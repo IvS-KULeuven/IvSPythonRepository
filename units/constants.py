@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SI-units
 # value                     name                         unit
 #===================================================================
@@ -17,7 +18,7 @@ sigma= 5.67040040e-8       # Stefan-Boltzmann constant   W/m2/K4
 GG   = 6.67428e-11         # gravitational constant      m3/kg/s2
 RR   = 8.31447215          # (ideal) gas constant        J/K/mol
 aa   = 7.5657e-16          # radiation constant          J/m3/K4
-
+a0   = 52.9177e-12         # Bohr radius of hydrogen     m
 
 # CGS-units
 # value                     name                             unit
@@ -36,7 +37,7 @@ sigma_cgs= 5.67040040e-5       # Stefan-Boltzmann constant   erg/cm2/s/K4
 GG_cgs   = 6.67428e-8          # gravitational constant      cm3/g/s2
 RR_cgs   = 8.31447215e7        # (ideal) gas constant        erg/K/mol
 aa_cgs   = 7.5657e-15          # radiation constant          erg/cm2/K4
-
+a0_cgs   = 52.9177e-10         # Bohr radius of hydrogen     cm
 
 # other stuff
 Mabs_sun = 4.83                # solar bolometric abs mag    mag

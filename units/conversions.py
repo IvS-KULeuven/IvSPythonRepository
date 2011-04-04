@@ -6,6 +6,22 @@ The main function C{convert} does all the work.
 
 Be B{careful} when you mix nonlinear conversions (e.g. magnitude to flux) with
 linear conversions (e.g. Jy to W/m2/m).
+
+Note: when your favorite conversion is not implemented, there are four places
+where you can add information:
+
+    1. C{_scalings}: if your favorite prefix (e.g. Tera, nano...) is not
+    available
+    2. C{_aliases}: if your unit is available but not under the name you are
+    used to.
+    3. C{_factors}: if your unit is not available.
+    4. C{_switch}: if your units are available, but conversions from one to
+    another is not straightforward and extra infromation is needed (e.g. to go
+    from angstrom to km/s in a spectrum, a reference wavelength is needed).
+
+If you need to add a linear factor, just give the factor in SI units, and the
+SI base units it consists of. If you need to add a nonlinear factor, you have
+to give a function definition (see the examples).
 """
 import re
 from numpy import pi
@@ -183,11 +199,14 @@ def convert(_from,_to,*args,**kwargs):
             args = _switch['sr-1_to_'](args[0],**kwargs_SI),
             only_from = only_from[:-4]
         
+        #-- nonlinear conversions need a little tweak
         if isinstance(fac_from,NonLinearConverter):
             ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from(args[0]),**kwargs_SI)
+        #-- linear conversions are easy
         else:
             ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from*args[0],**kwargs_SI)
-    #-- final step: convert to    
+    #-- final step: convert to ... (again distinction between linear and
+    #   nonlinear converters)
     if isinstance(fac_to,NonLinearConverter):
         ret_value = fac_to(ret_value,inv=True)
     else:
@@ -585,6 +604,14 @@ def times_sr(arg,**kwargs):
 
 
 class NonLinearConverter():
+    """
+    Base class for nonlinear conversions
+    
+    This class keeps track of prefix-factors and powers.
+    
+    To have a real nonlinear converter, you need to define the C{__call__}
+    attribute.
+    """
     def __init__(self,prefix=1.,power=1.):
         self.prefix = prefix
         self.power = power
@@ -599,43 +626,48 @@ class NonLinearConverter():
             return self.__class__(prefix=self.prefix,power=self.power+other)
 
 class Fahrenheit(NonLinearConverter):
+    """
+    Convert Fahrenheit to Kelvin and back
+    """
     def __call__(self,a,inv=False):
-        if not inv:
-            return (a*self.prefix+459.67)*5./9.
-        else:
-            return (a*9./5.-459.67)/self.prefix
+        if not inv: return (a*self.prefix+459.67)*5./9.
+        else:       return (a*9./5.-459.67)/self.prefix
 
 class Celcius(NonLinearConverter):
+    """
+    Convert Celcius to Kelvin and back
+    """
     def __call__(self,a,inv=False):
-        if not inv:
-            return a*self.prefix+273.15
-        else:
-            return (a-273.15)/self.prefix
+        if not inv: return a*self.prefix+273.15
+        else:       return (a-273.15)/self.prefix
 
 class VegaMag(NonLinearConverter):
+    """
+    Convert a Vega magnitude to W/m2/m (Flambda) and back
+    """
     def __call__(self,meas,photband=None,inv=False):
         #-- this part should include something where the zero-flux is retrieved
         F0 = 1e-09
-        if not inv:
-            return 10**(-meas/2.5)*F0
-        else:
-            return -2.5*log10(meas/F0)
+        if not inv: return 10**(-meas/2.5)*F0
+        else:       return -2.5*log10(meas/F0)
 
 class ABMag(NonLinearConverter):
+    """
+    Convert an AB magnitude to W/m2/Hz (Fnu) and back
+    """
     def __call__(self,meas,photband=None,inv=False):
         F0 = 3.6307805477010024e-23
-        if not inv:
-            return 10**(-meas/2.5)*F0
-        else:
-            return -2.5*log10(meas/F0)
+        if not inv: return 10**(-meas/2.5)*F0
+        else:       return -2.5*log10(meas/F0)
 
 class STMag(NonLinearConverter):
+    """
+    Convert an ST magnitude to W/m2/m (Flambda) and back
+    """
     def __call__(self,meas,photband=None,inv=False):
         F0 = 0.036307805477010027
-        if not inv:
-            return 10**(-meas/-2.5)*F0
-        else:
-            return -2.5*log10(meas/F0)
+        if not inv: return 10**(-meas/-2.5)*F0
+        else:       return -2.5*log10(meas/F0)
 
 
 #-- basic units which the converter should know about
@@ -647,6 +679,9 @@ _factors = {
            'pc':    (pc,            'm'),
            'ly':    (ly,            'm'),
            'Rsun':  (Rsun,          'm'),
+           'ft':    (0.3048,        'm'),
+           'in':    (0.0254,        'm'),
+           'mi':    (1609.344,      'm'),
 # MASS
            'g':     (  1e-03,       'kg'),
            'Msun':  (Msun,          'kg'),
@@ -662,7 +697,7 @@ _factors = {
            'rad':         (0.15915494309189535, 'cy'),
            'cy':          (1e+00,               'cy'),
            'deg':         (1./360.,             'cy'),
-           'am':      (1./360./60.,         'cy'),
+           'am':          (1./360./60.,         'cy'),
            'as':          (1./360./3600.,       'cy'),
            'sr':          (1e+00,                'sr'),
 # FORCE
@@ -678,6 +713,13 @@ _factors = {
            'erg':   (  1e-07,       'kg m2 s-2'),
            'eV':    (1.60217646e-19,'kg m2 s-2'),
            'cal':   (4.184,         'kg m2 s-2'),
+# PRESSURE
+           'Pa':    (  1e+00,       'kg m-1 s-2'),
+           'bar':   (  1e+05,       'kg m-1 s-2'),
+           'at':    (  98066.5,     'kg m-1 s-2'),
+           'atm':   ( 101325,       'kg m-1 s-2'),
+           'torr':  (    133.322,   'kg m-1 s-2'),
+           'psi':   (   6894.,      'kg m-1 s-2'),
 # FLUX
            'Jy':      (1e-26,         'kg s-2 cy-1'),
            'vegamag': (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
@@ -722,6 +764,7 @@ _aliases = [('micron','mum'),
             ('Angstrom','A'),
             (' mag',' vegamag'), # with space! otherwise confusion with ST/AB mag
             ('/mag',' /vegamag'),# with space! otherwise confusion with ST/AB mag
+            ('inch','in'),
             ('^',''),
             ('**','')
             ]
