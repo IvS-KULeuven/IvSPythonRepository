@@ -115,6 +115,7 @@ def convert(_from,_to,*args,**kwargs):
     40599538.4683
     
     B{Magnitudes}:
+    
     >>> print(convert('ABmag','Jy',0.))
     3630.7805477
     >>> print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))

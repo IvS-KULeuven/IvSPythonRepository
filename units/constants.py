@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+List of physical constants (SI and CGS)
+"""
 # SI-units
 # value                     name                         unit
 #===================================================================
