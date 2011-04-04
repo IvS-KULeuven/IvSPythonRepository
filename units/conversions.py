@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
-from numpy import pi
-import re
+"""
+Convert one unit to another.
 
+The main function C{convert} does all the work.
+
+Be B{careful} when you mix nonlinear conversions (e.g. magnitude to flux) with
+linear conversions (e.g. Jy to W/m2/m).
+"""
+import re
+from numpy import pi
 from constants import *
 
 #{ Main functions
@@ -23,13 +30,15 @@ def convert(_from,_to,*args,**kwargs):
     
     The crasiest you're allowed to go is
     
-    >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
+    >>> print(convert('10mW m-2/nm','erg s-1 cm-2 A-1',1.))
     1.0
     
     Parentheses are in no circumstances accepted. Some common aliases are also
     resolved (for a full list, see dictionary C{_aliases}):
     
     C{erg/s/cm2/angstrom}
+    
+    WARNING: the conversion involving sr and pixels is B{not tested}.
     
     Examples:
     
@@ -78,12 +87,24 @@ def convert(_from,_to,*args,**kwargs):
     667128190.39630413
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),diam=(3.,'mas'))
     4511059.8298101583
+    >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
+    3542978.1053089043
     >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),diam=(3.,'mas'))
     2.2167739682629828e-07
     >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
     7.4948114500000012e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
+    >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,diam=(2.,'mas'),wave=(1.,'micron'))
+    40599538.4683
+    
+    B{Magnitudes}:
+    >>> print(convert('ABmag','Jy',0.))
+    3630.7805477
+    >>> print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
+    1.08848062485e-09
+    >>> print(convert('ABmag','erg cm-2 s-1 A-1',0.,wave=(1.,'micron')))
+    1.08848062485e-09
     
     B{Frequency analysis}:
     
@@ -107,6 +128,21 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('cycles/mas','m',0.187,freq=(300000.,'Ghz'))
     38.544834734379712
     
+    B{Temperature}:
+    
+    >>> print(convert('F','K',123.))
+    323.705555556
+    >>> print(convert('kF','kK',0.123))
+    0.323705555556
+    >>> print(convert('K','F',323.7))
+    122.99
+    >>> print(convert('C','K',10.))
+    283.15
+    >>> print(convert('C','F',10.))
+    50.0
+    >>> print(convert('dC','kF',100.))
+    0.05
+    
     @param from_units: units to convert from
     @param to_units: units to convert to
     @return: converted value
@@ -126,15 +162,14 @@ def convert(_from,_to,*args,**kwargs):
         kwargs_SI[key] = fac_key*kwargs[key][0]
     
     #-- easy if same units
+    ret_value = 1.
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
         if isinstance(fac_from,NonLinearConverter):
-            return fac_from(args[0])/fac_to
-        elif isinstance(fac_to,NonLinearConverter):
-            return fac_to(fac_from*args[0],inv=True)
-        #-- otherwise
+            ret_value *= fac_from(args[0])
         else:
-            return fac_from * args[0] / fac_to
+            ret_value *= fac_from*args[0]
+    #-- otherwise a little bit more complicated
     else:
         uni_from_ = uni_from.split()
         uni_to_ = uni_to.split()
@@ -148,7 +183,17 @@ def convert(_from,_to,*args,**kwargs):
             args = _switch['sr-1_to_'](args[0],**kwargs_SI),
             only_from = only_from[:-4]
         
-        return _switch['%s_to_%s'%(only_from,only_to)](fac_from*args[0],**kwargs_SI)/fac_to
+        if isinstance(fac_from,NonLinearConverter):
+            ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from(args[0]),**kwargs_SI)
+        else:
+            ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from*args[0],**kwargs_SI)
+    #-- final step: convert to    
+    if isinstance(fac_to,NonLinearConverter):
+        ret_value = fac_to(ret_value,inv=True)
+    else:
+        ret_value /= fac_to
+    
+    return ret_value
 
 #}
 #{ Conversions basics
@@ -500,11 +545,16 @@ def per_sr(arg,**kwargs):
     """
     if 'diam' in kwargs:
         radius = kwargs['diam']/2.
+        surface = (pi*(2*pi*radius)**2)
     elif 'radius' in kwargs:
         radius = kwargs['radius']
+        surface = (pi*(2*pi*radius)**2)
+    elif 'pix' in kwargs:
+        pix = kwargs['pix']
+        surface = (2*pi*pix)**2
     else:
         raise ValueError,'angular size (diam/radius) not given'
-    Qsr = arg/(pi*(2*pi*radius)**2)
+    Qsr = arg/surface
     return Qsr
 
 def times_sr(arg,**kwargs):
@@ -518,11 +568,16 @@ def times_sr(arg,**kwargs):
     """
     if 'diam' in kwargs:
         radius = kwargs['diam']/2.
+        surface = (pi*(2*pi*radius)**2)
     elif 'radius' in kwargs:
         radius = kwargs['radius']
+        surface = (pi*(2*pi*radius)**2)
+    elif 'pix' in kwargs:
+        pix = kwargs['pix']
+        surface = (2*pi*pix)**2
     else:
         raise ValueError,'angular size (diam/radius) not given'
-    Q = arg*(pi*(2*pi*radius)**2)
+    Q = arg*surface
     return Q
 #}
 
@@ -553,9 +608,9 @@ class Fahrenheit(NonLinearConverter):
 class Celcius(NonLinearConverter):
     def __call__(self,a,inv=False):
         if not inv:
-            return a*self.prefix-273.15
+            return a*self.prefix+273.15
         else:
-            return (a+273.15)/self.prefix
+            return (a-273.15)/self.prefix
 
 class VegaMag(NonLinearConverter):
     def __call__(self,meas,photband=None,inv=False):
@@ -689,18 +744,3 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
 if __name__=="__main__":
     import doctest
     doctest.testmod()
-    print convert('F','K',1000.)
-    print convert('kF','K',1.)
-    print convert('K','F',1000.)
-    print convert('kK','F',1000.)
-    
-    print "Celcius"
-    print convert('C','K',0.)
-    print convert('C','SI',0.)
-    print convert('K','C',0.)
-    
-    
-    print "Magnitudes"
-    print convert('vegamag','SI',0.)
-    print convert('ABmag','Jy',0.)
-    print convert('STmag','erg cm-2 s-1 A-1',0.)
