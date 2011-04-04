@@ -1,3 +1,9 @@
+"""
+Unit tests covering linearregression.py
+
+Author: Joris De Ridder
+"""
+
 
 import unittest
 from math import pi, sqrt
