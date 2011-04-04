@@ -2,7 +2,9 @@
 """
 Convert one unit to another.
 
-The main function C{convert} does all the work.
+The main function C{convert} does all the work and is called via
+
+C{result = convert('km','m',1.)}
 
 Be B{careful} when you mix nonlinear conversions (e.g. magnitude to flux) with
 linear conversions (e.g. Jy to W/m2/m).
@@ -54,7 +56,9 @@ def convert(_from,_to,*args,**kwargs):
     
     C{erg/s/cm2/angstrom}
     
-    WARNING: the conversion involving sr and pixels is B{not tested}.
+    B{WARNINGS}:
+        1. the conversion involving sr and pixels is B{not tested}.
+        2. the conversion involving magnitudes is not tested and not calibrated
     
     Examples:
     
@@ -160,8 +164,10 @@ def convert(_from,_to,*args,**kwargs):
     >>> print(convert('dC','kF',100.))
     0.05
     
-    @param from_units: units to convert from
-    @param to_units: units to convert to
+    @param _from: units to convert from
+    @type _from: str
+    @param _to: units to convert to
+    @type _to: str
     @return: converted value
     @rtype: float
     """
@@ -788,3 +794,10 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
 if __name__=="__main__":
     import doctest
     doctest.testmod()
+    #-- timing
+    #import time
+    #c0 = time.time()
+    #nr = 50000
+    #for i in xrange(nr):
+        #x = convert('ABmag','erg s-1 cm-2 micron-1 sr-1',0.,diam=(2.,'mas'),wave=(1.,'micron'))
+    #print "One conversion takes on average",(time.time()-c0)/nr*1000,'ms'
