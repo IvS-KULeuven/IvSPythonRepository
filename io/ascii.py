@@ -25,12 +25,15 @@ def read2list(filename,**kwargs):
     @type commentchar: list of str
     @keyword splitchar: character seperating entries in a row (default: whitespace)
     @type splitchar: str or None
+    @keyword skip_empty: skip empty lines
+    @type skip_empty: bool
     @return: list of lists (data rows)
              list of lists (comments lines without commentchar),
     @rtype: (list,list)
     """
     commentchar = kwargs.get('commentchar',['#'])
     splitchar = kwargs.get('splitchar',None)
+    skip_empty = kwargs.get('skip_empty',True)
     
     if os.path.splitext(filename)[1] == '.gz':
         ff = gzip.open(filename)
@@ -44,13 +47,19 @@ def read2list(filename,**kwargs):
         line = ff.readline()
         if not line: break  # end of file
         
+        #-- strip return character from line
+        if skip_empty and line.isspace():
+            continue # empty line
+        
+        #-- remove return characters
+        line = line.replace('\n','')
         #-- when reading a comment line
         if line[0] in commentchar:
-            comm.append(line[1:].strip())
+            comm.append(line[1:])
             continue # treat next line
         
         #-- when reading data, split the line
-        data.append(line.strip().split(splitchar))
+        data.append(line.split(splitchar))
     ff.close()
     
     #-- report that the file has been read
@@ -81,7 +90,6 @@ def read2array(filename,**kwargs):
     dtype = kwargs.get('dtype',np.float)
     return_comments = kwargs.get('return_comments',False)
     data,comm = read2list(filename,**kwargs)
-    
     data = np.array(data,dtype=dtype)
     return return_comments and (data,comm) or data
 

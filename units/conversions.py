@@ -719,7 +719,9 @@ class VegaMag(NonLinearConverter):
     def __call__(self,meas,photband=None,inv=False):
         #-- this part should include something where the zero-flux is retrieved
         data = read_fluxcalib()
-        F0 = data['F0'][data['PHOTBAND']==photband.upper()][0]
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        F0 = data['F0'][match][0]
         if not inv: return 10**(-meas/2.5)*F0
         else:       return -2.5*np.log10(meas/F0)
 
@@ -730,7 +732,9 @@ class ABMag(NonLinearConverter):
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         data = read_fluxcalib()
         F0 = 3.6307805477010024e-23
-        mag0 = data['ABMAG'][data['PHOTBAND']==photband.upper()][0]
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        mag0 = data['ABMAG'][match][0]
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/2.5)*F0
         else:       return -2.5*np.log10(meas/F0)
@@ -742,7 +746,9 @@ class STMag(NonLinearConverter):
     def __call__(self,meas,photband=None,inv=False):
         data = read_fluxcalib()
         F0 = 0.036307805477010027
-        mag0 = data['STMAG'][data['PHOTBAND']==photband.upper()][0]
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        mag0 = data['STMAG'][match][0]
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/-2.5)*F0
         else:       return -2.5*np.log10(meas/F0)
@@ -902,6 +908,7 @@ _factors = {
 # FLUX
            'Jy':      (1e-26,         'kg s-2 cy-1'),
            'vegamag': (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
+           'mag':     (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
            'STmag':   (STMag,         'kg m-1 s-3'),  # in W/m2/m
            'ABmag':   (ABMag,         'kg s-2 cy-1'), # in W/m2/Hz
            }
@@ -951,8 +958,6 @@ _aliases = [('micron','mum'),
             ('cyc','cy'),
             ('angstrom','A'),
             ('Angstrom','A'),
-            (' mag',' vegamag'), # with space! otherwise confusion with ST/AB mag
-            ('/mag',' /vegamag'),# with space! otherwise confusion with ST/AB mag
             ('inch','in'),
             ('^',''),
             ('**',''),
