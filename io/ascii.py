@@ -67,7 +67,7 @@ def read2array(filename,**kwargs):
     
     If you want to return a list of the columns instead of rows, just do
     
-    C{ >>> col1,col2,col3 = ascii.read2array(myfile).T
+    C{>>> col1,col2,col3 = ascii.read2array(myfile).T}
     
     @param filename: name of file with the data
     @type filename: string
@@ -97,16 +97,16 @@ def write_array(data, filename, **kwargs):
     
     @param header: optional header for column names
     @type header: list of str
-    @param comments: comment lines
+    @keyword comments: comment lines
     @type comments: list of str
-    @param commentchar: comment character
+    @keyword commentchar: comment character
     @type commentchar: str
-    @param sep: separator for the columns and header names
+    @keyword sep: separator for the columns and header names
     @type sep: str
-    @param axis0: string denoting the orientation of the matrix. If you gave
+    @keyword axis0: string denoting the orientation of the matrix. If you gave
     a list of columns, set C{axis0='cols'}, otherwise C{axis='rows'} (default).
     @type axis0: str, one of C{cols}, C{rows}.
-    @param mode: file mode (a for appending, w for (over)writing...)
+    @keyword mode: file mode (a for appending, w for (over)writing...)
     @type mode: char (one of 'a','w'...)
     """
     header = kwargs.get('header',[])
