@@ -95,7 +95,7 @@ def write_array(data, filename, **kwargs):
     line). By default, the comment lines will be preceded by the C{commentchar}.
     If you want to override this behaviour, set C{commentchar=''}.
     
-    @param header: optional header for column names
+    @keyword header: optional header for column names
     @type header: list of str
     @keyword comments: comment lines
     @type comments: list of str
