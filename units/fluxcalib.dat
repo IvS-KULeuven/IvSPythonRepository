@@ -1,0 +1,99 @@
+# CALIBRATION DONE VIA bohlin-MODEL of VEGA
+#=================================
+# THE FOLLOWING SYSTEMS HAVE BEEN THOROUGHLY CHECKED (both zeropoints and response curves)
+#
+#- STROMGREN (Maiz-Apellaniz 2007, Chorizos)
+#- 2MASS     (Maiz-Apellaniz 2007, Chorizos)
+#- SDSS      (Maiz-Apellaniz 2007, Chorizos)
+#- TYCHO2    (Maiz-Apellaniz 2007, Chorizos)
+#- COUSINS   (Maiz-Apellaniz 2007, Chorizos)
+#- LANDOLT   (SYNPHOT, but confusion between B2 and B3 (same zeropoint assumed))
+#- GENEVA    (Rufener database and GCPD)
+#- BESSELL   (Bessel, 1990)  #-- but based on old Vega model (1980, see paper): Use colors (otherwise ZP(B)=-0.102)
+#
+#
+# THE FOLLOWING SYSTEMS ARE VERY UNCERTAIN
+#- JOHNSON
+#=================================
+#   PHOTBAND          VEGAMAG  ABMAG   STMAG   F0
+     JOHNSON.U        0.0550   nan     nan     4.184595e-09  
+     JOHNSON.B        0.0340   nan     nan     6.325725e-09  
+     JOHNSON.V        0.0260   nan     nan     3.669989e-09  
+     JOHNSON.R        0.0700   nan     nan     1.937098e-09  
+     JOHNSON.I        0.1000   nan     nan     9.977314e-10  
+     JOHNSON.J        0.0200   nan     nan     3.175586e-10  
+     JOHNSON.H        0.0200   nan     nan     1.171778e-10  
+     JOHNSON.K        0.0200   nan     nan     4.243333e-11  
+     JOHNSON.L       -0.0200   nan     nan     6.791615e-12  
+     JOHNSON.M       -0.0400   nan     nan     1.774756e-12  
+     JOHNSON.N       -0.0100   nan     nan     1.342252e-13  
+     BESSELL.U        0.7900   nan     nan     8.292267e-09  
+     BESSELL.B       -0.1040   nan     nan     5.713438e-09  
+     BESSELL.V        0.0080   nan     nan     3.635018e-09  
+     BESSELL.R        0.1930   nan     nan     2.591315e-09  
+     BESSELL.I        0.4430   nan     nan     1.701537e-09  
+     LANDOLT.V        0.0260   nan     nan     3.711216e-09  
+     LANDOLT.B2       0.0360   nan     nan     6.415398e-09  
+     LANDOLT.B3       0.0360   nan     nan     6.487763e-09  
+     LANDOLT.U        0.0460   nan     nan     4.344168e-09  
+     LANDOLT.R        0.0380   nan     nan     2.271246e-09  
+     LANDOLT.I        0.0280   nan     nan     1.224980e-09  
+      USNOB1.B1       0.0300   nan     nan     6.302463e-09  
+      USNOB1.R1       0.0700   nan     nan     1.937098e-09  
+       2MASS.J       -0.0210   nan     nan     3.050892e-10  
+       2MASS.H        0.0090   nan     nan     1.144799e-10  
+       2MASS.KS       0.0000   nan     nan     4.278710e-11  
+       DENIS.I        0.0400   nan     nan     1.218283e-09  
+       DENIS.J        0.0320   nan     nan     3.250137e-10  
+       DENIS.KS       0.0410   nan     nan     4.475789e-11  
+       TYCHO.BT       0.0290   nan     nan     6.734339e-09  
+       TYCHO.VT       0.0300   nan     nan     4.022674e-09  
+      TYCHO2.BT       0.0690   nan     nan     6.987068e-09  
+      TYCHO2.VT       0.0320   nan     nan     4.030091e-09  
+     COUSINS.I        0.0170   nan     nan     1.212632e-09  
+     COUSINS.R        0.0300   nan     nan     2.254573e-09  
+        IRAC.36       nan      nan     nan     6.616704e-12  
+        IRAC.45       nan      nan     nan     2.712802e-12  
+        IRAC.58       nan      nan     nan     1.062920e-12  
+        IRAC.80       nan      nan     nan     3.179174e-13  
+        MIPS.24       nan      nan     nan     3.704084e-15  
+        MIPS.70       nan      nan     nan     5.294575e-17  
+        MIPS.160      nan      nan     nan     nan
+   STROMGREN.U        1.4320   nan     nan     1.188117e-08  
+   STROMGREN.V        0.1790   nan     nan     8.588857e-09  
+   STROMGREN.B        0.0180   nan     nan     5.830122e-09  
+   STROMGREN.Y        0.0140   nan     nan     3.656534e-09  
+         TD1.1565    -0.5600   nan     nan     4.002699e-09  
+         TD1.1965    -0.4100   nan     nan     3.997481e-09  
+         TD1.2365    -0.0100   nan     nan     4.013650e-09  
+         TD1.2740     0.0900   nan     nan     3.958701e-09  
+      GENEVA.U        0.6070   nan     nan     5.637653e-09  
+      GENEVA.B1       0.0020   nan     nan     6.596283e-09  
+      GENEVA.B       -0.8980   nan     nan     2.850519e-09  
+      GENEVA.B2       0.6120   nan     nan     1.090806e-08  
+      GENEVA.V1       0.7640   nan     nan     7.643597e-09  
+      GENEVA.V        0.0610   nan     nan     3.828820e-09  
+      GENEVA.G        1.2700   nan     nan     1.002057e-08  
+       IPHAS.RP       nan      nan     nan     2.476710e-09  
+       IPHAS.IP       nan      nan     nan     1.305284e-09  
+       IPHAS.HA       nan      nan     nan     1.813439e-09  
+        SDSS.U        0.0420   0.04    nan     3.721237e-09  
+        SDSS.G       -0.0020   0.00    nan     5.455824e-09  
+        SDSS.R       -0.0030   0.00    nan     2.506190e-09  
+        SDSS.I       -0.0160   0.00    nan     1.374391e-09  
+        SDSS.Z       -0.0280   0.00    nan     8.192196e-10  
+        SDSS.UP       0.9800   nan     nan     8.470829e-09  
+        SDSS.GP      -0.1000   nan     nan     4.826070e-09  
+        SDSS.RP       0.1500   nan     nan     2.784463e-09  
+        SDSS.IP       0.3800   nan     nan     1.816564e-09  
+        SDSS.ZP       0.5300   nan     nan     8.587805e-10  
+        SAAO.J        0.0540   nan     nan     3.336649e-10  
+        SAAO.H        0.0540   nan     nan     1.209956e-10  
+        SAAO.K        0.0140   nan     nan     4.033069e-11  
+        SAAO.L        0.0320   nan     nan     7.676682e-12  
+       GALEX.FUV      nan      nan     nan     6.501572e-09  
+       GALEX.NUV      nan      nan     nan     4.431373e-09  
+        GAIA.RP       0.0300   nan     nan     1.228768e-09  
+        GAIA.BP       0.0300   nan     nan     3.767382e-09  
+        GAIA.G        0.0300   nan     nan     2.247594e-09  
+        GAIA.RVS      0.0300   nan     nan     9.246737e-10  
