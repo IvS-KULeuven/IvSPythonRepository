@@ -1,74 +1,108 @@
-import sys
-from numpy import *
-from numpy.random import *
+"""
+Simulation of a granulation signal
+
+Author: Joris De Ridder
+
+"""
+
+import numpy as np
+from numpy.random import normal
 
 
 
-#------------------------------------------
-def granulation(time, timescale, varscale):
-#------------------------------------------
+def granulation(time, timescale, varscale, logger=None):
 
-  #-- Input: time[0..Ntime-1]: time points
-  #--        timescale[0..Ncomp-1]: time scale tau of each component
-  #--                               of the granulation/magnetic activity
-  #--        varscale[0..Ncomp-1]: variation scale of each component
-  #--                              of the granulation/magnetic activity
-  #--                              in the appropriate passband
+    """
+    Simulates a time series showing granulation variations
+    
+    A first-order autoregressive process is used, as this gives a Harvey
+    model in the frequency domain. See also:
+    De Ridder et al., 2006, MNRAS 365, pp. 595-605.
+    
+    @param time: time points
+    @type time: ndarray
+    @param timescale: array of time scale "tau_i" of each granulation component
+                      of the granulation/magnetic activity. Same units as 'time'.
+    @type timescale: ndarray
+    @param varscale: array of variation scale "sigma_i" of each component of the 
+                     granulation/magnetic activity in the appropriate passband.
+                     Same size as the timescale array. Unit: ppm
+    @type varscale: ndarray
+    @param logger: logger (optional). logger.info() will be called to write info strings.
+    @type logger: logging instance 
+    @return: ndarray containing the granulation signal
+    
+    Example:
+    
+    >>> time = np.linspace(0,100,200)             # E.g. in days
+    >>> timescale = np.array([5.0, 20.])          # time scales in days
+    >>> varscale = np.array([10.0, 50.0])         # variation scale in ppm
+    >>> gransignal = granulation(time, timescale, varscale)
+    >>> flux = 100000.0                           # mean flux level
+    >>> signal = flux * (1.0 + gransignal)        # signal in flux
+    
+    """
+    
+    
+    Ntime = len(time)
+    Ncomp = len(timescale)
 
-  Ntime = len(time)
-  Ncomp = len(timescale)
+    if logger is not None:
+        logger.info("Simulating %d granulation components\n" % Ncomp)
+        
+    # Set the kick (= reexcitation) timestep to be one 100th of the
+    # shortest granulation time scale (i.e. kick often enough).
 
-  print >> sys.stderr, "Simulating", Ncomp, "component(s)."
+    kicktimestep = min(timescale) / 100.0
+    
+    if logger is not None:
+        logger.info("Kicktimestep = %f\n" % kicktimestep)
 
-  # Set the kick (= reexcitation) timestep to be one 100th of the
-  # shortest granulation time scale (i.e. kick often enough).
+    # Predefine some arrays
 
-  kicktimestep = min(timescale) / 100.0
-  print >> sys.stderr, "Kicktimestep = ", kicktimestep
+    signal = np.zeros(Ntime)
+    granul = np.zeros(Ncomp)
+    mu = np.zeros(Ncomp)
+    sigma = np.sqrt(kicktimestep/timescale)*varscale
 
-  # Predefine some arrays
+    # Warm up the first-order autoregressive process
 
-  signal = zeros(Ntime)
-  granul = zeros(Ncomp)
-  mu = zeros(Ncomp)
-  sigma = sqrt(kicktimestep/timescale)*varscale
+    if logger is not None:
+        logger.info("Granulation process warming up...\n")
+        
+    for i in range(2000):
+        granul = granul * (1.0 - kicktimestep / timescale) + normal(mu, sigma)
 
-  # Warm up the first-order autoregressive process
+    # Start simulating the granulation time series
 
-  print >> sys.stderr, "Warming up..."
+    if logger is not None:
+        logger.info("Simulating granulation signal.\n")
 
-  for i in range(2000):
-    granul = granul * (1.0 - kicktimestep / timescale) + normal(mu, sigma)
+    delta = 0.0
+    currenttime = time[0] - kicktimestep
 
-  # Start simulating the granulation time series
+    for i in range(Ntime):
 
-  print >> sys.stderr, "Simulating granulation signal"
+        # Compute the contribution of each component separately.
+        # First advance the time series right *before* the time point i,
 
-  delta = 0.0
-  currenttime = time[0] - kicktimestep
+        while((currenttime + kicktimestep) < time[i]):
+            granul = granul * (1.0 - kicktimestep / timescale) + normal(mu,sigma)
+            currenttime = currenttime + kicktimestep
 
-  for i in range(Ntime):
+        # Then advance the time series with a small time step right *on* time[i]
 
-    # Compute the contribution of each component separately.
-    # First advance the time series right *before* the time point i,
+        delta = time[i] - currenttime
+        granul = granul * (1.0 - delta / timescale)    \
+                 + normal(mu, np.sqrt(delta/timescale)*varscale)
+        currenttime = time[i]
 
-    while((currenttime + kicktimestep) < time[i]):
-      granul = granul * (1.0 - kicktimestep / timescale) + normal(mu,sigma)
-      currenttime = currenttime + kicktimestep
+        # Add the different components to the signal. 
 
-    # Then advance the time series with a small time step right *on* time[i]
-
-    delta = time[i] - currenttime
-    granul = granul * (1.0 - delta / timescale)    \
-               + normal(mu, sqrt(delta/timescale)*varscale)
-    currenttime = time[i]
-
-    # Add the different components to the signal. 
-
-    signal[i] = sum(granul)
+        signal[i] = sum(granul)
 
 
-  # That's it!
+    # That's it!
 
-  return(signal)
+    return(signal)
 
