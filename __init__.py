@@ -1,3 +1,2 @@
 
-__all__ = ["units", "statistics"]
-
+__all__ = ["io", "statistics", "units", "misc"]

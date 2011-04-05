@@ -3,6 +3,7 @@
 Various decorator functions
     - Memoization with args and kwargs (@memoized)
     - Retry with exponential backoff (@retry(3,2))
+    - Retry accessing website with exponential backoff (@retry(3,2))
     - Counting function calls (@countcalls)
     - Timing function calls
     - Redirecting print statements to logger
@@ -66,10 +67,9 @@ def retry(tries, delay=3, backoff=2):
   """
   Retry a function or method until it returns True.
   
-  delay sets the initial delay, and backoff sets how much the delay should
+  Delay sets the initial delay, and backoff sets how much the delay should
   lengthen after each failure. backoff must be greater than 1, or else it
-  isn't really a backoff. tries must be at least 0, and delay greater than
-  0.
+  isn't really a backoff. tries must be at least 0, and delay greater than 0.
   """
 
   if backoff <= 1:
@@ -103,55 +103,54 @@ def retry(tries, delay=3, backoff=2):
   return deco_retry  # @retry(arg[, ...]) -> true decorator
 
 def retry_http(tries, backoff=2, on_failure='error'):
-  """
-  Retry a function or method reading from the internet until no socket or IOError
-  is raised
-  
-  delay sets the initial delay, and backoff sets how much the delay should
-  lengthen after each failure. backoff must be greater than 1, or else it
-  isn't really a backoff. tries must be at least 0, and delay greater than
-  0.
-  """
-  delay = socket.getdefaulttimeout()
-  o_delay = socket.getdefaulttimeout()
-  if backoff <= 1:
-    raise ValueError("backoff must be greater than 1")
+    """
+    Retry a function or method reading from the internet until no socket or IOError
+    is raised
+    
+    delay sets the initial delay, and backoff sets how much the delay should
+    lengthen after each failure. backoff must be greater than 1, or else it
+    isn't really a backoff. tries must be at least 0, and delay greater than 0.
+    """
+    delay = socket.getdefaulttimeout()
+    o_delay = socket.getdefaulttimeout()
+    if backoff <= 1:
+      raise ValueError("backoff must be greater than 1")
 
-  tries = math.floor(tries)
-  if tries < 0:
-    raise ValueError("tries must be 0 or greater")
+    tries = math.floor(tries)
+    if tries < 0:
+      raise ValueError("tries must be 0 or greater")
 
-  if delay <= 0:
-    raise ValueError("delay must be greater than 0")
+    if delay <= 0:
+      raise ValueError("delay must be greater than 0")
 
-  def deco_retry(f):
-    def f_retry(*args, **kwargs):
-      mtries, mdelay = tries, delay # make mutable
-      
-      while mtries > 0:
-        try:
-            rv = f(*args, **kwargs) # Try again
-        except IOError,msg:
-            rv = False
-        except socket.error:
-            rv = False
-            
-        if rv != False: # Done on success
-          return rv
-        mtries -= 1      # consume an attempt
-        socket.setdefaulttimeout(mdelay) # wait...
-        mdelay *= backoff  # make future wait longer
-        print "URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay)
-      print "URL timeout: number of trials exceeded"
-      if on_failure=='error':
-        raise IOError,msg # Ran out of tries :-(
-      else:
-        print "Failed, but continuing..."
-        return None
+    def deco_retry(f):
+      def f_retry(*args, **kwargs):
+        mtries, mdelay = tries, delay # make mutable
+        
+        while mtries > 0:
+          try:
+              rv = f(*args, **kwargs) # Try again
+          except IOError,msg:
+              rv = False
+          except socket.error:
+              rv = False
+              
+          if rv != False: # Done on success
+            return rv
+          mtries -= 1      # consume an attempt
+          socket.setdefaulttimeout(mdelay) # wait...
+          mdelay *= backoff  # make future wait longer
+          print "URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay)
+        print "URL timeout: number of trials exceeded"
+        if on_failure=='error':
+          raise IOError,msg # Ran out of tries :-(
+        else:
+          print "Failed, but continuing..."
+          return None
 
-    return f_retry # true decorator -> decorated function
-  socket.setdefaulttimeout(o_delay)
-  return deco_retry  # @retry(arg[, ...]) -> true decorator
+      return f_retry # true decorator -> decorated function
+    socket.setdefaulttimeout(o_delay)
+    return deco_retry  # @retry(arg[, ...]) -> true decorator
 
 class countcalls(object):
    """
