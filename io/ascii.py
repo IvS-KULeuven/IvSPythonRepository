@@ -4,6 +4,7 @@ Read and write ASCII files.
 """
 import gzip
 import logging
+import os
 
 import numpy as np
 
@@ -49,7 +50,7 @@ def read2list(filename,**kwargs):
             continue # treat next line
         
         #-- when reading data, split the line
-        data.append(line.split(splitchar))
+        data.append(line.strip().split(splitchar))
     ff.close()
     
     #-- report that the file has been read
@@ -63,6 +64,10 @@ def read2array(filename,**kwargs):
     Load ASCII file to a numpy array.
     
     For a list of extra keyword arguments, see C{<read2list>}.
+    
+    If you want to return a list of the columns instead of rows, just do
+    
+    C{ >>> col1,col2,col3 = ascii.read2array(myfile).T
     
     @param filename: name of file with the data
     @type filename: string
@@ -78,9 +83,6 @@ def read2array(filename,**kwargs):
     data,comm = read2list(filename,**kwargs)
     return np.array(data,dtype=dtype)
     return return_comments and (data,comments) or data
-
-
-
 #}
 
 #{ Output
@@ -88,10 +90,49 @@ def read2array(filename,**kwargs):
 def write_array(data, filename, **kwargs):
     """
     Save a numpy array to an ASCII file.
+    
+    Add comments via keyword comments (a list of strings denoting every comment
+    line). By default, the comment lines will be preceded by the C{commentchar}.
+    If you want to override this behaviour, set C{commentchar=''}.
+    
+    @param header: optional header for column names
+    @type header: list of str
+    @param comments: comment lines
+    @type comments: list of str
+    @param commentchar: comment character
+    @type commentchar: str
+    @param sep: separator for the columns and header names
+    @type sep: str
+    @param axis0: string denoting the orientation of the matrix. If you gave
+    a list of columns, set C{axis0='cols'}, otherwise C{axis='rows'} (default).
+    @type axis0: str, one of C{cols}, C{rows}.
+    @param mode: file mode (a for appending, w for (over)writing...)
+    @type mode: char (one of 'a','w'...)
     """
     header = kwargs.get('header',[])
     comments = kwargs.get('comments',None)
+    commentchar = kwargs.get('commentchar','#')
     sep = kwargs.get('sep',' ')
+    axis0 = kwargs.get('axis0','rows')
+    mode = kwargs.get('model','w')
+    
+    #-- switch to rows first if a list of columns is given
+    if axis0.lower()!='rows':
+        data = data.T
+    
+    ff = open(filename,mode)
+    if header:
+        ff.write('#'+sep.join(header)+'\n')
+    
+    #-- write to a file
+    for row in data:
+        ff.write(sep.join(['%g'%(col) for col in row])+'\n')
+    ff.close()
+        
+            
+        
+    
+    
     
     
 
