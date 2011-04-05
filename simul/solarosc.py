@@ -28,7 +28,8 @@ def solarosc(time, freq, ampl, eta, logger=None):
     @type eta: ndarray
     @param logger: standard python logging facility
     @type logger: logging instance
-    @return: ndarray, signal[0..Ntime-1]
+    @return: signal[0..Ntime-1]
+    @rtype: ndarray
 
     Example:
     

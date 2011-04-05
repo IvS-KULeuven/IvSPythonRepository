@@ -30,7 +30,8 @@ def granulation(time, timescale, varscale, logger=None):
     @type varscale: ndarray
     @param logger: logger (optional). logger.info() will be called to write info strings.
     @type logger: logging instance 
-    @return: ndarray containing the granulation signal
+    @return: the granulation signal
+    @rtype: ndarray
     
     Example:
     
