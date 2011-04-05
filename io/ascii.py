@@ -81,7 +81,46 @@ def read2array(filename,**kwargs):
     dtype = kwargs.get('dtype',np.float)
     return_comments = kwargs.get('return_comments',False)
     data,comm = read2list(filename,**kwargs)
-    return np.array(data,dtype=dtype)
+    
+    data = np.array(data,dtype=dtype)
+    return return_comments and (data,comments) or data
+
+def read2recarray(filename,**kwargs):
+    """
+    Load ASCII file to a numpy record array.
+    
+    For a list of extra keyword arguments, see C{<read2list>}.
+    
+    FI dtypes is None, we have some room to automatically detect the contents
+    of the columns. This is not implemented yet.
+    
+    the keyword 'dtype' should be equal to a list of tuples, e.g.
+    
+    C{dtype = [('col1','a10'),('col2','>f4'),..]}
+    
+    @param filename: name of file with the data
+    @type filename: string
+    @keyword dtype: dtypes of record array 
+    @type dtype: list of tuples
+    @keyword return_comments: flag to return comments (default: False)
+    @type return_comments: bool
+    @return: data array (, list of comments)
+    @rtype: ndarray (, list)
+    """
+    dtype = kwargs.get('dtype',None)
+    return_comments = kwargs.get('return_comments',False)
+
+    #-- first read in as a normal array
+    data,comm = read2list(filename,**kwargs)
+    data = np.array(data,dtype=np.str).T
+    
+    #-- if dtypes is None, we have some room to automatically detect the contents
+    #   of the columns. This is not implemented yet.
+    #-- cast all columns to the specified type
+    dtype = np.dtype(dtype)
+    data = [np.cast[dtype[i]](data[i]) for i in range(len(data))]
+    #-- and build the record array
+    data = np.rec.array(data, dtype=dtype)
     return return_comments and (data,comments) or data
 #}
 
