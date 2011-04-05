@@ -83,7 +83,7 @@ def read2array(filename,**kwargs):
     data,comm = read2list(filename,**kwargs)
     
     data = np.array(data,dtype=dtype)
-    return return_comments and (data,comments) or data
+    return return_comments and (data,comm) or data
 
 def read2recarray(filename,**kwargs):
     """
@@ -121,7 +121,7 @@ def read2recarray(filename,**kwargs):
     data = [np.cast[dtype[i]](data[i]) for i in range(len(data))]
     #-- and build the record array
     data = np.rec.array(data, dtype=dtype)
-    return return_comments and (data,comments) or data
+    return return_comments and (data,comm) or data
 #}
 
 #{ Output
