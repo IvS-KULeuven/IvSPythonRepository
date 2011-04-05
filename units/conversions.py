@@ -39,6 +39,7 @@ to give a class definition (see the examples).
 #-- standard libraries
 import re
 import os
+import logging
 import numpy as np
 try: import ephem
 except ImportError: print("Unable to load pyephem, coordinate transfos unavailable")
@@ -46,6 +47,8 @@ except ImportError: print("Unable to load pyephem, coordinate transfos unavailab
 #-- from IVS repository
 from ivs.units.constants import *
 from ivs.io import ascii
+
+logger = logging.getLogger("UNITS.CONV")
 
 #{ Main functions
 
@@ -254,13 +257,16 @@ def convert(_from,_to,*args,**kwargs):
         if 'cy-2' in only_to:
             args = _switch['_to_cy-2'](args[0],**kwargs_SI),
             only_to = only_to.replace('cy-2','')
+            logger.debug('Switching to /sr')
         if 'cy-2' in only_from:
             args = _switch['cy-2_to_'](args[0],**kwargs_SI),
             only_from = only_from.replace('cy-2','')
+            logger.debug('Switching from /sr')
         
         #-- nonlinear conversions need a little tweak
         try:
             key = '%s_to_%s'%(only_from,only_to)
+            logger.debug('Switching from %s to %s'%(only_from,only_to))
             if isinstance(fac_from,NonLinearConverter):
                 ret_value *= _switch[key](fac_from(args[0],**kwargs_SI),**kwargs_SI)
             #-- linear conversions are easy
@@ -716,7 +722,7 @@ class VegaMag(NonLinearConverter):
     """
     Convert a Vega magnitude to W/m2/m (Flambda) and back
     """
-    def __call__(self,meas,photband=None,inv=False):
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
         #-- this part should include something where the zero-flux is retrieved
         data = read_fluxcalib()
         match = data['PHOTBAND']==photband.upper()
@@ -743,7 +749,7 @@ class STMag(NonLinearConverter):
     """
     Convert an ST magnitude to W/m2/m (Flambda) and back
     """
-    def __call__(self,meas,photband=None,inv=False):
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
         data = read_fluxcalib()
         F0 = 0.036307805477010027
         match = data['PHOTBAND']==photband.upper()
