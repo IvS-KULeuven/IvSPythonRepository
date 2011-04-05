@@ -981,8 +981,8 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
            '_to_m1':spatialfreq2distance, # for interferometry
            'cy-1s-2_to_m-1s-3':fnu2flambda,
            'm-1s-3_to_cy-1s-2':flambda2fnu,
-           'cy-1s-2_to_s-3':fnu2nufnu,
-           's-3_to_cy-1s-2':nufnu2fnu,
+           'cy-1s-2_to_s-3':fnu2nufnu, # switch from Fnu to nuFnu
+           's-3_to_cy-1s-2':nufnu2fnu, # switch from nuFnu to Fnu
            '_to_cy-2':per_sr,
            'cy-2_to_':times_sr}
  
