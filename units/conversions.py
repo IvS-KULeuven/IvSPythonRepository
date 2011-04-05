@@ -2,11 +2,22 @@
 """
 Convert one unit to another.
 
+Some of the  many possibilities include:
+    
+    1. Conversions between equal-type units: meter to nano-lightyears, erg/s
+    to W, cy/d to muHz, but also erg/s/cm2/A to W/m2/mum, sr to deg2, etc...
+    2. Conversions between unequal-type units: angstrom to km/s via the speed
+    of light, F(lambda) to F(nu), F(nu) to lambdaF(lambda)/sr, meter to
+    cycles/arcsec (interferometry), etc...
+    3. Nonlinear conversions: vegamag to erg/s/cm2/A or Jy, Celcius to
+    Fahrenheit or Kelvin, calender date to (modified) Julian Day, Equatorial to
+    Ecliptic coordinates, etc...
+
 The main function C{convert} does all the work and is called via
 
 C{result = convert('km','m',1.)}
 
-Be B{careful} when you mix nonlinear conversions (e.g. magnitude to flux) with
+Be B{careful} when mixing nonlinear conversions (e.g. magnitude to flux) with
 linear conversions (e.g. Jy to W/m2/m).
 
 Note: when your favorite conversion is not implemented, there are four places
@@ -23,11 +34,13 @@ where you can add information:
 
 If you need to add a linear factor, just give the factor in SI units, and the
 SI base units it consists of. If you need to add a nonlinear factor, you have
-to give a function definition (see the examples).
+to give a class definition (see the examples).
 """
 import re
 from numpy import pi
 from constants import *
+try: import ephem
+except ImportError: print("Unable to load pyephem, coordinate transfos unavailable")
 
 #{ Main functions
 
@@ -105,18 +118,22 @@ def convert(_from,_to,*args,**kwargs):
     1.49896229e-09
     >>> convert('erg/s/cm2','Jy',1.,wave=(2.,'micron'))
     667128190.39630413
-    >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),diam=(3.,'mas'))
-    4511059.8298101583
+    >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
+    4511059.8297938667
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
-    3542978.1053089043
-    >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),diam=(3.,'mas'))
-    2.2167739682629828e-07
+    3542978.1052961089
+    >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
+    2.2167739682709884e-07
     >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
     7.4948114500000012e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
-    >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,diam=(2.,'mas'),wave=(1.,'micron'))
-    40599538.4683
+    >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
+    40599538.4681
+    
+    B{Angles}:
+    >>> convert('sr','deg2',1.)
+    3282.8063499998884
     
     B{Magnitudes}:
     
@@ -164,6 +181,30 @@ def convert(_from,_to,*args,**kwargs):
     >>> print(convert('dC','kF',100.))
     0.05
     
+    B{Time and Dates}:
+    
+    >>> convert('sidereal d','d',1.)
+    1.0027379093
+    >>> convert('JD','CD',2446257.81458)
+    (1985.0, 7.0, 11.314580000005662)
+    >>> convert('CD','JD',(1985,7,11.31))
+    2446257.8100000001
+    >>> convert('CD','JD',(1985,7,11,7,31,59))
+    2446257.8138773148
+    >>> convert('MJD','CD',0.,jtype='corot')
+    (2000.0, 1.0, 1.5)
+    >>> convert('JD','MJD',2400000.5,jtype='mjd')
+    0.0
+    >>> convert('MJD','CD',0,jtype='mjd')
+    (1858.0, 11.0, 17.0)
+    
+    B{Coordinates}:
+    
+    >>> convert('equ','gal',('17:45:40.4','-29:00:28.1'),epoch='2000')
+    (6.282224277178722, -0.00082517883389919317)
+    >>> convert('gal','equ',('00:00:00.00','00:00:00.0'),epoch='2000')
+    (4.6496443030366299, -0.50503150853426648)
+    
     @param _from: units to convert from
     @type _from: str
     @param _to: units to convert to
@@ -178,18 +219,21 @@ def convert(_from,_to,*args,**kwargs):
     else:
         fac_to,uni_to = 1.,uni_from
     
-    #-- convert the kwargs to SI units
+    #-- convert the kwargs to SI units if they are tuples
     kwargs_SI = {}
     for key in kwargs:
-        fac_key,uni_key = breakdown(kwargs[key][1])
-        kwargs_SI[key] = fac_key*kwargs[key][0]
+        if isinstance(kwargs[key],tuple):
+            fac_key,uni_key = breakdown(kwargs[key][1])
+            kwargs_SI[key] = fac_key*kwargs[key][0]
+        else:
+            kwargs_SI[key] = kwargs[key]
     
     #-- easy if same units
     ret_value = 1.
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
         if isinstance(fac_from,NonLinearConverter):
-            ret_value *= fac_from(args[0])
+            ret_value *= fac_from(args[0],**kwargs_SI)
         else:
             ret_value *= fac_from*args[0]
     #-- otherwise a little bit more complicated
@@ -199,19 +243,25 @@ def convert(_from,_to,*args,**kwargs):
         only_from = "".join(sorted(list(set(uni_from_) - set(uni_to_))))
         only_to = "".join(sorted(list(set(uni_to_) - set(uni_from_))))
         
-        if only_to[-4:]=='sr-1':
-            args = _switch['_to_sr-1'](args[0],**kwargs_SI),
-            only_to = only_to[:-4]
-        if only_from[-4:]=='sr-1':
-            args = _switch['sr-1_to_'](args[0],**kwargs_SI),
-            only_from = only_from[:-4]
+        #-- especially for conversion from and to sterradians
+        if 'cy-2' in only_to:
+            args = _switch['_to_cy-2'](args[0],**kwargs_SI),
+            only_to = only_to.replace('cy-2','')
+        if 'cy-2' in only_from:
+            args = _switch['cy-2_to_'](args[0],**kwargs_SI),
+            only_from = only_from.replace('cy-2','')
         
         #-- nonlinear conversions need a little tweak
-        if isinstance(fac_from,NonLinearConverter):
-            ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from(args[0]),**kwargs_SI)
-        #-- linear conversions are easy
-        else:
-            ret_value *= _switch['%s_to_%s'%(only_from,only_to)](fac_from*args[0],**kwargs_SI)
+        try:
+            key = '%s_to_%s'%(only_from,only_to)
+            if isinstance(fac_from,NonLinearConverter):
+                ret_value *= _switch[key](fac_from(args[0]),**kwargs_SI)
+            #-- linear conversions are easy
+            else:
+                ret_value *= _switch[key](fac_from*args[0],**kwargs_SI)
+        except KeyError:
+            raise KeyError,'cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key)
+    
     #-- final step: convert to ... (again distinction between linear and
     #   nonlinear converters)
     if isinstance(fac_to,NonLinearConverter):
@@ -301,7 +351,7 @@ def components(unit):
     #   combination of _scalings and basis which is inside the dictionary!
     for scale in _scalings:
         scale_unit,base_unit = basis[:len(scale)],basis[len(scale):]
-        if scale_unit==scale and base_unit in _factors:
+        if scale_unit==scale and base_unit in _factors and not basis in _factors:
             factor *= _scalings[scale]
             basis = base_unit
             break
@@ -569,17 +619,17 @@ def per_sr(arg,**kwargs):
     @return: some SI unit per steradian
     @rtype: float
     """
-    if 'diam' in kwargs:
-        radius = kwargs['diam']/2.
-        surface = (pi*(2*pi*radius)**2)
+    if 'ang_diam' in kwargs:
+        radius = kwargs['ang_diam']/2.
+        surface = pi*radius**2
     elif 'radius' in kwargs:
         radius = kwargs['radius']
-        surface = (pi*(2*pi*radius)**2)
+        surface = pi*radius**2
     elif 'pix' in kwargs:
         pix = kwargs['pix']
-        surface = (2*pi*pix)**2
+        surface = pix**2
     else:
-        raise ValueError,'angular size (diam/radius) not given'
+        raise ValueError,'angular size (ang_diam/radius) not given'
     Qsr = arg/surface
     return Qsr
 
@@ -592,17 +642,17 @@ def times_sr(arg,**kwargs):
     @return: some SI unit
     @rtype: float
     """
-    if 'diam' in kwargs:
-        radius = kwargs['diam']/2.
-        surface = (pi*(2*pi*radius)**2)
+    if 'ang_diam' in kwargs:
+        radius = kwargs['ang_diam']/2.
+        surface = pi*radius**2
     elif 'radius' in kwargs:
         radius = kwargs['radius']
-        surface = (pi*(2*pi*radius)**2)
+        surface = pi*radius**2
     elif 'pix' in kwargs:
         pix = kwargs['pix']
-        surface = (2*pi*pix)**2
+        surface = pix**2
     else:
-        raise ValueError,'angular size (diam/radius) not given'
+        raise ValueError,'angular size (ang_diam/radius) not given'
     Q = arg*surface
     return Q
 #}
@@ -676,6 +726,97 @@ class STMag(NonLinearConverter):
         if not inv: return 10**(-meas/-2.5)*F0
         else:       return -2.5*log10(meas/F0)
 
+class JulianDay(NonLinearConverter):
+    """
+    Convert a calender date to Julian date and back
+    """
+    def __call__(self,meas,inv=False):
+        if inv:
+            L= meas+68569
+            N= 4*L//146097
+            L= L-(146097*N+3)//4
+            I= 4000*(L+1)//1461001
+            L= L-1461*I//4+31
+            J= 80*L//2447
+            day = L-2447*J//80+0.5
+            L= J//11
+            month = J+2-12*L
+            year = 100*(N-49)+I+L
+            
+            return year,month,day
+        else:
+            year,month,day = meas[:3]
+            hour = len(meas)>3 and meas[3] or 0.
+            mint = len(meas)>4 and meas[4] or 0.
+            secn = len(meas)>5 and meas[5] or 0.    
+            a = (14 - month)//12
+            y = year + 4800 - a
+            m = month + 12*a - 3
+            jd = day + ((153*m + 2)//5) + 365*y + y//4 - y//100 + y//400 - 32045
+            jd += hour/24.
+            jd += mint/24./60.
+            jd += secn/24./3600.
+            jd -= 0.5
+            return jd
+
+class ModJulianDay(NonLinearConverter):
+    """
+    Convert a Modified Julian Day to Julian Day  and back
+    """
+    ZP = {'COROT':2451545.,
+          'MJD':2400000.5}
+    def __call__(self,meas,inv=False,jtype='MJD'):
+        if inv:
+            return meas-self.ZP[jtype.upper()]
+        else:
+            return meas+self.ZP[jtype.upper()]
+
+class GalCoords(NonLinearConverter):
+    """
+    Convert Galactic coords to complex coords and back
+    """
+    def __call__(self,mycoord,inv=False,epoch='2000'):
+        if inv:
+            x,y = mycoord.real,mycoord.imag
+            equ = ephem.Equatorial(x,y,epoch=epoch)
+            gal = ephem.Galactic(equ,epoch=epoch)
+            return gal.long,gal.lat
+        else:
+            x,y = mycoord
+            gal = ephem.Galactic(x,y,epoch=epoch)
+            equ = ephem.Equatorial(gal,epoch=epoch)
+            return float(equ.ra) + 1j*float(equ.dec)
+
+class EquCoords(NonLinearConverter):
+    """
+    Convert Equatorial coords to complex coords and back
+    """
+    def __call__(self,mycoord,inv=False,epoch='2000'):
+        if inv:
+            x,y = mycoord.real,mycoord.imag
+            equ = ephem.Equatorial(x,y,epoch=epoch)
+            return equ.ra,equ.dec
+        else:
+            x,y = mycoord
+            equ = ephem.Equatorial(x,y,epoch=epoch)
+            return float(equ.ra) + 1j*float(equ.dec)
+
+class EclCoords(NonLinearConverter):
+    """
+    Convert Ecliptic coords to complex coords and back
+    """
+    def __call__(self,mycoord,inv=False,epoch='2000'):
+        if inv:
+            x,y = mycoord.real,mycoord.imag
+            equ = ephem.Equatorial(x,y,epoch=epoch)
+            ecl = ephem.Ecliptic(equ,epoch=epoch)
+            return ecl.long,ecl.lat
+        else:
+            x,y = mycoord
+            ecl = ephem.Ecliptic(x,y,epoch=epoch)
+            equ = ephem.Equatorial(ecl,epoch=epoch)
+            return float(equ.ra) + 1j*float(equ.dec)
+
 
 #-- basic units which the converter should know about
 _factors = {
@@ -697,16 +838,25 @@ _factors = {
            'min':   (  60.,         's'),
            'h':     (3600.,         's'),
            'd':     (24*3600.,      's'),
+           'sidereal': (1.0027379093,''),
            'yr':    (365*24*3600.,  's'),
            'cr':    (100*365*24*3600,'s'),
            'hz':    (1e+00,         'cy s-1'),
+           'JD':    (1e+00,         'JD'), # Julian Day
+           'CD':    (JulianDay,     'JD'), # Calender Day
+           'MJD':   (ModJulianDay,  'JD'), # Modified Julian Day
 # ANGLES
            'rad':         (0.15915494309189535, 'cy'),
            'cy':          (1e+00,               'cy'),
            'deg':         (1./360.,             'cy'),
            'am':          (1./360./60.,         'cy'),
            'as':          (1./360./3600.,       'cy'),
-           'sr':          (1e+00,                'sr'),
+           'sr':          (1/39.4784176045,     'cy2'),
+# COORDINATES
+           'complex_coord':(1e+00+0*1j, 'complex_coord'),
+           'equ':          (EquCoords,  'complex_coord'),
+           'gal':          (GalCoords,  'complex_coord'),
+           'ecl':          (EclCoords,  'complex_coord'),
 # FORCE
            'N':     (1e+00,         'kg m s-2'),
            'dy':    (1e-05,         'kg m s-2'),
@@ -720,6 +870,7 @@ _factors = {
            'erg':   (  1e-07,       'kg m2 s-2'),
            'eV':    (1.60217646e-19,'kg m2 s-2'),
            'cal':   (4.184,         'kg m2 s-2'),
+           'Lsun':  (Lsun,          'kg m2 s-3'),
 # PRESSURE
            'Pa':    (  1e+00,       'kg m-1 s-2'),
            'bar':   (  1e+05,       'kg m-1 s-2'),
@@ -735,17 +886,27 @@ _factors = {
            }
             
 #-- scaling factors for prefixes            
-_scalings = {
-            'n':       1e-09,
-            'mu':      1e-06,
-            'm':       1e-03,
-            'c':       1e-02,
-            'd':       1e-01,
-            'da':      1e+01,
-            'h':       1e+02,
-            'k':       1e+03,
-            'M':       1e+06,
-            'G':       1e+09}
+_scalings ={'y':       1e-24, # yocto
+            'z':       1e-21, # zepto
+            'a':       1e-18, # atto
+            'f':       1e-15, # femto
+            'p':       1e-12, # pico
+            'n':       1e-09, # nano
+            'mu':      1e-06, # micro
+            'm':       1e-03, # milli
+            'c':       1e-02, # centi
+            'd':       1e-01, # deci
+            'da':      1e+01, # deca
+            'h':       1e+02, # hecto
+            'k':       1e+03, # kilo
+            'M':       1e+06, # mega
+            'G':       1e+09, # giga
+            'T':       1e+12, # tera
+            'P':       1e+15, # peta
+            'E':       1e+18, # exa
+            'Z':       1e+21, # zetta
+            'Y':       1e+24  # yotta
+            }
  
 #-- some common aliases
 _aliases = [('micron','mum'),
@@ -773,7 +934,10 @@ _aliases = [('micron','mum'),
             ('/mag',' /vegamag'),# with space! otherwise confusion with ST/AB mag
             ('inch','in'),
             ('^',''),
-            ('**','')
+            ('**',''),
+            ('galactic','gal'),
+            ('equatorial','equ'),
+            ('ecliptic','ecl'),
             ]
  
 #-- Change-of-base function definitions
@@ -787,8 +951,8 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
            'm-1s-3_to_cy-1s-2':flambda2fnu,
            'cy-1s-2_to_s-3':fnu2nufnu,
            's-3_to_cy-1s-2':nufnu2fnu,
-           '_to_sr-1':per_sr,
-           'sr-1_to_':times_sr} 
+           '_to_cy-2':per_sr,
+           'cy-2_to_':times_sr}
  
  
 if __name__=="__main__":
@@ -799,5 +963,7 @@ if __name__=="__main__":
     #c0 = time.time()
     #nr = 50000
     #for i in xrange(nr):
-        #x = convert('ABmag','erg s-1 cm-2 micron-1 sr-1',0.,diam=(2.,'mas'),wave=(1.,'micron'))
+        #x = convert('ABmag','erg s-1 cm-2 micron-1 sr-1',0.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
     #print "One conversion takes on average",(time.time()-c0)/nr*1000,'ms'
+    #print convert('cy/d2','s/yr',1e-9)
+    print convert('cy/d2','Hz/yr',1e-9)
