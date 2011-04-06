@@ -2,11 +2,132 @@
 Easy linear fitting.
 Author: Joris De Ridder
 
+A crash course
+==============
+The following example will illustrate some of the core functionality of the package.
+We first make some "fake" observations I{obs} that were measured as a function of I{x}.
+
+>>> from numpy import *
+>>> noise = array([0.44, -0.48, 0.26, -2.00, -0.93, 2.21, -0.57, -2.04, -1.09, 1.53])
+>>> x = linspace(0, 5, 10)
+>>> obs = 2.0 + 3.0 * exp(x) + noise          # our "observations"
+
+The model we want to fit is y = a_0 + a_1 * exp(x) = a_0 * 1 + a_1 * exp(x):
+
+>>> myModel = LinearModel([ones(10), exp(x)], ["1", "exp(x)"])
+>>> print myModel
+Model: y = a_0 + a_1 * exp(x)
+Expected number of observations: 10
+
+Now we fit the observations:
+
+>>> myFit = myModel.fitData(obs)
+>>> myFit.summary()
+Model: y = a_0 + a_1 * exp(x)
+Regression coefficients:
+    a_0 = 1.519644 +/- 0.574938
+    a_1 = 3.006151 +/- 0.010033
+Sum of squared residuals: 16.755934
+Estimated variance of the residuals: 2.094492
+Coefficient of determination R^2: 0.999911
+F-statistic: 89767.825042
+AIC: 15.161673
+BIC: 12.069429
 
 
+The more advanced features
+==========================
 
-Robust. Efficient.
+A lot of interesting information can be extracted from the LinearModel and LinearFit classes.
+A simple way to list the available methods on the prompt is:
 
+>>> [method for method in dir(myModel) if not method.startswith("_")]
+
+With the LinearModel class we can compute, for example:
+
+>>> myModel.conditionNumber()
+71.994675255533011
+>>> myModel.singularValues()
+array([ 181.21519026,    2.51706379])
+>>> myModel.degreesOfFreedom()
+8
+>>> myModel.traceHatMatrix()
+1.9999999999999996
+
+and more. Some examples with the LinearFit class:
+
+>>> myFit.regressionCoefficients()
+array([ 1.51964437,  3.00615141])
+>>> myFit.errorBars()
+array([ 0.57493781,  0.01003345])
+>>> myFit.covarianceMatrix()            # correlation matrix also available
+array([[  3.30553480e-01,  -3.49164676e-03],
+       [ -3.49164676e-03,   1.00670216e-04]])
+>>> myFit.confidenceIntervals(0.05)
+(array([ 0.19383541,  2.98301422]), array([ 2.84545333,  3.0292886 ]))
+
+The 95% confidence interval of coefficient a_0 is thus [0.19, 2.85]. See the list 
+of methods for more functionality. Note that also weights can be taken into account.
+
+
+Assessing the models
+====================
+
+Test if we can reject the null hypothesis that all coefficients are zero 
+with a 5% significance level:
+
+In [57]: myFit.FstatisticTest(0.05)
+Out[57]: True
+
+The "True" result means that H0 can indeed be rejected. Now we test if we can
+reject the null hypothesis that one particular coefficient is zero with a 5%
+significance level
+
+>>> myFit.regressorTtest(0.05)
+array([ True,  True], dtype=bool)
+
+We obtained "True" for both coefficients, so both a_0 and a_1 are significant.
+
+
+Some handy derived classes
+==========================
+
+There is a shortcut to define polynomials:
+
+>>> myPolynomial = PolynomialModel(x, "x", [3,1])
+>>> print myPolynomial
+Model: y = a_0 * x^3 + a_1 * x^1
+Expected number of observations: 10
+
+and to define harmonic models:
+
+>>> myHarmonicModel = HarmonicModel(x, "x", [2.13, 3.88], ["f1", "f2"], maxNharmonics=2)
+>>> print myHarmonicModel
+Model: y = a_0 * sin(2*pi*1*f1*x) + a_1 * cos(2*pi*1*f1*x) + a_2 * sin(2*pi*2*f1*x) + a_3 * cos(2*pi*2*f1*x) + a_4 * sin(2*pi*1*f2*x) + a_5 * cos(2*pi*1*f2*x) + a_6 * sin(2*pi*2*f2*x) + a_7 * cos(2*pi*2*f2*x)
+Expected number of observations: 10
+
+One can even add the two models:
+
+>>> myCombinedModel = myPolynomial + myHarmonicModel
+>>> print myCombinedModel
+Model: y = a_0 * x^3 + a_1 * x^1 + a_2 * sin(2*pi*1*f1*x) + a_3 * cos(2*pi*1*f1*x) + a_4 * sin(2*pi*2*f1*x) + a_5 * cos(2*pi*2*f1*x) + a_6 * sin(2*pi*1*f2*x) + a_7 * cos(2*pi*1*f2*x) + a_8 * sin(2*pi*2*f2*x) + a_9 * cos(2*pi*2*f2*x)
+Expected number of observations: 10
+
+
+Notes
+=====
+The package is aimed to be robust and efficient.
+    - B{Robust}: Singular value decomposition is used to do the fit, where the
+                 singular values are treated to avoid numerical problems. This is
+                 especially useful when you tend to overfit the data.
+    - B{Efficient}: asking twice for the same information will not lead to a
+                    recomputation. Results are kept internally. The reason for
+                    having a separate LinearModel and LinearFit class is that
+                    the bulk of the fitting computations can actually be done
+                    without the observations. Fitting the same model to different
+                    sets of observations can therefore be done a lot faster this
+                    way.
+              
 """
 
 
@@ -1587,11 +1708,14 @@ class LinearFit(object):
         
         Residuals = observations minus the predictions
         
-        INPUT: weighted: boolean. If True/False, the residuals for the 
+        @param weighted: If True/False, the residuals for the 
                          decorrelated/original observations will be used.
+        @type weighted: boolean
                          
-        REMARK: . if no covariance matrix of the observations was specified for the
-                  model, the weighted residuals are identical to the unweighted ones
+        Remarks:
+            - If no covariance matrix of the observations was specified for the
+              model, the weighted residuals are identical to the unweighted ones.
+              
         """
         
         if weighted:
