@@ -36,11 +36,19 @@ If you need to add a linear factor, just give the factor in SI units, and the
 SI base units it consists of. If you need to add a nonlinear factor, you have
 to give a class definition (see the examples).
 """
+#-- standard libraries
 import re
-from numpy import pi
-from constants import *
+import os
+import logging
+import numpy as np
 try: import ephem
 except ImportError: print("Unable to load pyephem, coordinate transfos unavailable")
+
+#-- from IVS repository
+from ivs.units.constants import *
+from ivs.io import ascii
+
+logger = logging.getLogger("UNITS.CONV")
 
 #{ Main functions
 
@@ -137,12 +145,14 @@ def convert(_from,_to,*args,**kwargs):
     
     B{Magnitudes}:
     
-    >>> print(convert('ABmag','Jy',0.))
-    3630.7805477
+    >>> print(convert('ABmag','Jy',0.,photband='SDSS.U'))
+    3767.03798984
     >>> print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
     1.08848062485e-09
-    >>> print(convert('ABmag','erg cm-2 s-1 A-1',0.,wave=(1.,'micron')))
+    >>> print(convert('ABmag','erg cm-2 s-1 A-1',0.,wave=(1.,'micron'),photband='SDSS.G'))
     1.08848062485e-09
+    >>> print(convert('erg cm-2 s-1 A-1','ABmag',1e-8,wave=(1.,'micron'),photband='SDSS.G'))
+    -2.40794824268
     
     B{Frequency analysis}:
     
@@ -247,15 +257,18 @@ def convert(_from,_to,*args,**kwargs):
         if 'cy-2' in only_to:
             args = _switch['_to_cy-2'](args[0],**kwargs_SI),
             only_to = only_to.replace('cy-2','')
+            logger.debug('Switching to /sr')
         if 'cy-2' in only_from:
             args = _switch['cy-2_to_'](args[0],**kwargs_SI),
             only_from = only_from.replace('cy-2','')
+            logger.debug('Switching from /sr')
         
         #-- nonlinear conversions need a little tweak
         try:
             key = '%s_to_%s'%(only_from,only_to)
+            logger.debug('Switching from %s to %s'%(only_from,only_to))
             if isinstance(fac_from,NonLinearConverter):
-                ret_value *= _switch[key](fac_from(args[0]),**kwargs_SI)
+                ret_value *= _switch[key](fac_from(args[0],**kwargs_SI),**kwargs_SI)
             #-- linear conversions are easy
             else:
                 ret_value *= _switch[key](fac_from*args[0],**kwargs_SI)
@@ -265,7 +278,7 @@ def convert(_from,_to,*args,**kwargs):
     #-- final step: convert to ... (again distinction between linear and
     #   nonlinear converters)
     if isinstance(fac_to,NonLinearConverter):
-        ret_value = fac_to(ret_value,inv=True)
+        ret_value = fac_to(ret_value,inv=True,**kwargs_SI)
     else:
         ret_value /= fac_to
     
@@ -582,9 +595,9 @@ def distance2spatialfreq(arg,**kwargs):
     @rtype: float
     """
     if 'wave' in kwargs:
-        spatfreq = 2*pi*arg/kwargs['wave']
+        spatfreq = 2*np.pi*arg/kwargs['wave']
     elif 'freq' in kwargs:
-        spatfreq = 2*pi*arg*cc*kwargs['freq']
+        spatfreq = 2*np.pi*arg*cc*kwargs['freq']
     else:
         raise ValueError,'reference wave/freq not given'
     return spatfreq
@@ -603,9 +616,9 @@ def spatialfreq2distance(arg,**kwargs):
     @rtype: float
     """
     if 'wave' in kwargs:
-        distance = kwargs['wave']*arg/(2*pi)
+        distance = kwargs['wave']*arg/(2*np.pi)
     elif 'freq' in kwargs:
-        distance = cc/kwargs['freq']*arg/(2*pi)
+        distance = cc/kwargs['freq']*arg/(2*np.pi)
     else:
         raise ValueError,'reference wave/freq not given'
     return distance
@@ -621,10 +634,10 @@ def per_sr(arg,**kwargs):
     """
     if 'ang_diam' in kwargs:
         radius = kwargs['ang_diam']/2.
-        surface = pi*radius**2
+        surface = np.pi*radius**2
     elif 'radius' in kwargs:
         radius = kwargs['radius']
-        surface = pi*radius**2
+        surface = np.pi*radius**2
     elif 'pix' in kwargs:
         pix = kwargs['pix']
         surface = pix**2
@@ -644,10 +657,10 @@ def times_sr(arg,**kwargs):
     """
     if 'ang_diam' in kwargs:
         radius = kwargs['ang_diam']/2.
-        surface = pi*radius**2
+        surface = np.pi*radius**2
     elif 'radius' in kwargs:
         radius = kwargs['radius']
-        surface = pi*radius**2
+        surface = np.pi*radius**2
     elif 'pix' in kwargs:
         pix = kwargs['pix']
         surface = pix**2
@@ -658,7 +671,14 @@ def times_sr(arg,**kwargs):
 #}
 
 #{ Nonlinear change-of-base functions
-
+def read_fluxcalib():
+    dtypes = [('PHOTBAND','a50'),
+              ('VEGAMAG',np.float),
+              ('ABMAG',np.float),
+              ('STMAG',np.float),
+              ('F0',np.float)]
+    data = ascii.read2recarray(_fluxcalib,dtype=dtypes)
+    return data
 
 class NonLinearConverter():
     """
@@ -702,35 +722,48 @@ class VegaMag(NonLinearConverter):
     """
     Convert a Vega magnitude to W/m2/m (Flambda) and back
     """
-    def __call__(self,meas,photband=None,inv=False):
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
         #-- this part should include something where the zero-flux is retrieved
-        F0 = 1e-09
+        data = read_fluxcalib()
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        F0 = data['F0'][match][0]
         if not inv: return 10**(-meas/2.5)*F0
-        else:       return -2.5*log10(meas/F0)
+        else:       return -2.5*np.log10(meas/F0)
 
 class ABMag(NonLinearConverter):
     """
     Convert an AB magnitude to W/m2/Hz (Fnu) and back
     """
-    def __call__(self,meas,photband=None,inv=False):
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
+        data = read_fluxcalib()
         F0 = 3.6307805477010024e-23
-        if not inv: return 10**(-meas/2.5)*F0
-        else:       return -2.5*log10(meas/F0)
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        mag0 = data['ABMAG'][match][0]
+        if np.isnan(mag0): mag0 = 0.
+        if not inv: return 10**(-(meas-mag0)/2.5)*F0
+        else:       return -2.5*np.log10(meas/F0)
 
 class STMag(NonLinearConverter):
     """
     Convert an ST magnitude to W/m2/m (Flambda) and back
     """
-    def __call__(self,meas,photband=None,inv=False):
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
+        data = read_fluxcalib()
         F0 = 0.036307805477010027
-        if not inv: return 10**(-meas/-2.5)*F0
-        else:       return -2.5*log10(meas/F0)
+        match = data['PHOTBAND']==photband.upper()
+        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        mag0 = data['STMAG'][match][0]
+        if np.isnan(mag0): mag0 = 0.
+        if not inv: return 10**(-(meas-mag0)/-2.5)*F0
+        else:       return -2.5*np.log10(meas/F0)
 
 class JulianDay(NonLinearConverter):
     """
     Convert a calender date to Julian date and back
     """
-    def __call__(self,meas,inv=False):
+    def __call__(self,meas,inv=False,**kwargs):
         if inv:
             L= meas+68569
             N= 4*L//146097
@@ -817,7 +850,7 @@ class EclCoords(NonLinearConverter):
             equ = ephem.Equatorial(ecl,epoch=epoch)
             return float(equ.ra) + 1j*float(equ.dec)
 
-
+_fluxcalib = os.path.join(os.path.abspath(os.path.dirname(__file__)),'fluxcalib.dat')
 #-- basic units which the converter should know about
 _factors = {
 # DISTANCE
@@ -881,6 +914,7 @@ _factors = {
 # FLUX
            'Jy':      (1e-26,         'kg s-2 cy-1'),
            'vegamag': (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
+           'mag':     (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
            'STmag':   (STMag,         'kg m-1 s-3'),  # in W/m2/m
            'ABmag':   (ABMag,         'kg s-2 cy-1'), # in W/m2/Hz
            }
@@ -930,8 +964,6 @@ _aliases = [('micron','mum'),
             ('cyc','cy'),
             ('angstrom','A'),
             ('Angstrom','A'),
-            (' mag',' vegamag'), # with space! otherwise confusion with ST/AB mag
-            ('/mag',' /vegamag'),# with space! otherwise confusion with ST/AB mag
             ('inch','in'),
             ('^',''),
             ('**',''),
@@ -949,8 +981,8 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
            '_to_m1':spatialfreq2distance, # for interferometry
            'cy-1s-2_to_m-1s-3':fnu2flambda,
            'm-1s-3_to_cy-1s-2':flambda2fnu,
-           'cy-1s-2_to_s-3':fnu2nufnu,
-           's-3_to_cy-1s-2':nufnu2fnu,
+           'cy-1s-2_to_s-3':fnu2nufnu, # switch from Fnu to nuFnu
+           's-3_to_cy-1s-2':nufnu2fnu, # switch from nuFnu to Fnu
            '_to_cy-2':per_sr,
            'cy-2_to_':times_sr}
  
@@ -966,4 +998,8 @@ if __name__=="__main__":
         #x = convert('ABmag','erg s-1 cm-2 micron-1 sr-1',0.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
     #print "One conversion takes on average",(time.time()-c0)/nr*1000,'ms'
     #print convert('cy/d2','s/yr',1e-9)
-    print convert('cy/d2','Hz/yr',1e-9)
+    #print convert('cy/d2','Hz/yr',1e-9)
+    #print(convert('ABmag','Jy',0.,photband='SDSS.U'))
+    #3630.7805477
+    #print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
+    #1.08848062485e-09

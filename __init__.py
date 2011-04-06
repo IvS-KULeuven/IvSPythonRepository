@@ -1,3 +1,2 @@
 
-__all__ = ["io", "simul", "statistics", "units"]
-
+__all__ = ["io", "misc", "simul", "statistics", "units"]
