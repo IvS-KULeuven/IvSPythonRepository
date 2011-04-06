@@ -149,7 +149,10 @@ class LinearModel(object):
     A linear model class 
     
     The class implements a linear model of the form
-    y(x) = a_0 * f_0(x) + a_1 * f_1(x) + ... + a_{n-1} f_{n-1}(x)
+    
+    C{y(x) = a_0 * f_0(x) + a_1 * f_1(x) + ... + a_{n-1} f_{n-1}(x)}
+    
+    where
         - y are the responses (observables)
         - x are the covariates
         - a_i are the regression coefficients (to be determined)
