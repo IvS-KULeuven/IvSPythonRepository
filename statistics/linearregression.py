@@ -163,6 +163,11 @@ class LinearModel(object):
     
         """
         Initialiser of the LinearModel class. 
+
+        Example:
+        
+        >>> x = linspace(0,10,100)
+        >>> lm = LinearModel([sin(x),x*x], ["sin(x)", "x^2"])
         
         @param regressors: either a list of equally-sized numpy arrays with the regressors 
                            evaluated in the covariates: [f_0(x),f_1(x),f_2(x),...],
@@ -180,11 +185,6 @@ class LinearModel(object):
         @type regressorsAreWeighted: boolean
         @return: a LinearModel instance
         @rtype: LinearModel
-        
-        Example:
-        
-        >>> x = linspace(0,10,100)
-        >>> lm = LinearModel([sin(x),x*x], ["sin(x)", "x^2"])
         
         """
 
@@ -267,13 +267,6 @@ class LinearModel(object):
     
         """
         Defines operator '+' of two LinearModel instances.
-                
-        @param linearModel: a LinearModel instance with the same number of observations as the
-                            linear model in 'self'
-        @type linearModel: LinearModel class
-        @return: a newly created LinearModel object representing a linear model that is the sum 
-                 of 'self' and 'linearModel'. 'self' and 'linearModel' are unaltered.
-        @rtype: LinearModel
         
         Example:
         
@@ -281,6 +274,14 @@ class LinearModel(object):
         >>> lm1 = LinearModel([x], ["x"])
         >>> lm2 = LinearModel([x**2], ["x^2"])
         >>> lm3 = lm1 + lm2    # the same as LinearModel([x, x**2], ["x", "x^2"])
+        
+                
+        @param linearModel: a LinearModel instance with the same number of observations as the
+                            linear model in 'self'
+        @type linearModel: LinearModel class
+        @return: a newly created LinearModel object representing a linear model that is the sum 
+                 of 'self' and 'linearModel'. 'self' and 'linearModel' are unaltered.
+        @rtype: LinearModel
         
         """
         
@@ -316,12 +317,6 @@ class LinearModel(object):
         """
         Returns the design matrix of the linear model
         
-        @return: a N x M design matrix. If the model is written as  
-                 y(x) = a_0 * f_0(x) + a_1 * f_1(x) + ... + a_{n-1} f_{n-1}(x)
-                 then the design matrix A is defined by A_{i,j} = f_i(x_j). N is
-                 the number of regressors, M is the number of data points.
-        @rtype: ndarray
-                 
         Example:
         
         >>> x = np.linspace(0,10,5)
@@ -333,6 +328,12 @@ class LinearModel(object):
         [   7.5 ,   56.25],
         [  10.  ,  100.  ]])
 
+        @return: a N x M design matrix. If the model is written as  
+                 y(x) = a_0 * f_0(x) + a_1 * f_1(x) + ... + a_{n-1} f_{n-1}(x)
+                 then the design matrix A is defined by A_{i,j} = f_i(x_j). N is
+                 the number of regressors, M is the number of data points.
+        @rtype: ndarray
+                 
         """
         
         return self._designMatrix
@@ -355,8 +356,6 @@ class LinearModel(object):
         
         Private class method, not to be used by the user.
         
-        @return: nothing
-        
         The singular value decomposition of the design matrix is defined as 
         
         C{X = U * W * V^t }
@@ -368,6 +367,9 @@ class LinearModel(object):
             - V: N x N unitary matrix
         with M the number of observations, and N the number of regressors. Note that for a 
         unitary matrix A: A^{-1} = A^t
+        
+        @return: nothing
+        
         """
         
         # Compute the singular value decomposition of the design matrix.
@@ -402,16 +404,10 @@ class LinearModel(object):
     def pseudoInverse(self):
     
         """
-        Computes the pseudo-inverse
-        
-        @return: A numerical safe version of the N x M matrix 
-                 X^t X)^{-1} X^t where X is the M x N design matrix, 
-                 ^t the transpose, ^{-1} the inverse matrix. 
-                 The multiplications are matrix multiplications.
-        @rtype: ndarray
-                 
+        Computes the pseudo-inverse in a robust way
+                         
         Remarks:
-            - The "safeness" is obtained by using a singular value decomposition 
+            - The "robustness" is obtained by using a singular value decomposition 
               of X, and treating the singular values in order to avoid numerical 
               problems.
         
@@ -424,6 +420,13 @@ class LinearModel(object):
                   1.04516129e-01,  -1.18709677e-01],
                [ -1.07455262e-17,  -1.80645161e-02,  -2.06451613e-02,
                  -7.74193548e-03,   2.06451613e-02]])
+
+        @return: A numerical safe version of the N x M matrix 
+                 X^t X)^{-1} X^t where X is the M x N design matrix, 
+                 ^t the transpose, ^{-1} the inverse matrix. 
+                 The multiplications are matrix multiplications.
+        @rtype: ndarray
+
 
         """
         
@@ -457,12 +460,6 @@ class LinearModel(object):
         """
         Computes the standard covariance matrix.
                  
-        @return: A  numerical safe version of C = (X^t X)^{-1} where
-                 X is the design matrix, ^t the transpose, ^{-1} the 
-                 inverse matrix. The multiplications are matrix 
-                 multiplications. 
-        @rtype: ndarray
-         
         Remarks:
             - The "safeness" is obtained by using a singular value 
               decomposition of X, and treating the singular values to avoid 
@@ -480,6 +477,13 @@ class LinearModel(object):
         >>> lm.standardCovarianceMatrix()
         array([[ 0.09135484, -0.01032258],
                [-0.01032258,  0.00123871]])
+
+        @return: A  numerical safe version of C = (X^t X)^{-1} where
+                 X is the design matrix, ^t the transpose, ^{-1} the 
+                 inverse matrix. The multiplications are matrix 
+                 multiplications. 
+        @rtype: ndarray
+
 
         """
         
@@ -504,19 +508,20 @@ class LinearModel(object):
     
         """
         Computes the condition number.
-                         
-        @return: The ratio of the highest to the lowest singular value,
-                 where the singular values are obtained by singular value 
-                 decomposition of the design matrix. A large condition number 
-                 implies an ill-conditioned design matrix.
-        @rtype: double
-        
+                                 
         Example:
         
         >>> x = linspace(0,10,5)
         >>> lm = LinearModel([x, x**2], ["x", "x^2"])
         >>> lm..conditionNumber()
         35.996606504814814
+
+        @return: The ratio of the highest to the lowest singular value,
+                 where the singular values are obtained by singular value 
+                 decomposition of the design matrix. A large condition number 
+                 implies an ill-conditioned design matrix.
+        @rtype: double
+
         
         """
         
@@ -543,9 +548,6 @@ class LinearModel(object):
         Return the non-zero singular values 
         as obtained with the singular value decomposition
         
-        @return: The non-zero singular values.
-        @rtype: ndarray
-       
         Remarks: 
             - the singular values can be used a diagnostic to see how 
               ill-conditioned the matrix inversion is.
@@ -556,6 +558,9 @@ class LinearModel(object):
         >>> lm = LinearModel([x, x**2], ["x", "x^2"])
         >>> lm.singularValues()
         array([ 118.34194851,    3.28758625])
+
+        @return: The non-zero singular values.
+        @rtype: ndarray
 
         """
         
@@ -591,9 +596,6 @@ class LinearModel(object):
             - y the (weighted) observations. 
         So, it "puts a hat" on the (weighted) observation vector.
         
-        @return: The hat matrix.
-        @rtype: ndarray
-        
         Remarks:
             - as the number of data points may be large, this matrix may
               become so huge that it no longer fits into your computer's
@@ -617,6 +619,9 @@ class LinearModel(object):
                   3.48387097e-01,   2.70967742e-01],
                [ -1.79092104e-16,  -1.67741935e-01,  -7.74193548e-02,
                   2.70967742e-01,   8.77419355e-01]])
+
+        @return: The hat matrix.
+        @rtype: ndarray
                   
         """
         
@@ -648,9 +653,6 @@ class LinearModel(object):
         when the number of observations is so high that the hat matrix 
         does no longer fit into the memory.
         
-        @return: The trace of the hat matrix.
-        @rtype: ndarray
-        
         Remarks:
             - If the hat matrix was computed anyway it will be used.
             - The trace of the hat matrix that puts a hat on the original
@@ -663,6 +665,9 @@ class LinearModel(object):
         >>> lm = LinearModel([x, x**2], ["x", "x^2"])
         >>> lm.hatMatrix()
         1.9999999999999993
+
+        @return: The trace of the hat matrix.
+        @rtype: ndarray
         
         """
         
@@ -697,9 +702,6 @@ class LinearModel(object):
         
         The d.o.f. is defined as the trace of the hat matrix. See also:
         U{Wikipedia<http://en.wikipedia.org/wiki/Degrees_of_freedom_(statistics)>}
-                 
-        @return: The effective number of degrees of freedom.
-        @rtype: integer
         
         Example:
         
@@ -707,6 +709,9 @@ class LinearModel(object):
         >>> lm = LinearModel([x, x**2], ["x", "x^2"])
         >>> lm.degreesOfFreedom()
         3
+
+        @return: The effective number of degrees of freedom.
+        @rtype: integer
         
         """
         
@@ -731,15 +736,15 @@ class LinearModel(object):
         """
         Returns the regressor names.
         
-        @return: list with strings containing the names of the regressors.
-        @rtype: list
-    
         Example:
         
         >>> x = linspace(0,10,100)
         >>> lm = LinearModel([sin(x),x*x], ["sin(x)", "x^2"]) 
         >>> lm.regressorNames()
         ["sin(x)", "x^2"]
+
+        @return: list with strings containing the names of the regressors.
+        @rtype: list
         
         """
         
@@ -763,12 +768,6 @@ class LinearModel(object):
         """
         Checks if the linear model contains the given regressor.
         
-        @param regressorName: name of a regressor
-        @type regressorName: string
-        @return: True if one of the regressor names is identical 
-                 to the input 'regressorName', else False.
-        @rtype: boolean
-        
         Example: 
            
         >>> x = linspace(0,10,100)
@@ -777,6 +776,12 @@ class LinearModel(object):
         True
         >>> lm.containsRegressorName("cos(x)")
         False
+
+        @param regressorName: name of a regressor
+        @type regressorName: string
+        @return: True if one of the regressor names is identical 
+                 to the input 'regressorName', else False.
+        @rtype: boolean
         
         """
         
@@ -794,20 +799,20 @@ class LinearModel(object):
     
         """
         Checks if a regressor name contains a given substring.
-        
-        @param someString: substring to be checked
-        @type someString: string
-        
-        @return: True if at least one of the regressor names contains
-                 the substring someString, else return false.
-        @rtype: boolean
-                         
+                                 
         Example:
         
         >>> x = linspace(0,10,100)
         >>> lm = LinearModel([sin(x), x*x], ["sin(x)", "x^2"])
         >>> lm.someRegressorNameContains("sin")
         True
+
+        @param someString: substring to be checked
+        @type someString: string
+        
+        @return: True if at least one of the regressor names contains
+                 the substring someString, else return false.
+        @rtype: boolean
         
         """
 
@@ -829,17 +834,17 @@ class LinearModel(object):
     
         """
         Checks if there is a constant regressor
-        
-        @return: True if there is a constant regressor (the intercept).
-                 False otherwise.
-        @rtype: boolean        
-                
+                        
         Example:
         
         >>> x = linspace(0,10,100)
         >>> lm = LinearModel([1, x*x], ["1", "x^2"])
         >>> lm.withIntercept()
         True
+
+        @return: True if there is a constant regressor (the intercept).
+                 False otherwise.
+        @rtype: boolean     
         
         """
         
@@ -866,16 +871,16 @@ class LinearModel(object):
     
         """
         Returns the number of observations
-        
-        @return: the number of observations that the LinearModel expects
-        @rtype: integer
-        
+      
         Example:
         
         >>> x = linspace(0,10,23)
         >>> lm = LinearModel([x], ["x"])
         >>> lm.nObservations()
         23
+
+        @return: the number of observations that the LinearModel expects
+        @rtype: integer
         
         """
         
@@ -896,17 +901,17 @@ class LinearModel(object):
     
         """
         Returns the number of fit coefficients
-        
-        @return: the numbero fit coefficients of the linear model
-        @rtype: integer
-        
+       
         Example:
         
         >>> x = linspace(0,10,100)
         >>> lm = LinearModel([sin(x),x*x], ["sin(x)", "x^2"])
         >>> lm.nParameters()
         2
-          
+
+        @return: the numbero fit coefficients of the linear model
+        @rtype: integer
+           
         """
         
         return self._nParameters
@@ -929,14 +934,6 @@ class LinearModel(object):
         
         From this object the user can extract all kinds of quantities 
         related to the linear fit. See L{LinearFit}.
-        
-        @param observations: array with the observations y_i.  The size 
-                             of the array should be compatible with the number
-                             of expected observations in the LinearModel.
-        @type observations: ndarray
-        @return: a LinearFit instance, containing the fit of the observations
-                 with the linear model.
-        @rtype: LinearFit
                                                         
         Example:
         
@@ -944,6 +941,14 @@ class LinearModel(object):
         >>> lm = LinearModel([x], ["x"])
         >>> obs = x + normal(0.0, 1.0, 100)         # some simulated observations
         >>> linearfit = lm.fitData(obs)
+
+        @param observations: array with the observations y_i.  The size 
+                             of the array should be compatible with the number
+                             of expected observations in the LinearModel.
+        @type observations: ndarray
+        @return: a LinearFit instance, containing the fit of the observations
+                 with the linear model.
+        @rtype: LinearFit
         
         """
         
@@ -975,6 +980,33 @@ class LinearModel(object):
         The order in which the regressors appear in the submodels will be from 
         low rank to high rank.
         
+        Examples: 
+        
+        If the regressors are [1, x, x**2] then
+            - Nmin=1, nested=False, ranks=None gives the submodels
+              [1], [x], [x**2], [1,x], [1,x**2], [x,x**2], [1,x,x**2] 
+            - Nmin=1, Nmax=2, nested=False, ranks=None gives the submodels
+              [1], [x], [x**2], [1,x], [1,x**2], [x,x**2]
+            - Nmin=2, nested=False, ranks=None gives the submodels
+              [1,x], [1,x**2], [x,x**2], [1,x,x**2]
+            - Nmin=3, nested=True, ranks=None gives the submodel
+              [1,x,x**2]
+            - Nmin=3, nested=True, ranks=[1,0,3] gives the submodel
+              [x,1,x**2]  
+            - Nmin=2, nested=False, ranks=[1,0,3] gives the submodels
+              [x,1], [x,x**2], [1,x**2], [x,1,x**2]
+            - Nmin=2, nested=True, ranks=[1,0,3] gives the submodels
+              [x,1], [x,1,x**2]
+        If the regressors are [1,x,sin(2x),cos(2x)] then
+            - Nmin=3, nested=True, ranks=[0,1,2,2] gives the submodel
+              [1,x,sin(2x),cos(2x)]
+            - Nmin=2, nested=True, ranks=[0,1,2,2] gives the submodels
+              [1,x], [1,x,sin(2x),cos(2x)]
+            - Nmin=2, nested=False, ranks=[0,1,2,2] gives the submodels
+              [1,x], [1,sin(2x),cos(2x)], [x,sin(2x),cos(2x)], [1,x,sin(2x),cos(2x)]
+            - Nmin=1, Nmax=2, nested=False, ranks=[0,1,2,2] gives the submodels
+              [1], [x], [sin(2x),cos(2x)], [1,x], [1,sin(2x),cos(2x)], [x,sin(2x),cos(2x)]
+
         @param Nmin: Minimum number of regressors (or groups of equally ranking 
                      regressors). Should be minimal 1. 
         @type Nmin: integer
@@ -1006,33 +1038,6 @@ class LinearModel(object):
         @return: a python generator implementing the yield method
         @rtype: generator
         
-        Examples: 
-        If the regressors are [1, x, x**2] then
-            - Nmin=1, nested=False, ranks=None gives the submodels
-              [1], [x], [x**2], [1,x], [1,x**2], [x,x**2], [1,x,x**2] 
-            - Nmin=1, Nmax=2, nested=False, ranks=None gives the submodels
-              [1], [x], [x**2], [1,x], [1,x**2], [x,x**2]
-            - Nmin=2, nested=False, ranks=None gives the submodels
-              [1,x], [1,x**2], [x,x**2], [1,x,x**2]
-            - Nmin=3, nested=True, ranks=None gives the submodel
-              [1,x,x**2]
-            - Nmin=3, nested=True, ranks=[1,0,3] gives the submodel
-              [x,1,x**2]  
-            - Nmin=2, nested=False, ranks=[1,0,3] gives the submodels
-              [x,1], [x,x**2], [1,x**2], [x,1,x**2]
-            - Nmin=2, nested=True, ranks=[1,0,3] gives the submodels
-              [x,1], [x,1,x**2]
-        If the regressors are [1,x,sin(2x),cos(2x)] then
-            - Nmin=3, nested=True, ranks=[0,1,2,2] gives the submodel
-              [1,x,sin(2x),cos(2x)]
-            - Nmin=2, nested=True, ranks=[0,1,2,2] gives the submodels
-              [1,x], [1,x,sin(2x),cos(2x)]
-            - Nmin=2, nested=False, ranks=[0,1,2,2] gives the submodels
-              [1,x], [1,sin(2x),cos(2x)], [x,sin(2x),cos(2x)], [1,x,sin(2x),cos(2x)]
-            - Nmin=1, Nmax=2, nested=False, ranks=[0,1,2,2] gives the submodels
-              [1], [x], [sin(2x),cos(2x)], [1,x], [1,sin(2x),cos(2x)], [x,sin(2x),cos(2x)]
-              
-        >>> 
         """
         
         # If no ranking of the regressors are given, consider the first regressor
@@ -1097,16 +1102,15 @@ class LinearModel(object):
         
         """
         Returns a duplicate of the current LinearModel
-        
-        @return: of duplicate of self. Not a reference,
-                 a real copy.
-        @rtype: LinearModel
                  
         Example:
         
         >>> x = linspace(0,10,100)
         >>> lm = LinearModel([x], ["x"])
         >>> lm2 = lm.copy()
+
+        @return: of duplicate of self. Not a reference, a real copy.
+        @rtype: LinearModel
         
         """
         
@@ -1186,6 +1190,11 @@ class PolynomialModel(LinearModel):
 
         """
         Initialiser of the PolynomialModel class. 
+
+        Example:
+        
+        >>> time = linspace(0,10,100)
+        >>> pm = PolynomialModel(time, "t", [2,1])
         
         @param covariate: an array of size N with the covariate values, 
                           where N is the number of observations
@@ -1204,11 +1213,6 @@ class PolynomialModel(LinearModel):
         @return: an instance of PolynomialModel, subclass of LinearModel
         @rtype: PolynomialModel
                
-        Example:
-        
-        >>> time = linspace(0,10,100)
-        >>> pm = PolynomialModel(time, "t", [2,1])
-        
         """
         
         # Create and fill the design matrix
@@ -1270,6 +1274,12 @@ class HarmonicModel(LinearModel):
 
         """
         Initialiser of HarmonicModel class, with *known* frequencies. 
+
+        Example: 
+           
+        >>> time = linspace(0,10,100)
+        >>> hm = HarmonicModel(time, "t", [2.34, 8.9], ["f_1", "f_2"], 1)
+
         
         @param covariate: an array of size N with the covariate values, 
                           where N is the number of observations.
@@ -1294,11 +1304,6 @@ class HarmonicModel(LinearModel):
         @return: an instance of HarmonicModel, subclass of LinearModel
         @rtype: HarmonicModel
              
-        Example: 
-           
-        >>> time = linspace(0,10,100)
-        >>> hm = HarmonicModel(time, "t", [2.34, 8.9], ["f_1", "f_2"], 1)
-        
         """
         
         # Create and fill the design matrix
@@ -1416,17 +1421,18 @@ class LinearFit(object):
         
         """
         Returns the observations
+
+        Remarks: 
+            - if no covariance matrix of the observations was specified for
+              the model, the "decorrelated" observations are identical to the
+              original observations.
         
         @param weighted: If false return the original observations, if
                          True, return de decorrelated observations.
         @type weighted: boolean
         @return: the observations that were used to initialize the LinearFit instance
         @rtype: ndarray
-                         
-        Remarks: 
-            - if no covariance matrix of the observations was specified for
-              the model, the "decorrelated" observations are identical to the
-              original observations.
+
         """
         
         if weighted:
@@ -1591,8 +1597,11 @@ class LinearFit(object):
     
         """
         Returns the symmetric (1-alpha) confidence interval around the fit coefficients
-        
         E.g. if alpha = 0.05, the 95% symmetric confidence interval is returned.
+
+        Remarks:
+            - The formula used assumes that the noise on the observations is 
+              independently, identically and gaussian distributed.
                                   
         @param alpha: confidence level in ]0,1[
         @type alpha: double
@@ -1600,10 +1609,6 @@ class LinearFit(object):
                  respectively the lower and the upper bounds of the symmetric interval
                  around the fit coefficients, where K is the number of fit coeffs.
         @rtype: tuple
-        
-        Remarks:
-            - The formula used assumes that the noise on the observations is 
-              independently, identically and gaussian distributed.
               
         """
 
@@ -1638,10 +1643,14 @@ class LinearFit(object):
     def regressorTtest(self, alpha):
     
         """
-        Performs a hypothesis T-test on each of the regressors
-        
+        Performs a hypothesis T-test on each of the regressors       
         Null hypothesis: H0 : fit coefficient == 0
         Alternative hypothesis : H1 : fit coefficient != 0
+        
+        Remarks: 
+            - This test assumes that the noise is independently,
+              identically, and gaussian distributed. It is not robust 
+              against this assumption.
         
         @param alpha: significance level of the hypothesis test. In ]0,1[.
                       E.g.: alpha = 0.05
@@ -1651,11 +1660,6 @@ class LinearFit(object):
                  "False" otherwise.
         @rtype: ndarray
         
-        Remarks: 
-            - This test assumes that the noise is independently,
-              identically, and gaussian distributed. It is not robust 
-              against this assumption.
-              
         """
         
         t = stats.t.ppf(1.0-alpha/2., self._linearModel.degreesOfFreedom())
@@ -1675,15 +1679,16 @@ class LinearFit(object):
         
         It concerns the predictions for the original observations, 
         not the decorrelated ones.
+
+        Remarks:
+            - If no covariance matrix of the observations was specified 
+              for the model, the weighted predictions are identical to 
+              the unweighted ones.
                  
         @param weighted: If True/False, the predictions for the 
                          decorrelated/original observations will be used.
         @type weighted: boolean
                          
-        Remarks:
-            - If no covariance matrix of the observations was specified 
-              for the model, the weighted predictions are identical to 
-              the unweighted ones.
         """
         
         if weighted:
@@ -1711,17 +1716,16 @@ class LinearFit(object):
     def residuals(self, weighted=False):
     
         """
-        Returns an array with the residuals.
-        
+        Returns an array with the residuals.  
         Residuals = observations minus the predictions
+
+        Remarks:
+            - If no covariance matrix of the observations was specified for the
+              model, the weighted residuals are identical to the unweighted ones.
         
         @param weighted: If True/False, the residuals for the 
                          decorrelated/original observations will be used.
         @type weighted: boolean
-                         
-        Remarks:
-            - If no covariance matrix of the observations was specified for the
-              model, the weighted residuals are identical to the unweighted ones.
               
         """
         
@@ -1754,6 +1758,11 @@ class LinearFit(object):
             S2 = \frac{\sum_{i=1}^N (y_i - \overline{y})^2}
             - If there is no intercept term in the model, then S2 is computed
             S2 = \frac{\sum_{i=1}^N (y_i)^2}
+
+        Remarks:
+            - If no covariance matrix of the observations was specified 
+              for the model, the weighted coeff of determination is 
+              identical to the unweighted one.
         
         @param weighted: If True/False, the residuals for the 
                          decorrelated/original observations will be used.
@@ -1761,10 +1770,6 @@ class LinearFit(object):
         @return: coefficient of determination
         @rtype: double
         
-        Remarks:
-            - If no covariance matrix of the observations was specified 
-              for the model, the weighted coeff of determination is 
-              identical to the unweighted one.
         """
         
         if weighted:
@@ -1801,15 +1806,16 @@ class LinearFit(object):
         """
         Returns the Bayesian Information Criterion value. 
         
-        @return: BIC value
-        @rtype: double
-        
         Remarks:
             - Also called the Schwartz Information Criterion (SIC)
             - Gaussian noise is assumed, with unknown variance sigma^2
             - Constant terms in the log-likelihood are omitted
             
         TODO: . make a weighted version
+        
+        @return: BIC value
+        @rtype: double
+        
         """
 
         if self._BICvalue is not None:
@@ -1829,14 +1835,15 @@ class LinearFit(object):
         """
         Returns the 2nd order Akaike Information Criterion value 
         
-        @return: AIC value
-        @rtype: double
-        
         Remarks:
             - Gaussian noise is assumed, with unknown variance sigma^2
             - Constant terms in the log-likelihood were omitted
             
         TODO: . make a weighted version
+
+        @return: AIC value
+        @rtype: double
+
         """
 
         if self._AICvalue is not None:
@@ -1856,16 +1863,16 @@ class LinearFit(object):
         """
         Returns the F-statistic, commonly used to assess the fit.
         
+        Remarks:
+            - if no covariance matrix of the observations was specified for the
+              model, the weighted F-statistic is identical to the unweighted one
+
         @param weighted: If True/False, the residuals for the 
                          decorrelated/original observations will be used.
         @type weighted: boolean
         @return: the F-statistic
         @rtype: double
                          
-        Remarks:
-            - if no covariance matrix of the observations was specified for the
-              model, the weighted F-statistic is identical to the unweighted one
-
         """
         
         if weighted:
@@ -1909,6 +1916,11 @@ class LinearFit(object):
         Null hypothesis: H0 : R^2 == 0
         Alternative hypothesis: H1: R^2 != 0
                  
+        Remarks:
+            - if no covariance matrix of the observations was specified for the
+              model, the weighted F-test is identical to the unweighted one
+
+
         @param alpha: significance level of the hypothesis test. In ]0,1[.
         @type alpha: double
         @param weighted: If True/False, the weighted/not-weighted 
@@ -1917,10 +1929,6 @@ class LinearFit(object):
         @return: "True" if null hypothesis was rejected, "False" otherwise
         @rtype: boolean
                             
-        Remarks:
-            - if no covariance matrix of the observations was specified for the
-              model, the weighted F-test is identical to the unweighted one
-              
         """
         
         df = self._linearModel.degreesOfFreedom()
@@ -2009,6 +2017,7 @@ def combinations(items, n):
     @type n: integer
     @return: generator yielding lists of combinations
     @rtype: generator
+    
     """
 
     if n==0: 
