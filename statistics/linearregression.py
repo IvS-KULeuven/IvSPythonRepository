@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Easy linear fitting.
 Author: Joris De Ridder
@@ -357,7 +358,9 @@ class LinearModel(object):
         @return: nothing
         
         The singular value decomposition of the design matrix is defined as 
-             X = U * W * V^t 
+        
+        C{X = U * W * V^t }
+        
         where 
             - X: M x N design matrix.
             - U: M x M unitary matrix 
@@ -468,7 +471,7 @@ class LinearModel(object):
               coefficients if the signal noise would be i.i.d. with sigma = 1.
             - In the case of sigma != 1, the actual covariance matrix
               can be obtained by simply rescaling the standard covariance
-              matrix. See L{covarianceMatrix}.
+              matrix. See L{LinearFit.covarianceMatrix}.
                  
         Example: 
         
@@ -1166,7 +1169,9 @@ class PolynomialModel(LinearModel):
     Class to implement a polynomial model
     
     The class implements a polynomial model function of the form
-        y(x) = a_0 * a_1 * x + a_2 * x^2 + ...
+    
+    C{y(x) = a_0 * a_1 * x + a_2 * x^2 + ...}
+    
     where y are the responses (observables), x are the covariates, 
     the a_i are the regression coefficients (to be determined).
     Such a class provides convenient way of creating a polynomial model.
@@ -1245,8 +1250,10 @@ class HarmonicModel(LinearModel):
     Class to implement a harmonic model function.
     
     The class implements a harmonic model of the form
-        y(x) =   a_0 * sin(2*pi*f1*t) + a_1 * cos(2*pi*f1*t)
-               + a_2 * sin(2*pi*f2*t) + a_3 * cos(2*pi*f2*t) + ...
+    
+    C{y(x) =   a_0 * sin(2*pi*f1*t) + a_1 * cos(2*pi*f1*t)
+    + a_2 * sin(2*pi*f2*t) + a_3 * cos(2*pi*f2*t) + ...}
+               
     where y are the responses (observables), x are the covariates, 
     the a_i are the regression coefficients (to be determined).
     Such a class provides a more convenient short way of creating a
@@ -1742,11 +1749,11 @@ class LinearFit(object):
         
         The coeff of determination is defined by  1 - S1 / S2 with
             - S1 the sum of squared residuals:
-              S1 = \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2
+            S1 = \frac{\sum_{i=1}^N (y_i - \hat{y}_i)^2}
             - S2 the sample variance w.r.t. the mean:
-              S2 = \frac{\sum_{i=1}^N (y_i - \overline{y})^2
+            S2 = \frac{\sum_{i=1}^N (y_i - \overline{y})^2}
             - If there is no intercept term in the model, then S2 is computed
-              S2 = \frac{\sum_{i=1}^N (y_i)^2
+            S2 = \frac{\sum_{i=1}^N (y_i)^2}
         
         @param weighted: If True/False, the residuals for the 
                          decorrelated/original observations will be used.
@@ -1991,18 +1998,17 @@ def combinations(items, n):
     """
     Returns all combinations of size n without replacement
     
+    Example:
+    
+    >>> [c for c in combinations("love", 2)]
+    [['l', 'o'], ['l', 'v'], ['l', 'e'], ['o', 'v'], ['o', 'e'], ['v', 'e']]
+    
     @param items: a sequence
     @type items: list, tuple, string, ndarray
     @param n: size of the combinations
     @type n: integer
     @return: generator yielding lists of combinations
     @rtype: generator
-    
-    Example:
-    
-    >>> [c for c in combinations("love", 2)]
-    [['l', 'o'], ['l', 'v'], ['l', 'e'], ['o', 'v'], ['o', 'e'], ['v', 'e']]
-    
     """
 
     if n==0: 
