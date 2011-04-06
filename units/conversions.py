@@ -253,6 +253,8 @@ def convert(_from,_to,*args,**kwargs):
         only_from = "".join(sorted(list(set(uni_from_) - set(uni_to_))))
         only_to = "".join(sorted(list(set(uni_to_) - set(uni_from_))))
         
+        logger.debug("Convert %s to %s"%(only_from,only_to))
+        
         #-- especially for conversion from and to sterradians
         if 'cy-2' in only_to:
             args = _switch['_to_cy-2'](args[0],**kwargs_SI),
@@ -262,6 +264,8 @@ def convert(_from,_to,*args,**kwargs):
             args = _switch['cy-2_to_'](args[0],**kwargs_SI),
             only_from = only_from.replace('cy-2','')
             logger.debug('Switching from /sr')
+        
+        logger.debug("Convert %s to %s"%(only_from,only_to))
         
         #-- nonlinear conversions need a little tweak
         try:
@@ -539,7 +543,7 @@ def fnu2nufnu(arg,**kwargs):
         fnu = cc/wave * arg
     elif 'freq' in kwargs:
         freq = kwargs['freq']
-        fnu = freq/cc * arg
+        fnu = freq * arg
     else:
         raise ValueError,'reference wave/freq not given'
     return fnu
@@ -565,10 +569,63 @@ def nufnu2fnu(arg,**kwargs):
         fnu = wave/cc * arg
     elif 'freq' in kwargs:
         freq = kwargs['freq']
-        fnu = cc/freq * arg
+        fnu = arg / freq
     else:
         raise ValueError,'reference wave/freq not given'
     return fnu
+
+def flam2lamflam(arg,**kwargs):
+    """
+    Switch from lamFlam to Flam via a reference wavelength.
+    
+    Flambda and Fnu are spectral irradiance in wavelength and frequency,
+    respectively
+    
+    @param arg: spectral irradiance (SI,W/m2/Hz)
+    @type arg: float
+    @keyword wave: reference wavelength (SI, m)
+    @type wave: float
+    @keyword freq: reference frequency (SI, Hz)
+    @type freq: float
+    @return: spectral irradiance (SI, W/m2/m)
+    @rtype: float
+    """
+    if 'wave' in kwargs:
+        wave = kwargs['wave']
+        lamflam = wave * arg
+    elif 'freq' in kwargs:
+        freq = kwargs['freq']
+        lamflam = cc/freq * arg
+    else:
+        raise ValueError,'reference wave/freq not given'
+    return lamflam
+
+def lamflam2flam(arg,**kwargs):
+    """
+    Switch from lamFlam to Flam via a reference wavelength.
+    
+    Flambda and Fnu are spectral irradiance in wavelength and frequency,
+    respectively
+    
+    @param arg: spectral irradiance (SI,W/m2/Hz)
+    @type arg: float
+    @keyword wave: reference wavelength (SI, m)
+    @type wave: float
+    @keyword freq: reference frequency (SI, Hz)
+    @type freq: float
+    @return: spectral irradiance (SI, W/m2/m)
+    @rtype: float
+    """
+    if 'wave' in kwargs:
+        wave = kwargs['wave']
+        flam = arg / wave
+    elif 'freq' in kwargs:
+        freq = kwargs['freq']
+        flam = arg / (cc/freq)
+    else:
+        raise ValueError,'reference wave/freq not given'
+    return flam
+
 
 def distance2frequency(arg,**kwargs):
     """
@@ -912,11 +969,11 @@ _factors = {
            'torr':  (    133.322,   'kg m-1 s-2'),
            'psi':   (   6894.,      'kg m-1 s-2'),
 # FLUX
-           'Jy':      (1e-26,         'kg s-2 cy-1'),
-           'vegamag': (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
-           'mag':     (VegaMag,       'kg m-1 s-3'),  # in W/m2/m
-           'STmag':   (STMag,         'kg m-1 s-3'),  # in W/m2/m
-           'ABmag':   (ABMag,         'kg s-2 cy-1'), # in W/m2/Hz
+           'Jy':      (1e-26,         'kg s-2 cy-1'), # W/m2/Hz
+           'vegamag': (VegaMag,       'kg m-1 s-3'),  # W/m2/m
+           'mag':     (VegaMag,       'kg m-1 s-3'),  # W/m2/m
+           'STmag':   (STMag,         'kg m-1 s-3'),  # W/m2/m
+           'ABmag':   (ABMag,         'kg s-2 cy-1'), # W/m2/Hz
            }
             
 #-- scaling factors for prefixes            
@@ -983,6 +1040,8 @@ _switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
            'm-1s-3_to_cy-1s-2':flambda2fnu,
            'cy-1s-2_to_s-3':fnu2nufnu, # switch from Fnu to nuFnu
            's-3_to_cy-1s-2':nufnu2fnu, # switch from nuFnu to Fnu
+           '_to_m-1':lamflam2flam, # switch from lamFlam to Flam
+           'm-1_to_':flam2lamflam, # switch from Flam to lamFlam
            '_to_cy-2':per_sr,
            'cy-2_to_':times_sr}
  
