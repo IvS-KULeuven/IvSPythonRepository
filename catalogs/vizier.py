@@ -349,13 +349,13 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     #-- fix colours: we have to run through it two times to be sure to have
     #   all the colours
     N = len(master)-cols_added
-    master_ = breakup_colours(master[N:])
-    master_ = breakup_colours(master_)
+    master_ = _breakup_colours(master[N:])
+    master_ = _breakup_colours(master_)
     #-- combine and return
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
     return master
     
-def breakup_colours(master):
+def _breakup_colours(master):
     """
     From colors and one magnitude measurement, derive the other magnitudes.
     
