@@ -65,29 +65,21 @@ def search(source,**kwargs):
         catalog of Rufener.
     
         >>> results,units,comms = search('II/169/main',ID='vega',radius=60.)
-        >>> print "Vega: Vmag = %.3f %s, RA = %.2f %s, DEC = %.2f %s"\
-                     %(results['Vmag'],units['Vmag'],\
-                       results['_RAJ2000'],units['_RAJ2000'],\
-                       results['_DEJ2000'],units['_DEJ2000'])
+        >>> print "Vega: Vmag = %.3f %s, RA = %.2f %s, DEC = %.2f %s"%(results['Vmag'],units['Vmag'],results['_RAJ2000'],units['_RAJ2000'],results['_DEJ2000'],units['_DEJ2000'])
         Vega: Vmag = 0.061 mag, RA = 279.24 deg, DEC = 38.77 deg
     
         2. Search for all targets in the 2MASS catalog in a particular field.
         Download the results to a FITS file, read the file, and plot the results
         to the screen.
     
-        >>> filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,\
-                filetype='fits',filename='2mass_test',out_all=None)
+        >>> filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,filetype='fits',filename='2mass_test',out_all=None)
     
         Now read in the FITS-file and plot the contents
         
         >>> import pyfits,pylab,os
         >>> ff = pyfits.open('2mass_test.fits')
         >>> p = pylab.gcf().canvas.set_window_title('test of <search>')
-        >>> p = pylab.scatter(ff[1].data.field('_RAJ2000'),\
-                             ff[1].data.field('_DEJ2000'),\
-                             c=ff[1].data.field('Jmag'),\
-                             s=(20-ff[1].data.field('Jmag'))**2,\
-                             cmap=pylab.cm.hot_r,edgecolors='none')
+        >>> p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
         >>> p = pylab.colorbar()
         >>> p = p.set_label('Jmag')
         >>> p,q = pylab.xlabel('RA [deg]'),pylab.ylabel('DEC [deg]')
@@ -243,11 +235,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     ...         myvalue = conversions.convert(master[i]['unit'],'Jy',master[i]['meas'],photband=master[i]['photband'])
     ...     except ValueError:
     ...         myvalue = np.nan
-    ...     print '%15s %10.3e+/-%10.3e %15s %10.3e %15s %6.2f %6.2f %6.3f %25s'%(master[i]['photband'],
-    ...                                         master[i]['meas'],master[i]['e_meas'],
-    ...                                         master[i]['unit'],myvalue,'Jy',
-    ...                                         master[i]['_RAJ2000'],master[i]['_DEJ2000'],
-    ...                                         master[i]['_r'],master[i]['source'])
+    ...     print '%15s %10.3e+/-%10.3e %15s %10.3e %15s %6.2f %6.2f %6.3f %25s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue,'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
           JOHNSON.V  3.300e-02+/- 1.200e-02             mag  3.598e+03              Jy 279.23  38.78  0.000           II/168/ubvmeans
         JOHNSON.B-V -1.000e-03+/- 5.000e-03             mag        nan              Jy 279.23  38.78  0.000           II/168/ubvmeans
         JOHNSON.U-B -6.000e-03+/- 6.000e-03             mag        nan              Jy 279.23  38.78  0.000           II/168/ubvmeans
