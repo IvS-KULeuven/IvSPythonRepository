@@ -95,7 +95,7 @@ def convert(_from,_to,*args,**kwargs):
     4553.0
     >>> convert('nm','Ghz',1000.)
     299792.45799999993
-    >>> convert('km h-1','nRsun s-1',1.)
+    >>> convert('km h-1','nRsol s-1',1.)
     0.39939292275740873
     >>> convert('erg s-1 cm-2 A-1','SI',1.)
     10000000.0
@@ -916,13 +916,13 @@ _factors = {
            'AU':    (au,            'm'),
            'pc':    (pc,            'm'),
            'ly':    (ly,            'm'),
-           'Rsun':  (Rsun,          'm'),
+           'Rsol':  (Rsol,          'm'),
            'ft':    (0.3048,        'm'),
            'in':    (0.0254,        'm'),
            'mi':    (1609.344,      'm'),
 # MASS
            'g':     (  1e-03,       'kg'),
-           'Msun':  (Msun,          'kg'),
+           'Msol':  (Msol,          'kg'),
 # TIME
            's':     (  1e+00,       's'),
            'min':   (  60.,         's'),
@@ -960,7 +960,7 @@ _factors = {
            'erg':   (  1e-07,       'kg m2 s-2'),
            'eV':    (1.60217646e-19,'kg m2 s-2'),
            'cal':   (4.184,         'kg m2 s-2'),
-           'Lsun':  (Lsun,          'kg m2 s-3'),
+           'Lsol':  (Lsol,          'kg m2 s-3'),
 # PRESSURE
            'Pa':    (  1e+00,       'kg m-1 s-2'),
            'bar':   (  1e+05,       'kg m-1 s-2'),
