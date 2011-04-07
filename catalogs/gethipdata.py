@@ -1,11 +1,20 @@
+"""
+Retrieve Hipparcos epoch photometry from the internet
+
+Author: Joris De Ridder
+
+Error messages are written to the logger "gethipdata".
+"""
+
 from __future__ import with_statement
 import httplib
 import logging
 
 
 # Setup the logger.
-# Add at least one handler to avoid the message "No handlers could be found" on the console.
-# The NullHandler is part of the logging module only from Python 2.7 on.
+# Add at least one handler to avoid the message "No handlers could be found" 
+# on the console. The NullHandler is part of the standard logging module only 
+# from Python 2.7 on.
 
 class NullHandler(logging.Handler):
     def emit(self, record):
@@ -27,6 +36,13 @@ def getHipData(hipnr, outputFileName):
     Example:
     
     >>> getHipData(23124, "myfile.txt")
+    >>> from numpy import loadtxt
+    >>> data = loadtxt("myfile.txt")
+    >>> time,magnitude,errorbar,flag = data[:,0],data[:,1],data[:,2],data[:,3]
+    >>> time = time[flag <= 2.]
+    >>> magnitude = magnitude[flag <= 2]
+    >>> errorbar = errorbar[flag <= 2]
+
     
     @param hipnr: the hipparcos number of the star. 
                   E.g. 1234 or "1234"
@@ -47,7 +63,7 @@ def getHipData(hipnr, outputFileName):
     conn.request("GET", webpage + str(hipnr))
     response = conn.getresponse()
     if response.reason != "OK":
-        logger.critical("Data retrieval for HIP%s not possible. Reason: %s" % (str(hipnr), response.reason))
+        logger.error("Data retrieval for HIP%s not possible. Reason: %s" % (str(hipnr), response.reason))
         return
     else:
         logger.info("Data retrieval for HIP%s: OK" % str(hipnr))
