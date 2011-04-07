@@ -3,14 +3,30 @@ Simulation of a granulation signal
 
 Author: Joris De Ridder
 
+Error messages are written to the logger "granulation".
 """
 
 import numpy as np
 from numpy.random import normal
+import logging
+
+
+# Setup the logger.
+# Add at least one handler to avoid the message "No handlers could be found" 
+# on the console. The NullHandler is part of the standard logging module only 
+# from Python 2.7 on.
+
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+        
+logger = logging.getLogger("granulation")
+nullHandler = NullHandler()
+logger.addHandler(nullHandler)
 
 
 
-def granulation(time, timescale, varscale, logger=None):
+def granulation(time, timescale, varscale):
 
     """
     Simulates a time series showing granulation variations
@@ -28,8 +44,6 @@ def granulation(time, timescale, varscale, logger=None):
                      granulation/magnetic activity in the appropriate passband.
                      Same size as the timescale array. Unit: ppm
     @type varscale: ndarray
-    @param logger: logger (optional). logger.info() will be called to write info strings.
-    @type logger: logging instance 
     @return: the granulation signal
     @rtype: ndarray
     
@@ -48,16 +62,14 @@ def granulation(time, timescale, varscale, logger=None):
     Ntime = len(time)
     Ncomp = len(timescale)
 
-    if logger is not None:
-        logger.info("Simulating %d granulation components\n" % Ncomp)
+    logger.info("Simulating %d granulation components\n" % Ncomp)
         
     # Set the kick (= reexcitation) timestep to be one 100th of the
     # shortest granulation time scale (i.e. kick often enough).
 
     kicktimestep = min(timescale) / 100.0
     
-    if logger is not None:
-        logger.info("Kicktimestep = %f\n" % kicktimestep)
+    logger.info("Kicktimestep = %f\n" % kicktimestep)
 
     # Predefine some arrays
 
@@ -68,16 +80,14 @@ def granulation(time, timescale, varscale, logger=None):
 
     # Warm up the first-order autoregressive process
 
-    if logger is not None:
-        logger.info("Granulation process warming up...\n")
+    logger.info("Granulation process warming up...\n")
         
     for i in range(2000):
         granul = granul * (1.0 - kicktimestep / timescale) + normal(mu, sigma)
 
     # Start simulating the granulation time series
 
-    if logger is not None:
-        logger.info("Simulating granulation signal.\n")
+    logger.info("Simulating granulation signal.\n")
 
     delta = 0.0
     currenttime = time[0] - kicktimestep

@@ -3,14 +3,32 @@ Simulation of a solarlike oscillations
 
 Author: Joris De Ridder
 
+Error messages are written to the logger "solarosc".
 """
 
 import numpy as np
 from numpy.random import uniform, normal
 from math import sin,cos, floor, pi
+import logging
 
 
-def solarosc(time, freq, ampl, eta, logger=None):
+# Setup the logger.
+# Add at least one handler to avoid the message "No handlers could be found" 
+# on the console. The NullHandler is part of the standard logging module only 
+# from Python 2.7 on.
+
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+        
+logger = logging.getLogger("solarosc")
+nullHandler = NullHandler()
+logger.addHandler(nullHandler)
+
+
+
+
+def solarosc(time, freq, ampl, eta):
     
     """
     Compute time series of stochastically excited damped modes
@@ -26,8 +44,6 @@ def solarosc(time, freq, ampl, eta, logger=None):
     @type ampl: ndarray
     @param eta: damping rates (unit: e.g. (Ms)^{-1})
     @type eta: ndarray
-    @param logger: standard python logging facility
-    @type logger: logging instance
     @return: signal[0..Ntime-1]
     @rtype: ndarray
 
@@ -42,7 +58,7 @@ def solarosc(time, freq, ampl, eta, logger=None):
     >>> signal = flux * (1.0 + oscsignal)
     >>> # The same with a logger
     >>> import sys, logging, logging.handlers
-    >>> myLogger = logging.getLogger('myLogger')
+    >>> myLogger = logging.getLogger("solarosc")
     >>> myLogger.addHandler(logging.StreamHandler(sys.stdout))
     >>> myLogger.setLevel(logging.INFO)
     >>> oscsignal = solarosc(time, freq, ampl, eta, myLogger)
@@ -56,16 +72,14 @@ def solarosc(time, freq, ampl, eta, logger=None):
     Ntime = len(time)
     Nmode = len(freq)
 
-    if logger is not None:
-        logger.info("Simulating %d modes" % Nmode)
+    logger.info("Simulating %d modes" % Nmode)
 
     # Set the kick (= reexcitation) timestep to be one 100th of the
     # shortest damping time. (i.e. kick often enough).
 
     kicktimestep = (1.0 / max(eta)) / 100.0
     
-    if logger is not None:
-        logger.info("Oscillation kicktimestep: %f" % kicktimestep)
+    logger.info("Oscillation kicktimestep: %f" % kicktimestep)
 
     # Init start values of amplitudes, and the kicking amplitude
     # so that the amplitude of the oscillator will be on average be
@@ -83,8 +97,7 @@ def solarosc(time, freq, ampl, eta, logger=None):
     damp = np.exp(-eta * kicktimestep)
     Nwarmup = min(20000, int(floor(1.0 / min(eta) / kicktimestep)))
 
-    if logger is not None:
-        logger.info("%d kicks for warm up for oscillation signal" % Nwarmup)
+    logger.info("%d kicks for warm up for oscillation signal" % Nwarmup)
         
     for i in range(Nwarmup):
         amplsin = damp * amplsin + normal(np.zeros(Nmode), kick_amplitude)
@@ -101,8 +114,7 @@ def solarosc(time, freq, ampl, eta, logger=None):
 
     # Start simulating the time series.
 
-    if logger is not None:
-        logger.info("Simulating stochastic oscillations")
+    logger.info("Simulating stochastic oscillations")
         
     signal = np.zeros(Ntime)
 
