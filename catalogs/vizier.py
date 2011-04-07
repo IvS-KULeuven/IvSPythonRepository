@@ -220,7 +220,6 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     
     First look for all photometry of Vega in all VizieR catalogs:
     
-    >>> from ivs.reduction.photometry import calibration
     >>> master = None
     >>> for source in cat_info.sections():
     ...     results,units,comms = search(source,ID='vega',radius=60.)
