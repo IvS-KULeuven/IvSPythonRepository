@@ -6,10 +6,10 @@ List of physical constants (SI and CGS)
 # value                     name                         unit
 #===================================================================
 cc   = 299792458.          # speed of light              m/s
-Msun = 1.98892e30          # solar mass                  kg
-Rsun = 6.955e8             # solar radius                m
-Lsun = 3.839e26            # solar luminosity            W
-Tsun = 5778.               # solar effective temperature K
+Msol = 1.98892e30          # solar mass                  kg
+Rsol = 6.955e8             # solar radius                m
+Lsol = 3.839e26            # solar luminosity            W
+Tsol = 5778.               # solar effective temperature K
 au   = 149598.e6           # astronomical unit           m
 pc   = 3.08568025e+16      # parsec                      m
 ly   = 9.4605284e+15       # light year                  m
@@ -27,9 +27,9 @@ a0   = 52.9177e-12         # Bohr radius of hydrogen     m
 # value                     name                             unit
 #=========================================================================
 cc_cgs   = 29979245800.        # speed of light              cm/s
-Msun_cgs = 1.98892e33          # solar mass                  g
-Rsun_cgs = 6.955e10            # solar radius                cm
-Lsun_cgs = 3.839e33            # solar luminosity            erg/s
+Msol_cgs = 1.98892e33          # solar mass                  g
+Rsol_cgs = 6.955e10            # solar radius                cm
+Lsol_cgs = 3.839e33            # solar luminosity            erg/s
 au_cgs   = 149598.e8           # astronomical unit           cm
 pc_cgs   = 3.08568025e+18      # parsec                      cm
 ly_cgs   = 9.4605284e+17       # light year                  cm
@@ -43,5 +43,5 @@ aa_cgs   = 7.5657e-15          # radiation constant          erg/cm2/K4
 a0_cgs   = 52.9177e-10         # Bohr radius of hydrogen     cm
 
 # other stuff
-Mabs_sun = 4.83                # solar bolometric abs mag    mag
-Mapp_sun = -26.74              # solar visual apparent mag   mag
+Mabs_sol = 4.83                # solar bolometric abs mag    mag
+Mapp_sol = -26.74              # solar visual apparent mag   mag
