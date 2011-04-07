@@ -75,12 +75,29 @@ def getHipData(hipnr, outputFileName):
     # Put a "#" in front of the header information, and format nicely.
     # Write to the output file.
     
+    info = {}
     with open(outputFileName, 'w') as outputFile:
         for line in contents.split('\n'):
             if line == "": continue
             if not line.startswith("<"):
                 if not line[0].isdigit():
                     line = "# " + line
+                    items = line.split()
+                    info +=    \
+                    {'HH1' : { : items[]}, 
+                     'HH2' : ,
+                     'HH3' : , 
+                     'HH4' : ,
+                     'HH5' : , 
+                     'HH6' : ,
+                     'HH7' : ,
+                     'HH8' : ,
+                     'HH9' : ,
+                     'HH10' : ,
+                     'HH11' : ,
+                     'HH12' : , 
+                     'HH13' : ,
+                     'HH14' : ,
                 line = line.replace("|", " ").replace("\r", "")
                 outputFile.write(line + "\n")
                 
