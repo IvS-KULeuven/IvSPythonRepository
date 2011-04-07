@@ -36,6 +36,24 @@ def get_response(photband):
     wave, response = ascii.read2array(photfile).T
     return wave,response
 
+def eff_wave(photband):
+    """
+    Return the effective wavelength of a photometric passband.
+    
+    The effective wavelength is defined as the average wavelength weighed wit
+    the response curve.
+    
+    >>> eff_wave('2MASS.J')
+    12412.136241640892
+    
+    @param photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
+    @return: effective wavelength [A]
+    @rtype: float
+    """
+    wave,response = get_response(photband)
+    return np.average(wave,weights=response)
+
 if __name__=="__main__":
     import doctest
     doctest.testmod()

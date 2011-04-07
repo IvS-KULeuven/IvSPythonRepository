@@ -46,6 +46,7 @@ except ImportError: print("Unable to load pyephem, coordinate transfos unavailab
 
 #-- from IVS repository
 from ivs.units.constants import *
+from ivs.reduction.photometry import calibration
 from ivs.io import ascii
 
 logger = logging.getLogger("UNITS.CONV")
@@ -277,7 +278,8 @@ def convert(_from,_to,*args,**kwargs):
             else:
                 ret_value *= _switch[key](fac_from*args[0],**kwargs_SI)
         except KeyError:
-            raise KeyError,'cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key)
+            logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key))
+            raise
     
     #-- final step: convert to ... (again distinction between linear and
     #   nonlinear converters)
@@ -479,6 +481,8 @@ def fnu2flambda(arg,**kwargs):
     
     @param arg: spectral irradiance (SI,W/m2/Hz)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -486,6 +490,10 @@ def fnu2flambda(arg,**kwargs):
     @return: spectral irradiance (SI, W/m2/m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         flambda = cc/wave**2 * arg
@@ -505,6 +513,8 @@ def flambda2fnu(arg,**kwargs):
     
     @param arg: spectral irradiance (SI, W/m2/m)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -512,6 +522,10 @@ def flambda2fnu(arg,**kwargs):
     @return: spectral irradiance (SI,W/m2/Hz)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         fnu = wave**2/cc * arg
@@ -531,6 +545,8 @@ def fnu2nufnu(arg,**kwargs):
     
     @param arg: spectral irradiance (SI,W/m2/Hz)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -538,6 +554,10 @@ def fnu2nufnu(arg,**kwargs):
     @return: spectral irradiance (SI, W/m2/m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         fnu = cc/wave * arg
@@ -557,6 +577,8 @@ def nufnu2fnu(arg,**kwargs):
     
     @param arg: spectral irradiance (SI,W/m2/Hz)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -564,6 +586,10 @@ def nufnu2fnu(arg,**kwargs):
     @return: spectral irradiance (SI, W/m2/m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         fnu = wave/cc * arg
@@ -583,6 +609,8 @@ def flam2lamflam(arg,**kwargs):
     
     @param arg: spectral irradiance (SI,W/m2/Hz)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -590,6 +618,10 @@ def flam2lamflam(arg,**kwargs):
     @return: spectral irradiance (SI, W/m2/m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         lamflam = wave * arg
@@ -609,6 +641,8 @@ def lamflam2flam(arg,**kwargs):
     
     @param arg: spectral irradiance (SI,W/m2/Hz)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -616,6 +650,10 @@ def lamflam2flam(arg,**kwargs):
     @return: spectral irradiance (SI, W/m2/m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         wave = kwargs['wave']
         flam = arg / wave
@@ -644,6 +682,8 @@ def distance2spatialfreq(arg,**kwargs):
     
     @param arg: distance (SI, m)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -651,6 +691,10 @@ def distance2spatialfreq(arg,**kwargs):
     @return: spatial frequency (SI, cy/as)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         spatfreq = 2*np.pi*arg/kwargs['wave']
     elif 'freq' in kwargs:
@@ -665,6 +709,8 @@ def spatialfreq2distance(arg,**kwargs):
     
     @param arg: spatial frequency (SI, cy/as)
     @type arg: float
+    @keyword photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
     @keyword wave: reference wavelength (SI, m)
     @type wave: float
     @keyword freq: reference frequency (SI, Hz)
@@ -672,6 +718,10 @@ def spatialfreq2distance(arg,**kwargs):
     @return: distance (SI, m)
     @rtype: float
     """
+    if 'photband' in kwargs:
+        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = convert('A','m',lameff)
+        kwargs['wave'] = lameff
     if 'wave' in kwargs:
         distance = kwargs['wave']*arg/(2*np.pi)
     elif 'freq' in kwargs:
