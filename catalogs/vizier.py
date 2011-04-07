@@ -106,7 +106,7 @@ def search(source,**kwargs):
     @keyword radius: search radius (arcseconds)
     @type radius: float
     @return: filename / catalog data columns, units, comments
-    @rtype: str/ dict, dict, list of str
+    @rtype: str/ record array, dict, list of str
     """
     #-- options for output format
     filetype = kwargs.get('filetype','tsv')
