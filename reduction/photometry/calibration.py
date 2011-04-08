@@ -15,6 +15,11 @@ import numpy as np
 from ivs.misc.decorators import memoized
 from ivs.io import ascii
 
+
+
+
+
+
 @memoized
 def get_response(photband):
     """
@@ -36,6 +41,12 @@ def get_response(photband):
     wave, response = ascii.read2array(photfile).T
     return wave,response
 
+
+
+
+
+
+
 def eff_wave(photband):
     """
     Return the effective wavelength of a photometric passband.
@@ -53,6 +64,11 @@ def eff_wave(photband):
     """
     wave,response = get_response(photband)
     return np.average(wave,weights=response)
+
+
+
+
+
 
 if __name__=="__main__":
     import doctest
