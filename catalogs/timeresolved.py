@@ -51,7 +51,7 @@ def getHipData(hipnr, outputFileName=None):
     
     >>> data, header = getHipData(1234 , "myfile.txt")
     
-   To store the different columns in separate arrays:
+    To store the different columns in separate arrays:
     
     >>> data, header = getHipData(1234)
     >>> time = data['time']
