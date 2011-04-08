@@ -2,6 +2,7 @@
 """
 Various decorator functions
     - Memoization with args and kwargs (@memoized)
+    - Make a parallel version of a function (@make_parallel)
     - Retry with exponential backoff (@retry(3,2))
     - Retry accessing website with exponential backoff (@retry(3,2))
     - Counting function calls (@countcalls)
@@ -46,6 +47,25 @@ def clear_memoization():
     for key in memory.keys():
         del memory[key]
     print("Memoization cleared")
+
+def make_parallel(fctn):
+    """
+    Make a parallel version of a function.
+    
+    This extends the function's arguments with one extra argument, which is
+    a parallel array that collects the output of the function.
+    
+    You have to decorate this function in turn with a function that calls the
+    basic function, but with different arguments so to effectively make it
+    parallel (e.g. in the frequency analysis case, this would be a function
+    that calls the periodogram calculation with different f0 and fn.
+    """
+    @functools.wraps(fctn)
+    def extra(*args,**kwargs):
+        arr = args[-1] # this is the parallel array
+        out = fctn(*args[:-1],**kwargs)
+        arr.append(out) # collect the output
+    return extra
 
 def timeit(fctn):
     """
