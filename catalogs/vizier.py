@@ -76,7 +76,7 @@ def search(source,**kwargs):
     
         Now read in the FITS-file and plot the contents
         
-        >>> import pyfits,pylab,os
+        >>> import pyfits,pylab
         >>> ff = pyfits.open('2mass_test.fits')
         >>> p = pylab.gcf().canvas.set_window_title('test of <search>')
         >>> p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
@@ -115,7 +115,9 @@ def search(source,**kwargs):
     out_all = kwargs.get('out_all',True) # if None, basic
     out_max = kwargs.get('out_max',1000000) # not to unlimited
     filename = kwargs.get('filename',None)
-    if filename is not None:
+    if filename is not None and '.' in os.path.basename(filename):
+        filetype = os.path.splitext(filename)[1][1:]
+    elif filename is not None:
         filename = '%s.%s'%(filename,filetype)
     
     #-- options for quering
@@ -148,8 +150,6 @@ def search(source,**kwargs):
     results = None
     units = {}
     if filetype=='tsv':
-        import os
-        os.system('cp %s test.csv'%(filen))
         data,comms = ascii.read2array(filen,dtype=np.str,splitchar='\t',return_comments=True)
         
         #-- retrieve the data and put it into a record array
