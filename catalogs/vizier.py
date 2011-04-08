@@ -27,7 +27,10 @@ cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'vizier_cats.cfg')))
 
 
-def search(source,**kwargs):
+def search(source,ID=None,ra=None,dec=None,radius=5.,
+                  oc='deg',oc_eq='J2000',
+                  out_all=True,out_max=1000000,
+                  filename=None,filetype='tsv'):
     """
     Search and retrieve information from a VizieR catalog.
     
@@ -76,7 +79,7 @@ def search(source,**kwargs):
     
         Now read in the FITS-file and plot the contents
         
-        >>> import pyfits,pylab,os
+        >>> import pyfits,pylab
         >>> ff = pyfits.open('2mass_test.fits')
         >>> p = pylab.gcf().canvas.set_window_title('test of <search>')
         >>> p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
@@ -89,40 +92,29 @@ def search(source,**kwargs):
     
     @param source: name of a ViZieR catalog (e.g. 'II/246/out')
     @type source: str
-    @keyword filetype: type of the retrieved file 
+    @param filetype: type of the retrieved file 
     @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
-    @keyword oc: coordinates
+    @param oc: coordinates
     @type oc: str (one of 'deg'...)
-    @keyword out_all: retrieve all or basic information
+    @param out_all: retrieve all or basic information
     @type out_all: boolean (True = all, None = basic)
-    @keyword filename: name of the file to write the results to (no extension)
+    @param filename: name of the file to write the results to (no extension)
     @type filename: str
-    @keyword ID: target name
+    @param ID: target name
     @type ID: str
-    @keyword ra: target's right ascension
+    @param ra: target's right ascension
     @type ra: float
-    @keyword dec: target's declination
+    @param dec: target's declination
     @type dec: float
-    @keyword radius: search radius (arcseconds)
+    @param radius: search radius (arcseconds)
     @type radius: float
     @return: filename / catalog data columns, units, comments
     @rtype: str/ record array, dict, list of str
     """
-    #-- options for output format
-    filetype = kwargs.get('filetype','tsv')
-    oc = kwargs.get('oc','deg')
-    oc_eq = kwargs.get('oc_eq','J2000')
-    out_all = kwargs.get('out_all',True) # if None, basic
-    out_max = kwargs.get('out_max',1000000) # not to unlimited
-    filename = kwargs.get('filename',None)
-    if filename is not None:
+    if filename is not None and '.' in os.path.basename(filename):
+        filetype = os.path.splitext(filename)[1][1:]
+    elif filename is not None:
         filename = '%s.%s'%(filename,filetype)
-    
-    #-- options for quering
-    ID = kwargs.get('ID',None)
-    ra = kwargs.get('ra',None)
-    dec = kwargs.get('dec',None)
-    radius = kwargs.get('radius',5.)
     
     #-- gradually build URI
     source_ = urllib.quote(source)
@@ -148,8 +140,6 @@ def search(source,**kwargs):
     results = None
     units = {}
     if filetype=='tsv':
-        import os
-        os.system('cp %s test.csv'%(filen))
         data,comms = ascii.read2array(filen,dtype=np.str,splitchar='\t',return_comments=True)
         
         #-- retrieve the data and put it into a record array
