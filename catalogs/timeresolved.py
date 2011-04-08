@@ -2,9 +2,9 @@
 """
 Retrieve Hipparcos epoch photometry from the internet
 
-Author: Joris De Ridder
+Author: Joris De Ridder & Pieter Degroote
 
-Error messages are written to the logger "gethipdata".
+Error messages are written to the logger "timeresolved".
 """
 
 from __future__ import with_statement
@@ -22,7 +22,7 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
         
-logger = logging.getLogger("gethipdata")
+logger = logging.getLogger("timeresolved")
 nullHandler = NullHandler()
 logger.addHandler(nullHandler)
 
@@ -38,29 +38,27 @@ def getHipData(hipnr, outputFileName=None):
     The time points are given in barycentric Julian Date and are corrected
     for the offset of 2440000.0 in the original files, but B{only in the output
     record array}. The output files display the B{original contents}.
-    
-    The header dictionary is of style::
-    
-        {'HH14': ('A', 'Annex flag (light curves)'),
-         ...}
-    
+       
     For more information:
     C{http://www.rssd.esa.int/SA-general/Projects/Hipparcos/CATALOGUE_VOL1/sect2_05.ps.gz}
     
-    Example 1: using the output file
+    Example:
     
-    >>> data,header = getHipData(23124, "myfile.txt")
-    >>> from numpy import loadtxt
-    >>> data = loadtxt("myfile.txt")
-    >>> time,magnitude,errorbar,flag = data[:,0],data[:,1],data[:,2],data[:,3]
-    >>> time = time[flag <= 2.]
-    >>> magnitude = magnitude[flag <= 2]
-    >>> errorbar = errorbar[flag <= 2]
+    >>> data,header = getHipData(1234)
+    >>> data = data[data['q_mag'] <= 2]         # keep only the good points
     
-    Example 2: using the output record array
+    To write the retrieved data to a file:
     
-    >>> data,header = getHipData(23124)
-    >>> data = data[ data['q_mag']<=2. ]
+    >>> data, header = getHipData(1234 , "myfile.txt")
+    
+   To store the different columns in separate arrays:
+    
+    >>> data, header = getHipData(1234)
+    >>> time = data['time']
+    >>> magnitude = data['mag']
+    >>> errorbar = data['e_mag']
+    >>> qualityflag = data['q_mag']
+    
     
     @param hipnr: the hipparcos number of the star. 
                   E.g. 1234 or "1234"
@@ -68,8 +66,10 @@ def getHipData(hipnr, outputFileName=None):
     @param outputFileName: the name of the file that will be created
                            to save the Hipparcos time series
     @type outputFileName: string
-    @return: record array with fields C{time}, C{mag}, C{e_mag}, C{q_mag} and
-    a dictionary containing the header information
+    @return: record array with fields time, mag, e_mag (errorbar), 
+             q_mag (quality flag), and a dictionary containing the 
+             header information. The header dictionary is of style
+             {'HH14': ('A', 'Annex flag (light curves)'), ...}
     @rtype: rec array, dict
     
     """
@@ -94,6 +94,7 @@ def getHipData(hipnr, outputFileName=None):
     # Parse the webpage, to remove the html codes (line starts with <").
     # Put a "#" in front of the header information, and format nicely.
     # Write to the output file if asked for.
+    
     data = []
     header = {}
     
@@ -104,18 +105,24 @@ def getHipData(hipnr, outputFileName=None):
         if line == "": continue
         if not line.startswith("<"):
             line = line.replace("|", " ").replace("\r", "")
-            #-- this is the header
+            
+            # This is the header
+            
             if not line[0].isdigit():
                 sline = line.split(':')
-                #-- only keep header entries of the style "key: value information"
-                #   in the dictionary
+                
+                # Only keep header entries of the style 
+                # "key: value information" in the dictionary
+                
                 if len(sline)==2:
                     key,info = sline
                     info = info.split()
                     header[key] = (info[0]," ".join(info[1:]))
                 if outputFileName:
                     line = "# " + line
-            #-- this is the real contents
+                    
+            # This is the real contents
+            
             else:
                 data.append(tuple(line.split()))
             if outputFileName:
@@ -123,14 +130,20 @@ def getHipData(hipnr, outputFileName=None):
     if outputFileName:
         outputFile.close()
     
-    #-- now make a record array
-    #   we choose the header name to be in the VizieR style
+    # Make a record array.
+    # Choose the header names to be in the VizieR style.
+    
     dtypes = [('time','>f4'),('mag','>f4'),('e_mag','>f4'),('q_mag','i')]
     data = np.rec.array(data,dtype=dtypes)
     
-    #-- fix the time offset
+    # Fix the time offset
+    
     data['time'] += 2440000.0
+    
     return data,header
+
+
+
 
 if __name__=="__main__":
     import doctest
