@@ -8,8 +8,10 @@ import os
 import pyfits
 
 import numpy as np
+from ivs.misc import loggers
 
 logger = logging.getLogger("IO.FITS")
+logger.addHandler(loggers.NullHandler)
 
 #{ Input
 

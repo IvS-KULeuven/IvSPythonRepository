@@ -7,8 +7,10 @@ import logging
 import os
 
 import numpy as np
+from ivs.misc import loggers
 
 logger = logging.getLogger("IO.ASCII")
+logger.addHandler(loggers.NullHandler)
 
 #{ Input
 def read2list(filename,**kwargs):
