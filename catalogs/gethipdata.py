@@ -60,8 +60,7 @@ def getHipData(hipnr, outputFileName=None):
     Example 2: using the output record array
     
     >>> data,header = getHipData(23124)
-    >>> data = data[ data['q_flag'<=2.] ]
-
+    >>> data = data[ data['q_mag']<=2. ]
     
     @param hipnr: the hipparcos number of the star. 
                   E.g. 1234 or "1234"
@@ -126,10 +125,14 @@ def getHipData(hipnr, outputFileName=None):
     
     #-- now make a record array
     #   we choose the header name to be in the VizieR style
-    dtypes = [('time','>f4'),('mag','>f4'),('e_mag','>f4'),('q_mag','>f4')]
+    dtypes = [('time','>f4'),('mag','>f4'),('e_mag','>f4'),('q_mag','i')]
     data = np.rec.array(data,dtype=dtypes)
     
     #-- fix the time offset
     data['time'] += 2440000.0
     return data,header
+
+if __name__=="__main__":
+    import doctest
+    doctest.testmod()
     
