@@ -1,2 +1,2 @@
 
-__all__ = ["gethipdata"]
+__all__ = ["timeresolved", "vizier"]
