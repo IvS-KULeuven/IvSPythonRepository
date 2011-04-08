@@ -855,6 +855,8 @@ class ABMag(NonLinearConverter):
 class STMag(NonLinearConverter):
     """
     Convert an ST magnitude to W/m2/m (Flambda) and back
+    
+    mag = -2.5*log10(F) + 21.10
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         data = read_fluxcalib()

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Interface to the ViZieR website.
+Interface to the VizieR website.
 
-Download or retrieve ViZieR catalogs.
+Download or retrieve VizieR catalogs.
 
 You can define 'standard' photometric catalogs in the C{vizier_cats.cfg} file.
 This files is basically a translator for VizieR column headers to photometric
@@ -179,6 +179,10 @@ def search(source,**kwargs):
                  col = data[3:,i]
                  #-- fill empty values with nan
                  cols.append([(row.isspace() or not row) and np.nan or row for row in col])
+                 #-- fix unit name
+                 #if source in cat_info.sections() and cat_info.has_option(source,data[1,i]):
+                 #   units[key] = cat_info.get(source,data[1,i])
+                 #else:  
                  units[key] = data[1,i]
             #-- define columns for record array and construct record array
             cols = [np.cast[dtypes[i]](cols[i]) for i in range(len(cols))]
@@ -189,12 +193,12 @@ def search(source,**kwargs):
 
 def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fields=None):
     """
-    Convert/combine ViZieR record arrays to measurement record arrays.
+    Convert/combine VizieR record arrays to measurement record arrays.
     
-    Every line in the combined array represent a measurement in a certain band.
+    Every line in the combined array represents a measurement in a certain band.
     
     This is probably only useful if C{results} contains only information on
-    one target (or you have the give 'ID' as an extra column).
+    one target (or you have to give 'ID' as an extra field, maybe).
     
     The standard columns are:
     
@@ -220,70 +224,80 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     
     First look for all photometry of Vega in all VizieR catalogs:
     
+    >>> from ivs.reduction.photometry import calibration
+    >>> import pylab
     >>> master = None
     >>> for source in cat_info.sections():
     ...     results,units,comms = search(source,ID='vega',radius=60.)
     ...     if results is not None:
     ...         master = vizier2phot(source,results,units,master,extra_fields=['_r','_RAJ2000','_DEJ2000'])
     
-    Keep only observations we have an error of, and convert every observation to 'Jy'
+    Keep only observations we have an measurement and error of, convert every
+    observation to 'Jy' and keep track of the results to plot.
     
-    >>> master = master[-np.isnan(master['e_meas'])]
+    >>> master = master[(-np.isnan(master['e_meas'])) & (-np.isnan(master['meas']))]
+    >>> plotdata = np.zeros((2,len(master)))
     >>> for i in range(len(master)):
     ...     try:
     ...         myvalue = conversions.convert(master[i]['unit'],'Jy',master[i]['meas'],photband=master[i]['photband'])
+    ...         cwave = calibration.eff_wave(master[i]['photband'])
     ...     except ValueError:
-    ...         myvalue = np.nan
-    ...     print '%15s %10.3e+/-%10.3e %15s %10.3e %15s %6.2f %6.2f %6.3f %25s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue,'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
-          JOHNSON.V  3.300e-02+/- 1.200e-02             mag  3.598e+03              Jy 279.23  38.78  0.000           II/168/ubvmeans
-        JOHNSON.B-V -1.000e-03+/- 5.000e-03             mag        nan              Jy 279.23  38.78  0.000           II/168/ubvmeans
-        JOHNSON.U-B -6.000e-03+/- 6.000e-03             mag        nan              Jy 279.23  38.78  0.000           II/168/ubvmeans
-          JOHNSON.B  3.200e-02+/- 1.300e-02             mag  4.054e+03              Jy 279.23  38.78  0.000           II/168/ubvmeans
-          JOHNSON.U  2.600e-02+/- 1.432e-02             mag  1.807e+03              Jy 279.23  38.78  0.000           II/168/ubvmeans
-           TD1.1965  4.928e-09+/- 1.300e-11      10mW/m2/nm  6.347e+02              Jy 279.23  38.78 18.520            II/59B/catalog
-           TD1.1565  5.689e-09+/- 1.700e-11      10mW/m2/nm  4.648e+02              Jy 279.23  38.78 18.520            II/59B/catalog
-           TD1.2365  3.700e-09+/- 1.000e-11      10mW/m2/nm  6.903e+02              Jy 279.23  38.78 18.520            II/59B/catalog
-           TD1.2740  3.123e-09+/- 9.000e-12      10mW/m2/nm  7.821e+02              Jy 279.23  38.78 18.520            II/59B/catalog
-        AKARI.WIDEL  4.047e+00+/- 3.500e-01              Jy  4.047e+00              Jy 279.23  38.78  3.400                II/298/fis
-        AKARI.WIDES  6.201e+00+/- 1.650e-01              Jy  6.201e+00              Jy 279.23  38.78  3.400                II/298/fis
-         AKARI.N160  3.221e+00+/- 2.550e-01              Jy  3.221e+00              Jy 279.23  38.78  3.400                II/298/fis
-          AKARI.N60  6.582e+00+/- 2.090e-01              Jy  6.582e+00              Jy 279.23  38.78  3.400                II/298/fis
-         DIRBE.F140  2.557e+02+/- 5.223e+03              Jy  2.557e+02              Jy 279.23  38.78  0.120            J/ApJS/154/673
-         DIRBE.F240  8.290e+01+/- 2.881e+03              Jy  8.290e+01              Jy 279.23  38.78  0.120            J/ApJS/154/673
-         DIRBE.F4_9  1.504e+02+/- 6.200e+00              Jy  1.504e+02              Jy 279.23  38.78  0.120            J/ApJS/154/673
-         DIRBE.F2_2  6.217e+02+/- 9.500e+00              Jy  6.217e+02              Jy 279.23  38.78  0.120            J/ApJS/154/673
-         DIRBE.F3_5  2.704e+02+/- 1.400e+01              Jy  2.704e+02              Jy 279.23  38.78  0.120            J/ApJS/154/673
-          DIRBE.F12  2.910e+01+/- 1.570e+01              Jy  2.910e+01              Jy 279.23  38.78  0.120            J/ApJS/154/673
-          DIRBE.F25  1.630e+01+/- 3.120e+01              Jy  1.630e+01              Jy 279.23  38.78  0.120            J/ApJS/154/673
-          DIRBE.F60  1.220e+01+/- 5.610e+01              Jy  1.220e+01              Jy 279.23  38.78  0.120            J/ApJS/154/673
-         DIRBE.F100 -7.000e-01+/- 7.790e+01              Jy -7.000e-01              Jy 279.23  38.78  0.120            J/ApJS/154/673
-           GENEVA.V  6.100e-02+/- 2.500e-02             mag  3.629e+03              Jy 279.24  38.77 56.000               II/169/main
-           GENEVA.B -8.980e-01+/- 2.500e-02             mag  3.837e+03              Jy 279.24  38.77 56.000               II/169/main
-           GENEVA.G  1.270e+00+/- 2.500e-02             mag  3.450e+03              Jy 279.24  38.77 56.000               II/169/main
-          GENEVA.B2  6.120e-01+/- 2.500e-02             mag  4.152e+03              Jy 279.24  38.77 56.000               II/169/main
-           GENEVA.U  6.070e-01+/- 2.500e-02             mag  1.259e+03              Jy 279.24  38.77 56.000               II/169/main
-          GENEVA.V1  7.640e-01+/- 2.500e-02             mag  3.673e+03              Jy 279.24  38.77 56.000               II/169/main
-          GENEVA.B1  2.000e-03+/- 2.500e-02             mag  3.521e+03              Jy 279.24  38.77 56.000               II/169/main
-           IRAS.F60  9.510e+00+/- 8.000e+00              Jy  9.510e+00              Jy 279.23  38.78  9.400               II/125/main
-          IRAS.F100  7.760e+00+/- 9.000e+00              Jy  7.760e+00              Jy 279.23  38.78  9.400               II/125/main
-           IRAS.F12  4.160e+01+/- 4.000e+00              Jy  4.160e+01              Jy 279.23  38.78  9.400               II/125/main
-           IRAS.F25  1.100e+01+/- 5.000e+00              Jy  1.100e+01              Jy 279.23  38.78  9.400               II/125/main
-         AKARI.L18W  1.254e+01+/- 7.770e-02              Jy  1.254e+01              Jy 279.24  38.78  2.540                II/297/irc
-          AKARI.S9W  5.670e+01+/- 4.010e-01              Jy  5.670e+01              Jy 279.24  38.78  2.540                II/297/irc
-          JOHNSON.J        nan+/- 2.100e-01             mag       -nan              Jy 279.23  38.78  0.000   J/PASP/120/1128/catalog
-          JOHNSON.K  1.300e-01+/- 1.900e-01             mag  6.051e+02              Jy 279.23  38.78  0.000   J/PASP/120/1128/catalog
-          JOHNSON.H        nan+/- 1.500e-01             mag       -nan              Jy 279.23  38.78  0.000   J/PASP/120/1128/catalog
-             ANS.25  4.600e-02+/- 4.000e-03             mag        nan              Jy 279.23  38.78 14.000                 II/97/ans
-            ANS.15W -4.410e-01+/- 1.200e-02             mag        nan              Jy 279.23  38.78 14.000                 II/97/ans
-             ANS.33  1.910e-01+/- 3.000e-03             mag        nan              Jy 279.23  38.78 14.000                 II/97/ans
-             ANS.18 -4.620e-01+/- 3.000e-03             mag        nan              Jy 279.23  38.78 14.000                 II/97/ans
-            ANS.15N -4.910e-01+/- 1.000e-03             mag        nan              Jy 279.23  38.78 14.000                 II/97/ans
-          JOHNSON.B  1.900e-02+/- 1.000e-02             mag  4.102e+03              Jy 279.23  38.78  3.070               I/280B/ascc
-          JOHNSON.V  7.400e-02+/- 2.000e-03             mag  3.465e+03              Jy 279.23  38.78  3.070               I/280B/ascc
-            2MASS.J -1.770e-01+/- 2.060e-01             mag  1.845e+03              Jy 279.23  38.78  0.034                II/246/out
-           2MASS.KS  1.290e-01+/- 1.860e-01             mag  6.083e+02              Jy 279.23  38.78  0.034                II/246/out
-            2MASS.H -2.900e-02+/- 1.460e-01             mag  1.067e+03              Jy 279.23  38.78  0.034                II/246/out
+    ...         myvalue,cwave = np.nan,np.nan
+    ...     plotdata[:,i] = cwave,myvalue
+    ...     print '%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue,'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
+          JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.598e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
+        JOHNSON.B-V -1.000e-03+/- 5.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
+        JOHNSON.U-B -6.000e-03+/- 6.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
+          JOHNSON.B  3.200e-02+/- 1.300e-02         mag  4.054e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
+          JOHNSON.U  2.600e-02+/- 1.432e-02         mag  1.807e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
+           TD1.1965  4.928e-09+/- 1.300e-11  10mW/m2/nm  6.347e+02  Jy 279.23  38.78 18.520          II/59B/catalog
+           TD1.1565  5.689e-09+/- 1.700e-11  10mW/m2/nm  4.648e+02  Jy 279.23  38.78 18.520          II/59B/catalog
+           TD1.2365  3.700e-09+/- 1.000e-11  10mW/m2/nm  6.903e+02  Jy 279.23  38.78 18.520          II/59B/catalog
+           TD1.2740  3.123e-09+/- 9.000e-12  10mW/m2/nm  7.821e+02  Jy 279.23  38.78 18.520          II/59B/catalog
+        AKARI.WIDEL  4.047e+00+/- 3.500e-01          Jy  4.047e+00  Jy 279.23  38.78  3.400              II/298/fis
+        AKARI.WIDES  6.201e+00+/- 1.650e-01          Jy  6.201e+00  Jy 279.23  38.78  3.400              II/298/fis
+         AKARI.N160  3.221e+00+/- 2.550e-01          Jy  3.221e+00  Jy 279.23  38.78  3.400              II/298/fis
+          AKARI.N60  6.582e+00+/- 2.090e-01          Jy  6.582e+00  Jy 279.23  38.78  3.400              II/298/fis
+         DIRBE.F140  2.557e+02+/- 5.223e+03          Jy  2.557e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
+         DIRBE.F240  8.290e+01+/- 2.881e+03          Jy  8.290e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
+         DIRBE.F4_9  1.504e+02+/- 6.200e+00          Jy  1.504e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
+         DIRBE.F2_2  6.217e+02+/- 9.500e+00          Jy  6.217e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
+         DIRBE.F3_5  2.704e+02+/- 1.400e+01          Jy  2.704e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
+          DIRBE.F12  2.910e+01+/- 1.570e+01          Jy  2.910e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
+          DIRBE.F25  1.630e+01+/- 3.120e+01          Jy  1.630e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
+          DIRBE.F60  1.220e+01+/- 5.610e+01          Jy  1.220e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
+         DIRBE.F100 -7.000e-01+/- 7.790e+01          Jy -7.000e-01  Jy 279.23  38.78  0.120          J/ApJS/154/673
+           GENEVA.V  6.100e-02+/- 2.500e-02         mag  3.629e+03  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.B -8.980e-01+/- 2.500e-02         mag  3.837e+03  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.G  1.270e+00+/- 2.500e-02         mag  3.450e+03  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.B2  6.120e-01+/- 2.500e-02         mag  4.152e+03  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.U  6.070e-01+/- 2.500e-02         mag  1.259e+03  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.V1  7.640e-01+/- 2.500e-02         mag  3.673e+03  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.B1  2.000e-03+/- 2.500e-02         mag  3.521e+03  Jy 279.24  38.77 56.000             II/169/main
+           IRAS.F60  9.510e+00+/- 8.000e+00          Jy  9.510e+00  Jy 279.23  38.78  9.400             II/125/main
+          IRAS.F100  7.760e+00+/- 9.000e+00          Jy  7.760e+00  Jy 279.23  38.78  9.400             II/125/main
+           IRAS.F12  4.160e+01+/- 4.000e+00          Jy  4.160e+01  Jy 279.23  38.78  9.400             II/125/main
+           IRAS.F25  1.100e+01+/- 5.000e+00          Jy  1.100e+01  Jy 279.23  38.78  9.400             II/125/main
+         AKARI.L18W  1.254e+01+/- 7.770e-02          Jy  1.254e+01  Jy 279.24  38.78  2.540              II/297/irc
+          AKARI.S9W  5.670e+01+/- 4.010e-01          Jy  5.670e+01  Jy 279.24  38.78  2.540              II/297/irc
+          JOHNSON.K  1.300e-01+/- 1.900e-01         mag  6.051e+02  Jy 279.23  38.78  0.000 J/PASP/120/1128/catalog
+             ANS.25  4.600e-02+/- 4.000e-03       STmag  7.853e+02  Jy 279.23  38.78 14.000               II/97/ans
+            ANS.15W -4.410e-01+/- 1.200e-02       STmag  1.936e+02  Jy 279.23  38.78 14.000               II/97/ans
+             ANS.33  1.910e-01+/- 3.000e-03       STmag  1.568e+03  Jy 279.23  38.78 14.000               II/97/ans
+             ANS.18 -4.620e-01+/- 3.000e-03       STmag  2.580e+02  Jy 279.23  38.78 14.000               II/97/ans
+            ANS.15N -4.910e-01+/- 1.000e-03       STmag  1.839e+02  Jy 279.23  38.78 14.000               II/97/ans
+          JOHNSON.B  1.900e-02+/- 1.000e-02         mag  4.102e+03  Jy 279.23  38.78  3.070             I/280B/ascc
+          JOHNSON.V  7.400e-02+/- 2.000e-03         mag  3.465e+03  Jy 279.23  38.78  3.070             I/280B/ascc
+            2MASS.J -1.770e-01+/- 2.060e-01         mag  1.845e+03  Jy 279.23  38.78  0.034              II/246/out
+           2MASS.KS  1.290e-01+/- 1.860e-01         mag  6.083e+02  Jy 279.23  38.78  0.034              II/246/out
+            2MASS.H -2.900e-02+/- 1.460e-01         mag  1.067e+03  Jy 279.23  38.78  0.034              II/246/out
                 
+    Make a quick plot:
+    
+    >>> p = pylab.figure()
+    >>> p = pylab.loglog(plotdata[0],plotdata[1],'ko')
+    >>> p = pylab.show()
+    
     @param source: name of the VizieR source
     @type source: str
     @param results: results from VizieR C{search}
@@ -324,7 +338,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
-        if key in ['e_flag','q_flag']:
+        if key in ['e_flag','q_flag','mag']:
             continue
         photband = cat_info.get(source,key)
         #-- contains measurement, error, quality, units, photometric band and

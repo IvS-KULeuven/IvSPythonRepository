@@ -97,3 +97,8 @@
         GAIA.BP       0.0300   nan     nan     0.0376738
         GAIA.G        0.0300   nan     nan     0.0224759
         GAIA.RVS      0.0300   nan     nan     0.00924674
+         ANS.25      nan       nan     0       nan
+         ANS.15W     nan       nan     0       nan
+         ANS.15N     nan       nan     0       nan
+         ANS.33      nan       nan     0       nan
+         ANS.18      nan       nan     0       nan
