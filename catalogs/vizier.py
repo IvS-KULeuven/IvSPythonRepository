@@ -18,14 +18,18 @@ import ConfigParser
 #-- IvS repository
 from ivs.io import ascii
 from ivs.units import conversions
+from ivs.misc import loggers
 
 logger = logging.getLogger("CAT.VIZIER")
+logger.addHandler(loggers.NullHandler)
 
 #-- read in catalog information
 cat_info = ConfigParser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'vizier_cats.cfg')))
 
+
+#{ Basic interfaces
 
 def search(source,ID=None,ra=None,dec=None,radius=5.,
                   oc='deg',oc_eq='J2000',
@@ -180,6 +184,10 @@ def search(source,ID=None,ra=None,dec=None,radius=5.,
     url.close()
     logger.debug('Results converted to record array')
     return results,units,comms
+
+
+#}
+#{ Convenience functions
 
 def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fields=None):
     """
@@ -359,6 +367,11 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
     return master
     
+
+#}
+
+#{ Internal helper functions
+
 def _breakup_colours(master):
     """
     From colors and one magnitude measurement, derive the other magnitudes.
@@ -422,6 +435,8 @@ def test():
     """
     import doctest
     doctest.testmod()
+
+#}
 
 if __name__=="__main__":
     test()
