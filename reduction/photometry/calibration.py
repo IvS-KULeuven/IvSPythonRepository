@@ -15,6 +15,7 @@ import numpy as np
 
 from ivs.misc.decorators import memoized
 from ivs.io import ascii
+from ivs import config
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -95,16 +96,6 @@ def eff_wave(photband):
 
 #}
 
-#{ Synthetic photometry
-
-def synthetic_photometry(wave,flux,photbands):
-    """
-    Calculate synthetic photometry from a model SED.
-    """
-    raise NotImplementedError
-
-
-#}
 if __name__=="__main__":
     import doctest
     doctest.testmod()
