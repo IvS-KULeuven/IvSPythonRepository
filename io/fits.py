@@ -45,7 +45,3 @@ def read_spectrum(filename, return_header=False):
         return wave,flux
     
 #}
-
-#{ Output
-
-#}
