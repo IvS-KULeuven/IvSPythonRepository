@@ -14,6 +14,7 @@ class NullHandler(logging.Handler):
     """
     The NullHandler is part of the standard logging module only from Python 2.7 on.
     """
+    level = 100
     def emit(self, record):
         pass
 
@@ -73,5 +74,4 @@ def get_basic_logger(name="",clevel='INFO',
     #-- If we only want a console:
     else:
         logging.basicConfig(level=clevel,format=format,datefmt=datefmt,filename=filename,filemode=filemode)        
-        
     return logging.getLogger(name)

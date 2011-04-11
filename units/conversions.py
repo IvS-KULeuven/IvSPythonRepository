@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Convert one unit to another.
+Convert one unit (and uncertainty) to another.
 
-Some of the  many possibilities include:
+Some of the many possibilities include:
     
     1. Conversions between equal-type units: meter to nano-lightyears, erg/s
     to W, cy/d to muHz, but also erg/s/cm2/A to W/m2/mum, sr to deg2, etc...
@@ -12,6 +12,8 @@ Some of the  many possibilities include:
     3. Nonlinear conversions: vegamag to erg/s/cm2/A or Jy, Celcius to
     Fahrenheit or Kelvin, calender date to (modified) Julian Day, Equatorial to
     Ecliptic coordinates, etc...
+    4. Inclusion of uncertainties, both in input values and/or reference values
+    when converting between unequal-type units.
 
 The main function C{convert} does all the work and is called via
 
@@ -41,11 +43,16 @@ import re
 import os
 import logging
 import numpy as np
+
+#-- optional libraries: WARNING: when these modules are not installed, the
+#   module's use is restricted
 try: import ephem
 except ImportError: print("Unable to load pyephem, coordinate transfos unavailable")
 
 #-- from IVS repository
 from ivs.units.constants import *
+from ivs.units.uncertainties import unumpy,AffineScalarFunc
+from ivs.units.uncertainties.unumpy import log10
 from ivs.reduction.photometry import calibration
 from ivs.io import ascii
 
@@ -57,10 +64,40 @@ def convert(_from,_to,*args,**kwargs):
     """
     Convert one unit to another.
     
-    Keyword arguments can give extra information, for example when converting
-    from Flambda to Fnu, and should be tuples (float,'unit').
+    1. Basic explanation
+    ====================
     
-    The unit strings should by default be given in the form
+    The unit strings C{_from} and C{_to} should by default be given in the form
+    
+    C{erg s-1 cm-2 A-1}
+    
+    Common alternatives are also accepted (see below).
+    
+    If one positional argument is given, it can be either a scalar, numpy array
+    or C{uncertainties} object. The function will also return one argument of
+    the same type.
+    
+    If two positional arguments are given, the second argument is assumed to be
+    the uncertainty on the first (scalar or numpy array). The function will also
+    return two arguments.
+
+    Basic examples:
+    
+    >>> convert('km','cm',1.)
+    100000.0
+    >>> convert('m/s','km/h',1,0.1)
+    (3.5999999999999996, 0.35999999999999999)
+    
+    Keyword arguments can give extra information, for example when converting
+    from Flambda to Fnu, and should be tuples (float(,error),'unit'):
+    
+    >>> convert('A','km/s',4553,0.1,wave=(4552.,0.1,'A'))
+    (65.859503075576129, 9.3149633624641144)
+    
+    2. Extra
+    ========
+    
+    The unit strings C{_from} and C{_to} should by default be given in the form
     
     C{erg s-1 cm-2 A-1}
     
@@ -80,16 +117,16 @@ def convert(_from,_to,*args,**kwargs):
     
     B{WARNINGS}:
         1. the conversion involving sr and pixels is B{not tested}.
-        2. the conversion involving magnitudes is not tested and not calibrated
+        2. the conversion involving magnitudes is calibrated but not fully tested
     
     Examples:
     
     B{Spectra}:
     
-    >>> convert('km','cm',1.)
-    100000.0
     >>> convert('A','km/s',4553.,wave=(4552.,'A'))
     65.859503075576129
+    >>> convert('A','km/s',4553.,wave=(4552.,0.1,'A'))
+    (65.859503075576129, 6.5873971331958607)
     >>> convert('nm','m/s',455.3,wave=(0.4552,'mum'))
     65859.503075645873
     >>> convert('km/s','A',65.859503075576129,wave=(4552.,'A'))
@@ -151,9 +188,9 @@ def convert(_from,_to,*args,**kwargs):
     >>> print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
     1.08848062485e-09
     >>> print(convert('ABmag','erg cm-2 s-1 A-1',0.,wave=(1.,'micron'),photband='SDSS.G'))
-    1.08848062485e-09
+    4.93934836475e-09
     >>> print(convert('erg cm-2 s-1 A-1','ABmag',1e-8,wave=(1.,'micron'),photband='SDSS.G'))
-    -2.40794824268
+    -0.765825856568
     
     B{Frequency analysis}:
     
@@ -223,6 +260,15 @@ def convert(_from,_to,*args,**kwargs):
     @return: converted value
     @rtype: float
     """
+    #-- get the input arguments: if only one is given, it is either an
+    #   C{uncertainty} from the C{uncertainties} package, or it is just a float
+    if len(args)==1:
+        start_value = args[0]
+    #   if two arguments are given, we assume the first is the actual value and
+    #   the second is the error on the value
+    elif len(args)==2:
+        start_value = unumpy.uarray([args[0],args[1]])
+        
     #-- break down the from and to units to their basic elements
     fac_from,uni_from = breakdown(_from)
     if _to!='SI':
@@ -230,12 +276,17 @@ def convert(_from,_to,*args,**kwargs):
     else:
         fac_to,uni_to = 1.,uni_from
     
-    #-- convert the kwargs to SI units if they are tuples
+    #-- convert the kwargs to SI units if they are tuples (make a distinction
+    #   when uncertainties are given)
     kwargs_SI = {}
     for key in kwargs:
-        if isinstance(kwargs[key],tuple):
+        if isinstance(kwargs[key],tuple) and len(kwargs[key])==2:
             fac_key,uni_key = breakdown(kwargs[key][1])
             kwargs_SI[key] = fac_key*kwargs[key][0]
+        elif isinstance(kwargs[key],tuple) and len(kwargs[key])==3:
+            fac_key,uni_key = breakdown(kwargs[key][2])
+            kwarg_value = unumpy.uarray([kwargs[key][0],kwargs[key][1]])
+            kwargs_SI[key] = fac_key*kwarg_value
         else:
             kwargs_SI[key] = kwargs[key]
     
@@ -244,9 +295,9 @@ def convert(_from,_to,*args,**kwargs):
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
         if isinstance(fac_from,NonLinearConverter):
-            ret_value *= fac_from(args[0],**kwargs_SI)
+            ret_value *= fac_from(start_value,**kwargs_SI)
         else:
-            ret_value *= fac_from*args[0]
+            ret_value *= fac_from*start_value
     #-- otherwise a little bit more complicated
     else:
         uni_from_ = uni_from.split()
@@ -258,11 +309,11 @@ def convert(_from,_to,*args,**kwargs):
         
         #-- especially for conversion from and to sterradians
         if 'cy-2' in only_to:
-            args = _switch['_to_cy-2'](args[0],**kwargs_SI),
+            start_value = _switch['_to_cy-2'](start_value,**kwargs_SI)
             only_to = only_to.replace('cy-2','')
             logger.debug('Switching to /sr')
         if 'cy-2' in only_from:
-            args = _switch['cy-2_to_'](args[0],**kwargs_SI),
+            start_value = _switch['cy-2_to_'](start_value,**kwargs_SI)
             only_from = only_from.replace('cy-2','')
             logger.debug('Switching from /sr')
         
@@ -273,10 +324,10 @@ def convert(_from,_to,*args,**kwargs):
             key = '%s_to_%s'%(only_from,only_to)
             logger.debug('Switching from %s to %s'%(only_from,only_to))
             if isinstance(fac_from,NonLinearConverter):
-                ret_value *= _switch[key](fac_from(args[0],**kwargs_SI),**kwargs_SI)
+                ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
             #-- linear conversions are easy
             else:
-                ret_value *= _switch[key](fac_from*args[0],**kwargs_SI)
+                ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
         except KeyError:
             logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key))
             raise
@@ -287,6 +338,16 @@ def convert(_from,_to,*args,**kwargs):
         ret_value = fac_to(ret_value,inv=True,**kwargs_SI)
     else:
         ret_value /= fac_to
+    
+    #-- unpack the uncertainties if: 
+    #    1. the input was not given as such
+    #    2. the input was without uncertainties, but extra keywords had uncertainties
+    if len(args)==2 or (len(args)==1 and isinstance(ret_value,AffineScalarFunc)):
+        ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
+        #-- convert to real floats if real floats were given
+        if not ret_value[0].shape:
+            ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])
+    
     
     return ret_value
 
@@ -836,7 +897,7 @@ class VegaMag(NonLinearConverter):
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
         F0 = data['F0'][match][0]
         if not inv: return 10**(-meas/2.5)*F0
-        else:       return -2.5*np.log10(meas/F0)
+        else:       return -2.5*log10(meas/F0)
 
 class ABMag(NonLinearConverter):
     """
@@ -850,7 +911,7 @@ class ABMag(NonLinearConverter):
         mag0 = data['ABMAG'][match][0]
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/2.5)*F0
-        else:       return -2.5*np.log10(meas/F0)
+        else:       return -2.5*log10(meas/F0)
 
 class STMag(NonLinearConverter):
     """
@@ -866,7 +927,7 @@ class STMag(NonLinearConverter):
         mag0 = data['STMAG'][match][0]
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/-2.5)*F0
-        else:       return -2.5*np.log10(meas/F0)
+        else:       return -2.5*log10(meas/F0)
 
 class JulianDay(NonLinearConverter):
     """
@@ -906,7 +967,8 @@ class ModJulianDay(NonLinearConverter):
     Convert a Modified Julian Day to Julian Day  and back
     """
     ZP = {'COROT':2451545.,
-          'MJD':2400000.5}
+            'HIP':2440000.,
+            'MJD':2400000.5}
     def __call__(self,meas,inv=False,jtype='MJD'):
         if inv:
             return meas-self.ZP[jtype.upper()]
@@ -1053,32 +1115,19 @@ _scalings ={'y':       1e-24, # yocto
  
 #-- some common aliases
 _aliases = [('micron','mum'),
-            ('micro','mu'),
-            ('milli','m'),
-            ('kilo','k'),
-            ('mega','M'),
-            ('giga','G'),
+            ('micro','mu'),('milli','m'),('kilo','k'),('mega','M'),('giga','G'),
             ('nano','n'),
-            ('watt','W'),
-            ('Watt','W'),
+            ('watt','W'),('Watt','W'),
             ('Hz','hz'),
-            ('joule','J'),
-            ('Joule','J'),
-            ('jansky','Jy'),
-            ('Jansky','Jy'),
-            ('arcsec','as'),
-            ('arcmin','am'),
-            ('cycles','cy'),
-            ('cycle','cy'),
-            ('cyc','cy'),
-            ('angstrom','A'),
-            ('Angstrom','A'),
+            ('joule','J'),('Joule','J'),
+            ('jansky','Jy'),('Jansky','Jy'),
+            ('arcsec','as'),('arcmin','am'),
+            ('cycles','cy'),('cycle','cy'),('cyc','cy'),
+            ('angstrom','A'),('Angstrom','A'),
             ('inch','in'),
-            ('^',''),
-            ('**',''),
-            ('galactic','gal'),
-            ('equatorial','equ'),
-            ('ecliptic','ecl'),
+            ('^',''),('**',''),
+            ('galactic','gal'),('equatorial','equ'),('ecliptic','ecl'),
+            ('Vegamag','vegamag')
             ]
  
 #-- Change-of-base function definitions
