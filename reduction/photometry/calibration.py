@@ -85,16 +85,37 @@ def eff_wave(photband):
     12412.136241640892
     
     @param photband: photometric passband
-    @type photband: str ('SYSTEM.FILTER')
+    @type photband: str ('SYSTEM.FILTER') or array/list of str
     @return: effective wavelength [A]
-    @rtype: float
+    @rtype: float or numpy array
     """
-    wave,response = get_response(photband)
-    return np.average(wave,weights=response)
+    #-- if photband is a string, it's the name of a photband
+    if isinstance(photband,str):
+        wave,response = get_response(photband)
+        my_eff_wave = np.average(wave,weights=response)
+    #-- else, it is a container
+    else:
+        my_eff_wave = []
+        for iphotband in photband:
+            wave,response = get_response(photband)
+            my_eff_wave.append(np.average(wave,weights=response))
+        my_eff_wave = np.array(my_eff_wave,float)
+            
+    return my_eff_wave
 
 
 
 #}
+
+#{ Calibrators
+
+def get_calibrator(name):
+    """
+    Retrieve a calibration SED
+    """
+
+#}
+
 
 if __name__=="__main__":
     import doctest
