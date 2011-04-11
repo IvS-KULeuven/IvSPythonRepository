@@ -64,8 +64,8 @@ def convert(_from,_to,*args,**kwargs):
     """
     Convert one unit to another.
     
-    1. Basic explanation
-    ====================
+    Basic explanation
+    =================
     
     The unit strings C{_from} and C{_to} should by default be given in the form
     
@@ -94,8 +94,8 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('A','km/s',4553,0.1,wave=(4552.,0.1,'A'))
     (65.859503075576129, 9.3149633624641144)
     
-    2. Extra
-    ========
+    Extra
+    =====
     
     The unit strings C{_from} and C{_to} should by default be given in the form
     

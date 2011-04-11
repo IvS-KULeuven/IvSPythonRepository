@@ -44,6 +44,25 @@ def get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
                      filetype='tsv'):
     """
     Build Vizier URI from available options.
+    
+    @param name: name of a ViZieR catalog (e.g. 'II/246/out')
+    @type name: str
+    @param filetype: type of the retrieved file 
+    @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
+    @param oc: coordinates
+    @type oc: str (one of 'deg'...)
+    @param out_all: retrieve all or basic information
+    @type out_all: boolean (True = all, None = basic)
+    @param ID: target name
+    @type ID: str
+    @param ra: target's right ascension
+    @type ra: float
+    @param dec: target's declination
+    @type dec: float
+    @param radius: search radius (arcseconds)
+    @type radius: float
+    @return: url
+    @rtype: str
     """
     base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
     if name:    base_url += '&-source=%s'%(name)
@@ -116,22 +135,8 @@ def search(name,**kwargs):
     
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
-    @param filetype: type of the retrieved file 
-    @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
-    @param oc: coordinates
-    @type oc: str (one of 'deg'...)
-    @param out_all: retrieve all or basic information
-    @type out_all: boolean (True = all, None = basic)
     @param filename: name of the file to write the results to (no extension)
     @type filename: str
-    @param ID: target name
-    @type ID: str
-    @param ra: target's right ascension
-    @type ra: float
-    @param dec: target's declination
-    @type dec: float
-    @param radius: search radius (arcseconds)
-    @type radius: float
     @return: filename / catalog data columns, units, comments
     @rtype: str/ record array, dict, list of str
     """

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Frequency Analysis Routines.
 
@@ -314,7 +315,7 @@ def windowfunction(time, freq):
     @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
     @type freq: ndarray       
     @return: |W(freq)|^2      [0..Nfreq-1]
-    @type: ndarray
+    @rtype: ndarray
     
     """
   
