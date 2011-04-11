@@ -135,7 +135,7 @@ def search(name,**kwargs):
     
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
-    @param filename: name of the file to write the results to (no extension)
+    @keyword filename: name of the file to write the results to (no extension)
     @type filename: str
     @return: filename / catalog data columns, units, comments
     @rtype: str/ record array, dict, list of str
