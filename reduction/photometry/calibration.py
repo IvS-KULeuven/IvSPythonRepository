@@ -97,8 +97,12 @@ def eff_wave(photband):
     else:
         my_eff_wave = []
         for iphotband in photband:
-            wave,response = get_response(photband)
-            my_eff_wave.append(np.average(wave,weights=response))
+            try:
+                wave,response = get_response(iphotband)
+                my_eff_wave.append(np.average(wave,weights=response))
+            except IOError:
+                my_eff_wave.append(np.nan)
+            
         my_eff_wave = np.array(my_eff_wave,float)
             
     return my_eff_wave

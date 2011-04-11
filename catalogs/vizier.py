@@ -170,7 +170,22 @@ def search(name,**kwargs):
 
 def list_catalogs(ID,**kwargs):
     """
-    Print and return all catalogs where
+    Print and return all catalogs containing information on the star.
+    
+    If you give C{filetype} and C{filename}, all information will be downloaded
+    to that file.
+    
+    Extra kwargs: see L{get_URI}.
+    
+    @param ID: identification of the star
+    @type ID: str
+    @param filetype: type of the output file ('fits','tsv','csv'...)
+    @type filetype: str
+    @param filename: name of the output file
+    @type filename: str
+    @return: dictionary with keys the catalog ID from VizieR and entries the
+    names of the catalogs
+    @rtype: dictionary
     """
     filetype = kwargs.setdefault('filetype','fits')
     filename = kwargs.pop('filename',None)
@@ -208,6 +223,42 @@ def list_catalogs(ID,**kwargs):
     else:
         url.close()
         return filen        
+
+def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
+    """
+    Download all available photometry from a star to a record array.
+    
+    For extra kwargs, see L{get_URI} and L{vizier2phot}
+    
+    """
+    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    #-- retrieve all measurements
+    master = None
+    for source in cat_info.sections():
+        results,units,comms = search(source,ID=ID,**kwargs)
+        if results is not None:
+            master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
+    
+    #-- convert the measurement to a common unit.
+    if to_units:
+        names = list(master.dtype.names)
+        dtypes = [(name,master.dtype[names.index(name)].str) for name in names]
+        dtypes += [('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        rows = []
+        no_errors = np.isnan(master['e_meas'])
+        master['e_meas'][no_errors] = 0.
+        for i in range(len(master)):
+            try:
+                value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+            except ValueError: # calibrations not available
+                value,e_value = np.nan,np.nan
+            rows.append(list(master[i]) + [value,e_value,to_units])
+        master = np.core.records.fromrecords(rows,dtype=dtypes)
+        master['e_meas'][no_errors] = np.nan
+        master['e_cmeas'][no_errors] = np.nan
+    
+    #-- and return the results
+    return master
 
 #}
 #{ Convenience functions
@@ -404,8 +455,10 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
     
     #-- create empty master if not given
-    if master is None:
+    newmaster = False
+    if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
+        newmaster = True
     
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
@@ -415,16 +468,16 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         photband = cat_info.get(source,key)
         #-- contains measurement, error, quality, units, photometric band and
         #   source
-        cols = [results[key],
-                (e_flag+key in results.dtype.names and results[e_flag+key] or np.ones(len(results))*np.nan),
-                (q_flag+key in results.dtype.names and results[q_flag+key] or np.ones(len(results))*np.nan),
-                np.array(len(results)*[units[key]],str),
-                np.array(len(results)*[photband],str),
-                np.array(len(results)*[source],str)]
+        cols = [results[key][:1],
+                (e_flag+key in results.dtype.names and results[e_flag+key][:1] or np.ones(len(results[:1]))*np.nan),
+                (q_flag+key in results.dtype.names and results[q_flag+key][:1] or np.ones(len(results[:1]))*np.nan),
+                np.array(len(results[:1])*[units[key]],str),
+                np.array(len(results[:1])*[photband],str),
+                np.array(len(results[:1])*[source],str)]
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
-                cols.append(results[e_dtype])
+                cols.append(results[:1][e_dtype])
         #-- add to the master
         rows = []
         for i in range(len(cols[0])):
@@ -439,6 +492,9 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     master_ = _breakup_colours(master_)
     #-- combine and return
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
+    
+    #-- skip first line from building 
+    if newmaster: master = master[1:]
     return master
     
 
@@ -511,8 +567,10 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
     
     #-- create empty master if not given
-    if master is None:
+    newmaster = False
+    if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
+        newmaster = True
     
     #-- add fluxes and magnitudes to the record array
     for key in cat_info_fund.options(source):
@@ -539,6 +597,9 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             rows.append(tuple([col[i] for col in cols]))
         #print master
         master = np.core.records.fromrecords(master.tolist()+rows,dtype=dtypes)
+    
+    #-- skip first line from building 
+    if newmaster: master = master[1:]
     return master
 #}
 
@@ -612,17 +673,3 @@ def test():
 
 if __name__=="__main__":
     test()
-    
-    
-    
-#XTENSION= 'TABLE   '           / Ascii Table Extension (TAB and NEWLINE sep)        XTENSION= 'TABLE   '           / Ascii Table Extension (TAB and NEWLINE sep)    
-#BITPIX  =                    8 / Character data                                     BITPIX  =                    8 / Character data                                 
-#NAXIS   =                    2 / Simple 2-D matrix                                  NAXIS   =                    2 / Simple 2-D matrix                              
-#NAXIS1  =                   71 / Number of bytes per record                         NAXIS1  =                  145 / Number of bytes per record                     
-#NAXIS2  =                    1 / Number of records                                  NAXIS2  =                    1 / Number of records                              
-#PCOUNT  =                    0 / Get rid of random parameters                       PCOUNT  =                    0 / Get rid of random parameters                   
-#GCOUNT  =                    1 / Only one group (isn't it obvious?)                 GCOUNT  =                    1 / Only one group (isn't it obvious?)             
-#TFIELDS =                   11 / Number of data fields (columns)                    TFIELDS =                   25 / Number of data fields (columns)                
-#CDS-CAT = 'I/65    '           / Catalogue designation in CDS nomenclature          EXTNAME = 'I_99_PHTELEC'       / Identification of the table                    
-         #Abbadia Catalogue between +5{deg}15 and -3{deg}15' (Hendaye 1914)          CDS-NAME= 'I/99/phtelec'       / Table name in METAtab                          
-#                                                                                             Brorfelde Photoelectric Meridian Catalogues                 
