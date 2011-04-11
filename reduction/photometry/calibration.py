@@ -10,16 +10,15 @@ Example usage:
 >>> p = show()
 """
 import os
+import glob
 import numpy as np
 
 from ivs.misc.decorators import memoized
 from ivs.io import ascii
 
+basedir = os.path.dirname(os.path.abspath(__file__))
 
-
-
-
-
+#{ response curves
 @memoized
 def get_response(photband):
     """
@@ -37,9 +36,36 @@ def get_response(photband):
     @return: (wavelength [A], response)
     @rtype: (array, array)
     """
-    photfile = os.path.join(os.path.dirname(os.path.abspath(__file__)),'calibration',photband.upper())
+    photfile = os.path.join(basedir,'calibration',photband.upper())
     wave, response = ascii.read2array(photfile).T
     return wave,response
+
+
+
+
+
+def list_response(name='*',wave_range=(-np.inf,+np.inf)):
+    """
+    List available response curves.
+    
+    Specify a glob string C{name} and/or a wavelength range to make a selection
+    of all available curves. If nothing is supplied, all curves will be returned.
+    
+    @param name: list all curves containing this string
+    @type name: str 
+    @param wave_range: list all curves within this wavelength range (A)
+    @type wave_range: (float, float)
+    @return: list of curve files
+    @rtype: list of str
+    """
+    #-- collect all curve files
+    curve_files = sorted(glob.glob(os.path.join(basedir,glob_string.upper())))
+    #-- select in correct wavelength range
+    curve_files = [os.path.basename(curve_file) for curve_file in curvefiles \
+      if (wave_range[0]<=effwave(curve_files)<=wave_range[1])]
+    #-- log to the screen and return
+    for curve_file in curve_files: logger.info(curve_file)
+    return curve_files
 
 
 
@@ -67,9 +93,18 @@ def eff_wave(photband):
 
 
 
+#}
+
+#{ Synthetic photometry
+
+def synthetic_photometry(wave,flux,photbands):
+    """
+    Calculate synthetic photometry from a model SED.
+    """
+    raise NotImplementedError
 
 
-
+#}
 if __name__=="__main__":
     import doctest
     doctest.testmod()
