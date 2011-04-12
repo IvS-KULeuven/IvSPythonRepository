@@ -9,8 +9,9 @@ def unique_arr(a,axis=0,return_index=False):
     """
     Distil unique rows/cols from an array
     
-        axis=0: unique rows
-        axis=1: unique cols
+    C{axis=0}: unique rows
+    C{axis=1}: unique cols
+    
     Example with rows:
     >>> c = np.sort(np.random.normal(size=(3,5)),axis=0)
     >>> d = np.r_[c,c,c]
@@ -24,6 +25,15 @@ def unique_arr(a,axis=0,return_index=False):
     >>> du = np.sort(unique_arr(d,axis=1),axis=1)
     >>> np.all(du==c)
     True
+    
+    @param a: array to remove duplicate entries from
+    @type a: numpy array
+    @param axis: keep unique elements in rows (axis=0) or columns (axis=1)
+    @type axis: integer
+    @param return_index: return index array with unique elements
+    @type return_index: bool
+    @return: unique array(,indices)
+    @rtype: numpy array(, numpy array)
     """
     
     if axis==0:
@@ -66,6 +76,13 @@ def sort_order(a,order):
            [ 1.,  2.],
            [ 1.,  3.],
            [ 1.,  3.]])
+    
+    @param a: numpy array to sort
+    @type a: numpy array
+    @param order: order of the columns to sort
+    @type order: list of integers (indices)
+    @return: sorted array
+    @rtype: numpy array
     """
     a = np.ascontiguousarray(a.copy())+0.
     a_ = np.sort(a.view([('',a.dtype)]*a.shape[1]), order=['f%d'%(i) for i in order], axis=0)
