@@ -147,7 +147,7 @@ def list_catalogs(ID,**kwargs):
     @type ID: str
     @keyword filetype: type of the output file ('fits','tsv','csv'...)
     @type filetype: str
-    keyword filename: name of the output file
+    @keyword filename: name of the output file
     @type filename: str
     @return: dictionary with keys the catalog ID from VizieR and entries the
     names of the catalogs
