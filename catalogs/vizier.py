@@ -20,6 +20,7 @@ import ConfigParser
 from ivs.io import ascii
 from ivs.units import conversions
 from ivs.misc import loggers
+from ivs.misc import numpy_ext
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler)
@@ -37,41 +38,6 @@ cat_info_fund.readfp(open(os.path.join(basedir,'vizier_cats_fund.cfg')))
 
 
 #{ Basic interfaces
-
-def get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
-                     oc='deg',oc_eq='J2000',
-                     out_all=True,out_max=1000000,
-                     filetype='tsv'):
-    """
-    Build Vizier URI from available options.
-    
-    @param name: name of a ViZieR catalog (e.g. 'II/246/out')
-    @type name: str
-    @param filetype: type of the retrieved file 
-    @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
-    @param oc: coordinates
-    @type oc: str (one of 'deg'...)
-    @param out_all: retrieve all or basic information
-    @type out_all: boolean (True = all, None = basic)
-    @param ID: target name
-    @type ID: str
-    @param ra: target's right ascension
-    @type ra: float
-    @param dec: target's declination
-    @type dec: float
-    @param radius: search radius (arcseconds)
-    @type radius: float
-    @return: url
-    @rtype: str
-    """
-    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
-    if name:    base_url += '&-source=%s'%(name)
-    if out_all: base_url += '&-out.all'
-    if out_max: base_url += '&-out.max=%s'%(out_max)
-    if radius:  base_url += '&-c.rs=%s'%(radius)
-    if ID is not None: base_url += '&-c=%s'%(urllib.quote(ID))
-    if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
-    return base_url
 
 def search(name,**kwargs):
     """
@@ -148,7 +114,7 @@ def search(name,**kwargs):
         filename = '%s.%s'%(filename,filetype)
     
     #-- gradually build URI
-    base_url = get_URI(name=name,**kwargs)
+    base_url = _get_URI(name=name,**kwargs)
     
     #-- prepare to open URI
     logger.info('Querying ViZieR source %s'%(name))
@@ -175,7 +141,7 @@ def list_catalogs(ID,**kwargs):
     If you give C{filetype} and C{filename}, all information will be downloaded
     to that file.
     
-    Extra kwargs: see L{get_URI}.
+    Extra kwargs: see L{_get_URI}.
     
     @param ID: identification of the star
     @type ID: str
@@ -189,7 +155,7 @@ def list_catalogs(ID,**kwargs):
     """
     filetype = kwargs.setdefault('filetype','fits')
     filename = kwargs.pop('filename',None)
-    base_url = get_URI(ID=ID,**kwargs)
+    base_url = _get_URI(ID=ID,**kwargs)
     filetype = kwargs.pop('filetype','tsv')
     
     #-- download the file
@@ -228,7 +194,7 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
     Download all available photometry from a star to a record array.
     
-    For extra kwargs, see L{get_URI} and L{vizier2phot}
+    For extra kwargs, see L{_get_URI} and L{vizier2phot}
     
     """
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
@@ -241,19 +207,23 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     
     #-- convert the measurement to a common unit.
     if to_units:
-        names = list(master.dtype.names)
-        dtypes = [(name,master.dtype[names.index(name)].str) for name in names]
-        dtypes += [('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
-        rows = []
+        #-- prepare columns to extend to basic master
+        dtypes = [('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        cols = [[],[],[]]
+        #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
         master['e_meas'][no_errors] = 0.
+        #-- extend basic master
         for i in range(len(master)):
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
                 value,e_value = np.nan,np.nan
-            rows.append(list(master[i]) + [value,e_value,to_units])
-        master = np.core.records.fromrecords(rows,dtype=dtypes)
+            cols[0].append(value)
+            cols[1].append(e_value)
+            cols[2].append(to_units)
+        master = numpy_ext.recarr_addcols(master,cols,dtypes)
+        #-- reset errors
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
     
@@ -604,6 +574,41 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
 #}
 
 #{ Internal helper functions
+
+def _get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
+                     oc='deg',oc_eq='J2000',
+                     out_all=True,out_max=1000000,
+                     filetype='tsv'):
+    """
+    Build Vizier URI from available options.
+    
+    @param name: name of a ViZieR catalog (e.g. 'II/246/out')
+    @type name: str
+    @param filetype: type of the retrieved file 
+    @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
+    @param oc: coordinates
+    @type oc: str (one of 'deg'...)
+    @param out_all: retrieve all or basic information
+    @type out_all: boolean (True = all, None = basic)
+    @param ID: target name
+    @type ID: str
+    @param ra: target's right ascension
+    @type ra: float
+    @param dec: target's declination
+    @type dec: float
+    @param radius: search radius (arcseconds)
+    @type radius: float
+    @return: url
+    @rtype: str
+    """
+    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
+    if name:    base_url += '&-source=%s'%(name)
+    if out_all: base_url += '&-out.all'
+    if out_max: base_url += '&-out.max=%s'%(out_max)
+    if radius:  base_url += '&-c.rs=%s'%(radius)
+    if ID is not None: base_url += '&-c=%s'%(urllib.quote(ID))
+    if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
+    return base_url
 
 def _breakup_colours(master):
     """
