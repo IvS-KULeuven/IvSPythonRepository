@@ -165,21 +165,21 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('erg/s/cm2','Jy',1.,wave=(2.,'micron'))
     667128190.39630413
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
-    4511059.8297938667
+    4511059.8298101583
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
-    3542978.1052961089
+    3542978.1053089043
     >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
-    2.2167739682709884e-07
+    2.2167739682629828e-07
     >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
     7.4948114500000012e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
     >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
-    40599538.4681
+    40599538.4683
     
     B{Angles}:
     >>> convert('sr','deg2',1.)
-    3282.8063499998884
+    3282.8063500117441
     
     B{Magnitudes}:
     
@@ -204,11 +204,11 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('m','cy/arcsec',85.,wave=(2.2,'micron'))
     187.3143767923207
     >>> convert('cm','cy/arcmin',8500.,wave=(2200,'nm'))/60.
-    187.31437679232073
+    187.3143767923207
     >>> convert('cy/arcsec','m',187.,wave=(2.2,'mum'))
-    84.857341290055444
+    84.857341290055459
     >>> convert('cyc/arcsec','m',187.,wave=(1,'mum'))
-    38.571518768207014
+    38.571518768207028
     >>> convert('cycles/arcsec','m',187.,freq=(300000.,'Ghz'))
     38.54483473437972
     >>> convert('cycles/mas','m',0.187,freq=(300000.,'Ghz'))
@@ -270,6 +270,7 @@ def convert(_from,_to,*args,**kwargs):
         start_value = unumpy.uarray([args[0],args[1]])
         
     #-- break down the from and to units to their basic elements
+    
     fac_from,uni_from = breakdown(_from)
     if _to!='SI':
         fac_to,uni_to = breakdown(_to)
@@ -290,7 +291,17 @@ def convert(_from,_to,*args,**kwargs):
         else:
             kwargs_SI[key] = kwargs[key]
     
-    #-- easy if same units
+    #-- add some default values if necessary
+    if uni_from=='m1' and not 'wave' in kwargs_SI:
+        kwargs_SI['wave'] = fac_from*start_value
+        logger.info('Assumed input value to serve for "wave" key')
+    elif uni_from=='cy1 s-1' and not 'freq' in kwargs_SI:
+        kwargs_SI['freq'] = fac_from*start_value
+        logger.info('Assumed input value to serve for "freq" key')
+        
+    logger.debug('Convert %s to %s'%(uni_from,uni_to))
+    
+    #-- conversion is easy if same units
     ret_value = 1.
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
@@ -298,25 +309,40 @@ def convert(_from,_to,*args,**kwargs):
             ret_value *= fac_from(start_value,**kwargs_SI)
         else:
             ret_value *= fac_from*start_value
+            
     #-- otherwise a little bit more complicated
     else:
+        #-- first check where the unit differences are
         uni_from_ = uni_from.split()
         uni_to_ = uni_to.split()
-        only_from = "".join(sorted(list(set(uni_from_) - set(uni_to_))))
-        only_to = "".join(sorted(list(set(uni_to_) - set(uni_from_))))
-        
-        logger.debug("Convert %s to %s"%(only_from,only_to))
-        
-        #-- especially for conversion from and to sterradians
-        if 'cy-2' in only_to:
-            start_value = _switch['_to_cy-2'](start_value,**kwargs_SI)
-            only_to = only_to.replace('cy-2','')
+        only_from_c,only_to_c = sorted(list(set(uni_from_) - set(uni_to_))),sorted(list(set(uni_to_) - set(uni_from_)))
+        only_from_c,only_to_c = [list(components(i))[1:] for i in only_from_c],[list(components(i))[1:] for i in only_to_c]
+        #-- push them all bach to the left side (change sign of right hand side components)
+        left_over = " ".join(['%s%d'%(i,j) for i,j in only_from_c])
+        left_over+= " "+" ".join(['%s%d'%(i,-j) for i,j in only_to_c])
+        left_over = breakdown(left_over)[1]
+        only_from = "".join(left_over.split())
+        only_to = ''
+
+        #-- first we remove any differences concerning (ster)radians
+        if 'rad2' in only_from:
+            start_value = _switch['rad2_to_'](start_value,**kwargs_SI)
+            only_from = only_from.replace('rad2','')
             logger.debug('Switching to /sr')
-        if 'cy-2' in only_from:
-            start_value = _switch['cy-2_to_'](start_value,**kwargs_SI)
-            only_from = only_from.replace('cy-2','')
+        elif 'rad-2' in only_from:
+            start_value = _switch['rad-2_to_'](start_value,**kwargs_SI)
+            only_from = only_from.replace('rad-2','')
             logger.debug('Switching from /sr')
+        elif 'rad1' in only_from:
+            start_value = _switch['rad1_to_'](start_value,**kwargs_SI)
+            only_from = only_from.replace('rad1','')
+            logger.debug('Switching to /rad')
+        elif 'rad-1' in only_from:
+            start_value = _switch['rad-1_to_'](start_value,**kwargs_SI)
+            only_from = only_from.replace('rad-1','')
+            logger.debug('Switching from /rad')
         
+        #-- then we do what is left over
         logger.debug("Convert %s to %s"%(only_from,only_to))
         
         #-- nonlinear conversions need a little tweak
@@ -327,11 +353,12 @@ def convert(_from,_to,*args,**kwargs):
                 ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
             #-- linear conversions are easy
             else:
+                logger.debug('fac_from=%s, start_value=%s'%(fac_from,start_value))
                 ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
         except KeyError:
             logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key))
             raise
-    
+
     #-- final step: convert to ... (again distinction between linear and
     #   nonlinear converters)
     if isinstance(fac_to,NonLinearConverter):
@@ -725,18 +752,6 @@ def lamflam2flam(arg,**kwargs):
         raise ValueError,'reference wave/freq not given'
     return flam
 
-
-def distance2frequency(arg,**kwargs):
-    """
-    Switch from distance to frequency via the speed of light, or vice versa.
-    
-    @param arg: distance (SI, m)
-    @type arg: float
-    @return: frequency (SI, Hz)
-    @rtype: float
-    """
-    return cc/arg
-
 def distance2spatialfreq(arg,**kwargs):
     """
     Switch from distance to spatial frequency via a reference wavelength.
@@ -759,7 +774,7 @@ def distance2spatialfreq(arg,**kwargs):
     if 'wave' in kwargs:
         spatfreq = 2*np.pi*arg/kwargs['wave']
     elif 'freq' in kwargs:
-        spatfreq = 2*np.pi*arg*cc*kwargs['freq']
+        spatfreq = 2*np.pi*arg/(cc/kwargs['freq'])
     else:
         raise ValueError,'reference wave/freq not given'
     return spatfreq
@@ -836,6 +851,14 @@ def times_sr(arg,**kwargs):
         raise ValueError,'angular size (ang_diam/radius) not given'
     Q = arg*surface
     return Q
+
+def per_cy(arg,**kwargs):
+    return arg / (2*np.pi)
+
+def times_cy(arg,**kwargs):
+    return 2*np.pi*arg
+
+
 #}
 
 #{ Nonlinear change-of-base functions
@@ -1050,12 +1073,12 @@ _factors = {
            'CD':    (JulianDay,     'JD'), # Calender Day
            'MJD':   (ModJulianDay,  'JD'), # Modified Julian Day
 # ANGLES
-           'rad':         (0.15915494309189535, 'cy'),
+           'rad':         (1e+00,               'rad'),
            'cy':          (1e+00,               'cy'),
-           'deg':         (1./360.,             'cy'),
-           'am':          (1./360./60.,         'cy'),
-           'as':          (1./360./3600.,       'cy'),
-           'sr':          (1/39.4784176045,     'cy2'),
+           'deg':         (np.pi/180.,             'rad'),
+           'am':          (np.pi/180./60.,         'rad'),
+           'as':          (np.pi/180./3600.,       'rad'),
+           'sr':          (1,        'rad2'),#1/39.4784176045
 # COORDINATES
            'complex_coord':(1e+00+0*1j, 'complex_coord'),
            'equ':          (EquCoords,  'complex_coord'),
@@ -1120,7 +1143,7 @@ _aliases = [('micron','mum'),
             ('watt','W'),('Watt','W'),
             ('Hz','hz'),
             ('joule','J'),('Joule','J'),
-            ('jansky','Jy'),('Jansky','Jy'),
+            ('jansky','Jy'),('Jansky','Jy'),('jy','Jy'),
             ('arcsec','as'),('arcmin','am'),
             ('cycles','cy'),('cycle','cy'),('cyc','cy'),
             ('angstrom','A'),('Angstrom','A'),
@@ -1131,20 +1154,20 @@ _aliases = [('micron','mum'),
             ]
  
 #-- Change-of-base function definitions
-_switch = {'_to_s-1':distance2velocity, # switch from wavelength to velocity
-           's-1_to_':velocity2distance, # switch from wavelength to velocity
-           'm1_to_cy1s-1':distance2frequency,  # switch from wavelength to frequency
-           'cy1s-1_to_m1':distance2frequency,  # switch from frequency to wavelength
-           'm1_to_':distance2spatialfreq, # for interferometry
-           '_to_m1':spatialfreq2distance, # for interferometry
-           'cy-1s-2_to_m-1s-3':fnu2flambda,
-           'm-1s-3_to_cy-1s-2':flambda2fnu,
-           'cy-1s-2_to_s-3':fnu2nufnu, # switch from Fnu to nuFnu
-           's-3_to_cy-1s-2':nufnu2fnu, # switch from nuFnu to Fnu
-           '_to_m-1':lamflam2flam, # switch from lamFlam to Flam
-           'm-1_to_':flam2lamflam, # switch from Flam to lamFlam
-           '_to_cy-2':per_sr,
-           'cy-2_to_':times_sr}
+_switch = {'s1_to_':       distance2velocity, # switch from wavelength to velocity
+           's-1_to_':      velocity2distance, # switch from wavelength to velocity
+           'cy-1m1_to_':   distance2spatialfreq,  # for interferometry
+           'cy1m-1_to_':   spatialfreq2distance, # for interferometry
+           'cy-1m1s1_to_': fnu2flambda, # switch from Fnu to Flam
+           'cy1m-1s-1_to_':flambda2fnu, # switch from Flam to Fnu
+           'cy-1s1_to_':   fnu2nufnu, # switch from Fnu to nuFnu
+           'cy1s-1_to_':   nufnu2fnu, # switch from nuFnu to Fnu
+           'm1_to_':       lamflam2flam, # switch from lamFlam to Flam
+           'm-1_to_':      flam2lamflam, # switch from Flam to lamFlam
+           'rad2_to_':     per_sr,
+           'rad-2_to_':    times_sr,
+           'rad1_to_':     per_cy,
+           'rad-1_to_':    times_cy}
  
  
 if __name__=="__main__":
