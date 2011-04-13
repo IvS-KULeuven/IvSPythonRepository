@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Query Sesame for general information on a star (cf. Simbad star page)
+Interface to Sesame for general information on a star (cf Simbad star page)
 """
 import urllib
 from ivs.misc import xmlparser
@@ -10,6 +10,13 @@ from ivs.misc import xmlparser
 def get_URI(ID,db='S'):
     """
     Build Sesame URI from available options.
+    
+    @param ID: name of the star
+    @type ID: str
+    @keyword db: database (one of 'S','N', or 'A')
+    @type db: str
+    @return: uri name
+    @rtype: str
     """
     #mirrors:
     # http://vizier.cfa.harvard.edu/viz-bin/nph-sesame/-oxpsIF/~%s?%s'
@@ -49,59 +56,58 @@ def search(ID,db='S'):
     >>> print info['mag']['B']['v']
     0.03
     
-    This is an exhaustive list of example contents:
-    
-    Vel.e    = 0.9
-    Vel.q    = A
-    Vel.r    = 1979IAUS...30...57E
-    Vel.v    = -13.9
-    alias    = [u'V* alf Lyr', u'* alf Lyr', u'* 3 Lyr', u'ADS 11510 A', u'AG+38 1711', u'ASCC 507896', u'BD+38 3238', u'CCDM J18369+3847A', u'CEL 4636', u'CSI+38 3238 1', u'CSV 101745', u'1E 183515+3844.3', u'EUVE J1836+38.7', u'FK5 699', u'GC 25466', u'GCRV 11085', u'GEN# +1.00172167', u'GJ 721', u'HD 172167', u'HGAM 706', u'HIC 91262', u'HIP 91262', u'HR 7001', u'IDS 18336+3841 A', u'IRAS 18352+3844', u'IRC +40322', u'JP11 2999', u'LSPM J1836+3847', u'LTT 15486', u'2MASS J18365633+3847012', u'N30 4138', u'NAME VEGA', u'NLTT 46746', u'NSV 11128', u'8pc 128.93', u'PLX 4293.00', u'PLX 4293', u'PMC 90-93 496', u'PPM 81558', u'RAFGL 2208', u'ROT 2633', u'SAO 67174', u'SKY# 34103', u'TD1 22883', u'TYC 3105-2070-1', u'UBV 15842', u'UBV M 23118', u'USNO-B1.0 1287-00305764', u'USNO 882', u'uvby98 100172167 V', u'WDS J18369+3846A', u'Zkh 277', u'[HFE83] 1223']
-    errDEmas = 5.4
-    errRAmas = 5.16
-    jdedeg   = 38.78369194
-    jpos     = 18:36:56.33 +38:47:01.2
-    jradeg   = 279.234735
-    mag.B.q  = C
-    mag.B.v  = 0.03
-    mag.H.q  = C
-    mag.H.r  = 2003yCat.2246....0C
-    mag.H.v  = -0.03
-    mag.I.q  = E
-    mag.I.r  = 2003AJ....125..984M
-    mag.I.v  = 0.2
-    mag.J.q  = C
-    mag.J.r  = 2003yCat.2246....0C
-    mag.J.v  = -0.18
-    mag.K.q  = C
-    mag.K.r  = 2003yCat.2246....0C
-    mag.K.v  = 0.13
-    mag.R.q  = E
-    mag.R.r  = 2003AJ....125..984M
-    mag.R.v  = 0.1
-    mag.V.q  = C
-    mag.V.v  = 0.03
-    nrefs    = 1860.0
-    oid      = @2900336
-    oname    = NAME VEGA
-    otype    = V*
-    plx.e    = 0.55
-    plx.q    = A
-    plx.r    = [u'1997A', u'&', u'A...323L..49P']
-    plx.v    = 128.93
-    pm.e     = 0.83
-    pm.epmDE = 0.6
-    pm.epmRA = 0.57
-    pm.pa    = 35.0
-    pm.pmDE  = 287.47
-    pm.pmRA  = 201.03
-    pm.q     = A
-    pm.r     = [u'1997A', u'&', u'A...323L..49P']
-    pm.v     = 350.79
-    refPos   = [u'1997A', u'&', u'A...323L..49P']
-    spNum    = 0.0000C800.0030.0000000000000000
-    spType   = A0V
-        
-        
+    This is an exhaustive list of example contents::
+        Vel.e    = 0.9
+        Vel.q    = A
+        Vel.r    = 1979IAUS...30...57E
+        Vel.v    = -13.9
+        alias    = [u'V* alf Lyr', u'* alf Lyr', u'* 3 Lyr', u'ADS 11510 A', u'AG+38 1711', u'ASCC 507896', u'BD+38 3238', u'CCDM J18369+3847A', u'CEL 4636', u'CSI+38 3238 1', u'CSV 101745', u'1E 183515+3844.3', u'EUVE J1836+38.7', u'FK5 699', u'GC 25466', u'GCRV 11085', u'GEN# +1.00172167', u'GJ 721', u'HD 172167', u'HGAM 706', u'HIC 91262', u'HIP 91262', u'HR 7001', u'IDS 18336+3841 A', u'IRAS 18352+3844', u'IRC +40322', u'JP11 2999', u'LSPM J1836+3847', u'LTT 15486', u'2MASS J18365633+3847012', u'N30 4138', u'NAME VEGA', u'NLTT 46746', u'NSV 11128', u'8pc 128.93', u'PLX 4293.00', u'PLX 4293', u'PMC 90-93 496', u'PPM 81558', u'RAFGL 2208', u'ROT 2633', u'SAO 67174', u'SKY# 34103', u'TD1 22883', u'TYC 3105-2070-1', u'UBV 15842', u'UBV M 23118', u'USNO-B1.0 1287-00305764', u'USNO 882', u'uvby98 100172167 V', u'WDS J18369+3846A', u'Zkh 277', u'[HFE83] 1223']
+        errDEmas = 5.4
+        errRAmas = 5.16
+        jdedeg   = 38.78369194
+        jpos     = 18:36:56.33 +38:47:01.2
+        jradeg   = 279.234735
+        mag.B.q  = C
+        mag.B.v  = 0.03
+        mag.H.q  = C
+        mag.H.r  = 2003yCat.2246....0C
+        mag.H.v  = -0.03
+        mag.I.q  = E
+        mag.I.r  = 2003AJ....125..984M
+        mag.I.v  = 0.2
+        mag.J.q  = C
+        mag.J.r  = 2003yCat.2246....0C
+        mag.J.v  = -0.18
+        mag.K.q  = C
+        mag.K.r  = 2003yCat.2246....0C
+        mag.K.v  = 0.13
+        mag.R.q  = E
+        mag.R.r  = 2003AJ....125..984M
+        mag.R.v  = 0.1
+        mag.V.q  = C
+        mag.V.v  = 0.03
+        nrefs    = 1860.0
+        oid      = @2900336
+        oname    = NAME VEGA
+        otype    = V*
+        plx.e    = 0.55
+        plx.q    = A
+        plx.r    = [u'1997A', u'&', u'A...323L..49P']
+        plx.v    = 128.93
+        pm.e     = 0.83
+        pm.epmDE = 0.6
+        pm.epmRA = 0.57
+        pm.pa    = 35.0
+        pm.pmDE  = 287.47
+        pm.pmRA  = 201.03
+        pm.q     = A
+        pm.r     = [u'1997A', u'&', u'A...323L..49P']
+        pm.v     = 350.79
+        refPos   = [u'1997A', u'&', u'A...323L..49P']
+        spNum    = 0.0000C800.0030.0000000000000000
+        spType   = A0V
+            
+            
     >>> info = search('vega',db='N')
     >>> for key1 in sorted(info.keys()):
     ...    print '%s = %s'%(key1.ljust(8),info[key1])
