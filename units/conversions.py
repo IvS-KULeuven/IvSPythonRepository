@@ -57,6 +57,7 @@ from ivs.reduction.photometry import calibration
 from ivs.io import ascii
 
 logger = logging.getLogger("UNITS.CONV")
+logger.addHandler(loggers.NullHandler)
 
 #{ Main functions
 
