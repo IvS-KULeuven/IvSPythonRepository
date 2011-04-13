@@ -55,6 +55,7 @@ from ivs.units.uncertainties import unumpy,AffineScalarFunc
 from ivs.units.uncertainties.unumpy import log10
 from ivs.reduction.photometry import calibration
 from ivs.io import ascii
+from ivs.misc import loggers
 
 logger = logging.getLogger("UNITS.CONV")
 logger.addHandler(loggers.NullHandler)
