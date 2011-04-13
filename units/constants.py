@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 List of physical constants (SI and CGS)
+
+Taken from NIST (http://physics.nist.gov/cuu/Constants/index.html)
 """
 # SI-units
 # value                     name                         unit
@@ -18,7 +20,7 @@ hhbar= 1.05457162853e-34   # reduced Planck constant     J/s
 kB   = 1.380650424e-23     # Boltzmann constant          J/K
 NA   = 6.0221417930e23     # Avogadro constant           1/mol
 sigma= 5.67040040e-8       # Stefan-Boltzmann constant   W/m2/K4
-GG   = 6.67428e-11         # gravitational constant      m3/kg/s2
+GG   = 6.6742867e-11       # gravitational constant      m3/kg/s2
 RR   = 8.31447215          # (ideal) gas constant        J/K/mol
 aa   = 7.5657e-16          # radiation constant          J/m3/K4
 a0   = 52.9177e-12         # Bohr radius of hydrogen     m
