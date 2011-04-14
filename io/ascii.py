@@ -144,8 +144,11 @@ def write_array(data, filename, **kwargs):
     line). By default, the comment lines will be preceded by the C{commentchar}.
     If you want to override this behaviour, set C{commentchar=''}.
     
+    If you give a record array, you can simply set C{header} to C{True} to write
+    the header, instead of specifying a list of strings.
+    
     @keyword header: optional header for column names
-    @type header: list of str
+    @type header: list of str (or boolean for record arrays)
     @keyword comments: comment lines
     @type comments: list of str
     @keyword commentchar: comment character
@@ -157,31 +160,68 @@ def write_array(data, filename, **kwargs):
     @type axis0: str, one of C{cols}, C{rows}.
     @keyword mode: file mode (a for appending, w for (over)writing...)
     @type mode: char (one of 'a','w'...)
+    @keyword auto_width: automatically determine the width of the columns
+    @type auto_width: bool
+    @keyword formats: formats to use to write each column
+    @type formats: list of string formatters
     """
-    header = kwargs.get('header',[])
+    header = kwargs.get('header',None)
     comments = kwargs.get('comments',None)
     commentchar = kwargs.get('commentchar','#')
     sep = kwargs.get('sep',' ')
     axis0 = kwargs.get('axis0','rows')
-    mode = kwargs.get('model','w')
+    mode = kwargs.get('mode','w')
+    auto_width = kwargs.get('auto_width',False)
+    formats = kwargs.get('formats',None)
     
     #-- switch to rows first if a list of columns is given
     if axis0.lower()!='rows':
         data = data.T
     
+    if formats is None:
+        if len(data.dtype):
+            formats = [('S' in str(data[col].dtype) and '%s' or '%g') for col in data.dtype.names]
+        else:
+            formats = [('S' in col.dtype and '%s' or '%g') for col in data.T]
+    
+    #-- determine width of columns: also take the header label into account
+    col_widths = []
+    #-- for record arrays
+    if auto_width is True and header is True:
+        for fmt,head in zip(formats,data.dtype.names):
+            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]+[len(head)]))
+    #-- for normal arrays and specified header
+    elif auto_width is True and header is not None:
+        for i,head in enumerate(header):
+            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[:,i]]+[len(head)]))
+    #-- for normal arrays without header
+    elif auto_width is True and header is not None:
+        for i in range(data.shape[1]):
+            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[:,i]]))
+    
+    if header is True:
+        header = data.dtype.names
+    
     ff = open(filename,mode)
-    if header:
+    if comments is not None:
+        ff.write('\n'.join(comments)+'\n')
+    #-- when header is desired and automatic width
+    if header is not None and col_widths:
+        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(head) for head,cw in zip(header,col_widths)])+'\n')
+    #-- when header is desired
+    elif header is not None:
         ff.write('#'+sep.join(header)+'\n')
     
     #-- write to a file
-    for row in data:
-        ff.write(sep.join(['%g'%(col) for col in row])+'\n')
+    #-- with automatic width
+    if col_widths:
+        for row in data:
+            ff.write(' '+sep.join(['%%%s%s%s'%(('s' in fmt and '-' or ''),cw,fmt[1:])%(col) for col,cw,fmt in zip(row,col_widths,formats)])+'\n')
+    #-- without automatic width
+    else:
+        for row in data:
+            ff.write(sep.join(['%g'%(col) for col in row])+'\n')
     ff.close()
-        
-            
-        
-    
-    
     
     
 
