@@ -21,6 +21,7 @@ from ivs.io import ascii
 from ivs.units import conversions
 from ivs.misc import loggers
 from ivs.misc import numpy_ext
+from ivs.reduction.photometry import calibration
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler)
@@ -130,7 +131,7 @@ def search(name,**kwargs):
     if filetype=='tsv':
         results,units,comms = tsv2recarray(filen)
         url.close()
-        logger.debug('Results converted to record array')
+        logger.debug('Results converted to record array (found %d targets)'%(results is not None and len(results) or -1))
         return results,units,comms
     
 
@@ -208,8 +209,8 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units:
         #-- prepare columns to extend to basic master
-        dtypes = [('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
-        cols = [[],[],[]]
+        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
         master['e_meas'][no_errors] = 0.
@@ -219,9 +220,14 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
                 value,e_value = np.nan,np.nan
-            cols[0].append(value)
-            cols[1].append(e_value)
-            cols[2].append(to_units)
+            try:
+                eff_wave = calibration.eff_wave(master['photband'][i])
+            except IOError:
+                eff_wave = np.nan
+            cols[0].append(eff_wave)
+            cols[1].append(value)
+            cols[2].append(e_value)
+            cols[3].append(to_units)
         master = numpy_ext.recarr_addcols(master,cols,dtypes)
         #-- reset errors
         master['e_meas'][no_errors] = np.nan

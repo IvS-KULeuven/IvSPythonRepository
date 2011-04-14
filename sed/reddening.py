@@ -1,6 +1,44 @@
 # -*- coding: utf-8 -*-
 """
 Definitions of interstellar reddening curves
+
+Example usage:
+    
+>>> import pylab as pl
+
+Use the general interface to get different curves:
+
+>>> wave = np.r_[1e3:1e5:10]
+>>> for name in ['chiar2006','fitzpatrick1999','cardelli1989','seaton1979']:
+...   wave_,mag_ = get_law(name,wave=wave)
+...   p = pl.plot(1e4/wave_,mag_)
+>>> p = pl.xlim(0,10)
+>>> p = pl.ylim(0,12)
+
+Use the general interface to get the same curves but with different Rv:
+>>> for Rv in [2.0,3.1,5.1]:
+...   wave_,mag_ = get_law('cardelli1989',wave=wave,Rv=Rv)
+...   p = pl.plot(1e4/wave_,mag_,'--',lw=2)
+>>> p = pl.xlim(0,10)
+>>> p = pl.ylim(0,12)
+
+Get the curves seperately:
+
+>>> wave1,mag1 = cardelli1989()
+>>> wave2,mag2 = chiar2006()
+>>> wave3,mag3 = seaton1979()
+>>> wave4,mag4 = fitzpatrick1999()
+
+And plot them:
+
+>>> p = pl.figure()
+>>> p = pl.plot(1e4/wave1,mag1*3.1)
+>>> p = pl.plot(1e4/wave2,mag2*3.1)
+>>> p = pl.plot(1e4/wave3,mag3*3.1)
+>>> p = pl.plot(1e4/wave4,mag4*3.1)
+>>> p = pl.xlim(0,10)
+>>> p = pl.ylim(0,12)
+>>> p = pl.show()
 """
 
 import os
@@ -30,8 +68,9 @@ def get_law(name,**kwargs):
     C{wave} (array), which B{must} be in angstrom. You can change the units
     ouf the returned wavelength array via C{wave_units}.
     
-    By default, the curve is normalised with respect to E(B-V). you can set the
-    C{norm} keyword to Av if you don't want this. Remember that
+    By default, the curve is normalised with respect to E(B-V) (you get
+    A(l)/E(B-V)). You can set the C{norm} keyword to Av if you want A(l)/E(B-V).
+    Remember that
     
     A(V) = Rv * E(B-V)
     
@@ -42,11 +81,8 @@ def get_law(name,**kwargs):
     
     Example usage:
     
-    >>> import pylab as pl
-    >>> for name in ['chiar2006','fitzpatrick1999','donnell1994','cardelli1989','seaton1979']:
-    ...     wave,mag = get_law(name)
-    ...     p = pl.plot(10000/wave,mag)
-    >>> p = pl.show()
+    >>> wave = np.r_[1e3:1e5:10]
+    >>> wave,mag = get_law('cardelli1989',wave=wave,Rv=3.1)
     
     @param name: name of the interstellar law
     @type name: str, one of the functions defined here
@@ -63,14 +99,15 @@ def get_law(name,**kwargs):
     Rv = kwargs.setdefault('Rv',3.1)
     
     #-- get the curve
-    wave_,mag = globals()[name.lower()](**kwargs)
+    wave,mag = globals()[name.lower()](**kwargs)
     
     #-- interpolate on user defined grid
-    wave = kwargs.get('wave',None)
-    if wave is not None:
-        mag = np.interp(wave,wave_,mag)
+    wave_ = kwargs.get('wave',None)
+    if wave_ is not None:
+        mag = np.interp(wave_,wave,mag,right=0)
+        wave = wave_
     
-    #-- convert to A(lambda)/E(B-V) if needed
+    #-- convert to A(lambda)/Av if needed
     if norm.lower()=='e(b-v)':
         mag *= Rv
     elif norm.lower()!='av':
@@ -91,10 +128,12 @@ def chiar2006(**kwargs):
     """
     Extinction curve at infrared wavelengths from Chiar and Tielens (2006)
     
-    To get A(lambda)/E(B-V), you have to multiply A(lambda)/Av with Rv.
+    We return A(lambda)/E(B-V), by multiplying A(lambda)/Av with Rv.
     
     This is only defined for Rv=3.1. If it is different, this will raise an
     AssertionError
+    
+    UNCERTAIN NORMALISATION
     
     @keyword Rv: Rv
     @type Rv: float
@@ -109,21 +148,19 @@ def chiar2006(**kwargs):
     
     #-- check Rv
     assert(Rv==3.1)
-    
-    wave,gc,ism = ascii.read2array(source).T
+    wavelengths,gc,ism = ascii.read2array(source).T
     if curve=='gc':
         alam_ak = gc
     elif curve=='ism':
         keep = ism>0
         alam_ak = ism[keep]
-        wave = wave[keep]
+        wavelengths = wavelengths[keep]
     else:
         raise ValueError,'no curve %s'%(curve)
-    
-    logger.info('Chiar2006 (%s) curve with Rv=%.2f'%(curve,Rv))
-    
     alam_aV = alam_ak * 0.09
-    return wave*1e4,alam_aV
+    #plot(1/wavelengths,alam_aV,'o-')
+    return wavelengths*1e4,alam_aV
+
 
 
 
@@ -252,6 +289,10 @@ def seaton1979(**kwargs):
     """
     Extinction curve from Seaton, 1979.
     
+    This function returns A(lambda)/A(V).
+    
+    To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
     @keyword Rv: Rv
     @type Rv: float
     @keyword wave: wavelengths to compute the curve on
@@ -260,7 +301,7 @@ def seaton1979(**kwargs):
     @rtype: (ndarray,ndarray)
     """
     Rv = kwargs.get('Rv',3.1)
-    wave = kwargs.get('wave',np.r_[1000.:30000.:10])
+    wave = kwargs.get('wave',np.r_[1000.:10000.:10])
     all_x = 1e4/(wave)
     alam_aV = np.zeros_like(all_x)
     
@@ -268,7 +309,7 @@ def seaton1979(**kwargs):
     x_ = np.r_[1.0:2.8:0.1]
     X_ = np.array([1.36,1.44,1.84,2.04,2.24,2.44,2.66,2.88,3.14,3.36,3.56,3.77,3.96,4.15,4.26,4.40,4.52,4.64])
     fir = all_x<=2.7
-    alam_aV[fir] = np.interp(all_x[fir][::-1],x_,X_)[::-1]
+    alam_aV[fir] = np.interp(all_x[fir][::-1],x_,X_,left=0)[::-1]
     
     #-- infrared
     infrared = (2.70<=all_x) & (all_x<3.65)
@@ -287,7 +328,7 @@ def seaton1979(**kwargs):
     
     logger.info('Seaton curve with Rv=%.2f'%(Rv))
     
-    return wave,alam_aV
+    return wave,alam_aV/Rv
 
 #}
 
