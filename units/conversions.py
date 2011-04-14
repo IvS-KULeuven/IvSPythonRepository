@@ -12,7 +12,8 @@ Some of the many possibilities include:
     3. Nonlinear conversions: vegamag to erg/s/cm2/A or Jy, Celcius to
     Fahrenheit or Kelvin, calender date to (modified) Julian Day, Equatorial to
     Ecliptic coordinates, etc...
-    4. Inclusion of uncertainties, both in input values and/or reference values
+    4. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
+    5. Inclusion of uncertainties, both in input values and/or reference values
     when converting between unequal-type units.
 
 The main function C{convert} does all the work and is called via
@@ -74,6 +75,8 @@ def convert(_from,_to,*args,**kwargs):
     C{erg s-1 cm-2 A-1}
     
     Common alternatives are also accepted (see below).
+    
+    Square brackets '[]' denote a logarithmic value.
     
     If one positional argument is given, it can be either a scalar, numpy array
     or C{uncertainties} object. The function will also return one argument of
@@ -270,9 +273,17 @@ def convert(_from,_to,*args,**kwargs):
     #   the second is the error on the value
     elif len(args)==2:
         start_value = unumpy.uarray([args[0],args[1]])
-        
-    #-- break down the from and to units to their basic elements
     
+    #-- (un)logarithmicize (denoted by '[]')
+    m_in = re.search(r'\[(.*)\]',_from)
+    m_out = re.search(r'\[(.*)\]',_to)
+    if m_in is not None:
+        _from = m_in.group(1)
+        start_value = 10**start_value
+    if m_out is not None:
+        _to = m_out.group(1)
+    
+    #-- break down the from and to units to their basic elements
     fac_from,uni_from = breakdown(_from)
     if _to!='SI':
         fac_to,uni_to = breakdown(_to)
@@ -294,12 +305,12 @@ def convert(_from,_to,*args,**kwargs):
             kwargs_SI[key] = kwargs[key]
     
     #-- add some default values if necessary
-    if uni_from=='m1' and not 'wave' in kwargs_SI:
+    if uni_from!=uni_to and uni_from=='m1' and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
         kwargs_SI['wave'] = fac_from*start_value
-        logger.info('Assumed input value to serve for "wave" key')
-    elif uni_from=='cy1 s-1' and not 'freq' in kwargs_SI:
+        logger.warning('Assumed input value to serve for "wave" key')
+    elif uni_from!=uni_to and uni_from=='cy1 s-1' and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
         kwargs_SI['freq'] = fac_from*start_value
-        logger.info('Assumed input value to serve for "freq" key')
+        logger.warning('Assumed input value to serve for "freq" key')
         
     logger.debug('Convert %s to %s'%(uni_from,uni_to))
     
@@ -367,6 +378,10 @@ def convert(_from,_to,*args,**kwargs):
         ret_value = fac_to(ret_value,inv=True,**kwargs_SI)
     else:
         ret_value /= fac_to
+    
+    #-- logarithmicize
+    if m_out is not None:
+        ret_value = log10(ret_value)
     
     #-- unpack the uncertainties if: 
     #    1. the input was not given as such
@@ -942,7 +957,9 @@ class STMag(NonLinearConverter):
     """
     Convert an ST magnitude to W/m2/m (Flambda) and back
     
-    mag = -2.5*log10(F) + 21.10
+    mag = -2.5*log10(F) - 21.10
+    
+    F0 = 3.6307805477010028e-09 erg/s/cm2/A
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         data = read_fluxcalib()
