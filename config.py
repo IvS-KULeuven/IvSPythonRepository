@@ -3,6 +3,7 @@
 Global configuration of the IvS package.
 """
 import os
+import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
@@ -37,4 +38,23 @@ def get_datafile(relative_path,basename):
         raise IOError, "File %s not found in any of the specified data directories %s"%(relative_file,str_data_dirs)
     
     return filename
+
+def glob(relative_path,arg='*'):
+    """
+    Glob the files in a relative path.
+    
+    @param relative_path: relative path starting from main data directory tree
+    @type relative_path: str
+    @param arg: argument to use in glob
+    @type arg: str
+    @return: sorted list of files
+    @rtype: list of str
+    """
+    files = []
+    for data_dir in data_dirs:
+        if data_dir is None: continue
+        files += glob_module.glob(os.path.join(data_dir,relative_path,arg))
+    files.sort()
+    return files
+    
             
