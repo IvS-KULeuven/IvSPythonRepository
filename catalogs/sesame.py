@@ -141,11 +141,12 @@ def search(ID,db='S'):
     database = xmlparser.XMLParser(xmlpage).content
     try:
         database = database['Sesame']['Target']['%s'%(db)]['Resolver']
-    except KeyError:
+        database = database[database.keys()[0]]
+    except KeyError,IndexError:
         #-- we found nothing!
         database = {}
     ff.close()
-    return database[database.keys()[0]]
+    return database
     
 if __name__=="__main__":
     import doctest
