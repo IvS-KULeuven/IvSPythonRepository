@@ -16,6 +16,7 @@ Use the general interface to get different curves:
 >>> p = pl.ylim(0,12)
 
 Use the general interface to get the same curves but with different Rv:
+
 >>> for Rv in [2.0,3.1,5.1]:
 ...   wave_,mag_ = get_law('cardelli1989',wave=wave,Rv=Rv)
 ...   p = pl.plot(1e4/wave_,mag_,'--',lw=2)
