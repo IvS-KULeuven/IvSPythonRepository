@@ -129,7 +129,10 @@ def search(name,**kwargs):
     
     #   otherwise, we read everything into a dictionary
     if filetype=='tsv':
-        results,units,comms = tsv2recarray(filen)
+        try:
+            results,units,comms = tsv2recarray(filen)
+        except ValueError:
+            raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name)
         url.close()
         logger.debug('Results converted to record array (found %d targets)'%(results is not None and len(results) or -1))
         return results,units,comms
