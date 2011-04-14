@@ -131,6 +131,7 @@ def search(name,**kwargs):
     if filetype=='tsv':
         try:
             results,units,comms = tsv2recarray(filen)
+        #-- raise an exception when multiple catalogs were specified
         except ValueError:
             raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name)
         url.close()
