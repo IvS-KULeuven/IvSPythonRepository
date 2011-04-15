@@ -402,8 +402,6 @@ def calibrate():
 
 #}
 
-#}
-
 #{ Synthetic photometry
 
 def synthetic_flux(wave,flux,photbands):
