@@ -54,7 +54,7 @@ except ImportError: print("Unable to load pyephem, coordinate transfos unavailab
 from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc
 from ivs.units.uncertainties.unumpy import log10
-from ivs.reduction.photometry import calibration
+#from ivs.reduction.photometry import calibration
 from ivs.io import ascii
 from ivs.misc import loggers
 

@@ -18,8 +18,11 @@ import numpy as np
 
 from ivs import config
 from ivs.units import conversions
+from ivs.misc import loggers
+from ivs.reduction.photometry import calibration
 
 logger = logging.getLogger("SED.MODEL")
+logger.addHandler(loggers.NullHandler)
 
 #-- default values for grids
 defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
@@ -28,6 +31,8 @@ defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
+
+#{ Interface to library
 
 def set_defaults(**kwargs):
     """
@@ -114,11 +119,9 @@ def get_sed_file(**kwargs):
         elif odfnew:
             basename = 'kurucz93_z%.1f_k%dodfnew_sed.fits'%(z,vturb)
         elif nover:
-            basename = 'kurucz93_z%.1f_k%dnover_sed.fits'%(z,vturb)
-            
+            basename = 'kurucz93_z%.1f_k%dnover_sed.fits'%(z,vturb)            
     elif grid=='cmfgen':
-        basename = 'cmfgen_sed.fits'
-        
+        basename = 'cmfgen_sed.fits'        
     elif grid=='sdb_uli':
         basename = 'SED_int_h%d_z%.1f.fits'%(He,z)
     elif grid=='wd_boris':
@@ -126,24 +129,19 @@ def get_sed_file(**kwargs):
     elif grid=='wd_da':
         basename = 'SED_WD_Koester_DA.fits'
     elif grid=='wd_db':
-        basename = 'SED_WD_Koester_DB.fits'
-        
+        basename = 'SED_WD_Koester_DB.fits'        
     elif grid=='marcs':
         basename = 'marcsp_z%.1ft%.1f_a%.2f_c%.2f_sed.fits'%(z,t,a,c)
     elif grid=='marcs2':
         basename = 'marcsp2_z0.00t2.0_m.1.0c0.00_sed.fits'
     elif grid=='comarcs':
-        basename = 'comarcsp_z%.2fco%.2fm%.1fxi2.50_sed.fits'%(z,co,m)
-        
+        basename = 'comarcsp_z%.2fco%.2fm%.1fxi2.50_sed.fits'%(z,co,m)        
     elif grid=='stars':
-        basename = 'kurucz_stars_sed.fits'
-        
+        basename = 'kurucz_stars_sed.fits'        
     elif grid=='tlusty':
-        basename = 'tlusty_z%.2f_sed.fits'%(z)
-        
+        basename = 'tlusty_z%.2f_sed.fits'%(z)        
     elif grid=='uvblue':
-        basename = 'uvblue_z%.1f_k2_sed.fits'%(z)
-        
+        basename = 'uvblue_z%.1f_k2_sed.fits'%(z)        
     elif grid=='atlas12':
         basename = 'atlas12_z%.1f_sed.fits'%(z)
     
@@ -262,14 +260,170 @@ def get_table(**kwargs):
     return wave,flux
 
 
+#}
 
+#{ Calibration
 
-
-
-
-
-
+def list_calibrators():
+    """
+    Print and return the list of calibrators
+    """
+    files = config.glob(caldir,'*.fits')
+    names = []
+    for ff in files:
+        fits_file = pyfits.open(ff)
+        names.append(fits_file[0].header['targetid'])
+        star_info = sesame.search(names[-1])
+        spType = ('spType' in star_info) and star_info['spType'] or ''
+        logger.info('%-15s: (%8s) %s'%(names[-1],spType,fits_file[0].header['descrip']))
+        fits_file.close()
+    return names
     
+
+def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None):
+    """
+    Retrieve a calibration SED
+    
+    If C{version} is None, get the last version.
+    """
+    #-- collect calibration files
+    files = config.glob(caldir,'*.fits')
+    calfile = None
+    for ff in files:
+        #-- check if the name matches with the given one
+        fits_file = pyfits.open(ff)
+        header = fits_file[0].header
+        if name in ff or name in header['targetid']:
+            #-- maybe the target is correct, but the 'model version' is not
+            if version is not None and version not in ff:
+                fits_file.close()
+                continue
+            #-- extract the wavelengths and flux
+            calfile = ff
+            wave = fits_file[1].data.field('wavelength')
+            flux = fits_file[1].data.field('flux')
+        fits_file.close()
+    
+    if calfile is None:
+        raise ValueError, 'Calibrator %s (version=%s) not found'%(name,version)
+    
+    logger.info('Calibrator %s selected'%(calfile))
+    
+    return wave,flux
+
+
+
+def calibrate():
+    """
+    Calibrate photometry.
+    
+    Not finished!
+    
+    ABmag = -2.5 Log F_nu - 48.6 with F_nu in erg/s/cm2/Hz
+    Flux computed as 10**(-(meas-mag0)/2.5)*F0
+    Magnitude computed as -2.5*log10(Fmeas/F0)
+    
+    STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/A
+    Flux computed as 10**(-(meas-mag0)/2.5)*F0
+    Magnitude computed as -2.5*log10(Fmeas/F0)
+    
+    Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/A
+    Flux computed as 10**(-meas/2.5)*F0
+    Magnitude computed as -2.5*log10(Fmeas/F0)
+    """
+    #-- get calibrator
+    wave,flux = get_calibrator(name='alpha_lyr')
+    zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
+    zp = ascii.read2recarray(zp_file,dtype=[('photband','a50'),('eff_wave','>f4'),('type','a3'),
+                                            ('vegamag','>f4'),('vegamag_lit','i'),
+                                            ('abmag','>f4'),('abmag_lit','i'),
+                                            ('stmag','>f4'),('stmag_lit','i'),
+                                            ('Flam0','>f4'),('Flam0_units','a50'),('Flam0_lit','i'),
+                                            ('Fnu0','>f4'),('Fnu0_units','a50'),('Fnu0_lit','i'),
+                                            ('source','a100')])
+    #-- calculate zeropoint fluxes
+    #   Flam0 from VEGA magnitudes:
+    
+    #----------------- INTEGRATE THE MODEL ------------------
+    keep = zp['vegamag_lit']==1
+    energy = model.synthetic_flux(wave,flux,zp['photband'][keep])
+    print energy
+    #-- calculate VEGA magnitudes:
+    zp['vegamag'][zp['vegamag_lit']==0] = 0.
+    return wave,flux,zp['eff_wave'][keep],energy
+    
+
+#}
+
+#}
+
+#{ Synthetic photometry
+
+def synthetic_flux(wave,flux,photbands):
+    """
+    Extract flux measurements from a synthetic SED.
+    
+    The fluxes below 4micron are calculated assuming PHOTON-counting detectors
+    (e.g. CCDs).
+    
+    F = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
+    
+    When otherwise specified, we assume ENEGY-counting detectors (e.g. bolometers)
+    
+    F = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
+    
+    Where P_lam is the total system dimensionless sensitivity function, which
+    is normalised so that the maximum equals 1. Also, f_lam is the SED of the
+    object, in units of energy per time per unit area per wavelength.
+    
+    The PHOTON-counting part of this routine has been thoroughly checked with
+    respect to johnson UBV, geneva and stromgren filters, and only gives offsets
+    with respect to the Kurucz integrated files (.geneva and stuff on his websites). These could be
+    due to different normalisation.
+    
+    You are responsible yourself for having a response curve covering the
+    model fluxes!
+    
+    See e.g. Maiz-Apellaniz, 2006.
+    """    
+    energys = np.zeros(len(photbands))
+    
+    #-- only keep relevant information on filters:
+    filter_info = calibration.get_filter_info()
+    keep = np.searchsorted(filter_info['photband'],photbands)
+    filter_info = filter_info[keep]
+    
+    for i,photband in enumerate(photbands):
+        waver,transr = calibration.get_response(photband)
+        
+        #-- make wavelength range a bit bigger, otherwise F25 from IRAS has only
+        #   one Kurucz model point in its wavelength range... this is a bit
+        #   'ad hoc' but seems to work.
+        region = ((waver[0]-0.4*waver[0])<=wave) & (wave<=(waver[-1]+0.4*waver[-1]))
+        #-- if we're working in infrared (>4e4A) and the model is not of high
+        #   enough resolution (100000 points over wavelength range), interpolate
+        #   the model in logscale on to a denser grid (in logscale!)
+        if filter_info['wave_eff'][i]>=4e4 and sum(region)<1e5 and sum(region)>1:
+            wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
+            flux = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
+            wave = wave_
+        else:
+            wave = wave[region]
+            flux = flux[region]
+        #-- interpolate response curve onto model grid
+        trans_res = np.interp1d(wave,waver,transr,left=0,right=0)
+        #-- integrated flux: different for bolometers and CCDs
+        if filter_info['type'][i]=='BOL':
+            energys[i] = trapz(flux*transr,x=wave)/trapz(transr,x=wave)
+        elif filter_info['type'][i]=='CCD':
+            energys[i] = trapz(flux*transr*wave,x=wave)/trapz(transr*wave,x=wave)
+    
+    #-- that's it!
+    return energys
+
+
+#}
+
 if __name__=="__main__":
     import doctest
     doctest.testmod()
