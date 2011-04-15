@@ -15,14 +15,18 @@ import logging
 import copy
 import pyfits
 import numpy as np
+import pylab as pl
 
 from ivs import config
 from ivs.units import conversions
 from ivs.misc import loggers
-from ivs.reduction.photometry import calibration
+from ivs.sed import filters
+from ivs.io import ascii
 
 logger = logging.getLogger("SED.MODEL")
 logger.addHandler(loggers.NullHandler)
+
+caldir = os.sep.join(['sedtables','calibrators'])
 
 #-- default values for grids
 defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
@@ -285,6 +289,12 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     Retrieve a calibration SED
     
     If C{version} is None, get the last version.
+    
+    Example usage:
+    
+    >>> wave,flux = get_calibrator(name='alpha_lyr')
+    >>> wave,flux = get_calibrator(name='alpha_lyr',version='003')
+    
     """
     #-- collect calibration files
     files = config.glob(caldir,'*.fits')
@@ -307,6 +317,12 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     if calfile is None:
         raise ValueError, 'Calibrator %s (version=%s) not found'%(name,version)
     
+    if flux_units is not None:
+        flux = conversions.convert('erg/s/cm2/A',flux_units,flux,wave=(wave,'A'))
+    if wave_units is not None:
+        wave = conversions.convert('A',wave_units,wave)
+    
+    
     logger.info('Calibrator %s selected'%(calfile))
     
     return wave,flux
@@ -322,35 +338,66 @@ def calibrate():
     ABmag = -2.5 Log F_nu - 48.6 with F_nu in erg/s/cm2/Hz
     Flux computed as 10**(-(meas-mag0)/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
+    F0 = 3.6307805477010029e-20 erg/s/cm2/Hz
     
     STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/A
     Flux computed as 10**(-(meas-mag0)/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
+    F0 = 3.6307805477010028e-09 erg/s/cm2/A
     
     Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/A
     Flux computed as 10**(-meas/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
     """
+    F0ST = 3.6307805477010028e-09
+    F0AB = 3.6307805477010029e-20
     #-- get calibrator
     wave,flux = get_calibrator(name='alpha_lyr')
-    zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
-    zp = ascii.read2recarray(zp_file,dtype=[('photband','a50'),('eff_wave','>f4'),('type','a3'),
-                                            ('vegamag','>f4'),('vegamag_lit','i'),
-                                            ('abmag','>f4'),('abmag_lit','i'),
-                                            ('stmag','>f4'),('stmag_lit','i'),
-                                            ('Flam0','>f4'),('Flam0_units','a50'),('Flam0_lit','i'),
-                                            ('Fnu0','>f4'),('Fnu0_units','a50'),('Fnu0_lit','i'),
-                                            ('source','a100')])
-    #-- calculate zeropoint fluxes
-    #   Flam0 from VEGA magnitudes:
+    zp = filters.get_info()
     
-    #----------------- INTEGRATE THE MODEL ------------------
-    keep = zp['vegamag_lit']==1
-    energy = model.synthetic_flux(wave,flux,zp['photband'][keep])
-    print energy
-    #-- calculate VEGA magnitudes:
-    zp['vegamag'][zp['vegamag_lit']==0] = 0.
-    return wave,flux,zp['eff_wave'][keep],energy
+    #-- calculate synthetic fluxes
+    syn_flux = synthetic_flux(wave,flux,zp['photband'])
+    Flam0_lit = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/A',zp['Flam0'],photband=zp['photband'])
+    
+    #-- we have Flam0 but not Fnu0: compute Fnu0
+    keep = (zp['Flam0_lit']==1) & (zp['Fnu0_lit']==0)
+    Fnu0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/Hz',zp['Flam0'],photband=zp['photband'])
+    zp['Fnu0'][keep] = Fnu0[keep]
+    zp['Fnu0_units'][keep] = 'erg/s/cm2/Hz'
+    
+    #-- we have Fnu0 but not Flam0: compute Flam0
+    keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==1)
+    Flam0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/A',zp['Fnu0'],photband=zp['photband'])
+    
+    #   set everything in correct units for convenience:
+    Flam0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/A',zp['Flam0'])
+    Fnu0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/Hz',zp['Fnu0'])
+    
+    #-- as a matter of fact, set Flam0 for all the stuff
+    keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==0)
+    zp['Flam0'][keep] = syn_flux[keep]
+    zp['Flam0_units'][keep] = 'erg/s/cm2/A'
+    
+    keep = np.array(['DENIS' in photb and True or False for photb in zp['photband']])
+    print zip(syn_flux[keep],Flam0[keep])
+    
+    #-- we have no Flam0, only ZP vegamags
+    keep = (zp['vegamag_lit']==1) & (zp['Flam0_lit']==0)
+    zp['Flam0'][keep] = syn_flux[keep]
+    zp['Flam0_units'][keep] = 'erg/s/cm2/A'
+    
+    #-- we have no Flam0, no ZP vegamas but STmags
+    keep = (zp['STmag_lit']==1) & (zp['Flam0_lit']==0)
+    m_vega = 2.5*np.log10(F0ST/syn_flux) + zp['STmag']
+    zp['vegamag'][keep] = m_vega[keep]
+    
+    #-- we have no Fnu0, no ZP vegamas but ABmags
+    keep = (zp['ABmag_lit']==1) & (zp['Flam0_lit']==0)
+    F0AB_lam = conversions.convert('erg/s/cm2/Hz','erg/s/cm2/A',F0AB,photband=zp['photband'])
+    m_vega = 2.5*np.log10(F0AB_lam/syn_flux) + zp['ABmag']
+    zp['vegamag'][keep] = m_vega[keep]
+    
+    return zp
     
 
 #}
@@ -389,13 +436,12 @@ def synthetic_flux(wave,flux,photbands):
     energys = np.zeros(len(photbands))
     
     #-- only keep relevant information on filters:
-    filter_info = calibration.get_filter_info()
+    filter_info = filters.get_info()
     keep = np.searchsorted(filter_info['photband'],photbands)
     filter_info = filter_info[keep]
     
     for i,photband in enumerate(photbands):
-        waver,transr = calibration.get_response(photband)
-        
+        waver,transr = filters.get_response(photband)
         #-- make wavelength range a bit bigger, otherwise F25 from IRAS has only
         #   one Kurucz model point in its wavelength range... this is a bit
         #   'ad hoc' but seems to work.
@@ -403,20 +449,20 @@ def synthetic_flux(wave,flux,photbands):
         #-- if we're working in infrared (>4e4A) and the model is not of high
         #   enough resolution (100000 points over wavelength range), interpolate
         #   the model in logscale on to a denser grid (in logscale!)
-        if filter_info['wave_eff'][i]>=4e4 and sum(region)<1e5 and sum(region)>1:
+        if filter_info['eff_wave'][i]>=4e4 and sum(region)<1e5 and sum(region)>1:
+            logger.debug('%10s: Interpolating model to integrate over response curve'%(photband))
             wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
-            flux = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
-            wave = wave_
+            flux_ = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
         else:
-            wave = wave[region]
-            flux = flux[region]
+            wave_ = wave[region]
+            flux_ = flux[region]
         #-- interpolate response curve onto model grid
-        trans_res = np.interp1d(wave,waver,transr,left=0,right=0)
+        transr = np.interp(wave_,waver,transr,left=0,right=0)
         #-- integrated flux: different for bolometers and CCDs
         if filter_info['type'][i]=='BOL':
-            energys[i] = trapz(flux*transr,x=wave)/trapz(transr,x=wave)
+            energys[i] = np.trapz(flux_*transr,x=wave_)/np.trapz(transr,x=wave_)
         elif filter_info['type'][i]=='CCD':
-            energys[i] = trapz(flux*transr*wave,x=wave)/trapz(transr*wave,x=wave)
+            energys[i] = np.trapz(flux_*transr*wave_,x=wave_)/np.trapz(transr*wave_,x=wave_)
     
     #-- that's it!
     return energys

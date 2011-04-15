@@ -21,7 +21,7 @@ from ivs.io import ascii
 from ivs.units import conversions
 from ivs.misc import loggers
 from ivs.misc import numpy_ext
-from ivs.reduction.photometry import calibration
+from ivs.sed import filters
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler)
@@ -203,8 +203,9 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     
     """
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
-    #-- retrieve all measurements
+    master_ = kwargs.get('master',None)
     master = None
+    #-- retrieve all measurements
     for source in cat_info.sections():
         results,units,comms = search(source,ID=ID,**kwargs)
         if results is not None:
@@ -219,13 +220,14 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
         no_errors = np.isnan(master['e_meas'])
         master['e_meas'][no_errors] = 0.
         #-- extend basic master
+        zp = filters.get_info(master['photband'])
         for i in range(len(master)):
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
                 value,e_value = np.nan,np.nan
             try:
-                eff_wave = calibration.eff_wave(master['photband'][i])
+                eff_wave = filters.eff_wave(master['photband'][i])
             except IOError:
                 eff_wave = np.nan
             cols[0].append(eff_wave)
@@ -236,6 +238,9 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
+    
+    if master_ is not None:
+        master = numpy_ext.recarr_addrows(master_,master.tolist())
     
     #-- and return the results
     return master
@@ -325,7 +330,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     
     First look for all photometry of Vega in all VizieR catalogs:
     
-    >>> from ivs.reduction.photometry import calibration
+    >>> from ivs.sed import filters
     >>> import pylab
     >>> master = None
     >>> for source in cat_info.sections():
@@ -337,15 +342,10 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     observation to 'Jy' and keep track of the results to plot.
     
     >>> master = master[(-np.isnan(master['e_meas'])) & (-np.isnan(master['meas']))]
-    >>> plotdata = np.zeros((2,len(master)))
+    >>> zp = filters.get_info(master['photband'])
+    >>> myvalue,e_myvalue = conversions.nconvert(master['unit'],'erg/s/cm2/A',master['meas'],master['e_meas'],photband=master['photband'])
     >>> for i in range(len(master)):
-    ...     try:
-    ...         myvalue = conversions.convert(master[i]['unit'],'Jy',master[i]['meas'],photband=master[i]['photband'])
-    ...         cwave = calibration.eff_wave(master[i]['photband'])
-    ...     except ValueError:
-    ...         myvalue,cwave = np.nan,np.nan
-    ...     plotdata[:,i] = cwave,myvalue
-    ...     print '%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue,'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
+    ...    print '%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue[i],'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
           JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.598e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
         JOHNSON.B-V -1.000e-03+/- 5.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
         JOHNSON.U-B -6.000e-03+/- 6.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
@@ -398,7 +398,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     Make a quick plot:
     
     >>> p = pylab.figure()
-    >>> p = pylab.loglog(plotdata[0],plotdata[1],'ko')
+    >>> p = pylab.loglog(zp['eff_wave'],myvalue,'ko')
     >>> p = pylab.show()
     
     @param source: name of the VizieR source

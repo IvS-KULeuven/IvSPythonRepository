@@ -125,7 +125,14 @@ def read2recarray(filename,**kwargs):
     data = np.array(data,dtype=np.str).T
     
     #-- if dtypes is None, we have some room to automatically detect the contents
-    #   of the columns. This is not implemented yet.
+    #   of the columns. This is not fully implemented yet, and works only
+    #   if the second-to-last and last columns of the comments denote the
+    #   name and dtype, respectively
+    if dtype is None:
+        header = comm[-2].replace('|',' ').split()
+        types = comm[-1].replace('|','').split()
+        dtype = [(head,typ) for head,typ in zip(header,types)]
+        
     #-- cast all columns to the specified type
     dtype = np.dtype(dtype)
     data = [np.cast[dtype[i]](data[i]) for i in range(len(data))]
@@ -200,11 +207,16 @@ def write_array(data, filename, **kwargs):
             col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[:,i]]))
     
     if header is True:
+        col_fmts = [str(data.dtype[i]) for i in range(len(data.dtype))]
         header = data.dtype.names
+    else:
+        col_fmts = None
     
     ff = open(filename,mode)
     if comments is not None:
         ff.write('\n'.join(comments)+'\n')
+    
+    #-- WRITE HEADER
     #-- when header is desired and automatic width
     if header is not None and col_widths:
         ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(head) for head,cw in zip(header,col_widths)])+'\n')
@@ -212,7 +224,11 @@ def write_array(data, filename, **kwargs):
     elif header is not None:
         ff.write('#'+sep.join(header)+'\n')
     
-    #-- write to a file
+    #-- WRITE COLUMN FORMATS
+    if col_fmts is not None:
+        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(colfmt) for colfmt,cw in zip(col_fmts,col_widths)])+'\n')
+    
+    #-- WRITE DATA
     #-- with automatic width
     if col_widths:
         for row in data:

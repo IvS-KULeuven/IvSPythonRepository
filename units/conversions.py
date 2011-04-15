@@ -54,7 +54,7 @@ except ImportError: print("Unable to load pyephem, coordinate transfos unavailab
 from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc
 from ivs.units.uncertainties.unumpy import log10
-#from ivs.reduction.photometry import calibration
+from ivs.sed import filters
 from ivs.io import ascii
 from ivs.misc import loggers
 
@@ -277,6 +277,7 @@ def convert(_from,_to,*args,**kwargs):
     #-- (un)logarithmicize (denoted by '[]')
     m_in = re.search(r'\[(.*)\]',_from)
     m_out = re.search(r'\[(.*)\]',_to)
+    
     if m_in is not None:
         _from = m_in.group(1)
         start_value = 10**start_value
@@ -369,7 +370,7 @@ def convert(_from,_to,*args,**kwargs):
                 logger.debug('fac_from=%s, start_value=%s'%(fac_from,start_value))
                 ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
         except KeyError:
-            logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(only_from,only_to and only_to or '[DimLess]',key))
+            logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(_from,_to,key))
             raise
 
     #-- final step: convert to ... (again distinction between linear and
@@ -394,6 +395,40 @@ def convert(_from,_to,*args,**kwargs):
     
     
     return ret_value
+
+
+def nconvert(_froms,_tos,*args,**kwargs):
+    """
+    Convert a list/array/tuple of values with different units to other units.
+    
+    This silently catches some exceptions and replaces the value with nan!
+    """
+    if len(args)==1:
+        ret_value = np.zeros((len(args[0])))
+    elif len(args)==2:
+        ret_value = np.zeros((len(args[0]),2))
+    if isinstance(_tos,str):
+        _tos = [_tos for i in _froms]
+    elif isinstance(_froms,str):
+        _froms = [_froms for i in _tos]
+    
+    for i,(_from,_to) in enumerate(zip(_froms,_tos)):
+        myargs = [iarg[i] for iarg in args]
+        mykwargs = {}
+        for key in kwargs:
+            if not isinstance(kwargs[key],str) and hasattr(kwargs[key],'__iter__'):
+                mykwargs[key] = kwargs[key][i]
+            else:
+                mykwargs[key] = kwargs[key]
+        try:
+            ret_value[i] = convert(_from,_to,*myargs,**mykwargs)
+        except ValueError: #no calibration
+            ret_value[i] = np.nan
+    
+    if len(args)==2:
+        ret_value = ret_value.T
+    return ret_value
+    
 
 #}
 #{ Conversions basics
@@ -596,7 +631,7 @@ def fnu2flambda(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -628,7 +663,7 @@ def flambda2fnu(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -660,7 +695,7 @@ def fnu2nufnu(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -692,7 +727,7 @@ def nufnu2fnu(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -724,7 +759,7 @@ def flam2lamflam(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -756,7 +791,7 @@ def lamflam2flam(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -785,7 +820,7 @@ def distance2spatialfreq(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -812,7 +847,7 @@ def spatialfreq2distance(arg,**kwargs):
     @rtype: float
     """
     if 'photband' in kwargs:
-        lameff = calibration.eff_wave(kwargs['photband'])
+        lameff = filters.eff_wave(kwargs['photband'])
         lameff = convert('A','m',lameff)
         kwargs['wave'] = lameff
     if 'wave' in kwargs:
@@ -879,14 +914,6 @@ def times_cy(arg,**kwargs):
 #}
 
 #{ Nonlinear change-of-base functions
-def read_fluxcalib():
-    dtypes = [('PHOTBAND','a50'),
-              ('VEGAMAG',np.float),
-              ('ABMAG',np.float),
-              ('STMAG',np.float),
-              ('F0',np.float)]
-    data = ascii.read2recarray(_fluxcalib,dtype=dtypes)
-    return data
 
 class NonLinearConverter():
     """
@@ -932,11 +959,12 @@ class VegaMag(NonLinearConverter):
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         #-- this part should include something where the zero-flux is retrieved
-        data = read_fluxcalib()
-        match = data['PHOTBAND']==photband.upper()
+        zp = filters.get_info()
+        match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
-        F0 = data['F0'][match][0]
-        if not inv: return 10**(-meas/2.5)*F0
+        F0 = convert(zp['Flam0_units'][match][0],'W/m3',zp['Flam0'][match][0])
+        mag0 = float(zp['vegamag'][match][0])
+        if not inv: return 10**(-(meas-mag0)/2.5)*F0
         else:       return -2.5*log10(meas/F0)
 
 class ABMag(NonLinearConverter):
@@ -944,11 +972,11 @@ class ABMag(NonLinearConverter):
     Convert an AB magnitude to W/m2/Hz (Fnu) and back
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
-        data = read_fluxcalib()
+        zp = filters.get_info()
         F0 = 3.6307805477010024e-23
-        match = data['PHOTBAND']==photband.upper()
+        match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
-        mag0 = data['ABMAG'][match][0]
+        mag0 = float(zp['ABmag'][match][0])
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/2.5)*F0
         else:       return -2.5*log10(meas/F0)
@@ -962,11 +990,11 @@ class STMag(NonLinearConverter):
     F0 = 3.6307805477010028e-09 erg/s/cm2/A
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
-        data = read_fluxcalib()
+        zp = filters.get_info()
         F0 = 0.036307805477010027
-        match = data['PHOTBAND']==photband.upper()
+        match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
-        mag0 = data['STMAG'][match][0]
+        mag0 = float(zp['STmag'][match][0])
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/-2.5)*F0
         else:       return -2.5*log10(meas/F0)
