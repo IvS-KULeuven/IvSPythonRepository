@@ -30,8 +30,8 @@ def _get_URI(catalog,**kwargs):
     """
     Build GATOR URI from available options.
     
-    @keyword catalog: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
-    @type name: str
+    @param catalog: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
+    @type catalog: str
     @keyword objstr: target name
     @type objstr: str
     @keyword outfmt: type of output format
