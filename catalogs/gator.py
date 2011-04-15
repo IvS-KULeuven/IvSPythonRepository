@@ -26,29 +26,8 @@ cat_info = ConfigParser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'gator_cats_phot.cfg')))
 
-def _get_URI(catalog,**kwargs):
-    """
-    Build GATOR URI from available options.
-    
-    @param catalog: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
-    @type catalog: str
-    @keyword objstr: target name
-    @type objstr: str
-    @keyword outfmt: type of output format
-    @type outfmt: str ('1','2',...)
-    @keyword radius: search radius (arcseconds)
-    @type radius: float
-    @return: url
-    @rtype: str
-    """
-    base_url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query?'
-    base_url += 'catalog=%s'%(catalog)
-    
-    if 'objstr' in kwargs: base_url += '&objstr=%s'%(urllib.quote(kwargs['objstr']))
-    if 'outfmt' in kwargs: base_url += '&outfmt=%s'%(kwargs['outfmt'])
-    if 'radius' in kwargs: base_url += '&radius=%s'%(kwargs['radius'])
-    return base_url
 
+#[ Basic interfaces
 
 def search(catalog,**kwargs):
     """
@@ -116,6 +95,101 @@ def search(catalog,**kwargs):
         url.close()
         logger.debug('Results converted to record array (found %d targets)'%(results is not None and len(results) or -1))
         return results,units,comms
+
+
+
+
+def list_catalogs():
+    """
+    Return a list of all availabe GATOR catalogues.
+    
+    @return: list of gator catalogs and discriptions
+    @rtype: list of string tuples
+    """
+    url = urllib.URLopener()
+    filen,msg = url.retrieve('http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-scan?mode=ascii')
+    results,units,comms = txt2recarray(filen)
+    cats = []
+    for i in range(len(results)):
+        cats += [(results['catname'][i],results['description'][i])]
+        logger.info('%-20s: %s'%cats[-1])
+    url.close()
+    return cats
+
+
+
+
+
+def get_photometry(ID,extra_fields=['dist','ra','dec'],**kwargs):
+    """
+    Download all available photometry from a star to a record array.
+    
+    For extra kwargs, see L{_get_URI} and L{gator2phot}
+    
+    Example usage:
+    
+    >>> import pylab
+    >>> import vizier
+    >>> name = 'kr cam'
+    >>> master = vizier.get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[])
+    >>> master = get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[],master=master)
+    >>> p = pylab.figure()
+    >>> wise = np.array(['WISE' in photband and True or False for photband in master['photband']])
+    >>> p = pylab.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
+    >>> p = pylab.errorbar(master['cwave'][wise],master['cmeas'][wise],yerr=master['e_cmeas'][wise],fmt='ro',ms=8)
+    >>> p = pylab.gca().set_xscale('log')
+    >>> p = pylab.gca().set_yscale('log')
+    >>> p = pylab.show()
+    """
+    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    master_ = kwargs.get('master',None)
+    master = None
+    #-- retrieve all measurements
+    for source in cat_info.sections():
+        results,units,comms = search(source,objstr=ID,**kwargs)
+        if results is not None:
+            master = gator2phot(source,results,units,master,extra_fields=extra_fields)
+    
+    #-- convert the measurement to a common unit.
+    if to_units and master is not None:
+        #-- prepare columns to extend to basic master
+        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        cols = [[],[],[],[]]
+        #-- forget about 'nan' errors for the moment
+        no_errors = np.isnan(master['e_meas'])
+        master['e_meas'][no_errors] = 0.
+        #-- extend basic master
+        zp = filters.get_info(master['photband'])
+        for i in range(len(master)):
+            try:
+                value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+            except ValueError: # calibrations not available
+                value,e_value = np.nan,np.nan
+            try:
+                eff_wave = filters.eff_wave(master['photband'][i])
+            except IOError:
+                eff_wave = np.nan
+            cols[0].append(eff_wave)
+            cols[1].append(value)
+            cols[2].append(e_value)
+            cols[3].append(to_units)
+        master = numpy_ext.recarr_addcols(master,cols,dtypes)
+        #-- reset errors
+        master['e_meas'][no_errors] = np.nan
+        master['e_cmeas'][no_errors] = np.nan
+    
+    if master_ is not None and master is not None:
+        master = numpy_ext.recarr_addrows(master_,master.tolist())
+    elif master_ is not None:
+        master = master_
+    
+    #-- and return the results
+    return master
+
+
+#}
+
+#{ Convenience functions
 
 
 def txt2recarray(filename):
@@ -187,23 +261,6 @@ def txt2recarray(filename):
         results = np.rec.array(cols, dtype=dtypes)
     return results,units,comms
 
-
-def list_catalogs():
-    """
-    Return a list of all availabe GATOR catalogues.
-    
-    @return: list of gator catalogs and discriptions
-    @rtype: list of string tuples
-    """
-    url = urllib.URLopener()
-    filen,msg = url.retrieve('http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-scan?mode=ascii')
-    results,units,comms = txt2recarray(filen)
-    cats = []
-    for i in range(len(results)):
-        cats += [(results['catname'][i],results['description'][i])]
-        logger.info('%-20s: %s'%cats[-1])
-    url.close()
-    return cats
 
 
 def gator2phot(source,results,units,master=None,extra_fields=None):
@@ -295,71 +352,32 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
     return master
 
 
-def get_photometry(ID,extra_fields=['dist','ra','dec'],**kwargs):
+
+#{ Internal helper functions
+
+def _get_URI(catalog,**kwargs):
     """
-    Download all available photometry from a star to a record array.
+    Build GATOR URI from available options.
     
-    For extra kwargs, see L{_get_URI} and L{gator2phot}
-    
-    Example usage:
-    
-    >>> import pylab
-    >>> import vizier
-    >>> name = 'kr cam'
-    >>> master = vizier.get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[])
-    >>> master = get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[],master=master)
-    >>> p = pylab.figure()
-    >>> wise = np.array(['WISE' in photband and True or False for photband in master['photband']])
-    >>> p = pylab.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
-    >>> p = pylab.errorbar(master['cwave'][wise],master['cmeas'][wise],yerr=master['e_cmeas'][wise],fmt='ro',ms=8)
-    >>> p = pylab.gca().set_xscale('log')
-    >>> p = pylab.gca().set_yscale('log')
-    >>> p = pylab.show()
+    @param catalog: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
+    @type catalog: str
+    @keyword objstr: target name
+    @type objstr: str
+    @keyword outfmt: type of output format
+    @type outfmt: str ('1','2',...)
+    @keyword radius: search radius (arcseconds)
+    @type radius: float
+    @return: url
+    @rtype: str
     """
-    to_units = kwargs.pop('to_units','erg/s/cm2/A')
-    master_ = kwargs.get('master',None)
-    master = None
-    #-- retrieve all measurements
-    for source in cat_info.sections():
-        results,units,comms = search(source,objstr=ID,**kwargs)
-        if results is not None:
-            master = gator2phot(source,results,units,master,extra_fields=extra_fields)
+    base_url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query?'
+    base_url += 'catalog=%s'%(catalog)
     
-    #-- convert the measurement to a common unit.
-    if to_units and master is not None:
-        #-- prepare columns to extend to basic master
-        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
-        cols = [[],[],[],[]]
-        #-- forget about 'nan' errors for the moment
-        no_errors = np.isnan(master['e_meas'])
-        master['e_meas'][no_errors] = 0.
-        #-- extend basic master
-        zp = filters.get_info(master['photband'])
-        for i in range(len(master)):
-            try:
-                value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
-            except ValueError: # calibrations not available
-                value,e_value = np.nan,np.nan
-            try:
-                eff_wave = filters.eff_wave(master['photband'][i])
-            except IOError:
-                eff_wave = np.nan
-            cols[0].append(eff_wave)
-            cols[1].append(value)
-            cols[2].append(e_value)
-            cols[3].append(to_units)
-        master = numpy_ext.recarr_addcols(master,cols,dtypes)
-        #-- reset errors
-        master['e_meas'][no_errors] = np.nan
-        master['e_cmeas'][no_errors] = np.nan
-    
-    if master_ is not None and master is not None:
-        master = numpy_ext.recarr_addrows(master_,master.tolist())
-    elif master_ is not None:
-        master = master_
-    
-    #-- and return the results
-    return master
+    if 'objstr' in kwargs: base_url += '&objstr=%s'%(urllib.quote(kwargs['objstr']))
+    if 'outfmt' in kwargs: base_url += '&outfmt=%s'%(kwargs['outfmt'])
+    if 'radius' in kwargs: base_url += '&radius=%s'%(kwargs['radius'])
+    return base_url
+
 
 
 
