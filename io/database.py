@@ -139,8 +139,9 @@ class Database(dict):
         
         '''
         
-        super(Database,self).__delitem__(key)
         self.__deleted.append(key)
+        return super(Database,self).__delitem__(key)
+        
     
     
     
@@ -169,7 +170,7 @@ class Database(dict):
         
         
         
-    def setdefault(self,key,**kwargs):
+    def setdefault(self,key,*args):
         
         '''
         Return key's value, if present. Otherwise add key with value default
@@ -179,20 +180,69 @@ class Database(dict):
         
         @param key: the key to be returned and/or added.
         @type key: any valid dict() key
-        @keyword default: A default value added to the dict() if the key is not 
-        present
+        @param default: A default value added to the dict() if the key is not 
+        present. If not specified, default defaults to None.
         @type default: any type
+        @return: key's value or default
                 
         '''
         
-        default = kwargs.get('default',None)
         if not self.has_key(key):
             self.__changed.append(key)
-        return super(Database,self).setdefault(key,default)
+        return super(Database,self).setdefault(key,*args)
         
         
+            
+    def pop(self,key,*args):
         
-    def update(self,**kwargs):
+        '''
+        If database has key, remove it from the database and return it, else 
+        return default. 
+    
+        If both default is not given and key is not in the database, a KeyError
+        is raised. 
+        
+        If deletion is successful, this change is only added to the database 
+        saved on the hard disk when the sync() method is called. 
+        
+        The key is added to the Database.__deleted list, if present originally.
+                
+        @param key: a dict key that will be removed from the Database in memory
+        @type key: a type valid for a dict key
+        @param default: value of the key to be returned if key not in Database
+        @type value: any
+        @return: value for key, or default
+        
+        '''
+        
+        if self.has_key(key):
+            self.__deleted.append(key)
+        return super(Database,self).pop(key,*args)
+        
+        
+    def popitem(self):
+        
+        '''
+        Remove and return an arbitrary (key, value) pair from the database.
+        
+        A KeyError is raised if the database has an empty dictionary.
+        
+        If removal is successful, this change is only added to the database 
+        saved on the hard disk when the sync() method is called. 
+        
+        The removed key is added to the Database.__deleted list.
+                
+        @return: (key, value) pair from Database
+        
+        '''
+        
+        (key,value) = super(Database,self).popitem()
+        self.__deleted.append(key)
+        return (key,value)
+            
+            
+        
+    def update(self,*args,**kwargs):
         
         '''
         
@@ -202,20 +252,18 @@ class Database(dict):
         includes the changed keys so that the next sync will save these changes
         to the hard disk.
         
-        @keyword dict_type: A dictionary type object to update the Database.
+        @param dict_type: A dictionary type object to update the Database.
         @type dict_type: dict()
         @keyword *: Any extra keywords are added as keys with their values.
         @type *: any type that is allowed as a dict key type.
         
         '''
         
-        dict_type = kwargs.get('dict_type',dict())
         self.__changed.extend(kwargs.keys())
-        self.__changed.extend(dict_type.keys())
-        super(Database,self).update(dict_type)
-        super(Database,self).update(kwargs)
-        
-        
+        self.__changed.extend(args[0].keys())
+        return super(Database,self).update(*args,**kwargs)
+               
+               
         
     def read(self):
         
@@ -282,8 +330,9 @@ class Database(dict):
         if self.__changed or self.__deleted:
             current_db = dict([(k,v) 
                                for k,v in self.items() 
-                               if k in self.__changed])
+                               if k in set(self.__changed)])
             self.read()
+            self.__deleted = list(set(self.__deleted))
             while self.__deleted:
                 try:
                     super(Database,self).__delitem__(self.__deleted.pop())
@@ -331,4 +380,32 @@ class Database(dict):
         '''
         
         self.__changed.append(key)
+    
+    
+    
+    def getDeletedKeys(self):
         
+        '''
+        Return a list of all keys that have been deleted from the database in
+        memory.
+        
+        @return: list of keys
+        @rtype: list
+        '''
+        
+        return self.__deleted
+    
+    
+    
+    def getChangedKeys(self):
+        
+        '''
+        Return a list of all keys that have been changed in the database in
+        memory.
+        
+        @return: list of keys
+        @rtype: list
+        '''
+        
+        return self.__changed
+    

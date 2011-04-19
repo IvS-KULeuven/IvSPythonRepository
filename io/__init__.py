@@ -1,3 +1,3 @@
 
-__all__ = ["ascii"]
+__all__ = ["ascii","database"]
 
