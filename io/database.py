@@ -85,9 +85,9 @@ class Database(dict):
     >>> db2.read()
     >>> print db2['test']
     {'test': 1}
-    >>> db.setdefault('test',default='defkey')
+    >>> db.setdefault('test','defkey')
     {'test': 1}
-    >>> db.setdefault('test3',default='defval')
+    >>> db.setdefault('test3','defval')
     'defval'
     >>> db.sync()
     >>> db2.read()
@@ -132,7 +132,7 @@ class Database(dict):
         when the sync() method is called. 
         
         This method can be called by using syntax:
-        >>> del db[key]
+        del db[key]
         
         @param key: a dict key that will be deleted from the Database in memory
         @type key: a type valid for a dict key
@@ -156,7 +156,7 @@ class Database(dict):
         The key is added to the Database.__changed list.
         
         This method can be called by using syntax:
-        >>> db[key] = value
+        db[key] = value
         
         @param key: a dict key that will be added to the Database in memory
         @type key: a type valid for a dict key
@@ -180,9 +180,9 @@ class Database(dict):
         
         @param key: the key to be returned and/or added.
         @type key: any valid dict() key
-        @param default: A default value added to the dict() if the key is not 
+        @param args: A default value added to the dict() if the key is not 
         present. If not specified, default defaults to None.
-        @type default: any type
+        @type args: any type
         @return: key's value or default
                 
         '''
@@ -209,8 +209,8 @@ class Database(dict):
                 
         @param key: a dict key that will be removed from the Database in memory
         @type key: a type valid for a dict key
-        @param default: value of the key to be returned if key not in Database
-        @type value: any
+        @param args: value of the key to be returned if key not in Database
+        @type args: any
         @return: value for key, or default
         
         '''
@@ -252,10 +252,10 @@ class Database(dict):
         includes the changed keys so that the next sync will save these changes
         to the hard disk.
         
-        @param dict_type: A dictionary type object to update the Database.
-        @type dict_type: dict()
-        @keyword *: Any extra keywords are added as keys with their values.
-        @type *: any type that is allowed as a dict key type.
+        @param args: A dictionary type object to update the Database.
+        @type args: dict()
+        @keyword kwargs: Any extra keywords are added as keys with their values.
+        @type kwargs: any type that is allowed as a dict key type.
         
         '''
         
@@ -408,4 +408,8 @@ class Database(dict):
         '''
         
         return self.__changed
+        
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
     
