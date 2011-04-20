@@ -375,6 +375,9 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     @type teffrange: tuple of floats
     @param loggrange: starting and ending of the grid in logg
     @type loggrange: tuple of floats
+    @return: wavelengths, teffs, loggs and fluxes of grid, and the interpolating
+    function
+    @rtype: (1Darray,1Darray,1Darray,3Darray,InterpolatingFunction)
     """
     #-- get the dimensions of the grid
     teffs,loggs = get_grid_dimensions(**kwargs)
