@@ -49,6 +49,7 @@ import logging
 from ivs.io import ascii
 from ivs.misc import loggers
 from ivs.units import conversions
+from ivs.sed import filters
 
 logger = logging.getLogger("SED.RED")
 logger.addHandler(loggers.NullHandler)
@@ -120,6 +121,63 @@ def get_law(name,**kwargs):
     
     return wave,mag
 
+
+def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',**kwargs):
+    """
+    Redden flux or magnitudes
+    
+    The reddening parameters C{ebv} means E(B-V).
+    
+    If it is negative, we B{deredden}.
+    
+    If you give the keyword C{wave}, it is assumed that you want to (de)redden
+    a B{model}, i.e. a spectral energy distribution.
+    
+    If you give the keyword C{photbands}, it is assumed that you want to (de)redden
+    B{photometry}, i.e. integrated fluxes.
+    
+    @param flux: fluxes to (de)redden (magnitudes if C{rtype='mag'})
+    @type flux: ndarray (floats)
+    @param wave: wavelengths matching the fluxes (or give C{photbands})
+    @type wave: ndarray (floats)
+    @param photbands: photometry bands matching the fluxes (or give C{wave})
+    @type photbands: ndarray of str
+    @param ebv: reddening parameter E(B-V)
+    @type ebv: float
+    @param rtype: type of dereddening (magnituds or fluxes)
+    @type rtype: str ('flux' or 'mag')
+    @return: (de)reddened flux/magnitude
+    @rtype: ndarray (floats)
+    """
+    if photbands is not None:
+        wave = filters.get_info(photbands)['eff_wave']
+        
+    wave,mag = get_law(law,wave=wave,**kwargs)
+    if rtype=='flux':
+        flux_dered = flux / 10**(mag*ebv/2.5)
+    elif rtype=='mag':
+        flux_dered = flux - mag*ebv
+    return flux_dered
+
+def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
+    """
+    Deredden flux or magnitudes.
+    
+    @param flux: fluxes to (de)redden (NOT magnitudes)
+    @type flux: ndarray (floats)
+    @param wave: wavelengths matching the fluxes (or give C{photbands})
+    @type wave: ndarray (floats)
+    @param photbands: photometry bands matching the fluxes (or give C{wave})
+    @type photbands: ndarray of str
+    @param ebv: reddening parameter E(B-V)
+    @type ebv: float
+    @param rtype: type of dereddening (magnituds or fluxes)
+    @type rtype: str ('flux' or 'mag')
+    @return: (de)reddened flux
+    @rtype: ndarray (floats)
+    """
+    return redden(flux,wave=wave,photbands=photbands,ebv=-ebv,rtype=rtype,**kwargs)
+    
 
 #}
 
