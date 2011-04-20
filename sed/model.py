@@ -63,6 +63,9 @@ def reset_defaults():
 def get_gridnames():
     """
     Return a list of available grid names.
+    
+    @return: list of grid names
+    @rtype: list of str
     """
     return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
             'tlusty','uvblue','atlas12']
@@ -98,6 +101,8 @@ def get_file(**kwargs):
     
     @keyword grid: gridname (default Kurucz)
     @type grid: str
+    @return: gridfile
+    @rtype: str
     """
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])
@@ -411,6 +416,9 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 def list_calibrators():
     """
     Print and return the list of calibrators
+    
+    @return: list of calibrator names
+    @rtype: list of str
     """
     files = config.glob(caldir,'*.fits')
     names = []
@@ -435,6 +443,16 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     >>> wave,flux = get_calibrator(name='alpha_lyr')
     >>> wave,flux = get_calibrator(name='alpha_lyr',version='003')
     
+    @param name: calibrator name
+    @type name: str
+    @param version: version of the calibration file
+    @type version: str
+    @param wave_units: units of wavelength arrays (default: A)
+    @type wave_units: str (interpretable by C{units.conversions.convert})
+    @param flux_units: units of flux arrays (default: erg/s/cm2/A)
+    @type flux_units: str (interpretable by C{units.conversions.convert})
+    @return: wavelength and flux arrays of calibrator
+    @rtype: (ndarray,ndarray)
     """
     #-- collect calibration files
     files = config.glob(caldir,'*.fits')
