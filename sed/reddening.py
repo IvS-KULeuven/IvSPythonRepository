@@ -58,7 +58,7 @@ basename = os.path.join(os.path.dirname(__file__),'redlaws')
 
 #{ Main interface
 
-def get_law(name,**kwargs):
+def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
     """
     Retrieve an interstellar reddening law.
     
@@ -88,16 +88,16 @@ def get_law(name,**kwargs):
     
     @param name: name of the interstellar law
     @type name: str, one of the functions defined here
+    @param norm: type of normalisation of the curve
+    @type norm: str (one of E(B-V), Av)
+    @param wave_units: wavelength units
+    @type wave_units: str (interpretable for units.conversions.convert)
     @keyword wave: wavelength array to interpolate the law on
     @type wave: ndarray
-    @keyword norm: type of normalisation of the curve
-    @type norm: str (one of E(B-V), Av)
     @return: wavelength, reddening magnitude
     @rtype: (ndarray,ndarray)
     """
     #-- get the inputs
-    norm = kwargs.pop('norm','E(B-V)')
-    wave_units = kwargs.pop('wave_units','A')
     Rv = kwargs.setdefault('Rv',3.1)
     
     #-- get the curve
@@ -183,7 +183,7 @@ def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
 
 #{ Curve definitions
 
-def chiar2006(**kwargs):
+def chiar2006(Rv=3.1,curve='ism'):
     """
     Extinction curve at infrared wavelengths from Chiar and Tielens (2006)
     
@@ -194,15 +194,13 @@ def chiar2006(**kwargs):
     
     UNCERTAIN NORMALISATION
     
-    @keyword Rv: Rv
+    @param Rv: Rv
     @type Rv: float
-    @keyword curve: extinction curve
+    @param curve: extinction curve
     @type curve: string (one of 'gc' or 'ism', galactic centre or local ISM)
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
     """
-    Rv = kwargs.get('Rv',3.1)
-    curve = kwargs.get('curve','ism').lower()
     source = os.path.join(basename,'Chiar2006.red')
     
     #-- check Rv
@@ -224,7 +222,7 @@ def chiar2006(**kwargs):
 
 
 
-def fitzpatrick1999(**kwargs):
+def fitzpatrick1999(Rv=3.1):
     """
     From Fitzpatrick 1999 (downloaded from ASAGIO database)
     
@@ -232,12 +230,11 @@ def fitzpatrick1999(**kwargs):
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
     
-    @keyword Rv: Rv
+    @param Rv: Rv
     @type Rv: float
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
     """
-    Rv = kwargs.get('Rv',3.1)
     filename = 'Fitzpatrick1999_Rv_%.1f'%(Rv)
     filename = filename.replace('.','_') + '.red'
     myfile = os.path.join(basename,filename)
@@ -267,7 +264,7 @@ def donnell1994(**kwargs):
 
 
 
-def cardelli1989(**kwargs):
+def cardelli1989(Rv=3.1,curve='cardelli',wave=None):
     """
     Construct extinction laws from Cardelli (1989).
     
@@ -279,18 +276,18 @@ def cardelli1989(**kwargs):
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
     
-    @keyword Rv: Rv
+    @param Rv: Rv
     @type Rv: float
-    @keyword curve: extinction curve
+    @param curve: extinction curve
     @type curve: string (one of 'cardelli' or 'donnell')
-    @keyword wave: wavelengths to compute the curve on
+    @param wave: wavelengths to compute the curve on
     @type wave: ndarray
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
     """
-    Rv = kwargs.get('Rv',3.1)
-    curve = kwargs.get('curve','cardelli')
-    wave = kwargs.get('wave',np.r_[100.:100000.:10])
+    if wave is None:
+        wave = np.r_[100.:100000.:10]
+    
     all_x = 1./(wave/1.0e4)
     alam_aV = np.zeros_like(all_x)
     
@@ -344,7 +341,7 @@ def cardelli1989(**kwargs):
 
 
 
-def seaton1979(**kwargs):
+def seaton1979(Rv=3.1,wave=None):
     """
     Extinction curve from Seaton, 1979.
     
@@ -352,15 +349,15 @@ def seaton1979(**kwargs):
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
     
-    @keyword Rv: Rv
+    @param Rv: Rv
     @type Rv: float
-    @keyword wave: wavelengths to compute the curve on
+    @param wave: wavelengths to compute the curve on
     @type wave: ndarray
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
     """
-    Rv = kwargs.get('Rv',3.1)
-    wave = kwargs.get('wave',np.r_[1000.:10000.:10])
+    if wave is None: wave = np.r_[1000.:10000.:10]
+    
     all_x = 1e4/(wave)
     alam_aV = np.zeros_like(all_x)
     
