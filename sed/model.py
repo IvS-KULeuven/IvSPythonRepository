@@ -44,21 +44,22 @@ basedir = 'sedtables/modelgrids/'
 def set_defaults(**kwargs):
     """
     Set defaults of this module
+    
+    If you give no keyword arguments, the default values will be reset.
     """
-    for key in kwargs:
-        if key in defaults:
-            defaults[key] = kwargs[key]
-
-def reset_defaults():
-    """
-    Reset defaults to original defaults
-    """
-    mydefaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
+    if not kwargs:
+        kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
-    for key in mydefaults:
-        defaults[key] = mydefaults[key]
+    
+    for key in kwargs:
+        if key in defaults:
+            defaults[key] = kwargs[key]
+        
+
+
+
 
 def get_gridnames():
     """
@@ -70,6 +71,10 @@ def get_gridnames():
     return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
             'tlusty','uvblue','atlas12']
             #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
+
+
+
+
 
 def get_file(**kwargs):
     """
@@ -288,6 +293,12 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     
     return wave,flux
 
+
+
+
+
+
+
 def get_grid_dimensions(**kwargs):
     """
     Retrieve possible effective temperatures and gravities from a grid.
@@ -316,7 +327,7 @@ def get_grid_dimensions(**kwargs):
     >>> p=ylabel('logg')
     >>> p=xlim(xlim()[::-1])
     >>> p=ylim(ylim()[::-1])
-    >>> reset_defaults()
+    >>> set_defaults()
     
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
@@ -330,6 +341,11 @@ def get_grid_dimensions(**kwargs):
             loggs.append(float(mod.header['LOGG']))
     ff.close()
     return np.array(teffs),np.array(loggs)
+
+
+
+
+
 
 @memoized
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
@@ -432,6 +448,10 @@ def list_calibrators():
     return names
     
 
+
+
+
+
 def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None):
     """
     Retrieve a calibration SED
@@ -484,6 +504,9 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     logger.info('Calibrator %s selected'%(calfile))
     
     return wave,flux
+
+
+
 
 
 
