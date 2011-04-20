@@ -65,8 +65,7 @@ def search(catalog,**kwargs):
     @rtype: str/ record array, dict, list of str
     """
     filename = kwargs.pop('filename',None) # remove filename from kwargs
-    filetype = kwargs.get('filetype','1')
-    outfmt = kwargs.setdefault('outfmt','1')
+    filetype = kwargs.setdefault('filetype','1')
     if filename is not None and '.' in os.path.basename(filename):
         filetype = os.path.splitext(filename)[1][1:]
     elif filename is not None:
@@ -74,7 +73,6 @@ def search(catalog,**kwargs):
     
     #-- gradually build URI
     base_url = _get_URI(catalog,**kwargs)
-    print base_url
     #-- prepare to open URI
     logger.info('Querying GATOR source %s'%(catalog))
     url = urllib.URLopener()
@@ -120,7 +118,7 @@ def list_catalogs():
 
 
 
-def get_photometry(ID,extra_fields=['dist','ra','dec'],**kwargs):
+def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     """
     Download all available photometry from a star to a record array.
     
@@ -146,7 +144,7 @@ def get_photometry(ID,extra_fields=['dist','ra','dec'],**kwargs):
     master = None
     #-- retrieve all measurements
     for source in cat_info.sections():
-        results,units,comms = search(source,objstr=ID,**kwargs)
+        results,units,comms = search(source,ID=ID,**kwargs)
         if results is not None:
             master = gator2phot(source,results,units,master,extra_fields=extra_fields)
     
@@ -204,6 +202,7 @@ def txt2recarray(filename):
     ff = open(filename,'r')
     data = []
     comms = []
+    indices = None
     while 1:  # might call read several times for a file
         line = ff.readline()
         if not line: break  # end of file
@@ -223,14 +222,14 @@ def txt2recarray(filename):
             for i in range(len(line)):
                 if line[i]=='|': indices.append(i)
             continue
+        if indices is None: break
         data.append([])
         for i in range(len(indices)-1):
             data[-1].append(line[indices[i]:indices[i+1]].strip())
-    
     results = None
     units = {}
     #-- retrieve the data and put it into a record array
-    if len(data)>0:
+    if comms:
         #-- now convert this thing into a nice dictionary
         data = np.array(data)
         #-- retrieve the format of the columns. They are given in the
@@ -250,15 +249,20 @@ def txt2recarray(filename):
         #-- remove spaces or empty values
         cols = []
         for i,key in enumerate(names):
-             col = data[:,i]
-             #-- fill empty values with nan
-             cols.append([(row.isspace() or not row) and np.nan or row for row in col])
-             ##-- fix unit name
-             units[key] = units_[i]
+            units[key] = units_[i]
+            if len(data)==0: break
+            col = data[:,i]
+            #-- fill empty or null values with nan
+            col = [(row.isspace() or not row or row=='null') and 'nan' or row for row in col]
+            cols.append(col)
+            
         #-- define columns for record array and construct record array
-        cols = data.T
-        cols = [np.cast[dtypes[i]](cols[i]) for i in range(len(cols))]
-        results = np.rec.array(cols, dtype=dtypes)
+        if len(data)==0:
+            results = None
+        else:
+            cols = np.array(cols)
+            cols = [np.cast[dtypes[i]](cols[i]) for i in range(len(cols))]
+            results = np.rec.array(cols, dtype=dtypes)
     return results,units,comms
 
 
@@ -355,33 +359,96 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
 
 #{ Internal helper functions
 
-def _get_URI(catalog,**kwargs):
+def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='1',spatial='cone'):
     """
     Build GATOR URI from available options.
     
-    @param catalog: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
-    @type catalog: str
-    @keyword objstr: target name
-    @type objstr: str
-    @keyword outfmt: type of output format
-    @type outfmt: str ('1','2',...)
+    Filetype should be one of:
+    
+    6___ returns a program interface in XML 
+    3___ returns a VO Table (XML) 
+    2___ returns SVC (Software handshaking structure) message 
+    1___ returns an ASCII table 
+    0___ returns Gator Status Page in HTML (default)
+    
+    kwargs are to catch unused arguments.
+    
+    @param name: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
+    @type name: str
+    @keyword ID: target name
+    @type ID: str
+    @param filetype: type of the retrieved file 
+    @type filetype: str (one of '0','1','2','3','6'... see GATOR site)
     @keyword radius: search radius (arcseconds)
     @type radius: float
+    @param ra: target's right ascension
+    @type ra: float
+    @param dec: target's declination
+    @type dec: float
+    @param spatial: type of spatial query
+    @type spatial: str (one of Cone, Box (NIY), Polygon (NIY), NONE (NIY))
     @return: url
     @rtype: str
     """
     base_url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query?'
-    base_url += 'catalog=%s'%(catalog)
+    base_url += 'catalog=%s'%(name)
+    #base_url += '&spatial=cone'
     
-    if 'objstr' in kwargs: base_url += '&objstr=%s'%(urllib.quote(kwargs['objstr']))
-    if 'outfmt' in kwargs: base_url += '&outfmt=%s'%(kwargs['outfmt'])
-    if 'radius' in kwargs: base_url += '&radius=%s'%(kwargs['radius'])
+    #-- in GATOR, many things should be given via the keyword 'objstr': right
+    #   ascension, declination, target name...
+    objstr = None
+    
+    #-- transform input to the 'objstr' paradigm
+    if ID is not None:
+        #-- if the ID is given in the form 'J??????+??????', derive the
+        #   coordinates of the target from the name.
+        if ID[0]=='J':
+            ra = int(ID[1:3]),int(ID[3:5]),float(ID[5:10])
+            dec = int(ID[10:13]),int(ID[13:15]),float(ID[15:])
+            ra = '%02d+%02d+%.2f'%ra
+            dec = '+%+02d+%02d+%.2f'%dec
+            objstr = ra+dec
+    #-- this is when ra and dec are given
+    if ra is not None and dec is not None:
+        ra = str(ra)
+        dec = str(dec)
+        ra = ra.replace(' ','+').replace(':','+')
+        dec = dec.replace(' ','+').replace(':','+')
+        objstr = ''.join([ra,dec])
+    
+    #-- build up the URI
+    if 'objstr' is not None:   base_url += '&objstr=%s'%(objstr)
+    if 'filetype' is not None: base_url += '&outfmt=%s'%(filetype)
+    if 'radius' is not None:   base_url += '&radius=%s'%(radius)
+    
+    logger.debug(base_url)
+    
     return base_url
 
 
 
 
 if __name__=="__main__":
+    #-- EXAMPLES: J053336.35-692312.6
+    #             J052429.44-693723.7
+    #J045543.20-675110.1
+    import vizier
+    #master = search('sagecatiracv2',objstr='053336.35-69231.6',radius=10.)
+    master = search('sagecatiracv2',ID='J052429.44-693723.7',radius=1.)
+    #master = search('sagecatiracv2',ID='J044458.39-703522.6',radius=1.)
+    sys.exit()
+    #master = search('sagecatiracv2',objstr='71.239527-70.589427',radius=5.,filename='/lhome/pieterd/python/ivs/ivs/catalogs/test.sage')
+    master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
+    master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
+    print master
+    
+    from pylab import *
+    figure()
+    loglog(master['cwave'],master['cmeas'],'ko')
+    errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ro')
+    show()
+    
+    sys.exit()
     import doctest
     doctest.testmod()
     #logger = loggers.get_basic_logger()
