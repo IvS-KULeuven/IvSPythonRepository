@@ -195,7 +195,7 @@ def list_catalogs(ID,**kwargs):
         url.close()
         return filen        
 
-def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
+def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
     Download all available photometry from a star to a record array.
     
@@ -212,7 +212,7 @@ def get_photometry(ID,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
             master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
     
     #-- convert the measurement to a common unit.
-    if to_units:
+    if to_units and master is not None:
         #-- prepare columns to extend to basic master
         dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
         cols = [[],[],[],[]]
@@ -588,9 +588,11 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
 def _get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
                      oc='deg',oc_eq='J2000',
                      out_all=True,out_max=1000000,
-                     filetype='tsv'):
+                     filetype='tsv',**kwargs):
     """
     Build Vizier URI from available options.
+    
+    kwargs are to catch unused arguments.
     
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
@@ -612,12 +614,27 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
     @rtype: str
     """
     base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
+    
+    if ID is not None
+        #-- if the ID is given in the form 'J??????+??????', derive the
+        #   coordinates of the target from the name.
+        if ID[0]=='J':
+            ra = int(ID[1:3]),int(ID[3:5]),float(ID[5:10])
+            dec = int(ID[10:13]),int(ID[13:15]),float(ID[15:])
+            ra = '%02d+%02d+%.2f'%ra
+            dec = '+%+02d+%02d+%.2f'%dec
+            ID = None
+    
+    
     if name:    base_url += '&-source=%s'%(name)
     if out_all: base_url += '&-out.all'
     if out_max: base_url += '&-out.max=%s'%(out_max)
     if radius:  base_url += '&-c.rs=%s'%(radius)
     if ID is not None: base_url += '&-c=%s'%(urllib.quote(ID))
     if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
+    
+    logger.debug(base_url)
+    
     return base_url
 
 def _breakup_colours(master):
