@@ -16,11 +16,14 @@ import copy
 import pyfits
 import numpy as np
 import pylab as pl
+from Scientific.Functions.Interpolation import InterpolatingFunction
 
 from ivs import config
 from ivs.units import conversions
 from ivs.misc import loggers
+from ivs.misc.decorators import memoized
 from ivs.sed import filters
+from ivs.sed import reddening
 from ivs.io import ascii
 
 logger = logging.getLogger("SED.MODEL")
@@ -56,9 +59,16 @@ def reset_defaults():
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
     for key in mydefaults:
         defaults[key] = mydefaults[key]
-    
 
-def get_sed_file(**kwargs):
+def get_gridnames():
+    """
+    Return a list of available grid names.
+    """
+    return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
+            'tlusty','uvblue','atlas12']
+            #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
+
+def get_file(**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
     
@@ -109,6 +119,7 @@ def get_sed_file(**kwargs):
     t = kwargs.get('t',defaults['t'])
     a = kwargs.get('a',defaults['a'])
     c = kwargs.get('c',defaults['c'])
+    m = kwargs.get('m',defaults['m'])
     co= kwargs.get('co',defaults['co'])
     
     #-- figure out what grid to use
@@ -160,7 +171,8 @@ def get_sed_file(**kwargs):
 
 
 
-def get_table(**kwargs):
+def get_table(teff=None,logg=None,ebv=None,star=None,
+              wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere.
         
@@ -173,49 +185,54 @@ def get_table(**kwargs):
         
     Possibility to redden the fluxes according to the reddening parameter EB_V.
     
+    Extra kwargs can specify the grid type.
+    Extra kwargs can specify constraints on the size of the grid to interpolate.
+    Extra kwargs can specify reddening law types.
+    Extra kwargs can specify information for conversions.
+    
     Example usage:
-        >>> from pylab import figure,plot,legend,gca,subplot,title,show
-        >>> p = figure(); p = subplot(121)
-        >>> p = plot(*get_table(grid='FASTWIND',teff=35000,logg=4.0))
-        >>> p = plot(*get_table(grid='KURUCZ',teff=35000,logg=4.0))
-        >>> p = plot(*get_table(grid='TLUSTY',teff=35000,logg=4.0))
-        >>> p = plot(*get_table(grid='MARCS',teff=5000,logg=2.0))
-        >>> p = plot(*get_table(grid='KURUCZ',teff=5000,logg=2.0))
-        >>> p = gca().set_xscale('log')
-        >>> p = gca().set_yscale('log')
-        >>> p = subplot(122)
-        >>> p = plot(*get_table(grid='FASTWIND',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-        >>> p = plot(*get_table(grid='KURUCZ',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-        >>> p = plot(*get_table(grid='TLUSTY',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-        >>> p = plot(*get_table(grid='MARCS',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
-        >>> p = plot(*get_table(grid='KURUCZ',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
-        >>> p = gca().set_xscale('log')
-        >>> p = gca().set_yscale('log')
-        >>> p = show()
+    
+    >>> from pylab import figure,plot,legend,gca,subplot,title,show,gcf,loglog
+    >>> p = figure()
+    >>> p=gcf().canvas.set_window_title('Test of <get_table>')
+    >>> p = subplot(131)
+    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0))
+    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0))
+    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0))
+    >>> p = subplot(132)
+    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = subplot(133)
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10250,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10500,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10750,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=11000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
+    >>> p = show()
         
-    @keyword teff: effective temperature
+    @param teff: effective temperature
     @type teff: float
-    @keyword logg: logarithmic gravity (cgs)
+    @param logg: logarithmic gravity (cgs)
     @type logg: float
-    @keyword EB_V: reddening coefficient
+    @param EB_V: reddening coefficient
     @type EB_V: float
-    @keyword wave_units: units to convert the wavelengths to (if not given, A)
+    @param wave_units: units to convert the wavelengths to (if not given, A)
     @type wave_units: str
-    @keyword flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
     @type flux_units: str
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-    teff = kwargs.pop('teff',None)
-    logg = kwargs.pop('logg',None)
-    EB_V = kwargs.pop('EB_V',None)
-    star = kwargs.pop('star',None)
-    wave_units = kwargs.get('wave_units',None)
-    flux_units = kwargs.get('flux_units',None)
     
+    #-- get the FITS-file containing the tables
+    gridfile = get_file(**kwargs)
     
-    gridfile = get_sed_file(**kwargs)
-    
+    #-- read the file:
     ff = pyfits.open(gridfile)
     #-- a possible grid is the one where only selected stellar models are
     #   present. In that case, we there is no need for interpolation or
@@ -228,7 +245,7 @@ def get_table(**kwargs):
         logg = float(logg)
         #-- if we have a grid model, no need for interpolation
         try:
-            #Table name as in fits files prepared by Steven
+            #-- extenstion name as in fits files prepared by Steven
             mod_name = "T%05d_logg%01.02f" %(teff,logg)
             mod = ff[mod_name]
             wave = mod.data.field('wavelength')
@@ -239,29 +256,152 @@ def get_table(**kwargs):
             #-- it is possible we first have to set the interpolation function.
             #   This function is memoized, so if it will not be calculated
             #   twice.
-            meshkwargs = copy.copy(gridfile)
+            meshkwargs = copy.copy(kwargs)
             meshkwargs['wave'] = kwargs.get('wave',None)
             meshkwargs['teffrange'] = kwargs.get('teffrange',None)
             meshkwargs['loggrange'] = kwargs.get('loggrange',None)
-            wave,teffs,loggs,flux,flux_grid = get_sed_grid_mesh(**meshkwargs)
-            wave = wave + 0.
+            wave,teffs,loggs,flux,flux_grid = get_grid_mesh(**meshkwargs)
             logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
-            flux = flux_grid(log10(teff),logg) + 0.
-            
+            wave = wave + 0.
+            flux = flux_grid(np.log10(teff),logg) + 0.
+    
+    #-- convert to arrays
     wave = np.array(wave,float)
     flux = np.array(flux,float)
     #-- redden if necessary
-    if EB_V is not None:
+    if ebv is not None:
         if 'wave' in kwargs.keys():
-            removed=kwargs.pop('wave')
-        flux = photometry.deredden(wave,flux,EB_V=EB_V,**kwargs)
+            removed = kwargs.pop('wave')
+        flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
     
-    if flux_units:
+    if flux_units!='erg/s/cm2/A/sr':
         flux = conversions.convert('erg/s/cm2/A/sr',flux_units,flux,wave=(wave,'A'),**kwargs)
-    if wave_units:
+    if wave_units!='A':
         wave = conversions.convert('A',wave_units,wave,**kwargs)
     
+    ff.close()
+    
     return wave,flux
+
+def get_grid_dimensions(**kwargs):
+    """
+    Retrieve possible effective temperatures and gravities from a grid.
+    
+    E.g. kurucz, sdB, fastwind...
+    
+    Example usage:
+    
+    >>> from pylab import plot,legend,figure,fill,getp,gca,xlabel,ylabel,gcf,show
+    >>> from pylab import title,xlim,ylim,cm
+    >>> from sigproc.base import bplot
+    >>> import matplotlib
+    >>> matplotlib.axes.set_default_color_cycle(bplot.get_color_cycle(cm.spectral,res=2))
+    >>> p = figure();p=title('Grid of SEDs')
+    >>> p=gcf().canvas.set_window_title('Test of <get_grid_dimensions>')
+    >>> sizes = range(15,1,-1)
+    >>> gridnames = get_gridnames()
+    >>> for s,gridname in zip(sizes,np.sort(gridnames)):
+    ...    teffs,loggs = get_grid_dimensions(grid=gridname)
+    ...    teffs = np.log10(teffs)
+    ...    p=plot(teffs,loggs,'o',label=gridname,mew=0,ms=s)
+    ...    hull_pts = bplot.convex_hull(np.array([teffs,loggs]))
+    ...    p=fill(hull_pts[:,0],hull_pts[:,1],color=getp(p[0],'color'),alpha=0.2)
+    >>> p=legend(loc='upper left')
+    >>> p=xlabel('log(Teff)')
+    >>> p=ylabel('logg')
+    >>> p=xlim(xlim()[::-1])
+    >>> p=ylim(ylim()[::-1])
+    >>> reset_defaults()
+    
+    @rtype: (ndarray,ndarray)
+    @return: effective temperatures, gravities
+    """
+    gridfile = get_file(**kwargs)
+    ff = pyfits.open(gridfile)
+    teffs = []
+    loggs = []
+    for mod in ff[1:]:
+            teffs.append(float(mod.header['TEFF']))
+            loggs.append(float(mod.header['LOGG']))
+    ff.close()
+    return np.array(teffs),np.array(loggs)
+
+@memoized
+def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
+    """
+    Return InterpolatingFunction spanning the available grid of atmosphere models.
+    
+    WARNING: the grid must be entirely defined on a mesh grid, but it does not
+    need to be equidistant.
+    
+    It is thus the user's responsibility to know whether the grid is evenly
+    spaced in logg and teff (e.g. this is not so for the CMFGEN models).
+    
+    You can supply your own wavelength range, since the grid models'
+    resolution are not necessarily homogeneous. If not, the first wavelength
+    array found in the grid will be used as a template.
+        
+    It might take a long a time and cost a lot of memory if you load the entire
+    grid. Therefor, you can also set range of temperature and gravity.
+    
+    WARNING: 30000,50000 did not work out for FASTWIND, since we miss a model!
+    
+    Example usage:
+    
+    @param wave: wavelength to define the grid on
+    @type wave: ndarray
+    @param teffrange: starting and ending of the grid in teff
+    @type teffrange: tuple of floats
+    @param loggrange: starting and ending of the grid in logg
+    @type loggrange: tuple of floats
+    """
+    #-- get the dimensions of the grid
+    teffs,loggs = get_grid_dimensions(**kwargs)
+    #-- build flux grid, assuming a perfectly sampled grid (needs not to be
+    #   equidistant)
+    if teffrange is not None:
+        sa = (teffrange[0]<=teffs) & (teffs<=teffrange[1])
+        teffs = teffs[sa]
+    if loggrange is not None:
+        sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
+        loggs = loggs[sa]
+    #-- clip if necessary
+    teffs = list(set(list(teffs)))
+    loggs = list(set(list(loggs)))
+    teffs = np.sort(teffs)
+    loggs = np.sort(loggs)
+    if wave is not None:
+        flux = np.ones((len(teffs),len(loggs),len(wave)))
+    #-- run over teff and logg, and interpolate the models onto the supplied
+    #   wavelength range
+    gridfile = get_file(**kwargs)
+    ff = pyfits.open(gridfile)
+    for i,teff in enumerate(teffs):
+        for j,logg in enumerate(loggs):
+            try:
+                mod_name = "T%05d_logg%01.02f" %(teff,logg)
+                mod = ff[mod_name]
+                wave_ = mod.data.field('wavelength')#array(mod.data.tolist())[:,0]
+                flux_ = mod.data.field('flux')#array(mod.data.tolist())[:,1]
+                #-- if there is no wavelength range given, we assume that
+                #   the whole grid has the same resolution, and the first
+                #   wave-array will be used as a template
+                if wave is None:
+                    wave = wave_
+                    flux = np.ones((len(teffs),len(loggs),len(wave)))
+            except KeyError:
+                continue
+            #-- it could be that we're lucky and the grid is completely
+            #   homogeneous. In that case, there is no need for interpolation
+            try:
+                flux[i,j,:] = flux_
+            except:
+                flux[i,j,:] = np.interp(wave,wave_,flux_)
+    flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
+    logger.info('Constructed SED interpolation grid')
+    return wave,teffs,loggs,flux,flux_grid
+
+
 
 
 #}
@@ -430,6 +570,15 @@ def synthetic_flux(wave,flux,photbands):
     model fluxes!
     
     See e.g. Maiz-Apellaniz, 2006.
+    
+    @param wave: model wavelengths (angstrom)
+    @type wave: ndarray
+    @param flux: model fluxes (Flam)
+    @type flux: ndarray
+    @param photbands: list of photometric passbands
+    @type photbands: list of str
+    @return: model fluxes (Flam)
+    @rtype: ndarray
     """    
     energys = np.zeros(len(photbands))
     
