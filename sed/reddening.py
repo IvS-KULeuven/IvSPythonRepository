@@ -183,7 +183,7 @@ def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
 
 #{ Curve definitions
 
-def chiar2006(Rv=3.1,curve='ism'):
+def chiar2006(Rv=3.1,curve='ism',**kwargs):
     """
     Extinction curve at infrared wavelengths from Chiar and Tielens (2006)
     
@@ -191,6 +191,8 @@ def chiar2006(Rv=3.1,curve='ism'):
     
     This is only defined for Rv=3.1. If it is different, this will raise an
     AssertionError
+    
+    Extra kwags are to catch unwanted keyword arguments.
     
     UNCERTAIN NORMALISATION
     
@@ -222,13 +224,15 @@ def chiar2006(Rv=3.1,curve='ism'):
 
 
 
-def fitzpatrick1999(Rv=3.1):
+def fitzpatrick1999(Rv=3.1,**kwargs):
     """
     From Fitzpatrick 1999 (downloaded from ASAGIO database)
     
     This function returns A(lambda)/A(V).
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
+    Extra kwags are to catch unwanted keyword arguments.
     
     @param Rv: Rv
     @type Rv: float
@@ -252,6 +256,8 @@ def donnell1994(**kwargs):
     """
     Small improvement on Cardelli 1989 by James E. O'Donnell (1994).
     
+    Extra kwags are to catch unwanted keyword arguments.
+    
     @keyword Rv: Rv
     @type Rv: float
     @keyword wave: wavelengths to compute the curve on
@@ -264,7 +270,7 @@ def donnell1994(**kwargs):
 
 
 
-def cardelli1989(Rv=3.1,curve='cardelli',wave=None):
+def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     """
     Construct extinction laws from Cardelli (1989).
     
@@ -275,6 +281,8 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None):
     This function returns A(lambda)/A(V).
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
+    Extra kwags are to catch unwanted keyword arguments.
     
     @param Rv: Rv
     @type Rv: float
@@ -341,13 +349,15 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None):
 
 
 
-def seaton1979(Rv=3.1,wave=None):
+def seaton1979(Rv=3.1,wave=None,**kwargs):
     """
     Extinction curve from Seaton, 1979.
     
     This function returns A(lambda)/A(V).
     
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
+    Extra kwags are to catch unwanted keyword arguments.
     
     @param Rv: Rv
     @type Rv: float
