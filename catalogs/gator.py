@@ -27,7 +27,7 @@ cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'gator_cats_phot.cfg')))
 
 
-#[ Basic interfaces
+#{ Basic interfaces
 
 def search(catalog,**kwargs):
     """
@@ -138,6 +138,10 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     >>> p = pylab.gca().set_xscale('log')
     >>> p = pylab.gca().set_yscale('log')
     >>> p = pylab.show()
+    
+    Other examples:
+    >>> master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
+    >>> master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
     """
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
     master_ = kwargs.get('master',None)
@@ -355,7 +359,7 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
     if newmaster: master = master[1:]
     return master
 
-
+#}
 
 #{ Internal helper functions
 
@@ -426,20 +430,19 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='1',spatial='cone'
     return base_url
 
 
-
+#}
 
 if __name__=="__main__":
-    #-- EXAMPLES: J053336.35-692312.6
-    #             J052429.44-693723.7
-    #J045543.20-675110.1
     import vizier
-    #master = search('sagecatiracv2',objstr='053336.35-69231.6',radius=10.)
-    master = search('sagecatiracv2',ID='J052429.44-693723.7',radius=1.)
-    #master = search('sagecatiracv2',ID='J044458.39-703522.6',radius=1.)
-    sys.exit()
-    #master = search('sagecatiracv2',objstr='71.239527-70.589427',radius=5.,filename='/lhome/pieterd/python/ivs/ivs/catalogs/test.sage')
-    master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
-    master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
+    #-- example 1
+    #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
+    #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
+    
+    #-- example 2
+    master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
+    master = vizier.get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=5.,master=master)
+    
+    
     print master
     
     from pylab import *

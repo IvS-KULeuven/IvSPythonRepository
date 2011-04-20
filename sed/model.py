@@ -219,8 +219,8 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     @type teff: float
     @param logg: logarithmic gravity (cgs)
     @type logg: float
-    @param EB_V: reddening coefficient
-    @type EB_V: float
+    @param ebv: reddening coefficient
+    @type ebv: float
     @param wave_units: units to convert the wavelengths to (if not given, A)
     @type wave_units: str
     @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
