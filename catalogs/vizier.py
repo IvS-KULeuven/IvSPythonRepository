@@ -602,6 +602,8 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
     @type oc: str (one of 'deg'...)
     @param out_all: retrieve all or basic information
     @type out_all: boolean (True = all, None = basic)
+    @param out_max: maximum number of rows
+    @type out_max: integer
     @param ID: target name
     @type ID: str
     @param ra: target's right ascension
