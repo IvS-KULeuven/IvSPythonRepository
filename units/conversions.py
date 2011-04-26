@@ -1101,12 +1101,16 @@ _factors = {
            'pc':    (pc,            'm'),
            'ly':    (ly,            'm'),
            'Rsol':  (Rsol,          'm'),
+           'Rearth':(Rearth,        'm'),
            'ft':    (0.3048,        'm'),
            'in':    (0.0254,        'm'),
            'mi':    (1609.344,      'm'),
 # MASS
            'g':     (  1e-03,       'kg'),
            'Msol':  (Msol,          'kg'),
+           'Mearth':(Mearth,        'kg'),
+           'Mjup':  (Mjup,          'kg'),
+           'Mlun':  (Mlun,          'kg'),
 # TIME
            's':     (  1e+00,       's'),
            'min':   (  60.,         's'),
@@ -1220,16 +1224,3 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
 if __name__=="__main__":
     import doctest
     doctest.testmod()
-    #-- timing
-    #import time
-    #c0 = time.time()
-    #nr = 50000
-    #for i in xrange(nr):
-        #x = convert('ABmag','erg s-1 cm-2 micron-1 sr-1',0.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
-    #print "One conversion takes on average",(time.time()-c0)/nr*1000,'ms'
-    #print convert('cy/d2','s/yr',1e-9)
-    #print convert('cy/d2','Hz/yr',1e-9)
-    #print(convert('ABmag','Jy',0.,photband='SDSS.U'))
-    #3630.7805477
-    #print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
-    #1.08848062485e-09
