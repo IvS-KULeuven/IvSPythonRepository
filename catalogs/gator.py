@@ -412,6 +412,8 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='1',spatial='cone'
             ra = '%02d+%02d+%.2f'%ra
             dec = '+%+02d+%02d+%.2f'%dec
             objstr = ra+dec
+        else:
+            objstr = ID
     #-- this is when ra and dec are given
     if ra is not None and dec is not None:
         ra = str(ra)
@@ -439,8 +441,13 @@ if __name__=="__main__":
     #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
     
     #-- example 2
-    master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
-    master = vizier.get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=5.,master=master)
+    #master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
+    #master = vizier.get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=5.,master=master)
+    
+    
+    #-- example 3
+    master = get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=1.)
+    master = vizier.get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=5.,master=master)
     
     
     print master
