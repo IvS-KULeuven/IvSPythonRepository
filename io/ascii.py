@@ -29,6 +29,8 @@ def read2list(filename,**kwargs):
     @type splitchar: str or None
     @keyword skip_empty: skip empty lines
     @type skip_empty: bool
+    @keyword skip_lines: skip nr of lines (including comment and empty lines)
+    @type skip_lines: integer
     @return: list of lists (data rows)
              list of lists (comments lines without commentchar),
     @rtype: (list,list)
@@ -36,6 +38,7 @@ def read2list(filename,**kwargs):
     commentchar = kwargs.get('commentchar',['#'])
     splitchar = kwargs.get('splitchar',None)
     skip_empty = kwargs.get('skip_empty',True)
+    skip_lines = kwargs.get('skip_lines',0)
     
     if os.path.splitext(filename)[1] == '.gz':
         ff = gzip.open(filename)
@@ -45,9 +48,13 @@ def read2list(filename,**kwargs):
     data = []  # data
     comm = []  # comments
     
+    line_nr = -1
     while 1:  # might call read several times for a file
         line = ff.readline()
         if not line: break  # end of file
+        line_nr += 1
+        if line_nr<skip_lines:        
+            continue
         
         #-- strip return character from line
         if skip_empty and line.isspace():
@@ -182,15 +189,16 @@ def write_array(data, filename, **kwargs):
     formats = kwargs.get('formats',None)
     
     #-- switch to rows first if a list of columns is given
-    if axis0.lower()!='rows':
+    if not isinstance(data,np.ndarray):
+        data = np.array(data)
+    if not 'row' in axis0.lower():
         data = data.T
     
     if formats is None:
-        if len(data.dtype):
-            formats = [('S' in str(data[col].dtype) and '%s' or '%g') for col in data.dtype.names]
-        else:
-            formats = [('S' in col.dtype and '%s' or '%g') for col in data.T]
-    
+        try:
+            formats = [('S' in str(data[col].dtype) and '%s' or '%f') for col in data.dtype.names]
+        except TypeError:
+            formats = [('S' in str(col.dtype) and '%s' or '%s') for col in data.T]
     #-- determine width of columns: also take the header label into account
     col_widths = []
     #-- for record arrays
@@ -236,7 +244,7 @@ def write_array(data, filename, **kwargs):
     #-- without automatic width
     else:
         for row in data:
-            ff.write(sep.join(['%g'%(col) for col in row])+'\n')
+            ff.write(sep.join(['%s'%(col) for col in row])+'\n')
     ff.close()
     
     
