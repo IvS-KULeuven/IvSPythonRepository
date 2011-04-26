@@ -48,6 +48,7 @@ import logging
 
 from ivs.io import ascii
 from ivs.misc import loggers
+from ivs.misc.decorators import memoized
 from ivs.units import conversions
 from ivs.sed import filters
 
@@ -182,7 +183,7 @@ def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
 #}
 
 #{ Curve definitions
-
+@memoized
 def chiar2006(Rv=3.1,curve='ism',**kwargs):
     """
     Extinction curve at infrared wavelengths from Chiar and Tielens (2006)
@@ -222,8 +223,7 @@ def chiar2006(Rv=3.1,curve='ism',**kwargs):
 
 
 
-
-
+@memoized
 def fitzpatrick1999(Rv=3.1,**kwargs):
     """
     From Fitzpatrick 1999 (downloaded from ASAGIO database)
@@ -250,8 +250,7 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     return wave,alam_av
 
 
-
-
+@memoized
 def donnell1994(**kwargs):
     """
     Small improvement on Cardelli 1989 by James E. O'Donnell (1994).
@@ -268,8 +267,7 @@ def donnell1994(**kwargs):
     return cardelli1989(curve='donnell',**kwargs)
 
 
-
-
+@memoized
 def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     """
     Construct extinction laws from Cardelli (1989).
@@ -347,8 +345,7 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     return wave,alam_aV
 
 
-
-
+@memoized
 def seaton1979(Rv=3.1,wave=None,**kwargs):
     """
     Extinction curve from Seaton, 1979.
