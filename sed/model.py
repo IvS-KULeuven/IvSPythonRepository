@@ -14,12 +14,14 @@ import os
 import logging
 import copy
 import pyfits
+import time
 import numpy as np
-import pylab as pl
 from Scientific.Functions.Interpolation import InterpolatingFunction
+from multiprocessing import Process,Manager
 
 from ivs import config
 from ivs.units import conversions
+from ivs.units import constants
 from ivs.misc import loggers
 from ivs.misc.decorators import memoized
 from ivs.sed import filters
@@ -56,6 +58,7 @@ def set_defaults(**kwargs):
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
+            logger.info('Set %s to %s'%(key,kwargs[key]))
         
 
 
@@ -76,7 +79,7 @@ def get_gridnames():
 
 
 
-def get_file(**kwargs):
+def get_file(integrated=False,**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
     
@@ -104,6 +107,8 @@ def get_file(**kwargs):
         - grid='marcs2'
         - grid='atlas12'
     
+    @param integrated: choose integrated version of the grid
+    @type integrated: boolean
     @keyword grid: gridname (default Kurucz)
     @type grid: str
     @return: gridfile
@@ -172,6 +177,13 @@ def get_file(**kwargs):
     
     #-- retrieve the absolute path of the file and check if it exists:
     grid = config.get_datafile(basedir,basename)
+    
+    if integrated:
+        dirname = os.path.dirname(grid)
+        basename= os.path.basename(grid)
+        grid = os.path.join(dirname,'i'+basename)
+    
+    logger.debug('Selected %s'%(grid))
     
     return grid
 
@@ -341,6 +353,29 @@ def get_grid_dimensions(**kwargs):
             loggs.append(float(mod.header['LOGG']))
     ff.close()
     return np.array(teffs),np.array(loggs)
+
+
+
+
+
+def get_igrid_dimensions(**kwargs):
+    """
+    Retrieve possible effective temperatures, surface gravities and reddenings
+    from an integrated grid.
+    
+    E.g. kurucz, sdB, fastwind...
+    
+    @rtype: (ndarray,ndarray,ndarray)
+    @return: effective temperatures, surface, gravities, E(B-V)s
+    """
+    gridfile = get_file(integrated=True,**kwargs)
+    ff = pyfits.open(gridfile)
+    teffs = ff[1].data.field('TEFF')
+    loggs = ff[1].data.field('LOGG')
+    ebvs  = ff[1].data.field('EBV')
+    ff.close()
+    return teffs,loggs,ebvs
+
 
 
 
@@ -636,7 +671,7 @@ def synthetic_flux(wave,flux,photbands):
         #-- make wavelength range a bit bigger, otherwise F25 from IRAS has only
         #   one Kurucz model point in its wavelength range... this is a bit
         #   'ad hoc' but seems to work.
-        region = ((waver[0]-0.4*waver[0])<=wave) & (wave<=(waver[-1]+0.4*waver[-1]))
+        region = ((waver[0]-0.4*waver[0])<=wave) & (wave<=(2*waver[-1]))
         #-- if we're working in infrared (>4e4A) and the model is not of high
         #   enough resolution (100000 points over wavelength range), interpolate
         #   the model in logscale on to a denser grid (in logscale!)
@@ -658,6 +693,134 @@ def synthetic_flux(wave,flux,photbands):
     #-- that's it!
     return energys
 
+
+
+def luminosity(wave,flux,radius=1.):
+    """
+    Calculate the bolometric luminosity of a model SED.
+    
+    Flux should be in cgs per unit wavelength (same unit as wave).
+    The latter is integrated out, so it is of no importance. After integration,
+    flux, should have units erg/s/cm2.
+    
+    Returned luminosity is in solar units.
+    
+    If you give radius=1 and want to correct afterwards, multiply the obtained
+    Labs with radius**2.
+    
+    @param wave: model wavelengths
+    @type wave: ndarray
+    @param flux: model fluxes (Flam)
+    @type flux: ndarray
+    @param radius: stellar radius in solar units
+    @type radius: float
+    @return: total bolometric luminosity
+    @rtype: float
+    """
+    Lint = np.trapz(flux,x=wave)
+    Labs = Lint*4*np.pi/constants.Lsol_cgs*(radius*constants.Rsol_cgs)**2
+    return Labs
+
+
+
+
+
+
+def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwargs):
+    """
+    Integrate an entire SED grid over all passbands and save to a FITS file.
+    
+    The output file can be used to fit SEDs more efficiently, since integration
+    over the passbands has already been carried out.
+    
+    WARNING: this function takes about a day to run on a 8-core processor!
+    
+    Extra keywords can be used to specify the grid.
+    
+    @param threads: number of threads
+    @type threads; integer
+    @param ebv: reddening parameters to include
+    @type ebv: numpy array
+    """
+    if ebvs is None:
+        ebvs = np.r_[0:4:0.01]
+    
+    #-- set the parameters for the SED grid
+    set_defaults(**kwargs)
+    #-- get the dimensions of the grid: both the grid points, but also
+    #   the wavelength range
+    teffs,loggs = get_grid_dimensions()
+    wave,flux = get_table(teff=teffs[0],logg=loggs[0])
+    #-- get the response functions covering the wavelength range of the models
+    #   also get the information on those filters
+    responses = filters.list_response(wave_range=(wave[0],wave[-1]))
+    filter_info = filters.get_info(responses)
+    responses = filter_info['photband']
+    
+    def do_ebv_process(ebvs,arr,responses):
+        logger.info('EBV: %s-->%s'%(ebvs[0],ebvs[-1]))
+        for ebv in ebvs:
+            flux_ = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',law=law,Rv=Rv)
+            #-- calculate synthetic fluxes
+            synflux = synthetic_flux(wave,flux_,responses)
+            arr.append([np.concatenate(([ebv],synflux))])
+    
+    #-- do the calculations
+    c0 = time.time()
+    output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
+    start = 0
+    print len(teffs)
+    for i,(teff,logg) in enumerate(zip(teffs,loggs)):
+        if i>0:
+            logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
+        
+        #-- get model SED and absolute luminosity
+        wave,flux = get_table(teff,logg)
+        Labs = luminosity(wave,flux)
+        
+        #-- threaded calculation over all E(B-V)s
+        processes = []
+        manager = Manager()
+        arr = manager.list([])
+        all_processes = []
+        for j in range(threads):
+            all_processes.append(Process(target=do_ebv_process,args=(ebvs[j::threads],arr,responses)))
+            all_processes[-1].start()
+        for p in all_processes:
+            p.join()
+        
+        #-- collect the results and add them to 'output'
+        arr = np.vstack([row for row in arr])
+        sa = np.argsort(arr[:,0])
+        arr = arr[sa]
+        output[start:start+arr.shape[1],:3] = teff,logg,Labs
+        output[start:start+arr.shape[0],3:] = arr
+        start += arr.shape[1]
+    
+    #-- make FITS columns
+    output = output.T
+    cols = [pyfits.Column(name='teff',format='E',array=output[0]),
+            pyfits.Column(name='logg',format='E',array=output[1]),
+            pyfits.Column(name='ebv',format='E',array=output[2]),
+            pyfits.Column(name='Labs',format='E',array=output[3])]
+    for i,photband in enumerate(responses):
+        cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
+    
+    #-- make FITS extension and write grid/reddening specifications to header
+    table = pyfits.new_table(pyfits.ColDefs(cols))
+    gridfile = get_file()
+    table.header.update('gridfile',os.path.basename(gridfile))
+    for key in sorted(defaults.keys()):
+        table.header.update(key,defaults[key])
+    for key in sorted(kwargs.keys()):
+        table.header.update(key,kwargs[key])
+    
+    #-- make complete FITS file
+    hdulist = pyfits.HDUList([])
+    hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+    hdulist.append(table)
+    hdulist.writeto('i%s'%(os.path.basename(gridfile)))
+    
 
 #}
 
