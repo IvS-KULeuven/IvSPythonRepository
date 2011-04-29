@@ -421,13 +421,28 @@ def pdm(time, signal, freq, Nbin=10, Ncover=5):
 
 
   
-
-def phasediagram(time, signal, nu0, t0 = None):
-
+            
+def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
+                 chronological=False):
     """
-    Computes the phases for a phase diagram for a given frequency.
-    If a zero time is given, it will be subtracted from all time
-    points.
+    Construct a phasediagram, using frequency nu0.
+    
+    Possibility to include a frequency shift D.
+    
+    If needed, the indices can be returned. To 'unphase', just do:
+    
+    Example usage:
+    
+    >>> original = random.normal(size=10)
+    >>> indices = argsort(original)
+    >>> inv_indices = argsort(indices)
+    >>> all(original == take(take(original,indices),inv_indices))
+    True
+    
+    Optionally, the zero time point can be given, it will be subtracted from all
+    time points
+    
+    Joris De Ridder, Pieter Degroote
     
     @param time: time points [0..Ntime-1]
     @type time: ndarray
@@ -438,15 +453,48 @@ def phasediagram(time, signal, nu0, t0 = None):
     @type nu0: float
     @param t0: zero time point, if None: t0 = time[0]
     @type t0: float
+    @param D: frequency shift
+    @type D: float
+    @param chronological: set to True if you want to have a list of every phase
+    separately
+    @type chronological: boolean
+    @param return_indices: flag to return indices
+    @type return_indices: boolean
     @return: phase points (sorted), corresponding observations
-    @rtype: ndarray,ndarray
-    
+    @rtype: ndarray,ndarray(, ndarray)
     """
-
     if (t0 is None): t0 = time[0]
-    phase = np.fmod((time - t0) * nu0, 1.0)
-    indices = np.argsort(phase)
+    phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
+    phase = np.where(phase<0,phase+1,phase)
     
-    return phase[indices], signal[indices]
-  
-            
+    if chronological:
+        #-- keep track of the phase number, and prepare lists to add the points
+        chainnr = np.floor((time-t0)*nu0)
+        myphase = [[]]
+        mysignl = [[]]
+        currentphase = chainnr[0]
+        #-- divide the signal into separate phase bins
+        for i in xrange(len(signal)):
+            if chainnr[i]==currentphase:
+                myphase[-1].append(phase[i])
+                mysignl[-1].append(signal[i])
+            else:
+                myphase[-1] = np.array(myphase[-1])
+                mysignl[-1] = np.array(mysignl[-1])
+                currentphase = chainnr[i]
+                myphase.append([phase[i]])
+                mysignl.append([signal[i]])
+        myphase[-1] = np.array(myphase[-1])
+        mysignl[-1] = np.array(mysignl[-1])
+    else:
+        indices = np.argsort(phase)
+    
+    #-- possibly only return phase and signal
+    if not return_indices and not chronological:
+        return phase[indices], signal[indices]
+    #-- maybe return phase,signal and indices
+    elif not chronological:
+        return phase[indices], signal[indices], indices
+    #-- or return seperate phase bins
+    else:
+        return myphase,mysignl
