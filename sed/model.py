@@ -308,6 +308,99 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
 
 
 
+def get_itable(teff=None,logg=None,ebv=None,photbands=None,
+               wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
+                   
+    """
+    Retrieve the spectral energy distribution of a model atmosphere in
+    photometric passbands.
+        
+    Wavelengths in A (angstrom)
+    Fluxes in Ilambda = ergs/cm2/s/A/sr, except specified via 'units',
+    
+    If you give 'units', and /sr is not included, you are responsible yourself
+    for giving an extra keyword with the angular diameter C{ang_diam}, or other
+    possibilities offered by the C{units.conversions.convert} function.
+        
+    Possibility to redden the fluxes according to the reddening parameter EB_V.
+    
+    Extra kwargs can specify the grid type.
+    Extra kwargs can specify constraints on the size of the grid to interpolate.
+    Extra kwargs can specify reddening law types.
+    Extra kwargs can specify information for conversions.
+    
+    Example usage:
+        
+    @param teff: effective temperature
+    @type teff: float
+    @param logg: logarithmic gravity (cgs)
+    @type logg: float
+    @param ebv: reddening coefficient
+    @type ebv: float
+    @param photbands: photometric passbands
+    @type photbands: list of photometric passbands
+    @param wave_units: units to convert the wavelengths to (if not given, A)
+    @type wave_units: str
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @type flux_units: str
+    @return: wavelength,flux
+    @rtype: (ndarray,ndarray)
+    """
+    
+    #-- get the FITS-file containing the tables
+    gridfile = get_file(integrated=True,**kwargs)
+    
+    #-- read the file:
+    ff = pyfits.open(gridfile)
+    #-- a possible grid is the one where only selected stellar models are
+    #   present. In that case, we there is no need for interpolation or
+    #   other stuff.
+    if star is not None:
+        wave = ff[star.upper()].data.field('wavelength')
+        flux = ff[star.upper()].data.field('flux')
+    else:
+        teff = float(teff)
+        logg = float(logg)
+        #-- if we have a grid model, no need for interpolation
+        try:
+            #-- extenstion name as in fits files prepared by Steven
+            mod_name = "T%05d_logg%01.02f" %(teff,logg)
+            mod = ff[mod_name]
+            wave = mod.data.field('wavelength')
+            flux = mod.data.field('flux')
+            logger.debug('Model SED taken directly from file (%s)'%(os.path.basename(gridfile)))
+        #-- if the teff/logg is not present, use the interpolation thing
+        except KeyError:
+            #-- it is possible we first have to set the interpolation function.
+            #   This function is memoized, so if it will not be calculated
+            #   twice.
+            meshkwargs = copy.copy(kwargs)
+            meshkwargs['wave'] = kwargs.get('wave',None)
+            meshkwargs['teffrange'] = kwargs.get('teffrange',None)
+            meshkwargs['loggrange'] = kwargs.get('loggrange',None)
+            wave,teffs,loggs,flux,flux_grid = get_grid_mesh(**meshkwargs)
+            logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
+            wave = wave + 0.
+            flux = flux_grid(np.log10(teff),logg) + 0.
+    
+    #-- convert to arrays
+    wave = np.array(wave,float)
+    flux = np.array(flux,float)
+    #-- redden if necessary
+    if ebv is not None:
+        if 'wave' in kwargs.keys():
+            removed = kwargs.pop('wave')
+        flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
+    
+    if flux_units!='erg/s/cm2/A/sr':
+        flux = conversions.convert('erg/s/cm2/A/sr',flux_units,flux,wave=(wave,'A'),**kwargs)
+    if wave_units!='A':
+        wave = conversions.convert('A',wave_units,wave,**kwargs)
+    
+    ff.close()
+    
+    return wave,flux
+
 
 
 
@@ -349,8 +442,8 @@ def get_grid_dimensions(**kwargs):
     teffs = []
     loggs = []
     for mod in ff[1:]:
-            teffs.append(float(mod.header['TEFF']))
-            loggs.append(float(mod.header['LOGG']))
+        teffs.append(float(mod.header['TEFF']))
+        loggs.append(float(mod.header['LOGG']))
     ff.close()
     return np.array(teffs),np.array(loggs)
 
@@ -372,7 +465,7 @@ def get_igrid_dimensions(**kwargs):
     ff = pyfits.open(gridfile)
     teffs = ff[1].data.field('TEFF')
     loggs = ff[1].data.field('LOGG')
-    ebvs  = ff[1].data.field('EBV')
+    ebvs  = ff[1].data.field('LABS')
     ff.close()
     return teffs,loggs,ebvs
 
@@ -456,9 +549,84 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
                 flux[i,j,:] = flux_
             except:
                 flux[i,j,:] = np.interp(wave,wave_,flux_)
+    ff.close()
     flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
     logger.info('Constructed SED interpolation grid')
     return wave,teffs,loggs,flux,flux_grid
+
+
+
+
+
+
+@memoized
+def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
+                   include_Labs=False,**kwargs):
+    """
+    Return InterpolatingFunction spanning the available grid of atmosphere models.
+    
+    WARNING: the grid must be entirely defined on a mesh grid, but it does not
+    need to be equidistant.
+            
+    It might take a long a time and cost a lot of memory if you load the entire
+    grid. Therefore, you can also set range of temperature, gravity and
+    reddening.
+    
+    Example usage:
+    
+    @param photbands: photometric passbands
+    @type photbands: array of strings
+    @param teffrange: starting and ending of the grid in teff
+    @type teffrange: tuple of floats
+    @param loggrange: starting and ending of the grid in logg
+    @type loggrange: tuple of floats
+    @param ebvrange: starting and ending of the grid in E(B-V)
+    @type ebvrange: tuple of floats
+    @return: wavelengths, teffs, loggs, ebvs and fluxes of grid,
+    and the interpolating function
+    @rtype: (4 x 1Darray,4Darray,InterpolatingFunction)
+    """
+    #-- get the dimensions of the grid
+    teffs,loggs,ebvs = get_igrid_dimensions(**kwargs)
+    #-- build flux grid, assuming a perfectly sampled grid (needs not to be
+    #   equidistant)
+    if teffrange is not None:
+        sa = (teffrange[0]<=teffs) & (teffs<=teffrange[1])
+        teffs = teffs[sa]
+    if loggrange is not None:
+        sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
+        loggs = loggs[sa]
+    if ebvrange is not None:
+        sa = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
+        ebvs = ebvs[sa]
+    #-- clip if necessary
+    teffs = np.sort(list(set(teffs)))
+    loggs = np.sort(list(set(loggs)))
+    ebvs = np.sort(list(set(ebvs)))
+    #-- run over teff and logg, and interpolate the models onto the supplied
+    #   wavelength range
+    gridfile = get_file(integrated=True,**kwargs)
+    flux = np.zeros((len(teffs),len(loggs),len(ebvs),len(photbands)))
+    #-- use cartesian product!!!
+    ff = pyfits.open(gridfile)
+    for i,teff in enumerate(teffs):
+        for j,logg in enumerate(loggs):
+            for k,ebv in enumerate(ebvs):
+                print teff,logg,ebv
+                right_teff = ff[1].data.field('teff')==teff
+                right_logg = ff[1].data.field('logg')==logg
+                right_ebv = ff[1].data.field('Labs')==ebv
+                flux[i,j,k,:] = [ff[1].data.field(photband)[right_teff & right_logg & right_ebv][0] for photband in photbands]
+    ff.close()
+    flux_grid = InterpolatingFunction([np.log10(teffs),loggs,ebvs],flux)
+    logger.info('Constructed SED interpolation grid')
+    return teffs,loggs,ebvs,flux,flux_grid
+
+
+
+
+
+
 
 
 
@@ -801,8 +969,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwar
     output = output.T
     cols = [pyfits.Column(name='teff',format='E',array=output[0]),
             pyfits.Column(name='logg',format='E',array=output[1]),
-            pyfits.Column(name='ebv',format='E',array=output[2]),
-            pyfits.Column(name='Labs',format='E',array=output[3])]
+            pyfits.Column(name='ebv',format='E',array=output[3]),
+            pyfits.Column(name='Labs',format='E',array=output[2])]
     for i,photband in enumerate(responses):
         cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
     
