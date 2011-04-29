@@ -436,6 +436,8 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='1',spatial='cone'
 
 if __name__=="__main__":
     import vizier
+    from ivs.misc import loggers
+    logger = loggers.get_basic_logger("")
     #-- example 1
     #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
     #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
@@ -446,16 +448,30 @@ if __name__=="__main__":
     
     
     #-- example 3
-    master = get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=1.)
-    master = vizier.get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=5.,master=master)
+    #master = get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=1.)
+    #master = vizier.get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=5.,master=master)
+    
+    #-- example 4
+    master = get_photometry(ID='HD143454',to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
+    master = vizier.get_photometry(ID='HD143454',to_units='erg/s/cm2/A',extra_fields=[],radius=30.,master=master)
     
     
     print master
     
     from pylab import *
     figure()
-    loglog(master['cwave'],master['cmeas'],'ko')
-    errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ro')
+    #loglog(master['cwave'],master['cmeas'],'ko')
+    #errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ro')
+    plot(np.log10(master['cwave']),np.log10(master['cmeas'])+13,'ko')
+    #errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ro')
+    plot(np.log10(1538.62),np.log10(conversions.convert('muJy','W/m2',1202.758,photband='GALEX.FUV'))+13,'bo')
+    plot(np.log10(2315.66),np.log10(conversions.convert('muJy','W/m2',2896.989,photband='GALEX.NUV'))+13,'bo')
+    plot(np.log10(1538.62),np.log10(conversions.convert('muJy','W/m2',5025.582,photband='GALEX.FUV'))+13,'go')
+    plot(np.log10(2315.66),np.log10(conversions.convert('muJy','W/m2',7106.731,photband='GALEX.NUV'))+13,'go')
+    ylim(-1.5,2.5)
+    xlim(3.1,4.7)
+    
+    
     show()
     
     sys.exit()
