@@ -74,12 +74,11 @@ def search(catalog,**kwargs):
     #-- gradually build URI
     base_url = _get_URI(catalog,**kwargs)
     #-- prepare to open URI
-    logger.info('Querying GATOR source %s'%(catalog))
     url = urllib.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
-        logger.info('Downloaded results to file %s'%(filen))
+        logger.info('Querying GATOR source %s and downloading to %s'%(catalog,filen))
         url.close()
         return filen
     
@@ -91,7 +90,7 @@ def search(catalog,**kwargs):
         except ValueError:
             raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(catalog)
         url.close()
-        logger.debug('Results converted to record array (found %d targets)'%(results is not None and len(results) or -1))
+        logger.info('Querying GATOR source %s (%d)'%(catalog,(results is not None and len(results) or 0)))
         return results,units,comms
 
 
@@ -363,7 +362,7 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
 
 #{ Internal helper functions
 
-def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='1',spatial='cone'):
+def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'):
     """
     Build GATOR URI from available options.
     

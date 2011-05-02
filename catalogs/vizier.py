@@ -40,7 +40,7 @@ cat_info_fund.readfp(open(os.path.join(basedir,'vizier_cats_fund.cfg')))
 
 #{ Basic interfaces
 
-def search(name,**kwargs):
+def search(name,filetype='tsv',filename=None,**kwargs):
     """
     Search and retrieve information from a VizieR catalog.
     
@@ -102,13 +102,13 @@ def search(name,**kwargs):
     
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
-    @keyword filename: name of the file to write the results to (no extension)
+    @param filetype: type of the file to write the results to ('tsv' if no file desired)
+    @type filetype: string (one of 'tsv','fits','ascii','csv'...
+    @param filename: name of the file to write the results to (no extension)
     @type filename: str
     @return: filename / catalog data columns, units, comments
     @rtype: str/ record array, dict, list of str
     """
-    filename = kwargs.pop('filename',None) # remove filename from kwargs
-    filetype = kwargs.get('filetype','tsv')
     if filename is not None and '.' in os.path.basename(filename):
         filetype = os.path.splitext(filename)[1][1:]
     elif filename is not None:
@@ -118,12 +118,11 @@ def search(name,**kwargs):
     base_url = _get_URI(name=name,**kwargs)
     
     #-- prepare to open URI
-    logger.info('Querying ViZieR source %s'%(name))
     url = urllib.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
-        logger.info('Downloaded results to file %s'%(filen))
+        logger.info('Querying ViZieR source %s and downloading to %s'%(name,filen))
         url.close()
         return filen
     
@@ -135,7 +134,7 @@ def search(name,**kwargs):
         except ValueError:
             raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name)
         url.close()
-        logger.debug('Results converted to record array (found %d targets)'%(results is not None and len(results) or -1))
+        logger.info('Querying ViZieR source %s (%d)'%(name,(results is not None and len(results) or 0)))
         return results,units,comms
     
 
@@ -276,9 +275,9 @@ def tsv2recarray(filename):
                 if key == line[1] and line[0]=='Column': # this is the line with information
                     formats[i] = line[2].replace('(','').replace(')','').lower()
                     if formats[i][0].isdigit(): formats[i] = 'a100'
-                    elif 'f' in formats[i]: formats[i] = '>f4' # floating point
-                    elif 'i' in formats[i]: formats[i] = '>f4' # integer, but make it float to contain nans
-                    elif 'e' in formats[i]: formats[i] = '>f4' # exponential
+                    elif 'f' in formats[i]: formats[i] = '>f8' # floating point
+                    elif 'i' in formats[i]: formats[i] = '>f8' # integer, but make it float to contain nans
+                    elif 'e' in formats[i]: formats[i] = '>f8' # exponential
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
@@ -585,7 +584,7 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
 
 #{ Internal helper functions
 
-def _get_URI(name=None,ID=None,ra=None,dec=None,radius=5.,
+def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
                      oc='deg',oc_eq='J2000',
                      out_all=True,out_max=1000000,
                      filetype='tsv',**kwargs):

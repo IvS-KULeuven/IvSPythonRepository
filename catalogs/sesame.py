@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Interface to Sesame for general information on a star (cf Simbad star page)
+Interface to Sesame for general information on a star (SIMBAD)
 """
 import urllib
 from ivs.misc import xmlparser
