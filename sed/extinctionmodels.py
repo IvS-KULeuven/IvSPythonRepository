@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Extinction models of Arenou, Drimmel and Marschall
 # +++ Uniformly rewritten by K. Smolders
 
@@ -17,7 +18,7 @@ logger = logging.getLogger("SED.EXT")
 logger.addHandler(logging.NullHandler())
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Top level wrapper
+#{ Top level wrapper
 # # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def findext(ll, bb, distance=None, model='drimmel'):
   """
@@ -34,9 +35,9 @@ def findext(ll, bb, distance=None, model='drimmel'):
   """
   pass
 
-  
+#}  
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Arenou 3D extinction model
+#{ Arenou 3D extinction model
 # (based on Arenou et al, "A tridimensional model of the 
 # galactic interstellar extinction" published in Astronomy and
 # Astrophysics (ISSN 0004-6361), vol. 258, no. 1, p. 104-111.)
@@ -546,11 +547,11 @@ def _getarenouparams(ll,bb):
 
   return alpha, beta, gamma, rr0, saa
 
+#}
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Arenou 3D extinction model
-# (based on Arenou et al, "A tridimensional model of the 
-# galactic interstellar extinction" published in Astronomy and
-# Astrophysics (ISSN 0004-6361), vol. 258, no. 1, p. 104-111.)
+#{ Marshall 3D extinction model
+# (Marshall et al. (2006) published in Astronomy and Astrophysics,
+#  Volume 453, Issue 2, July II 2006, pp.635-651
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @memoized
@@ -660,8 +661,9 @@ def findext_marshall(ll, bb, distance=None):
     
   return ak
 
+#}
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Drimmel 3D extinction model presented in Drimmel et al. in
+#{ Drimmel 3D extinction model presented in Drimmel et al. in
 # Astronomy and Astrophysics, v.409, p.205-215 (2003) and
 # Proceedings of the Gaia Symposium "The Three-Dimensional
 # Universe with Gaia"
@@ -1213,8 +1215,9 @@ def _trint(mm,x,y,z,missing=None):
   iv  = w1*(1.-xd) + w2*xd
   return iv
 
+#}
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Schlegel 3D extinction model presented in Drimmel et al. in
+#{ Schlegel 3D extinction model presented in Drimmel et al. in
 # Astronomy and Astrophysics, v.409, p.205-215 (2003) and
 # Proceedings of the Gaia Symposium "The Three-Dimensional
 # Universe with Gaia"
@@ -1354,6 +1357,6 @@ def _readmaps(hs, mapname='ebv'):
   
   return data,header
   
-  
+#}  
   
   
