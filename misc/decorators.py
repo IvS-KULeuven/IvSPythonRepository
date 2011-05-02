@@ -83,6 +83,22 @@ def timeit(fctn):
         return output
     return time_this
 
+def timeit_duration(fctn):
+    """
+    Time a function and return duration.
+    
+    @return: output from func, duration of function
+    @rtype: 2-tuple
+    """
+    @functools.wraps(fctn)
+    def time_this(*args,**kwargs):
+        start_time = time.time()
+        output = fctn(*args,**kwargs)
+        duration = time.time()-start_time
+        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)    
+        return duration
+    return time_this
+
 def retry(tries, delay=3, backoff=2):
   """
   Retry a function or method until it returns True.
