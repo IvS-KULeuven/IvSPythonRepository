@@ -202,17 +202,17 @@ def write_array(data, filename, **kwargs):
     #-- determine width of columns: also take the header label into account
     col_widths = []
     #-- for record arrays
-    if auto_width is True and header is True:
+    if auto_width is True and header==True:
         for fmt,head in zip(formats,data.dtype.names):
             col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]+[len(head)]))
     #-- for normal arrays and specified header
     elif auto_width is True and header is not None:
         for i,head in enumerate(header):
-            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[:,i]]+[len(head)]))
+            col_widths.append(max([len('%s'%(formats[i])%(el)) for el in data[:,i]]+[len(head)]))
     #-- for normal arrays without header
     elif auto_width is True and header is not None:
         for i in range(data.shape[1]):
-            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[:,i]]))
+            col_widths.append(max([len('%s'%(formats[i])%(el)) for el in data[:,i]]))
     
     if header is True:
         col_fmts = [str(data.dtype[i]) for i in range(len(data.dtype))]
@@ -227,14 +227,16 @@ def write_array(data, filename, **kwargs):
     #-- WRITE HEADER
     #-- when header is desired and automatic width
     if header is not None and col_widths:
-        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(head) for head,cw in zip(header,col_widths)])+'\n')
+        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(head) for fmt,head,cw in zip(formats,header,col_widths)])+'\n')
     #-- when header is desired
     elif header is not None:
         ff.write('#'+sep.join(header)+'\n')
     
     #-- WRITE COLUMN FORMATS
-    if col_fmts is not None:
-        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(colfmt) for colfmt,cw in zip(col_fmts,col_widths)])+'\n')
+    if col_fmts is not None and col_widths:
+        ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(colfmt) for fmt,colfmt,cw in zip(formats,col_fmts,col_widths)])+'\n')
+    elif col_fmts is not None:
+        ff.write('#'+sep.join(['%%%ss'%('s' in fmt and '-' or '')%(colfmt) for fmt,colfmt in zip(formats,col_fmts)])+'\n')
     
     #-- WRITE DATA
     #-- with automatic width
