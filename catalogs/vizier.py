@@ -614,7 +614,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     @return: url
     @rtype: str
     """
-    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
+    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s&-sort=_r'%(filetype,oc,oc_eq)
     
     if ID is not None:
         #-- if the ID is given in the form 'J??????+??????', derive the

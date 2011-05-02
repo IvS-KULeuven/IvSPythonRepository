@@ -238,9 +238,12 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
     
+    #-- if a master is given as a keyword, and data is found in this module,
+    #   append the two
     if master_ is not None and master is not None:
         master = numpy_ext.recarr_addrows(master_,master.tolist())
-    
+    elif master is None:
+        master = master_
     #-- and return the results
     return master
 
