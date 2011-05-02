@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+"""
+Various decorator functions for time series analysis
+    - Parallel periodogram
+    - Autocompletion of default arguments
+"""
+import functools
+import logging
+from multiprocessing import Manager,Process
+import numpy as np
+from ivs.misc import loggers
+from ivs.timeseries import freqanalyse
+#from ivs.timeseries import windowfunctions
+
+logger = logging.getLogger("TS.DEC")
+logger.addHandler(loggers.NullHandler)
+
+def parallel_pergram(fctn):
+    """
+    Run periodogram calculations in parallel.
+    
+    This splits up the frequency range between f0 and fn in 'threads' parts.
+    
+    This must decorate a 'make_parallel' decorator.
+    """
+    @functools.wraps(fctn)
+    def globpar(*args,**kwargs):
+        #-- construct a manager to collect all calculations 
+        manager = Manager() 
+        arr = manager.list([]) 
+        all_processes = []
+        #-- get information on frequency range
+        f0 = kwargs['f0']
+        fn = kwargs['fn']
+        threads = float(kwargs.pop('threads',1))
+        
+        #-- extend the arguments to include the parallel array
+        myargs = tuple(list(args) + [arr] )
+        
+        #-- distribute the periodogram calcs over different threads, and wait
+        for i in range(int(threads)):
+            #-- define new start and end frequencies
+            kwargs['f0'] = f0 + i*(fn-f0) / threads
+            kwargs['fn'] = f0 +(i+1)*(fn-f0) / threads
+            logger.debug("parallel: starting process %s: f=%.4f-%.4f"%(i,kwargs['f0'],kwargs['fn']))
+            p = Process(target=fctn, args=myargs, kwargs=kwargs) 
+            p.start()
+            all_processes.append(p) 
+        
+        for p in all_processes: p.join() 
+        
+        logger.debug("parallel: all processes ended") 
+        
+        #-- join all periodogram pieces
+        freq = np.hstack([output[0] for output in arr])
+        ampl = np.hstack([output[1] for output in arr]) 
+        sort_arr = np.argsort(freq)
+        ampl = ampl[sort_arr] 
+        freq = freq[sort_arr]
+        ampl[np.isnan(ampl)] = 0.
+        return freq,ampl
+        
+    return globpar
+
+
+
+def defaults_pergram(fctn):
+    """
+    Set default parameters common to all periodograms.
+    """
+    @functools.wraps(fctn)
+    def globpar(*args,**kwargs):
+        #-- this is the information we need the compute everything
+        times = args[0]
+        signal = args[1]
+        T = times.ptp()
+        
+        #-- get information on frequency range. If it is not given, compute the
+        #   start (0.1/T) and stop (Nyquist) frequency.
+        #   Also compute the frequency step as 0.1/T
+        nyq_stat = kwargs.pop('nyq_stat',np.min)
+        nyquist = freqanalyse.getNyquist(times,nyq_stat=nyq_stat)
+        f0 = kwargs.get('f0',0.01/T)
+        fn = kwargs.get('fn',nyquist)
+        df = kwargs.get('df',0.1/T)
+        if df==0: df = 0.1/T
+        if f0==0: f0 = 0.01/T
+        if fn>nyquist:
+            fn = nyquist
+        kwargs['f0'] = f0
+        kwargs['df'] = df
+        kwargs['fn'] = fn
+        
+        #-- maybe the data needs to be windowed
+        window = kwargs.pop('window',None)
+        if window is not None:
+            signal = signal*windowfunctions.getWindowFunction(window)(times)
+            signal -= signal.mean()
+            logger.debug('Signal is windowed with %s'%(window))
+        
+        #-- normalise weights if they are given
+        weights = kwargs.get('weights',None)
+        if weights is not None:
+            if weights.sum() != len(weights):
+                weights = weights / float(weights.sum()) * len(weights)
+                logger.debug("Weights were initially not normalized: normalization performed.")
+                kwargs['weights'] = weights
+        return fctn(times,signal,*args[2:],**kwargs)
+        
+    return globpar
