@@ -183,3 +183,32 @@
  WISE.W2            46293 BOL         0             1   nan         0   nan         0 2.41500e-15 W/cm2/mum           1         171.787 Jy              1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html                                                         
  WISE.W3           123337 BOL         0             1   nan         0   nan         0 6.51510e-17 W/cm2/mum           1         31.674 Jy               1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html                                                               
  WISE.W4           222532 BOL         0             1   nan         0   nan         0 5.09010e-18 W/cm2/mum           1         8.363 Jy                1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html                                                               
+ VILNIUS.V            nan CCD         0.030         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.Z            nan CCD         0.085         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.Y            nan CCD         0.180         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.X            nan CCD         0.470         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.P            nan CCD         1.275         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.S            nan CCD        -0.110         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ VILNIUS.U            nan CCD         1.900         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ ARGUE.R              nan CCD         0.285         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ ARGUE.RG9            nan CCD         0.321         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ ARGUE.RG8            nan CCD         0.303         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ KRON.R               nan CCD         0.15          1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ KRON.I               nan CCD         0.24          1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.U               nan CCD         1.104         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.V               nan CCD        -0.202         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.B               nan CCD        -0.168         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.Y               nan CCD        -0.063         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.O               nan CCD         0.086         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.R               nan CCD         0.167         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.I               nan CCD         0.202         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.G               nan CCD         0.004         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.A               nan CCD        -0.016         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.H               nan CCD         0.192         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.T1              nan CCD        -0.048         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WOOD.T2              nan CCD        -0.044         1   nan         0   nan         0      nan  erg/s/cm2/A           0         nan   0                 0 GCPD
+ WALRAVEN.W           nan CCD         nan           0   nan         0   nan         0  2.12e-11 erg/s/cm2/A           1         nan   0                 0 GCPD
+ WALRAVEN.U           nan CCD         nan           0   nan         0   nan         0  1.61e-11 erg/s/cm2/A           1         nan   0                 0 GCPD
+ WALRAVEN.L           nan CCD         nan           0   nan         0   nan         0  1.52e-11 erg/s/cm2/A           1         nan   0                 0 GCPD
+ WALRAVEN.B           nan CCD         nan           0   nan         0   nan         0  1.23e-11 erg/s/cm2/A           1         nan   0                 0 GCPD
+ WALRAVEN.V           nan CCD         nan           0   nan         0   nan         0  6.73e-12 erg/s/cm2/A           1         nan   0                 0 GCPD
