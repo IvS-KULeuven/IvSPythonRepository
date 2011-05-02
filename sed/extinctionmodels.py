@@ -89,7 +89,7 @@ def findext_arenou(ll, bb, distance=None):
     logger.error("galactic lattitude outside [-90,90] degrees")
   elif ll < 0. or ll > 360:
     logger.error("galactic longitude outside [0,360] degrees")
-  elif distance < 0:
+  elif distance < 0 and distance is not None:
     logger.error("distance is negative")
     
   # find the Arenou paramaters in the Appendix of Arenou et al. (1992)
