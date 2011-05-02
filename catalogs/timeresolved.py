@@ -10,14 +10,16 @@ Error messages are written to the logger "timeresolved".
 from __future__ import with_statement
 import httplib
 import logging
+import pyfits
 import numpy as np
 from ivs.misc import loggers
+from ivs.catalogs import sesame
 from ivs import config
         
 logger = logging.getLogger("timeresolved")
 logger.addHandler(loggers.NullHandler)
 
-def getHipData(hipnr, outputFileName=None):
+def getHipData(ID,outputFileName=None):
 
     """
     Retrieve Hipparcos epoch photometry from the ESA website.
@@ -49,9 +51,11 @@ def getHipData(hipnr, outputFileName=None):
     >>> qualityflag = data['q_mag']
     
     
-    @param hipnr: the hipparcos number of the star. 
-                  E.g. 1234 or "1234"
-    @type hipnr: integer or string
+    @param ID: identification of the star: if you give an integer or string that
+    can be converted to an integer, it is assumed to be the hipparcos number of
+    the star.  E.g. 1234 or "1234". If it is not an integer, the star will
+    be resolved via sesame to get the HIP number if possible
+    @type ID: integer or string
     @param outputFileName: the name of the file that will be created
                            to save the Hipparcos time series
     @type outputFileName: string
@@ -60,12 +64,23 @@ def getHipData(hipnr, outputFileName=None):
              header information. The header dictionary is of style
              {'HH14': ('A', 'Annex flag (light curves)'), ...}
     @rtype: rec array, dict
-    
     """
 
     server = "www.rssd.esa.int"
     webpage = "/hipparcos_scripts/HIPcatalogueSearch.pl?hipepId="
-
+    
+    # Resolve the name if necessary (i.e., if it's not a HIP number). If the 
+    # star has no HIP number, log an error and return None
+    try:
+        ID = int(ID)
+    except ValueError:
+        info = sesame.search(ID,db='S')
+        IDs = [alias for alias in info['alias'] if 'HIP' in alias]
+        if len(IDs)!=1:
+            logger.error("Data retrieval for %s not possible. Reason: no HIP number resolved" % (ID))
+            return
+        hipnr = IDs[0].split(' ')[1]
+    
     # Connect to the website, en retrieve the wanted webpage
     
     conn = httplib.HTTPConnection(server)
@@ -122,7 +137,7 @@ def getHipData(hipnr, outputFileName=None):
     # Make a record array.
     # Choose the header names to be in the VizieR style.
     
-    dtypes = [('time','>f4'),('mag','>f4'),('e_mag','>f4'),('q_mag','i')]
+    dtypes = [('time','>f8'),('mag','>f8'),('e_mag','>f8'),('q_mag','i')]
     data = np.rec.array(data,dtype=dtypes)
     
     # Fix the time offset
