@@ -901,14 +901,18 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwar
     The output file can be used to fit SEDs more efficiently, since integration
     over the passbands has already been carried out.
     
-    WARNING: this function takes about a day to run on a 8-core processor!
+    WARNING: this function can take a day to complete on a 8-core processor!
     
     Extra keywords can be used to specify the grid.
     
     @param threads: number of threads
     @type threads; integer
-    @param ebv: reddening parameters to include
-    @type ebv: numpy array
+    @param ebvs: reddening parameters to include
+    @type ebvs: numpy array
+    @param law: interstellar reddening law to use
+    @type law: string (valid law name, see C{reddening.py})
+    @param Rv: Rv value for reddening law
+    @type Rv: float
     """
     if ebvs is None:
         ebvs = np.r_[0:4:0.01]
