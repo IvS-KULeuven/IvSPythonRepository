@@ -4,6 +4,7 @@
 
 from ivs.catalogs import vizier
 from ivs.misc.decorators import memoized
+from ivs.misc import loggers
 from ivs import config
 
 import numpy  as np
@@ -14,7 +15,7 @@ import pyfits as pf
 import logging
 
 logger = logging.getLogger("SED.EXT")
-logger.addHandler(logging.NullHandler())
+logger.addHandler(loggers.NullHandler)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #{ Top level wrapper
