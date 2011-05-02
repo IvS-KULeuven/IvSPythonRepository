@@ -7,7 +7,7 @@ import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
-data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/']
+data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata']
 
 
 def get_datafile(relative_path,basename):
