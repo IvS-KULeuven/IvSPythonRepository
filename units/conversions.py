@@ -12,9 +12,11 @@ Some of the many possibilities include:
     3. Nonlinear conversions: vegamag to erg/s/cm2/A or Jy, Celcius to
     Fahrenheit or Kelvin, calender date to (modified) Julian Day, Equatorial to
     Ecliptic coordinates, etc...
-    4. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
-    5. Inclusion of uncertainties, both in input values and/or reference values
-    when converting between unequal-type units.
+    4. Conversions of magnitude to flux amplitudes via 'Amag' and 'ppt' or 'ampl'
+    5. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
+    6. Inclusion of uncertainties, both in input values and/or reference values
+    when converting between unequal-type units, automatically recognised when
+    giving two positional argument (value, error) instead of one (value).
 
 The main function C{convert} does all the work and is called via
 
@@ -186,7 +188,7 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('sr','deg2',1.)
     3282.8063500117441
     
-    B{Magnitudes}:
+    B{Magnitudes and amplitudes}:
     
     >>> print(convert('ABmag','Jy',0.,photband='SDSS.U'))
     3767.03798984
@@ -196,6 +198,10 @@ def convert(_from,_to,*args,**kwargs):
     4.93934836475e-09
     >>> print(convert('erg cm-2 s-1 A-1','ABmag',1e-8,wave=(1.,'micron'),photband='SDSS.G'))
     -0.765825856568
+    >>> print(convert('ppm','muAmag',1.))
+    1.0857356618
+    >>> print(convert('mAmag','ppt',1.,0.1))
+    (0.92145831929579813, 0.092188273167354881)
     
     B{Frequency analysis}:
     
@@ -290,7 +296,7 @@ def convert(_from,_to,*args,**kwargs):
         fac_to,uni_to = breakdown(_to)
     else:
         fac_to,uni_to = 1.,uni_from
-    
+        
     #-- convert the kwargs to SI units if they are tuples (make a distinction
     #   when uncertainties are given)
     kwargs_SI = {}
@@ -953,6 +959,16 @@ class Celcius(NonLinearConverter):
         if not inv: return a*self.prefix+273.15
         else:       return (a-273.15)/self.prefix
 
+
+class AmplMag(NonLinearConverter):
+    """
+    Convert a Vega magnitude to W/m2/m (Flambda) and back
+    """
+    def __call__(self,meas,inv=False):
+        #-- this part should include something where the zero-flux is retrieved
+        if not inv: return 10**(meas*self.prefix/2.5) - 1.
+        else:       return (2.5*log10(1.+meas))/self.prefix
+
 class VegaMag(NonLinearConverter):
     """
     Convert a Vega magnitude to W/m2/m (Flambda) and back
@@ -1162,6 +1178,11 @@ _factors = {
            'mag':     (VegaMag,       'kg m-1 s-3'),  # W/m2/m
            'STmag':   (STMag,         'kg m-1 s-3'),  # W/m2/m
            'ABmag':   (ABMag,         'kg s-2 cy-1'), # W/m2/Hz
+           'ampl':    (1e+00,         'ampl'),
+           'Amag':    (AmplMag,       'ampl'),
+           'pph':     (1e-02,         'ampl'), # amplitude
+           'ppt':     (1e-03,         'ampl'), # amplitude
+           'ppm':     (1e-06,         'ampl') # amplitude
            }
             
 #-- scaling factors for prefixes            
