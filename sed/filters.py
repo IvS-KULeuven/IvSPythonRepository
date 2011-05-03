@@ -81,18 +81,24 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
 
 
 
-def eff_wave(photband):
+def eff_wave(photband,model=None):
     """
     Return the effective wavelength of a photometric passband.
     
-    The effective wavelength is defined as the average wavelength weighed wit
+    The effective wavelength is defined as the average wavelength weighed with
     the response curve.
     
     >>> eff_wave('2MASS.J')
     12412.136241640892
     
+    If you give model fluxes as an extra argument, the wavelengths will take
+    these into account to calculate the `true' effective wavelength (e.g., 
+    Van Der Bliek, 1996), eq 2.
+    
     @param photband: photometric passband
     @type photband: str ('SYSTEM.FILTER') or array/list of str
+    @param model: model wavelength and fluxes
+    @type model: tuple of 1D arrays (wave,flux)
     @return: effective wavelength [A]
     @rtype: float or numpy array
     """
@@ -106,15 +112,22 @@ def eff_wave(photband):
         for iphotband in photband:
             try:
                 wave,response = get_response(iphotband)
-                my_eff_wave.append(np.average(wave,weights=response))
+                if model is None:
+                    this_eff_wave = np.average(wave,weights=response)
+                else:
+                    #-- interpolate response curve onto model and take weighted average
+                    response = np.interp(model[0],wave,response)
+                    this_eff_wave = np.trapz(model[0]*model[1]*response,x=model[0]) / np.trapz(model[1]*response,x=model[0])
+            #-- if the photband is not defined:
             except IOError:
-                my_eff_wave.append(np.nan)
+                this_eff_wave = np.nan
+            my_eff.wave.append(this_eff_wave)
             
         my_eff_wave = np.array(my_eff_wave,float)
             
     return my_eff_wave
 
-@memoized
+#@memoized
 def get_info(photbands=None):
     """
     Return a record array containing all filter information.
@@ -163,7 +176,7 @@ def update_info(zp):
     """
     zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
     zp_,comms = ascii.read2recarray(zp_file,return_comments=True)
-    ascii.write_array(zp,'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]])
+    ascii.write_array(zp,'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]],use_float='%g')
     
 
 
