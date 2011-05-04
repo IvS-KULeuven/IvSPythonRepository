@@ -44,6 +44,7 @@ to give a class definition (see the examples).
 #-- standard libraries
 import re
 import os
+import sys
 import logging
 import numpy as np
 
@@ -1243,5 +1244,61 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
  
  
 if __name__=="__main__":
-    import doctest
-    doctest.testmod()
+    if not sys.argv[1:]:
+        import doctest
+        doctest.testmod()
+        sys.exit()
+    from optparse import OptionParser, Option, OptionGroup
+    import copy
+    def check_pythoncode(option, opt, value):
+        try:
+            return eval(value)
+        except ValueError:
+            raise OptionValueError(
+                "option %s: invalid python code: %r" % (opt, value))
+
+    class MyOption (Option):
+        TYPES = Option.TYPES + ("pythoncode",)
+        TYPE_CHECKER = copy.copy(Option.TYPE_CHECKER)
+        TYPE_CHECKER["pythoncode"] = check_pythoncode   
+    
+    parser = OptionParser(option_class=MyOption)
+    parser.add_option('--from',dest='_from',type='str',
+                        help="units to convert from",default=None)
+    parser.add_option('--to',dest='_to',type='str',
+                        help="units to convert to",default='SI')
+    
+    group = OptionGroup(parser,'Extra quantities when changing base units (e.g. Flambda to Fnu)')
+    group.add_option('--wave','-w',dest='wave',type='str',
+                        help="wavelength with units (e.g. used to convert Flambda to Fnu)",default=None)
+    group.add_option('--freq','-f',dest='freq',type='str',
+                        help="frequency (e.g. used to convert Flambda to Fnu)",default=None)
+    group.add_option('--photband','-p',dest='photband',type='str',
+                        help="photometric passband",default=None)
+    parser.add_option_group(group)
+    
+    #-- prepare inputs for functions
+    (options, args) = parser.parse_args()
+    options = vars(options)
+    _from = options.pop('_from')
+    _to = options.pop('_to')
+    args = tuple([float(i) for i in args])
+    #-- remove None types
+    for option in copy.copy(options):
+        if options[option] is None:
+            options.pop(option)
+    #-- set type correctly
+    for option in options:
+        if isinstance(options[option],str) and ',' in options[option]:
+            entry = options[option].split(',')
+            options[option] = (float(entry[0]),entry[1])
+    #-- do the conversion
+    output = convert(_from,_to,*args,**options)
+    
+    #-- and nicely print to the screen
+    if isinstance(output,tuple) and len(output)==2:
+        print "%g +/- %g %s    =    %g +/- %g %s"%(args[0],args[1],_from,output[0],output[1],_to)
+    elif isinstance(output,tuple):
+        print "%g %s    =    %s %s"%(args[0],_from,output,_to)
+    else:
+        print "%g %s    =    %g %s"%(args[0],_from,output,_to)
