@@ -17,9 +17,6 @@ from ivs import config
 logger = logging.getLogger("CAT.CORALIE")
 logger.addHandler(loggers.NullHandler)
 
-name_keys = {'CORALIE':["ESO OBS "+key for key in ["TARG NAME","TARG CODE","NOCODB","NOCODA","REFNOCOD"]]}
-coor_keys = {'CORALIE':["TEL TARG "+key for key in ["ALPHA","DELTA"]]}
-
 def search(ID,radius=1.,filename=None):
     """
     Retrieve datafiles from the Coralie catalogue.
@@ -32,9 +29,6 @@ def search(ID,radius=1.,filename=None):
     
     @param ID: ID of the star, understandable by SIMBAD
     @type ID: str
-    @param data_type: if None, all data will be returned. Otherwise, subset
-    'sd1_A'
-    @type data_type: str
     @param radius: search radius around the coordinates
     @type radius: 1
     @param filename: write summary to outputfile if not None

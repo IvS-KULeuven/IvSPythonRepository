@@ -69,7 +69,7 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
     @param remove_flagged: remove flagged datapoints
     @type remove_flagged: True
     @return: CoRoT data (times, flux, error, flags)
-    @type: array, array, array, array(, header)
+    @rtype: array, array, array, array(, header)
     """
     #-- read in the FITS file
     # headers: ['DATE', 'DATEJD', 'DATEHEL', 'STATUS', 'WHITEFLUX', 'WHITEFLUXDEV', 'BG', 'CORREC']
