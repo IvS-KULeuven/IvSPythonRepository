@@ -278,12 +278,8 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
             #-- it is possible we first have to set the interpolation function.
             #   This function is memoized, so if it will not be calculated
             #   twice.
-            meshkwargs = copy.copy(kwargs)
-            meshkwargs['wave'] = kwargs.get('wave',None)
-            meshkwargs['teffrange'] = kwargs.get('teffrange',None)
-            meshkwargs['loggrange'] = kwargs.get('loggrange',None)
-            wave,teffs,loggs,flux,flux_grid = get_grid_mesh(**meshkwargs)
-            logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
+            wave,teffs,loggs,flux,flux_grid = get_grid_mesh(**kwargs)
+            logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),kwargs))
             wave = wave + 0.
             flux = flux_grid(np.log10(teff),logg) + 0.
     
@@ -308,7 +304,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
 
 
 
-def get_itable(teff=None,logg=None,ebv=None,photbands=None,
+def get_itable(teff=None,logg=None,ebv=0,photbands=None,
                wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
                    
     """
@@ -349,39 +345,32 @@ def get_itable(teff=None,logg=None,ebv=None,photbands=None,
     
     #-- get the FITS-file containing the tables
     gridfile = get_file(integrated=True,**kwargs)
-    
-    #-- read the file:
     ff = pyfits.open(gridfile)
-    #-- a possible grid is the one where only selected stellar models are
-    #   present. In that case, we there is no need for interpolation or
-    #   other stuff.
-    if star is not None:
-        wave = ff[star.upper()].data.field('wavelength')
-        flux = ff[star.upper()].data.field('flux')
-    else:
-        teff = float(teff)
-        logg = float(logg)
-        #-- if we have a grid model, no need for interpolation
-        try:
-            #-- extenstion name as in fits files prepared by Steven
-            mod_name = "T%05d_logg%01.02f" %(teff,logg)
-            mod = ff[mod_name]
-            wave = mod.data.field('wavelength')
-            flux = mod.data.field('flux')
-            logger.debug('Model SED taken directly from file (%s)'%(os.path.basename(gridfile)))
-        #-- if the teff/logg is not present, use the interpolation thing
-        except KeyError:
-            #-- it is possible we first have to set the interpolation function.
-            #   This function is memoized, so if it will not be calculated
-            #   twice.
-            meshkwargs = copy.copy(kwargs)
-            meshkwargs['wave'] = kwargs.get('wave',None)
-            meshkwargs['teffrange'] = kwargs.get('teffrange',None)
-            meshkwargs['loggrange'] = kwargs.get('loggrange',None)
-            wave,teffs,loggs,flux,flux_grid = get_grid_mesh(**meshkwargs)
-            logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
-            wave = wave + 0.
-            flux = flux_grid(np.log10(teff),logg) + 0.
+    #-- read the file:
+    teff = float(teff)
+    logg = float(logg)
+    #-- if we have a grid model, no need for interpolation
+    try:
+        #-- extenstion name as in fits files prepared by Steven
+        teffs = ff[1].data.field('TEFF')
+        loggs = ff[1].data.field('LOGG')
+        ebvs  = ff[1].data.field('EBV')
+        for index in xrange(len(teffs)):
+            if (teffs[index]==teff) & (loggs[index]==logg) & (ebvs[index]==ebv):
+                break
+        #-- else not available, so go on and interpolate!
+        #   we raise a KeyError for symmetry with C{get_table}.
+        else:
+            raise KeyError
+        logger.debug('Model iSED taken directly from file (%s)'%(os.path.basename(gridfile)))
+    #-- if the teff/logg is not present, use the interpolation thing
+    except KeyError:
+        #-- it is possible we first have to set the interpolation function.
+        #   This function is memoized, so if it will not be calculated
+        #   twice.
+        teffs,loggs,ebvs,flux,flux_grid = get_igrid_mesh(photbands=photbands,**kwargs)
+        logger.debug('Model iSED interpolated from grid %s (%s)'%(os.path.basename(gridfile),kwargs))
+        flux = flux_grid(np.log10(teff),logg) + 0.
     
     #-- convert to arrays
     wave = np.array(wave,float)
@@ -465,7 +454,7 @@ def get_igrid_dimensions(**kwargs):
     ff = pyfits.open(gridfile)
     teffs = ff[1].data.field('TEFF')
     loggs = ff[1].data.field('LOGG')
-    ebvs  = ff[1].data.field('LABS')
+    ebvs  = ff[1].data.field('EBV')
     ff.close()
     return teffs,loggs,ebvs
 
@@ -475,7 +464,7 @@ def get_igrid_dimensions(**kwargs):
 
 
 
-@memoized
+#@memoized
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of atmosphere models.
@@ -559,7 +548,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 
 
 
-@memoized
+#@memoized
 def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
                    include_Labs=False,**kwargs):
     """
@@ -615,7 +604,7 @@ def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
                 print teff,logg,ebv
                 right_teff = ff[1].data.field('teff')==teff
                 right_logg = ff[1].data.field('logg')==logg
-                right_ebv = ff[1].data.field('Labs')==ebv
+                right_ebv = ff[1].data.field('ebv')==ebv
                 flux[i,j,k,:] = [ff[1].data.field(photband)[right_teff & right_logg & right_ebv][0] for photband in photbands]
     ff.close()
     flux_grid = InterpolatingFunction([np.log10(teffs),loggs,ebvs],flux)
@@ -784,6 +773,10 @@ def calibrate():
     m_vega = 2.5*np.log10(F0AB_lam/syn_flux) + zp['ABmag']
     zp['vegamag'][keep] = m_vega[keep]
     
+    #-- set the central wavelengths of the bands
+    set_wave = np.isnan(zp['eff_wave'])
+    zp['eff_wave'][set_wave] = filters.eff_wave(zp['photband'][set_wave])
+    
     return zp
     
 
@@ -930,12 +923,13 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwar
     responses = filter_info['photband']
     
     def do_ebv_process(ebvs,arr,responses):
-        logger.info('EBV: %s-->%s'%(ebvs[0],ebvs[-1]))
+        logger.info('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
         for ebv in ebvs:
             flux_ = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',law=law,Rv=Rv)
             #-- calculate synthetic fluxes
             synflux = synthetic_flux(wave,flux_,responses)
             arr.append([np.concatenate(([ebv],synflux))])
+        logger.info("Finished EBV process (len(arr)=%d)"%(len(arr)))
     
     #-- do the calculations
     c0 = time.time()
@@ -965,9 +959,9 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwar
         arr = np.vstack([row for row in arr])
         sa = np.argsort(arr[:,0])
         arr = arr[sa]
-        output[start:start+arr.shape[1],:3] = teff,logg,Labs
+        output[start:start+arr.shape[0],:3] = teff,logg,Labs
         output[start:start+arr.shape[0],3:] = arr
-        start += arr.shape[1]
+        start += arr.shape[0]
     
     #-- make FITS columns
     output = output.T

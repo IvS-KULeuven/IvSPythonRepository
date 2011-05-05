@@ -11,7 +11,7 @@ __author__ = "Henning Risvik"
 __date__ = "February 2008"
 __version__ = "1.1.02"
     
-################### Preprocessing Methods ###################
+#{  Preprocessing Methods 
 def mean_center(X):
     """
     
@@ -52,9 +52,9 @@ def standardization(X):
         new_X[row, 0:cols] = X[row, 0:cols] / _STDs[0:cols]
     return new_X        
 
-
+#}
        
-################### NIPALS array help functions ###################
+#{ NIPALS array help functions 
 def get_column(E):
     """
     Get an acceptable column-vector of E.
@@ -145,7 +145,9 @@ def remove_tp_prod(E, t, p):
         E[i, :] = E[i, :] - (t[i] * p)
        
 
-################### NIPALS Algorithm ###################
+#}
+
+#{ NIPALS Algorithm
 """
   Estimation of PC components with the iterative NIPALS method: 
 
@@ -381,8 +383,9 @@ def nipals_arr(X, PCs, threshold, E_matrices):
         return Scores, Loadings, explained_var 
 
 
+#}
 
-################### Principal Component Analysis (using NIPALS) ###################
+#{ Principal Component Analysis (using NIPALS)
 def PCA_nipals(X, standardize=True, PCs=10, threshold=0.0001, E_matrices=False):
     """
     
@@ -479,9 +482,9 @@ def PCA_nipals_c(X, standardize=True, PCs=10, threshold=0.0001, E_matrices=False
     
     return nipals_c(X, PCs, threshold, E_matrices)      
     
+#}    
     
-    
-################### Principal Component Analysis (using SVD) ###################
+#{ Principal Component Analysis (using SVD) 
 def PCA_svd(X, standardize=True):
     """   
     PCA by SVD and get Scores, Loadings, E
@@ -521,8 +524,9 @@ def PCA_svd(X, standardize=True):
     return Scores, Loadings, explained_var
 
 
+#}
 
-################### Correlation Loadings ###################
+#{ Correlation Loadings 
 def CorrelationLoadings(X, Scores):
     """
     Get correlation loadings matrix based on Scores (T of PCA) and X (original variables, not mean centered).
@@ -557,3 +561,5 @@ def CorrelationLoadings(X, Scores):
             CorrLoadings[i, row] = corrs[0,1]
                 
     return CorrLoadings        
+
+#}

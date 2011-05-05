@@ -44,6 +44,7 @@ def get_response(photband):
     @rtype: (array, array)
     """
     photfile = os.path.join(basedir,'filters',photband.upper())
+    #print photfile
     wave, response = ascii.read2array(photfile).T[:2]
     sa = np.argsort(wave)
     return wave[sa],response[sa]

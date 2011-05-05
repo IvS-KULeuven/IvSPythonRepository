@@ -187,6 +187,8 @@ def write_array(data, filename, **kwargs):
     mode = kwargs.get('mode','w')
     auto_width = kwargs.get('auto_width',False)
     formats = kwargs.get('formats',None)
+    # use '%g' or '%f' or '%e' for writing floats automatically from record arrays with auto width
+    use_float = kwargs.get('use_float','%f') 
     
     #-- switch to rows first if a list of columns is given
     if not isinstance(data,np.ndarray):
@@ -196,7 +198,7 @@ def write_array(data, filename, **kwargs):
     
     if formats is None:
         try:
-            formats = [('S' in str(data[col].dtype) and '%s' or '%f') for col in data.dtype.names]
+            formats = [('S' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
         except TypeError:
             formats = [('S' in str(col.dtype) and '%s' or '%s') for col in data.T]
     #-- determine width of columns: also take the header label into account

@@ -498,3 +498,29 @@ def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
     #-- or return seperate phase bins
     else:
         return myphase,mysignl
+
+
+
+def getNyquist(times,nyq_stat=np.inf):
+    """
+    Calculate Nyquist frequency.
+    
+    Typical use is minimum or median of time points differences.
+    
+    If C{nyq_stat} is not callable, it is assumed to be a number and that number
+    will just be returned: this you can do to search for frequencies above the
+    nyquist frequency
+    
+    @param times: sorted array containing time points
+    @type times: numpy array
+    @param nyq_stat: statistic to use or absolute value of the Nyquist frequency
+    @type nyq_stat: callable or float
+    @return: Nyquist frequency
+    @rtype: float
+    """
+    if not hasattr(nyq_stat,'__call__'):
+        nyquist = nyq_stat
+    else:
+        nyquist = 1/(2*nyq_stat(np.diff(times)))
+    return nyquist
+    

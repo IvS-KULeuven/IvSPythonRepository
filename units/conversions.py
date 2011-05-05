@@ -1250,6 +1250,10 @@ if __name__=="__main__":
         sys.exit()
     from optparse import OptionParser, Option, OptionGroup
     import copy
+    
+    #logger_ = loggers.get_basic_logger()
+    #logger_.setLevel(10)
+    
     def check_pythoncode(option, opt, value):
         try:
             return eval(value)

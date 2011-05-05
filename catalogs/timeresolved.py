@@ -10,10 +10,12 @@ Error messages are written to the logger "timeresolved".
 from __future__ import with_statement
 import httplib
 import logging
+import os
 import pyfits
 import numpy as np
 from ivs.misc import loggers
 from ivs.catalogs import sesame
+from ivs.io import fits
 from ivs import config
         
 logger = logging.getLogger("timeresolved")
@@ -150,6 +152,61 @@ def getHipData(ID,outputFileName=None):
 
 
 
+def getCoRoTData(ID,channel='sismo'):
+    """
+    Retrieve CoRoT timeseries from a local data repository.
+    
+    @param ID: ID of the target: either an integer (CoRoT ID) or an official
+    target name
+    @type ID: int or str
+    @param channel: type of CoRoT data (sismo or exo)
+    @type channel: str ('sismo' or 'exo')
+    @return: data, header
+    @rtype: numpy recarray, dict
+    """
+    
+    #-- resolve the target's name: it's either a target name or CoRoT ID.
+    try:
+        ID = int(ID)
+    except ValueError:
+        info = sesame.search(ID,db='S')
+        IDs = [alias for alias in info['alias'] if 'HD' in alias]
+        if len(IDs)!=1:
+            logger.error("Data retrieval for %s not possible. Reason: no HD number resolved" % (ID))
+            return
+        ID = IDs[0]
+    
+    if channel=='sismo':
+        #-- data on one target can be spread over multiple files: collect the
+        #   data
+        data = []
+        #-- collect the files containing data on the target
+        catfiles = config.glob((os.sep).join(['catalogs','corot','sismo']),'*.fits')
+        for catfile in catfiles:
+            try:
+                header = pyfits.getheader(catfile)
+            except IOError:
+                continue
+            if header['starname']==ID or header['corotid']=='%s'%(ID):
+                times,flux,error,flags = fits.read_corot(catfile)
+                data.append([times,flux,error,flags])
+        #-- now make a record array and sort according to times
+        data = np.hstack(data)        
+        data = np.rec.fromarrays(data,dtype=[('HJD','>f8'),('flux','>f8'),('e_flux','>f8'),('flag','i')])
+        sa = np.argsort(data['HJD'])
+        return data[sa],header
+        
+        
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -175,7 +232,7 @@ def getP7Data(ID=None,code=None,include_nans=True):
         # this should resolve the GENEVA name
         code = _geneva_name_resolver(ID=ID)
         
-    catfile = config.get_datafile('catalogs','p7photometry.fits')
+    catfile = config.get_datafile('catalogs/p7','p7photometry.fits')
     ff = pyfits.open(catfile)
     valid = ff[1].data.field('CODE')==code
     hjd = ff[1].data.field('HJD')[valid]
@@ -232,6 +289,15 @@ def _geneva_name_resolver(code=None,ID=None):
         else: code = 0
         return  int(code)
         
+
+
+
+
+
+
+
+
+
 
 
 if __name__=="__main__":

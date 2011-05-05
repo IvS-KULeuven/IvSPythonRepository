@@ -78,7 +78,7 @@ def search(name,**kwargs):
         if len(values) < len(entries):
             values += ['nan']*(len(entries)-len(values))
         #-- in some columns, there are '*' or 'STD' signs
-        values = [value.replace('*','').replace('STD','') for value in values]
+        values = [value.replace('*','').replace('STD','').replace('/','') for value in values]
         #-- some columns have no values
         values = [(value and value or 'nan') for value in values]
         dtypes = np.dtype([(i,'>f8') for i in entries])

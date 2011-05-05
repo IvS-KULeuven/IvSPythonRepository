@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Interface the spectra from the Hermes spectrograph.
+"""
 import re
 import sys
 import glob

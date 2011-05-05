@@ -87,7 +87,10 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
     
     # remove flagged datapoints if asked
     if remove_flagged:
-        keep = (flags==0) & (error!=-1)
+        keep1 = (flags==0)
+        keep2 = (error!=-1)
+        logger.info('Remove: flagged (%d) no valid error (%d) datapoints (%d)'%(len(keep1)-sum(keep1),len(keep2)-sum(keep2),len(keep1)))
+        keep = keep1 & keep2
         times,flux,error,flags = times[keep], flux[keep], error[keep], flags[keep]
     
     # convert times to heliocentric JD
