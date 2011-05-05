@@ -49,7 +49,8 @@ def search(ID,radius=1.,filename=None):
     if np.any(keep):
         data = data[keep]
     
-    seqs = sorted(set(data['unseq']))
+    logger.info('Found %d spectra'%(len(data)))
+    
     if filename is not None:
         ascii.write_array(data,filename,auto_width=True,header=True)
     else:
