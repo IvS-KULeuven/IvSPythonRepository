@@ -315,13 +315,16 @@ def doppler_shift(wave,vrad,vrad_units='km/s'):
     return wave_out
 
 
-def rotin(wave_spec,flux_spec,**kwargs):
+def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
+                         chard=None,stepr=0,stepi=0,alam0=None,alam1=None,
+                         irel=0,cont=None):
     """
-    Calculate rotationally broadened spectrum using ROTIN.
+    Apply rotational broadening to a spectrum assuming a linear limb darkening
+    law.
     
-    See Fortran file for explanations of parameters.
+    This function is based on the ROTIN program. See Fortran file for
+    explanations of parameters.
     
-    vrot is a compulsory keyword argument!!!
     Limb darkening law is linear, default value is epsilon=0.6
     
     Possibility to normalize as well by giving continuum in 'cont' parameter.
@@ -367,28 +370,25 @@ def rotin(wave_spec,flux_spec,**kwargs):
      ALAM1 - final wavelength
      IREL  - for =1 relative spectrum
                  =0 absolute spectrum
+    
+    @return: wavelength,flux
+    @rtype: array, array
     """
-    chard = kwargs.get('chard',None)
-    stepr = kwargs.get('stepr',0)
-    fwhm = kwargs.get('fwhm',0.25)
-    stepi = kwargs.get('stepi',0)
-    alam0 = kwargs.get('alam0',wave_spec[0])
-    alam1 = kwargs.get('alam1',wave_spec[-1])
-    irel = kwargs.get('irel',0)
-    vrot = kwargs.get('vrot',None)
-    cont = kwargs.get('cont',(ones(1),ones(1)))
-    epsilon = kwargs.get('epsilon',0.6)
+    #-- set arguments
+    if alam0 is None: alam0 = wave_spec[0]
+    if alam1 is None: alam1 = wave_spec[-1]
+    if cont is None: cont = (np.ones(1),np.ones(1))
     contw,contf = cont
-    
     if chard is None:
-        chard = average(diff(wave_spec))
+        chard = np.diff(wave_spec).mean()
     
+    #-- apply broadening
     w3,f3,ind = pyrotin4.pyrotin(wave_spec,flux_spec,contw,contf,
                   vrot,chard,stepr,fwhm,stepi,alam0,alam1,irel,epsilon)
-    logger.info('Applied ROTIN rot.broad. with vrot=%.3f'%(vrot))
-    w3 = w3[:ind]
-    f3 = f3[:ind]
-    return w3,f3
+    logger.info('ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'%(vrot,epsilon))
+    
+    return w3[:ind],f3[:ind]
+    
 #}
 if __name__=="__main__":
     import doctest

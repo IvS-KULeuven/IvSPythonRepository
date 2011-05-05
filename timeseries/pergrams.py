@@ -247,6 +247,8 @@ def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
     @type niter: integer
     @keyword gain: gain for clean computation
     @type gain: float between 0 (no cleaning) and 1 (full cleaning)
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
     """
     T = times.ptp()
     n = len(times)
@@ -299,7 +301,8 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
     @type df: float
     @keyword nh: number of harmonics to take into account
     @type nh: integer
-    @return: frequencies, f-statistics.
+    @return: frequencies, f-statistic
+    @rtype: array,array
     """
     T = times.ptp()
     n = len(times)
@@ -350,6 +353,7 @@ def pdm(times, signal, f0=None, fn=None, df=None, nb=5, nc=2, D=0):
     @param D: linear frequency shift parameter
     @type D: float
     @return: frequencies, theta statistic
+    @rtype: array,array
     """
     T = times.ptp()
     n  = len(times)
@@ -420,7 +424,8 @@ def bls(times, signal, f0=None, fn=None, df=None, nb=50, qmi=0.005, qma=0.75 ):
     @type qmi: 0<float<qma<1
     @param qma: maximum fractional transit length to be tested
     @type qma: 0<qmi<float<1
-    @return: [frequency,power], [frequencies, power spectrum], parameters
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
     """
     
     #-- initialize some variables needed in the FORTRAN module
@@ -473,6 +478,8 @@ def kepler(times,signal, f0=None, fn=None, df=None, e0=0., en=0.91, de=0.1,
     @type x00: float
     @param x0n: end x0
     @type x0n: float
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
     """
     T = times.ptp()
     n = len(times)

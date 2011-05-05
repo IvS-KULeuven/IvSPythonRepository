@@ -38,7 +38,7 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     as their location (column 'filename')
     @rtype: numpy rec array
     """
-    data = ascii.read2recarray('HermesFullDataOverview.tsv',splitchar='\t')
+    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes','HermesFullDataOverview.tsv'),splitchar='\t')
     info = sesame.search(ID)
     if info:
         ra,dec = info['jradeg'],info['jdedeg']

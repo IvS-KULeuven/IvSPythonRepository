@@ -1000,6 +1000,7 @@ def _pix2fij(pixel,resolution):
   ii          = array(zeros(n), int)
   jj          = array(zeros(n), int)
   #
+  
   if n > 1:
     for i in arange(n):
       for bit in arange(res1):
