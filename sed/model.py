@@ -23,7 +23,8 @@ from ivs import config
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.misc import loggers
-from ivs.misc.decorators import memoized
+from ivs.misc.decorators import memoized,clear_memoization
+from ivs.misc import itertools
 from ivs.sed import filters
 from ivs.sed import reddening
 from ivs.io import ascii
@@ -287,7 +288,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     wave = np.array(wave,float)
     flux = np.array(flux,float)
     #-- redden if necessary
-    if ebv is not None:
+    if ebv is not None and ebv>0:
         if 'wave' in kwargs.keys():
             removed = kwargs.pop('wave')
         flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
@@ -305,13 +306,15 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
 
 
 def get_itable(teff=None,logg=None,ebv=0,photbands=None,
-               wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
+               wave_units='A',flux_units='erg/s/cm2/A/sr',**kwargs):
                    
     """
     Retrieve the spectral energy distribution of a model atmosphere in
     photometric passbands.
         
-    Wavelengths in A (angstrom)
+    Wavelengths in A (angstrom). If you set 'wavelengths' to None, no effective
+    wavelengths will be calculated. Otherwise, the effective wavelength is
+    calculated taking the model flux into account.
     Fluxes in Ilambda = ergs/cm2/s/A/sr, except specified via 'units',
     
     If you give 'units', and /sr is not included, you are responsible yourself
@@ -342,53 +345,77 @@ def get_itable(teff=None,logg=None,ebv=0,photbands=None,
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-    
+    ebvrange = kwargs.get('ebvrange',(0,4))
     #-- get the FITS-file containing the tables
+    #c0 = time.time()
     gridfile = get_file(integrated=True,**kwargs)
-    ff = pyfits.open(gridfile)
-    #-- read the file:
-    teff = float(teff)
-    logg = float(logg)
+    #c1 = time.time() - c0
+    #-- retrieve structured information on the grid (memoized)
+    markers,(g_teff,g_logg,g_ebv),ext = _get_itable_markers(gridfile,ebvrange=ebvrange)
+    #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
     try:
-        #-- extenstion name as in fits files prepared by Steven
-        teffs = ff[1].data.field('TEFF')
-        loggs = ff[1].data.field('LOGG')
-        ebvs  = ff[1].data.field('EBV')
-        for index in xrange(len(teffs)):
-            if (teffs[index]==teff) & (loggs[index]==logg) & (ebvs[index]==ebv):
-                break
-        #-- else not available, so go on and interpolate!
+        input_code = float('%5d%03d%03d'%(int(round(teff)),int(round(logg*100)),int(round(ebv*100))))
+        index = markers.searchsorted(input_code)
+        output_code = markers[index]
+        #-- if not available, go on and interpolate!
         #   we raise a KeyError for symmetry with C{get_table}.
-        else:
+        if not input_code==output_code:
             raise KeyError
+        flux = np.array(_get_flux_from_table(ext,photbands,index))
+        #flux = np.array([ext.data.field(photband)[index] for photband in photbands])
         logger.debug('Model iSED taken directly from file (%s)'%(os.path.basename(gridfile)))
     #-- if the teff/logg is not present, use the interpolation thing
     except KeyError:
-        #-- it is possible we first have to set the interpolation function.
-        #   This function is memoized, so if it will not be calculated
-        #   twice.
-        teffs,loggs,ebvs,flux,flux_grid = get_igrid_mesh(photbands=photbands,**kwargs)
+        #-- cheat edges in interpolating function
+        teff = teff+1e-8
+        logg = logg+1e-8
+        ebv = ebv+1e-8
+        #-- it is possible we have to interpolate: identify the grid points in
+        #   the immediate vicinity of the given fundamental parameters
+        i_teff = max(1,g_teff.searchsorted(teff))
+        i_logg = max(1,g_logg.searchsorted(logg))
+        i_ebv  = max(1,g_ebv.searchsorted(ebv))
+        if i_teff==len(g_teff): i_teff -= 1
+        if i_logg==len(g_logg): i_logg -= 1
+        if i_ebv==len(g_ebv): i_ebv -= 1
+        #-- prepare fluxes matrix for interpolation, and x,y an z axis
+        fluxes = np.zeros((2,2,2,len(photbands)))
+        teffs_subgrid = g_teff[i_teff-1:i_teff+1]
+        loggs_subgrid = g_logg[i_logg-1:i_logg+1]
+        ebvs_subgrid = g_ebv[i_ebv-1:i_ebv+1]
+        #-- iterates over two values: we know that the grid is ordered
+        #   via ebv in the last part (about twice as fast). Reducing the grid
+        #   size to 2 increases the speed again with a factor 2.
+        for i,j in itertools.lproduct(xrange(-1,1),xrange(-1,1)):
+            input_code = float('%5d%03d%03d'%(int(round(teffs_subgrid[i])),\
+                                              int(round(loggs_subgrid[j]*100)),\
+                                              int(round(ebvs_subgrid[1]*100))))
+            index = markers.searchsorted(input_code)
+            fluxes[i,j] = np.array(_get_flux_from_table(ext,photbands,slice(index-1,index+1))).T
+        myf = InterpolatingFunction([np.log10(teffs_subgrid),
+                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes))
         logger.debug('Model iSED interpolated from grid %s (%s)'%(os.path.basename(gridfile),kwargs))
-        flux = flux_grid(np.log10(teff),logg) + 0.
+        flux = 10**myf(np.log10(teff),logg,ebv) + 0.
+    #c3 = time.time() - c0 - c1 - c2
+    #print '%.6e %.6e %.6e %.6e'%(c1,c2,c3,time.time()-c0)
+    return flux
     
     #-- convert to arrays
-    wave = np.array(wave,float)
     flux = np.array(flux,float)
-    #-- redden if necessary
-    if ebv is not None:
-        if 'wave' in kwargs.keys():
-            removed = kwargs.pop('wave')
-        flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
     
     if flux_units!='erg/s/cm2/A/sr':
-        flux = conversions.convert('erg/s/cm2/A/sr',flux_units,flux,wave=(wave,'A'),**kwargs)
-    if wave_units!='A':
-        wave = conversions.convert('A',wave_units,wave,**kwargs)
+        flux = conversions.nconvert('erg/s/cm2/A/sr',flux_units,flux,photband=photbands,**kwargs)
     
-    ff.close()
+    if wave_units is not None:
+        model = get_table(teff=teff,logg=logg,ebv=ebv,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='A':
+            wave = wave = conversions.convert('A',wave_units,wave,**kwargs)
     
-    return wave,flux
+        return wave,flux
+    else:
+        return flux
 
 
 
@@ -439,7 +466,6 @@ def get_grid_dimensions(**kwargs):
 
 
 
-
 def get_igrid_dimensions(**kwargs):
     """
     Retrieve possible effective temperatures, surface gravities and reddenings
@@ -464,7 +490,7 @@ def get_igrid_dimensions(**kwargs):
 
 
 
-#@memoized
+@memoized
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of atmosphere models.
@@ -577,17 +603,6 @@ def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
     """
     #-- get the dimensions of the grid
     teffs,loggs,ebvs = get_igrid_dimensions(**kwargs)
-    #-- build flux grid, assuming a perfectly sampled grid (needs not to be
-    #   equidistant)
-    if teffrange is not None:
-        sa = (teffrange[0]<=teffs) & (teffs<=teffrange[1])
-        teffs = teffs[sa]
-    if loggrange is not None:
-        sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
-        loggs = loggs[sa]
-    if ebvrange is not None:
-        sa = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
-        ebvs = ebvs[sa]
     #-- clip if necessary
     teffs = np.sort(list(set(teffs)))
     loggs = np.sort(list(set(loggs)))
@@ -595,7 +610,7 @@ def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
     #-- run over teff and logg, and interpolate the models onto the supplied
     #   wavelength range
     gridfile = get_file(integrated=True,**kwargs)
-    flux = np.zeros((len(teffs),len(loggs),len(ebvs),len(photbands)))
+    flux = np.zeros((3,3,3,len(photbands)))
     #-- use cartesian product!!!
     ff = pyfits.open(gridfile)
     for i,teff in enumerate(teffs):
@@ -989,6 +1004,70 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,**kwar
     
 
 #}
+
+@memoized
+def _get_itable_markers(gridfile,ebvrange=(0,4)):
+    """
+    Get a list of markers to more easily retrieve integrated fluxes.
+    """
+    clear_memoization(keys=['ivs.sed.model'])
+    ff = pyfits.open(gridfile)
+    ext = ff[1].copy()
+    ff.close()
+    teffs = ext.data.field('teff')
+    loggs = ext.data.field('logg')
+    ebvs = ext.data.field('ebv')
+    keep = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
+    teffs,loggs,ebvs = teffs[keep],loggs[keep],ebvs[keep]
+    grid_teffs = np.sort(list(set(teffs)))
+    grid_loggs = np.sort(list(set(loggs)))
+    grid_ebvs = np.sort(list(set(ebvs)))
+    
+    #-- we construct an array representing the teff-logg-ebv content, but in one
+    #   number: 5000040031 means T=50000,logg=4.0 and E(B-V)=0.31
+
+    markers = np.zeros(len(teffs))
+    for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
+        markers[i] = float('%5d%03d%03d'%(int(round(it)),int(round(il*100)),int(round(ie*100))))
+    
+    return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs),ext
+
+
+def _get_flux_from_table(fits_ext,photbands,index):
+    """
+    Retrieve flux and flux ratios from an integrated SED table.
+    
+    @param fits_ext: fits extension containing integrated flux
+    @type fits_ext: FITS extension
+    @param photbands: list of photometric passbands
+    @type photbands: list of str
+    @param index: slice or index of rows to retrieve
+    @type index: slice or integer
+    @return: fluxes or flux ratios
+    #@rtype: list
+    """
+    fluxes = []
+    for photband in photbands:
+        if not filters.is_color(photband):
+            fluxes.append(fits_ext.data.field(photband)[index])
+        else:
+            system,color = photband.split('.')
+            if '-' in color:
+                band0,band1 = color.split('-')
+                fluxes.append(fits_ext.data.field('%s.%s'%(system,band0))[index]/fits_ext.data.field('%s.%s'%(system,band1))[index])
+            elif color=='M1':
+                fv = fits_ext.data.field('STROMGREN.V')[index]
+                fy = fits_ext.data.field('STROMGREN.Y')[index]
+                fb = fits_ext.data.field('STROMGREN.B')[index]
+                fluxes.append(fv*fy/fb**2)
+            elif color=='C1':
+                fu = fits_ext.data.field('STROMGREN.U')[index]
+                fv = fits_ext.data.field('STROMGREN.V')[index]
+                fb = fits_ext.data.field('STROMGREN.B')[index]
+                fluxes.append(fu*fb/fv**2)
+    return fluxes
+                
+
 
 if __name__=="__main__":
     import doctest
