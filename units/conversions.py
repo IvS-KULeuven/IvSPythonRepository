@@ -204,6 +204,8 @@ def convert(_from,_to,*args,**kwargs):
     1.0857356618
     >>> print(convert('mAmag','ppt',1.,0.1))
     (0.92145831929579813, 0.092188273167354881)
+    >>> convert('mag_color','flux_ratio',0.599,0.004,photband='GENEVA.U-B')
+    (1.1391327795013375, 0.0041967202512330449)
     
     B{Frequency analysis}:
     
@@ -270,9 +272,17 @@ def convert(_from,_to,*args,**kwargs):
     @type _from: str
     @param _to: units to convert to
     @type _to: str
+    @keyword unpack: set to True if you don't want 'uncertainty objects'. If True
+    and uncertainties are given, they will be returned as a tuple (value, error)
+    instead of uncertainty object. Set to False probably only for internal uses
+    @type unpack: boolean, defaults to True
     @return: converted value
     @rtype: float
     """
+    #-- remember if user wants to unpack the results to have no trace of
+    #   uncertainties, or wants to get uncertainty objects back
+    unpack = kwargs.pop('unpack',True)
+    
     #-- get the input arguments: if only one is given, it is either an
     #   C{uncertainty} from the C{uncertainties} package, or it is just a float
     if len(args)==1:
@@ -393,9 +403,9 @@ def convert(_from,_to,*args,**kwargs):
         ret_value = log10(ret_value)
     
     #-- unpack the uncertainties if: 
-    #    1. the input was not given as such
+    #    1. the input was not given as an uncertainty
     #    2. the input was without uncertainties, but extra keywords had uncertainties
-    if len(args)==2 or (len(args)==1 and isinstance(ret_value,AffineScalarFunc)):
+    if unpack and (len(args)==2 or (len(args)==1 and isinstance(ret_value,AffineScalarFunc))):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
@@ -1053,6 +1063,12 @@ class Color(NonLinearConverter):
     
     CB = 2.5log10[FB(m=0)]
     CV = 2.5log10[FV(m=0)]
+    
+    Stromgren colour indices:
+    
+    m1 = v - 2b + y
+    c1 = u - 2v + b
+    Hbeta = HBN - HBW
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         #-- we have two types of colours: the stromgren M1/C1 type, and the
@@ -1061,17 +1077,39 @@ class Color(NonLinearConverter):
         system,band = photband.split('.')
         if '-' in band and not inv:
             band0,band1 = band.split('-')
-            f0 = convert('mag','SI',meas,photband='.'.join([system,band0]))
-            f1 = convert('mag','SI',0.,photband='.'.join([system,band1]))
+            f0 = convert('mag','SI',meas,photband='.'.join([system,band0]),unpack=False)
+            f1 = convert('mag','SI',0.00,photband='.'.join([system,band1]))
             return f0/f1
         elif '-' in band and inv:
             #-- the units don't really matter, we choose SI'
             #   the flux ratio is converted to color by assuming that the
             #   denominator flux is equal to one.
             band0,band1 = band.split('-')
-            m0 = convert('W/m3','mag',meas,photband='.'.join([system,band0]))
+            m0 = convert('W/m3','mag',meas,photband='.'.join([system,band0]),unpack=False)
             m1 = convert('W/m3','mag',1.00,photband='.'.join([system,band1]))
             return m0-m1
+        elif photband=='STROMGREN.C1' and not inv:
+            fu = convert('mag','SI',meas,photband='STROMGREN.U',unpack=False)
+            fb = convert('mag','SI',0.00,photband='STROMGREN.B')
+            fv = convert('mag','SI',0.00,photband='STROMGREN.V')
+            return fu*fb/fv**2
+        elif photband=='STROMGREN.C1' and inv:
+            mu = convert('W/m3','mag',meas,photband='STROMGREN.U',unpack=False)
+            mb = convert('W/m3','mag',1.00,photband='STROMGREN.B')
+            mv = convert('W/m3','mag',1.00,photband='STROMGREN.V')
+            return mu-2*mv+mb
+        elif photband=='STROMGREN.M1' and not inv:
+            fv = convert('mag','SI',meas,photband='STROMGREN.V',unpack=False)
+            fy = convert('mag','SI',0.00,photband='STROMGREN.Y')
+            fb = convert('mag','SI',0.00,photband='STROMGREN.B')
+            return fv*fy/fb**2
+        elif photband=='STROMGREN.M1' and inv:
+            mu = convert('W/m3','mag',meas,photband='STROMGREN.V',unpack=False)
+            mb = convert('W/m3','mag',1.00,photband='STROMGREN.Y')
+            mv = convert('W/m3','mag',1.00,photband='STROMGREN.B')
+            return mv-2*mb+my
+        else:
+            raise ValueError, "No color calibrations for %s"%(photband)
 
 class JulianDay(NonLinearConverter):
     """
@@ -1311,6 +1349,7 @@ if __name__=="__main__":
         doctest.testmod()
         sys.exit()
     from optparse import OptionParser, Option, OptionGroup
+    import datetime
     import copy
     
     #logger_ = loggers.get_basic_logger()
@@ -1364,7 +1403,15 @@ if __name__=="__main__":
     #-- and nicely print to the screen
     if isinstance(output,tuple) and len(output)==2:
         print "%g +/- %g %s    =    %g +/- %g %s"%(args[0],args[1],_from,output[0],output[1],_to)
-    elif isinstance(output,tuple):
-        print "%g %s    =    %s %s"%(args[0],_from,output,_to)
+    elif _to.lower()=='cd':
+        year,month,day = output
+        day,fraction = int(day),day-int(day)
+        hour = fraction*24
+        hour,fraction = int(hour),hour-int(hour)
+        minute = fraction*60
+        minute,fraction = int(minute),minute-int(minute)
+        second = int(fraction*60)
+        dt = datetime.datetime(year,month,day,hour,minute,second)
+        print "%g %s    =    %s %s"%(args[0],_from,dt,_to)
     else:
         print "%g %s    =    %g %s"%(args[0],_from,output,_to)
