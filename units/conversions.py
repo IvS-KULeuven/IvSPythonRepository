@@ -10,11 +10,12 @@ Some of the many possibilities include:
     of light, F(lambda) to F(nu), F(nu) to lambdaF(lambda)/sr, meter to
     cycles/arcsec (interferometry), etc...
     3. Nonlinear conversions: vegamag to erg/s/cm2/A or Jy, Celcius to
-    Fahrenheit or Kelvin, calender date to (modified) Julian Day, Equatorial to
-    Ecliptic coordinates, etc...
+    Fahrenheit or Kelvin, calender date to (any kind of modified) Julian Day,
+    Equatorial to Ecliptic coordinates, etc...
     4. Conversions of magnitude to flux amplitudes via 'Amag' and 'ppt' or 'ampl'
-    5. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
-    6. Inclusion of uncertainties, both in input values and/or reference values
+    5. Conversions of magnitude colors to flux ratios via 'mag_color' and 'flux_ratio'
+    6. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
+    7. Inclusion of uncertainties, both in input values and/or reference values
     when converting between unequal-type units, automatically recognised when
     giving two positional argument (value, error) instead of one (value).
 
@@ -436,7 +437,26 @@ def nconvert(_froms,_tos,*args,**kwargs):
         ret_value = ret_value.T
     return ret_value
     
-
+def round_arbitrary(x, base=5):
+    """
+    Round to an arbitrary base.
+    
+    Example usage:
+    
+    >>> round_arbitrary(1.24,0.25)
+    1.25
+    >>> round_arbitrary(1.37,0.75)
+    1.5
+    
+    
+    @param x: number to round
+    @type x: float
+    @param base: base to round to
+    @type base: integer or float
+    @return: rounded number
+    @rtype: float
+    """
+    return base * round(float(x)/base)
 #}
 #{ Conversions basics
 def solve_aliases(unit):
@@ -982,7 +1002,7 @@ class VegaMag(NonLinearConverter):
         F0 = convert(zp['Flam0_units'][match][0],'W/m3',zp['Flam0'][match][0])
         mag0 = float(zp['vegamag'][match][0])
         if not inv: return 10**(-(meas-mag0)/2.5)*F0
-        else:       return -2.5*log10(meas/F0)
+        else:       return -2.5*log10(meas/F0)+mag0
 
 class ABMag(NonLinearConverter):
     """
@@ -1015,6 +1035,43 @@ class STMag(NonLinearConverter):
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/-2.5)*F0
         else:       return -2.5*log10(meas/F0)
+
+
+class Color(NonLinearConverter):
+    """
+    Convert a color to a flux ratio and back
+    
+    B-V = -2.5log10(FB) + CB - (-2.5log10(FV) + CV)
+    B-V = -2.5log10(FB) + CB + 2.5log10(FV) - CV
+    B-V = -2.5log10(FB/FV) + (CB-CV)
+    
+    and thus
+    
+    FB/FV = 10 ** [((B-V) - (CB-CV)) / (-2.5)]
+    
+    where
+    
+    CB = 2.5log10[FB(m=0)]
+    CV = 2.5log10[FV(m=0)]
+    """
+    def __call__(self,meas,photband=None,inv=False,**kwargs):
+        #-- we have two types of colours: the stromgren M1/C1 type, and the
+        #   normal Band1 - Band2 type. We need to have conversions back and
+        #   forth: this translates into four cases.
+        system,band = photband.split('.')
+        if '-' in band and not inv:
+            band0,band1 = band.split('-')
+            f0 = convert('mag','SI',meas,photband='.'.join([system,band0]))
+            f1 = convert('mag','SI',0.,photband='.'.join([system,band1]))
+            return f0/f1
+        elif '-' in band and inv:
+            #-- the units don't really matter, we choose SI'
+            #   the flux ratio is converted to color by assuming that the
+            #   denominator flux is equal to one.
+            band0,band1 = band.split('-')
+            m0 = convert('W/m3','mag',meas,photband='.'.join([system,band0]))
+            m1 = convert('W/m3','mag',1.00,photband='.'.join([system,band1]))
+            return m0-m1
 
 class JulianDay(NonLinearConverter):
     """
@@ -1174,11 +1231,16 @@ _factors = {
            'torr':  (    133.322,   'kg m-1 s-2'),
            'psi':   (   6894.,      'kg m-1 s-2'),
 # FLUX
+# -- absolute magnitudes
            'Jy':      (1e-26,         'kg s-2 cy-1'), # W/m2/Hz
            'vegamag': (VegaMag,       'kg m-1 s-3'),  # W/m2/m
            'mag':     (VegaMag,       'kg m-1 s-3'),  # W/m2/m
            'STmag':   (STMag,         'kg m-1 s-3'),  # W/m2/m
            'ABmag':   (ABMag,         'kg s-2 cy-1'), # W/m2/Hz
+# -- magnitude differences (colors)
+           'mag_color':(Color,         'flux_ratio'),
+           'flux_ratio':(1+00,         'flux_ratio'),
+# -- magnitude amplitudes
            'ampl':    (1e+00,         'ampl'),
            'Amag':    (AmplMag,       'ampl'),
            'pph':     (1e-02,         'ampl'), # amplitude
