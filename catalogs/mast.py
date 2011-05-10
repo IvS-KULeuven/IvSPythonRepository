@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Interface to the MAST archive.
+"""
 import urllib
 import logging
 import os
