@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Interface to s1d_A spectra from the Coralie spectrograph.
+Interface to s1dA spectra from the Coralie spectrograph.
 """
 import re
 import sys
