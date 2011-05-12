@@ -1379,7 +1379,7 @@ def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
   ! WARNING: the schlegel maps are not usefull when |b| < 5 degrees !
   """
   deg2rad = pi/180. # convert degrees to rads
-  dd      = dd/1.e3 # convert to kpc
+  dd      = distance/1.e3 # convert to kpc
   
   # first get the right pixel coordinates
   xx, yy = _lb2xy_schlegel(ll,bb)
