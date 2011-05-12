@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-Extinction models of Arenou, Drimmel and Marschall
-
+# Extinction models of Arenou, Drimmel and Marschall
 # +++ Uniformly rewritten by K. Smolders
-"""
 
 from ivs.catalogs import vizier
+from ivs.sed.reddening import get_law
 from ivs.misc.decorators import memoized
 from ivs.misc import loggers
 from ivs import config
 
 import numpy  as np
 from numpy import (abs, arange, array, ceil, cos, dot, floor, int, logical_and,
-                   logical_or, max, min, ones, pi, sin, where, zeros)
+                   logical_or, max, min, ones, pi, sin, sqrt, where, zeros)
 import scipy  as sc
 import pyfits as pf
 import logging
@@ -23,20 +21,104 @@ logger.addHandler(loggers.NullHandler)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #{ Top level wrapper
 # # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def findext(ll, bb, distance=None, model='drimmel'):
+def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   """
-  STIL UNDER CONSTRUCTION, USE findext_type DIRECTLY
+  Get the "model" extinction at a certain longitude and latitude.
+  
   Find the predicted V-band extinction (Av) based on three
   dimensional models of the galactic interstellar extinction.
   The user can choose between different models by setting the
   model keyword:
   
   1) "arenou": model from Arenou et al. (1992).
-  2) "drimmel": model from Drimmel et al. (2003)
-  3) "marshall": model from Marshall et al. (2006)
-  4) "schlegel": model from Schlegel et al. (1998) (still under construction)
+  2) "schlegel": model from Schlegel et al. (1998)
+  3) "drimmel": model from Drimmel et al. (2003)
+  4) "marshall": model from Marshall et al. (2006)
+    
+  example useage:
+  
+    1. Find the total galactic extinction for a star at galactic lattitude 10.2
+       and longitude 59.0 along the line of sight, as given by the model of
+       Arenou et al. (1992)
+       
+        >>> lng = 10.2
+        >>> lat = 59.0
+        >>> av = findext(lng, lat, model='arenou')
+        >>> print("Av at lng = %.2f, lat = %.2f is %.2f magnitude" %(lng, lat, av))
+        Av at lng = 10.20, lat = 59.00 is 0.05 magnitude
+    
+    2. Find the extinction for a star at galactic lattitude 107.05 and
+       longitude -34.93 and a distance of 144.65 parsecs, as given by the
+       model of Arenou et al. (1992)
+       
+        >>> lng = 107.05
+        >>> lat = -34.93
+        >>> dd  = 144.65
+        >>> av = findext(lng, lat, distance = dd, model='arenou')
+        >>> print("Av at lng = %.2f, lat = %.2f and distance = %.2f parsecs is %.2f magnitude" %(lng, lat, dd, av))
+        Av at lng = 107.05, lat = -34.93 and distance = 144.65 parsecs is 0.15 magnitude
+        
+    3. Find the Marschall extinction for a star at galactic longitude 10.2 and
+       latitude 9.0. If the distance is not given, we return the
+       complete extinction along the line of sight (i.e. put the star somewhere
+       out of the galaxy).
+       
+        >>> lng = 10.2
+        >>> lat = 9.0
+        >>> av = findext(lng, lat, model='marshall')
+        >>> print("Av at lng = %.2f, lat = %.2f is %.2f magnitude" %(lng, lat, av))
+        Av at lng = 10.20, lat = 9.00 is 10.67 magnitude
+        
+    4. Find the Marshall extinction for a star at galactic lattitude 271.05 and
+       longitude -4.93 and a distance of 144.65 parsecs, but convert to Av using
+       Rv = 2.5 instead of Rv = 3.1
+       
+        >>> lng = 271.05
+        >>> lat = -4.93
+        >>> dd  = 144.65
+        >>> av = findext(lng, lat, distance = dd, model='marshall', Rv=2.5)
+        >>> print("Av at lng = %.2f, lat = %.2f and distance = %.2f parsecs is %.2f magnitude" %(lng, lat, dd, av))
+        Av at lng = 271.05, lat = -4.93 and distance = 144.65 parsecs is 13.95 magnitude
+        
+    5. Find the extinction for a star at galactic longitude 10.2 and
+       latitude 9.0, using the schlegel model, using Rv=2.9 instead of
+       Rv=3.1
+       
+        >>> lng = 58.2
+        >>> lat = 24.0
+        >>> distance = 848.
+        >>> av = findext(lng, lat, distance=distance)
+        >>> print("Av at lng = %.2f, lat = %.2f is %.2f magnitude" %(lng, lat, av))
+        Av at lng = 58.20, lat = 24.00 is 0.12 magnitude
+        
+  @param lng: Galactic Longitude (in degrees)
+  @type lng: float
+  @param lat: Galactic Lattitude (in degrees)
+  @type lat: float
+  @keyword model: the name of the extinction model: ("arenou", "schlegel", "drimmel" or "marshall"; if none given, the program uses "drimmel")
+  @type model: str
+  @keyword distance: Distance to the source (in parsecs), if the distance is not given, the total galactic extinction along the line of sight is calculated
+  @type distance: float
+  @return: The extinction in Johnson V-band
+  @rtype: float
+  
+  REMARKS:
+    a) Schlegel actually returns E(B-V), this value is then converted to Av (the desired value for Rv can be set as a keyword; standard sets Rv=3.1)
+    b) Schlegel is very dubious for latitudes between -5 and 5 degrees
+    c) Marschall actually returns Ak, this value is then converted to Av (the reddening law and Rv can be set as keyword; standard sets Rv=3.1, redlaw='cardelli1989')
+    d) Marschall is only available for certain longitudes and latitudes:
+       0 < lng < 100 or 260 < lng < 360 and -10 < lat < 10
   """
-  pass
+  
+  if model.lower() == 'drimmel':
+    av = findext_drimmel(lng, lat, **kwargs)
+  elif model.lower() == 'marshall' or model.lower() == 'marschall':
+    av = findext_marshall(lng, lat, **kwargs)
+  elif model.lower() == 'arenou':
+    av = findext_arenou(lng, lat, **kwargs)
+  elif model.lower() == 'schlegel':
+    av = findext_schlegel(lng, lat, **kwargs)
+  return(av)
 
 #}  
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -77,13 +159,13 @@ def findext_arenou(ll, bb, distance=None):
         >>> av = findext_arenou(lng, lat, distance = dd)
         >>> print("Av at lng = %.2f, lat = %.2f and distance = %.2f parsecs is %.2f magnitude" %(lng, lat, dd, av))
         Av at lng = 107.05, lat = -34.93 and distance = 144.65 parsecs is 0.15 magnitude
-  
+        
   @param ll: Galactic Longitude (in degrees)
-  @type name: float
+  @type ll: float
   @param bb: Galactic Lattitude (in degrees)
-  @type filename: float
+  @type bb: float
   @keyword distance: Distance to the source (in parsecs)
-  @type filename: float
+  @type distance: float
   @return: The extinction in Johnson V-band
   @rtype: float
   """
@@ -563,9 +645,9 @@ def get_marshall_data():
   data_ma, units_ma, comments_ma = vizier.search("J/A+A/453/635")
   return data_ma, units_ma, comments_ma
 
-def findext_marshall(ll, bb, distance=None):
+def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kwargs):
   """
-  Find the K-band extinction according to the reddening model of
+  Find the V-band extinction according to the reddening model of
   Marshall et al. (2006) published in Astronomy and Astrophysics,
   Volume 453, Issue 2, July II 2006, pp.635-651
   
@@ -594,20 +676,25 @@ def findext_marshall(ll, bb, distance=None):
         
     3. The extinction for galactic longitude 10.2 and latitude 59.0 can not
          be calculated using the Marshall models, because they are only valid at
-         certain lng and lat ( 0 < lng < 100 or 260 < lng < 360, -10 < lat < 10)
+         certain lng and lat (0 < lng < 100 or 260 < lng < 360, -10 < lat < 10)
        
         >>> lng = 10.2
         >>> lat = 59.0
         >>> ak = findext_marshall(lng, lat)
         >>> print(av)
         None
+        
 
   @param ll: Galactic Longitude (in degrees) should be between 0 and 100 or 260 and 360 degrees
-  @type name: float
+  @type ll: float
   @param bb: Galactic Lattitude (in degrees) should be between -10 and 10 degrees
-  @type filename: float
+  @type bb: float
   @keyword distance: Distance to the source (in parsecs)
-  @type filename: float
+  @type distance: float
+  @keyword redlaw: the used reddening law (standard: 'cardelli1989')
+  @type redlaw: str
+  @keyword Rv: Av/E(B-V) (standard: 3.1)
+  @type Rv: float
   @return: The extinction in K-band
   @rtype: float
   """
@@ -661,8 +748,10 @@ def findext_marshall(ll, bb, distance=None):
   else:
     logger.info("Interpolating linearly")
     ak = sc.interp(dd, rr, ext)
-    
-  return ak
+  
+  redwave, redflux = get_law(redlaw,Rv=Rv,wave_units='micron',norm='Av', wave=array([0.54,2.22]))
+  
+  return ak*redflux[0]/redflux[1]
 
 #}
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -704,7 +793,7 @@ rfac        = rf_allsky.rfac
 
 g2e         = array([[-0.054882486, -0.993821033, -0.096476249], [0.494116468, -0.110993846,  0.862281440], [-0.867661702, -0.000346354,  0.497154957]])
 
-def findext_drimmel(lng,lat,distance=None,rescaling=True):
+def findext_drimmel(lng, lat, distance=None, rescaling=True,**kwargs):
   """
   procedure to retrieve the absorption in V from three-dimensional 
   grids, based on the Galactic dust distribution of Drimmel & Spergel.
@@ -734,11 +823,11 @@ def findext_drimmel(lng,lat,distance=None,rescaling=True):
 
 
   @param lng: Galactic Longitude (in degrees)
-  @type name: float
+  @type lng: float
   @param lat: Galactic Lattitude (in degrees)
-  @type filename: float
+  @type lat: float
   @keyword distance: Distance to the source (in parsecs)
-  @type dd: float
+  @type distance: float
   @keyword rescaling: Rescaling needed or not?
   @type rescaling: boolean
   @return: extinction in V band with/without rescaling
@@ -1000,7 +1089,6 @@ def _pix2fij(pixel,resolution):
   ii          = array(zeros(n), int)
   jj          = array(zeros(n), int)
   #
-  
   if n > 1:
     for i in arange(n):
       for bit in arange(res1):
@@ -1219,4 +1307,127 @@ def _trint(mm,x,y,z,missing=None):
   iv  = w1*(1.-xd) + w2*xd
   return iv
 
+#}
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#{ Schlegel 3D extinction model presented in Schlegel et al.
+# The Astrophysical Journal, 500:525È553, 1998 June 20,
+# "MAPS OF DUST INFRARED EMISSION FOR USE IN ESTIMATION
+# OF REDDENING AND COSMIC MICROWAVE BACKGROUND RADIATION
+# FOREGROUNDS"
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@memoized
+def get_schlegel_data_south():
+  # Read in the Schlegel data of the southern hemisphere
+  dustname = config.get_datafile('schlegel',"SFD_dust_4096_sgp.fits")
+  maskname = config.get_datafile('schlegel',"SFD_mask_4096_sgp.fits")
+  data     = pf.getdata(dustname)
+  mask     = pf.getdata(maskname)
+  return data, mask
+
+def get_schlegel_data_north():
+  # Read in the Schlegel data of the northern hemisphere
+  dustname = config.get_datafile('schlegel',"SFD_dust_4096_ngp.fits")
+  maskname = config.get_datafile('schlegel',"SFD_mask_4096_ngp.fits")
+  data     = pf.getdata(dustname)
+  mask     = pf.getdata(maskname)
+  return data, mask
+
+def _lb2xy_schlegel(ll, bb):
+  """
+  Converts coordinates in lattitude and longitude to coordinates
+  in x and y pixel coordinates.
+  
+  The x and y coordinates you find with these formulas are not
+  the coordinates you can read in ds9, but 1 smaller. Hence
+  (x+1, y+1) are the coordinates you find in DS9.
+  
+  Input
+  @param ll     : galactic longitude
+  @type  ll     : float 
+  @param bb     : galactic lattitude
+  @type  bb     : float
+  @return out_coor : output coordinate array
+  @rtype: ndarray
+  """
+  deg2rad = pi/180. # convert degrees to rads
+
+  if bb <= 0  : hs = -1.
+  elif bb >  0: hs = +1.
+  
+  yy =  2048 * sqrt(1. - hs * sin(bb*deg2rad)) * cos(ll*deg2rad) + 2047.5
+  xx = -2048 * hs * sqrt(1 - hs * sin(bb*deg2rad)) * sin(ll*deg2rad) + 2047.5
+  
+  return xx, yy
+
+def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
+  """
+  Get the "Schlegel" extinction at certain longitude and latitude
+  
+  This function returns the E(B-V) maps of Schlegel et al. (1998),
+  depending on wether the distance is given or not, the E(B-V) value
+  is corrected. If distance is set we use the distance-corrected
+  values:
+
+    E(B-V) = E(B-V)_maps * (1 - exp(-10 * r * sin(|b|)))
+    where E(B-V) is the value to be used and E(B-V)_maps the value
+    as found with the Schlegel dust maps
+  
+  Then we convert the E(B-V) to Av. Standard we use Av = E(B-V)*Rv with Rv=3.1, but the value of Rv can be given as a keyword.
+
+  ! WARNING: the schlegel maps are not usefull when |b| < 5 degrees !
+  """
+  deg2rad = pi/180. # convert degrees to rads
+  dd      = dd/1.e3 # convert to kpc
+  
+  # first get the right pixel coordinates
+  xx, yy = _lb2xy_schlegel(ll,bb)
+  
+  # read in the right map:
+  if bb <= 0:
+    data, mask = get_schlegel_data_south()
+  elif bb >  0:
+    data, mask = get_schlegel_data_north()
+
+  if abs(bb) < 10.:
+    logger.warning("Schlegel is not good for lattitudes > 10 degrees")
+    
+  # the xy-coordinates are:
+  xl = floor(xx)
+  yl = floor(yy)
+  xh = xl + 1.
+  yh = yl + 1.
+  
+  # the weights are just the distances to the points
+  w1 = (xl-xx)**2 + (yl-yy)**2
+  w2 = (xl-xx)**2 + (yh-yy)**2
+  w3 = (xh-xx)**2 + (yl-yy)**2
+  w4 = (xh-xx)**2 + (yh-yy)**2
+  
+  # the values of these points are:
+  v1 = data[xl, yl]
+  v2 = data[xl, yh]
+  v3 = data[xh, yl]
+  v4 = data[xh, yh]  
+  f1 = mask[xl, yl]
+  f2 = mask[xl, yh]
+  f3 = mask[xh, yl]
+  f4 = mask[xh, yh]
+  
+  ebv = (w1*v1 + w2*v2 + w3*v3 + w4*v4) / (w1 + w2 + w3 + w4)
+  
+  # Check flags at the right pixels
+  logger.info("flag of pixel 1 is: %i" %f1)
+  logger.info("flag of pixel 2 is: %i" %f2)
+  logger.info("flag of pixel 3 is: %i" %f3)
+  logger.info("flag of pixel 4 is: %i" %f4)
+  
+  if dd is not None:
+    ebv = ebv * (1. - exp(-10. * dd * sin(abs(bb*deg2rad))))
+  
+  # if Rv is given, by definition we find Av = Ebv*Rv
+  av = ebv*Rv
+  
+  return av
 #}
