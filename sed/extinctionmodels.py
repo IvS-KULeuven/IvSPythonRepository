@@ -111,13 +111,13 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   """
   
   if model.lower() == 'drimmel':
-    av = findext_drimmel(lng, lat, **kwargs)
+    av = findext_drimmel(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'marshall' or model.lower() == 'marschall':
-    av = findext_marshall(lng, lat, **kwargs)
+    av = findext_marshall(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'arenou':
-    av = findext_arenou(lng, lat, **kwargs)
+    av = findext_arenou(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'schlegel':
-    av = findext_schlegel(lng, lat, **kwargs)
+    av = findext_schlegel(lng, lat, distance=distance, **kwargs)
   return(av)
 
 #}  
@@ -1427,7 +1427,7 @@ def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
   logger.info("flag of pixel 4 is: %i" %f4)
   
   if dd is not None:
-    ebv = ebv * (1. - exp(-10. * dd * sin(abs(bb*deg2rad))))
+    ebv = ebv * (1. - np.exp(-10. * dd * sin(abs(bb*deg2rad))))
   
   # if Rv is given, by definition we find Av = Ebv*Rv
   av = ebv*Rv
