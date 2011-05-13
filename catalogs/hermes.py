@@ -38,7 +38,7 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     as their location (column 'filename')
     @rtype: numpy rec array
     """
-    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes','HermesFullDataOverview.tsv'),splitchar='\t')
+    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv'),splitchar='\t')
     info = sesame.search(ID)
     if info:
         ra,dec = info['jradeg'],info['jdedeg']
@@ -63,6 +63,14 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     else:
         return data
     
+def make_list_star(ID):
+    """
+    Mimics HermesTool MakeListStar without airmass and pm column.
+    
+    This works as input for HermesTool CCFList.py
+    """
+    data = search(ID)
+    ascii.write_array([data['unseq'],data['date-avg'],[ID for i in data['unseq']],data['bjd'],data['bvcor'],data['prog_id'],data['exptime']],'%s.list'%(ID),axis0='cols')
     
 
 
@@ -85,7 +93,10 @@ def make_data_overview():
     outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime date-avg filename\n')
     outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 a30 a200\n')
     for i,obj_file in enumerate(obj_files):
-        print i,len(obj_files)
+        sys.stdout.write(chr(27)+'[s') # save cursor
+        sys.stdout.write(chr(27)+'[2K') # remove line
+        sys.stdout.write('Scanning %5d / %5d FITS files'%(i+1,len(obj_files)))
+        sys.stdout.flush() # flush to screen
         #-- keep track of: UNSEQ, BJD, BVCOR, OBSERVER, RA, DEC , PROG_ID, OBSMODE, EXPTIME, DATE-AVG, OBJECT and filename
         contents = dict(unseq=-1,prog_id=-1,obsmode='nan',bvcor=np.nan,observer='nan',
                         object='nan',ra=np.nan,dec=np.nan,
@@ -103,4 +114,11 @@ def make_data_overview():
                 contents[key] = float(header[key])
         outfile.write('%(unseq)d\t%(prog_id)d\t%(obsmode)s\t%(bvcor)f\t%(observer)s\t%(object)s\t%(ra)f\t%(dec)f\t%(bjd)f\t%(exptime)f\t%(date-avg)s\t%(filename)s\n'%contents)
         outfile.flush()
+        sys.stdout.write(chr(27)+'[u') # reset cursor
     outfile.close()
+
+if __name__=="__main__":
+    import shutil
+    make_data_overview()
+    shutil.move('HermesFullDataOverview.tsv','/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv')
+    
