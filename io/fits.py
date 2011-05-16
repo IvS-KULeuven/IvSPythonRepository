@@ -102,3 +102,96 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
         return times, flux, error, flags
 
 #}
+
+
+#{ Output
+
+def write_recarray(recarr,filename,header_dict={},units={},ext='new'):
+    """
+    Write or add a record array to a FITS file.
+    
+    If 'filename' refers to an existing file, the record array will be added
+    (ext='new') to the HDUlist or replace an existing HDU (ext=integer). Else,
+    a new file will be created.
+    
+    Units can be given as a dictionary with keys the same names as the column
+    names of the record array.
+    
+    A header_dictionary can be given, it is used to update an existing header
+    or create a new one if the extension is new.
+    """
+    if not os.path.isfile(filename):
+        primary = np.array([[0]])
+        hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
+        hdulist.writeto(filename)
+    
+    hdulist = pyfits.open(filename,mode='update')
+    
+    #-- create the table HDU
+    cols = []
+    for i,name in enumerate(recarr.dtype.names):
+        format = recarr.dtype[i].str.lower().replace('|','').replace('s','a').replace('>','')
+        format = format.replace('b1','L').replace('<','')
+        unit = name in units and units[name] or 'NA'
+        cols.append(pyfits.Column(name=name,format=format,array=recarr[name],unit=unit))
+    tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    
+    #   put it in the right place
+    if ext=='new':
+        hdulist.append(tbhdu)
+        ext = -1
+    else:
+        hdulist[ext] = tbhdu
+    
+    #-- take care of the header:
+    if len(header_dict):
+        for key in header_dict:
+            hdulist[ext].header.update(key,header_dict[key])
+    
+    hdulist.close()
+
+def write_array(arr,filename,names=(),units=(),header_dict={},ext='new'):
+    """
+    Write or add an array to a FITS file.
+    
+    If 'filename' refers to an existing file, the list of arrays will be added
+    (ext='new') to the HDUlist or replace an existing HDU (ext=integer). Else,
+    a new file will be created.
+    
+    Names and units should be given as a list of strings, in the same order as
+    the list of arrays.
+    
+    A header_dictionary can be given, it is used to update an existing header
+    or create a new one if the extension is new.
+    """
+    if not os.path.isfile(filename):
+        primary = np.array([[0]])
+        hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
+        hdulist.writeto(filename)
+    
+    hdulist = pyfits.open(filename,mode='update')
+    
+    #-- create the table HDU
+    cols = []
+    for i,name in enumerate(names):
+        format = arr[i].dtype.str.lower().replace('|','').replace('s','a').replace('>','')
+        format = format.replace('b1','L').replace('<','')
+        unit = name in units and units[name] or 'NA'
+        cols.append(pyfits.Column(name=name,format=format,array=arr[i],unit=unit))
+    tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    
+    #   put it in the right place
+    if ext=='new':
+        hdulist.append(tbhdu)
+        ext = -1
+    else:
+        hdulist[ext] = tbhdu
+    
+    #-- take care of the header:
+    if len(header_dict):
+        for key in header_dict:
+            hdulist[ext].header.update(key,header_dict[key])
+    
+    hdulist.close()
+
+#}
