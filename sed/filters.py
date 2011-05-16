@@ -68,6 +68,8 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     @rtype: list of str
     """
     #-- collect all curve files but remove human eye responses
+    if not '*' in name:
+        name = '*' + name + '*'
     curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name.upper())))
     curve_files = [cf for cf in curve_files if not ('HUMAN' in cf or 'EYE' in cf) ]
     #-- select in correct wavelength range
@@ -78,6 +80,19 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
 
 
 
+def is_color(photband):
+    """
+    Return true if the photometric passband is actually a color.
+    
+    @param photband: name of the photometric passband
+    @type photband: string
+    """
+    if '-' in photband.split('.')[1]:
+        return True
+    elif photband.split('.')[1].upper() in ['M1','C1']:
+        return True
+    else:
+        return False
 
 
 
@@ -103,32 +118,42 @@ def eff_wave(photband,model=None):
     @return: effective wavelength [A]
     @rtype: float or numpy array
     """
-    #-- if photband is a string, it's the name of a photband
+    
+    #-- if photband is a string, it's the name of a photband: put it in a container
+    #   but unwrap afterwards
     if isinstance(photband,str):
-        wave,response = get_response(photband)
-        my_eff_wave = np.average(wave,weights=response)
+        single_band = True
+        photband = [photband]
     #-- else, it is a container
     else:
-        my_eff_wave = []
-        for iphotband in photband:
-            try:
-                wave,response = get_response(iphotband)
-                if model is None:
-                    this_eff_wave = np.average(wave,weights=response)
-                else:
-                    #-- interpolate response curve onto model and take weighted average
-                    response = np.interp(model[0],wave,response)
-                    this_eff_wave = np.trapz(model[0]*model[1]*response,x=model[0]) / np.trapz(model[1]*response,x=model[0])
-            #-- if the photband is not defined:
-            except IOError:
-                this_eff_wave = np.nan
-            my_eff.wave.append(this_eff_wave)
-            
+        single_band = False
+        
+    my_eff_wave = []
+    for iphotband in photband:
+        try:
+            wave,response = get_response(iphotband)
+            if model is None:
+                this_eff_wave = np.average(wave,weights=response)
+            else:
+                #-- interpolate response curve onto higher resolution model and
+                #   take weighted average
+                is_response = response>1e-10
+                start_response,end_response = wave[is_response].min(),wave[is_response].max()
+                fluxm = 10**np.interp(np.log10(wave),np.log10(model[0]),np.log10(model[1]))
+                this_eff_wave = np.trapz(wave*fluxm*response,x=wave) / np.trapz(fluxm*response,x=wave)
+        #-- if the photband is not defined:
+        except IOError:
+            this_eff_wave = np.nan
+        my_eff_wave.append(this_eff_wave)
+    
+    if single_band:
+        my_eff_wave = my_eff_wave[0]
+    else:
         my_eff_wave = np.array(my_eff_wave,float)
-            
+    
     return my_eff_wave
 
-#@memoized
+@memoized
 def get_info(photbands=None):
     """
     Return a record array containing all filter information.

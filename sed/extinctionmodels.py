@@ -10,7 +10,7 @@ from ivs import config
 
 import numpy  as np
 from numpy import (abs, arange, array, ceil, cos, dot, floor, int, logical_and,
-                   logical_or, max, min, ones, pi, sin, sqrt, where, zeros)
+                   logical_or, max, min, ones, pi, sin, sqrt, where, zeros, exp)
 import scipy  as sc
 import pyfits as pf
 import logging
@@ -111,13 +111,13 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   """
   
   if model.lower() == 'drimmel':
-    av = findext_drimmel(lng, lat, **kwargs)
+    av = findext_drimmel(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'marshall' or model.lower() == 'marschall':
-    av = findext_marshall(lng, lat, **kwargs)
+    av = findext_marshall(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'arenou':
-    av = findext_arenou(lng, lat, **kwargs)
+    av = findext_arenou(lng, lat, distance=distance, **kwargs)
   elif model.lower() == 'schlegel':
-    av = findext_schlegel(lng, lat, **kwargs)
+    av = findext_schlegel(lng, lat, distance=distance, **kwargs)
   return(av)
 
 #}  

@@ -9,11 +9,12 @@ Example usage:
 Use the general interface to get different curves:
 
 >>> wave = np.r_[1e3:1e5:10]
->>> for name in ['chiar2006','fitzpatrick1999','cardelli1989','seaton1979']:
+>>> for name in ['chiar2006','fitzpatrick1999','fitzpatrick2004','cardelli1989','seaton1979'][2:3]:
 ...   wave_,mag_ = get_law(name,wave=wave)
-...   p = pl.plot(1e4/wave_,mag_)
+...   p = pl.plot(1e4/wave_,mag_,label=name)
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
+>>> p = pl.legend()
 
 Use the general interface to get the same curves but with different Rv:
 
@@ -234,7 +235,7 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     
     Extra kwags are to catch unwanted keyword arguments.
     
-    @param Rv: Rv
+    @param Rv: Rv (2.1, 3.1 or 5.0)
     @type Rv: float
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
@@ -248,6 +249,30 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     logger.info('Fitzpatrick curve with Rv=%.2f'%(Rv))
     
     return wave,alam_av
+
+@memoized
+def fitzpatrick2004(Rv=3.1,**kwargs):
+    """
+    From Fitzpatrick 2004 (downloaded from FTP)
+    
+    This function returns A(lambda)/A(V).
+    
+    To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
+    Extra kwags are to catch unwanted keyword arguments.
+    
+    @param Rv: Rv (2.1, 3.1 or 5.0)
+    @type Rv: float
+    @return: wavelengths (A), A(lambda)/Av
+    @rtype: (ndarray,ndarray)
+    """
+    filename = 'F04_CURVE_%.1f.dat'%(Rv)
+    myfile = os.path.join(basename,filename)
+    wave_inv,elamv_ebv = ascii.read2array(myfile,skip_lines=15).T
+    
+    logger.info('Fitzpatrick curve with Rv=%.2f'%(Rv))
+    
+    return 1e4/wave_inv,elamv_ebv
 
 
 @memoized

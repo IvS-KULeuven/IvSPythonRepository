@@ -1159,6 +1159,11 @@ def _get_itable_markers(photbands,
         loggs = ext.data.field('logg')
         ebvs = ext.data.field('ebv')
         keep = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
+        
+        #-- for some reason, the Kurucz grid has a lonely point at Teff=14000,logg=2
+        #   which messes up the interpolation
+        keep = keep & (-((teffs==14000) & (loggs==2.0)))
+        
         teffs,loggs,ebvs = teffs[keep],loggs[keep],ebvs[keep]
         grid_teffs = np.sort(list(set(teffs)))
         grid_loggs = np.sort(list(set(loggs)))
@@ -1179,6 +1184,7 @@ def _get_itable_markers(photbands,
     flux = np.vstack(flux)
     markers = np.hstack(markers)
     grid_z = np.sort(grid_z)
+    
     return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs,grid_z),flux
 
 
