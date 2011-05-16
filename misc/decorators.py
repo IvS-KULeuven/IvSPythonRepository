@@ -17,7 +17,9 @@ import logging
 import sys
 import math
 import socket
+import logging
 
+logger = logging.getLogger("DEC")
 memory = {}
 
 #{ Common tools
@@ -35,18 +37,22 @@ def memoized(fctn):
             memory[modname] = {}
         if not (haxh in memory[modname]):
             memory[modname][haxh] = fctn(*args,**kwargs)
+            logger.debug("Function %s memoized"%(str(fctn)))
         return memory[modname][haxh]
     if memo.__doc__:
         memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
     return memo
 
-def clear_memoization():
+def clear_memoization(keys=None):
     """
     Clear contents of memory
     """
-    for key in memory.keys():
-        del memory[key]
-    print("Memoization cleared")
+    if keys is None:
+        keys = memory.keys()
+    for key in keys:
+        if key in memory:
+            riddens = [memory[key].pop(ikey) for ikey in memory[key].keys()[:]]
+    logger.debug("Memoization cleared")
 
 def make_parallel(fctn):
     """

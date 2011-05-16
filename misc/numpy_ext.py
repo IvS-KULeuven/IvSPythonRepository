@@ -88,6 +88,7 @@ def sort_order(a,order):
     a_ = np.sort(a.view([('',a.dtype)]*a.shape[1]), order=['f%d'%(i) for i in order], axis=0)
     a = a_.view(a.dtype).reshape(-1,a.shape[1])
     return a
+    
 #}
 #{ Record arrays
 
