@@ -154,7 +154,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -241,10 +241,10 @@ def txt2recarray(filename):
         #   the contents as a long string
         names = [head.strip() for head in comms[0].split('|')[1:-1]]
         formats = comms[1]
-        formats = formats.replace('double','>f8')
+        formats = formats.replace('double','f8')
         formats = formats.replace('char','a100')
-        formats = formats.replace('int','>f8')
-        formats = formats.replace('long','>f8')
+        formats = formats.replace('int','f8')
+        formats = formats.replace('long','f8')
         formats = [head.strip() for head in formats.split('|')[1:-1]]
         units_ = [head.strip() for head in comms[2].split('|')[1:-1]]
         #-- define dtypes for record array
@@ -313,15 +313,15 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
     e_flag = 'e_'
     q_flag = 'q_'
     #-- basic dtypes
-    dtypes = [('meas','>f4'),('e_meas','>f4'),('flag','a20'),
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
     
     #-- extra can be added:
     names = list(results.dtype.names)
+    translation = {'_r':'dist','_RAJ2000':'ra','_DEJ2000':'dec'}
     if extra_fields is not None:
-        translation = dict(dist='_r',ra='_RAJ2000',dec='_DEJ2000')
         for e_dtype in extra_fields:
-            dtypes.append((translation[e_dtype],results.dtype[names.index(e_dtype)].str))
+            dtypes.append((e_dtype,results.dtype[names.index(translation[e_dtype])].str))
     
     #-- create empty master if not given
     newmaster = False
@@ -346,7 +346,7 @@ def gator2phot(source,results,units,master=None,extra_fields=None):
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
-                cols.append(results[:1][e_dtype])
+                cols += [translation[e_dtype] in results.dtype.names and results[translation[e_dtype]][:1] or np.ones(len(results[:1]))*np.nan]
         #-- add to the master
         rows = []
         for i in range(len(cols[0])):

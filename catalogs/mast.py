@@ -8,6 +8,7 @@ import os
 import ConfigParser
 
 import numpy as np
+import pyfits
 
 from ivs.sed import filters
 from ivs.misc import xmlparser
@@ -16,6 +17,7 @@ from ivs.misc import numpy_ext
 from ivs.io import ascii
 from ivs.units import conversions
 from ivs.catalogs import vizier
+from ivs.catalogs import sesame
 
 
 logger = logging.getLogger("CAT.MAST")
@@ -67,6 +69,8 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='CSV',
         base_url += 'siap/search2.php?'
     elif name == 'spectra':
         base_url += 'ssap/search2.php?'
+    #elif name == 'galex':
+    #    base_url = 'http://galex.stsci.edu/search.php?action=Search'
     else:
         base_url += '%s/search.php?action=Search'%(name)
     
@@ -206,7 +210,7 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
     e_flag = 'e_'
     q_flag = 'q_'
     #-- basic dtypes
-    dtypes = [('meas','>f4'),('e_meas','>f4'),('flag','a20'),
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
     
     #-- extra can be added:
@@ -239,7 +243,7 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
-                cols.append(results[:1][e_dtype])
+                cols += [e_dtype in results.dtype.names and results[e_dtype][:1] or np.ones(len(results[:1]))*np.nan]
         #-- add to the master
         rows = []
         for i in range(len(cols[0])):
@@ -284,10 +288,10 @@ def csv2recarray(filename):
         formats = np.zeros_like(data[0])
         for i,fmt in enumerate(data[1]):
             if fmt=='string' or fmt=='datetime': formats[i] = 'a100'
-            if fmt=='integer': formats[i] = '>f8'
-            if fmt=='ra': formats[i] = '>f8'
-            if fmt=='dec': formats[i] = '>f8'
-            if fmt=='float': formats[i] = '>f8'
+            if fmt=='integer': formats[i] = 'f8'
+            if fmt=='ra': formats[i] = 'f8'
+            if fmt=='dec': formats[i] = 'f8'
+            if fmt=='float': formats[i] = 'f8'
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
@@ -331,7 +335,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -366,7 +370,23 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
 
 
 
-
+def get_dss_image(ID,width=5,height=5):
+    """
+    Retrieve an image from DSS
+    
+    plot with
+    
+    >>> data,coords,size = mast.get_image('HD21389')
+    >>> pl.imshow(data[::-1],extent=[coords[0]-size[0]/2,coords[0]+size[0]/2,
+                                    coords[1]-size[1]/2,coords[1]+size[1]/2])
+    """
+    info = sesame.search(ID)
+    ra,dec = info['jradeg'],info['jdedeg']
+    url  = urllib.URLopener()
+    myurl = "http://archive.stsci.edu/cgi-bin/dss_search?ra=%s&dec=%s&equinox=J2000&height=%s&generation=%s&width=%s&format=FITS"%(ra,dec,height,'2i',width)
+    out = url.retrieve(myurl)
+    data1 = pyfits.getdata(out[0])
+    return data1,(ra,dec),(width/60.,height/60.)
 
 
 
