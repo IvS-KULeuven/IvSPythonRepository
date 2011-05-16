@@ -291,6 +291,8 @@ def convert(_from,_to,*args,**kwargs):
     #   the second is the error on the value
     elif len(args)==2:
         start_value = unumpy.uarray([args[0],args[1]])
+    else:
+        raise ValueError,'illegal input'
     
     #-- (un)logarithmicize (denoted by '[]')
     m_in = re.search(r'\[(.*)\]',_from)
@@ -374,23 +376,25 @@ def convert(_from,_to,*args,**kwargs):
             only_from = only_from.replace('rad-1','')
             logger.debug('Switching from /rad')
         
-        #-- then we do what is left over
-        logger.debug("Convert %s to %s"%(only_from,only_to))
-        
-        #-- nonlinear conversions need a little tweak
-        try:
-            key = '%s_to_%s'%(only_from,only_to)
-            logger.debug('Switching from %s to %s'%(only_from,only_to))
-            if isinstance(fac_from,NonLinearConverter):
-                ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
-            #-- linear conversions are easy
-            else:
-                logger.debug('fac_from=%s, start_value=%s'%(fac_from,start_value))
-                ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
-        except KeyError:
-            logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(_from,_to,key))
-            raise
-
+        #-- then we do what is left over (if anything is left over)
+        if only_from or only_to:
+            logger.debug("Convert %s to %s"%(only_from,only_to))
+            
+            #-- nonlinear conversions need a little tweak
+            try:
+                key = '%s_to_%s'%(only_from,only_to)
+                logger.debug('Switching from %s to %s'%(only_from,only_to))
+                if isinstance(fac_from,NonLinearConverter):
+                    ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
+                #-- linear conversions are easy
+                else:
+                    logger.debug('fac_from=%s, start_value=%s'%(fac_from,start_value))
+                    ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
+            except KeyError:
+                logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(_from,_to,key))
+                raise
+        else:
+            ret_value *= start_value
     #-- final step: convert to ... (again distinction between linear and
     #   nonlinear converters)
     if isinstance(fac_to,NonLinearConverter):
