@@ -248,7 +248,7 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     wave,alam_ebv = ascii.read2array(myfile).T
     alam_av = alam_ebv/Rv
     
-    logger.info('Fitzpatrick curve with Rv=%.2f'%(Rv))
+    logger.info('Fitzpatrick1999 curve with Rv=%.2f'%(Rv))
     
     return wave,alam_av
 
@@ -272,7 +272,7 @@ def fitzpatrick2004(Rv=3.1,**kwargs):
     myfile = os.path.join(basename,filename)
     wave_inv,elamv_ebv = ascii.read2array(myfile,skip_lines=15).T
     
-    logger.info('Fitzpatrick curve with Rv=%.2f'%(Rv))
+    logger.info('Fitzpatrick2004 curve with Rv=%.2f'%(Rv))
     
     return 1e4/wave_inv[::-1],((elamv_ebv+Rv)/Rv)[::-1]
 

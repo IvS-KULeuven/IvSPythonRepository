@@ -25,6 +25,7 @@ from ivs.units import constants
 from ivs.misc import loggers
 from ivs.misc.decorators import memoized,clear_memoization
 from ivs.misc import itertools
+from ivs.misc import numpy_ext
 from ivs.sed import filters
 from ivs.sed import reddening
 from ivs.io import ascii
@@ -365,13 +366,13 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-    ebvrange = kwargs.pop('ebvrange',(0,4))
+    ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
     zrange = kwargs.pop('zrange',(-np.inf,np.inf))
     #-- get the FITS-file containing the tables
     #c0 = time.time()
     #c1 = time.time() - c0
     #-- retrieve structured information on the grid (memoized)
-    markers,(g_teff,g_logg,g_ebv,g_z),ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,include_Labs=True,**kwargs)
+    markers,(g_teff,g_logg,g_ebv,g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,include_Labs=True,**kwargs)
     #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
     try:
@@ -424,7 +425,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 index = markers.searchsorted(input_code)
                 fluxes[i,j,k] = ext[index-1:index+1]
             myf = InterpolatingFunction([zs_subgrid,np.log10(teffs_subgrid),
-                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes))
+                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
             flux = 10**myf(z,np.log10(teff),logg,ebv) + 0.
         
         #-- if only teff,logg and ebv need to be interpolated (faster)
@@ -438,14 +439,18 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 index = markers.searchsorted(input_code)
                 fluxes[i,j] = ext[index-1:index+1]
             myf = InterpolatingFunction([np.log10(teffs_subgrid),
-                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes))
+                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
             flux = 10**myf(np.log10(teff),logg,ebv) + 0.
+            
         
         
         #logger.debug('Model iSED interpolated from grid (%s)'%(kwargs))
         
     #c3 = time.time() - c0 - c1 - c2
     #print '%.6e %.6e %.6e %.6e'%(c1,c2,c3,time.time()-c0)
+    if np.any(np.isinf(flux)):
+        print 'infinity encountered!'
+        flux = np.zeros(fluxes.shape[-1])
     return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
     
     #-- convert to arrays: remember that last column of the fluxes is actually
@@ -509,7 +514,13 @@ def get_grid_dimensions(**kwargs):
         teffs.append(float(mod.header['TEFF']))
         loggs.append(float(mod.header['LOGG']))
     ff.close()
-    return np.array(teffs),np.array(loggs)
+    
+    #-- maybe the fits extensions are not in right order...
+    matrix = np.vstack([np.array(teffs),np.array(loggs)]).T
+    matrix = numpy_ext.sort_order(matrix,order=[0,1])
+    teffs,loggs = matrix.T
+    
+    return teffs,loggs
 
 
 
@@ -530,6 +541,10 @@ def get_igrid_dimensions(**kwargs):
     loggs = ff[1].data.field('LOGG')
     ebvs  = ff[1].data.field('EBV')
     ff.close()
+    
+    #correct = (teffs==14000) & (loggs==2.0)
+    #teffs[correct] = 12000
+    
     return teffs,loggs,ebvs
 
 
@@ -1026,7 +1041,7 @@ def luminosity(wave,flux,radius=1.):
 
 
 
-def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,units='Flambda',**kwargs):
+def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units='Flambda',**kwargs):
     """
     Integrate an entire SED grid over all passbands and save to a FITS file.
     
@@ -1133,8 +1148,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick1999',Rv=3.1,units=
 @memoized
 def _get_itable_markers(photbands,
                     teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf),
-                    ebvrange=(0,4),zrange=(-np.inf,np.inf),include_Labs=True,
-                    **kwargs):
+                    ebvrange=(-np.inf,np.inf),zrange=(-np.inf,np.inf),
+                    include_Labs=True,**kwargs):
     """
     Get a list of markers to more easily retrieve integrated fluxes.
     """
@@ -1144,6 +1159,7 @@ def _get_itable_markers(photbands,
     metals_sa = np.argsort([pyfits.getheader(ff,1)['z'] for ff in gridfiles])
     gridfiles = np.array(gridfiles)[metals_sa]
     flux = []
+    gridpnts = []
     grid_z = []
     markers = []
     
@@ -1162,7 +1178,8 @@ def _get_itable_markers(photbands,
         
         #-- for some reason, the Kurucz grid has a lonely point at Teff=14000,logg=2
         #   which messes up the interpolation
-        keep = keep & (-((teffs==14000) & (loggs==2.0)))
+        #correct = (teffs==14000) & (loggs==2.0)
+        #teffs[correct] = 12000
         
         teffs,loggs,ebvs = teffs[keep],loggs[keep],ebvs[keep]
         grid_teffs = np.sort(list(set(teffs)))
@@ -1175,17 +1192,20 @@ def _get_itable_markers(photbands,
         #   T=50000,logg=4.0,E(B-V)=0.31 and Z = 0.00
         # Note that Z is Z+5 so that we avoid minus signs...
         markers.append(np.zeros(len(teffs)))
+        gridpnts.append(np.zeros((len(teffs),4)))
+        
         for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
             markers[-1][i] = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(it)),int(round(il*100)),int(round(ie*100))))
-        
+	    gridpnts[-1][i]= it,il,ie,z
         flux.append(_get_flux_from_table(ext,photbands,include_Labs=include_Labs))
         ff.close()
     
     flux = np.vstack(flux)
     markers = np.hstack(markers)
+    gridpnts = np.vstack(gridpnts)
     grid_z = np.sort(grid_z)
     
-    return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs,grid_z),flux
+    return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs,grid_z),gridpnts,flux
 
 
 def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
