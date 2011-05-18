@@ -9,11 +9,12 @@ Example usage:
 Use the general interface to get different curves:
 
 >>> wave = np.r_[1e3:1e5:10]
->>> for name in ['chiar2006','fitzpatrick1999','cardelli1989','seaton1979']:
+>>> for name in ['chiar2006','fitzpatrick1999','fitzpatrick2004','cardelli1989','seaton1979']:
 ...   wave_,mag_ = get_law(name,wave=wave)
-...   p = pl.plot(1e4/wave_,mag_)
+...   p = pl.plot(1e4/wave_,mag_,label=name)
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
+>>> p = pl.legend()
 
 Use the general interface to get the same curves but with different Rv:
 
@@ -29,6 +30,7 @@ Get the curves seperately:
 >>> wave2,mag2 = chiar2006()
 >>> wave3,mag3 = seaton1979()
 >>> wave4,mag4 = fitzpatrick1999()
+>>> wave5,mag5 = fitzpatrick2004()
 
 And plot them:
 
@@ -37,6 +39,7 @@ And plot them:
 >>> p = pl.plot(1e4/wave2,mag2*3.1)
 >>> p = pl.plot(1e4/wave3,mag3*3.1)
 >>> p = pl.plot(1e4/wave4,mag4*3.1)
+>>> p = pl.plot(1e4/wave5,mag5*3.1)
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
 >>> p = pl.show()
@@ -234,7 +237,7 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     
     Extra kwags are to catch unwanted keyword arguments.
     
-    @param Rv: Rv
+    @param Rv: Rv (2.1, 3.1 or 5.0)
     @type Rv: float
     @return: wavelengths (A), A(lambda)/Av
     @rtype: (ndarray,ndarray)
@@ -245,9 +248,33 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     wave,alam_ebv = ascii.read2array(myfile).T
     alam_av = alam_ebv/Rv
     
-    logger.info('Fitzpatrick curve with Rv=%.2f'%(Rv))
+    logger.info('Fitzpatrick1999 curve with Rv=%.2f'%(Rv))
     
     return wave,alam_av
+
+@memoized
+def fitzpatrick2004(Rv=3.1,**kwargs):
+    """
+    From Fitzpatrick 2004 (downloaded from FTP)
+    
+    This function returns A(lambda)/A(V).
+    
+    To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
+    
+    Extra kwags are to catch unwanted keyword arguments.
+    
+    @param Rv: Rv (2.1, 3.1 or 5.0)
+    @type Rv: float
+    @return: wavelengths (A), A(lambda)/Av
+    @rtype: (ndarray,ndarray)
+    """
+    filename = 'Fitzpatrick2004_Rv_%.1f.red'%(Rv)
+    myfile = os.path.join(basename,filename)
+    wave_inv,elamv_ebv = ascii.read2array(myfile,skip_lines=15).T
+    
+    logger.info('Fitzpatrick2004 curve with Rv=%.2f'%(Rv))
+    
+    return 1e4/wave_inv[::-1],((elamv_ebv+Rv)/Rv)[::-1]
 
 
 @memoized

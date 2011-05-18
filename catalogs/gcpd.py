@@ -81,7 +81,7 @@ def search(name,**kwargs):
         values = [value.replace('*','').replace('STD','').replace('/','') for value in values]
         #-- some columns have no values
         values = [(value and value or 'nan') for value in values]
-        dtypes = np.dtype([(i,'>f8') for i in entries])
+        dtypes = np.dtype([(i,'f8') for i in entries])
         units = {}
         for entry in entries:
             units[entry] = 'mag'
@@ -141,15 +141,19 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
         e_flag = cat_info.get(source,'e_flag')
     
     #-- basic dtypes
-    dtypes = [('meas','>f4'),('e_meas','>f4'),('flag','a20'),
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
     
+    #-- extra can be added, but only if a master is already given!! The reason
+    #   is that thre GCPD actually does not contain any extra information, so
+    #   we will never be able to add it and will not know what dtype the extra
+    #   columns should be   
     #-- extra can be added:
     names = list(results.dtype.names)
     if extra_fields is not None:
         for e_dtype in extra_fields:
-            dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
-    
+            dtypes.append((e_dtype,'f8'))
+     
     #-- create empty master if not given
     newmaster = False
     if master is None or len(master)==0:
@@ -173,7 +177,7 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
-                cols.append(results[:1][np.nan])
+                cols += [e_dtype in results.dtype.names and results[e_dtype][:1] or np.ones(len(results[:1]))*np.nan]
         #-- add to the master
         rows = []
         for i in range(len(cols[0])):
@@ -185,7 +189,8 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
     #   all the colours
     N = len(master)-cols_added
     master_ = vizier._breakup_colours(master[N:])
-    master_ = vizier._breakup_colours(master_)
+    for i in range(5):
+        master_ = vizier._breakup_colours(master_)
     #-- combine and return
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
     
@@ -213,18 +218,32 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
         master['e_meas'][no_errors] = 0.
         #-- extend basic master
-        zp = filters.get_info(master['photband'])
+        try:
+            zp = filters.get_info(master['photband'])
+        except:
+            print master['photband']
+            raise
         for i in range(len(master)):
+            to_units_ = to_units+''
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
-                value,e_value = np.nan,np.nan
+                # if it is a magnitude color, try converting it to a flux ratio
+                if 'mag' in master['unit'][i]:
+                    try:
+                        value,e_value = conversions.convert('mag_color','flux_ratio',master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                        to_units_ = 'flux_ratio'
+                    except ValueError:
+                        value,e_value = np.nan,np.nan
+                # else, we are powerless...
+                else:
+                    value,e_value = np.nan,np.nan
             try:
                 eff_wave = filters.eff_wave(master['photband'][i])
             except IOError:
@@ -232,7 +251,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
             cols[0].append(eff_wave)
             cols[1].append(value)
             cols[2].append(e_value)
-            cols[3].append(to_units)
+            cols[3].append(to_units_)
         master = numpy_ext.recarr_addcols(master,cols,dtypes)
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
@@ -264,14 +283,22 @@ def _get_URI(name='GENEVA',ID=None,**kwargs):
     """
     #-- GCPD is poor at recognising aliases: therefore we try different
     #   identifiers retrieved from Sesame that GCPD understands
-    recognized_alias = ['HD','BD',"CD",'HIC','SAO']
-    aliases = sesame.search(ID)['alias']
+    recognized_alias = ['HD','BD',"CD"]
     
-    for alias in aliases:
-        if alias[:2] in recognized_alias:
-            ID = alias
-            break
+    try:
+        aliases = sesame.search(ID)['alias']
+        for alias in aliases:
+            if alias[:2] in recognized_alias:
+                ID = alias[:2]+' '+alias[2:]
+                break
+        else:
+            logger.error('Star %s has no aliases recognised by GCPD: query will not return results'%(ID))
+    except KeyError:
+        logger.error('Unknown star %s: GCPD query will not return results'%(ID))
+    
+    
     base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.quote(ID))
+    logger.debug(base_url)
     return base_url
     
 #}

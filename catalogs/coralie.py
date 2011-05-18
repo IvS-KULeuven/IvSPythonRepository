@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Interface to s1d_A spectra from the Coralie spectrograph.
+Interface to s1dA spectra from the Coralie spectrograph.
 """
 import re
 import sys
@@ -37,7 +37,7 @@ def search(ID,radius=1.,filename=None):
     as their location (column 'filename')
     @rtype: numpy rec array
     """
-    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','coralie','CoralieFullDataOverview.tsv'),splitchar='\t')
+    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','coralie'),'CoralieFullDataOverview.tsv'),splitchar='\t')
     info = sesame.search(ID)
     if info:
         ra,dec = info['jradeg'],info['jdedeg']

@@ -17,7 +17,9 @@ import logging
 import sys
 import math
 import socket
+import logging
 
+logger = logging.getLogger("DEC")
 memory = {}
 
 #{ Common tools
@@ -35,18 +37,22 @@ def memoized(fctn):
             memory[modname] = {}
         if not (haxh in memory[modname]):
             memory[modname][haxh] = fctn(*args,**kwargs)
+            logger.debug("Function %s memoized"%(str(fctn)))
         return memory[modname][haxh]
     if memo.__doc__:
         memo.__doc__ = "\n".join([memo.__doc__,"This function is memoized."])
     return memo
 
-def clear_memoization():
+def clear_memoization(keys=None):
     """
     Clear contents of memory
     """
-    for key in memory.keys():
-        del memory[key]
-    print("Memoization cleared")
+    if keys is None:
+        keys = memory.keys()
+    for key in keys:
+        if key in memory:
+            riddens = [memory[key].pop(ikey) for ikey in memory[key].keys()[:]]
+    logger.debug("Memoization cleared")
 
 def make_parallel(fctn):
     """
@@ -157,7 +163,10 @@ def retry_http(tries, backoff=2, on_failure='error'):
       raise ValueError("tries must be 0 or greater")
 
     if delay <= 0:
-      raise ValueError("delay must be greater than 0")
+      delay = 15.
+      o_delay = 15.
+      socket.setdefaulttimeout(delay)
+      #raise ValueError("delay must be greater than 0")
 
     def deco_retry(f):
       def f_retry(*args, **kwargs):
@@ -176,12 +185,12 @@ def retry_http(tries, backoff=2, on_failure='error'):
           mtries -= 1      # consume an attempt
           socket.setdefaulttimeout(mdelay) # wait...
           mdelay *= backoff  # make future wait longer
-          print "URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay)
-        print "URL timeout: number of trials exceeded"
+          logger.error("URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay))
+        logger.critical("URL timeout: number of trials exceeded")
         if on_failure=='error':
           raise IOError,msg # Ran out of tries :-(
         else:
-          print "Failed, but continuing..."
+          logger.critical("URL Failed, but continuing...")
           return None
 
       return f_retry # true decorator -> decorated function

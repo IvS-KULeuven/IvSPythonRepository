@@ -10,7 +10,7 @@ from ivs import config
 
 import numpy  as np
 from numpy import (abs, arange, array, ceil, cos, dot, floor, int, logical_and,
-                   logical_or, max, min, ones, pi, sin, sqrt, where, zeros)
+                   logical_or, max, min, ones, pi, sin, sqrt, where, zeros, exp)
 import scipy  as sc
 import pyfits as pf
 import logging

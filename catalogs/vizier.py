@@ -213,7 +213,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','>f4'),('cmeas','>f4'),('e_cmeas','>f4'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -221,10 +221,20 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
         #-- extend basic master
         zp = filters.get_info(master['photband'])
         for i in range(len(master)):
+            to_units_ = to_units+''
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
-            except ValueError: # calibrations not available
-                value,e_value = np.nan,np.nan
+            except ValueError: # calibrations not available, or its a color
+                # if it is a magnitude color, try converting it to a flux ratio
+                if 'mag' in master['unit'][i]:
+                    try:
+                        value,e_value = conversions.convert('mag_color','flux_ratio',master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                        to_units_ = 'flux_ratio'
+                    except ValueError:
+                        value,e_value = np.nan,np.nan
+                # else, we are powerless...
+                else:
+                    value,e_value = np.nan,np.nan
             try:
                 eff_wave = filters.eff_wave(master['photband'][i])
             except IOError:
@@ -232,7 +242,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
             cols[0].append(eff_wave)
             cols[1].append(value)
             cols[2].append(e_value)
-            cols[3].append(to_units)
+            cols[3].append(to_units_)
         master = numpy_ext.recarr_addcols(master,cols,dtypes)
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
@@ -275,9 +285,9 @@ def tsv2recarray(filename):
                 if key == line[1] and line[0]=='Column': # this is the line with information
                     formats[i] = line[2].replace('(','').replace(')','').lower()
                     if formats[i][0].isdigit(): formats[i] = 'a100'
-                    elif 'f' in formats[i]: formats[i] = '>f8' # floating point
-                    elif 'i' in formats[i]: formats[i] = '>f8' # integer, but make it float to contain nans
-                    elif 'e' in formats[i]: formats[i] = '>f8' # exponential
+                    elif 'f' in formats[i]: formats[i] = 'f8' # floating point
+                    elif 'i' in formats[i]: formats[i] = 'f8' # integer, but make it float to contain nans
+                    elif 'e' in formats[i]: formats[i] = 'f8' # exponential
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
@@ -424,7 +434,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info.get(source,'e_flag')
     
     #-- basic dtypes
-    dtypes = [('meas','>f4'),('e_meas','>f4'),('flag','a20'),
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
     
     #-- extra can be added:
@@ -453,10 +463,15 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
                 np.array(len(results[:1])*[units[key]],str),
                 np.array(len(results[:1])*[photband],str),
                 np.array(len(results[:1])*[source],str)]
+        #-- correct errors given in percentage
+        if e_flag+key in results.dtype.names and units[e_flag+key]=='%':
+            print cols
+            cols[1] = cols[1]/100.*cols[0]
+            print cols
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
-                cols.append(results[:1][e_dtype])
+                cols += [e_dtype in results.dtype.names and results[e_dtype][:1] or np.ones(len(results[:1]))*np.nan]
         #-- add to the master
         rows = []
         for i in range(len(cols[0])):
@@ -536,7 +551,7 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info_fund.get(source,'e_flag')
     
     #-- basic dtypes
-    dtypes = [('meas','>f4'),('e_meas','>f4'),('q_meas','>f4'),('unit','a30'),
+    dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','a30'),
               ('source','a50'),('name','a50')]
     
     #-- extra can be added:
@@ -651,6 +666,10 @@ def _breakup_colours(master):
     photbands = list(master['photband'])
     for i,photband in enumerate(photbands):
         system,color = photband.split('.')
+        
+        ########################################################################
+        #-- NORMAL COLORS
+        ########################################################################
         if '-' in color: # we have a colour            
             #-- in which column are the measurements (and error) located?
             index_meas, index_emeas = names.index('meas'),names.index('e_meas')
@@ -688,7 +707,62 @@ def _breakup_colours(master):
                 row1[index_band] = band1
                 master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
                 logger.debug("Added band %s = %s + %s (b)"%(band1,band2,photband))
-                
+        
+        ########################################################################
+        #-- STROMGREN COLORS
+        ########################################################################
+        #-- stromgren index M1
+        elif color.upper()=='M1':
+            # m1 = v - 2*b + y
+            #-- in which column are the measurements (and error) located?
+            index_meas, index_emeas = names.index('meas'),names.index('e_meas')
+            index_band = names.index('photband')
+            #-- this is the m1 row
+            row = list(master[i])
+            meas,e_meas = row[index_meas],row[index_emeas]
+            #-- retrieve the measurements we need to calculate band-magnitudes
+            my_photbands = list(master['photband'])
+            if 'STROMGREN.Y' in my_photbands and 'STROMGREN.B' in my_photbands and (not 'STROMGREN.V' in my_photbands):
+                index_b = my_photbands.index('STROMGREN.B')
+                index_y = my_photbands.index('STROMGREN.Y')
+                rowb,rowy = list(master[index_b]),list(master[index_y])
+                b,e_b = rowb[index_meas],rowb[index_emeas]
+                y,e_y = rowy[index_meas],rowy[index_emeas]
+                #-- add extra row
+                row1 = list(master[index_band])
+                row1[index_band] = 'STROMGREN.V'
+                row1[index_meas] = meas + 2*b - y
+                row1[index_emeas] = np.sqrt(e_meas**2 + 2*e_b**2 + e_y**2)
+                master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
+                logger.debug("Added band STROMGREN.Y (m1)")
+        #-- stromgren index C1
+        elif color.upper()=='C1':
+            # c1 = u - 2*v + b
+            #-- in which column are the measurements (and error) located?
+            index_meas, index_emeas = names.index('meas'),names.index('e_meas')
+            index_band = names.index('photband')
+            #-- this is the m1 row
+            row = list(master[i])
+            meas,e_meas = row[index_meas],row[index_emeas]
+            #-- retrieve the measurements we need to calculate band-magnitudes
+            my_photbands = list(master['photband'])
+            if 'STROMGREN.V' in my_photbands and 'STROMGREN.B' in my_photbands and (not 'STROMGREN.U' in my_photbands):
+                index_v = my_photbands.index('STROMGREN.V')
+                index_b = my_photbands.index('STROMGREN.B')
+                rowb,rowv = list(master[index_b]),list(master[index_v])
+                b,e_b = rowb[index_meas],rowb[index_emeas]
+                v,e_v = rowv[index_meas],rowv[index_emeas]
+                #-- add extra row
+                row1 = list(master[index_band])
+                row1[index_band] = 'STROMGREN.U'
+                row1[index_meas] = meas + 2*v - b
+                row1[index_emeas] = np.sqrt(e_meas**2 + 2*e_v**2 + e_b**2)
+                master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
+                logger.debug("Added band STROMGREN.U (c1)")
+        
+        
+        
+        
     return master
     
 

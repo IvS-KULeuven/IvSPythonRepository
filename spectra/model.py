@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Interface to SED library.
+Interface to stellar spectra library and functions to manipulate them.
 """
 import os
 import logging
