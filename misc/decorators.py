@@ -163,7 +163,10 @@ def retry_http(tries, backoff=2, on_failure='error'):
       raise ValueError("tries must be 0 or greater")
 
     if delay <= 0:
-      raise ValueError("delay must be greater than 0")
+      delay = 15.
+      o_delay = 15.
+      socket.setdefaulttimeout(delay)
+      #raise ValueError("delay must be greater than 0")
 
     def deco_retry(f):
       def f_retry(*args, **kwargs):
@@ -182,12 +185,12 @@ def retry_http(tries, backoff=2, on_failure='error'):
           mtries -= 1      # consume an attempt
           socket.setdefaulttimeout(mdelay) # wait...
           mdelay *= backoff  # make future wait longer
-          print "URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay)
-        print "URL timeout: number of trials exceeded"
+          logger.error("URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay))
+        logger.critical("URL timeout: number of trials exceeded")
         if on_failure=='error':
           raise IOError,msg # Ran out of tries :-(
         else:
-          print "Failed, but continuing..."
+          logger.critical("URL Failed, but continuing...")
           return None
 
       return f_retry # true decorator -> decorated function
