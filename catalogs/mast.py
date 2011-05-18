@@ -3,6 +3,7 @@
 Interface to the MAST archive.
 """
 import urllib
+import socket
 import logging
 import os
 import ConfigParser
@@ -14,6 +15,7 @@ from ivs.sed import filters
 from ivs.misc import xmlparser
 from ivs.misc import loggers
 from ivs.misc import numpy_ext
+from ivs.misc.decorators import retry_http
 from ivs.io import ascii
 from ivs.units import conversions
 from ivs.catalogs import vizier
@@ -369,7 +371,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     return master    
 
 
-
+#@retry_http(3)
 def get_dss_image(ID,width=5,height=5):
     """
     Retrieve an image from DSS
@@ -380,12 +382,17 @@ def get_dss_image(ID,width=5,height=5):
     >>> pl.imshow(data[::-1],extent=[coords[0]-size[0]/2,coords[0]+size[0]/2,
                                     coords[1]-size[1]/2,coords[1]+size[1]/2])
     """
+    #-- set a reasonable timeout
+    timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(30.)
     info = sesame.search(ID)
     ra,dec = info['jradeg'],info['jdedeg']
     url  = urllib.URLopener()
     myurl = "http://archive.stsci.edu/cgi-bin/dss_search?ra=%s&dec=%s&equinox=J2000&height=%s&generation=%s&width=%s&format=FITS"%(ra,dec,height,'2i',width)
     out = url.retrieve(myurl)
     data1 = pyfits.getdata(out[0])
+    #-- reset timeout to original value
+    socket.setdefaulttimeout(timeout)
     return data1,(ra,dec),(width/60.,height/60.)
 
 
