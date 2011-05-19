@@ -98,9 +98,9 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   @type lng: float
   @param lat: Galactic Lattitude (in degrees)
   @type lat: float
-  @keyword model: the name of the extinction model: ("arenou", "schlegel", "drimmel" or "marshall"; if none given, the program uses "drimmel")
+  @param model: the name of the extinction model: ("arenou", "schlegel", "drimmel" or "marshall"; if none given, the program uses "drimmel")
   @type model: str
-  @keyword distance: Distance to the source (in parsecs), if the distance is not given, the total galactic extinction along the line of sight is calculated
+  @param distance: Distance to the source (in parsecs), if the distance is not given, the total galactic extinction along the line of sight is calculated
   @type distance: float
   @return: The extinction in Johnson V-band
   @rtype: float
@@ -167,7 +167,7 @@ def findext_arenou(ll, bb, distance=None):
   @type ll: float
   @param bb: Galactic Lattitude (in degrees)
   @type bb: float
-  @keyword distance: Distance to the source (in parsecs)
+  @param distance: Distance to the source (in parsecs)
   @type distance: float
   @return: The extinction in Johnson V-band
   @rtype: float
@@ -200,6 +200,11 @@ def _getarenouparams(ll,bb):
   """
   Input: galactic coordinates
   Output: Arenou 1992 alpha, beta, gamma, rr0, saa
+  
+  @param ll: Galactic Longitude (in degrees)
+  @type ll: float
+  @param bb: Galactic Lattitude (in degrees)
+  @type bb: float
   """
   if -90 < bb < -60:
     gamma = 0
@@ -644,7 +649,9 @@ def _getarenouparams(ll,bb):
 
 @memoized
 def get_marshall_data():
-  # Read in the Marshall data
+  """
+  Read in the Marshall data
+  """
   data_ma, units_ma, comments_ma = vizier.search("J/A+A/453/635")
   return data_ma, units_ma, comments_ma
 
@@ -692,11 +699,11 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
   @type ll: float
   @param bb: Galactic Lattitude (in degrees) should be between -10 and 10 degrees
   @type bb: float
-  @keyword distance: Distance to the source (in parsecs)
+  @param distance: Distance to the source (in parsecs)
   @type distance: float
-  @keyword redlaw: the used reddening law (standard: 'cardelli1989')
+  @param redlaw: the used reddening law (standard: 'cardelli1989')
   @type redlaw: str
-  @keyword Rv: Av/E(B-V) (standard: 3.1)
+  @param Rv: Av/E(B-V) (standard: 3.1)
   @type Rv: float
   @return: The extinction in K-band
   @rtype: float
@@ -829,9 +836,9 @@ def findext_drimmel(lng, lat, distance=None, rescaling=True,**kwargs):
   @type lng: float
   @param lat: Galactic Lattitude (in degrees)
   @type lat: float
-  @keyword distance: Distance to the source (in parsecs)
+  @param distance: Distance to the source (in parsecs)
   @type distance: float
-  @keyword rescaling: Rescaling needed or not?
+  @param rescaling: Rescaling needed or not?
   @type rescaling: boolean
   @return: extinction in V band with/without rescaling
   @rtype: float
@@ -1138,10 +1145,10 @@ def _ll2uv(lng, lat):
   Convert longitude, latitude to unit vectors
   SMOLDERS SEAL OF APPROVAL
   
-  @param input : galactic longitude
-  @type  input : float 
-  @param infmt : galactic lattitude
-  @type  infmt : float
+  @param lng : galactic longitude
+  @type  lng : float 
+  @param lat : galactic lattitude
+  @type  lat : float
   @return      : unitvector
   @rtype       : ndarray
   """
@@ -1273,10 +1280,10 @@ def _ll2pix(lng, lat, res=9):
   (coorconv([lng,lat], infmt='L', outfmt='P', inco='G', outco='R9'))
   
   Input
-  @param input     : galactic longitude
-  @type  input     : float 
-  @param infmt     : galactic lattitude
-  @type  infmt     : float
+  @param lng     : galactic longitude
+  @type  lng     : float 
+  @param lat     : galactic lattitude
+  @type  lat     : float
   @return out_coor : output coordinate array
   @rtype  our_coor : ndarray
   
