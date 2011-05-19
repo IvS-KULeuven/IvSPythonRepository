@@ -328,27 +328,27 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     Limb darkening law is linear, default value is epsilon=0.6
     
     Possibility to normalize as well by giving continuum in 'cont' parameter.
-     2. parameters for rotational convolution 
+    2. parameters for rotational convolution 
 
-     VROT  - v sin i (in km/s)
-             if VROT=0 - rotational convolution is 
+    VROT  - v sin i (in km/s):
+             - if VROT=0 - rotational convolution is 
                  a) either not calculated,
                  b) or, if simultaneously FWHM is rather large
                     (vrot/c*lambda < FWHM/20.),
                     vrot is set to  FWHM/20*c/lambda;
-             if VROT >0 but the previous condition b) applies, the
+             - if VROT >0 but the previous condition b) applies, the
                      value of VROT is changed as  in the previous case
-             if VROT<0 - the value of abs(VROT) is used regardless of
+             - if VROT<0 - the value of abs(VROT) is used regardless of
                      how small compared to FWHM it is
-     CHARD - characteristic scale of the variations of unconvolved
-             stellar spectrum (basically, characteristic distance
+     CHARD - characteristic scale of the variations of unconvolved:
+           - stellar spectrum (basically, characteristic distance
              between two neighbouring wavelength points) - in A
            - if =0 - program sets up default (0.01 A)
      STEPR - wavelength step for evaluation rotational convolution;
            - if =0, the program sets up default (the wavelength
                     interval corresponding to the rotational velocity
                     devided by 3.)                           
-             if <0, convolved spectrum calculated on the original
+           - if <0, convolved spectrum calculated on the original
              (detailed) SYNSPEC wavelength mesh
 
 

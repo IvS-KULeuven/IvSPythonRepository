@@ -106,11 +106,11 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   @rtype: float
   
   REMARKS:
-    a) Schlegel actually returns E(B-V), this value is then converted to Av (the desired value for Rv can be set as a keyword; standard sets Rv=3.1)
-    b) Schlegel is very dubious for latitudes between -5 and 5 degrees
-    c) Marschall actually returns Ak, this value is then converted to Av (the reddening law and Rv can be set as keyword; standard sets Rv=3.1, redlaw='cardelli1989')
-    d) Marschall is only available for certain longitudes and latitudes:
-       0 < lng < 100 or 260 < lng < 360 and -10 < lat < 10
+  a) Schlegel actually returns E(B-V), this value is then converted to Av (the desired value for Rv can be set as a keyword; standard sets Rv=3.1)
+  b) Schlegel is very dubious for latitudes between -5 and 5 degrees
+  c) Marschall actually returns Ak, this value is then converted to Av (the reddening law and Rv can be set as keyword; standard sets Rv=3.1, redlaw='cardelli1989')
+  d) Marschall is only available for certain longitudes and latitudes:
+  0 < lng < 100 or 260 < lng < 360 and -10 < lat < 10
   """
   
   if model.lower() == 'drimmel':
@@ -1284,8 +1284,8 @@ def _ll2pix(lng, lat, res=9):
   @type  lng     : float 
   @param lat     : galactic lattitude
   @type  lat     : float
-  @return out_coor : output coordinate array
-  @rtype  our_coor : ndarray
+  @return: output coordinate array
+  @rtype: ndarray
   
   (Note: The default coordinate system for pixels is ecliptic.)
     """
@@ -1358,7 +1358,7 @@ def _lb2xy_schlegel(ll, bb):
   @type  ll     : float 
   @param bb     : galactic lattitude
   @type  bb     : float
-  @return out_coor : output coordinate array
+  @return: output coordinate array
   @rtype: ndarray
   """
   deg2rad = pi/180. # convert degrees to rads
