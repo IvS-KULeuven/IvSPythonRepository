@@ -8,16 +8,20 @@ that a module!
 import sys
 import time
 import os
+import logging
 
 import pylab as pl
 from matplotlib import mlab
+import Image
 import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
 
-from ivs.misc import loggers
+from ivs import config
 from ivs.misc import numpy_ext
+from ivs.misc.decorators import memoized
 from ivs.io import ascii
+from ivs.io import fits
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import fit
@@ -25,49 +29,65 @@ from ivs.sed import distance
 from ivs.sed import extinctionmodels
 from ivs.catalogs import crossmatch
 from ivs.catalogs import vizier
+from ivs.catalogs import mast
 from ivs.catalogs import sesame
 from ivs.units import conversions
 from ivs.units import constants
 
 
-logger = loggers.get_basic_logger()
+logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)
 
 def fix_master(master,e_default=None):
     """
-    Clean up record array received from C{get_photometry}.
+    Clean/extend/fix record array received from C{get_photometry}.
     
     This function does a couple of things:
     
-        1. Add common but uncatalogized colors like 2MASS.J-H
+        1. Adds common but uncatalogized colors like 2MASS.J-H if not already
+           present. WARNING: these colors can mix values from the same system
+           but from different catalogs!
         2. Removes photometry for which no calibration is available
-        3. Add a column 'column' with flag False denoting absolute flux measurement
+        3. Adds a column 'color' with flag False denoting absolute flux measurement
         and True denoting color.
-        4. Set's some default errors to photometric values, for which we know
-        that the catalog values are not trustworthy
+        4. Adds a column 'include' with flag True meaning the value will be
+        included in the fit
+        5. Sets some default errors to photometric values, for which we know
+        that the catalog values are not trustworthy.
+        6. Sets a lower limit to the allowed errors of 1%. Errors below this
+        value are untrostworthy because the calibration error is larger than that.
+        7. USNOB1 and ANS photometry are set the have a minimum error of 30%
+        due to uncertainties in response curves.
         
-    To do: BUG FIX: only make colors from measurements from the same source
+    To do BUG FIX: only make colors from measurements from the same source
     catalog!
-    """
     
+    @param master: record array containing photometry. This should have the fields
+    'meas','e_meas','unit','photband','source','_r','_RAJ2000','DEJ2000',
+    'cmeas','e_cmeas','cwave','cunit'
+    @type master: record array
+    @param e_default: default error for measurements without errors
+    @type e_default: float
+    @return: record array extended with fields 'include' and 'color', and with
+    rows added (see above description)
+    @rtype: numpy recard array
+    """
     #-- we recognize uncalibrated stuff as those for which no absolute flux was
-    #   obtained:
+    #   obtained, and remove them:
     master = master[-np.isnan(master['cmeas'])]
     
     #-- add common uncatalogized colors:
-    # 2MASS.J-H, 2MASS.KS-H
-    # TD1.1565-1965, TD1.2365-1965, TD1.2365-2740
     columns = list(master.dtype.names)
     for color in ['2MASS.J-H','2MASS.KS-H','TD1.1565-1965','TD1.2365-1965','TD1.2365-2740',
                   'JOHNSON.J-H','JOHNSON.K-H','JOHNSON.B-V','JOHNSON.U-B','GALEX.FUV-NUV',
-                  'TYCHO2.BT-VT']:
-        #-- get the filter system and the separate bands
+                  'TYCHO2.BT-VT','ANS.15N-15W','ANS.15W-18','ANS.18-22','ANS.22-25','ANS.25-33']:
+        #-- get the filter system and the separate bands for these colors
         system,band = color.split('.')
         band0,band1 = band.split('-')
         band0,band1 = '%s.%s'%(system,band0),'%s.%s'%(system,band1)
         
         #-- if the separate bands are available (and not the color itself),
-        #   calculate the colors
+        #   calculate the colors here
         if band0 in master['photband'] and band1 in master['photband'] and not color in master['photband']:
             #-- where are the bands located?
             index0 = list(master['photband']).index(band0)
@@ -88,7 +108,7 @@ def fix_master(master,e_default=None):
                 except AssertionError:
                     row[columns.index('cmeas')] = conversions.convert('mag_color','flux_ratio',row[columns.index('meas')],photband=color)
                     row[columns.index('e_cmeas')] = np.nan
-            #-- or a flux ratio
+            #-- or it could be a flux ratio
             else:
                 row[columns.index('meas')] = master['meas'][index0]/master['meas'][index1]
                 row[columns.index('e_meas')] = np.sqrt(((master['e_meas'][index0]/master['meas'][index0])**2+(master['e_meas'][index1]/master['meas'][index1])**2)*row[columns.index('meas')]**2)
@@ -123,23 +143,68 @@ def fix_master(master,e_default=None):
     return master
 
 
-def decide_phot(master,names=None,wrange=None,include=False):
+def decide_phot(master,names=None,wrange=None,ptype='all',include=False):
     """
-    Remove/include photometric passbands containing one of the strings listed in
+    Exclude/include photometric passbands containing one of the strings listed in
     photbands.
+    
+    This function will set the flags in the 'include' field of the extended
+    master record array.
+    
+    Colours also have a wavelength in this function, and it is defined as the
+    average wavelength of the included bands (doesn't work for stromgren C1 and M1).
+    
+    include=False excludes photometry based on the input parameters.
+    include=True includes photometry based on the input parameters.
+    
+    Some examples:
+    
+    1. Exclude all measurements:
+    >>> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
+    
+    2. Include all TD1 fluxes and colors:
+    >>> decide_phot(master,names=['TD1'],ptype='all',include=True)
+    
+    3. Include all V band measurements from all systems (but not the colors):
+    >>> decide_phot(master,names=['.V'],ptype='abs',include=True)
+    
+    4. Include all Geneva colors and exclude Geneva magnitudes:
+    >>> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
+    >>> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
+    
+    5. Exclude all infrared measurements beyond 1 micron:
+    >>> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
+    
+    6. Include all AKARI measurements below 10 micron:
+    >>> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
+    
+    @param master: record array containing all photometry
+    @type master: numpy record array
+    @param names: strings excerpts to match filters
+    @type names: list of strings
+    @param wrange: wavelength range (most likely angstrom) to include/exclude
+    @type wrange: 2-tuple (start wavelength,end wavelength)
+    @param ptype: type of photometry to include/exclude: absolute values, colors
+    or both
+    @type ptype: string, one of 'abs','col','all'
+    @param include: flag setting exclusion or inclusion
+    @type include: boolean
+    @return: master record array with adapted 'include' flags
+    @rtype: numpy record array
     """ 
     #-- exclude/include passbands based on their names
     if names is not None:
         for index,photband in enumerate(master['photband']):
             for name in names:
                 if name in photband:
-                    master['include'][index] = include
-                    break
+                    if ptype=='all' or (ptype=='abs' and -master['color'][index]) or (ptype=='col' and master['color'][index]):
+                        master['include'][index] = include
+                        break
     #-- exclude/include colors based on their wavelength
     if wrange is not None:
         for index,photband in enumerate(master['photband']):
             system,color = photband.split('.')
-            if not '-' in color:
+            if not '-' in color or ptype=='abs':
                 continue
             band0,band1 = color.split('-')
             cwave0 = filters.eff_wave('%s.%s'%(system,band0))
@@ -147,10 +212,17 @@ def decide_phot(master,names=None,wrange=None,include=False):
             if (wrange[0]<cwave0<wrange[1]) or (wrange[0]<cwave0<wrange[1]):
                 master['include'][index] = include
         #-- exclude/include passbands based on their wavelength
-        master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
+        if not ptype=='col':
+            master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
 
 
 def photometry2str(master):
+    """
+    String representation of master record array
+    
+    @param master: master record array containing photometry
+    @type master: numpy record array
+    """
     master = master[np.argsort(master['photband'])]
     print '%20s %12s %12s %12s %10s %12s %12s %11s %s'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     print '=========================================================================================================================='
@@ -158,28 +230,38 @@ def photometry2str(master):
         print '%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s'%(i,j,k,l,m,n,o,p)
     
 
-
+@memoized
 def get_parallax(ID):
     """
-    Retrieve a star's parallax and galactic coordinates in degrees
+    Retrieve a star's parallax and galactic coordinates in degrees.
+    
+    @param ID: target's name
+    @type ID: string
+    @return: parallax and galactic coordinates
+    @rtype: (plx,e_plx),(long,lat)
     """
     data,units,comms = vizier.search('I/311/hip2',ID=ID)
-    if not data:
+    if data is None or not len(data):
         logger.warning('No parallax found')
-        raise ValueError,'no parallax found'
+        plx = None
+    else:
+        plx = (data['Plx'][0],data['e_Plx'][0])
     info = sesame.search(ID)
     ra,dec = info['jpos'].split()
     gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
     gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
-    return (data['Plx'][0],data['e_Plx'][0]),gal
+    return plx,gal
 
-
-
-def get_radii(teffs,loggs):
+@memoized
+def get_schaller_grid():
     """
-    Retrieve radii from stellar evolutionary tracks from Schaller 1992.
+    Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
+    function.
     
+    @return: Rbf interpolation function
+    @rtype: Rbf interpolation function
     """
+    #-- translation between table names and masses
     masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
     tables = ['table20','table18','table17','table16','table15','table14',
               'table13','table12','table11','table10','table9','table8',
@@ -202,37 +284,66 @@ def get_radii(teffs,loggs):
     all_loggs = all_loggs[keep]
     #-- make linear interpolation model between all modelpoints
     mygrid = Rbf(np.log10(all_teffs),all_loggs,all_radii,function='linear')
-    #   ... and interpolate
+    logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
+    return mygrid
+
+
+def get_radii(teffs,loggs):
+    """
+    Retrieve radii from stellar evolutionary tracks from Schaller 1992.
+    
+    @param teffs: model effective temperatures
+    @type teffs: numpy array
+    @param loggs: model surface gravities
+    @type loggs: numpy array
+    @return: model radii (solar units)
+    @rtype: numpy array
+    """
+    mygrid = get_schaller_grid()
     radii = mygrid(np.log10(teffs),loggs)
     return radii
 
 
-def calculate_distance(ID,teffs,loggs,scales):
+def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
     """
-    Calculate distances and radii.
+    Calculate distances and radii of a target given its parallax and location
+    in the galaxy.
+    
+    
     """
-    plx,gal = get_parallax(ID)
     #-- compute distance up to 25 kpc, which is about the maximum distance from
     #   earth to the farthest side of the Milky Way galaxy
     #   rescale to set the maximum to 1
     d = np.logspace(np.log10(0.1),np.log10(25000),100000)
-    dprob = distance.distprob(d,gal[1],plx)
-    dprob = dprob / dprob.max()
+    if plx is not None:
+        dprob = distance.distprob(d,gal[1],plx)
+        dprob = dprob / dprob.max()
+    else:
+        dprob = np.ones_like(d)
     #-- compute the radii for the computed models, and convert to parsec
-    radii = get_radii(teffs,loggs)
+    radii = get_radii(teffs[-n:],loggs[-n:])
     radii = conversions.convert('Rsol','pc',radii)
-    d_models = radii/np.sqrt(scales)
+    d_models = radii/np.sqrt(scales[-n:])
     #-- we set out of boundary values to zero
-    dprob_models = np.interp(d_models,d,dprob,left=0,right=0)
+    if plx is not None:
+        dprob_models = np.interp(d_models,d[-n:],dprob[-n:],left=0,right=0)
+    else:
+        dprob_models = np.ones_like(d_models)
     #-- reset the radii to solar units for return value
     radii = conversions.convert('pc','Rsol',radii)
-    return plx,gal,(d_models,dprob_models,radii),(d,dprob)
+    return (d_models,dprob_models,radii),(d,dprob)
     
 
 
 class SED(object):
 
-    def __init__(self,ID,photfile=None):
+    def __init__(self,ID,photfile=None,plx=None):
+        """
+        Initialize SED class.
+        
+        @param plx: parallax (and error) of the object
+        @type plx: tuple (plx,e_plx)
+        """
         self.ID = ID
         #-- the file containing photometry should have the following name. We
         #   save photometry to a file to avoid having to download photometry
@@ -242,14 +353,21 @@ class SED(object):
         else:
             self.photfile = photfile
         
-        #-- keep information on the star from SESAME
+        #-- keep information on the star from SESAME, but override parallax
+        #   and set new galactic coordinates
         self.info = sesame.search(ID)
+        plx_,gal_ = get_parallax(ID)
+        if plx is not None:
+            self.info['plx'] = plx
+        elif plx_ is not None:
+            self.info['plx'] = plx_
+        self.info['gal'] = gal_
         
         #-- prepare for information on fitting processes
         self.results = {}
     
     #{ Handling photometric data
-    def get_photometry(self,radius=3.):
+    def get_photometry(self,radius=None):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -258,16 +376,21 @@ class SED(object):
         @param radius: search radius (arcseconds)
         @type radius: float.
         """
+        if radius is None:
+            if 'mag.V.v' in self.info and self.info['mag.V.v']<6.:
+                radius = 60.
+            else:
+                radius = 10.
         if not os.path.isfile(self.photfile):
             #-- get and fix photometry. Set default errors to 1%, and set
             #   USNOB1 errors to 3%
-            master = crossmatch.get_photometry(ID=self.ID,radius=60.,extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
+            master = crossmatch.get_photometry(ID=self.ID,radius=radius,extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             master['_RAJ2000'] -= self.info['jradeg']
             master['_DEJ2000'] -= self.info['jdedeg']
             
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
-            self.master = fix_master(master,e_default=0.02)
+            self.master = fix_master(master,e_default=0.1)
             photometry2str(master)
             
             #-- write to file
@@ -279,13 +402,38 @@ class SED(object):
         """
         Exclude photometry from fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,include=False)
+        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='all')
+    
+    def exclude_colors(self,names=None,wrange=None):
+        """
+        Exclude photometry from fitting process.
+        """
+        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='col')
+    
+    def exclude_abs(self,names=None,wrange=None):
+        """
+        Exclude photometry from fitting process.
+        """
+        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='abs')
+    
     
     def include(self,names=None,wrange=None):
         """
         Include photometry from fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,include=True)
+        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='all')
+    
+    def include_colors(self,names=None,wrange=None):
+        """
+        Include photometry from fitting process.
+        """
+        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='col')
+    
+    def include_abs(self,names=None,wrange=None):
+        """
+        Include photometry from fitting process.
+        """
+        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='abs')
     
     def set_photometry_scheme(self,scheme):
         """
@@ -304,12 +452,15 @@ class SED(object):
             logger.info('Fitting procedure will use only colors (%d)'%(sum(self.master['include'])))
         elif 'com' in scheme.lower():
             self.master['include'][self.master['color']] = True
+            self.master['include'][-self.master['color']] = False
             systems = np.array([photband.split('.')[0] for photband in self.master['photband']])
             set_systems = sorted(list(set(systems)))
             for isys in set_systems:
                 keep = -self.master['color'] & (isys==systems)
+                if not sum(keep): continue
                 index = np.argmax(self.master['e_cmeas'][keep]/self.master['cmeas'][keep])
-                self.master['include'][keep][index] = True
+                index = np.arange(len(self.master))[keep][index]
+                self.master['include'][index] = True
             logger.info('Fitting procedure will use colors + one absolute flux for each system (%d)'%(sum(self.master['include'])))
             
         
@@ -421,10 +572,14 @@ class SED(object):
         
         #-- synthetic flux
         include = self.master['include']
-        synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
+        synflux = np.zeros(len(self.master['photband']))
+        keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
+        synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
-                                  photbands=self.master['photband'])
+                                  photbands=self.master['photband'][keep])
+        synflux[keep] = synflux_
+        
         #synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
         #                          logg=self.results[mtype]['CI']['logg'],
         #                          ebv=self.results[mtype]['CI']['ebv'],
@@ -440,9 +595,11 @@ class SED(object):
     
     def set_distance(self):
         #-- calculate the distance
-        cutlogg = self.results['igrid_search']['grid']['logg']<=4.4
-        plx,gal,(d_models,dprob_models,radii),(d,dprob)\
-                   = calculate_distance(self.ID,self.results['igrid_search']['grid']['teff'][cutlogg],\
+        cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
+        gal = self.info['gal']
+        plx = self.info.get('plx',None)
+        (d_models,dprob_models,radii),(d,dprob)\
+                   = calculate_distance(plx,self.info['gal'],self.results['igrid_search']['grid']['teff'][cutlogg],\
                                                    self.results['igrid_search']['grid']['logg'][cutlogg],\
                                                    self.results['igrid_search']['grid']['scale'][cutlogg])
         #-- calculate model extinction
@@ -451,10 +608,6 @@ class SED(object):
         self.results['igrid_search']['marshall'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='marshall', distance=myd) for myd in d[::res]]))
         self.results['igrid_search']['d_mod'] = (d_models,dprob_models,radii)
         self.results['igrid_search']['d'] = (d,dprob)
-        if not 'plx' in self.info:
-            self.info['plx'] = {}
-        self.info['plx']['vanleeuwen'] = plx
-        self.info['gal'] = gal
     
     #}
     
@@ -513,10 +666,6 @@ class SED(object):
             e_y = master['e_cmeas']
             return x,y,e_y,color_dict
             
-        
-        
-        
-        pl.title(self.ID)        
         
         x__,y__,e_y__,color_dict = plot_sed_getcolors(self.master)
         
@@ -580,7 +729,7 @@ class SED(object):
             wave,flux,flux_ur = self.results['model']
             pl.plot(wave,wave*flux,'r-')
             pl.plot(wave,wave*flux_ur,'k-')
-            pl.ylabel(r'$\lambda F_\lambda$ [erg/s/cm2]')
+            pl.ylabel(r'$\lambda F_\lambda$ [erg/s/cm$^2$]')
             pl.xlabel('wavelength [$\AA$]')
         else:
             xlabels = color_dict.keys()
@@ -639,10 +788,12 @@ class SED(object):
         #-- necessary information
         (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
         (d,dprob) = self.results['igrid_search']['d']
-        plx = self.info['plx']['vanleeuwen']
+        
+        ax_d = pl.gca()
+        
+        
         gal = self.info['gal']
         #-- the plot
-        ax_d = pl.gca()
         dzoom = dprob>1e-10
         pl.plot(d,dprob,'k-')
         pl.grid()
@@ -659,203 +810,190 @@ class SED(object):
         res = 100
         d_keep = (xlims[0]<=d[::res]) & (d[::res]<=xlims[1])
         if len(self.results['igrid_search']['drimmel']):
-            pl.plot(d[::res][d_keep],self.results['igrid_search']['drimmel'].ravel()[d_keep],'b-')
+            pl.plot(d[::res][d_keep],self.results['igrid_search']['drimmel'].ravel()[d_keep],'b-',label='Drimmel')
         if len(self.results['igrid_search']['marshall']):
-            pl.plot(d[::res][d_keep],self.results['igrid_search']['marshall'].ravel()[d_keep],'r-')
+            pl.plot(d[::res][d_keep],self.results['igrid_search']['marshall'].ravel()[d_keep],'b--',label='Marshall')
         ebv = self.results[mtype]['grid']['ebv'][-1]
-        pl.plot(xlims,[ebv*3.1,ebv*3.1],'r--',lw=2)
-        #d_sa = np.argsort(d_models)
-        #d_keep = (xlims[0]<=d_models[d_sa]) & (d_models[d_sa]<=xlims[1])
-        #pl.plot(d_models[d_sa][d_keep],np.log10(Labs*radii**2)[d_sa][d_keep],'r-')
-        #pl.ylabel('log (Luminosity [$L_\odot$]) [dex]')
+        pl.plot(xlims,[ebv*3.1,ebv*3.1],'r--',lw=2,label='measured')
+        pl.ylabel('Visual extinction $A_v$ [mag]')
+        pl.legend(loc='lower right',prop=dict(size='x-small'))
         pl.xlim(xlims)
         logger.info('Plotted distance/reddening')
     
-    def plot_grid_model(self):
+    def plot_grid_model(self,ptype='prob'):
         """
-        UNFINISHED!!!
+        Grid of models
         """
-        cutlogg = self.results['igrid_search']['grid']['logg']<=4.4
-        plx,gal,(d_models,dprob_models,radii),(d,dprob)\
-                   = calculate_distance(self.ID,self.results['igrid_search']['grid']['teff'][cutlogg],\
-                                                   self.results['igrid_search']['grid']['logg'][cutlogg],\
-                                                   self.results['igrid_search']['grid']['scale'][cutlogg])
+        pl.title(self.info['spType'])
+        cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
+        (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
+        (d,dprob) = self.results['igrid_search']['d']
+        gal = self.info['gal']
+        
+        n = 75000
         region = self.results['igrid_search']['grid']['CI_red']<0.95
-        total_prob = 100-(1-self.results['igrid_search']['grid'][cutlogg])*dprob_models*100
+        total_prob = 100-(1-self.results['igrid_search']['grid']['CI_red'][cutlogg][-n:])*d_prob_models*100
         tp_sa = np.argsort(total_prob)[::-1]
-        pl.scatter(grid_results['teff'][sa][region_sa][cutlogg][tp_sa],grid_results['logg'][sa][region_sa][cutlogg][tp_sa],
+        if ptype=='prob':
+            pl.scatter(self.results['igrid_search']['grid']['teff'][cutlogg][-n:][tp_sa],self.results['igrid_search']['grid']['logg'][cutlogg][-n:][tp_sa],
                 c=total_prob[tp_sa],edgecolors='none',cmap=pl.cm.spectral,
                 vmin=total_prob.min(),vmax=total_prob.max())
+        elif ptype=='radii':
+            pl.scatter(self.results['igrid_search']['grid']['teff'][cutlogg][-n:][tp_sa],self.results['igrid_search']['grid']['logg'][cutlogg][-n:][tp_sa],
+                c=radii,edgecolors='none',cmap=pl.cm.spectral,
+                vmin=radii.min(),vmax=radii.max())
         pl.xlim(self.results['igrid_search']['grid']['teff'][region].max(),self.results['igrid_search']['grid']['teff'][region].min())
         pl.ylim(self.results['igrid_search']['grid']['logg'][region].max(),self.results['igrid_search']['grid']['logg'][region].min())
         cbar = pl.colorbar()
         pl.xlabel('log (effective temperature [K]) [dex]')
         pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-        cbar.set_label('Probability (incl. plx) [%]')
-        logger.info('Plotted teff-logg diagram of models')
+        
+        if ptype=='prob':
+            cbar.set_label('Probability (incl. plx) [%]')
+        elif ptype=='radii':
+            cbar.set_label('Model radii [$R_\odot$]')
+        logger.info('Plotted teff-logg diagram of models (%s)'%(ptype))
+        
+        
+    
+    def plot_MW_side(self):
+        im = Image.open(config.get_datafile('images','ESOmilkyway.tif'))
+        left,bottom,width,height = 0.0,0.0,1.0,1.0
+        startm,endm = 183,-177
+        startv,endv = -89,91
+
+        xwidth = startm-endm
+        ywidth = 90.
+        ratio = ywidth/xwidth
+
+        gal = list(self.info['gal'])
+        if gal[0]>180:
+            gal[0] = gal[0] - 360.
+        #-- boundaries of ESO image
+        pl.imshow(im,extent=[startm,endm,startv,endv],origin='lower')
+        pl.plot(gal[0],gal[1],'rx',ms=15,mew=2)
+        pl.xlim(startm,endm)
+        pl.ylim(startv,endv)
+        pl.xticks([])
+        pl.yticks([])
+    
+    def plot_MW_top(self):
+        im = Image.open(config.get_datafile('images','topmilkyway.jpg'))
+        pl.imshow(im,origin='lower')
+        pl.box(on=False)
+        pl.xticks([])
+        pl.yticks([])
+        xlims = pl.xlim()
+        ylims = pl.ylim()
+        gal = self.info['gal']
+        pl.plot(2800,1720,'ro',ms=10)
+        pl.plot([2800,-5000*np.sin(gal[0]/180.*np.pi)+2800],[1720,5000*np.cos(gal[0]/180.*np.pi)+1720],'r-',lw=2)
+        
+        #-- necessary information
+        (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
+        (d,dprob) = self.results['igrid_search']['d']
+        
+        x = d/10.*1.3
+        y = dprob*1000.
+        theta = gal[0]/180.*np.pi + np.pi/2.
+        x_ = np.cos(theta)*x - np.sin(theta)*y + 2800
+        y_ = np.sin(theta)*x + np.cos(theta)*y + 1720
+    
+        pl.plot(x_,y_,'r-',lw=2)
+        index = np.argmax(y)
+        pl.plot(np.cos(theta)*x[index] + 2800,np.sin(theta)*x[index] + 1720,'rx',ms=15,mew=2)
+    
+        pl.xlim(xlims)
+        pl.ylim(ylims)
+    
+    def plot_finderchart(self):
+        
+        try:
+            data,coords,size = mast.get_dss_image(self.ID)
+            pl.imshow(data[::-1],extent=[-size[0]/2*60,size[0]/2*60,
+                                        -size[1]/2*60,size[1]/2*60],cmap=pl.cm.RdGy_r)#Greys
+            xlims,ylims = pl.xlim(),pl.ylim()
+            keep_this = -self.master['color'] & (self.master['cmeas']>0)
+            toplot = self.master[keep_this]
+            systems = np.array([system.split('.')[0] for system in toplot['photband']],str)
+            set_systems = sorted(list(set(systems)))
+            pl.gca().set_color_cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])    
+            for system in set_systems:
+                keep = systems==system
+                if sum(keep):
+                    pl.plot(toplot['_RAJ2000'][keep][0]*60,
+                            toplot['_DEJ2000'][keep][0]*60,'x',label=system,
+                            mew=2.5,ms=15,alpha=0.5)
+                else:
+                    pl.gca()._get_lines.count += 1
+            pl.legend(numpoints=1,prop=dict(size='x-small'))
+            pl.xlim(xlims)
+            pl.ylim(ylims)
+            pl.xlabel(r'Right ascension $\alpha$ [arcmin]')
+            pl.ylabel(r'Declination $\delta$ [arcmin]')    
+        except:
+            pass
+    
+    
+        
         
     def make_plots(self):
         """
         Make all available plots
         """
-        pl.figure(figsize=(16.5,12))
-        rows,cols = 3,3
-        pl.subplots_adjust(left=0.05, bottom=0.06, right=0.98, top=0.95,
+        pl.figure(figsize=(22,12))
+        rows,cols = 3,4
+        pl.subplots_adjust(left=0.04, bottom=0.07, right=0.97, top=0.96,
                 wspace=0.17, hspace=0.24)
         pl.subplot(rows,cols,1);self.plot_grid(ptype='CI_red')
         pl.subplot(rows,cols,2);self.plot_grid(ptype='ebv')
         pl.subplot(rows,cols,3);self.plot_grid(ptype='z')
-        pl.subplot(rows,cols,4);self.plot_sed(colors=False)
-        pl.subplot(rows,cols,5);self.plot_sed(colors=True)
+        pl.subplot(rows,cols,4);self.plot_distance()
+        
+        pl.subplot(3,2,3);self.plot_sed(colors=False)
+        pl.subplot(3,2,5);self.plot_sed(colors=True)
+        
         pl.subplot(rows,cols,7);self.plot_chi2(colors=False)
-        pl.subplot(rows,cols,8);self.plot_chi2(colors=True)
-        pl.subplot(rows,cols,6);self.plot_distance()
+        pl.subplot(rows,cols,11);self.plot_chi2(colors=True)
         
+        pl.subplot(rows,cols,8);self.plot_grid_model(ptype='prob')
+        pl.subplot(rows,cols,12);self.plot_grid_model(ptype='radii')
+        
+        pl.figure(figsize=(12,12))
+        pl.axes([0,0.0,1.0,0.5]);self.plot_MW_side()
+        pl.axes([0,0.5,0.5,0.5]);self.plot_MW_top()
+        pl.axes([0.5,0.5,0.5,0.5]);self.plot_finderchart()
+    
+    def save2fits(self,filename=None,overwrite=True):
+        if filename is None:
+            filename = os.path.splitext(self.photfile)[0]+'.fits'
+        if overwrite:
+            if os.path.isfile(filename): os.remove(filename)
+            
+        eff_waves,synflux,photbands = self.results['synflux']
+        chi2 = self.results['chi2']
+        
+        master = mlab.rec_append_fields(self.master, 'synflux',synflux)
+        master = mlab.rec_append_fields(master, 'mod_eff_wave',eff_waves)
+        master = mlab.rec_append_fields(master, 'chi2',chi2)
+        
+        results_dict = {}
+        keys = sorted(self.results['igrid_search'])
+        for key in keys:
+            if 'CI' in key:
+                for ikey in self.results['igrid_search'][key]:
+                    results_dict[ikey] = self.results['igrid_search'][key][ikey]
+                
+            
+        fits.write_recarray(master,filename)
+        fits.write_array(list(self.results['model']),filename,
+                                names=('wave','flux','dered_flux'),
+                                units=('A','erg/s/cm2/A','erg/s/cm2/A'),
+                                header_dict=results_dict)
+        
+        fits.write_recarray(self.results['igrid_search']['grid'],filename,header_dict=results_dict)
+    
     #}
-    #subset = conf_int_red<0.90
-
-
-
-    ##### -- WRITE RESULTS TO FILE ####
-    #fits_file = os.path.splitext(photfile)[0]+'.fits'
-    #fits.write_recarray(master,fits_file)
-    #fits.write_array([wave_grid,flux_grid,flux_ur_grid],fits_file,
-                                #names=('wave','flux','dered_flux'),
-                                #units=('A','erg/s/cm2/A','erg/s/cm2/A'),
-                                #header_dict=results_dict)
-    #fits.write_recarray(grid_results,fits_file,header_dict=results_dict)
-    
-        
-    #cutlogg = grid_results['logg'][sa][region_sa]<=4.4
-    #plx,gal,(d_models,dprob_models,radii),(d,dprob) = builder.calculate_distance(ID,grid_results['teff'][sa][region_sa][cutlogg],
-    #grid_results['logg'][sa][region_sa][cutlogg],grid_results['scale'][sa][region_sa][cutlogg])
-    
-    
-    #pl.subplot(rows,cols,7)
-    #total_prob = 100-(1-conf_int_red[sa][region_sa][cutlogg])*dprob_models*100
-    #tp_sa = np.argsort(total_prob)[::-1]
-    #pl.scatter(grid_results['teff'][sa][region_sa][cutlogg][tp_sa],grid_results['logg'][sa][region_sa][cutlogg][tp_sa],
-                #c=total_prob[tp_sa],edgecolors='none',cmap=pl.cm.spectral,
-                #vmin=total_prob.min(),vmax=total_prob.max())
-    #pl.xlim(grid_results['teff'][region].max(),grid_results['teff'][region].min())
-    #pl.ylim(grid_results['logg'][region].max(),grid_results['logg'][region].min())
-    #cbar = pl.colorbar()
-    #pl.xlabel('log (effective temperature [K]) [dex]')
-    #pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-    #cbar.set_label('Probability (incl. plx) [%]')
-    
-    #pl.subplot(rows,cols,8)
-    #pl.scatter(grid_results['teff'][sa][region_sa][cutlogg],grid_results['logg'][sa][region_sa][cutlogg],
-                #c=radii,edgecolors='none',cmap=pl.cm.spectral,
-                #vmin=radii.min(),vmax=radii.max())
-    #pl.plot(grid_results['teff'][best],grid_results['logg'][best],'r+',ms=40,mew=3)
-    #pl.xlim(grid_results['teff'][region].max(),grid_results['teff'][region].min())
-    #pl.ylim(grid_results['logg'][region].max(),grid_results['logg'][region].min())
-    #cbar = pl.colorbar()
-    #pl.xlabel('log (effective temperature [K]) [dex]')
-    #pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-    #cbar.set_label('Model radii [$R_\odot$]')
-        
-        
-        
-        
-    ##### -- END SOME FIGURES -- ####
-    #pl.savefig(os.path.splitext(photfile)[0]);pl.close()
-    
-    
-    #im = Image.open('../ESOmilkyway.tif')
-    #left,bottom,width,height = 0.0,0.0,1.0,1.0
-    #startm,endm = 183,-177
-    #startv,endv = -89,91
-
-    #xwidth = startm-endm
-    #ywidth = 90.
-    #ratio = ywidth/xwidth
-
-    #pl.figure(figsize=(12,12))
-    #pl.gcf().frameon = False
-    #ax0 = pl.axes([0,0.0,1.0,0.5])
-    #gal = list(gal)
-    #if gal[0]>180:
-        #gal[0] = gal[0] - 360.
-    ##-- boundaries of ESO image
-    #pl.imshow(im,extent=[startm,endm,startv,endv],origin='lower')
-    #pl.plot(gal[0],gal[1],'rx',ms=15,mew=2)
-    #pl.xlim(startm,endm)
-    #pl.ylim(startv,endv)
-    #pl.xticks([])
-    #pl.yticks([])
-    
-    #ax0 = pl.axes([0,0.5,0.5,0.5])
-    #im = Image.open('../topmilkyway.jpg')
-    #pl.imshow(im,origin='lower')
-    #pl.box(on=False)
-    #pl.xticks([])
-    #pl.yticks([])
-    #xlims = pl.xlim()
-    #ylims = pl.ylim()
-    #pl.plot(2800,1720,'ro',ms=10)
-    #pl.plot([2800,-5000*np.sin(gal[0]/180.*np.pi)+2800],[1720,5000*np.cos(gal[0]/180.*np.pi)+1720],'r-',lw=2)
-    
-    #x = d/10.*1.3
-    #y = dprob*1000.
-    #theta = gal[0]/180.*np.pi + np.pi/2.
-    #x_ = np.cos(theta)*x - np.sin(theta)*y + 2800
-    #y_ = np.sin(theta)*x + np.cos(theta)*y + 1720
-    
-    ##pl.plot(x+2800,y+1720,'r-')
-    #pl.plot(x_,y_,'r-',lw=2)
-    #index = np.argmax(y)
-    #pl.plot(np.cos(theta)*x[index] + 2800,np.sin(theta)*x[index] + 1720,'bx',ms=15,mew=2)
-    
-    #pl.xlim(xlims)
-    #pl.ylim(ylims)
-    
-    #ax0 = pl.axes([0.5,0.5,0.5,0.5])
-    #try:
-        #data,coords,size = mast.get_dss_image(ID)
-        #pl.imshow(data[::-1],extent=[-size[0]/2*60,size[0]/2*60,
-                                    #-size[1]/2*60,size[1]/2*60],cmap=pl.cm.RdGy_r)#Greys
-        #xlims,ylims = pl.xlim(),pl.ylim()
-        #keep_this = -master['color'] & (master['cmeas']>0)
-        #toplot = master[keep_this]
-        #systems = np.array([system.split('.')[0] for system in toplot['photband']],str)
-        #set_systems = sorted(list(set(systems)))
-        #pl.gca().set_color_cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])    
-        #for system in set_systems:
-            #keep = systems==system
-            #pl.plot(toplot['_RAJ2000'][keep][0]*60,
-                    #toplot['_DEJ2000'][keep][0]*60,'x',label=system,
-                    #mew=2.5,ms=15,alpha=0.5)
-        ##pl.legend(loc='upper ',prop=dict(size='x-small'))
-        #pl.xlim(xlims)
-        #pl.ylim(ylims)
-        #pl.xlabel(r'Right ascension $\alpha$ [arcmin]')
-        #pl.ylabel(r'Declination $\delta$ [arcmin]')    
-    #except:
-        #pass
-    
-    
-    
-    #pl.savefig(os.path.splitext(photfile)[0]+'_mw');pl.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

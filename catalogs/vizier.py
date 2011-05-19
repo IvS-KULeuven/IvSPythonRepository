@@ -465,9 +465,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
                 np.array(len(results[:1])*[source],str)]
         #-- correct errors given in percentage
         if e_flag+key in results.dtype.names and units[e_flag+key]=='%':
-            print cols
             cols[1] = cols[1]/100.*cols[0]
-            print cols
         #-- add any extra fields if desired.
         if extra_fields is not None:
             for e_dtype in extra_fields:
