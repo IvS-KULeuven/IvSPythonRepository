@@ -1380,9 +1380,9 @@ def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
   is corrected. If distance is set we use the distance-corrected
   values:
 
-    E(B-V) = E(B-V)_maps * (1 - exp(-10 * r * sin(|b|)))
-    where E(B-V) is the value to be used and E(B-V)_maps the value
-    as found with the Schlegel dust maps
+  E(B-V) = E(B-V)_maps * (1 - exp(-10 * r * sin(|b|)))
+  where E(B-V) is the value to be used and E(B-V)_maps the value
+  as found with the Schlegel dust maps
   
   Then we convert the E(B-V) to Av. Standard we use Av = E(B-V)*Rv with Rv=3.1, but the value of Rv can be given as a keyword.
 
