@@ -1358,7 +1358,7 @@ def _lb2xy_schlegel(ll, bb):
   @type  ll     : float 
   @param bb     : galactic lattitude
   @type  bb     : float
-  @return out_coor : output coordinate array
+  @return: output coordinate array
   @rtype: ndarray
   """
   deg2rad = pi/180. # convert degrees to rads
