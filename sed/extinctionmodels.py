@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-# Extinction models of Arenou, Drimmel and Marschall
-# +++ Uniformly rewritten by K. Smolders
+"""
+Extinction models of Arenou, Drimmel and Marschall
+
+Uniformly rewritten by K. Smolders
+"""
 
 from ivs.catalogs import vizier
 from ivs.sed.reddening import get_law
