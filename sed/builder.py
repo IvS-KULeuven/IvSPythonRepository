@@ -159,24 +159,24 @@ def decide_phot(master,names=None,wrange=None,ptype='all',include=False):
     
     Some examples:
     
-    1. Exclude all measurements:
-    >>> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
+        1. Exclude all measurements:
+        >>> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
     
-    2. Include all TD1 fluxes and colors:
-    >>> decide_phot(master,names=['TD1'],ptype='all',include=True)
+        2. Include all TD1 fluxes and colors:
+        >>> decide_phot(master,names=['TD1'],ptype='all',include=True)
     
-    3. Include all V band measurements from all systems (but not the colors):
-    >>> decide_phot(master,names=['.V'],ptype='abs',include=True)
+        3. Include all V band measurements from all systems (but not the colors):
+        >>> decide_phot(master,names=['.V'],ptype='abs',include=True)
     
-    4. Include all Geneva colors and exclude Geneva magnitudes:
-    >>> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
-    >>> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
+        4. Include all Geneva colors and exclude Geneva magnitudes:
+        >>> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
+        >>> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
     
-    5. Exclude all infrared measurements beyond 1 micron:
-    >>> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
+        5. Exclude all infrared measurements beyond 1 micron:
+        >>> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
     
-    6. Include all AKARI measurements below 10 micron:
-    >>> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
+        6. Include all AKARI measurements below 10 micron:
+        >>> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
     
     @param master: record array containing all photometry
     @type master: numpy record array
@@ -440,7 +440,7 @@ class SED(object):
         Scheme = 'abs': means excluding all colors, including all absolute values
         scheme = 'color': means including all colors, excluding all absolute values
         scheme = 'combo': means inculding all colors, and one absolute value per
-          system (the one with the smallest relative error)
+        system (the one with the smallest relative error)
         """
         if 'abs' in scheme.lower():
             self.master['include'][self.master['color']] = False
