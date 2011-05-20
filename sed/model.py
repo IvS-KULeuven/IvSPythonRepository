@@ -449,7 +449,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     #c3 = time.time() - c0 - c1 - c2
     #print '%.6e %.6e %.6e %.6e'%(c1,c2,c3,time.time()-c0)
     if np.any(np.isinf(flux)):
-        print 'infinity encountered!'
+        #print 'infinity encountered!'
         flux = np.zeros(fluxes.shape[-1])
     return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
     

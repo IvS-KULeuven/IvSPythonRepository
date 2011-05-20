@@ -2,8 +2,28 @@
 """
 SED builder program.
 
-Keep this preferentially out of the IVS repository: this is more of a program
-that a module!
+To construct an SED, use the SED class. The functions defined in this module
+are mainly convenience functions specifically for that class, but can be used
+outside of the SED class if you know what you're doing.
+
+Example usage:
+
+Make an SED of HD180642:
+
+>>> mysed = SED('HD180642')
+>>> mysed.get_photometry()
+
+Use colours and one absolute flux per system, but exclude IR photometry and
+some systems and colours which we know are untrustworthy
+
+>>> mysed.set_photometry_scheme('combo')
+>>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
+
+Start the grid based fitting process and show some plots
+
+>>> mysed.igrid_search()
+>>> mysed.make_plots()
+>>> pl.show()
 """
 import sys
 import time
@@ -34,6 +54,9 @@ from ivs.catalogs import sesame
 from ivs.units import conversions
 from ivs.units import constants
 
+from ivs.units.uncertainties import unumpy
+from ivs.units.uncertainties.unumpy import sqrt as usqrt
+from ivs.units.uncertainties.unumpy import tan as utan
 
 logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)
@@ -233,24 +256,35 @@ def photometry2str(master):
 @memoized
 def get_parallax(ID):
     """
-    Retrieve a star's parallax and galactic coordinates in degrees.
+    Retrieve a star's parallax, galactic coordinates in degrees and proper motions
+    in .
     
     @param ID: target's name
     @type ID: string
     @return: parallax and galactic coordinates
     @rtype: (plx,e_plx),(long,lat)
     """
+    #-- parallax
     data,units,comms = vizier.search('I/311/hip2',ID=ID)
     if data is None or not len(data):
         logger.warning('No parallax found')
         plx = None
     else:
         plx = (data['Plx'][0],data['e_Plx'][0])
+    #-- galactic coordinates
     info = sesame.search(ID)
     ra,dec = info['jpos'].split()
     gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
     gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
-    return plx,gal
+    
+    #-- proper motions
+    data,units,comms = vizier.search('I/317/sample',ID=ID)
+    if data is None or not len(data):
+        ppm = None
+    else:
+        ppm = (data['pmRA'][0],data['e_pmRA'][0]),(data['pmDE'][0],data['e_pmDE'][0])
+    
+    return plx,gal,ppm
 
 @memoized
 def get_schaller_grid():
@@ -336,7 +370,12 @@ def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
 
 
 class SED(object):
-
+    """
+    Class that facilitates the use of the ivs.sed module.
+    
+    This class is meant to be an easy interface to many of the ivs.sed module's
+    functionality.
+    """
     def __init__(self,ID,photfile=None,plx=None):
         """
         Initialize SED class.
@@ -353,15 +392,18 @@ class SED(object):
         else:
             self.photfile = photfile
         
-        #-- keep information on the star from SESAME, but override parallax
-        #   and set new galactic coordinates
+        #-- keep information on the star from SESAME, but override parallax with
+        #   the value from Van Leeuwen's new reduction. Set the galactic
+        #   coordinates, which are not available from SESAME.
         self.info = sesame.search(ID)
-        plx_,gal_ = get_parallax(ID)
+        plx_,gal_,ppm_ = get_parallax(ID)
         if plx is not None:
             self.info['plx'] = plx
         elif plx_ is not None:
             self.info['plx'] = plx_
         self.info['gal'] = gal_
+        if ppm_ is not None:
+            self.info['ppm'] = ppm_
         
         #-- prepare for information on fitting processes
         self.results = {}
@@ -933,7 +975,40 @@ class SED(object):
             pl.ylabel(r'Declination $\delta$ [arcmin]')    
         except:
             pass
-    
+        
+        if 'ppm' in self.info:
+            ppm_ra,ppm_de = self.info['ppm']
+            print pl.xlim(),pl.ylim()
+            print ppm_ra[0]/50.,ppm_de[0]/50.
+            pl.annotate('',xy=(ppm_ra[0]/50.,ppm_de[0]/50.),
+                  xycoords='data',xytext=(0,0),textcoords='data',color='red',
+                  arrowprops=dict(facecolor='red', shrink=0.05),
+                  horizontalalignment='right', verticalalignment='top')
+            pl.annotate('pmRA: %.1f $\pm$ %.1f mas/yr\npmDE: %.1f $\pm$ %.1f mas/yr'%(ppm_ra[0],ppm_ra[1],ppm_de[0],ppm_de[1]),
+                        xy=(0.05,0.25),xycoords='axes fraction',color='red')
+            (d,dprob) = self.results['igrid_search']['d']
+            max_distance = d[np.argmax(dprob)]
+            e_max_distance = abs(max_distance - d[np.argmin(np.abs(dprob-0.5*max(dprob)))])
+            
+            tang_velo = 'Tan. vel. at %.0f+/-%.0f pc: '%(max_distance,e_max_distance)
+            
+            max_distance = conversions.convert('pc','km',max_distance,e_max_distance)
+            ppm_ra = conversions.convert('mas/yr','rad/s',*ppm_ra)
+            ppm_de = conversions.convert('mas/yr','rad/s',*ppm_de)
+            max_distance = unumpy.uarray([max_distance[0],max_distance[1]])
+            x = unumpy.uarray([ppm_ra[0],ppm_ra[1]])
+            y = unumpy.uarray([ppm_de[0],ppm_de[1]])
+            velocity = max_distance*utan( usqrt(x**2+y**2))
+            
+            
+            pl.annotate(tang_velo + '%s km/s'%(velocity),xy=(0.05,0.2),xycoords='axes fraction',color='red')
+            print self.info
+            if 'Vel' in self.info and 'v' in self.info['Vel']:
+                rad_velo = 'Rad. vel.: %.1f'%(self.info['Vel']['v'])
+                if 'e' in self.info['Vel']:
+                    rad_velo += '+/-%.1f'%(self.info['Vel']['e'])
+                pl.annotate(rad_velo+' km/s',xy=(0.05,0.15),xycoords='axes fraction',color='red')
+                print rad_velo
     
         
         
