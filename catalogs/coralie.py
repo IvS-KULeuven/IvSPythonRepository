@@ -46,10 +46,7 @@ def search(ID,radius=1.,filename=None):
         keep = [((re.compile(ID).search(objectn) is not None) and True or False) for objectn in data['object']]
         keep = np.array(keep)
     
-    if np.any(keep):
-        data = data[keep]
-    else:
-        data = data[:0]
+    data = data[keep]
     
     logger.info('Found %d spectra'%(len(data)))
     
