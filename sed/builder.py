@@ -251,40 +251,6 @@ def photometry2str(master):
     print '=========================================================================================================================='
     for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
         print '%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s'%(i,j,k,l,m,n,o,p)
-    
-
-@memoized
-def get_parallax(ID):
-    """
-    Retrieve a star's parallax, galactic coordinates in degrees and proper motions
-    in .
-    
-    @param ID: target's name
-    @type ID: string
-    @return: parallax and galactic coordinates
-    @rtype: (plx,e_plx),(long,lat)
-    """
-    #-- parallax
-    data,units,comms = vizier.search('I/311/hip2',ID=ID)
-    if data is None or not len(data):
-        logger.warning('No parallax found')
-        plx = None
-    else:
-        plx = (data['Plx'][0],data['e_Plx'][0])
-    #-- galactic coordinates
-    info = sesame.search(ID)
-    ra,dec = info['jpos'].split()
-    gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
-    gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
-    
-    #-- proper motions
-    data,units,comms = vizier.search('I/317/sample',ID=ID)
-    if data is None or not len(data):
-        ppm = None
-    else:
-        ppm = (data['pmRA'][0],data['e_pmRA'][0]),(data['pmDE'][0],data['e_pmDE'][0])
-    
-    return plx,gal,ppm
 
 @memoized
 def get_schaller_grid():
@@ -395,15 +361,12 @@ class SED(object):
         #-- keep information on the star from SESAME, but override parallax with
         #   the value from Van Leeuwen's new reduction. Set the galactic
         #   coordinates, which are not available from SESAME.
-        self.info = sesame.search(ID)
-        plx_,gal_,ppm_ = get_parallax(ID)
+        self.info = sesame.search(ID,fix=True)
         if plx is not None:
-            self.info['plx'] = plx
-        elif plx_ is not None:
-            self.info['plx'] = plx_
-        self.info['gal'] = gal_
-        if ppm_ is not None:
-            self.info['ppm'] = ppm_
+            if not 'plx' in self.info:
+                self.info['plx'] = {}
+            self.info['plx']['v'] = plx[0]
+            self.info['plx']['e'] = plx[1]
         
         #-- prepare for information on fitting processes
         self.results = {}
@@ -638,10 +601,13 @@ class SED(object):
     def set_distance(self):
         #-- calculate the distance
         cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
-        gal = self.info['gal']
-        plx = self.info.get('plx',None)
+        gal = self.info['galpos']
+        if 'plx' in self.info:
+            plx = self.info['plx']['v'],self.info['plx']['e']
+        else:
+            plx = None
         (d_models,dprob_models,radii),(d,dprob)\
-                   = calculate_distance(plx,self.info['gal'],self.results['igrid_search']['grid']['teff'][cutlogg],\
+                   = calculate_distance(plx,self.info['galpos'],self.results['igrid_search']['grid']['teff'][cutlogg],\
                                                    self.results['igrid_search']['grid']['logg'][cutlogg],\
                                                    self.results['igrid_search']['grid']['scale'][cutlogg])
         #-- calculate model extinction
@@ -786,12 +752,13 @@ class SED(object):
             pl.legend(loc='best',prop=dict(size='x-small'))
         else:
             pl.legend(loc='upper right',prop=dict(size='x-small'))
-        angdiam = 0.8#2*np.arctan(np.sqrt(scale))/np.pi*180*3600*1000
         loc = (0.05,0.05)
         teff = self.results[mtype]['grid']['teff'][-1]
         logg = self.results[mtype]['grid']['logg'][-1]
         ebv = self.results[mtype]['grid']['ebv'][-1]
-        pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3f'%(teff,logg,ebv,0),
+        scale = self.results[mtype]['grid']['scale'][-1]
+        angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
+        pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g'%(teff,logg,ebv,angdiam),
                     loc,xycoords='axes fraction')
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         
@@ -808,7 +775,10 @@ class SED(object):
             keep = systems==system
             if sum(keep) and not colors:
                 pl.gca()._get_lines.count -= 1
-                pl.loglog(eff_waves[include_grid][keep],chi2[include_grid][keep],'o',label=system)
+                try:
+                    pl.loglog(eff_waves[include_grid][keep],chi2[include_grid][keep],'o',label=system)
+                except:
+                    print eff_waves[include_grid][keep],chi2[include_grid][keep]
             elif sum(keep) and colors:
                 pl.gca()._get_lines.count -= 1
                 pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system)
@@ -834,7 +804,7 @@ class SED(object):
         ax_d = pl.gca()
         
         
-        gal = self.info['gal']
+        gal = self.info['galpos']
         #-- the plot
         dzoom = dprob>1e-10
         pl.plot(d,dprob,'k-')
@@ -870,7 +840,7 @@ class SED(object):
         cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
         (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
         (d,dprob) = self.results['igrid_search']['d']
-        gal = self.info['gal']
+        gal = self.info['galpos']
         
         n = 75000
         region = self.results['igrid_search']['grid']['CI_red']<0.95
@@ -908,7 +878,7 @@ class SED(object):
         ywidth = 90.
         ratio = ywidth/xwidth
 
-        gal = list(self.info['gal'])
+        gal = list(self.info['galpos'])
         if gal[0]>180:
             gal[0] = gal[0] - 360.
         #-- boundaries of ESO image
@@ -927,7 +897,7 @@ class SED(object):
         pl.yticks([])
         xlims = pl.xlim()
         ylims = pl.ylim()
-        gal = self.info['gal']
+        gal = self.info['galpos']
         pl.plot(2800,1720,'ro',ms=10)
         pl.plot([2800,-5000*np.sin(gal[0]/180.*np.pi)+2800],[1720,5000*np.cos(gal[0]/180.*np.pi)+1720],'r-',lw=2)
         
@@ -976,8 +946,8 @@ class SED(object):
         except:
             pass
         
-        if 'ppm' in self.info:
-            ppm_ra,ppm_de = self.info['ppm']
+        if 'pm' in self.info:
+            ppm_ra,ppm_de = (self.info['pm']['pmRA'],self.info['pm']['epmRA']),(self.info['pm']['pmDE'],self.info['pm']['epmDE'])
             print pl.xlim(),pl.ylim()
             print ppm_ra[0]/50.,ppm_de[0]/50.
             pl.annotate('',xy=(ppm_ra[0]/50.,ppm_de[0]/50.),

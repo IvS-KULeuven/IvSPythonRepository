@@ -1075,6 +1075,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units=
     responses = filters.list_response(wave_range=(wave[0],wave[-1]))
     filter_info = filters.get_info(responses)
     responses = filter_info['photband']
+    responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
     
     def do_ebv_process(ebvs,arr,responses):
         logger.info('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
