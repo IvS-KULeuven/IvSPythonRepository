@@ -3,9 +3,14 @@
 Interface to Sesame for general information on a star (SIMBAD)
 """
 import urllib
+import logging
+
+import numpy as np
+from ivs.units import conversions
 from ivs.misc import xmlparser
+from ivs.catalogs import vizier
 
-
+logger = logging.getLogger("CAT.SESAME")
 
 def get_URI(ID,db='S'):
     """
@@ -28,7 +33,7 @@ def get_URI(ID,db='S'):
 
 
 
-def search(ID,db='S'):
+def search(ID,db='S',fix=False):
     """
     Query Simbad, NED and/or Vizier for information on an identifier.
     
@@ -41,6 +46,16 @@ def search(ID,db='S'):
     This function returns a (sometimes nested) dictionary. Example output is
     given below, where nested dictionaries are shown with the separator '.'
     between the keys.
+    
+    If you set C{fix} to C{False}, following values will be updated:
+    
+        1. the spectral type will be replaced by the one from the Skiff (2010)
+        catalog if possible.
+        2. The parallax will be replaced with the value from the new Van Leeuwen
+        reduction.
+        3. The galactic coordinates will be added (converted from RA and DEC)
+        4. The proper motions will be taken from the PPMXL catalog from Roeser
+        2010.
     
     Example usage:
     
@@ -146,6 +161,35 @@ def search(ID,db='S'):
         #-- we found nothing!
         database = {}
     ff.close()
+    
+    if fix:
+        #-- fix the parallax
+        data,units,comms = vizier.search('I/311/hip2',ID=ID)
+        if data is not None and len(data):
+            if not 'plx' in database:
+                database['plx'] = {}
+            database['plx']['v'] = data['Plx'][0]
+            database['plx']['e'] = data['e_Plx'][0]
+            database['plx']['r'] = 'I/311/hip2'
+        #-- fix the spectral type
+        data,units,comms = vizier.search('B/mk/mktypes',ID=ID)
+        if data is not None and len(data):
+            database['spType'] = data['SpType'][0]
+        #-- add galactic coordinates (in degrees)
+        ra,dec = database['jpos'].split()
+        gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
+        gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
+        database['galpos'] = gal
+        #-- fix the proper motions
+        data,units,comms = vizier.search('I/317/sample',ID=ID)
+        if data is not None and len(data):
+            if not 'pm' in database:
+                database['pm'] = {}
+            database['pm']['pmRA'] = data['pmRA'][0]
+            database['pm']['pmDE'] = data['pmDE'][0]
+            database['pm']['epmRA'] = data['e_pmRA'][0]
+            database['pm']['epmDE'] = data['e_pmDE'][0]
+            database['pm']['r'] = 'I/317/sample'
     return database
     
 if __name__=="__main__":
