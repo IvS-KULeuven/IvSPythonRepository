@@ -150,7 +150,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new'):
     
     hdulist.close()
 
-def write_array(arr,filename,names=(),units=(),header_dict={},ext='new'):
+def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=True):
     """
     Write or add an array to a FITS file.
     
@@ -164,12 +164,14 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new'):
     A header_dictionary can be given, it is used to update an existing header
     or create a new one if the extension is new.
     """
-    if not os.path.isfile(filename):
-        primary = np.array([[0]])
-        hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
-        hdulist.writeto(filename)
-    
-    hdulist = pyfits.open(filename,mode='update')
+    if close:
+        if not os.path.isfile(filename):
+            primary = np.array([[0]])
+            hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
+            hdulist.writeto(filename)
+        hdulist = pyfits.open(filename,mode='update')
+    else:
+        hdulist = filename
     
     #-- create the table HDU
     cols = []
@@ -192,6 +194,9 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new'):
         for key in header_dict:
             hdulist[ext].header.update(key,header_dict[key])
     
-    hdulist.close()
+    if close:
+        hdulist.close()
+    else:
+        return hdulist
 
 #}
