@@ -48,6 +48,8 @@ def search(ID,radius=1.,filename=None):
     
     if np.any(keep):
         data = data[keep]
+    else:
+        data = data[:0]
     
     logger.info('Found %d spectra'%(len(data)))
     
