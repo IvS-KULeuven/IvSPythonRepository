@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Decorators specifically for SED package
+"""
 import functools
 import logging
 import numpy as np
@@ -25,6 +28,10 @@ def parallel_gridsearch(fctn):
         threads = kwargs.pop('threads',1)
         if threads=='max':
             threads = cpu_count()
+        elif threads=='half':
+            threads = cpu_count()/2
+        elif threads=='safe':
+            threads = cpu_count()-1
         threads = int(threads)
         index = np.arange(len(args[0]))
         

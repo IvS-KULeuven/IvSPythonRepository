@@ -36,6 +36,7 @@ import Image
 import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
+import pyfits
 
 from ivs import config
 from ivs.misc import numpy_ext
@@ -620,7 +621,7 @@ class SED(object):
     #}
     
     #{ Input and output
-    def plot_grid(self,ptype='CI_red',mtype='igrid_search'):
+    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search'):
         """
         Plot grid as scatter plot
         
@@ -635,27 +636,34 @@ class SED(object):
             vmax = 95.
             vmin = colors.min()
         #-- grid scatter plot
-        pl.scatter(self.results[mtype]['grid']['teff'][region],
-                   self.results[mtype]['grid']['logg'][region],
+        pl.scatter(self.results[mtype]['grid'][x][region],
+                   self.results[mtype]['grid'][y][region],
              c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
         #-- mark best value
-        pl.plot(self.results[mtype]['grid']['teff'][-1],
-                self.results[mtype]['grid']['logg'][-1],'r+',ms=40,mew=3)
+        pl.plot(self.results[mtype]['grid'][x][-1],
+                self.results[mtype]['grid'][y][-1],'r+',ms=40,mew=3)
         #-- set the limits to only include the 95 interval
-        pl.xlim(self.results[mtype]['grid']['teff'][region].max(),
-                self.results[mtype]['grid']['teff'][region].min())
-        pl.ylim(self.results[mtype]['grid']['logg'][region].max(),
-                self.results[mtype]['grid']['logg'][region].min())
+        pl.xlim(self.results[mtype]['grid'][x][region].max(),
+                self.results[mtype]['grid'][x][region].min())
+        pl.ylim(self.results[mtype]['grid'][y][region].max(),
+                self.results[mtype]['grid'][y][region].min())
         cbar = pl.colorbar()
-        pl.xlabel('log (effective temperature [K]) [dex]')
-        pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
+        
+        #-- set the x/y labels
+        if   x=='teff': pl.xlabel('log (effective temperature [K]) [dex]')
+        elif x=='z'   : pl.xlabel('log (Metallicity Z [$Z_\odot$]) [dex]')
+        elif x=='logg': pl.xlabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
+        elif x=='ebv' : pl.xlabel('E(B-V) [mag]')
+        if   y=='teff': pl.ylabel('log (effective temperature [K]) [dex]')
+        elif y=='z'   : pl.ylabel('log (Metallicity Z [$Z_\odot$]) [dex]')
+        elif y=='logg': pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
+        elif y=='ebv' : pl.ylabel('E(B-V) [mag]')
+        
         #-- set the colorbar label
-        if 'CI'in ptype:
-            cbar.set_label('Probability [%]')
-        elif ptype=='z':
-            cbar.set_label('Metallicity Z ($Z_\odot$)')
-        elif ptype=='ebv':
-            cbar.set_label('E(B-V) [mag]')
+        if 'CI'in ptype:   cbar.set_label('Probability [%]')
+        elif ptype=='z':   cbar.set_label('Metallicity Z ($Z_\odot$)')
+        elif ptype=='ebv': cbar.set_label('E(B-V) [mag]')
+        
         logger.info('Plotted teff-logg diagram of %s'%(ptype))
             
     def plot_sed(self,colors=False,mtype='igrid_search'):
@@ -758,7 +766,7 @@ class SED(object):
         ebv = self.results[mtype]['grid']['ebv'][-1]
         scale = self.results[mtype]['grid']['scale'][-1]
         angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
-        pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g'%(teff,logg,ebv,angdiam),
+        pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
                     loc,xycoords='axes fraction')
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         
@@ -778,7 +786,7 @@ class SED(object):
                 try:
                     pl.loglog(eff_waves[include_grid][keep],chi2[include_grid][keep],'o',label=system)
                 except:
-                    print eff_waves[include_grid][keep],chi2[include_grid][keep]
+                    logger.critical('Plotting of CHI2 of absolute values failed')
             elif sum(keep) and colors:
                 pl.gca()._get_lines.count -= 1
                 pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system)
@@ -869,7 +877,7 @@ class SED(object):
         
     
     def plot_MW_side(self):
-        im = Image.open(config.get_datafile('images','ESOmilkyway.tif'))
+        im = Image.open(config.get_datafile('images','NRmilkyway.tif'))
         left,bottom,width,height = 0.0,0.0,1.0,1.0
         startm,endm = 183,-177
         startv,endv = -89,91
@@ -948,8 +956,6 @@ class SED(object):
         
         if 'pm' in self.info:
             ppm_ra,ppm_de = (self.info['pm']['pmRA'],self.info['pm']['epmRA']),(self.info['pm']['pmDE'],self.info['pm']['epmDE'])
-            print pl.xlim(),pl.ylim()
-            print ppm_ra[0]/50.,ppm_de[0]/50.
             pl.annotate('',xy=(ppm_ra[0]/50.,ppm_de[0]/50.),
                   xycoords='data',xytext=(0,0),textcoords='data',color='red',
                   arrowprops=dict(facecolor='red', shrink=0.05),
@@ -972,13 +978,11 @@ class SED(object):
             
             
             pl.annotate(tang_velo + '%s km/s'%(velocity),xy=(0.05,0.2),xycoords='axes fraction',color='red')
-            print self.info
             if 'Vel' in self.info and 'v' in self.info['Vel']:
                 rad_velo = 'Rad. vel.: %.1f'%(self.info['Vel']['v'])
                 if 'e' in self.info['Vel']:
                     rad_velo += '+/-%.1f'%(self.info['Vel']['e'])
                 pl.annotate(rad_velo+' km/s',xy=(0.05,0.15),xycoords='axes fraction',color='red')
-                print rad_velo
     
         
         
@@ -1009,7 +1013,10 @@ class SED(object):
         pl.axes([0,0.5,0.5,0.5]);self.plot_MW_top()
         pl.axes([0.5,0.5,0.5,0.5]);self.plot_finderchart()
     
-    def save2fits(self,filename=None,overwrite=True):
+    def save_fits(self,filename=None,overwrite=True):
+        """
+        Save fitting parameters and results to a FITS file.
+        """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
         if overwrite:
@@ -1022,21 +1029,47 @@ class SED(object):
         master = mlab.rec_append_fields(master, 'mod_eff_wave',eff_waves)
         master = mlab.rec_append_fields(master, 'chi2',chi2)
         
-        results_dict = {}
+        results_dict = dict(extname='model')
         keys = sorted(self.results['igrid_search'])
         for key in keys:
             if 'CI' in key:
                 for ikey in self.results['igrid_search'][key]:
                     results_dict[ikey] = self.results['igrid_search'][key][ikey]
-                
-            
-        fits.write_recarray(master,filename)
+                    
+        fits.write_recarray(master,filename,header_dict=dict(extname='data'))
         fits.write_array(list(self.results['model']),filename,
                                 names=('wave','flux','dered_flux'),
                                 units=('A','erg/s/cm2/A','erg/s/cm2/A'),
                                 header_dict=results_dict)
         
+        results_dict['extname'] = 'igrid_search'
         fits.write_recarray(self.results['igrid_search']['grid'],filename,header_dict=results_dict)
+    
+    def load_fits(self,filename=None):
+        """
+        Load grid results from a FITS file
+        """
+        if filename is None:
+            filename = os.path.splitext(self.photfile)[0]+'.fits'
+        ff = pyfits.open(filename)
+        
+        #-- grid search results
+        self.results['igrid_search'] = {}
+        fields = ff[3].columns.names
+        master = np.rec.fromarrays([ff[3].data.field(field) for field in fields],names=','.join(fields))
+        self.results['igrid_search']['grid'] = master
+        
+        self.results['model'] = ff[2].data.field('wave'),ff[2].data.field('flux'),ff[2].data.field('dered_flux')
+        self.results['chi2'] = ff[1].data.field('chi2')
+        self.results['synflux'] = ff[1].data.field('mod_eff_wave'),ff[1].data.field('synflux'),ff[1].data.field('photband')
+        
+        
+        #-- observed photometry
+        fields = ff[1].columns.names
+        master = np.rec.fromarrays([ff[1].data.field(field) for field in fields],names=','.join(fields))
+        self.master = master
+        
+        ff.close()
     
     #}
 
