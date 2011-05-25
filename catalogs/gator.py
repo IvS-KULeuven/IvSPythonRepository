@@ -142,12 +142,13 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     >>> master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
     >>> master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
     """
+    kwargs['ID'] = ID
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements
     for source in cat_info.sections():
-        results,units,comms = search(source,ID=ID,**kwargs)
+        results,units,comms = search(source,**kwargs)
         if results is not None:
             master = gator2phot(source,results,units,master,extra_fields=extra_fields)
     
@@ -270,7 +271,7 @@ def txt2recarray(filename):
 
 
 
-def gator2phot(source,results,units,master=None,extra_fields=None):
+def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_DEJ2000']):
     """
     Convert/combine Gator record arrays to measurement record arrays.
     
