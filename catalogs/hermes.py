@@ -30,8 +30,8 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     @param data_type: if None, all data will be returned. Otherwise, subset
     'cosmicsremoved', 'merged' or 'raw'
     @type data_type: str
-    @param radius: search radius around the coordinates
-    @type radius: 1
+    @param radius: search radius around the coordinates (arcminutes)
+    @type radius: float
     @param filename: write summary to outputfile if not None
     @type filename: str
     @return: record array with summary information on the observations, as well
@@ -40,6 +40,7 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     """
     data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv'),splitchar='\t')
     info = sesame.search(ID)
+    
     if info:
         ra,dec = info['jradeg'],info['jdedeg']
         keep = np.sqrt((data['ra']-ra)**2 + (data['dec']-dec)**2) < radius/60.
@@ -50,13 +51,17 @@ def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
     if np.any(keep):
         data = data[keep]
     
-    if data_type is not None:
-        data_type == data_type.lower()
-        keep = np.array([(data_type in ff.lower() and True or False) for ff in data['filename']])
-        data = data[keep]
-    seqs = sorted(set(data['unseq']))
+        if data_type is not None:
+            data_type == data_type.lower()
+            keep = np.array([(data_type in ff.lower() and True or False) for ff in data['filename']])
+            data = data[keep]
+            seqs = sorted(set(data['unseq']))
+        logger.info('Found %d spectra (data type=%s with unique unseqs)'%(len(seqs),data_type))
+    else:
+        data = data[:0]
+        logger.info('Found no spectra')
     
-    logger.info('Found %d spectra (data type=%s with unique unseqs)'%(len(seqs),data_type))
+    
     
     if filename is not None:
         ascii.write_array(data,filename,auto_width=True,header=True)
