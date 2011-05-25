@@ -286,7 +286,7 @@ def _geneva_name_resolver(code=None,ID=None):
         elif 'SAO' in ID: code = '15%06d'%(int(ID.split('SAO')[1]))
         elif 'HIC' in ID: code = '16%06d'%(int(ID.split('HIC')[1]))
         elif 'PPM' in ID: code = '17%06d'%(int(ID.split('PPM')[1]))
-        else: code = 0
+        else: code = ID
         return  int(code)
         
 
