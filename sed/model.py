@@ -39,6 +39,7 @@ caldir = os.sep.join(['sedtables','calibrators'])
 defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
+                ct='mlt',                                 # NEMO (convection theory)
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
@@ -75,7 +76,7 @@ def get_gridnames():
     @rtype: list of str
     """
     return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-            'tlusty','uvblue','atlas12']
+            'tlusty','uvblue','atlas12','nemo','tkachenko']
             #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
 
 
@@ -109,6 +110,9 @@ def get_file(integrated=False,**kwargs):
         - grid='marcs'
         - grid='marcs2'
         - grid='atlas12'
+        - grid='tkachenko': metallicity z
+        - grid='nemo': convection theory and metallicity (CM=Canuto and Mazzitelli 1991),
+        (CGM=Canuto,Goldman,Mazzitelli 1996), (MLT=mixinglengththeory a=0.5)
     
     @param integrated: choose integrated version of the grid
     @type integrated: boolean
@@ -139,11 +143,12 @@ def get_file(integrated=False,**kwargs):
     c = kwargs.get('c',defaults['c'])
     m = kwargs.get('m',defaults['m'])
     co= kwargs.get('co',defaults['co'])
+    #-- only for Nemo
+    ct = kwargs.get('ct','mlt')
     
     #-- figure out what grid to use
     if grid=='fastwind':
         basename = 'fastwind_sed.fits'
-        
     elif grid=='kurucz':
         if not isinstance(z,str): z = '%.1f'%(z)
         if not isinstance(vturb,str): vturb = '%d'%(vturb)
@@ -191,6 +196,13 @@ def get_file(integrated=False,**kwargs):
     elif grid=='atlas12':
         if not isinstance(z,str): z = '%.1f'%(z)
         basename = 'atlas12_z%s_sed.fits'%(z)
+    elif grid=='tkachenko':
+        basename = 'tkachenko_z%.2f.fits'%(z)
+    elif grid=='nemo':
+        ct = ct.lower()
+        if ct=='mlt': ct = ct+'072'
+        else: ct = ct+'288'
+        basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
