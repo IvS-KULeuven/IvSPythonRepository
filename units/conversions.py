@@ -21,7 +21,11 @@ Some of the many possibilities include:
 
 The main function C{convert} does all the work and is called via
 
-C{result = convert('km','m',1.)}
+>>> result = convert('km','m',1.)
+
+or when the error is known
+
+>>> result,e_result = convert('km','m',1.,0.1)
 
 Be B{careful} when mixing nonlinear conversions (e.g. magnitude to flux) with
 linear conversions (e.g. Jy to W/m2/m).
@@ -57,7 +61,7 @@ except ImportError: print("Unable to load pyephem, coordinate transfos unavailab
 #-- from IVS repository
 from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc
-from ivs.units.uncertainties.unumpy import log10
+from ivs.units.uncertainties.unumpy import log10,sqrt
 from ivs.sed import filters
 from ivs.io import ascii
 from ivs.misc import loggers
@@ -952,7 +956,75 @@ def times_cy(arg,**kwargs):
     return 2*np.pi*arg
 
 
+
 #}
+
+
+#{ Stellar calibrations
+
+def derive_radius(luminosity,temperature):
+    """
+    Convert luminosity and effective temperature to stellar radius.
+    
+    Units given to luminosity and temperature must be understandable by C{convert}.
+    
+    Stellar radius is returned in SI units.
+    
+    Example usage:
+    
+    >>> calculate_radius((3.9,'[Lsol]'),(3.72,'[K]'))/Rsol
+    107.994124114
+    
+    @param luminosity: (Luminosity(, error), units)
+    @type luminosity: 2 or 3 tuple
+    @param temperature: (effective temperature(, error), units)
+    @type temperature: 2 or 3 tuple
+    @return: radius (and error) in SI units
+    @rtype: 1- or 2-tuple
+    """
+    #-- take care of luminosity
+    if len(luminosity)==3:
+        luminosity = unumpy.uarray([luminosity[0],luminosity[1]])
+    lumi = convert(luminosity[-1],'SI',*luminosity[:-1])
+    #-- take care of effective temperature
+    if len(temperature)==3:
+        temperature = unumpy.uarray([temperature[0],temperature[1]])
+    teff = convert(temperature[-1],'SI',*temperature[:-1])
+    #-- calculate radius in SI units
+    R = sqrt(lumi / (teff**4)/(4*np.pi*sigma))
+    return R
+    
+def derive_logg(mass,radius):
+    """
+    Convert mass and radius to stellar surface gravity.
+    
+    Units given to mass and radius must be understandable by C{convert}.
+    
+    Logarithm of surface gravity is returned in CGS units.
+    
+    @param mass: (mass(, error), units)
+    @type mass: 2 or 3 tuple
+    @param radius: (radius(, error), units)
+    @type radius: 2 or 3 tuple
+    @return: log g (and error) in CGS units
+    @rtype: 1- or 2-tuple
+    """
+    #-- take care of mass
+    if len(mass)==3:
+        mass = unumpy.uarray([mass[0],mass[1]])
+    M = convert(mass[-1],'SI',*mass[:-1])
+    #-- take care of radius
+    if len(radius)==3:
+        radius = unumpy.uarray([radius[0],radius[1]])
+    R = convert(radius[-1],'cm',*radius[:-1])
+    #-- calculate surface gravity in logarithmic CGS units
+    logg = log10(GG_cgs*mass*Msol_cgs / (R**2))
+    return logg
+    
+
+#}
+
+
 
 #{ Nonlinear change-of-base functions
 
@@ -1151,6 +1223,9 @@ class JulianDay(NonLinearConverter):
 class ModJulianDay(NonLinearConverter):
     """
     Convert a Modified Julian Day to Julian Day  and back
+    
+    The CoRoT conversion has been checked with the CoRoT data archive: it is
+    correct at least to the second (the archive tool's precision).
     """
     ZP = {'COROT':2451545.,
             'HIP':2440000.,
