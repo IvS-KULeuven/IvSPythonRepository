@@ -11,7 +11,10 @@ frequency will be chosen. See the 'defaults_pergram' decorator for a list of
 keywords common to all periodogram calculations.
 
 All periodograms can be computed in parallel, by supplying an extra keyword
-'threads'.
+'threads':
+
+>>> freq,ampl = scargle(times,signal,threads=2)
+
 """
 import numpy as np
 from ivs.misc.decorators import make_parallel
@@ -231,7 +234,7 @@ def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
         >>> times = np.array([times_[i] for i in xrange(len(times_)) if (i%10)>7])
         >>> signal = np.sin(2*pi/10*times) + np.random.normal(size=len(times))
         >>> niter,freqbins = 10,[0,1.2]
-        >>> p1 = scargle(times,signal,fn=1.2,norm='amplitude')
+        >>> p1 = scargle(times,signal,fn=1.2,norm='amplitude',threads=2)
         >>> p2 = clean(times,signal,fn=1.2,gain=1.0,niter=niter,freqbins=freqbins)
         >>> p3 = clean(times,signal,fn=1.2,gain=0.1,niter=niter,freqbins=freqbins)
         >>> from pylab import figure,plot,legend

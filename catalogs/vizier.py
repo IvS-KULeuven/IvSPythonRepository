@@ -4,9 +4,79 @@ Interface to the VizieR website.
 
 Download or retrieve VizieR catalogs.
 
+The basic interface C{search} lets you download B{entire catalogs or parts} of
+them. The structure array containts then one row per target, the columns
+denoting the different columns of the catalogs. You can also specify two
+catalogs in C{xmatch}; the second will then be cross-matched against the first.
+
+The convenience functions (C{get_photometry},...) aim to collect information
+from different catalogs on B{one target} in one array. Each row represents
+one measurement from one catalog (typically you'll have many rows both from one
+catalog but also from different catalogs). The columns then denote the contents
+of each row (e.g. the magnitude, photometric passband etc).
+
+1. Download catalogs
+====================
+
+1.1. To a file
+--------------
+
+Download the entire Van Leeuwen Hipparcos New Reduction catalog to a file. The
+filename is returned as a check for success.
+
+>>> filename = search('I/311/hip2',filename='vanleeuwen.tsv')
+
+Download a 60 arcsec circular area from the catalog around the coordinates
+ra=237.1, dec=-10.10
+
+>>> filename = search('I/311/hip2',ra=237.1,dec=-10.10,radius=60.,filename='vanleeuwen.tsv')
+
+Search for the presence of a target in the catalog. The downloaded file will 
+contain no rows if the target is not in the catalog. If more than one target are
+in the search radius around the target, there will be more than one row. They
+are ordered via distance to the target, so it's probably the first one you need.
+
+>>> filename = search('I/311/hip2',ID='vega',filename='vanleeuwen.tsv')
+>>> filename = search('I/311/hip2',ID='vega',filename='vanleeuwen.tsv',radius=60.)
+
+1.2 To a RecordArray
+--------------------
+
+Instead of downloading to a file and then reading in the file for further
+analysis, you can download the contents of the file directly to a record array,
+retrieving the units and comments from the catalog in one go. The equivalent of
+the third example above becomes
+
+>>> rec_arr,unit_dict,comment_str = search('I/311/hip2',ID='vega')
+
+With these record arrays, its very easy to select targets based on criteria.
+For example, if you want to extract 2MASS targets in a certain area with a
+negative H-K index, you can do
+
+>>> data,units,comms = search('II/246/out',ra=237.1,dec=-10.10,radius=600.)
+>>> selection = (data['Hmag'] - data['Kmag']) < 0
+>>> data = data[selection] 
+
+1.3 List relevant catalogs
+--------------------------
+
+To know in which catalogs your target is present, list them all via
+
+>>> my_cats = list_catalogs('vega')
+
+Now you could iterate over them and download them to a file or whatever.
+
+2. Convenience functions
+========================
+
 You can define 'standard' photometric catalogs in the C{vizier_cats.cfg} file.
-This files is basically a translator for VizieR column headers to photometric
-passbands (and colors).
+This file is basically a translator for VizieR column headers to photometric
+passbands (and colors). For examples, see the file itself.
+
+You can add catalogs on the fly via
+
+>>> cat_info.add_section('my_new_catalog')
+>>> cat_info.update('my_new_catalog','Bmag','JOHNSON.B')
 """
 #-- standard libraries
 import numpy as np
@@ -15,6 +85,7 @@ import logging
 import os
 import pyfits
 import ConfigParser
+from scipy.spatial import KDTree
 
 #-- IvS repository
 from ivs.io import ascii
@@ -62,15 +133,17 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     C{tsv}, and the results will be saved to a temporary
     file and deleted after the function is finished. The content of the file
     will be read into a dictionary, as well as the units (two separate
-    dictionaries with the same keys, depending on the colum names in the
+    dictionaries with the same keys, depending on the column names in the
     catalog). The entries in the dictionary are of type C{ndarray}, and will
-    be converted to a float-array if possible. If not, the array will consist
-    of strings. The comments are also returned as a list of strings.
+    be converted to a float-array (no integers, we need to support nans) if
+    possible. If not, the array will consist of strings. The comments are also
+    returned as a list of strings.
     
     WARNING: when retrieving a FITS file, ViZieR sometimes puts weird formats
     into the header ('3F10.6E' in the 2MASS catalog), which cannot be read by
-    the C{pyfits} module. One option is to download to another format, or to
-    restrict the columns with C{out_all=None}.
+    the C{pyfits} module. These columns are actually multi-dimensional vectors.
+    One option is to download to another format, or to restrict the columns with
+    C{out_all=None}.
     
     Example usage:
     
@@ -109,6 +182,8 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     @return: filename / catalog data columns, units, comments
     @rtype: str/ record array, dict, list of str
     """
+    #-- two ways of giving filename: either complete filename with extension,
+    #   or filename without extension, but C{filetype} speficied.
     if filename is not None and '.' in os.path.basename(filename):
         filetype = os.path.splitext(filename)[1][1:]
     elif filename is not None:
@@ -138,7 +213,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         return results,units,comms
     
 
-def list_catalogs(ID,**kwargs):
+def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     """
     Print and return all catalogs containing information on the star.
     
@@ -157,10 +232,7 @@ def list_catalogs(ID,**kwargs):
     names of the catalogs
     @rtype: dictionary
     """
-    filetype = kwargs.setdefault('filetype','fits')
-    filename = kwargs.pop('filename',None)
-    base_url = _get_URI(ID=ID,**kwargs)
-    filetype = kwargs.pop('filetype','tsv')
+    base_url = _get_URI(ID=ID,filetype='fits',**kwargs)
     
     #-- download the file
     url = urllib.URLopener()
@@ -194,6 +266,100 @@ def list_catalogs(ID,**kwargs):
         url.close()
         return filen        
 
+
+def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
+    """
+    Crossmatch two vizier catalogs via a fast KDTree.
+    
+    The limit for these catalogs is probably somewhere between ~100000 entries,
+    so make sure your catalogs do not contain to many targets. You can always
+    do a subselection via the keyword arguments (e.g. give ra, dec and radius).
+    
+    An output tsv file will be written (by default named 'source1__source2',
+    which can be read in via C{tsv2recarray} for further analysis.
+    
+    tolerance is in arcseconds.
+    
+    Extra keyword arguments are passed to C{search}. Column names of second
+    source will be appended with postfix '_2', to avoid clashes of double-defined
+    column headers.
+    """
+    #-- construct default filename.
+    if output_file is None:
+        output_file = "__".join([source1,source2]).replace('/','_').replace('+','')+'.tsv'
+    
+    #-- download the two catalogs
+    cat1,units1,comms1 = vizier.search(source1,**kwargs)
+    cat2,units2,comms2 = vizier.search(source2,**kwargs)
+    
+    logger.info('Start Vizier Xmatch')
+    coords1 = np.array([cat1['_RAJ2000'],cat1['_DEJ2000']]).T
+    coords2 = np.array([cat2['_RAJ2000'],cat2['_DEJ2000']]).T
+    
+    logger.info('Building KDTree of shape %d,%d'%coords1.shape)
+    tree = KDTree(coords1)
+    
+    logger.info('Querying KDTree with %d entries'%(len(coords2)))
+    distance,order = tree.query(coords2)
+    
+    keep = distance<(tol/(60.))
+    
+    logger.info('Matched %d points (tol<%.3g arcsec)'%(sum(keep),tol))
+
+    #-- this the subset matching both catalogues
+    cat1 = cat1[order[keep]]
+    cat2 = cat2[keep]
+    
+    #-- now write it to a vizier-like file...
+    #-- first append '2' to each column name of the second source in the
+    #   comments, to make sure there are no doubles.
+    for i,line in enumerate(comms2):
+        line = line.split('\t')
+        if line[0]=='Column':
+            line[1] = line[1]+'_2'
+            comms2[i] = '\t'.join(line)
+    #-- change unit dictionaries and dtypes
+    units2_ = {}
+    for key in units2: units2_[key+'_2'] = units2[key]
+    cat2.dtype.names = [name+'_2' for name in cat2.dtype.names]
+    
+    
+    ff = open(output_file,'w')
+    ff.write('\n#'.join(comms1))
+    ff.write('\n#'.join(comms2))
+    
+    names1 = list(cat1.dtype.names)
+    names2 = list(cat2.dtype.names)
+    dtypes = [(name,cat1.dtype[names1.index(name)].str) for name in names1]
+    dtypes += [(name,cat2.dtype[names2.index(name)].str) for name in names2]
+    
+    ff.write('\n')
+    for nr,i in enumerate(dtypes):
+        ff.write(str(i[0]))
+        if nr<(len(dtypes)-1): ff.write('\t')
+    ff.write('\n')
+    for nr,i in enumerate(dtypes):
+        if i[0]   in units1:   ff.write(units1[i[0]])
+        elif i[0] in units2_:  ff.write(units2_[i[0]])
+        else:
+            raise ValueError,'this cannot be'
+        if nr<(len(dtypes)-1): ff.write('\t')
+        
+    ff.write('\n')
+    ff.write('\t'.join(['---']*len(dtypes)))
+    ff.write('\n')
+    
+    for row1,row2 in itertools.izip(cat1,cat2):
+        ff.write('\t'.join([str(x) for x in row1])+'\t')
+        ff.write('\t'.join([str(x) for x in row2])+'\n')
+    
+    ff.close()    
+
+
+
+
+#}
+#{ Convenience functions
 def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
     Download all available photometry from a star to a record array.
@@ -201,12 +367,13 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     For extra kwargs, see L{_get_URI} and L{vizier2phot}
     
     """
+    kwargs['ID'] = ID
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements
     for source in cat_info.sections():
-        results,units,comms = search(source,ID=ID,**kwargs)
+        results,units,comms = search(source,**kwargs)
         if results is not None:
             master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
     
@@ -248,14 +415,15 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
     
-    if master_ is not None:
+    if master_ is not None and master is not None:
         master = numpy_ext.recarr_addrows(master_,master.tolist())
+    elif master is None:
+        master = master_
     
     #-- and return the results
     return master
 
-#}
-#{ Convenience functions
+
 
 def tsv2recarray(filename):
     """
