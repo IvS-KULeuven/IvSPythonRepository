@@ -53,12 +53,21 @@ def parallel_pergram(fctn):
         
         #-- join all periodogram pieces
         freq = np.hstack([output[0] for output in arr])
-        ampl = np.hstack([output[1] for output in arr]) 
+        ampl = np.hstack([output[1] for output in arr])
         sort_arr = np.argsort(freq)
         ampl = ampl[sort_arr] 
         freq = freq[sort_arr]
         ampl[np.isnan(ampl)] = 0.
-        return freq,ampl
+        
+        if len(arr[0])>2:
+            rest = []
+            for i in range(2,len(arr[0])):
+                rest.append(np.hstack([output[i] for output in arr]))
+            rest = np.array(rest).T
+            rest = rest[sort_arr].T
+            return tuple([freq,ampl]+list(rest))
+        else:
+            return freq,ampl
         
     return globpar
 
@@ -107,4 +116,20 @@ def defaults_pergram(fctn):
                 kwargs['weights'] = weights
         return fctn(times,signal,*args[2:],**kwargs)
         
+    return globpar
+
+
+def defaults_filtering(fctn):
+    """
+    Set default parameters common to all filtering functions.
+    """
+    @functools.wraps(fctn)
+    def globpar(*args,**kwargs):
+        #-- this is the information we need the compute everything
+        x = args[0]
+        f0 = kwargs.get('f0',0)
+        fn = kwargs.get('fn',len(x))
+        kwargs['f0'] = f0
+        kwargs['fn'] = fn
+        return fctn(*args,**kwargs)
     return globpar
