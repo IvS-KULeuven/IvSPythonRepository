@@ -1286,67 +1286,79 @@ _fluxcalib = os.path.join(os.path.abspath(os.path.dirname(__file__)),'fluxcalib.
 #-- basic units which the converter should know about
 _factors = {
 # DISTANCE
-           'm':     (  1e+00,       'm'),
-           'A':     (  1e-10,       'm'),
-           'AU':    (au,            'm'),
-           'pc':    (pc,            'm'),
-           'ly':    (ly,            'm'),
-           'Rsol':  (Rsol,          'm'),
-           'Rearth':(Rearth,        'm'),
-           'ft':    (0.3048,        'm'),
-           'in':    (0.0254,        'm'),
-           'mi':    (1609.344,      'm'),
+           'm':     (  1e+00,       'm'), # meter
+           'A':     (  1e-10,       'm'), # Angstrom
+           'AU':    (au,            'm'), # astronomical unit
+           'pc':    (pc,            'm'), # parsec
+           'ly':    (ly,            'm'), # light year
+           'Rsol':  (Rsol,          'm'), # Solar radius
+           'Rearth':(Rearth,        'm'), # Earth radius
+           'ft':    (0.3048,        'm'), # foot (international)
+           'in':    (0.0254,        'm'), # inch (international)
+           'mi':    (1609.344,      'm'), # mile (international)
+           'a0':    (a0,            'm'), # Bohr radius
+           'ell':   (1.143,         'm'), # ell
+           'yd':    (0.9144,        'm'), # yard (international)
 # MASS
-           'g':     (  1e-03,       'kg'),
-           'Msol':  (Msol,          'kg'),
-           'Mearth':(Mearth,        'kg'),
-           'Mjup':  (Mjup,          'kg'),
-           'Mlun':  (Mlun,          'kg'),
+           'g':     (  1e-03,       'kg'), # gram
+           'Msol':  (Msol,          'kg'), # Solar mass
+           'Mearth':(Mearth,        'kg'), # Earth mass
+           'Mjup':  (Mjup,          'kg'), # Jupiter mass
+           'Mlun':  (Mlun,          'kg'), # Lunar mass
+           'lbs':   (0.45359237,    'kg'), # pound
+           'st':    (6.35029318,    'kg'), # stone
 # TIME
-           's':     (  1e+00,       's'),
-           'min':   (  60.,         's'),
-           'h':     (3600.,         's'),
-           'd':     (24*3600.,      's'),
-           'sidereal': (1.0027379093,''),
-           'yr':    (365*24*3600.,  's'),
-           'cr':    (100*365*24*3600,'s'),
-           'hz':    (1e+00,         'cy s-1'),
+           's':     (  1e+00,       's'),     # second
+           'min':   (  60.,         's'),     # minute
+           'h':     (3600.,         's'),     # hour 
+           'd':     (24*3600.,      's'),     # day
+           'wk':    (7*24*3600.,    's'),     # week
+           'mo':    (30*7*24*3600., 's'),     # month
+           'sidereal': (1.0027379093,''),     # sidereal
+           'yr':    (365*24*3600.,  's'),     # year
+           'cr':    (100*365*24*3600,'s'),    # century
+           'hz':    (1e+00,         'cy s-1'),# Hertz
            'JD':    (1e+00,         'JD'), # Julian Day
            'CD':    (JulianDay,     'JD'), # Calender Day
            'MJD':   (ModJulianDay,  'JD'), # Modified Julian Day
+           'j':     (1/60.,         's'),  # jiffy
 # ANGLES
-           'rad':         (1e+00,               'rad'),
-           'cy':          (1e+00,               'cy'),
-           'deg':         (np.pi/180.,             'rad'),
-           'am':          (np.pi/180./60.,         'rad'),
-           'as':          (np.pi/180./3600.,       'rad'),
-           'sr':          (1,        'rad2'),#1/39.4784176045
+           'rad':         (1e+00,               'rad'),  # radian
+           'cy':          (1e+00,               'cy'),   # cycle
+           'deg':         (np.pi/180.,          'rad'),  # degree
+           'am':          (np.pi/180./60.,      'rad'),  # arcminute
+           'as':          (np.pi/180./3600.,    'rad'),  # arcsecond
+           'sr':          (1,                   'rad2'), # sterradian #1/39.4784176045
+           'rpm':         (0.104719755,         'rad/s'),# revolutions per minute
 # COORDINATES
-           'complex_coord':(1e+00+0*1j, 'complex_coord'),
-           'equ':          (EquCoords,  'complex_coord'),
-           'gal':          (GalCoords,  'complex_coord'),
-           'ecl':          (EclCoords,  'complex_coord'),
+           'complex_coord':(1e+00+0*1j, 'complex_coord'), # own unit
+           'equ':          (EquCoords,  'complex_coord'), # Equatorial coordinates
+           'gal':          (GalCoords,  'complex_coord'), # Galactic coordinates
+           'ecl':          (EclCoords,  'complex_coord'), # Ecliptic coordinates
 # FORCE
-           'N':     (1e+00,         'kg m s-2'),
-           'dy':    (1e-05,         'kg m s-2'),
+           'N':     (1e+00,         'kg m s-2'), # newton
+           'dyn':   (1e-05,         'kg m s-2'), # dyne
 # TEMPERATURE
-           'K':      (1e+00,        'K'),
-           'F':      (Fahrenheit,   'K'),
-           'C':      (Celcius,      'K'),
+           'K':      (1e+00,        'K'), # Kelvin
+           'F':      (Fahrenheit,   'K'), # Fahrenheit
+           'C':      (Celcius,      'K'), # Celcius
 # ENERGY & POWER
-           'J':     (  1e+00,       'kg m2 s-2'),
-           'W':     (  1e+00,       'kg m2 s-3'),
-           'erg':   (  1e-07,       'kg m2 s-2'),
-           'eV':    (1.60217646e-19,'kg m2 s-2'),
-           'cal':   (4.184,         'kg m2 s-2'),
-           'Lsol':  (Lsol,          'kg m2 s-3'),
+           'J':     (  1e+00,       'kg m2 s-2'), # Joule
+           'W':     (  1e+00,       'kg m2 s-3'), # Watt
+           'erg':   (  1e-07,       'kg m2 s-2'), # ergon
+           'eV':    (1.60217646e-19,'kg m2 s-2'), # electron volt
+           'cal':   (4.1868,         'kg m2 s-2'),# calorie (International table)
+           'Lsol':  (Lsol,          'kg m2 s-3'), # solar luminosity
 # PRESSURE
-           'Pa':    (  1e+00,       'kg m-1 s-2'),
-           'bar':   (  1e+05,       'kg m-1 s-2'),
-           'at':    (  98066.5,     'kg m-1 s-2'),
-           'atm':   ( 101325,       'kg m-1 s-2'),
-           'torr':  (    133.322,   'kg m-1 s-2'),
-           'psi':   (   6894.,      'kg m-1 s-2'),
+           'Pa':    (  1e+00,       'kg m-1 s-2'), # Pascal
+           'bar':   (  1e+05,       'kg m-1 s-2'), # baros
+           'at':    (  98066.5,     'kg m-1 s-2'), # atmosphere (technical)
+           'atm':   ( 101325,       'kg m-1 s-2'), # atmosphere (standared)
+           'torr':  (    133.322,   'kg m-1 s-2'), # Torricelli
+           'psi':   (   6894.,      'kg m-1 s-2'), # pound per square inch
+# AREA
+           'ac':    (4046.8564224,  'm2'), # acre (international)
+           'a':     (100.,          'm2'), # are
 # FLUX
 # -- absolute magnitudes
            'Jy':      (1e-26,         'kg s-2 cy-1'), # W/m2/Hz
@@ -1389,7 +1401,7 @@ _scalings ={'y':       1e-24, # yocto
             }
  
 #-- some common aliases
-_aliases = [('micron','mum'),
+_aliases = [('micron','mum'),('au','AU'),
             ('micro','mu'),('milli','m'),('kilo','k'),('mega','M'),('giga','G'),
             ('nano','n'),
             ('watt','W'),('Watt','W'),

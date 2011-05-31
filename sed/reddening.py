@@ -101,6 +101,7 @@ def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
     @return: wavelength, reddening magnitude
     @rtype: (ndarray,ndarray)
     """
+    wave_ = kwargs.pop('wave',None)
     #-- get the inputs
     Rv = kwargs.setdefault('Rv',3.1)
     
@@ -108,8 +109,9 @@ def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
     wave,mag = globals()[name.lower()](**kwargs)
     
     #-- interpolate on user defined grid
-    wave_ = kwargs.get('wave',None)
     if wave_ is not None:
+        if wave_units != 'A':
+            wave_ = conversions.convert(wave_units,'A',wave_)
         mag = np.interp(wave_,wave,mag,right=0)
         wave = wave_
     

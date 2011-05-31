@@ -21,17 +21,21 @@ from ivs import config
 logger = logging.getLogger("timeresolved")
 logger.addHandler(loggers.NullHandler)
 
-def getHipData(ID,outputFileName=None):
+def getHipData(ID,dtype='ep',outputFileName=None):
 
     """
-    Retrieve Hipparcos epoch photometry from the ESA website.
+    Retrieve Hipparcos epoch/intermediate photometry from the ESA website.
+    
     The time series together with some header information is stored in a record
     array and dictionary, and optionally written in a specified file.
     
     The time points are given in barycentric Julian Date and are corrected
     for the offset of 2440000.0 in the original files, but B{only in the output
     record array}. The output files display the B{original contents}.
-       
+    
+    For epoch photometry, set C{dtype=ep}.
+    For intermediate date, set C{dtype='i'}.
+    
     For more information:
     C{http://www.rssd.esa.int/SA-general/Projects/Hipparcos/CATALOGUE_VOL1/sect2_05.ps.gz}
     
@@ -52,12 +56,22 @@ def getHipData(ID,outputFileName=None):
     >>> errorbar = data['e_mag']
     >>> qualityflag = data['q_mag']
     
+    In the case of intermediate data products:
+        - orbit: orbit number
+        - source: source of abscissa (F=FAST, f=rejected FAST, N=NDAC,n=NDAC rejected)
+        - d_acosd: partial derivative wrt alpha cos(delta)
+        - d_d: partial derivative wrt delta
+        - d_pi: partial derivative wrt parallax
+        - d_mua: partial derivative wrt proper motion alpha cos(delta)
+        - d_mud: partial derivative wrt proper motion delta
     
     @param ID: identification of the star: if you give an integer or string that
     can be converted to an integer, it is assumed to be the hipparcos number of
     the star.  E.g. 1234 or "1234". If it is not an integer, the star will
     be resolved via sesame to get the HIP number if possible
     @type ID: integer or string
+    @param dtype: data type (epoch ('ep') photometry or intermediate ('i') data)
+    @type dtype: string (one of ('ep','i'))
     @param outputFileName: the name of the file that will be created
                            to save the Hipparcos time series
     @type outputFileName: string
@@ -69,12 +83,12 @@ def getHipData(ID,outputFileName=None):
     """
 
     server = "www.rssd.esa.int"
-    webpage = "/hipparcos_scripts/HIPcatalogueSearch.pl?hipepId="
+    webpage = "/hipparcos_scripts/HIPcatalogueSearch.pl?hip%sId="%(dtype)
     
     # Resolve the name if necessary (i.e., if it's not a HIP number). If the 
     # star has no HIP number, log an error and return None
     try:
-        ID = int(ID)
+        hipnr = int(ID)
     except ValueError:
         info = sesame.search(ID,db='S')
         IDs = [alias for alias in info['alias'] if 'HIP' in alias]
@@ -110,7 +124,7 @@ def getHipData(ID,outputFileName=None):
     for line in contents.split('\n'):
         if line == "": continue
         if not line.startswith("<"):
-            line = line.replace("|", " ").replace("\r", "")
+            line = line.replace("\r", "")
             
             # This is the header
             
@@ -130,7 +144,9 @@ def getHipData(ID,outputFileName=None):
             # This is the real contents
             
             else:
-                data.append(tuple(line.split()))
+                data.append(line.split('|'))
+                #-- correct for empty fields
+                data[-1] = tuple([(entry.replace(' ','')=='' and np.nan or entry) for entry in data[-1]])
             if outputFileName:
                 outputFile.write(line + "\n")
     if outputFileName:
@@ -139,12 +155,19 @@ def getHipData(ID,outputFileName=None):
     # Make a record array.
     # Choose the header names to be in the VizieR style.
     
-    dtypes = [('time','>f8'),('mag','>f8'),('e_mag','>f8'),('q_mag','i')]
+    if dtype=='ep':
+        dtypes = [('time','f8'),('mag','f8'),('e_mag','f8'),('q_mag','i')]
+    elif dtype=='i':
+        dtypes = [('orbit','i'),('source','a1'),
+                  ('d_acosd','f8'),('d_d','f8'),('d_pi','f8'),
+                  ('d_mua','f8'),('d_mud','f8'),
+                  ('abs_res','f8'),('abs_std','f8'),('cor','f8')]
     data = np.rec.array(data,dtype=dtypes)
     
     # Fix the time offset
+    if dtype=='ep':
+        data['time'] += 2440000.0
     
-    data['time'] += 2440000.0
     
     return data,header
 
@@ -187,7 +210,7 @@ def getCoRoTData(ID,channel='sismo'):
                 header = pyfits.getheader(catfile)
             except IOError:
                 continue
-            if header['starname']==ID or header['corotid']=='%s'%(ID):
+            if header['starname']==ID or header['corotid'].replace(' ','')=='%s'%(ID):
                 times,flux,error,flags = fits.read_corot(catfile)
                 data.append([times,flux,error,flags])
         #-- now make a record array and sort according to times
@@ -229,6 +252,20 @@ def getP7Data(ID=None,code=None,include_nans=True):
     @rtype: np record array,dict
     """
     if ID is not None:
+        if not 'HD' in ID or not 'SAO' in ID or not 'HIC' in ID:
+            info = sesame.search(ID)
+            print info
+            if 'alias' in info:
+                for alias in info['alias']:
+                    if 'HD' in alias:
+                        ID = alias
+                        break
+                    if 'SAO' in alias:
+                        ID = alias
+                        break
+                    if 'HIC' in alias:
+                        ID = alias
+                        break
         # this should resolve the GENEVA name
         code = _geneva_name_resolver(ID=ID)
         

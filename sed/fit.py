@@ -224,7 +224,7 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
 def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
                  loggrange=(-np.inf,np.inf),ebvrange=(-np.inf,np.inf),
                  zrange=(-np.inf,np.inf),
-                 points=None,res=1,**kwargs):
+                 points=None,res=None,**kwargs):
     """
     Fit measured photometry to an interpolated grid of SEDs.
     
@@ -237,14 +237,19 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     
     If C{points=None}, the grid search is done on the predefined grid points.
     Otherwise, C{points} grid points will be generated, uniformly distributed
-    between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange}.
+    between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange},
+    and afterwards all the points outside the grid are removed (i.e., you could
+    end up with less points that given). It is probably safest to go for
+    C{points=None} and adapt the resolution of the grid (C{res}=2). If you set
+    the resolution to '2', one out of every two points will be selected.
     
     Extra keyword arguments can be used to give more details on the atmosphere
     models to use.
     
     Colors are automatically detected.
     
-    You can fix one parameter e.g. via setting teffrange=(10000,10000)
+    You can fix one parameter e.g. via setting teffrange=(10000,10000), but make
+    sure to either fix it on a grid point, or encompassing grid points!
     
     @param meas: array of measurements
     @type meas: 1D array
@@ -282,6 +287,9 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
                         zrange=(-np.inf,np.inf),include_Labs=True)
     teffs,loggs,ebvs,zs = gridpnts.T
     
+    unique_teffs = unique_teffs[(teffrange[0]<=unique_teffs) & (unique_teffs<=teffrange[1])]
+    unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
+    
     #-- if we gave a certain number of points, we need to choose our points
     #   randomly in the grid
     if points:
@@ -310,19 +318,34 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
             #-- we're at too low surface gravities:
             min_logg = max(loggrange[0],min_logg)
             max_logg = min(loggrange[1],max_logg)
-            size = (max_teff-min_teff)*(max_logg-min_logg)
+            #-- make sure there are points defined even if some range in parameters
+            #   equals zero
+            if (max_teff-min_teff)>1 and (max_logg-min_logg)>1:
+                size = (max_teff-min_teff)*(max_logg-min_logg)
+            elif (max_teff-min_teff)>1:
+                size = (max_teff-min_teff)
+            elif (max_logg-min_logg)>1:
+                size = (max_logg-min_logg)
+            else:
+                size = int(float(points)/(len(unique_min_loggs)))
+            print 'size',size
             limits_and_sizes.append([(min_teff,max_teff),(min_logg,max_logg),size])
         total_size = sum([row[-1] for row in limits_and_sizes])
+        print total_size
+        print limits_and_sizes
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],ebvrange[0],zrange[0]],
                                                        high=[lims[0][1],lims[1][1],ebvrange[1],zrange[1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
-    else:
-        keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
+        print teffs.shape
+    keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
             (loggrange[0]<=loggs) & (loggs<=loggrange[1]) &\
             (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1]) &\
             (zrange[0]<=zs) & (zs<=zrange[1])
-        teffs,loggs,ebvs,zs = teffs[keep][::res],loggs[keep][::res],ebvs[keep][::res],zs[keep][::res]
+    print sum(keep)
+    teffs,loggs,ebvs,zs = teffs[keep],loggs[keep],ebvs[keep],zs[keep]
     
+    if res:
+        teffs,loggs,ebvs,zs = teffs[::res],loggs[::res],ebvs[::res],zs[::res]
     logger.info('Evaluating %d points in parameter space'%(len(teffs)))
     
     #-- run over the grid and calculate chisq and scale factors for each point
@@ -348,7 +371,6 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     
     #-- then we do the grid search
     chisqs,scales,e_scales,lumis,index = do_grid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs)
-    
     #-- transform output to record array
     data_rec = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
                    dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
@@ -356,7 +378,23 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     return data_rec
 
 #}
-
+def do_grid_search2(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs):
+        """
+        index is to trace the results after parallelization
+        """
+        index = kwargs.pop('index',None)
+        chisqs = np.zeros_like(teffs)
+        scales = np.zeros_like(teffs)
+        e_scales = np.zeros_like(teffs)
+        lumis = np.zeros_like(teffs)
+        if index is None:
+            p = progressMeter.ProgressMeter(total=len(teffs))
+        for n,(teff,logg,ebv,z) in enumerate(itertools.izip(teffs,loggs,ebvs,zs)):
+            if index is None: p.update(1)
+            syn_flux,Labs = model.get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
+            chisqs[n],scales[n],e_scales[n] = stat_chi2(meas,e_meas,colors,syn_flux)
+            lumis[n] = Labs
+        return chisqs,scales,e_scales,lumis,index
 
 
 

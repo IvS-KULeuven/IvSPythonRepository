@@ -106,7 +106,7 @@ def get_file(**kwargs):
 
 
 
-def get_table(**kwargs):
+def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     """
     Retrieve synthetic spectrum.
         
@@ -117,12 +117,9 @@ def get_table(**kwargs):
     
     Possibility to include radial velocity shift (+vrad means redshift)
     
-    """
-    teff = kwargs.get('teff',3500)
-    logg = kwargs.get('logg',0.0)
-    teff = float(teff)
-    logg = float(logg)
+    vrot and vrad in km/s
     
+    """
     gridfile = get_file(**kwargs)
     
     ff = pyfits.open(gridfile)
@@ -154,11 +151,13 @@ def get_table(**kwargs):
     wave = np.array(wave,float)
     flux = np.array(flux,float)
     
-    #if 'vrot' in kwargs.keys() and kwargs['vrot']!=0:
-        #wave_,flux_ = rotation.rotin(wave,flux,**kwargs)
-        #flux = interpol.linear_interpolation(wave_,flux_,wave)
-    #if 'vrad' in kwargs.keys() and kwargs['vrad']!=0:
-        #wave = conversions.heliocentric_correction(wave,kwargs['vrad'])
+    if vrot>0:
+        #-- calculate rotational broadening but reinterpolate on original
+        #   wavelength grid
+        wave_,flux_ = rotational_broadening(wave,flux,vrot,**kwargs)
+        flux = np.interp(wave,wave_,flux_)
+    if vrad>0:
+        wave = doppler_shift(wave,vrad,**kwargs)
     
     ff.close()
     return wave,flux,cont

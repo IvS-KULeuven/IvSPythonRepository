@@ -17,13 +17,20 @@ from ivs import config
 logger = logging.getLogger("CAT.HERMES")
 logger.addHandler(loggers.NullHandler)
 
-def search(ID,data_type='cosmicsremoved',radius=1.,filename=None):
+def search(ID,data_type='cosmicsremoved_log',radius=1.,filename=None):
     """
     Retrieve datafiles from the Hermes catalogue.
     
     We search on coordinates, pulled from SIMBAD. If the star ID is not
     recognised, a string search is performed to match the 'object' field in the
     FITS headers.
+    
+    Data type can be any of:
+        1. cosmicsremoved_log: return log merged without cosmics
+        2. cosmicsremoved_wavelength: return wavelength merged without cosmics
+        3. ext_log: return log merged with cosmics
+        4. ext_wavelength: return wavelength merged with cosmics
+        5. raw: raw files
     
     @param ID: ID of the star, understandable by SIMBAD
     @type ID: str
@@ -83,6 +90,7 @@ def make_data_overview():
     """
     Summarize all Hermes data in a file for easy data retrieval.
     """
+    logger.info('Collecting files...')
     #-- all hermes data directories
     dirs = sorted(glob.glob(os.path.join(config.ivs_dirs['hermes'],'20??????')))
     dirs = [idir for idir in dirs if os.path.isdir(idir)]
@@ -92,16 +100,39 @@ def make_data_overview():
         obj_files += sorted(glob.glob(os.path.join(idir,'raw','*OBJ*.fits')))
         obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged.fits')))
         obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged_c.fits')))
+        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged.fits')))
+        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged_c.fits')))
+    
+    #-- keep track of what is already in the file:
+    try:
+        overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
+        overview_data = ascii.read2recarray(overview_file,splitchar='\t')
+        outfile = open(overview_file,'a')
+        logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
+    except IOError:
+        overview_file = 'HermesFullDataOverview.tsv'
+        outfile = open(overview_file,'w')
+        outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime date-avg filename\n')
+        outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 a30 a200\n')
+        overview_data = {'filename':[]}
+        logger.info('Found %d FITS files: starting new overview file %s'%(len(obj_files),overview_file))
+        
+    
     
     #-- and summarize the contents in a tab separated file (some columns contain spaces)
-    outfile = open('HermesFullDataOverview.tsv','w')
-    outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime date-avg filename\n')
-    outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 a30 a200\n')
+    existing_files = np.sort(overview_data['filename'])
     for i,obj_file in enumerate(obj_files):
         sys.stdout.write(chr(27)+'[s') # save cursor
         sys.stdout.write(chr(27)+'[2K') # remove line
         sys.stdout.write('Scanning %5d / %5d FITS files'%(i+1,len(obj_files)))
         sys.stdout.flush() # flush to screen
+        
+        #-- maybe this file is already processed: forget about it then
+        index = existing_files.searchsorted(obj_file)
+        if index<len(existing_files) and existing_files[index]==obj_file:
+            sys.stdout.write(chr(27)+'[u') # reset cursor
+            continue
+        
         #-- keep track of: UNSEQ, BJD, BVCOR, OBSERVER, RA, DEC , PROG_ID, OBSMODE, EXPTIME, DATE-AVG, OBJECT and filename
         contents = dict(unseq=-1,prog_id=-1,obsmode='nan',bvcor=np.nan,observer='nan',
                         object='nan',ra=np.nan,dec=np.nan,
@@ -123,7 +154,12 @@ def make_data_overview():
     outfile.close()
 
 if __name__=="__main__":
-    import shutil
-    make_data_overview()
-    shutil.move('HermesFullDataOverview.tsv','/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv')
+    import time
+    logger = loggers.get_basic_logger()
+    
+    while 1:
+        make_data_overview()
+        logger.info('Going to bed know... see you tomorrow!')
+        time.sleep(24*3600)
+        logger.info('Rise and shine!')
     

@@ -145,7 +145,6 @@ def search(ID,db='S',fix=False):
     @rtype: dictionary
     """
     base_url = get_URI(ID,db=db)
-    
     ff = urllib.urlopen(base_url)
     xmlpage = ""
     for line in ff.readlines():
