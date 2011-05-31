@@ -388,8 +388,9 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
     try:
-        input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(teff)),int(round(logg*100)),int(round(ebv*100))))
+        input_code = '%4d%06d%04d%04d'%(int(round((z+5)*1000)),int(round(teff))*10,int(round(logg*1000)),int(round(ebv*1000)))
         index = markers.searchsorted(input_code)
+        raise KeyError
         output_code = markers[index]
         #-- if not available, go on and interpolate!
         #   we raise a KeyError for symmetry with C{get_table}.
@@ -404,9 +405,9 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     except KeyError:
         #c1_ = 0
         #-- cheat edges in interpolating function
-        teff = teff-1e-10
-        logg = logg+1e-10
-        ebv = ebv+1e-10
+        teff = teff-1e-3
+        logg = logg+1e-6
+        ebv = ebv+1e-6
         #-- it is possible we have to interpolate: identify the grid points in
         #   the immediate vicinity of the given fundamental parameters
         i_teff = max(1,g_teff.searchsorted(teff))
@@ -428,12 +429,14 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         
         #-- if metallicity needs to be interpolated
         if not (z in g_z):
+            print teff,logg,ebv
             fluxes = np.zeros((2,2,2,2,len(photbands)+1))
             for i,j,k in itertools.lproduct(xrange(2),xrange(2),xrange(2)):
-                input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
-                                                int(round(teffs_subgrid[j])),\
-                                                int(round(loggs_subgrid[k]*100)),\
-                                                int(round(ebvs_subgrid[1]*100))))
+                input_code = float('%4d%06d%04d%04d'%(int(round((zs_subgrid[i]+5)*1000)),\
+                                                int(round(teffs_subgrid[j])*10),\
+                                                int(round(loggs_subgrid[k]*1000)),\
+                                                int(round(ebvs_subgrid[1]*1000))))
+                print 'fake1',input_code
                 index = markers.searchsorted(input_code)
                 fluxes[i,j,k] = ext[index-1:index+1]
             myf = InterpolatingFunction([zs_subgrid,np.log10(teffs_subgrid),
@@ -442,12 +445,14 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         
         #-- if only teff,logg and ebv need to be interpolated (faster)
         else:
+            print teff,logg,ebv
             fluxes = np.zeros((2,2,2,len(photbands)+1))
             for i,j in itertools.lproduct(xrange(2),xrange(2)):
-                input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
-                                                int(round(teffs_subgrid[i])),\
-                                                int(round(loggs_subgrid[j]*100)),\
-                                                int(round(ebvs_subgrid[1]*100))))
+                input_code = float('%4d%06d%04d%04d'%(int(round((z+5)*1000)),\
+                                                int(round(teffs_subgrid[i]*10)),\
+                                                int(round(loggs_subgrid[j]*1000)),\
+                                                int(round(ebvs_subgrid[1]*1000))))
+                print 'fake2',input_code
                 index = markers.searchsorted(input_code)
                 fluxes[i,j] = ext[index-1:index+1]
             myf = InterpolatingFunction([np.log10(teffs_subgrid),
@@ -461,7 +466,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     #c3 = time.time() - c0 - c1 - c2
     #print '%.6e %.6e %.6e %.6e'%(c1,c2,c3,time.time()-c0)
     if np.any(np.isinf(flux)):
-        #print 'infinity encountered!'
+        logger.error('infinity encountered during interpolation: results are lost')
         flux = np.zeros(fluxes.shape[-1])
     return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
     
@@ -1199,7 +1204,7 @@ def _get_itable_markers(photbands,
         grid_loggs = np.sort(list(set(loggs)))
         grid_ebvs = np.sort(list(set(ebvs)))
         grid_z.append(z)
-    
+        
         #-- we construct an array representing the teff-logg-ebv-z content, but
         #   in one number: 5000040031500 means: 
         #   T=50000,logg=4.0,E(B-V)=0.31 and Z = 0.00
@@ -1208,7 +1213,7 @@ def _get_itable_markers(photbands,
         gridpnts.append(np.zeros((len(teffs),4)))
         
         for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
-            markers[-1][i] = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(it)),int(round(il*100)),int(round(ie*100))))
+            markers[-1][i] = float('%4d%06d%04d%04d'%(int(round((z+5)*1000)),int(round(it)*10),int(round(il*1000)),int(round(ie*1000))))
 	    gridpnts[-1][i]= it,il,ie,z
         flux.append(_get_flux_from_table(ext,photbands,include_Labs=include_Labs))
         ff.close()

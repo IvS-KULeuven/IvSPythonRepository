@@ -760,7 +760,6 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
     ak = sc.interp(dd, rr, ext)
   
   redwave, redflux = get_law(redlaw,Rv=Rv,wave_units='micron',norm='Av', wave=array([0.54,2.22]))
-  
   return ak*redflux[0]/redflux[1]
 
 #}

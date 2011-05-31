@@ -492,15 +492,22 @@ class SED(object):
         extra_rows = []
         for m,e_m,u,p,s in zip(meas,e_meas,units,photbands,source):
             cm,e_cm = conversions.convert(u,self.master['cunit'][0],m,e_m,photband=p)
-            extra_rows.append((m,e_m,np.nan,u,p,s,0.,self.info['jradeg'],info['jdedeg'],eff_wave,cm,e_cm,self.master['cunit'][0],0,1))
+            eff_wave = filters.eff_wave(p)
+            extra_rows.append((m,e_m,np.nan,u,p,s,0.,0.,0.,eff_wave,cm,e_cm,self.master['cunit'][0],0,1))
+        print self.master[0]
+        print len(self.master[0])
+        print len(extra_rows[0])
+        print extra_rows
         self.master = numpy_ext.recarr_addrows(self.master,extra_rows)
+        print self.master
 
     #}
     
     #{ Fitting routines
     def igrid_search(self,teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf),
                           ebvrange=(-np.inf,np.inf),zrange=(-np.inf,np.inf),
-                          threads='max',iterations=3,increase=1,speed=1,res=1):
+                          threads='max',iterations=3,increase=1,speed=1,res=1,
+                          points=None,compare=True):
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are include in the fitting process:')
@@ -511,7 +518,7 @@ class SED(object):
                                     teffrange=teffrange,loggrange=loggrange,
                                     ebvrange=ebvrange,zrange=zrange,
                                     threads=threads,iterations=iterations,
-                                    increase=increase,speed=speed,res=res)
+                                    increase=increase,speed=speed,res=res,points=points)
         
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
@@ -553,9 +560,10 @@ class SED(object):
             logger.info('95%% CI %s: %g <= %g <= %g'%(name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
-        
         self.set_best_model()
-        self.set_distance()
+        if compare:
+            self.set_distance()
+        
     #}
     
     #{ Interfaces
@@ -844,7 +852,8 @@ class SED(object):
         """
         Grid of models
         """
-        pl.title(self.info['spType'])
+        if 'spType' in self.info:
+            pl.title(self.info['spType'])
         cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
         (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
         (d,dprob) = self.results['igrid_search']['d']

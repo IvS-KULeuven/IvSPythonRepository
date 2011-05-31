@@ -2,6 +2,10 @@
 """
 Fit and evaluate binary (Keplerian) orbits.
 
+Be careful with the inclination angle: if you only want an image projected onto
+the sky, it is not case-sensitive. Only for the radial velocities this becomes
+important (the primary and secondary can be mixed).
+
 Example usage: compute the absolute orbits of the two components of
 mu Cassiopeia, and compute the relative orbit of the second component.
 
