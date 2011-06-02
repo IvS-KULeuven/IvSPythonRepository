@@ -652,7 +652,10 @@ def get_marshall_data():
   """
   Read in the Marshall data
   """
-  data_ma, units_ma, comments_ma = vizier.search("J/A+A/453/635")
+  
+  #data_ma, units_ma, comments_ma = vizier.search("J/A+A/453/635")
+  filen = config.get_datafile('catalogs','extinction_marshall.dat')
+  data_ma, units_ma, comments_ma = tsv2recarray(filen)
   return data_ma, units_ma, comments_ma
 
 def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kwargs):
@@ -1436,7 +1439,7 @@ def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
   logger.info("flag of pixel 4 is: %i" %f4)
   
   if dd is not None:
-    ebv = ebv * (1. - np.exp(-10. * dd * sin(abs(bb*deg2rad))))
+    ebv = ebv * (1. - exp(-10. * dd * sin(abs(bb*deg2rad))))
   
   # if Rv is given, by definition we find Av = Ebv*Rv
   av = ebv*Rv
