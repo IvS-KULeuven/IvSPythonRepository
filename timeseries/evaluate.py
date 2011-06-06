@@ -209,18 +209,18 @@ def periodic_spline(times,parameters,t0=None):
     @return: sine signal with frequency shift (same shape as C{times})
     @rtype: array
     """
-    #-- get parameters
+    #-- get time offset
     if t0 is None:
         t0 = times[0]
-    frequency = parameters[0]
-    
-    #-- reconstruct coefficients array
-    N = (len(parameters)-2)/2
-    coefficients = (parameters[1:1+N],parameters[1+N:-1],int(parameters[-1]))
-    
+        
+    mytrend = 0.
     #-- reconstruct entire time series, instead of phased version
-    phases = np.fmod((times-t0) * frequency,1.0)
-    mytrend = splev(phases,coefficients)
+    for i in range(len(parameters)):
+        frequency = parameters[i]['freq']
+        #-- reconstruct coefficients array
+        coefficients = (parameters[i]['knots'],parameters[i]['coeffs'],parameters[i]['degree'])
+        phases = np.fmod((times-t0) * frequency,1.0)
+        mytrend += splev(phases,coefficients)
     
     return mytrend
     
@@ -244,6 +244,9 @@ def kepler(times,parameters,itermax=8):
     @return: radial velocity curve (same shape as C{times})
     @rtype: array
     """
+    if not parameters.dtype.names:
+        parameters = kepler_preppars(parameters)
+    
     if 'gamma' in parameters.dtype.names:
         RVfit = parameters['gamma'].sum()
     else:
@@ -329,7 +332,7 @@ def kepler_preppars(pars):
         # with systemic velocity
         if 'gamma' in pars.dtype.names:
             converted_pars = np.zeros(5*len(pars)+1)
-            converted_pars[0] = pars['const'].sum()
+            converted_pars[0] = pars['gamma'].sum()
             converted_pars[1::5] = pars['P']
             converted_pars[2::5] = pars['T0']
             converted_pars[3::5] = pars['e']
