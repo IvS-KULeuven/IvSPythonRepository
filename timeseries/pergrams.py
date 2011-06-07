@@ -688,7 +688,7 @@ def pdm_py(time, signal, f0=None, fn=None, df=None, Nbin=10, Ncover=5, D=0.):
 @defaults_pergram
 @parallel_pergram
 @make_parallel
-def bls(times, signal, f0=None, fn=None, df=None, nb=50, qmi=0.005, qma=0.75 ):
+def box(times, signal, f0=None, fn=None, df=None, nb=50, qmi=0.005, qma=0.75 ):
     """
     Box-Least-Squares spectrum of Kovacs et al. (2002).
 
@@ -730,7 +730,6 @@ def bls(times, signal, f0=None, fn=None, df=None, nb=50, qmi=0.005, qma=0.75 ):
     @return: frequencies, amplitude spectrum
     @rtype: array,array
     """
-    
     #-- initialize some variables needed in the FORTRAN module
     n = len(times)
     T = times.ptp()
@@ -825,7 +824,7 @@ if __name__=="__main__":
     f2,s2 = clean(x,y)
     f3,s3 = schwarzenberg_czerny(x,y,nh=2)
     f4,s4 = pdm(x,y)
-    f5,s5 = bls(x,y)
+    f5,s5 = box(x,y)
     f6,s6 = kepler(x,y)
     
     pl.subplot(2,3,1)
