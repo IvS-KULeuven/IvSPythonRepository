@@ -178,7 +178,12 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     for i,name in enumerate(names):
         format = arr[i].dtype.str.lower().replace('|','').replace('s','a').replace('>','')
         format = format.replace('b1','L').replace('<','')
-        unit = name in units and units[name] or 'NA'
+        if format=='f8':
+            format = 'D'
+        if isinstance(units,dict):
+            unit = name in units and units[name] or 'NA'
+        elif len(units)>i:
+            unit = units[i]
         cols.append(pyfits.Column(name=name,format=format,array=arr[i],unit=unit))
     tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
     

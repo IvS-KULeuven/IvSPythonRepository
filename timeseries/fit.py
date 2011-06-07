@@ -1,7 +1,6 @@
 """
 Fit various functions to timeseries.
 
-
 1. Radial velocity data
 =======================
 

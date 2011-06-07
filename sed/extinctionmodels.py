@@ -654,8 +654,8 @@ def get_marshall_data():
   """
   
   #data_ma, units_ma, comments_ma = vizier.search("J/A+A/453/635")
-  filen = config.get_datafile('catalogs','extinction_marshall.dat')
-  data_ma, units_ma, comments_ma = tsv2recarray(filen)
+  filen = config.get_datafile('catalogs','extinction_marshall.tsv')
+  data_ma, units_ma, comments_ma = vizier.tsv2recarray(filen)
   return data_ma, units_ma, comments_ma
 
 def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kwargs):

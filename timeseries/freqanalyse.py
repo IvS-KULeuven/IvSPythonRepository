@@ -4,194 +4,130 @@ Frequency Analysis Routines.
 
 Author: Joris De Ridder
 """
-
-
 import numpy as np
-from math import ceil, fmod, pi
-  
+from ivs.timeseries import fit
+from ivs.timeseries import evaluate
 
 
+#{ Convenience functions
 
-def DFTpower(time, signal, startfreq, stopfreq, stepfreq):
-
+def find_frequency(times,signal,
+            f0=None,fn=None,df=None,threads=1,
+            max_loops=20, scale_region=0.1, scale_df=0.20, nyq_stat=np.min,
+            **kwargs):
     """
-    Computes the modulus square of the fourier transform. 
-    Unit: square of the unit of signal. Time points need not be equidistant.
-    The normalisation is such that a signal A*sin(2*pi*nu_0*t)
-    gives power A^2 at nu=nu_0
+    Find one frequency, automatically going to maximum precision and parameters
+    & error estimates.
     
-    @param time: time points [0..Ntime-1] 
-    @type time: ndarray
-    @param signal: signal [0..Ntime-1]
-    @type signal: ndarray
-    @param startfreq: the power is computed for the frequencies
-                      freq = arange(startfreq,stopfreq,stepfreq)
-    @type startfreq: float
-    @param stopfreq: see startfreq
-    @type stopfreq: float
-    @param stepfreq: see startfreq
-    @type stepfreq: float
-    @return: power spectrum of the signal
-    @rtype: ndarray 
+    This routine will make the frequency grid finer until it is well below the
+    estimated error on the frequency. After that, it will compute harmonic
+    parameters and estimated errors.
     
-    """
-  
-    Ntime = len(time)
-    Nfreq = int(ceil((stopfreq-startfreq)/stepfreq))
-  
-    A = np.exp(1j*2.*pi*startfreq*time) * signal
-    B = np.exp(1j*2.*pi*stepfreq*time)
-    ft = np.zeros(Nfreq, complex) 
-    ft[0] = A.sum()
-
-    for k in range(1,Nfreq):
-        A *= B
-        ft[k] = np.sum(A)
+    There is a possibility to escape this optimization by setting dfscale=0 or
+    freqregscale=0.
     
-    return (ft.real**2 + ft.imag**2) * 4.0 / Ntime**2
-  
-  
-  
-  
-  
-  
-  
-def FFTpower(signal, timestep):
-
-    """
-    Computes power spectrum of an equidistant time series 'signal'
-    using the FFT algorithm. The length of the time series need not
-    be a power of 2 (zero padding is done automatically). 
-    Normalisation is such that a signal A*sin(2*pi*nu_0*t)
-    gives power A^2 at nu=nu_0  (IF nu_0 is in the 'freq' array)
+    Possible Extra keywords: see definition of the used periodogram function,
+    evaluating and fitting functions, etc...
     
-    @param signal: the time series [0..Ntime-1]
-    @type signal: ndarray
-    @param timestep: time step fo the equidistant time series
-    @type timestep: float
-    @return: frequencies and the power spectrum
-    @rtype: (ndarray,ndarray)
+    Example keywords:
+        - 'correlation_correction', default=True
+        - 'freqregscale', default=0.5: factor for zooming in on frequency
+        - 'dfscale', default = 0.25: factor for optimizing frequency resolution
     
-    """
-  
-    # Compute the FFT of a real-valued signal. If N is the number 
-    # of points of the original signal, 'Nfreq' is (N/2+1).
-  
-    fourier = np.fft.rfft(signal)
-    Ntime = len(signal)
-    Nfreq = len(fourier)
-  
-    # Compute the power
-  
-    power = np.abs(fourier)**2 * 4.0 / Ntime**2
-  
-    # Compute the frequency array.
-    # First compute an equidistant array that goes from 0 to 1 (included),
-    # with in total as many points as in the 'fourier' array.
-    # Then rescale the array that it goes from 0 to the Nyquist frequency
-    # which is 0.5/timestep
-  
-    freq = np.arange(float(Nfreq)) / (Nfreq-1) * 0.5 / timestep
-  
-    # That's it!
-  
-    return (freq, power)
-
-
-
-
-
-  
-  
-  
-def FFTpowerdensity(signal, timestep):
-  
-    """
-    Computes the power density of an equidistant time series 'signal',
-    using the FFT algorithm. The length of the time series need not
-    be a power of 2 (zero padding is done automatically). 
-
-    @param signal: the time series [0..Ntime-1]
-    @type signal: ndarray
-    @param timestep: time step fo the equidistant time series
-    @type timestep: float
-    @return: frequencies and the power density spectrum
-    @rtype: (ndarray,ndarray)
-
-    """
-  
-    # Compute the FFT of a real-valued signal. If N is the number 
-    # of points of the original signal, 'Nfreq' is (N/2+1).
-  
-    fourier = np.fft.rfft(signal)
-    Ntime = len(signal)
-    Nfreq = len(fourier)
-  
-    # Compute the power density
-  
-    powerdensity = np.abs(fourier)**2 / Ntime * timestep
-  
-    # Compute the frequency array.
-    # First compute an equidistant array that goes from 0 to 1 (included),
-    # with in total as many points as in the 'fourier' array.
-    # Then rescale the array that it goes from 0 to the Nyquist frequency
-    # which is 0.5/timestep
-  
-    freq = np.arange(float(Nfreq)) / (Nfreq-1) * 0.5 / timestep
-  
-    # That's it!
-  
-    return (freq, powerdensity)
-
-  
-
-
-  
-  
-
-
-
-def weightedpower(time, signal, weight, freq):
-
-    """
-    Compute the weighted power spectrum of a time signal.
-    For each given frequency a weighted sine fit is done using
-    chi-square minimization.
+    There is a possibility to enter frequency search range in units of the
+    Nyquist frequency, by setting the keyword 'units' to 'relative'.
     
-    @param time: time points [0..Ntime-1] 
-    @type time: ndarray
-    @param signal: observations [0..Ntime-1]
-    @type signal: ndarray
-    @param weight: 1/sigma_i^2 of observation
-    @type weight: ndarray
-    @param freq: frequencies [0..Nfreq-1] for which the power 
-                 needs to be computed
-    @type freq: ndarray
-    @return: weighted power [0..Nfreq-1]
-    @rtype: ndarray
+    There is a possibiliity to include a nonlinear least square update of the
+    parameters, by setting the keyword 'nllsq' to True.
     
+    Example usage:
+    
+    Import necessary modules:
+        >>> from pylab import plot,figure,title
+        >>> from sigproc.base import stats
+    
+    Generate test data:
+        >>> times = linspace(0,150,10000)
+        >>> pars = array([[0,1,1/20.,0],[0,0.3,1/6.,0]])
+        >>> signal = teval.sine_eval(times,pars) + random.normal(size=len(times),scale=3.5)
+    
+    Search for the first frequency (linear and nonlinear):
+        >>> o1 = find_frequency(times,signal,norm='amplitude',fn=1)
+        >>> o2 = find_frequency(times,signal,norm='amplitude',fn=1,nllsq=True)
+    
+    Output the results:
+        >>> p=figure();p=title("test:FIND_FREQUENCY: fit result")
+        >>> p=plot(times,signal,'ko')
+        >>> p=plot(times,teval.sine_eval(times,o1['pars']),'r-',linewidth=2)
+        >>> p=plot(times,teval.sine_eval(times,o2['pars']),'b--',linewidth=2)
+        >>> p=figure();p=title("test:FIND_FREQUENCY: periodogram result")
+        >>> p=plot(o1['pergram'][0],o1['pergram'][1],'k-')
+        >>> p=plot(o1['pergram_fine'][0],o1['pergram_fine'][1],'r-')
+        >>> varred_linear = stats.varred(signal,teval.sine_eval(times,o1['pars']))
+        >>> varred_nonlinear = stats.varred(signal,teval.sine_eval(times,o2['pars']))
+        >>> print varred_linear < varred_nonlinear
+        True
+    
+    @rtype: dict
+    @return: [frequency, peak], full_periodogram, fine_periodogram, stats,
+             parameters, errors, rho
     """
+    #-- make sure the series is sorted
+    gaps = np.diff(times)
 
-    result = np.zeros(len(freq))
+    if np.any(gaps<=0):
+        logger.warning("Time series not sorted or equal timepoints: sorting now")
+        sa = np.argsort(times)
+        times = times[sa]
+        signal = signal[sa]
+        
+    T = times[-1]-times[0]
+    nyquist = getNyquist(times,nyq_stat=nyq_stat)
+    N = len(times)
+    
+    #-- basic input: start/stop frequency, and frequency step
+    if f0 is None: f0 = 0.1/T
+    if fn is None: fn = nyquist
+    if df is None: df = 0.1/T
+    
+    #-- initial values
+    e_f = 0
+    freq_diff = inf
+    prev_freq = -inf
+    counter = 0
+    
+    #-- calculate periodogram until frequency precision is
+    #   under 1/10th of correlation corrected version
+    while freq_diff>e_f/10.:
+        #-- calculate periodogram
+        freqs,ampls = scargle(times,signal,f0=f0,fn=fn,df=df,**kwargs)
+        frequency = freqs[np.argmax(ampls)]
+        #-- estimate parameters and calculate a fit, errors and residuals
+        params = fit.sine(times,signal,frequency,**kwargs)
+        errors = fit.e_sine(times,signal,params,**kwargs)
+        #-- improve precision
+        freq_diff = abs(frequency-prev_freq)
+        prev_freq = frequency
+        freq_region = fn-f0
+        f0 = max(0      ,frequency-freq_region*freqregscale/2.)
+        fn = min(nyquist,frequency+freq_region*freqregscale/2.)
+        df *= dfscale
+        #-- possibility to escape optimization
+        if freqregscale==0 or dfscale==0: break
+        if counter >= max_loops:
+            logger.error("Frequency precision not reached in %d steps, breaking loop"%(max_loops))
+        counter += 1
 
-    for i in range(len(freq)):
-        if (freq[i] != 0.0):
-            sine   = np.sin(2.0*pi*freq[i]*time)
-            cosine = np.cos(2.0*pi*freq[i]*time)
-            a11= np.sum(weight*sine*sine)
-            a12 = np.sum(weight*sine*cosine)
-            a21 = a12
-            a22 = np.sum(weight*cosine*cosine)
-            b1 = np.sum(weight*signal*sine)
-            b2 = np.sum(weight*signal*cosine)
-            denominator = a11*a22-a12*a21
-            A = (b1*a22-b2*a12)/denominator
-            B = (b2*a11-b1*a21)/denominator
-            result[i] = A*A+B*B
-        else:
-            result[i] = np.sum(signal)/len(signal)
+    return frequency, parameters
 
-    return(result)
+
+
+
+
+
+
+
+
 
 
 
@@ -292,128 +228,6 @@ def Zwavelet(time, signal, freq, position, sigma=10.0):
     # That's it!
   
     return Z
-  
-  
-  
-  
-           
-           
-           
-           
-           
-           
-def windowfunction(time, freq):
-
-    """
-    Computes the modulus square of the window function of a set of 
-    time points at the given frequencies. The time point need not be 
-    equidistant. The normalisation is such that 1.0 is returned at 
-    frequency 0.
-    
-    @param time: time points  [0..Ntime-1]
-    @type time: ndarray       
-    @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
-    @type freq: ndarray       
-    @return: |W(freq)|^2      [0..Nfreq-1]
-    @rtype: ndarray
-    
-    """
-  
-    Ntime = len(time)
-    Nfreq = len(freq)
-    winkernel = np.empty_like(freq)
-
-    for i in range(Nfreq):
-        winkernel[i] = np.sum(np.cos(2.0*pi*freq[i]*time))**2     \
-                     + np.sum(np.sin(2.0*pi*freq[i]*time))**2
-
-    # Normalise such that winkernel(nu = 0.0) = 1.0 
-
-    return winkernel/Ntime**2
-
-
-
-
-
-
-
-
-def pdm(time, signal, freq, Nbin=10, Ncover=5):
-
-    """
-    Computes the theta-statistics to do a Phase Dispersion Minimisation.
-    See Stellingwerf R.F., 1978, ApJ, 224, 953)
-    
-    @param time: time points  [0..Ntime-1]
-    @type time: ndarray       
-    @param signal: observed data points [0..Ntime-1]
-    @type signal: ndarray
-    @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
-    @type freq: ndarray
-    @param Nbin: the number of phase bins (with length 1/Nbin)
-    @type Nbin: integer
-    @param Ncover: the number of covers (i.e. bin shifts)
-    @type Ncover: integer
-    @return: theta-statistic for each given frequency [0..Nfreq-1]
-    @rtype: ndarray
-
-    """
-  
-    Ntime = len(time)
-    Nfreq = len(freq)
-  
-    binsize = 1.0 / Nbin
-    covershift = 1.0 / (Nbin * Ncover)
-  
-    theta = np.zeros(Nfreq)
-  
-    for i in range(Nfreq):
-  
-        # Compute the phases in [0,1[ for all time points
-    
-        phase = np.fmod((time - time[0]) * freq[i], 1.0)
-    
-        # Reset the number of (shifted) bins without datapoints
-    
-        Nempty = 0
-    
-        # Loop over all Nbin * Ncover (shifted) bins
-    
-        for k in range(Nbin):
-            for n in range(Ncover):
-        
-                # Determine the left and right boundary of one such bin
-                # Note that due to the modulo, right may be < left. So instead
-                # of 0-----+++++------1, the bin might be 0++-----------+++1 .
-        
-                left = fmod(k * binsize + n * covershift, 1.0) 
-                right = fmod((k+1) * binsize + n * covershift, 1.0) 
-
-                # Select all data points in that bin
-        
-                if (left < right):
-                    bindata = np.compress((left <= phase) & (phase < right), signal)
-                else:
-                    bindata = np.compress(~((right <= phase) & (phase < left)), signal)
-
-                # Compute the contribution of that bin to the theta-statistics  
-          
-                if (len(bindata) != 0):
-                    theta[i] += (len(bindata) - 1) * bindata.var()
-                else:
-                    Nempty += 1
-  
-        # Normalize the theta-statistics        
-
-        theta[i] /= Ncover * Ntime - (Ncover * Nbin - Nempty)     
-    
-    # Normalize the theta-statistics again
-  
-    theta /= signal.var()  
-    
-    # That's it!
- 
-    return theta
     
   
   
@@ -421,83 +235,6 @@ def pdm(time, signal, freq, Nbin=10, Ncover=5):
 
 
   
-            
-def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
-                 chronological=False):
-    """
-    Construct a phasediagram, using frequency nu0.
-    
-    Possibility to include a frequency shift D.
-    
-    If needed, the indices can be returned. To 'unphase', just do:
-    
-    Example usage:
-    
-    >>> original = random.normal(size=10)
-    >>> indices = argsort(original)
-    >>> inv_indices = argsort(indices)
-    >>> all(original == take(take(original,indices),inv_indices))
-    True
-    
-    Optionally, the zero time point can be given, it will be subtracted from all
-    time points
-    
-    Joris De Ridder, Pieter Degroote
-    
-    @param time: time points [0..Ntime-1]
-    @type time: ndarray
-    @param signal: observed data points [0..Ntime-1]
-    @type signal: ndarray
-    @param nu0: frequency to compute the phasediagram with 
-                (inverse unit of time)
-    @type nu0: float
-    @param t0: zero time point, if None: t0 = time[0]
-    @type t0: float
-    @param D: frequency shift
-    @type D: float
-    @param chronological: set to True if you want to have a list of every phase
-    separately
-    @type chronological: boolean
-    @param return_indices: flag to return indices
-    @type return_indices: boolean
-    @return: phase points (sorted), corresponding observations
-    @rtype: ndarray,ndarray(, ndarray)
-    """
-    if (t0 is None): t0 = time[0]
-    phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
-    phase = np.where(phase<0,phase+1,phase)
-    
-    if chronological:
-        #-- keep track of the phase number, and prepare lists to add the points
-        chainnr = np.floor((time-t0)*nu0)
-        myphase = [[]]
-        mysignl = [[]]
-        currentphase = chainnr[0]
-        #-- divide the signal into separate phase bins
-        for i in xrange(len(signal)):
-            if chainnr[i]==currentphase:
-                myphase[-1].append(phase[i])
-                mysignl[-1].append(signal[i])
-            else:
-                myphase[-1] = np.array(myphase[-1])
-                mysignl[-1] = np.array(mysignl[-1])
-                currentphase = chainnr[i]
-                myphase.append([phase[i]])
-                mysignl.append([signal[i]])
-        myphase[-1] = np.array(myphase[-1])
-        mysignl[-1] = np.array(mysignl[-1])
-    else:
-        indices = np.argsort(phase)
-    
-    #-- possibly only return phase and signal
-    if not return_indices and not chronological:
-        return phase[indices], signal[indices]
-    #-- maybe return phase,signal and indices
-    elif not chronological:
-        return phase[indices], signal[indices], indices
-    #-- or return seperate phase bins
-    else:
-        return myphase,mysignl
 
 
 
@@ -521,6 +258,6 @@ def getNyquist(times,nyq_stat=np.inf):
     if not hasattr(nyq_stat,'__call__'):
         nyquist = nyq_stat
     else:
-        nyquist = 1/(2*nyq_stat(np.diff(times)))
+        nyquist = 1/(2.*nyq_stat(np.diff(times)))
     return nyquist
     

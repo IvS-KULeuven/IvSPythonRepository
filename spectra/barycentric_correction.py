@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Compute the influence of earth's orbit around the sun, and absolute stellar velocities
+"""
 from numpy import *
 from ivs.units.conversions import convert
 

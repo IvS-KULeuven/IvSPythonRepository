@@ -10,7 +10,7 @@ Example usage: compute the absolute orbits of the two components of
 mu Cassiopeia, and compute the relative orbit of the second component.
 
 See ps file on http://www.chara.gsu.edu/~gudehus/binary.html and Drummond et al.,
-1995 (the latters orbital parameters are used).
+1995 (the latter's orbital parameters are used).
 
 Neccesary imports:
 
@@ -189,6 +189,8 @@ def orbit_in_plane(times,parameters,component='primary'):
     """
     Construct an orbit in the orbital plane.
     
+    Give times in days
+    
     Parameters contains:
         1. period (days)
         2. eccentricity
@@ -226,7 +228,7 @@ def orbit_in_plane(times,parameters,component='primary'):
 
 def project_orbit(r,theta,parameters):
     """
-    Project an orbit on the plane of the sky.
+    Project an orbit onto the plane of the sky.
     
     Parameters contains the Euler angles:
         1. omega: the longitude of periastron gives the orientation of the

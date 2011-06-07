@@ -328,20 +328,20 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
                 size = (max_logg-min_logg)
             else:
                 size = int(float(points)/(len(unique_min_loggs)))
-            print 'size',size
+            #print 'size',size
             limits_and_sizes.append([(min_teff,max_teff),(min_logg,max_logg),size])
         total_size = sum([row[-1] for row in limits_and_sizes])
-        print total_size
-        print limits_and_sizes
+        #print total_size
+        #print limits_and_sizes
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],ebvrange[0],zrange[0]],
                                                        high=[lims[0][1],lims[1][1],ebvrange[1],zrange[1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
-        print teffs.shape
+        #print teffs.shape
     keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
             (loggrange[0]<=loggs) & (loggs<=loggrange[1]) &\
             (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1]) &\
             (zrange[0]<=zs) & (zs<=zrange[1])
-    print sum(keep)
+    #print sum(keep)
     teffs,loggs,ebvs,zs = teffs[keep],loggs[keep],ebvs[keep],zs[keep]
     
     if res:

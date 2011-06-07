@@ -55,7 +55,7 @@ from ivs.catalogs import sesame
 from ivs.units import conversions
 from ivs.units import constants
 
-from ivs.units.uncertainties import unumpy
+from ivs.units.uncertainties import unumpy,ufloat
 from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
 
@@ -322,6 +322,7 @@ def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
     else:
         dprob = np.ones_like(d)
     #-- compute the radii for the computed models, and convert to parsec
+    #radii = np.ones(len(teffs[-n:]))
     radii = get_radii(teffs[-n:],loggs[-n:])
     radii = conversions.convert('Rsol','pc',radii)
     d_models = radii/np.sqrt(scales[-n:])
@@ -563,6 +564,27 @@ class SED(object):
         self.set_best_model()
         if compare:
             self.set_distance()
+            d,dprob = self.results['igrid_search']['d'] # in parsecs
+            dcumprob = np.cumsum(dprob[1:]*np.diff(d))
+            dcumprob /= dcumprob.max()
+            d_min = d[dcumprob>0.38].min()
+            d_best = d[np.argmax(dprob)]
+            d_max = d[dcumprob<0.38].max()
+            e_d_best = min([abs(d_best-d_min),abs(d_max-d_best)])
+            print d_best,e_d_best
+            d_best = ufloat((d_best,e_d_best))
+
+            scales = self.results['igrid_search']['grid']['scale']
+            R = scales*d_best
+            print R
+            
+            #radii = np.zeros_like()
+            #for di,dprobi in zip(d,dprob):
+            #    self.results['igrid_search']['grid']['scale']*d_min
+            
+        
+        
+        
         
     #}
     
@@ -822,7 +844,7 @@ class SED(object):
         
         gal = self.info['galpos']
         #-- the plot
-        dzoom = dprob>1e-10
+        dzoom = dprob>1e-4
         pl.plot(d,dprob,'k-')
         pl.grid()
         pl.xlabel('Distance [pc]')

@@ -3,6 +3,7 @@
 Operations on numpy arrays not present in the standard package.
 """
 import numpy as np
+import pylab as pl
 
 #{ Normal arrays
 def unique_arr(a,axis=0,return_index=False):
@@ -88,7 +89,26 @@ def sort_order(a,order):
     a_ = np.sort(a.view([('',a.dtype)]*a.shape[1]), order=['f%d'%(i) for i in order], axis=0)
     a = a_.view(a.dtype).reshape(-1,a.shape[1])
     return a
+
+
+def match_arrays(a,b):
+    """
+    Return closest-match indices from b in a.
     
+    Example usage:
+        >>> a = np.random.uniform(size=10)
+        >>> b = a[np.array(np.random.uniform(size=3)*10,int)]
+        >>> ind = match_arrays(a,b)
+        >>> all(a[ind] == b)
+        True
+    """
+    sa = np.argsort(a)
+    a_ = a[sa]
+    a_ = a_[:-1] + np.diff(a_)/2.
+    closest_index = np.searchsorted(a_,b)
+    indices = sa[closest_index]
+    return indices
+
 #}
 #{ Record arrays
 
@@ -161,6 +181,16 @@ def recarr_addcols(x,cols,dtypes_ext):
         rows.append(list(x[i]) + [col[i] for col in cols])
     x = np.core.records.fromrecords(rows,dtype=dtypes)
     return x
+
+def recarr_join(arr1,arr2):
+    """
+    Join to record arrays column wise.
+    """
+    arr1 = arr1.copy()
+    for field in arr2.dtype.names:
+        arr1 = pl.mlab.rec_append_fields(arr1,field,arr2[field])
+    return arr1
+
 #}
 
 if __name__=="__main__":

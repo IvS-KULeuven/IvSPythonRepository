@@ -17,6 +17,7 @@ All periodograms can be computed in parallel, by supplying an extra keyword
 
 """
 import numpy as np
+from numpy import cos,sin,pi
 from ivs.misc.decorators import make_parallel
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram
 
@@ -27,6 +28,38 @@ import pyKEP
 import multih
 import deeming as fdeeming
 import eebls
+
+
+def windowfunction(time, freq):
+
+    """
+    Computes the modulus square of the window function of a set of 
+    time points at the given frequencies. The time point need not be 
+    equidistant. The normalisation is such that 1.0 is returned at 
+    frequency 0.
+    
+    @param time: time points  [0..Ntime-1]
+    @type time: ndarray       
+    @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
+    @type freq: ndarray       
+    @return: |W(freq)|^2      [0..Nfreq-1]
+    @rtype: ndarray
+    
+    """
+  
+    Ntime = len(time)
+    Nfreq = len(freq)
+    winkernel = np.empty_like(freq)
+
+    for i in range(Nfreq):
+        winkernel[i] = np.sum(np.cos(2.0*pi*freq[i]*time))**2     \
+                     + np.sum(np.sin(2.0*pi*freq[i]*time))**2
+
+    # Normalise such that winkernel(nu = 0.0) = 1.0 
+
+    return winkernel/Ntime**2
+
+
 
 @defaults_pergram
 @parallel_pergram
@@ -160,11 +193,181 @@ def deeming(times,signal, f0=None, fn=None, df=None, norm='amplitude'):
     
     
     
+def DFTpower(time, signal, f0=None, fn=None, df=None):
+
+    """
+    Computes the modulus square of the fourier transform. 
+    Unit: square of the unit of signal. Time points need not be equidistant.
+    The normalisation is such that a signal A*sin(2*pi*nu_0*t)
+    gives power A^2 at nu=nu_0
+    
+    @param time: time points [0..Ntime-1] 
+    @type time: ndarray
+    @param signal: signal [0..Ntime-1]
+    @type signal: ndarray
+    @param f0: the power is computed for the frequencies
+                      freq = arange(startfreq,stopfreq,stepfreq)
+    @type f0: float
+    @param fn: see startfreq
+    @type fn: float
+    @param df: see startfreq
+    @type df: float
+    @return: power spectrum of the signal
+    @rtype: ndarray 
+    """
+  
+    Ntime = len(time)
+    Nfreq = int(np.ceil((stopfreq-startfreq)/stepfreq))
+  
+    A = np.exp(1j*2.*pi*startfreq*time) * signal
+    B = np.exp(1j*2.*pi*stepfreq*time)
+    ft = np.zeros(Nfreq, complex) 
+    ft[0] = A.sum()
+
+    for k in range(1,Nfreq):
+        A *= B
+        ft[k] = np.sum(A)
+    
+    return (ft.real**2 + ft.imag**2) * 4.0 / Ntime**2    
     
     
     
+def FFTpower(signal, timestep):
+
+    """
+    Computes power spectrum of an equidistant time series 'signal'
+    using the FFT algorithm. The length of the time series need not
+    be a power of 2 (zero padding is done automatically). 
+    Normalisation is such that a signal A*sin(2*pi*nu_0*t)
+    gives power A^2 at nu=nu_0  (IF nu_0 is in the 'freq' array)
     
+    @param signal: the time series [0..Ntime-1]
+    @type signal: ndarray
+    @param timestep: time step fo the equidistant time series
+    @type timestep: float
+    @return: frequencies and the power spectrum
+    @rtype: (ndarray,ndarray)
     
+    """
+  
+    # Compute the FFT of a real-valued signal. If N is the number 
+    # of points of the original signal, 'Nfreq' is (N/2+1).
+  
+    fourier = np.fft.rfft(signal)
+    Ntime = len(signal)
+    Nfreq = len(fourier)
+  
+    # Compute the power
+  
+    power = np.abs(fourier)**2 * 4.0 / Ntime**2
+  
+    # Compute the frequency array.
+    # First compute an equidistant array that goes from 0 to 1 (included),
+    # with in total as many points as in the 'fourier' array.
+    # Then rescale the array that it goes from 0 to the Nyquist frequency
+    # which is 0.5/timestep
+  
+    freq = np.arange(float(Nfreq)) / (Nfreq-1) * 0.5 / timestep
+  
+    # That's it!
+  
+    return (freq, power)
+
+
+
+
+
+  
+  
+  
+def FFTpowerdensity(signal, timestep):
+  
+    """
+    Computes the power density of an equidistant time series 'signal',
+    using the FFT algorithm. The length of the time series need not
+    be a power of 2 (zero padding is done automatically). 
+
+    @param signal: the time series [0..Ntime-1]
+    @type signal: ndarray
+    @param timestep: time step fo the equidistant time series
+    @type timestep: float
+    @return: frequencies and the power density spectrum
+    @rtype: (ndarray,ndarray)
+
+    """
+  
+    # Compute the FFT of a real-valued signal. If N is the number 
+    # of points of the original signal, 'Nfreq' is (N/2+1).
+  
+    fourier = np.fft.rfft(signal)
+    Ntime = len(signal)
+    Nfreq = len(fourier)
+  
+    # Compute the power density
+  
+    powerdensity = np.abs(fourier)**2 / Ntime * timestep
+  
+    # Compute the frequency array.
+    # First compute an equidistant array that goes from 0 to 1 (included),
+    # with in total as many points as in the 'fourier' array.
+    # Then rescale the array that it goes from 0 to the Nyquist frequency
+    # which is 0.5/timestep
+  
+    freq = np.arange(float(Nfreq)) / (Nfreq-1) * 0.5 / timestep
+  
+    # That's it!
+  
+    return (freq, powerdensity)
+
+  
+
+
+  
+  
+
+
+
+def weightedpower(time, signal, weight, freq):
+
+    """
+    Compute the weighted power spectrum of a time signal.
+    For each given frequency a weighted sine fit is done using
+    chi-square minimization.
+    
+    @param time: time points [0..Ntime-1] 
+    @type time: ndarray
+    @param signal: observations [0..Ntime-1]
+    @type signal: ndarray
+    @param weight: 1/sigma_i^2 of observation
+    @type weight: ndarray
+    @param freq: frequencies [0..Nfreq-1] for which the power 
+                 needs to be computed
+    @type freq: ndarray
+    @return: weighted power [0..Nfreq-1]
+    @rtype: ndarray
+    
+    """
+
+    result = np.zeros(len(freq))
+
+    for i in range(len(freq)):
+        if (freq[i] != 0.0):
+            sine   = np.sin(2.0*pi*freq[i]*time)
+            cosine = np.cos(2.0*pi*freq[i]*time)
+            a11= np.sum(weight*sine*sine)
+            a12 = np.sum(weight*sine*cosine)
+            a21 = a12
+            a22 = np.sum(weight*cosine*cosine)
+            b1 = np.sum(weight*signal*sine)
+            b2 = np.sum(weight*signal*cosine)
+            denominator = a11*a22-a12*a21
+            A = (b1*a22-b2*a12)/denominator
+            B = (b2*a11-b1*a21)/denominator
+            result[i] = A*A+B*B
+        else:
+            result[i] = np.sum(signal)/len(signal)
+
+    return(result)    
     
     
     
@@ -330,14 +533,14 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
 @defaults_pergram
 @parallel_pergram
 @make_parallel
-def pdm(times, signal, f0=None, fn=None, df=None, nb=5, nc=2, D=0):
+def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
     """
     Phase Dispersion Minimization of Jurkevich-Stellingwerf (1978)
     
     This definition makes use of a Fortran routine written by Jan Cuypers and
     Conny Aerts.
     
-    Inclusion of linear frequency shift by Pieter Degroote
+    Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 1986)
     
     @param times: time points
     @type times: numpy array
@@ -349,10 +552,10 @@ def pdm(times, signal, f0=None, fn=None, df=None, nb=5, nc=2, D=0):
     @type fn: float
     @param df: step frequency
     @type df: float
-    @param nb: number of bins (default: 5)
-    @type nb: int
-    @param nc: number of covers (default: 1)
-    @type nc: int
+    @param Nbin: number of bins (default: 5)
+    @type Nbin: int
+    @param Ncover: number of covers (default: 1)
+    @type Ncover: int
     @param D: linear frequency shift parameter
     @type D: float
     @return: frequencies, theta statistic
@@ -370,14 +573,107 @@ def pdm(times, signal, f0=None, fn=None, df=None, nb=5, nc=2, D=0):
     
     #-- use Fortran subroutine
     if D is None:
-        f1, s1 = pyscargle.justel(signal,times,f0,df,nb,nc,xvar,xx,f1,s1,n,nf)
+        f1, s1 = pyscargle.justel(signal,times,f0,df,Nbin,Ncover,xvar,xx,f1,s1,n,nf)
     else:
-        f1, s1 = pyscargle.justel2(signal,times,f0,df,nb,nc,xvar,xx,D,f1,s1,n,nf)
+        f1, s1 = pyscargle.justel2(signal,times,f0,df,Nbin,Ncover,xvar,xx,D,f1,s1,n,nf)
     
     #-- it is possible that the first computed value is a none-variable
     if not s1[0]: s1[0] = 1. 
     
     return f1, s1
+
+
+
+
+
+@defaults_pergram
+@parallel_pergram
+@make_parallel
+def pdm_py(time, signal, f0=None, fn=None, df=None, Nbin=10, Ncover=5, D=0.):
+
+    """
+    Computes the theta-statistics to do a Phase Dispersion Minimisation.
+    See Stellingwerf R.F., 1978, ApJ, 224, 953)
+    
+    Joris De Ridder
+    
+    Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 1986)
+    
+    @param time: time points  [0..Ntime-1]
+    @type time: ndarray       
+    @param signal: observed data points [0..Ntime-1]
+    @type signal: ndarray
+    @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
+    @type freq: ndarray
+    @param Nbin: the number of phase bins (with length 1/Nbin)
+    @type Nbin: integer
+    @param Ncover: the number of covers (i.e. bin shifts)
+    @type Ncover: integer
+    @param D: linear frequency shift parameter
+    @type D: float
+    @return: theta-statistic for each given frequency [0..Nfreq-1]
+    @rtype: ndarray
+    """
+    freq = np.arange(f0,fn+df,df)
+    
+    Ntime = len(time)
+    Nfreq = len(freq)
+  
+    binsize = 1.0 / Nbin
+    covershift = 1.0 / (Nbin * Ncover)
+  
+    theta = np.zeros(Nfreq)
+  
+    for i in range(Nfreq):
+  
+        # Compute the phases in [0,1[ for all time points
+        phase = np.fmod((time - time[0]) * freq[i] + D/2.*time**2, 1.0)
+    
+        # Reset the number of (shifted) bins without datapoints
+    
+        Nempty = 0
+    
+        # Loop over all Nbin * Ncover (shifted) bins
+    
+        for k in range(Nbin):
+            for n in range(Ncover):
+        
+                # Determine the left and right boundary of one such bin
+                # Note that due to the modulo, right may be < left. So instead
+                # of 0-----+++++------1, the bin might be 0++-----------+++1 .
+        
+                left = np.fmod(k * binsize + n * covershift, 1.0) 
+                right = np.fmod((k+1) * binsize + n * covershift, 1.0) 
+
+                # Select all data points in that bin
+        
+                if (left < right):
+                    bindata = np.compress((left <= phase) & (phase < right), signal)
+                else:
+                    bindata = np.compress(~((right <= phase) & (phase < left)), signal)
+
+                # Compute the contribution of that bin to the theta-statistics  
+          
+                if (len(bindata) != 0):
+                    theta[i] += (len(bindata) - 1) * bindata.var()
+                else:
+                    Nempty += 1
+  
+        # Normalize the theta-statistics        
+
+        theta[i] /= Ncover * Ntime - (Ncover * Nbin - Nempty)     
+    
+    # Normalize the theta-statistics again
+  
+    theta /= signal.var()  
+    
+    # That's it!
+ 
+    return freq,theta
+
+
+
+
 
 
 
@@ -540,6 +836,13 @@ if __name__=="__main__":
     pl.plot(f5,s5)
     pl.subplot(2,3,6)
     pl.plot(f6,s6)
+    
+    f0,s0 = pdm(x,y)
+    f1,s1 = pdm_py(x,y)
+    pl.figure()
+    pl.plot(f0,s0)
+    pl.plot(f1,s1)
+    
     
     
     pl.show()
