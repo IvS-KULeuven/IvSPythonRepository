@@ -257,6 +257,32 @@ def kepler(times,parameters,itermax=8):
     return RVfit
 
 
+def box(times,parameters,t0=None):
+    """
+    Evaluate a box transit model.
+    
+    Parameters [[frequency,depth, fractional start, fraction end, continuum]]
+    @rtype: ndarray
+    """
+    if t0 is None:
+        t0 = 0.
+    
+    #-- continuum
+    model = np.ones(len(times))*sum(parameters[:,4])
+    
+    for parameter in parameters:
+        nu0 = parameter[0]
+        depth = parameter[1]
+        #-- set up the model, define which point is where in a
+        #   phasediagram
+        phase = np.fmod((times - t0) * nu0, 1.0)
+        phase = np.where(phase<0,phase+1,phase)
+        transit_place = (parameter[2]<=phase) & (phase<=parameter[3])
+        model = np.where(transit_place,model-depth,model)
+    return model
+
+
+
 
 
 #{ Convert record arrays to flat arrays and back

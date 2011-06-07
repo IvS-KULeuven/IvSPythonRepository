@@ -98,7 +98,49 @@ Now plot everything and print the results to the screen:
 >>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
       const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
    0.000242   0.014795   6.461705   -0.093895   0.000609   0.001912   0.000000   0.013386
-   
+
+
+Section 3. Exoplanet transit analysis
+=====================================
+
+Find the transits of XO-3b, after Winn et al., 2008
+
+Read in the data, but only keep the one in z filter:
+
+>>> data,units,comms = vizier.search('J/ApJ/683/1076/table2')
+>>> times,signal,filt = data['HJD'],data['Rflux'],data['Filt']
+>>> keep = filt=='z'
+>>> times,signal = times[keep],signal[keep]
+
+Find the best frequency using the Box Least Squares periodogram, fit a transit
+model with that frequency, optimize and prewhiten.
+
+>>> freqs,ampls = pergrams.box(times,signal)
+>>> freq = freqs[np.argmax(ampls)]
+#>>> pars1 = sine(times, signal, freq)
+#>>> e_pars1 = e_sine(times,signal, pars1)
+#>>> pars2,e_pars2 = optimize(times,signal,pars1,'sine')
+
+Evaluate the sines, and make phasediagrams of the fits and the data
+
+#>>> mysine1 = evaluate.sine(times,pars1)
+#>>> mysine2 = evaluate.sine(times,pars2)
+>>> phases,phased = evaluate.phasediagram(times,signal,freq)
+#>>> phases1,phased1 = evaluate.phasediagram(times,mysine1,pars1['freq'])
+#>>> phases2,phased2 = evaluate.phasediagram(times,mysine2,pars1['freq'])
+
+Now plot everything and print the results to the screen:
+
+#>>> sa1 = np.argsort(phases1)
+#>>> sa2 = np.argsort(phases2)
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.plot(freqs,ampls,'k-')
+>>> p = pl.subplot(122)
+>>> p = pl.plot(phases,phased,'ko')
+#>>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
+#>>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
+
 """ 
 import time
 import logging
@@ -382,7 +424,10 @@ def kepler(times, signal, freq, sigma=None, wexp=2.):
     pars = tuple([1/freq,x0/(2*pi*freq) + times[0], e, w, K, RV0])
     pars = np.rec.array([tuple(pars)],dtype=[('P','f8'),('T0','f8'),('e','f8'),('omega','f8'),('K','f8'),('gamma','f8')])
     return pars
-    
+
+
+  
+  
 #}
 #{ Error determination
 
