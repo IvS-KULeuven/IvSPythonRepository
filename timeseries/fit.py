@@ -1,8 +1,8 @@
 """
 Fit various functions to timeseries.
 
-1. Radial velocity data
-=======================
+Section 1. Radial velocity data
+===============================
 
 Fit orbit of massive X-ray binary LSI+65010, after Grundstrom 2007:
 
@@ -53,8 +53,8 @@ Now plot everything and print the results to the screen:
    -59.181942   11.581472   2451060.760523   0.194192   1.015276   11.925424   0.503331   0.004101   0.573320   0.060920   0.314982   0.788034
 
 
-2. Pulsation frequency analysis
-===============================
+Section 2. Pulsation frequency analysis
+=======================================
 
 Do a frequency analysis of the star HD129929, after Aerts 2004:
 
@@ -248,8 +248,8 @@ def periodic_spline(times, signal, freq, t0=None, order=20, k=3):
     @type times: numpy 1d array
     @param signal: observation points
     @type signal: numpy 1d array
-    @param frequency: frequency of the periodic trend
-    @type frequency: float
+    @param freq: frequency of the periodic trend
+    @type freq: float
     @keyword order: number of points to use for the spline fit.
     @type order: integer
     @keyword k: order of the spline
@@ -350,8 +350,8 @@ def kepler(times, signal, freq, sigma=None, wexp=2.):
     @type times: numpy 1d array
     @param signal: observation points
     @type signal: numpy 1d array
-    @param frequency: frequency of kepler orbit
-    @type frequency: float
+    @param freq: frequency of kepler orbit
+    @type freq: float
     @return: parameters
     @rtype: record array
     """

@@ -52,19 +52,19 @@ def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],**kwargs):
     
     Example usage:
     
-    1. You want to download all available photometry and write the results to
-    an ASCII file for later reference.
+        1. You want to download all available photometry and write the results to
+        an ASCII file for later reference.
     
-    >>> master = get_photometry('vega')
-    >>> ascii.write_array(master,header=True,auto_width=True)
+        >>> master = get_photometry('vega')
+        >>> ascii.write_array(master,header=True,auto_width=True)
     
-    2. You want to plot the raw, unmodelled SED of an object:
+        2. You want to plot the raw, unmodelled SED of an object:
     
-    >>> master = get_photometry('vega')
-    >>> pl.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
-    >>> pl.gca().set_xscale('log',nonposx='clip')
-    >>> pl.gca().set_yscale('log',nonposy='clip')
-    
+        >>> master = get_photometry('vega')
+        >>> pl.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
+        >>> pl.gca().set_xscale('log',nonposx='clip')
+        >>> pl.gca().set_yscale('log',nonposy='clip')
+        
     We made no difference between colors (B-V) and magnitude (V), because the
     'cwave' for colors is 'nan', so they will not be plotted anyway.The final
     two lines are just to correct errorbars that go below zero in a logarithmic

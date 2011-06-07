@@ -15,11 +15,11 @@ one measurement from one catalog (typically you'll have many rows both from one
 catalog but also from different catalogs). The columns then denote the contents
 of each row (e.g. the magnitude, photometric passband etc).
 
-1. Download catalogs
-====================
+Section 1. Download catalogs
+============================
 
-1.1. To a file
---------------
+Section 1.1. To a file
+----------------------
 
 Download the entire Van Leeuwen Hipparcos New Reduction catalog to a file. The
 filename is returned as a check for success.
@@ -39,8 +39,8 @@ are ordered via distance to the target, so it's probably the first one you need.
 >>> filename = search('I/311/hip2',ID='vega',filename='vanleeuwen.tsv')
 >>> filename = search('I/311/hip2',ID='vega',filename='vanleeuwen.tsv',radius=60.)
 
-1.2 To a RecordArray
---------------------
+Section 1.2 To a RecordArray
+----------------------------
 
 Instead of downloading to a file and then reading in the file for further
 analysis, you can download the contents of the file directly to a record array,
@@ -57,8 +57,8 @@ negative H-K index, you can do
 >>> selection = (data['Hmag'] - data['Kmag']) < 0
 >>> data = data[selection] 
 
-1.3 List relevant catalogs
---------------------------
+Section 1.3 List relevant catalogs
+----------------------------------
 
 To know in which catalogs your target is present, list them all via
 
@@ -66,8 +66,8 @@ To know in which catalogs your target is present, list them all via
 
 Now you could iterate over them and download them to a file or whatever.
 
-2. Convenience functions
-========================
+Section 2. Convenience functions
+================================
 
 You can define 'standard' photometric catalogs in the C{vizier_cats.cfg} file.
 This file is basically a translator for VizieR column headers to photometric

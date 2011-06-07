@@ -603,8 +603,12 @@ def pdm_py(time, signal, f0=None, fn=None, df=None, Nbin=10, Ncover=5, D=0.):
     @type time: ndarray       
     @param signal: observed data points [0..Ntime-1]
     @type signal: ndarray
-    @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
-    @type freq: ndarray
+    @param f0: start frequency
+    @type f0: float
+    @param fn: stop frequency
+    @type fn: float
+    @param df: step frequency
+    @type df: float
     @param Nbin: the number of phase bins (with length 1/Nbin)
     @type Nbin: integer
     @param Ncover: the number of covers (i.e. bin shifts)
