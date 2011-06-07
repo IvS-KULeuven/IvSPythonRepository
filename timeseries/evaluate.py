@@ -51,7 +51,7 @@ def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
     @return: phase points (sorted), corresponding observations
     @rtype: ndarray,ndarray(, ndarray)
     """
-    if (t0 is None): t0 = time[0]
+    if (t0 is None): t0 = 0.
     phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
     phase = np.where(phase<0,phase+1,phase)
     
@@ -267,18 +267,20 @@ def box(times,parameters,t0=None):
     if t0 is None:
         t0 = 0.
     
+    parameters = np.asarray(parameters)
+    if not parameters.dtype.names:
+        parameters = box_preppars(parameters)
     #-- continuum
-    model = np.ones(len(times))*sum(parameters[:,4])
+    parameters = np.asarray(parameters)
+    model = np.ones(len(times))*sum(parameters['cont'])
     
     for parameter in parameters:
-        nu0 = parameter[0]
-        depth = parameter[1]
         #-- set up the model, define which point is where in a
         #   phasediagram
-        phase = np.fmod((times - t0) * nu0, 1.0)
+        phase = np.fmod((times - t0) * parameter['freq'], 1.0)
         phase = np.where(phase<0,phase+1,phase)
-        transit_place = (parameter[2]<=phase) & (phase<=parameter[3])
-        model = np.where(transit_place,model-depth,model)
+        transit_place = (parameter['ingress']<=phase) & (phase<=parameter['egress'])
+        model = np.where(transit_place,model-parameter['depth'],model)
     return model
 
 
@@ -394,4 +396,41 @@ def kepler_preppars(pars):
             names = ['P','T0','e','omega','K']
         converted_pars = np.rec.fromarrays(converted_pars,names=names)
     return converted_pars
+    
+def box_preppars(pars):
+    """
+    Prepare sine function parameters in correct form for evaluating/fitting.
+    
+    If you input a record array, this function will output a 1D numpy array
+    containing only the independent parameters for use in nonlinear fitting
+    algorithms.
+    
+    If you input a 1D numpy array, it will output a record array.
+    
+    @param pars: input parameters in record array or normal array form
+    @type pars: record array or normal numpy array
+    @return: input parameters in normal array form or record array
+    @rtype: normal numpy array or record array
+    """
+    #-- from record array to flat
+    if pars.dtype.names:
+        converted_pars = np.ones(4*len(pars)+1)
+        converted_pars[0] += sum(pars['cont'])
+        converted_pars[1::4] = pars['freq']
+        converted_pars[2::4] = pars['depth']
+        converted_pars[3::4] = pars['ingress']
+        converted_pars[4::4] = pars['egress']
+    #-- from flat to record array
+    else:
+        converted_pars = np.ones((5,(len(pars)-1)/4))
+        converted_pars[0,0] = pars[0]
+        converted_pars[1] = pars[1::4]
+        converted_pars[2] = pars[2::4]
+        converted_pars[3] = pars[3::4]
+        converted_pars[4] = pars[4::4]
+        names = ['cont','freq','depth','ingress','egress']
+        converted_pars = np.rec.fromarrays(converted_pars,names=names)
+    return converted_pars    
+    
+    
 #}

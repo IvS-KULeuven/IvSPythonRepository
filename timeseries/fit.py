@@ -22,12 +22,15 @@ Read in the data, and remove the outliers:
 
 Find the best frequency using the Kepler periodogram, fit an orbit with that
 frequency and optimize. In the latter step, we also retrieve the errors on the
-parameters:
+parameters, and print the results to the screen:
 
 >>> freqs,ampls = pergrams.kepler(times,RV,fn=0.2)
 >>> freq = freqs[np.argmax(ampls)]
 >>> pars1 = kepler(times, RV, freq)
 >>> pars2,e_pars2 = optimize(times,RV,pars1,'kepler')
+>>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
+        gamma           P               T0          e      omega           K    e_gamma        e_P       e_T0        e_e    e_omega        e_K
+   -59.181942   11.581472   2451060.760523   0.194192   1.015276   11.925424   0.503331   0.004101   0.573320   0.060920   0.314982   0.788034
 
 Evaluate the orbital fits, and make phasediagrams of the fits and the data
 
@@ -37,7 +40,7 @@ Evaluate the orbital fits, and make phasediagrams of the fits and the data
 >>> phases1,phased1 = evaluate.phasediagram(times,myorbit1,1/pars1['P'])
 >>> phases2,phased2 = evaluate.phasediagram(times,myorbit2,1/pars1['P'])
 
-Now plot everything and print the results to the screen:
+Now plot everything:
 
 >>> sa1 = np.argsort(phases1)
 >>> sa2 = np.argsort(phases2)
@@ -48,9 +51,6 @@ Now plot everything and print the results to the screen:
 >>> p = pl.plot(phases,phased,'ko')
 >>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
 >>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
->>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
-        gamma           P               T0          e      omega           K    e_gamma        e_P       e_T0        e_e    e_omega        e_K
-   -59.181942   11.581472   2451060.760523   0.194192   1.015276   11.925424   0.503331   0.004101   0.573320   0.060920   0.314982   0.788034
 
 
 Section 2. Pulsation frequency analysis
@@ -65,13 +65,19 @@ Read in the data:
 >>> signal -= signal.mean()
 
 Find the best frequency using the Scargle periodogram, fit an orbit with that
-frequency, optimize and prewhiten.
+frequency, optimize and prewhiten. Then print the results to the screen:
 
 >>> freqs,ampls = pergrams.scargle(times,signal,f0=6.4,fn=7)
 >>> freq = freqs[np.argmax(ampls)]
 >>> pars1 = sine(times, signal, freq)
 >>> e_pars1 = e_sine(times,signal, pars1)
 >>> pars2,e_pars2 = optimize(times,signal,pars1,'sine')
+>>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars1,e_pars1),precision=6)
+      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
+   0.000242   0.014795   6.461705   -0.093895   0.000608   0.001319   0.000006   0.089134
+>>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
+      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
+   0.000242   0.014795   6.461705   -0.093895   0.000609   0.001912   0.000000   0.013386
 
 Evaluate the sines, and make phasediagrams of the fits and the data
 
@@ -81,7 +87,7 @@ Evaluate the sines, and make phasediagrams of the fits and the data
 >>> phases1,phased1 = evaluate.phasediagram(times,mysine1,pars1['freq'])
 >>> phases2,phased2 = evaluate.phasediagram(times,mysine2,pars1['freq'])
 
-Now plot everything and print the results to the screen:
+Now plot everything:
 
 >>> sa1 = np.argsort(phases1)
 >>> sa2 = np.argsort(phases2)
@@ -92,54 +98,47 @@ Now plot everything and print the results to the screen:
 >>> p = pl.plot(phases,phased,'ko')
 >>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
 >>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
->>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars1,e_pars1),precision=6)
-      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
-   0.000242   0.014795   6.461705   -0.093895   0.000608   0.001319   0.000006   0.089134
->>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
-      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
-   0.000242   0.014795   6.461705   -0.093895   0.000609   0.001912   0.000000   0.013386
 
 
 Section 3. Exoplanet transit analysis
 =====================================
 
-Find the transits of XO-3b, after Winn et al., 2008
+Find the transits of CoRoT 8b, after Borde 2010.
 
-Read in the data, but only keep the one in z filter:
-
->>> data,units,comms = vizier.search('J/ApJ/683/1076/table2')
->>> times,signal,filt = data['HJD'],data['Rflux'],data['Filt']
->>> keep = filt=='z'
->>> times,signal = times[keep],signal[keep]
+>>> import urllib
+>>> from ivs.io import ascii
+>>> url = urllib.URLopener()
+>>> filen,msg = url.retrieve('http://cdsarc.u-strasbg.fr/viz-bin/nph-Plot/Vgraph/txt?J%2fA%2bA%2f520%2fA66%2f.%2flc_white&F=white&P=0&--bitmap-size&800x400')
+>>> times,signal = ascii.read2array(filen).T
+>>> signal = signal / np.median(signal)
+>>> url.close()
 
 Find the best frequency using the Box Least Squares periodogram, fit a transit
 model with that frequency, optimize and prewhiten.
 
->>> freqs,ampls = pergrams.box(times,signal)
+>>> freqs,ampls = pergrams.box(times,signal,f0=0.16,fn=0.162,df=0.005/times.ptp(),qma=0.05)
 >>> freq = freqs[np.argmax(ampls)]
-#>>> pars1 = sine(times, signal, freq)
-#>>> e_pars1 = e_sine(times,signal, pars1)
-#>>> pars2,e_pars2 = optimize(times,signal,pars1,'sine')
+>>> pars = box(times,signal,freq)
+>>> pars = box(times,signal,freq,b0=pars['ingress'][0]-0.05,bn=pars['egress'][0]+0.05)
+>>> print pl.mlab.rec2txt(pars,precision=6)
+       freq      depth    ingress     egress       cont
+   0.161018   0.005978   0.782028   0.799229   1.000027
 
-Evaluate the sines, and make phasediagrams of the fits and the data
+Evaluate the transits, and make phasediagrams of the fits and the data
 
-#>>> mysine1 = evaluate.sine(times,pars1)
-#>>> mysine2 = evaluate.sine(times,pars2)
+>>> transit = evaluate.box(times,pars)
 >>> phases,phased = evaluate.phasediagram(times,signal,freq)
-#>>> phases1,phased1 = evaluate.phasediagram(times,mysine1,pars1['freq'])
-#>>> phases2,phased2 = evaluate.phasediagram(times,mysine2,pars1['freq'])
+>>> phases1,phased1 = evaluate.phasediagram(times,transit,freq)
 
 Now plot everything and print the results to the screen:
 
-#>>> sa1 = np.argsort(phases1)
-#>>> sa2 = np.argsort(phases2)
+>>> sa1 = np.argsort(phases1)
 >>> p = pl.figure()
 >>> p = pl.subplot(121)
 >>> p = pl.plot(freqs,ampls,'k-')
 >>> p = pl.subplot(122)
 >>> p = pl.plot(phases,phased,'ko')
-#>>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
-#>>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
+>>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
 
 """ 
 import time
@@ -148,7 +147,7 @@ import logging
 import numpy as np
 from numpy import pi,cos,sin
 from scipy.interpolate import splrep
-from scipy.optimize import leastsq,fmin
+import scipy.optimize
 
 from ivs.misc import loggers
 from ivs.timeseries import evaluate
@@ -427,7 +426,78 @@ def kepler(times, signal, freq, sigma=None, wexp=2.):
 
 
   
-  
+def box(times,signal,freq,b0=0,bn=1,order=50,t0=None):
+    """
+    Fit box shaped transits.
+    
+    @param times: time points
+    @type times: numpy 1d array
+    @param signal: observation points
+    @type signal: numpy 1d array
+    @param freq: frequency of transiting signal
+    @type freq: float
+    @param b0: minimum start of ingress (in phase)
+    @type b0: 0<float<bn
+    @param bn: maximum end of egress (in phase)
+    @type bn: b0<float<1
+    @param order: number of phase bins
+    @type order: integer
+    @param t0: zeropoint of times
+    @type t0: float
+    @return: parameters
+    @rtype: record array
+    """
+    if t0 is None:
+        t0 = 0.
+        
+    #-- Prepare the input: if a frequency value is given, put it in a list. If
+    #   an iterable is given convert it to an array
+    if not hasattr(freq,'__len__'):
+        freq = [freq]
+    freq = np.asarray(freq)
+    
+    parameters = np.rec.fromarrays([np.zeros(len(freq)) for i in range(5)],dtype=[('freq','f8'),('depth','f8'),
+                                            ('ingress','f8'),('egress','f8'),
+                                            ('cont','f8')])
+    bins = np.linspace(b0,bn,order)
+    
+    for fnr,frequency in enumerate(freq):
+        parameters[fnr]['freq'] = frequency
+        #-- we need to check two phase diagrams, to compensate for edge effects
+        phases1,phased1 = evaluate.phasediagram(times,signal,frequency,t0=t0)
+        phases2,phased2 = evaluate.phasediagram(times,signal,frequency,t0=t0+0.5/frequency)
+        best_fit = np.inf
+        for i,start in enumerate(bins):
+            for end in bins[i+1:]:
+                transit1 = (start<=phases1) & (phases1<=end)
+                transit2 = (start<=phases2) & (phases2<=end)
+                transit_sig1 = np.median(np.compress(  transit1,phased1))
+                contini_sig1 = np.median(np.compress(1-transit1,phased1))
+                depth1 = contini_sig1-transit_sig1
+                transit_sig2 = np.median(np.compress(  transit2,phased2))
+                contini_sig2 = np.median(np.compress(1-transit2,phased2))
+                depth2 = contini_sig2-transit_sig2
+                #-- check fit
+                chisquare1 = sum((evaluate.box(times,[contini_sig1,frequency,depth1,start,end])-signal)**2)
+                chisquare2 = sum((evaluate.box(times,[contini_sig2,frequency,depth2,start,end])-signal)**2)
+                if chisquare1 < best_fit and chisquare1 < chisquare2:
+                    parameters[fnr]['depth'] = depth1
+                    parameters[fnr]['ingress'] = start
+                    parameters[fnr]['egress'] = end
+                    parameters[fnr]['cont'] = contini_sig1
+                    best_fit = chisquare1
+                elif chisquare2 < best_fit and chisquare2 < chisquare1:
+                    start2 = start - 0.5
+                    end2 = end - 0.5
+                    if start2 < 0: start2 += 1
+                    if end2 < 0: end2 += 1
+                    parameters[fnr]['depth'] = depth2
+                    parameters[fnr]['ingress'] = start2
+                    parameters[fnr]['egress'] = end2
+                    parameters[fnr]['cont'] = contini_sig2
+                    best_fit = chisquare2
+    return parameters
+    
 #}
 #{ Error determination
 
@@ -538,11 +608,16 @@ def residuals(parameters,domain,data,evalfunc):
     fit = evalfunc(domain,parameters)
     return data-fit
 
-def optimize(times, signal, parameters, func_name):
+def residuals_single(parameters,domain,data,evalfunc):
+    fit = evalfunc(domain,parameters)
+    return sum((data-fit)**2)
+
+def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
     #-- we need these function to evaluate the fit and to (un)pack the fitting
     #   parameters from and to flat arrays
     prepfunc = getattr(evaluate,func_name+'_preppars')
     evalfunc = getattr(evaluate,func_name)
+    optifunc = getattr(scipy.optimize,minimizer)
     
     #-- if the initial guess of the fitting parameters aren't flat, flatten them
     #   here:
@@ -557,16 +632,25 @@ def optimize(times, signal, parameters, func_name):
     chisq_init = np.sum((signalf_init-signal)**2)
     
     #-- optimize
-    popt, cov, info, mesg, flag = leastsq(residuals,init_guess,
-                                     args=(times,signal,evalfunc),full_output=1)
+    if minimizer=='leastsq':
+        popt, cov, info, mesg, flag = optifunc(residuals,init_guess,
+                                     args=(times,signal,evalfunc),full_output=1)#,diag=[1.,10,1000,1.,100000000.])
+        #-- calculate new chisquare, and check if we have improved it
+        chisq = np.sum(info['fvec']*info['fvec'])
+        if flag!=1 or chisq>chisq_init:
+            logger.error('Optimization not successful')
     
-    #-- calculate new chisquare, and check if we have improved it
-    chisq = np.sum(info['fvec']*info['fvec'])
-    if flag!=1 or chisq>chisq_init:
-        logger.error('Optimization not successful')
-    
-    #-- derive the errors from the nonlinear fit
-    errors = np.sqrt(cov.diagonal()) * np.sqrt(chisq/dof)
+        #-- derive the errors from the nonlinear fit
+        if cov is not None:
+            errors = np.sqrt(cov.diagonal()) * np.sqrt(chisq/dof)
+        else:
+            logger.error('Error estimation via optimize not successful')
+            errors = np.zeros(len(popt))
+    else:
+        out = optifunc(residuals_single,init_guess,
+                                     args=(times,signal,evalfunc),full_output=1,disp=False)
+        popt = out[0]
+        errors = np.zeros(len(popt))
     
     #-- transform the parameters to record arrays, as well as the errors
     parameters = prepfunc(popt)
