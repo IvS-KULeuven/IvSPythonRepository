@@ -28,6 +28,9 @@ parameters, and print the results to the screen:
 >>> freq = freqs[np.argmax(ampls)]
 >>> pars1 = kepler(times, RV, freq)
 >>> pars2,e_pars2 = optimize(times,RV,pars1,'kepler')
+>>> print pl.mlab.rec2txt(pars1,precision=6)
+           P               T0          e      omega           K        gamma
+   11.581314   2451060.751789   0.190000   1.006924   11.915330   -59.178393
 >>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
         gamma           P               T0          e      omega           K    e_gamma        e_P       e_T0        e_e    e_omega        e_K
    -59.181942   11.581472   2451060.760523   0.194192   1.015276   11.925424   0.503331   0.004101   0.573320   0.060920   0.314982   0.788034
@@ -47,11 +50,15 @@ Now plot everything:
 >>> p = pl.figure()
 >>> p = pl.subplot(121)
 >>> p = pl.plot(freqs,ampls,'k-')
+>>> p = pl.xlabel('Frequency [d$^{-1}$]')
+>>> p = pl.ylabel('Statistic')
 >>> p = pl.subplot(122)
 >>> p = pl.plot(phases,phased,'ko')
->>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
->>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
-
+>>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2,label='Linear fit')
+>>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2,label='Optimization')
+>>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
+>>> p = pl.ylabel('Amplitude [km s$^{-1}$]')
+>>> p = pl.legend()
 
 Section 2. Pulsation frequency analysis
 =======================================
@@ -94,10 +101,14 @@ Now plot everything:
 >>> p = pl.figure()
 >>> p = pl.subplot(121)
 >>> p = pl.plot(freqs,ampls,'k-')
+>>> p = pl.xlabel('Frequency [d$^{-1}$]')
+>>> p = pl.ylabel('Amplitude [mag]')
 >>> p = pl.subplot(122)
 >>> p = pl.plot(phases,phased,'ko')
 >>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
 >>> p = pl.plot(phases2[sa2],phased2[sa2],'b--',lw=2)
+>>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
+>>> p = pl.ylabel('Amplitude [mag]')
 
 
 Section 3. Exoplanet transit analysis
@@ -136,9 +147,14 @@ Now plot everything and print the results to the screen:
 >>> p = pl.figure()
 >>> p = pl.subplot(121)
 >>> p = pl.plot(freqs,ampls,'k-')
+>>> p = pl.xlabel('Frequency [d$^{-1}$]')
+>>> p = pl.ylabel('Statistic')
 >>> p = pl.subplot(122)
->>> p = pl.plot(phases,phased,'ko')
->>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
+>>> p = pl.plot(phases,phased*100,'ko')
+>>> p = pl.plot(phases1[sa1],phased1[sa1]*100,'r-',lw=2)
+>>> p = pl.xlim(0.70,0.85)
+>>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
+>>> p = pl.ylabel('Depth [%]')
 
 Section 4. Eclipsing binary fit
 ===============================
@@ -148,7 +164,7 @@ showing the use of the periodic spline fitting functions, we do it anyway.
 
 We use the data on CU Cnc of Ribas, 2003:
 
->>> data = vizier.search('J/A+A/398/239/table1')
+>>> data,units,comms = vizier.search('J/A+A/398/239/table1')
 >>> times,signal = data['HJD'],data['Dmag']
 
 """ 
