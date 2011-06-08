@@ -9,7 +9,6 @@ import logging
 from multiprocessing import Manager,Process
 import numpy as np
 from ivs.misc import loggers
-from ivs.timeseries import freqanalyse
 #from ivs.timeseries import windowfunctions
 
 logger = logging.getLogger("TS.DEC")
@@ -88,7 +87,7 @@ def defaults_pergram(fctn):
         #   start (0.1/T) and stop (Nyquist) frequency.
         #   Also compute the frequency step as 0.1/T
         nyq_stat = kwargs.pop('nyq_stat',np.min)
-        nyquist = freqanalyse.getNyquist(times,nyq_stat=nyq_stat)
+        nyquist = getNyquist(times,nyq_stat=nyq_stat)
         f0 = kwargs.get('f0',0.01/T)
         fn = kwargs.get('fn',nyquist)
         df = kwargs.get('df',0.1/T)
@@ -133,3 +132,30 @@ def defaults_filtering(fctn):
         kwargs['fn'] = fn
         return fctn(*args,**kwargs)
     return globpar
+
+
+
+
+
+def getNyquist(times,nyq_stat=np.inf):
+    """
+    Calculate Nyquist frequency.
+    
+    Typical use is minimum or median of time points differences.
+    
+    If C{nyq_stat} is not callable, it is assumed to be a number and that number
+    will just be returned: this you can do to search for frequencies above the
+    nyquist frequency
+    
+    @param times: sorted array containing time points
+    @type times: numpy array
+    @param nyq_stat: statistic to use or absolute value of the Nyquist frequency
+    @type nyq_stat: callable or float
+    @return: Nyquist frequency
+    @rtype: float
+    """
+    if not hasattr(nyq_stat,'__call__'):
+        nyquist = nyq_stat
+    else:
+        nyquist = 1/(2.*nyq_stat(np.diff(times)))
+    return nyquist

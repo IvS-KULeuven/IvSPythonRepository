@@ -805,6 +805,102 @@ def kepler(times,signal, f0=None, fn=None, df=None, e0=0., en=0.91, de=0.1,
 
 
 
+
+def Zwavelet(time, signal, freq, position, sigma=10.0):
+
+    """
+    Computes "Weighted Wavelet Z-Transform"
+    which is a type of time-frequency diagram more suitable
+    for non-equidistant time series.
+    See: G. Foster, 1996, Astronomical Journal, 112, 1709 
+    
+    The result can be plotted as a colorimage (imshow in pylab).
+    
+    Mind the max, min order for position. It's often useful to try log(Z)
+    and/or different sigmas.
+    
+    @param time: time points [0..Ntime-1]
+    @type time: ndarray
+    @param signal: observed data points [0..Ntime-1]
+    @type signal: ndarray
+    @param freq: frequencies (omega/2pi in Foster's paper) [0..Nfreq-1]
+                 the array should not contain 0.0
+    @type freq: ndarray
+    @param position: time parameter: tau in Foster's paper [0..Npos-1]
+    @type position: ndarray
+    @param sigma: smoothing parameter in time domain: sigma in Foster's paper
+    @type sigma: float
+    @return: Z[0..Npos-1, 0..Nfreq-1]: the Z-transform: time-freq diagram
+    @rtype: ndarray
+    
+    """
+  
+    y = np.zeros(3)
+    S = np.zeros([3,3])
+    Z = np.zeros([len(position),len(freq)])
+  
+    for i in range(len(position)):
+        
+        tau = position[i]
+        arg = 2.0*pi*(time-tau)
+ 
+        for j in range(len(freq)):
+        
+            nu = freq[j]
+      
+            # Compute statistical weights akin the Morlet wavelet
+      
+            weight = np.exp(-(time-tau)**2 * (nu / 2./sigma)**2)
+            W = np.sum(weight)
+      
+            # Compute the base functions. A 3rd base function is the constant 1.
+      
+            cosine = np.cos(arg*nu)
+            sine = np.sin(arg*nu)
+          
+            print arg, nu
+            print sine, cosine
+          
+            # Compute the innerproduct of the base functions
+            # phi_0 = 1 (constant), phi_1 = cosine, phi_2 = sine
+      
+            S[0,0] = 1.0
+            S[0,1] = S[1,0] = np.sum(weight * 1.0 * cosine) / W
+            S[0,2] = S[2,0] = np.sum(weight * 1.0 * sine) / W
+            S[1,1] = np.sum(weight * cosine * cosine) / W
+            S[1,2] = S[2,1] = np.sum(weight * cosine * sine) / W
+            S[2,2] = np.sum(weight * sine * sine) / W
+            print S
+            invS = np.linalg.inv(S)
+      
+            # Determine the best-fit coefficients y_k of the base functions
+      
+            for k in range(3):
+                y[k] =   np.sum(weight * 1.0 * signal) / W * invS[k,0]     \
+                       + np.sum(weight * cosine * signal) / W * invS[k,1]  \
+                       + np.sum(weight * sine * signal) / W * invS[k,2]      
+      
+            # Compute the best-fit model
+      
+            model = y[0] + y[1] * cosine + y[2] * sine
+      
+            # Compute the weighted variation of the signal and the model functions
+      
+            Vsignal = np.sum(weight * signal**2) / W -  (np.sum(weight * signal) / W)**2
+            Vmodel = np.sum(weight * model**2) / W -  (np.sum(weight * model) / W)**2
+      
+            # Calculate the weighted Wavelet Z-Transform
+      
+            Neff = W**2 / np.sum(weight**2)
+            Z[i,j] = (Neff - 3) * Vmodel / 2. / (Vsignal - Vmodel)
+      
+    # That's it!
+  
+    return Z
+    
+  
+  
+
 if __name__=="__main__":
     import pylab as pl
     from ivs.misc import loggers

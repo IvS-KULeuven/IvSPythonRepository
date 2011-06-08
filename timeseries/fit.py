@@ -65,7 +65,7 @@ Read in the data:
 >>> signal -= signal.mean()
 
 Find the best frequency using the Scargle periodogram, fit an orbit with that
-frequency, optimize and prewhiten. Then print the results to the screen:
+frequency and optimize. Then print the results to the screen:
 
 >>> freqs,ampls = pergrams.scargle(times,signal,f0=6.4,fn=7)
 >>> freq = freqs[np.argmax(ampls)]
@@ -140,6 +140,17 @@ Now plot everything and print the results to the screen:
 >>> p = pl.plot(phases,phased,'ko')
 >>> p = pl.plot(phases1[sa1],phased1[sa1],'r-',lw=2)
 
+Section 4. Eclipsing binary fit
+===============================
+
+Splines are not a good way to fit eclipsing binaries, but just for the sake of
+showing the use of the periodic spline fitting functions, we do it anyway.
+
+We use the data on CU Cnc of Ribas, 2003:
+
+>>> data = vizier.search('J/A+A/398/239/table1')
+>>> times,signal = data['HJD'],data['Dmag']
+
 """ 
 import time
 import logging
@@ -186,7 +197,7 @@ def sine(times, signal, freq, sigma=None,constant=True,error=False,t0=0):
     @keyword t0: time zero point.
     @type t0: float
     @return: parameters
-    @rtype: Nx4 array
+    @rtype: record array
     """
     #-- Subtract the zero point from the time points.
     times = times - t0
@@ -567,6 +578,8 @@ def e_sine(times,signal,parameters,correlation_correction=True,limit=10000):
         #error_phase = np.sqrt(covariance.diagonal()[Nfreq:2*Nfreq])
         error_const = np.sqrt(covariance[2*Nfreq,2*Nfreq])
         error_const = np.ones(Nfreq)*error_const
+        if len(error_const)>1:
+            error_const[1:] = 0
         errors.append(error_const)
         names.append('e_const')
     elif constant:
@@ -690,7 +703,7 @@ def get_correlation_factor(residus, full_output=False):
     
     rho = np.average(same_sign_groups)
     
-    logger.info("Correlation factor rho = %f, sqrt(rho)=%f"%(rho,np.sqrt(rho)))
+    logger.debug("Correlation factor rho = %f, sqrt(rho)=%f"%(rho,np.sqrt(rho)))
     
     if full_output:
         return rho, same_sign_groups
