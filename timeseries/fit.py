@@ -27,7 +27,7 @@ parameters, and print the results to the screen:
 >>> freqs,ampls = pergrams.kepler(times,RV,fn=0.2)
 >>> freq = freqs[np.argmax(ampls)]
 >>> pars1 = kepler(times, RV, freq)
->>> pars2,e_pars2 = optimize(times,RV,pars1,'kepler')
+>>> pars2,e_pars2,gain = optimize(times,RV,pars1,'kepler')
 >>> print pl.mlab.rec2txt(pars1,precision=6)
            P               T0          e      omega           K        gamma
    11.581314   2451060.751789   0.190000   1.006924   11.915330   -59.178393
@@ -78,7 +78,7 @@ frequency and optimize. Then print the results to the screen:
 >>> freq = freqs[np.argmax(ampls)]
 >>> pars1 = sine(times, signal, freq)
 >>> e_pars1 = e_sine(times,signal, pars1)
->>> pars2,e_pars2 = optimize(times,signal,pars1,'sine')
+>>> pars2,e_pars2,gain = optimize(times,signal,pars1,'sine')
 >>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars1,e_pars1),precision=6)
       const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
    0.000242   0.014795   6.461705   -0.093895   0.000608   0.001319   0.000006   0.089134
@@ -667,7 +667,8 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
         #-- calculate new chisquare, and check if we have improved it
         chisq = np.sum(info['fvec']*info['fvec'])
         if flag!=1 or chisq>chisq_init:
-            logger.error('Optimization not successful')
+            logger.error('Optimization not successful [flag=%d] (%g --> %g)'%(flag,chisq_init,chisq))
+            chisq = np.inf
     
         #-- derive the errors from the nonlinear fit
         if cov is not None:
@@ -679,7 +680,15 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
         out = optifunc(residuals_single,init_guess,
                                      args=(times,signal,evalfunc),full_output=1,disp=False)
         popt = out[0]
+        #-- calculate new chisquare, and check if we have improved it
+        signalf_update = evalfunc(times,popt)
+        chisq = np.sum((signalf_update-signal)**2)
         errors = np.zeros(len(popt))
+        if chisq>chisq_init:
+            logger.error('Optimization not successful')
+    
+    #-- gain in chi square: if positive, we gained, if negative, we lost...
+    gain = (chisq_init-chisq)/chisq_init*100.
     
     #-- transform the parameters to record arrays, as well as the errors
     parameters = prepfunc(popt)
@@ -687,7 +696,7 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
     e_parameters = prepfunc(errors)
     e_parameters.dtype.names = ['e_'+name for name in e_parameters.dtype.names]
     
-    return parameters,e_parameters
+    return parameters,e_parameters, gain
 
 
 #}
@@ -775,7 +784,7 @@ if __name__=="__main__":
         frequencies.append(frequency)
         parameters = sine(times,signal_,frequencies)
         e_parameters = e_sine(times,signal_,parameters)
-        parameters,e_parameters = optimize(times,signal_,parameters,'sine')
+        parameters,e_parameters,gain = optimize(times,signal_,parameters,'sine')
         frequencies = list(parameters['freq'])
         
         signalf = evaluate.sine(times,parameters)

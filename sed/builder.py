@@ -374,7 +374,7 @@ class SED(object):
         self.results = {}
     
     #{ Handling photometric data
-    def get_photometry(self,radius=None):
+    def get_photometry(self,radius=None,ra=None,dec=None):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -391,7 +391,10 @@ class SED(object):
         if not os.path.isfile(self.photfile):
             #-- get and fix photometry. Set default errors to 1%, and set
             #   USNOB1 errors to 3%
-            master = crossmatch.get_photometry(ID=self.ID,radius=radius,extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
+            if ra is None and dec is None:
+                master = crossmatch.get_photometry(ID=self.ID,radius=radius,extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
+            else:
+                master = crossmatch.get_photometry(ra=ra,dec=dec,radius=radius,extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             master['_RAJ2000'] -= self.info['jradeg']
             master['_DEJ2000'] -= self.info['jdedeg']
             
@@ -490,16 +493,45 @@ class SED(object):
         By default unflagged, and at the ra and dec of the star. No color and
         included.
         """
-        extra_rows = []
-        for m,e_m,u,p,s in zip(meas,e_meas,units,photbands,source):
-            cm,e_cm = conversions.convert(u,self.master['cunit'][0],m,e_m,photband=p)
+        extra_cols = [np.zeros(len(meas))]
+        extra_cols.append(np.zeros(len(meas)))
+        extra_cols.append(np.zeros(len(meas)))
+        extra_cols.append(np.zeros(len(meas),dtype=str))
+        extra_cols.append(np.zeros(len(meas)))
+        extra_cols.append(np.zeros(len(meas)))
+        extra_cols.append(np.zeros(len(meas)))
+        extra_cols.append(np.zeros(len(meas),dtype=bool))
+        extra_cols.append(np.zeros(len(meas),dtype=bool))
+        for i,(m,e_m,u,p,s) in enumerate(zip(meas,e_meas,units,photbands,source)):
+            photsys,photband = p.split('.')
+            if photband in ['C1','M1'] or '-' in photband:
+                to_unit = 'flux_ratio'
+                color = True
+            else:
+                to_unit = self.master['cunit'][0]
+                color = False
+            print u,to_unit
+            if e_m>0:
+                cm,e_cm = conversions.convert(u,to_unit,m,e_m,photband=p)
+            else:
+                cm,e_cm = conversions.convert(u,to_unit,m,photband=p),np.nan
             eff_wave = filters.eff_wave(p)
-            extra_rows.append((m,e_m,np.nan,u,p,s,0.,0.,0.,eff_wave,cm,e_cm,self.master['cunit'][0],0,1))
-        print self.master[0]
-        print len(self.master[0])
-        print len(extra_rows[0])
-        print extra_rows
-        self.master = numpy_ext.recarr_addrows(self.master,extra_rows)
+            extra_cols[0][i] = cm
+            extra_cols[1][i] = e_cm
+            extra_cols[2][i] = eff_wave
+            extra_cols[3][i] = self.master['cunit'][0]
+            extra_cols[7][i] = color
+            extra_cols[8][i] = True
+            
+        extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
+        #meas     e_meas flag unit photband          source             _r    _RAJ2000   _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
+        extra_array = np.rec.fromarrays(extra_cols,names=['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photbands','source','flag'])
+        print '\n\nblabla'
+        print pl.mlab.rec2txt(self.master,precision=6)
+        print pl.mlab.rec2txt(extra_array,precision=6)
+        print 'blabla\n\n'
+        self.master = np.hstack([self.master,extra_array])
+        
         print self.master
 
     #}
