@@ -36,7 +36,7 @@ def read_spectrum(filename, return_header=False):
     wave = np.linspace(nu0,nun,len(flux))
     #-- fix wavelengths for logarithmic sampling
     if 'ctype1' in header and header['CTYPE1']=='log(wavelength)':
-        wave = np.exp(wavelength)
+        wave = np.exp(wave)
     
     logger.debug('Read spectrum %s'%(filename))
     
