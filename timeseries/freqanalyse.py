@@ -2,6 +2,8 @@
 """
 Frequency Analysis Routines.
 
+Here are some examples:
+
 Section 1. Pulsation frequency analysis
 =======================================
 
@@ -12,11 +14,10 @@ Import necessary modules:
 
 >>> from ivs.catalogs import vizier
 
-Read in the data:
+Read in the data and do an iterative prewhitening frequency analysis:
 
 >>> data,units,comms = vizier.search('J/A+A/415/241/table1')
->>> times,signal = data['HJD'],data['Umag']
->>> params = iterative_prewhitening(times,signal-signal.mean(),f0=6.2,fn=7.2,maxiter=6)
+>>> params = iterative_prewhitening(data.HJD,data.Umag-data.Umag.mean(),f0=6.2,fn=7.2,maxiter=6)
 >>> print pl.mlab.rec2txt(params,precision=6)
       const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
    0.000317   0.014698   6.461699    0.315793   0.000401   0.001331   0.000006   0.090586
@@ -110,9 +111,13 @@ def find_frequency(times,signal,
         params = fit.sine(times,signal,frequency)
         errors = fit.e_sine(times,signal,params)
         
-        #-- optimize inside loop if necessary:
+        #-- optimize inside loop if necessary and if we gained prediction
+        #   value:
         if optimize==2:
-            params,errors_ = fit.optimize(times,signal,params,'sine')
+            params_,errors_,gain = fit.optimize(times,signal,params,'sine')
+            if gain>0:
+                params = params_
+                logger.info('Accepted optimization (gained %g%%)'%gain)
         
         #-- improve precision
         freq_diff = abs(frequency-prev_freq)
@@ -131,7 +136,10 @@ def find_frequency(times,signal,
         
     #-- optimize parameters outside of loop if necessary:
     if optimize==1:
-        params,errors_ = fit.optimize(times,signal,params,'sine')
+        params_,errors_,gain = fit.optimize(times,signal,params,'sine')
+        if gain>0:
+            params = params_
+            logger.info('Accepted optimization (gained %g%%)'%gain)
     
     params = numpy_ext.recarr_join(params,errors)
     
@@ -140,6 +148,17 @@ def find_frequency(times,signal,
 
 
 def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,**kwargs):
+    """
+    Fit one or more functions to a timeseries via iterative prewhitening.
+    
+    This function will use C{find_frequency} to fit the function parameters to
+    the original signal (including any previously found parameters),
+    optimize the parameters if needed, and remove it from the data to search
+    for a new frequency in the residuals.
+    
+    It is always the original signal that is used to fit all parameters again;
+    only the (optimized) frequency is remembered from step to step.
+    """
     
     residuals = signal.copy()
     frequencies = []
@@ -158,7 +177,11 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,**kwargs):
             if optimize<=len(params):
                 model_fixed_params = evaluate.sine(times,allparams[:-optimize])
                 residuals_for_optimization -= model_fixed_params
-            uparams,e_uparams = fit.optimize(times,residuals_for_optimization,allparams[-optimize:],'sine')
+            uparams,e_uparams, gain = fit.optimize(times,residuals_for_optimization,allparams[-optimize:],'sine')
+            #-- only accept the optimization if we gained prediction power
+            if gain>0:
+                allparams[-optimize:] = uparams
+                logger.info('Accepted optimization (gained %g%%)'%gain)
         
         #-- compute the residuals to use in the next prewhitening step
         modelfunc = evaluate.sine(times,allparams)
@@ -166,7 +189,7 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,**kwargs):
         
         #-- exhaust the counter
         maxiter -= 1
-    
+        
     #-- calculate the errors
     e_allparams = fit.e_sine(times,signal,allparams)
     
