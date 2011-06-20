@@ -52,6 +52,12 @@ RR_cgs     = 8.31447215e7      # (ideal) gas constant        erg/K/mol
 aa_cgs     = 7.5657e-15        # radiation constant          erg/cm2/K4
 a0_cgs     = 52.9177e-10       # Bohr radius of hydrogen     cm
 
+# solar units
+# value                        name                          unit           reference
+#====================================================================================
+Msol_sol  = 1.                 # solar mass                  Msol
+GG_sol    = 3.945760947752e-07 # gravitional constant        Rsol3/Msol/s2
+
 # other stuff
 Mabs_sol = 4.83                # solar bolometric abs mag    mag
 Mapp_sol = -26.74              # solar visual apparent mag   mag
