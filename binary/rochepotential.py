@@ -24,8 +24,8 @@ This information can then be used to calculate:
     5. a synthetic spectrum starting from a library of spectra
     6. a synthetic light curve from the projected intensities
 
-1. Non-rotating spherically symmetric single star
-=================================================
+Section 1. Non-rotating spherically symmetric single star
+=========================================================
 
 The most trivial usage of this module would be to construct a non-rotating,
 spherically symmetric single star. All quantities should be constant over the
@@ -35,7 +35,7 @@ zero-rotation limit of the fast rotating model:
 First set some parameters: the rotation rate, effective temperature at the pole,
 polar radius, mass and viewing angle.
 
->>> omega = 0.0        # ratio to critical velocity
+>>> omega = 0.00       # ratio to critical velocity
 >>> T_pole = 5500.     # K
 >>> r_pole = 1.        # solar radii
 >>> M = 1.             # solar mass
@@ -114,16 +114,40 @@ Now make some plots showing the local quantities:
 ...    p = pl.xlim(0,360)
 ...    p = pl.ylim(180,0)
 
-<<<<include figure<<<ivs_binary_rochepotential_nonrotstar.png<<<
-    
-    
-x,y,z = vectors.spher2cart_coord(radius_,phis_,thetas_)
-output = np.array([x,y,z,gravx_,gravy_,gravz_,grav_,areas_,teff_]).T
-ascii.write_array(output,'test/fastrot_shape.dat')
-pl.show()
+]include figure]]ivs_binary_rochepotential_nonrotstar.png]
 
+Section 2. Fast and uniformly rotating star
+===========================================
 
+Repeating the same example as above, but now with parameters
 
+>>> omega = 0.98
+
+Gives the figure below:
+
+]include figure]]ivs_binary_rochepotential_fastrotstar.png]
+
+Changing the viewing angle to 80 degrees
+
+>>> view_angle = 80/180.*pi
+
+gives:
+
+]include figure]]ivs_binary_rochepotential_fastrotstar_80incl.png]
+
+To generate an image of the star, it is wise to convert the coordinates to
+Cartesian coordinates:
+
+>>> x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
+>>> p = pl.figure()
+>>> p = pl.subplot(121,aspect='equal')
+>>> p = pl.title('top view')
+>>> p = pl.scatter(x,y,c=teff_local.ravel(),edgecolors='none')
+>>> p = pl.subplot(122,aspect='equal')
+>>> p = pl.title('side view')
+>>> p = pl.scatter(y,z,c=teff_local.ravel(),edgecolors='none')
+
+]include figure]]ivs_binary_rochepotential_fastrotstar_shape.png]
 
 """
 import pylab as pl
@@ -1371,6 +1395,7 @@ def binary_light_curve_synthesis(**parameters):
 if __name__=="__main__":
     import doctest
     doctest.testmod()
+    pl.show()
     
     import sys
     #binary_test()
