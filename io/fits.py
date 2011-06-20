@@ -163,6 +163,9 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     
     A header_dictionary can be given, it is used to update an existing header
     or create a new one if the extension is new.
+    
+    Instead of writing the file, you can give a hdulist and append to it.
+    Supply a HDUList for 'filename', and set close=False
     """
     if close:
         if not os.path.isfile(filename):
@@ -184,11 +187,13 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
             unit = name in units and units[name] or 'NA'
         elif len(units)>i:
             unit = units[i]
+        else:
+            unit = 'NA'
         cols.append(pyfits.Column(name=name,format=format,array=arr[i],unit=unit))
     tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
     
     #   put it in the right place
-    if ext=='new':
+    if ext=='new' or ext==len(hdulist):
         hdulist.append(tbhdu)
         ext = -1
     else:
