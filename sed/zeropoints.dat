@@ -251,3 +251,4 @@
  WOOD.U            3458.09 CCD       1.104           1   nan         0   nan         0 3.16971e-09 erg/s/cm2/A         0 1.26677e-20 erg/s/cm2/Hz        0 GCPD,use_only_for_colors!                                            
  WOOD.V            4091.29 CCD      -0.202           1   nan         0   nan         0 7.29228e-09 erg/s/cm2/A         0 4.07622e-20 erg/s/cm2/Hz        0 GCPD,use_only_for_colors!                                            
  WOOD.Y            5463.97 CCD      -0.063           1   nan         0   nan         0 3.63529e-09 erg/s/cm2/A         0 3.62778e-20 erg/s/cm2/Hz        0 GCPD,use_only_for_colors!                                            
+ OPEN.BOL             1.00 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 Bolometric_open_filters

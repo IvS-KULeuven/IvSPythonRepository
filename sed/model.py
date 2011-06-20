@@ -961,9 +961,10 @@ def synthetic_flux(wave,flux,photbands,units=None):
     >>> energys = model.synthetic_flux(lam,flam,['IRAS.F12','IRAS.F25','IRAS.F60','IRAS.F100'],units=['Fnu','Fnu','Fnu','Fnu'])
     >>> energys = conversions.convert('erg/s/cm2/Hz','Jy',energys)
     
-    
     You are responsible yourself for having a response curve covering the
     model fluxes!
+    
+    WARNING: OPEN.BOL only works in Flambda for now.
     
     See e.g. Maiz-Apellaniz, 2006.
     
@@ -1010,7 +1011,9 @@ def synthetic_flux(wave,flux,photbands,units=None):
         
         #-- WE WORK IN FLAMBDA
         if units is None or ((units is not None) and (units[i].upper()=='FLAMBDA')):
-            if filter_info['type'][i]=='BOL':
+            if photband=='OPEN.BOL':
+                energys[i] = np.trapz(flux_,x=wave_)
+            elif filter_info['type'][i]=='BOL':
                 energys[i] = np.trapz(flux_*transr,x=wave_)/np.trapz(transr,x=wave_)
             elif filter_info['type'][i]=='CCD':
                 energys[i] = np.trapz(flux_*transr*wave_,x=wave_)/np.trapz(transr*wave_,x=wave_)

@@ -31,6 +31,8 @@ def get_response(photband):
     """
     Retrieve the response curve of a photometric system 'SYSTEM.FILTER'
     
+    OPEN.BOL represents a bolometric open filter.
+    
     Example usage:
     
     >>> from pylab import plot,show
@@ -43,8 +45,11 @@ def get_response(photband):
     @return: (wavelength [A], response)
     @rtype: (array, array)
     """
-    photfile = os.path.join(basedir,'filters',photband.upper())
-    #print photfile
+    photband = photband.upper()
+    if photband=='OPEN.BOL':
+        return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])
+        
+    photfile = os.path.join(basedir,'filters',photband)
     wave, response = ascii.read2array(photfile).T[:2]
     sa = np.argsort(wave)
     return wave[sa],response[sa]
