@@ -3,6 +3,7 @@
 Global configuration of the IvS package.
 """
 import os
+import sys
 import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
@@ -60,4 +61,18 @@ def glob(relative_path,arg='*'):
     files.sort()
     return files
     
-            
+
+
+def do_compile():
+    
+
+if __name__=="__main__":
+    
+    to_install = ['spectra/pyrotin4']
+    
+    if len(sys.argv)>1:
+        if sys.argv[1]=='compile':
+            for name in to_install:
+                if not os.path.isfile(name+'.so'):
+                    os.system('f2py -c %s.f -m %s')
+       
