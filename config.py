@@ -61,13 +61,9 @@ def glob(relative_path,arg='*'):
     files.sort()
     return files
     
-
-
-def do_compile():
     
 
-if __name__=="__main__":
-    
+if __name__=="__main__":    
     to_install = ['spectra/pyrotin4']
     
     if len(sys.argv)>1:
