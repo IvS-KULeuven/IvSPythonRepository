@@ -179,6 +179,8 @@ def getCoRoTData(ID,channel='sismo'):
     """
     Retrieve CoRoT timeseries from a local data repository.
     
+    The output record array has fields 'HJD', 'flux', 'e_flux', 'flag'.
+    
     @param ID: ID of the target: either an integer (CoRoT ID) or an official
     target name
     @type ID: int or str
