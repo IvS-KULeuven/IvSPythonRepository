@@ -942,6 +942,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
     True
     
     But this is not the case for IRAS.F12:
+    
     >>> energys = model.synthetic_flux(wave,flux,['IRAS.F12','IRAS.F12'],units=['flambda','fnu'])
     >>> e0_conv = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',energys[0],photband='IRAS.F12')
     >>> np.abs(energys[1]-e0_conv)>0.1
@@ -1071,7 +1072,8 @@ def luminosity(wave,flux,radius=1.):
 
 
 
-def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units='Flambda',**kwargs):
+def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
+           units='Flambda',responses=None,update=False,**kwargs):
     """
     Integrate an entire SED grid over all passbands and save to a FITS file.
     
@@ -1090,6 +1092,12 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units=
     @type law: string (valid law name, see C{reddening.py})
     @param Rv: Rv value for reddening law
     @type Rv: float
+    @param units: choose to work in 'Flambda' or 'Fnu'
+    @type units: str, one of 'Flambda','Fnu'
+    @param responses: respons curves to add (if None, add all)
+    @type responses: list of strings
+    @param update: append to existing FITS file
+    @type update: boolean
     """
     if ebvs is None:
         ebvs = np.r_[0:4.01:0.01]
@@ -1102,7 +1110,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units=
     wave,flux = get_table(teff=teffs[0],logg=loggs[0])
     #-- get the response functions covering the wavelength range of the models
     #   also get the information on those filters
-    responses = filters.list_response(wave_range=(wave[0],wave[-1]))
+    if responses is None:
+        responses = filters.list_response(wave_range=(wave[0],wave[-1]))
     filter_info = filters.get_info(responses)
     responses = filter_info['photband']
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
@@ -1149,17 +1158,26 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units=
         start += arr.shape[0]
     
     #-- make FITS columns
+    gridfile = get_file()
+    outfile = 'i%s'%(os.path.basename(gridfile))
     output = output.T
-    cols = [pyfits.Column(name='teff',format='E',array=output[0]),
-            pyfits.Column(name='logg',format='E',array=output[1]),
-            pyfits.Column(name='ebv',format='E',array=output[3]),
-            pyfits.Column(name='Labs',format='E',array=output[2])]
-    for i,photband in enumerate(responses):
-        cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
-    
+    if not update:
+        cols = [pyfits.Column(name='teff',format='E',array=output[0]),
+                pyfits.Column(name='logg',format='E',array=output[1]),
+                pyfits.Column(name='ebv',format='E',array=output[3]),
+                pyfits.Column(name='Labs',format='E',array=output[2])]
+        for i,photband in enumerate(responses):
+            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
+    #-- make FITS columns but copy the existing ones
+    else:
+        hdulist = pyfits.open(outfile,mode='update')
+        names = hdulist[1].columns.names
+        cols = [pyfits.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
+        for i,photband in enumerate(responses):
+            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
+        
     #-- make FITS extension and write grid/reddening specifications to header
     table = pyfits.new_table(pyfits.ColDefs(cols))
-    gridfile = get_file()
     table.header.update('gridfile',os.path.basename(gridfile))
     for key in sorted(defaults.keys()):
         table.header.update(key,defaults[key])
@@ -1167,11 +1185,17 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,units=
         table.header.update(key,kwargs[key])
     table.header.update('FLUXTYPE',units)
     
-    #-- make complete FITS file
-    hdulist = pyfits.HDUList([])
-    hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
-    hdulist.append(table)
-    hdulist.writeto('i%s'%(os.path.basename(gridfile)))
+    #-- make/update complete FITS file
+    if not update:
+        hdulist = pyfits.HDUList([])
+        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        hdulist.append(table)
+        hdulist.writeto(outfile)
+    else:
+        hdulist[1] = table
+        hdulist.flush()
+        hdulist.close()
+    
     
 
 #}
