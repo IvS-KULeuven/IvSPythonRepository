@@ -70,8 +70,8 @@ if __name__=="__main__":
         if sys.argv[1]=='compile':
             for name in to_install:
                 direc,pname = os.path.dirname(name),os.path.basename(name)
-                os.path.chdir(direc)
+                os.chdir(direc)
                 if not os.path.isfile(name+'.so'):
                     os.system('f2py -c %s.f -m %s'%(pname,pname))
-                os.path.chdir(main_dir)
+                os.chdir(main_dir)
        
