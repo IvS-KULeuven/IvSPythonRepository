@@ -59,6 +59,8 @@ Plot it:
 >>> p = pl.xlabel(r'Angular size (arcsec) --> N')
 >>> p = pl.ylabel(r'Angular size (arcsec) --> E')
 
+]include figure]]ivs_binary_keplerorbit_muCas.png]
+
 Example usage 2: compute the absolute orbits of the two components of
 Capella, and compute the relative orbit of the primary component.
 
@@ -115,8 +117,8 @@ Plot it:
 >>> p = pl.grid()
 >>> p = pl.xlabel(r'Angular size DEC (arcsec) --> N')
 >>> p = pl.ylabel(r'Angular size RA (arcsec) --> E')
->>> p = pl.show()
 
+]include figure]]ivs_binary_keplerorbit_capella.png]
 
 """
 import numpy as np
