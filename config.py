@@ -65,10 +65,13 @@ def glob(relative_path,arg='*'):
 
 if __name__=="__main__":    
     to_install = ['spectra/pyrotin4']
-    
+    main_dir = os.getcwd()
     if len(sys.argv)>1:
         if sys.argv[1]=='compile':
             for name in to_install:
+                direc,pname = os.path.dirname(name),os.path.basename(name)
+                os.path.chdir(direc)
                 if not os.path.isfile(name+'.so'):
-                    os.system('f2py -c %s.f -m %s'%(name,name))
+                    os.system('f2py -c %s.f -m %s'%(pname,pname))
+                os.path.chdir(main_dir)
        
