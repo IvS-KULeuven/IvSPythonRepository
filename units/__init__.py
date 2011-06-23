@@ -1,3 +1,3 @@
 
-__all__ = ["constants", "conversions"]
+__all__ = ["constants", "conversions","vectors"]
 
