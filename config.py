@@ -70,5 +70,5 @@ if __name__=="__main__":
         if sys.argv[1]=='compile':
             for name in to_install:
                 if not os.path.isfile(name+'.so'):
-                    os.system('f2py -c %s.f -m %s')
+                    os.system('f2py -c %s.f -m %s'%(name,name))
        
