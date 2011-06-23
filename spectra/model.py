@@ -121,6 +121,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     
     """
     gridfile = get_file(**kwargs)
+    template_wave = kwargs.pop('wave',None)
     
     ff = pyfits.open(gridfile)
     
@@ -141,7 +142,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         meshkwargs['wave'] = kwargs.get('wave',None)
         meshkwargs['teffrange'] = kwargs.get('teffrange',None)
         meshkwargs['loggrange'] = kwargs.get('loggrange',None)
-        wave,teffs,loggs,flux,flux_grid,cont_grid = get_grid_mesh(**meshkwargs)
+        wave,teffs,loggs,flux,flux_grid,cont_grid = get_grid_mesh(wave=template_wave)
         logger.debug('Model spectrum interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
         wave = wave + 0.
         flux = flux_grid(np.log10(teff),logg) + 0.
@@ -156,8 +157,9 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         #   wavelength grid
         wave_,flux_ = rotational_broadening(wave,flux,vrot,**kwargs)
         flux = np.interp(wave,wave_,flux_)
-    if vrad>0:
-        wave = doppler_shift(wave,vrad,**kwargs)
+    if vrad!=0:
+        wave_ = doppler_shift(wave,vrad)
+        flux = np.interp(wave,wave_,flux)
     
     ff.close()
     return wave,flux,cont
