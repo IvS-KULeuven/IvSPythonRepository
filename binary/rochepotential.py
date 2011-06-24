@@ -931,7 +931,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         from enthought.mayavi import mlab
         mlab.figure()
         mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray',representation='wireframe')
-        mlab.points3d(x,y,z,scale_factor=0.2)
+        mlab.points3d(r*x,r*y,r*z,scale_factor=0.2)
         mlab.show()
         
         for i,indices in enumerate(delaunay_grid.convex_hull):
