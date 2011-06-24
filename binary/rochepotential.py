@@ -927,7 +927,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         pl.figure(100,figsize=(16,11))        
         for i,indices in enumerate(delaunay_grid.convex_hull):
             indices2 = np.hstack([indices,indices[0]])
-            pl.plot(x_[indices2],y_[indices2],z_[indices2],'k-')
+            #pl.plot(x_[indices2],y_[indices2],z_[indices2],'k-')
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
@@ -1263,10 +1263,6 @@ def get_grid(*args,**kwargs):
         for i,indices in enumerate(grid.convex_hull):
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
         theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        #pl.figure()
-        #pl.plot(phi,theta,'ko')
-        #pl.show()
-        #sys.exit()
         
         return theta,phi,grid
         
