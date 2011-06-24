@@ -1637,7 +1637,6 @@ def binary_light_curve_synthesis(**parameters):
             x2_of,y2_of,z2_of = vectors.spher2cart_coord(radius2.ravel(),phi2_.ravel(),theta2_.ravel())
             x2_of = -x2_of            
             print 'x1',x_of.ptp()
-            sys.exit()
             #-- store information on primary and secondary in a record array
             primary = np.rec.fromarrays([theta_.ravel(),phi_.ravel(),radius.ravel(),
                                          x_of,y_of,z_of,
@@ -1668,12 +1667,14 @@ def binary_light_curve_synthesis(**parameters):
         #-- now compute the integrated intensity in the line of sight:
         #-------------------------------------------------------------
         rot_theta = np.arctan2(y1o[di],x1o[di])
+        print 'before',prim['y'].ptp()
         prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
         secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
+        print 'after',prim['x'].ptp()
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
         
