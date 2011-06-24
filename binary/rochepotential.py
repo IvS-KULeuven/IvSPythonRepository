@@ -944,7 +944,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
             
         #theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        mlab.points3d(centers[:,0],centers[:,1],centers[:,2],scale_factor=0.02,color=sizes)
+        mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.02)
         
         mlab.show()
         
