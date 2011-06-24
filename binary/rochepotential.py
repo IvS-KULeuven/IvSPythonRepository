@@ -1074,8 +1074,12 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
     
     #-- clip visible areas and sort in plotting order if necessary
     if only_visible:
+        print 'project4a',star['x'].ptp()
+        print 'project5a',new_star['x'].ptp()
         new_star = new_star[-np.isnan(new_star['projflux'])]
     if plot_sort:
+        print 'project4b',star['x'].ptp()
+        print 'project5b',new_star['x'].ptp()
         new_star = new_star[np.argsort(new_star['x'])]
     print 'project4',star['x'].ptp()
     print 'project5',new_star['x'].ptp()
