@@ -936,9 +936,16 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         centers = np.zeros((len(delaunay_grid.convex_hull),3))
         for i,indices in enumerate(delaunay_grid.convex_hull):
             centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
+            
+            a = sqrt((vertx[indices[0]]-vertx[indices[1]])**2 + (verty[indices[0]]-verty[indices[1]])**2 + (vertz[indices[0]]-vertz[indices[1]])**2)
+            b = sqrt((vertx[indices[0]]-vertx[indices[2]])**2 + (verty[indices[0]]-verty[indices[2]])**2 + (vertz[indices[0]]-vertz[indices[2]])**2)
+            c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
+            s = 0.5*(a+b+c)
+            sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
+            
         #theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        mlab.points3d(centers[:,0],centers[:,1],centers[:,2],scale_factor=0.02)
-        
+        mlab.points3d(centers[:,0],centers[:,1],centers[:,2],scale_factor=0.02,scalars=sizes)
+        print len(sizes
         mlab.show()
         
         for i,indices in enumerate(delaunay_grid.convex_hull):
