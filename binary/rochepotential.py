@@ -1370,6 +1370,7 @@ def binary_light_curve_synthesis(**parameters):
     direc = parameters.setdefault('direc','')
     #   calculation details
     res = parameters.setdefault('gres',20)                    # resolution of the grid
+    gtype = parameters.setdefault('gtype','spher')
     tres= parameters.setdefault('tres',125)                   # resolution of the phase diagram
     photband = parameters.setdefault('photband','JOHNSON.V')  # photometric passband
     max_iter_reflection = parameters.setdefault('ref_iter',1) # maximum number of iterations of reflection effect
@@ -1490,9 +1491,9 @@ def binary_light_curve_synthesis(**parameters):
     
     #-- construct the grid to calculate stellar shapes
     if hasattr(res,'__iter__'):
-        theta,phi = get_grid(res[0],res[1])
+        theta,phi = get_grid(res[0],res[1],gtype=gtype)
     else:
-        theta,phi = get_grid(res)
+        theta,phi = get_grid(res,gtype=gtype)
     thetas,phis = np.ravel(theta),np.ravel(phi)
     
     light_curve = np.zeros_like(times)
@@ -1536,7 +1537,7 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity
             grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
             grav = vectors.norm(grav_local)
-            areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
+            areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local,gtype=gtype)
             teff_local = local_temperature(grav,g_pole,T_pole,beta=beta1)
             ints_local = local_intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
             velo_local = np.cross(np.array([x,y,z]).T*to_SI,omega_rot_vec).T
@@ -1571,7 +1572,7 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity  
             grav_local2 = np.array([i.reshape(theta.shape) for i in grav_local2])
             grav2 = vectors.norm(grav_local2)
-            areas_local2,cos_gamma2 = surface_elements((radius2,theta,phi),-grav_local2)
+            areas_local2,cos_gamma2 = surface_elements((radius2,theta,phi),-grav_local2,gtype=gtype)
             teff_local2 = local_temperature(grav2,g_pole2,T_pole2,beta=beta2)
             ints_local2 = local_intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
             velo_local2 = np.cross(np.array([x2,y2,z2]).T*to_SI,omega_rot_vec).T
