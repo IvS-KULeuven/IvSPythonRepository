@@ -1052,7 +1052,6 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         gravx,gravz = vectors.rotate(gravx,gravz,rot_i)
         vx,vz = vectors.rotate(vx,vz,rot_i)
     print 'project3',x.ptp()
-    sys.exit()
     #-- ... and project the fluxes in the line of sight, which is now in the XY
     #   direction:
     view_vector = np.array([1.,0,0])#np.array([-sin(pi/2),0,-cos(pi/2)])
@@ -1078,7 +1077,9 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         new_star = new_star[-np.isnan(new_star['projflux'])]
     if plot_sort:
         new_star = new_star[np.argsort(new_star['x'])]
-    
+    print 'project4',star['x'].ptp()
+    print 'project5',new_star['x'].ptp()
+    sys.exit()
     return new_star
 
 
