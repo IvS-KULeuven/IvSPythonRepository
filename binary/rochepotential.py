@@ -1254,7 +1254,7 @@ def get_grid(*args,**kwargs):
         centers = np.zeros((len(grid.convex_hull),3))
         for i,indices in enumerate(grid.convex_hull):
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
-        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,0],centers[:,1])
+        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])
         return theta,phi, grid
         
         
@@ -1667,6 +1667,10 @@ def binary_light_curve_synthesis(**parameters):
                        only_visible=True,plot_sort=True)
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
+        
+        if direc is not None:
+            fits.write_recarray(prim,os.path.join(direc,'primary.fits'))
+            fits.write_recarray(secn,os.path.join(direc,'secondary.fits'))
         
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
