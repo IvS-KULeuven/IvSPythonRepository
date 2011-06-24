@@ -1254,12 +1254,11 @@ def get_grid(*args,**kwargs):
         centers = np.zeros((len(grid.convex_hull),3))
         for i,indices in enumerate(grid.convex_hull):
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
-        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])
-        
-        pl.figure()
-        pl.plot(phi,theta,'ko')
-        pl.show()
-        sys.exit()
+        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
+        #pl.figure()
+        #pl.plot(phi,theta,'ko')
+        #pl.show()
+        #sys.exit()
         
         return theta,phi,grid
         
