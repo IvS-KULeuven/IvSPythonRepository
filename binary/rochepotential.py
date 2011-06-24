@@ -885,7 +885,7 @@ def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
 
 #{ Derivation of local quantities
 
-def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='spher'):
+def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='spher'):
     """
     Compute surface area of elements in a grid.
     
@@ -894,6 +894,7 @@ def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtyp
     usually, the surfnormals are acquired via differentiation of a gravity potential,
     and is then equal to the *negative* of the local surface gravity.
     """
+    theta,phi = mygrid[:2]
     if gtype=='spher':
         #-- compute the grid size at each location
         dtheta = theta[1:]-theta[:-1]
@@ -919,21 +920,16 @@ def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtyp
         
         cos_gamma = vectors.cos_angle(a,b)
         
-        x,y,z = x.ravel(),y.ravel(),z.ravel()
-        points = np.array([x,y,z]).T
-        grid = Delaunay(points)
+        delaunay_grid = mygrid[2]
 
-        sizes = np.zeros(len(grid.convex_hull))
+        sizes = np.zeros(len(delaunay_grid.convex_hull))
         
-        for i,indices in enumerate(grid.convex_hull):
+        for i,indices in enumerate(delaunay_grid.convex_hull):
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
             s = 0.5*(a+b+c)
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
-        
-        print len(sizes),r.shape
-        sizes = sizes.reshape(r.shape)
         
         return sizes, cos_gamma
 
@@ -1249,7 +1245,19 @@ def get_grid(*args,**kwargs):
         
         theta = np.random.uniform(low=0,high=pi/2,size=res1*res2)
         phi = np.random.uniform(low=0,high=pi,size=res2*res1)
-        return theta.reshape((res1,res2)),phi.reshape((res1,res2))
+        
+        x = sin(theta)*sin(phi)
+        y = sin(theta)*cos(phi)
+        z = cos(theta)
+        
+        points = np.array([x,y,z]).T
+        grid = Delaunay(points)
+        centers = np.zeros((len(grid.convex_hull),3))
+        for i,indices in enumerate(grid.convex_hull):
+            centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
+        theta,phi = np.arccos(centers[:,2]),arctan2(centers[:,1],centers[:,0])
+        
+        return theta.reshape((res1,res2)),phi.reshape((res1,res2)), grid
         
         
         
@@ -1493,9 +1501,11 @@ def binary_light_curve_synthesis(**parameters):
     
     #-- construct the grid to calculate stellar shapes
     if hasattr(res,'__iter__'):
-        theta,phi = get_grid(res[0],res[1],gtype=gtype)
+        mygrid = get_grid(res[0],res[1],gtype=gtype)
+        theta,phi = mygrid[:2]
     else:
-        theta,phi = get_grid(res,gtype=gtype)
+        mygrid = get_grid(res,gtype=gtype)
+        theta,phi = mygrid[:2]
     thetas,phis = np.ravel(theta),np.ravel(phi)
     
     light_curve = np.zeros_like(times)
@@ -1539,7 +1549,7 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity
             grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
             grav = vectors.norm(grav_local)
-            areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local,gtype=gtype)
+            areas_local,cos_gamma = surface_elements((radius,mygrid),-grav_local,gtype=gtype)
             teff_local = local_temperature(grav,g_pole,T_pole,beta=beta1)
             ints_local = local_intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
             velo_local = np.cross(np.array([x,y,z]).T*to_SI,omega_rot_vec).T
@@ -1574,7 +1584,7 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity  
             grav_local2 = np.array([i.reshape(theta.shape) for i in grav_local2])
             grav2 = vectors.norm(grav_local2)
-            areas_local2,cos_gamma2 = surface_elements((radius2,theta,phi),-grav_local2,gtype=gtype)
+            areas_local2,cos_gamma2 = surface_elements((radius2,mygrid),-grav_local2,gtype=gtype)
             teff_local2 = local_temperature(grav2,g_pole2,T_pole2,beta=beta2)
             ints_local2 = local_intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
             velo_local2 = np.cross(np.array([x2,y2,z2]).T*to_SI,omega_rot_vec).T
