@@ -928,7 +928,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         
         pl.figure(100,figsize=(16,11))        
         from mpl_toolkits.mplot3d.axes3d import Axes3D
-        ax = Axes3D(fig)
+        ax = Axes3D(pl.gcf())
         for i,indices in enumerate(delaunay_grid.convex_hull):
             indices2 = np.hstack([indices,indices[0]])
             pl.plot(x_[indices2],y_[indices2],z_[indices2],'k-')
