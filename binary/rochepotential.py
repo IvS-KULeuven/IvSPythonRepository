@@ -918,8 +918,9 @@ def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtyp
         b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
         
         cos_gamma = vectors.cos_angle(a,b)
-
-        points = np.array([x.ravel(),y.ravel(),z.ravel()]).T
+        
+        x,y,z = x.ravel(),y.ravel(),z.ravel()
+        points = np.array([x,y,z]).T
         grid = Delaunay(points)
 
         sizes = np.zeros(len(grid.convex_hull))
