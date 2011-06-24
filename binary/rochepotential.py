@@ -930,7 +930,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         from mpl_toolkits.mplot3d.axes3d import Axes3D
         from enthought.mayavi import mlab
         mlab.figure()
-        mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray')
+        mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray',representation='wireframe')
         mlab.points3d(x,y,z,scale_factor=0.2)
         mlab.show()
         
