@@ -1719,7 +1719,7 @@ def binary_light_curve_synthesis(**parameters):
             #   find which coordinates of the back lie inside the convex hull
             #   of the front star
             eclipse_detection = Delaunay(coords_front)
-            in_eclipse = eclipse_detection(coords_back)>=0
+            in_eclipse = eclipse_detection.find_simplex(coords_back)>=0
         if np.sum(in_eclipse)>0:
             report += ' during eclipse'
         else:
