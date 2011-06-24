@@ -926,13 +926,13 @@ def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtyp
         sizes = np.zeros(len(grid.convex_hull))
         
         for i,indices in enumerate(grid.convex_hull):
-            print i,indices
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
             s = 0.5*(a+b+c)
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
         
+        print len(sizes),r.shape
         sizes = sizes.reshape(r.shape)
         
         return sizes, cos_gamma
