@@ -1256,9 +1256,10 @@ def get_grid(*args,**kwargs):
         if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
         else:            res1,res2 = args      # different resolution
         
-        theta = np.random.uniform(low=0,high=pi,size=res1*res2)
-        phi = np.random.uniform(low=0,high=2*pi,size=res2*res1)
-        
+        u,v = np.random.uniform(size=res1*res2),np.random.uniform(size=res1*res2)
+        phi = 2*pi*u
+        theta = np.arccos(2*v-1)
+
         x = sin(theta)*sin(phi)
         y = sin(theta)*cos(phi)
         z = cos(theta)
