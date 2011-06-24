@@ -1764,8 +1764,8 @@ def binary_light_curve_synthesis(**parameters):
                 
             pl.figure(figsize=(16,11))
             pl.subplot(111,aspect='equal');pl.title('line of sight intensity')
-            pl.scatter(back['y'],back['z'],c=back['eyeflux'],edgecolors='none',cmap=back_cmap)
-            pl.scatter(front['y'],front['z'],c=front['eyeflux'],edgecolors='none',cmap=front_cmap)
+            pl.scatter(back['y'],back['z'],c=back['eyeflux'],edgecolors='none',cmap=pl.cm.spectral)
+            pl.scatter(front['y'],front['z'],c=front['eyeflux'],edgecolors='none',cmap=pl.cm.spectral)
             pl.xlim(-0.5,0.5)
             pl.ylim(-0.2,0.5)
             pl.xlabel('X [semi-major axis]')
