@@ -925,18 +925,14 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         points = delaunay_grid.points
         vertx,verty,vertz = points.T
         
-        
-        pl.figure(100,figsize=(16,11))        
-        from mpl_toolkits.mplot3d.axes3d import Axes3D
-        from enthought.mayavi import mlab
-        mlab.figure()
-        mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray',representation='wireframe')
+        #from enthought.mayavi import mlab
+        #mlab.figure()
+        #mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray',representation='wireframe')
         #mlab.points3d(x/r,y/r,z/r,scale_factor=0.02)
         
         centers = np.zeros((len(delaunay_grid.convex_hull),3))
         for i,indices in enumerate(delaunay_grid.convex_hull):
-            centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
-            
+            #centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
             a = sqrt((vertx[indices[0]]-vertx[indices[1]])**2 + (verty[indices[0]]-verty[indices[1]])**2 + (vertz[indices[0]]-vertz[indices[1]])**2)
             b = sqrt((vertx[indices[0]]-vertx[indices[2]])**2 + (verty[indices[0]]-verty[indices[2]])**2 + (vertz[indices[0]]-vertz[indices[2]])**2)
             c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
@@ -944,29 +940,13 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
             
         #theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.05,scale_mode='none',colormap='RdBu')
-        print centers.shape
-        print vertx.shape
-        print r.shape,theta.shape,phi.shape
-        mlab.show()
+        #mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.05,scale_mode='none',colormap='RdBu')
+        #mlab.show()
         
-        for i,indices in enumerate(delaunay_grid.convex_hull):
-            indices2 = np.hstack([indices,indices[0]])
-            #pl.plot(vertx[indices2]*r[i],verty[indices2]*r[i],vertz[indices2]*r[i],'k-')
-            a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
-            b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
-            c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
-            s = 0.5*(a+b+c)
-            sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
-        
-        
-        #pl.plot(x,y,z,'ro',ms=2,mec='r')
-        #pl.plot(
         print gtype
         #pl.show()
-        sys.exit()
         
-        return sizes, cos_gamma
+        return sizes*r**2, cos_gamma
 
 def local_temperature(surface_gravity,g_pole,T_pole,beta=1.):
     """
