@@ -1616,12 +1616,14 @@ def binary_light_curve_synthesis(**parameters):
             #-- stitch the grid!
             theta_,phi_,radius,gravx,gravy,gravz,grav,areas,teff,ints,vx,vy,vz = \
                          stitch_grid(theta,phi,radius,grav_local[0],grav_local[1],grav_local[2],
-                                    grav,areas_local,teff_local,ints_local,velo_local[0],velo_local[1],velo_local[2],seamless=False,
+                                    grav,areas_local,teff_local,ints_local,velo_local[0],velo_local[1],velo_local[2],
+                                    seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
             #-- stitch the grid!
             theta2_,phi2_,radius2,gravx2,gravy2,gravz2,grav2,areas2,teff2,ints2,vx2,vy2,vz2 = \
                          stitch_grid(theta,phi,radius2,grav_local2[0],grav_local2[1],grav_local2[2],
-                                    grav2,areas_local2,teff_local2,ints_local2,velo_local2[0],velo_local2[1],velo_local2[2],seamless=False,
+                                    grav2,areas_local2,teff_local2,ints_local2,velo_local2[0],velo_local2[1],velo_local2[2],
+                                    seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
             
             #-- vectors and coordinates in original frame
