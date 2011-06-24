@@ -916,8 +916,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         #-- compute the angle between the surface normal and the radius vector
         x,y,z = vectors.spher2cart_coord(r,phi,theta)
         a = np.array([x,y,z])
-        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
-        
+        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])        
         cos_gamma = vectors.cos_angle(a,b)
         
         delaunay_grid = mygrid[2]
@@ -1255,7 +1254,7 @@ def get_grid(*args,**kwargs):
         centers = np.zeros((len(grid.convex_hull),3))
         for i,indices in enumerate(grid.convex_hull):
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
-        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])
+        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,0],centers[:,1])
         return theta,phi, grid
         
         
