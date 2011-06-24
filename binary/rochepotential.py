@@ -1704,16 +1704,22 @@ def binary_light_curve_synthesis(**parameters):
             report += ' Secondary in front'
         coords_front = np.column_stack([front['y'],front['z']])
         coords_back = np.column_stack([back['y'],back['z']])    
-
-        #   now find the coordinates of the front component closest to the
-        #   the coordinates of the back component
-        tree = KDTree(coords_front)
-        distance,order = tree.query(coords_back)
-        #   meshpoints of the back component inside an eclipse have a
-        #   nearest neighbouring point in the (projected) front component
-        #   which is closer than sqrt(area) of the surface element connected
-        #   to that neighbouring point on the front component
-        in_eclipse = distance < np.sqrt(front['areas'][order])
+        
+        if gtype!='delaunay':
+            #   now find the coordinates of the front component closest to the
+            #   the coordinates of the back component
+            tree = KDTree(coords_front)
+            distance,order = tree.query(coords_back)
+            #   meshpoints of the back component inside an eclipse have a
+            #   nearest neighbouring point in the (projected) front component
+            #   which is closer than sqrt(area) of the surface element connected
+            #   to that neighbouring point on the front component
+            in_eclipse = distance < np.sqrt(front['areas'][order])
+        else:
+            #   find which coordinates of the back lie inside the convex hull
+            #   of the front star
+            eclips_detection = Delaunay(coords_front)
+            in_eclipse = eclipse_detection(coords_back)<=0
         if np.sum(in_eclipse)>0:
             report += ' during eclipse'
         else:
