@@ -1548,7 +1548,6 @@ def binary_light_curve_synthesis(**parameters):
             x,y,z = vectors.spher2cart_coord(radius,phi,theta)
             print 'x',x.ptp()
             print 'y',y.ptp()
-            sys.exit()
             g_pole = binary_roche_surface_gravity(0,0,this_r_pole*to_SI,d*to_SI,omega_rot,M1*constants.Msol,M2*constants.Msol,norm=True)
             Gamma_pole = binary_roche_potential_gradient(0,0,this_r_pole,q,d,F,norm=True)
             zeta = g_pole / Gamma_pole
