@@ -1036,22 +1036,22 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         x,y,z = vectors.spher2cart_coord(star['r'].ravel(),star['phi'].ravel(),star['theta'].ravel())
     else:
         x,y,z = star['x'].ravel(),star['y'].ravel(),star['z'].ravel(),
-    print x.ptp()
-    sys.exit()
+    print 'project1',x.ptp()
+    
     #-- first we rotate in the XY plane (only for surface coordinates is the
     #   coordinate zeropoint important, the rest are vectors!):
     if view_long[0]!=0:
         x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1],y0=view_long[2])
         gravx,gravy = vectors.rotate(gravx,gravy,view_long[0])
         vx,vy = vectors.rotate(vx,vy,view_long[0])
-    
+    print 'project2',x.ptp()
     #-- then we rotate in the YZ plane:
     if view_lat[0]!=pi/2:
         rot_i = -(pi/2 - view_lat[0])
         x,z = vectors.rotate(x,z,rot_i)
         gravx,gravz = vectors.rotate(gravx,gravz,rot_i)
         vx,vz = vectors.rotate(vx,vz,rot_i)
-        
+    print 'project3',x.ptp()
     #-- ... and project the fluxes in the line of sight, which is now in the XY
     #   direction:
     view_vector = np.array([1.,0,0])#np.array([-sin(pi/2),0,-cos(pi/2)])
