@@ -922,13 +922,24 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         delaunay_grid = mygrid[2]
 
         sizes = np.zeros(len(delaunay_grid.convex_hull))
+        x_,y_,z_ = delaunay_grid.points.T
         
+        pl.figure(figsize=(16,11))        
         for i,indices in enumerate(delaunay_grid.convex_hull):
+            indices2 = np.hstack([indices,indices[0]])
+            pl.plot(x_[indices2],y_[indices2],z_[indices2],'k-')
+            pl.plot([x[i]],[y[i]],[z[i]],'ro')
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
             s = 0.5*(a+b+c)
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
+        
+        
+        #pl.plot(phi,theta,'ko',ms=2)
+        #pl.plot(
+        pl.show()
+        sys.exit()
         
         return sizes, cos_gamma
 
