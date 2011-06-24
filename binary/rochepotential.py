@@ -1257,6 +1257,7 @@ def get_grid(*args,**kwargs):
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
         theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])
         print theta.shape,phi.shape
+        print res1,res2
         return theta.reshape((res1,res2)),phi.reshape((res1,res2)), grid
         
         
