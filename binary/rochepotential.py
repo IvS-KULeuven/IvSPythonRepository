@@ -1546,6 +1546,7 @@ def binary_light_curve_synthesis(**parameters):
             radius  = rprim.reshape(theta.shape)
             this_r_pole = radius.ravel()[0]
             x,y,z = vectors.spher2cart_coord(radius,phi,theta)
+            print 'x',x.ptp()
             g_pole = binary_roche_surface_gravity(0,0,this_r_pole*to_SI,d*to_SI,omega_rot,M1*constants.Msol,M2*constants.Msol,norm=True)
             Gamma_pole = binary_roche_potential_gradient(0,0,this_r_pole,q,d,F,norm=True)
             zeta = g_pole / Gamma_pole
@@ -1634,6 +1635,8 @@ def binary_light_curve_synthesis(**parameters):
             x_of,y_of,z_of = vectors.spher2cart_coord(radius.ravel(),phi_.ravel(),theta_.ravel())
             x2_of,y2_of,z2_of = vectors.spher2cart_coord(radius2.ravel(),phi2_.ravel(),theta2_.ravel())
             x2_of = -x2_of            
+            print 'x1',x_of.ptp()
+            print 'x2',x2_of.ptp()
             #-- store information on primary and secondary in a record array
             primary = np.rec.fromarrays([theta_.ravel(),phi_.ravel(),radius.ravel(),
                                          x_of,y_of,z_of,
