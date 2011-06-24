@@ -1761,17 +1761,6 @@ def binary_light_curve_synthesis(**parameters):
                 size_y = 1.2*(max(prim['z'].ptp(),secn['z'].ptp())/2. + max(ds) * cos(view_angle))
                 vmin_image,vmax_image = 0,max([front['eyeflux'].max(),back['eyeflux'].max()])        
                 size_top = 1.2*(max(prim['x'].ptp(),secn['x'].ptp())/2. + max(ds))
-                
-            pl.figure(figsize=(16,11))
-            pl.subplot(111,aspect='equal');pl.title('line of sight intensity')
-            pl.scatter(back['y'],back['z'],c=back['eyeflux'],edgecolors='none',cmap=pl.cm.spectral)
-            pl.scatter(front['y'],front['z'],c=front['eyeflux'],edgecolors='none',cmap=pl.cm.spectral)
-            pl.xlim(-0.5,0.5)
-            pl.ylim(-0.2,0.5)
-            pl.xlabel('X [semi-major axis]')
-            pl.ylabel('Z [semi-major axis]')
-            pl.savefig(os.path.join(direc,'%s_losint_%04d'%(name,di)),facecolor='0.75')
-            pl.close()
             
             pl.figure(figsize=(16,11))
             pl.subplot(221,aspect='equal');pl.title('line of sight intensity')
