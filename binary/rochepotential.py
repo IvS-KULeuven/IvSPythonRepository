@@ -1637,7 +1637,7 @@ def binary_light_curve_synthesis(**parameters):
             x2_of,y2_of,z2_of = vectors.spher2cart_coord(radius2.ravel(),phi2_.ravel(),theta2_.ravel())
             x2_of = -x2_of            
             print 'x1',x_of.ptp()
-            print 'x2',x2_of.ptp()
+            sys.exit()
             #-- store information on primary and secondary in a record array
             primary = np.rec.fromarrays([theta_.ravel(),phi_.ravel(),radius.ravel(),
                                          x_of,y_of,z_of,
