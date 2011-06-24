@@ -442,6 +442,10 @@ import numpy as np
 from numpy import pi,cos,sin,sqrt,nan
 from scipy.optimize import newton
 from scipy.spatial import KDTree
+try:
+    from scipy.spatial import Delaunay
+except ImportError:
+    print 'No scipy >= 0.9, falling back on scipy < 0.9: no Delaunay triangulations available'
 import time
 from ivs.binary import keplerorbit
 from ivs.units import constants
@@ -881,7 +885,7 @@ def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
 
 #{ Derivation of local quantities
 
-def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z)):
+def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='spher'):
     """
     Compute surface area of elements in a grid.
     
@@ -890,21 +894,46 @@ def surface_elements((r,theta,phi),(surfnormal_x,surfnormal_y,surfnormal_z)):
     usually, the surfnormals are acquired via differentiation of a gravity potential,
     and is then equal to the *negative* of the local surface gravity.
     """
-    #-- compute the grid size at each location
-    dtheta = theta[1:]-theta[:-1]
-    dtheta = np.vstack([dtheta,dtheta[-1]])
+    if gtype=='spher':
+        #-- compute the grid size at each location
+        dtheta = theta[1:]-theta[:-1]
+        dtheta = np.vstack([dtheta,dtheta[-1]])
+        
+        dphi = phi[:,1:]-phi[:,:-1]
+        dphi = np.column_stack([dphi,dphi[:,-1]])
+        #-- compute the angle between the surface normal and the radius vector
+        x,y,z = vectors.spher2cart_coord(r,phi,theta)
+        
+        a = np.array([x,y,z])
+        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
+        
+        cos_gamma = vectors.cos_angle(a,b)
+        
+        return r**2 * sin(theta) * dtheta * dphi / cos_gamma, cos_gamma
     
-    dphi = phi[:,1:]-phi[:,:-1]
-    dphi = np.column_stack([dphi,dphi[:,-1]])
-    #-- compute the angle between the surface normal and the radius vector
-    x,y,z = vectors.spher2cart_coord(r,phi,theta)
-    
-    a = np.array([x,y,z])
-    b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
-    
-    cos_gamma = vectors.cos_angle(a,b)
-    
-    return r**2 * sin(theta) * dtheta * dphi / cos_gamma, cos_gamma
+    elif gtype=='delaunay':
+        #-- compute the angle between the surface normal and the radius vector
+        x,y,z = vectors.spher2cart_coord(r,phi,theta)
+        a = np.array([x,y,z])
+        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
+        
+        cos_gamma = vectors.cos_angle(a,b)
+
+        points = np.array([x.ravel(),y.ravel(),z.ravel()]).T
+        grid = Delaunay(points)
+
+        sizes = np.zeros(len(grid.convex_hull))
+        
+        for i,indices in enumerate(grid2.convex_hull):
+            a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
+            b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
+            c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
+            s = 0.5*(a+b+c)
+            sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
+        
+        sizes = sizes.reshape(r.shape)
+        
+        return sizes, cos_gamma
 
 def local_temperature(surface_gravity,g_pole,T_pole,beta=1.):
     """
@@ -1191,7 +1220,7 @@ def get_grid(*args,**kwargs):
             phi0,phin = 0,pi-dphi
             
         theta,phi = np.mgrid[theta0:thetan:res1*1j,phi0:phin:res2*1j]
-        return theta.ravel(),phi.ravel()
+        return theta,phi
     
     if 'cil' in gtype.lower():
         if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
@@ -1211,6 +1240,19 @@ def get_grid(*args,**kwargs):
         sintheta,phi = np.mgrid[sintheta0:sinthetan:res1*1j,phi0:phin:res2*1j]
         return np.arccos(sintheta),phi
     
+    if 'delaunay' in gtype.lower():
+        #-- resolution doesn't matter that much anymore 
+        if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
+        else:            res1,res2 = args      # different resolution
+        
+        theta = np.random.uniform(low=0,high=pi/2,size=res1*res2)
+        phi = np.random.uniform(low=0,high=pi,size=res2*res1)
+        return theta.reshape((res1,res2)),phi.reshape((res1,res2))
+        
+        
+        
+        
+        
     
 
 def stitch_grid(theta,phi,*quant,**kwargs):
