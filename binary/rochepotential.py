@@ -1191,7 +1191,7 @@ def get_grid(*args,**kwargs):
             phi0,phin = 0,pi-dphi
             
         theta,phi = np.mgrid[theta0:thetan:res1*1j,phi0:phin:res2*1j]
-        return theta,phi
+        return theta.ravel(),phi.ravel()
     
     if 'cil' in gtype.lower():
         if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
