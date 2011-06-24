@@ -928,10 +928,15 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         
         pl.figure(100,figsize=(16,11))        
         from mpl_toolkits.mplot3d.axes3d import Axes3D
-        ax = Axes3D(pl.gcf())
+        from enthought.mayavi import mlab
+        mlab.figure()
+        mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray')
+        mlab.points3d(x,y,z,scale_factor=0.2)
+        mlab.show()
+        
         for i,indices in enumerate(delaunay_grid.convex_hull):
             indices2 = np.hstack([indices,indices[0]])
-            pl.plot(vertx[indices2]*r[i],verty[indices2]*r[i],vertz[indices2]*r[i],'k-')
+            #pl.plot(vertx[indices2]*r[i],verty[indices2]*r[i],vertz[indices2]*r[i],'k-')
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
@@ -939,10 +944,10 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
         
         
-        pl.plot(x,y,z,'ro',ms=2,mec='r')
+        #pl.plot(x,y,z,'ro',ms=2,mec='r')
         #pl.plot(
         print gtype
-        pl.show()
+        #pl.show()
         sys.exit()
         
         return sizes, cos_gamma
