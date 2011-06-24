@@ -922,12 +922,15 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         delaunay_grid = mygrid[2]
 
         sizes = np.zeros(len(delaunay_grid.convex_hull))
-        x_,y_,z_ = delaunay_grid.points.T
+        points = delaunay_grid.points
+        x_,y_,z_ = points.T
         print x_.shape
+        
         pl.figure(100,figsize=(16,11))        
         for i,indices in enumerate(delaunay_grid.convex_hull):
             indices2 = np.hstack([indices,indices[0]])
-            pl.plot(x[indices2],y[indices2],z[indices2],'k-')
+            print indices2.shape
+            pl.plot(x_[indices2],y_[indices2],z_[indices2],'k-')
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
             b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
             c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
@@ -935,7 +938,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
         
         
-        pl.plot(x_,y_,z_,'ro',ms=2,mec='r')
+        pl.plot(x,y,z,'ro',ms=2,mec='r')
         #pl.plot(
         print gtype
         pl.show()
