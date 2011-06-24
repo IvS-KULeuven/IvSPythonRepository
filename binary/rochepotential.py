@@ -1036,6 +1036,8 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         x,y,z = vectors.spher2cart_coord(star['r'].ravel(),star['phi'].ravel(),star['theta'].ravel())
     else:
         x,y,z = star['x'].ravel(),star['y'].ravel(),star['z'].ravel(),
+    print x.ptp()
+    sys.exit()
     #-- first we rotate in the XY plane (only for surface coordinates is the
     #   coordinate zeropoint important, the rest are vectors!):
     if view_long[0]!=0:
