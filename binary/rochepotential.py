@@ -1571,7 +1571,7 @@ def binary_light_curve_synthesis(**parameters):
             #-- for the secondary
             #--------------------
             radius2 = rsec.reshape(theta.shape)
-            this_r_pole2 = radius2[0][0]
+            this_r_pole2 = radius2.ravel()[0]
             x2,y2,z2 = vectors.spher2cart_coord(radius2,phi,theta)
             g_pole2 = binary_roche_surface_gravity(0,0,this_r_pole2*to_SI,d*to_SI,omega_rot,M2*constants.Msol,M1*constants.Msol,norm=True)
             Gamma_pole2 = binary_roche_potential_gradient(0,0,this_r_pole2,q2,d,F2,norm=True)
