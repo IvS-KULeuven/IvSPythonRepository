@@ -1272,49 +1272,53 @@ def stitch_grid(theta,phi,*quant,**kwargs):
     """
     seamless = kwargs.get('seamless',False)
     vtype = kwargs.get('vtype',['scalar' for i in quant])
+    gtype = kwargs.get('gtype','spher')
     ravel = kwargs.get('ravel',False)
     
-    #-- basic coordinates
-    alltheta = np.vstack([np.hstack([theta,theta]),np.hstack([theta+pi/2,theta+pi/2])])
-    allphi   = np.vstack([np.hstack([phi,phi+pi]),np.hstack([phi,phi+pi])])
+    if gtype == 'spher':
+        #-- basic coordinates
+        alltheta = np.vstack([np.hstack([theta,theta]),np.hstack([theta+pi/2,theta+pi/2])])
+        allphi   = np.vstack([np.hstack([phi,phi+pi]),np.hstack([phi,phi+pi])])
     
-    #-- all other quantities
-    allquan = []
-    for i,iquant in enumerate(quant):
-        #-- if they are scalar values, they do not change direction
-        top1,top2 = iquant,iquant[:,::-1]
-        bot1,bot2 = iquant[::-1],iquant[::-1][:,::-1]
-        if vtype[i]=='scalar':
-            allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-        #-- vector components do change direction
-        elif vtype[i]=='x':
-            allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-        elif vtype[i]=='y':
-            allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
-        elif vtype[i]=='z':
-            allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
-        elif vtype[i]=='vx':
-            allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
-        elif vtype[i]=='vy':
-            allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-        elif vtype[i]=='vz':
-            allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
-    
-    out = [alltheta,allphi]+allquan
-    
-    #-- for plotting reasons, remove the vertical seam and the the bottom hole.
-    if seamless:
-        #-- vertical seam
-        out = [np.column_stack([i,i[:,0]]) for i in out]
-        out[1][:,-1] += 2*pi
-        #-- fill bottom hole
-        out = [np.vstack([i,i[0]]) for i in out]
-        out[0][-1] += pi
-    
-    #-- ravel to 1d arrays if asked for
-    if ravel:
-        out = [i.ravel() for i in out]
-    
+        #-- all other quantities
+        allquan = []
+        for i,iquant in enumerate(quant):
+            #-- if they are scalar values, they do not change direction
+            top1,top2 = iquant,iquant[:,::-1]
+            bot1,bot2 = iquant[::-1],iquant[::-1][:,::-1]
+            if vtype[i]=='scalar':
+                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
+            #-- vector components do change direction
+            elif vtype[i]=='x':
+                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
+            elif vtype[i]=='y':
+                allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
+            elif vtype[i]=='z':
+                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
+            elif vtype[i]=='vx':
+                allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
+            elif vtype[i]=='vy':
+                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
+            elif vtype[i]=='vz':
+                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
+        
+        out = [alltheta,allphi]+allquan
+        
+        #-- for plotting reasons, remove the vertical seam and the the bottom hole.
+        if seamless:
+            #-- vertical seam
+            out = [np.column_stack([i,i[:,0]]) for i in out]
+            out[1][:,-1] += 2*pi
+            #-- fill bottom hole
+            out = [np.vstack([i,i[0]]) for i in out]
+            out[0][-1] += pi
+        
+        #-- ravel to 1d arrays if asked for
+        if ravel:
+            out = [i.ravel() for i in out]
+    else:
+        out = [theta,phi] + list(quant)
+        
     return out
 
 #}
