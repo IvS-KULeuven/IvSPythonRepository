@@ -945,7 +945,9 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
             
         #theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
         mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.02,scale_mode='none',colormap='RdBu')
-        
+        print centers.shape
+        print vertx.shape
+        print r.shape,theta.shape,phi.shape
         mlab.show()
         
         for i,indices in enumerate(delaunay_grid.convex_hull):
