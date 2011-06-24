@@ -937,6 +937,7 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         
         pl.plot(phi,theta,'ro',ms=2,mec'r')
         #pl.plot(
+        print gtype
         pl.show()
         sys.exit()
         
