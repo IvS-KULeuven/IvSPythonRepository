@@ -109,6 +109,22 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
 
 #{ Output
 
+def write_primary(filename,data=None,header_dict={}):
+    """
+    Initiate a FITS file by writing to the primary HDU.
+    
+    If data is not given, a 1x1 zero array will be added.
+    """
+    if data is None:
+        data = np.array([[0]])
+    hdulist = pyfits.HDUList([pyfits.PrimaryHDU(data)])
+    for key in header_dict:
+        hdulist[0].header.update(key,header_dict[key])
+    hdulist.writeto(filename)
+    hdulist.close()
+    return filename
+    
+
 def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True):
     """
     Write or add a record array to a FITS file.
@@ -128,6 +144,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         primary = np.array([[0]])
         hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
         hdulist.writeto(filename)
+        hdulist.close()
     
     if close or is_file:
         hdulist = pyfits.open(filename,mode='update')
