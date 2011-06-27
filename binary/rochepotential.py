@@ -1536,6 +1536,7 @@ def binary_light_curve_synthesis(**parameters):
     if direc is not None and os.path.isfile(fitsfile):
         os.remove(fitsfile)
         logger.warning("Removed existing file %s"%(fitsfile))
+    if direc is not None:
         outputfile_prim = os.path.join(direc,'%s_primary.fits'%(name))
         outputfile_secn = os.path.join(direc,'%s_secondary.fits'%(name))
     
