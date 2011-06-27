@@ -1540,8 +1540,8 @@ def binary_light_curve_synthesis(**parameters):
         parameters['scale_factor'] = a*constants.au/constants.Rsol
         outputfile_prim = os.path.join(direc,'%s_primary.fits'%(name))
         outputfile_secn = os.path.join(direc,'%s_secondary.fits'%(name))
-        outputfile_prim = fits.write_primary(outpufile_prim,parameters)
-        outputfile_secn = fits.write_primary(outpufile_secn,parameters)
+        outputfile_prim = fits.write_primary(outputfile_prim,parameters)
+        outputfile_secn = fits.write_primary(outputfile_secn,parameters)
     
     ext_dict = {}
     for di,d in enumerate(ds):
