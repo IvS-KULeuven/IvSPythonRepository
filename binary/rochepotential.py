@@ -1540,8 +1540,8 @@ def binary_light_curve_synthesis(**parameters):
         parameters['scale_factor'] = a*constants.au/constants.Rsol
         outputfile_prim = os.path.join(direc,'%s_primary.fits'%(name))
         outputfile_secn = os.path.join(direc,'%s_secondary.fits'%(name))
-        outputfile_prim = fits.write_primary(outputfile_prim,parameters)
-        outputfile_secn = fits.write_primary(outputfile_secn,parameters)
+        outputfile_prim = fits.write_primary(outputfile_prim,header_dict=parameters)
+        outputfile_secn = fits.write_primary(outputfile_secn,header_dict=parameters)
     
     ext_dict = {}
     for di,d in enumerate(ds):
@@ -1704,8 +1704,8 @@ def binary_light_curve_synthesis(**parameters):
         else:
             close = False
         if direc is not None:
-            outputfile_prim = fits.write_recarray(primary,outputfile_prim,close=close)
-            outputfile_secn = fits.write_recarray(secondary,outputfile_secn,close=close)
+            outputfile_prim = fits.write_recarray(primary,outputfile_prim,close=close,header_dict=prim_header)
+            outputfile_secn = fits.write_recarray(secondary,outputfile_secn,close=close,header_dict=secn_header)
         
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
