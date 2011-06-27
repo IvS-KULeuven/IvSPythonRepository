@@ -129,7 +129,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
         hdulist.writeto(filename)
     
-    if close or not is_file:
+    if close or is_file:
         hdulist = pyfits.open(filename,mode='update')
     else:
         hdulist = filename
