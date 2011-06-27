@@ -1536,6 +1536,8 @@ def binary_light_curve_synthesis(**parameters):
     if direc is not None and os.path.isfile(fitsfile):
         os.remove(fitsfile)
         logger.warning("Removed existing file %s"%(fitsfile))
+        outputfile_prim = os.path.join(direc,'primary.fits')
+        outputfile_secn = os.path.join(direc,'secondary.fits')
     
     ext_dict = {}
     for di,d in enumerate(ds):
@@ -1684,9 +1686,13 @@ def binary_light_curve_synthesis(**parameters):
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
         
-        #if direc is not None:
-            #fits.write_recarray(primary,os.path.join(direc,'primary.fits'))
-            #fits.write_recarray(secondary,os.path.join(direc,'secondary.fits'))
+        if direc is not None and (di%20==0 or di==len(ds)-1):
+            close = True
+        else:
+            close = False
+        if direc is not None:
+            outputfile_prim = fits.write_recarray(primary,outputfile_prim,close=close)
+            outputfile_secn = fits.write_recarray(secondary,outputfile_secn,close=close)
         
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
