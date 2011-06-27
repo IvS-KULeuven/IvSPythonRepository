@@ -1537,8 +1537,11 @@ def binary_light_curve_synthesis(**parameters):
         os.remove(fitsfile)
         logger.warning("Removed existing file %s"%(fitsfile))
     if direc is not None:
+        parameters['scale_factor'] = a*constants.au/constants.Rsol
         outputfile_prim = os.path.join(direc,'%s_primary.fits'%(name))
         outputfile_secn = os.path.join(direc,'%s_secondary.fits'%(name))
+        outputfile_prim = fits.write_primary(outpufile_prim,parameters)
+        outputfile_secn = fits.write_primary(outpufile_secn,parameters)
     
     ext_dict = {}
     for di,d in enumerate(ds):
@@ -1686,8 +1689,17 @@ def binary_light_curve_synthesis(**parameters):
                        only_visible=True,plot_sort=True)
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
+        #-- calculate center-of-mass
+        com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
+        com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
+        com = np.array([com_x,com_y,0.])
+        rot_i = -(pi/2 - view_angle)
+        com[0],com[1] = vectors.rotate(com[0],com[1],rot_theta,x0=x1o[di],y0=y1o[di])
+        com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
+        prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
+        secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
         
-        if direc is not None and (di%20==0 or di==len(ds)-1):
+        if direc is not None and (di%20==0 or di==(len(ds)-1)):
             close = True
         else:
             close = False
