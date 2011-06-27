@@ -30,9 +30,12 @@ def read_spectrum(filename, return_header=False):
     flux = pyfits.getdata(filename)
     header = pyfits.getheader(filename)
     
-    nu0 = float(header["CRVAL1"])
+    #-- Make the equidistant wavelengthgrid using the Fits standard info
+    #   in the header
+    ref_pix = int(header["CRPIX1"])-1
     dnu = float(header["CDELT1"])
-    nun = nu0 + len(flux)*dnu
+    nu0 = float(header["CRVAL1"]) - ref_pix*dnu
+    nun = nu0 + (len(flux)-1)*dnu
     wave = np.linspace(nu0,nun,len(flux))
     #-- fix wavelengths for logarithmic sampling
     if 'ctype1' in header and header['CTYPE1']=='log(wavelength)':
@@ -106,7 +109,7 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
 
 #{ Output
 
-def write_recarray(recarr,filename,header_dict={},units={},ext='new'):
+def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True):
     """
     Write or add a record array to a FITS file.
     
@@ -120,12 +123,17 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new'):
     A header_dictionary can be given, it is used to update an existing header
     or create a new one if the extension is new.
     """
-    if not os.path.isfile(filename):
+    is_file = isinstance(filename,str) and os.path.isfile(filename)
+    if not is_file:
         primary = np.array([[0]])
         hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
         hdulist.writeto(filename)
     
-    hdulist = pyfits.open(filename,mode='update')
+    if close or not is_file:
+        hdulist = pyfits.open(filename,mode='update')
+    else:
+        hdulist = filename
+        
     
     #-- create the table HDU
     cols = []
@@ -147,8 +155,10 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new'):
     if len(header_dict):
         for key in header_dict:
             hdulist[ext].header.update(key,header_dict[key])
-    
-    hdulist.close()
+    if close:
+        hdulist.close()
+    else:
+        return hdulist
 
 def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=True):
     """
