@@ -124,7 +124,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     or create a new one if the extension is new.
     """
     is_file = isinstance(filename,str) and os.path.isfile(filename)
-    if not is_file:
+    if isinstance(filename,str) and not os.path.isfile(filename):
         primary = np.array([[0]])
         hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
         hdulist.writeto(filename)
