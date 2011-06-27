@@ -157,6 +157,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
             hdulist[ext].header.update(key,header_dict[key])
     if close:
         hdulist.close()
+        return filename
     else:
         return hdulist
 
