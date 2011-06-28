@@ -1534,6 +1534,7 @@ def binary_light_curve_synthesis(**parameters):
     RV2_corr = np.zeros_like(times)
     to_SI = a*constants.au
     to_CGS = a*constants.au*100.
+    scale_factor = a*constants.au/constants.Rsol
     
     fitsfile = os.path.join(direc,'%s.fits'%(name))
     if direc is not None and os.path.isfile(fitsfile):
