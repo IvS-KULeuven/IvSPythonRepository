@@ -1682,14 +1682,13 @@ def binary_light_curve_synthesis(**parameters):
         #-- now compute the integrated intensity in the line of sight:
         #-------------------------------------------------------------
         rot_theta = np.arctan2(y1o[di],x1o[di])
+        
         prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
         secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
-        prim['vx'] = -prim['vx'] + RV1[di]*1000.
-        secn['vx'] = -secn['vx'] + RV2[di]*1000.
         #-- calculate center-of-mass
         com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
         com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
@@ -1699,7 +1698,6 @@ def binary_light_curve_synthesis(**parameters):
         com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
         prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
         secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
-        
         if direc is not None and (di%20==0 or di==(len(ds)-1)):
             close = True
         else:
@@ -1707,6 +1705,15 @@ def binary_light_curve_synthesis(**parameters):
         if direc is not None:
             outputfile_prim = fits.write_recarray(prim,outputfile_prim,close=close,header_dict=prim_header)
             outputfile_secn = fits.write_recarray(secn,outputfile_secn,close=close,header_dict=secn_header)
+        
+        prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
+                       view_lat=(view_angle,0,0),photband=photband,
+                       only_visible=True,plot_sort=True)
+        secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
+                       view_lat=(view_angle,0,0),photband=photband,
+                       only_visible=True,plot_sort=True)
+        prim['vx'] = -prim['vx'] + RV1[di]*1000.
+        secn['vx'] = -secn['vx'] + RV2[di]*1000.
         
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
