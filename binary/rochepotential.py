@@ -442,10 +442,7 @@ import numpy as np
 from numpy import pi,cos,sin,sqrt,nan
 from scipy.optimize import newton
 from scipy.spatial import KDTree
-try:
-    from scipy.spatial import Delaunay
-except ImportError:
-    print 'No scipy >= 0.9, falling back on scipy < 0.9: no Delaunay triangulations available'
+from scipy.spatial import Delaunay
 import time
 from ivs.binary import keplerorbit
 from ivs.units import constants
@@ -1055,10 +1052,9 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
     
     #-- first we rotate in the XY plane (only for surface coordinates is the
     #   coordinate zeropoint important, the rest are vectors!):
-    if view_long[0]!=0:
-        x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1],y0=view_long[2])
-        gravx,gravy = vectors.rotate(gravx,gravy,view_long[0])
-        vx,vy = vectors.rotate(vx,vy,view_long[0])
+    x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1],y0=view_long[2])
+    gravx,gravy = vectors.rotate(gravx,gravy,view_long[0])
+    vx,vy = vectors.rotate(vx,vy,view_long[0])
     #-- then we rotate in the YZ plane:
     if view_lat[0]!=pi/2:
         rot_i = -(pi/2 - view_lat[0])
