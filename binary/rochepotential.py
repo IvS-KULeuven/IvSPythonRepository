@@ -1698,7 +1698,7 @@ def binary_light_curve_synthesis(**parameters):
         com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
         prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
         secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
-        if direc is not None and (di%20==0 or di==(len(ds)-1)):
+        if direc is not None and (di%20==0):
             close = True
         else:
             close = False
@@ -1863,7 +1863,11 @@ def binary_light_curve_synthesis(**parameters):
             pl.savefig(os.path.join(direc,'%s_image_%04d'%(name,di)),facecolor='k')
             pl.close()
             #================   END DEBUGGING PLOTS ===================
-        
+    
+    #-- make sure to have everything
+    if direc is not None:
+        outputfile_prim.close()
+        outputfile_secn.close()
     return times, light_curve, RV1_corr, RV2_corr
 
 if __name__=="__main__":
