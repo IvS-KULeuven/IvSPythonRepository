@@ -1447,7 +1447,10 @@ def binary_light_curve_synthesis(**parameters):
     parameters['L2'] = L2*a*constants.au/constants.Rsol
     
     #-- calculate the Keplerian orbits of the primary and secondary
-    times = np.linspace(0.5*P,1.5*P,tres)
+    if not hasattr(tres,'__iter__'):
+        times = np.linspace(0.5*P,1.5*P,tres)
+    else:
+        times = tres
     r1,theta1 = keplerorbit.orbit_in_plane(times,[P,e,a1,gamma],component='primary')
     r2,theta2 = keplerorbit.orbit_in_plane(times,[P,e,a2,gamma],component='secondary')
     RV1 = keplerorbit.radial_velocity([P,e,a1,pi/2,view_angle,gamma],theta=theta1,itermax=8)
