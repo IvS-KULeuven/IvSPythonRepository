@@ -1056,7 +1056,7 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
     #-- first we rotate in the XY plane (only for surface coordinates is the
     #   coordinate zeropoint important, the rest are vectors!):
     if view_long[0]!=0:
-        x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1],y0=view_long[2])
+        x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1]*scale_factor,y0=view_long[2]*scale_factor)
         gravx,gravy = vectors.rotate(gravx,gravy,view_long[0])
         vx,vy = vectors.rotate(vx,vy,view_long[0])
     #-- then we rotate in the YZ plane:
@@ -1074,8 +1074,8 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
     #-- we now construct a copy of the star record array with the changed
     #   coordinates
     new_star = star.copy()
-    new_star['gravx'],new_star['gravy'],new_star['gravz'] = gravx*scale_factor,gravy*scale_factor,gravz*scale_factor
-    new_star['vx'],new_star['vy'],new_star['vz'] = vx*scale_factor,vy*scale_factor,vz*scale_factor
+    new_star['gravx'],new_star['gravy'],new_star['gravz'] = gravx,gravy,gravz
+    new_star['vx'],new_star['vy'],new_star['vz'] = vx,vy,vz
     if 'x' in star.dtype.names:
         new_star['x'],new_star['y'],new_star['z'] = x*scale_factor,y*scale_factor,z*scale_factor
     else:
