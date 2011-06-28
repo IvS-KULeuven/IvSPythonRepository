@@ -1399,7 +1399,7 @@ def binary_light_curve_synthesis(**parameters):
     #   calculation details
     res = parameters.setdefault('gres',20)                    # resolution of the grid
     gtype = parameters.setdefault('gtype','spher')
-    tres= parameters.setdefault('tres',125)                   # resolution of the phase diagram
+    tres= parameters.pop('tres',125)                   # resolution of the phase diagram
     photband = parameters.setdefault('photband','JOHNSON.V')  # photometric passband
     max_iter_reflection = parameters.setdefault('ref_iter',1) # maximum number of iterations of reflection effect
     #   orbital parameters
