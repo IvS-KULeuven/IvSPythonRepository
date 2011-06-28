@@ -1685,10 +1685,10 @@ def binary_light_curve_synthesis(**parameters):
         #-- for output file
         prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=True,plot_sort=True)
+                       only_visible=False,plot_sort=True)
         secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=True,plot_sort=True)
+                       only_visible=False,plot_sort=True)
         #-- calculate center-of-mass
         com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
         com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
