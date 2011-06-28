@@ -1705,8 +1705,8 @@ def binary_light_curve_synthesis(**parameters):
         else:
             close = False
         if direc is not None:
-            outputfile_prim = fits.write_recarray(primary,outputfile_prim,close=close,header_dict=prim_header)
-            outputfile_secn = fits.write_recarray(secondary,outputfile_secn,close=close,header_dict=secn_header)
+            outputfile_prim = fits.write_recarray(prim,outputfile_prim,close=close,header_dict=prim_header)
+            outputfile_secn = fits.write_recarray(secn,outputfile_secn,close=close,header_dict=secn_header)
         
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
