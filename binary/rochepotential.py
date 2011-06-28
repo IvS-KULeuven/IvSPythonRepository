@@ -998,7 +998,7 @@ def projected_intensity(teff,gravity,areas,line_of_sight,photband='OPEN.BOL'):
 
 
 def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
-            only_visible=False,plot_sort=False):
+            only_visible=False,plot_sort=False,scale_factor=1.):
     """
     Project and transform coordinates and vectors to align with the line-of-sight.
     
@@ -1074,14 +1074,14 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
     #-- we now construct a copy of the star record array with the changed
     #   coordinates
     new_star = star.copy()
-    new_star['gravx'],new_star['gravy'],new_star['gravz'] = gravx,gravy,gravz
-    new_star['vx'],new_star['vy'],new_star['vz'] = vx,vy,vz
+    new_star['gravx'],new_star['gravy'],new_star['gravz'] = gravx*scale_factor,gravy*scale_factor,gravz*scale_factor
+    new_star['vx'],new_star['vy'],new_star['vz'] = vx*scale_factor,vy*scale_factor,vz*scale_factor
     if 'x' in star.dtype.names:
-        new_star['x'],new_star['y'],new_star['z'] = x,y,z
+        new_star['x'],new_star['y'],new_star['z'] = x*scale_factor,y*scale_factor,z*scale_factor
     else:
-        new_star = pl.mlab.rec_append_fields(new_star,'x',x)
-        new_star = pl.mlab.rec_append_fields(new_star,'y',x)
-        new_star = pl.mlab.rec_append_fields(new_star,'z',x)
+        new_star = pl.mlab.rec_append_fields(new_star,'x',x*scale_factor)
+        new_star = pl.mlab.rec_append_fields(new_star,'y',y*scale_factor)
+        new_star = pl.mlab.rec_append_fields(new_star,'z',z*scale_factor)
     new_star = pl.mlab.rec_append_fields(new_star,'projflux',proj_flux)
     new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas/mus)
     
@@ -1688,10 +1688,10 @@ def binary_light_curve_synthesis(**parameters):
         #-- for output file
         prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=False,plot_sort=False)
+                       only_visible=False,plot_sort=False,scale_factor=scale_factor)
         secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=False,plot_sort=False)
+                       only_visible=False,plot_sort=False,scale_factor=scale_factor)
         #-- calculate center-of-mass
         com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
         com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
