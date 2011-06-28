@@ -1682,7 +1682,7 @@ def binary_light_curve_synthesis(**parameters):
         #-- now compute the integrated intensity in the line of sight:
         #-------------------------------------------------------------
         rot_theta = np.arctan2(y1o[di],x1o[di])
-        
+        #-- for output file
         prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
