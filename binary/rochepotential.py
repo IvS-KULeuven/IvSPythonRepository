@@ -1696,8 +1696,8 @@ def binary_light_curve_synthesis(**parameters):
         rot_i = -(pi/2 - view_angle)
         com[0],com[1] = vectors.rotate(com[0],com[1],rot_theta,x0=x1o[di],y0=y1o[di])
         com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
-        prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
-        secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2])
+        prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
+        secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
         if direc is not None and (di%20==0):
             close = True
         else:
