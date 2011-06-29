@@ -1682,27 +1682,28 @@ def binary_light_curve_synthesis(**parameters):
         #-- now compute the integrated intensity in the line of sight:
         #-------------------------------------------------------------
         rot_theta = np.arctan2(y1o[di],x1o[di])
-        #-- for output file
-        prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
-                       view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=False,plot_sort=False,scale_factor=scale_factor)
-        secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
-                       view_lat=(view_angle,0,0),photband=photband,
-                       only_visible=False,plot_sort=False,scale_factor=scale_factor)
-        #-- calculate center-of-mass
-        com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
-        com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
-        com = np.array([com_x,com_y,0.])
-        rot_i = -(pi/2 - view_angle)
-        com[0],com[1] = vectors.rotate(com[0],com[1],rot_theta,x0=x1o[di],y0=y1o[di])
-        com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
-        prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
-        secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
-        if direc is not None and (di%20==0):
-            close = True
-        else:
-            close = False
+        #-- if we want to save the binary to a file, we'd better want it in some
+        #   real units, and the entire star, instead of just the projected star:
         if direc is not None:
+            prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
+                        view_lat=(view_angle,0,0),photband=photband,
+                        only_visible=False,plot_sort=False,scale_factor=scale_factor)
+            secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
+                        view_lat=(view_angle,0,0),photband=photband,
+                        only_visible=False,plot_sort=False,scale_factor=scale_factor)
+            #-- calculate center-of-mass (is this correct?)
+            com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
+            com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
+            com = np.array([com_x,com_y,0.])
+            rot_i = -(pi/2 - view_angle)
+            com[0],com[1] = vectors.rotate(com[0],com[1],rot_theta,x0=x1o[di],y0=y1o[di])
+            com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
+            prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
+            secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
+            #-- only close the file every 20 cycles (for speed)
+            if direc is not None and (di%20==0): close = True
+            else:                                close = False
+            #   and append to primary HDUList
             outputfile_prim = fits.write_recarray(prim,outputfile_prim,close=close,header_dict=prim_header)
             outputfile_secn = fits.write_recarray(secn,outputfile_secn,close=close,header_dict=secn_header)
         
