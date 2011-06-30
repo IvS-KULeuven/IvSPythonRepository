@@ -1,3 +1,7 @@
+"""
+Calculate airmass according to various models.
+"""
+
 import numpy as np
 
 def _deg2rad(degrees):
