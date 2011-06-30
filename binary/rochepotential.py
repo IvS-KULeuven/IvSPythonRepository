@@ -853,7 +853,7 @@ def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
     
     @param coordinates: polar coordinates of stellar surface (phi,theta,radius)
     make sure the radius is in SI units!
-    @type coordinates: 3xNxM array
+    @type coordinates: 3xN array
     @param omega_eq: equatorial angular velocity (as a fraction of the critical one)
     @type omega_eq: float
     @param omega_pole: polar angular velocity (as a fraction of the critical one)
@@ -863,20 +863,20 @@ def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
     @param M: stellar mass in solar mass
     @type M: float
     @return: velocity vectors of all surface elements
-    @rtype 3xNxM array
+    @rtype 3xN array
     """
     #-- angular velocity of every surface element
     Omega_crit = critical_angular_velocity(M,R_pole)
     phi,theta,radius = coordinates
     omega_local = diffrot_law(omega_eq,omega_pole,theta)*Omega_crit
     #-- direction of local angular velocity in Cartesian coordinates (directed in upwards z)
-    omega_local_vec = np.array([np.zeros_like(omega_local.ravel()),np.zeros_like(omega_local.ravel()),omega_local.ravel()]).T
+    omega_local_vec = np.array([np.zeros_like(omega_local),np.zeros_like(omega_local),omega_local]).T
     
     x,y,z = vectors.spher2cart_coord(radius,phi,theta)
-    surface_element = np.array([x.ravel(),y.ravel(),z.ravel()]).T
+    surface_element = np.array([x,y,z]).T
 
-    velo_local = np.array([np.cross(ielement,iomega_local_vec) for ielement,iomega_local_vec in zip(surface_element,omega_local_vec)]).T.ravel()
-    return velo_local.reshape((3,theta.shape[0],theta.shape[1]))
+    velo_local = np.array([np.cross(ielement,iomega_local_vec) for ielement,iomega_local_vec in zip(surface_element,omega_local_vec)]).T
+    return velo_local
 
 #}
 
@@ -1206,7 +1206,14 @@ def get_grid(*args,**kwargs):
     """
     Construct a coordinate grid
     
-    If you give two resolution, the first is for theta, the second for phi
+    If you give two resolutions, the first is for theta, the second for phi
+    
+    @param args: one or two integers indicating number of grid points in theta
+    and phi direction
+    @type args: integer
+    @keyword gtype: grid type ('spher' or 'delaunay')
+    @type gtype: str
+    @return: theta,phi(,grid)
     """
     gtype = kwargs.get('gtype','spherical')
     full = kwargs.get('full',False)
