@@ -976,7 +976,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
     @param photbands: list of photometric passbands
     @type photbands: list of str
     @param units: list containing Flambda or Fnu flag (defaults to all Flambda)
-    @type units: list of strings
+    @type units: list of strings or str
     @return: model fluxes (erg/s/cm2/A or erg/s/cm2/Hz)
     @rtype: ndarray
     """    

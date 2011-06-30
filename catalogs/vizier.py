@@ -369,10 +369,11 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
     kwargs['ID'] = ID
     to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    sources = kwargs.get('sources',cat_info.sections())
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements
-    for source in cat_info.sections():
+    for source in sources:
         results,units,comms = search(source,**kwargs)
         if results is not None:
             master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
