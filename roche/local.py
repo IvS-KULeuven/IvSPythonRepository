@@ -5,6 +5,10 @@ import numpy as np
 import pylab as pl
 from numpy import pi,cos,sin
 from scipy.optimize import newton
+try:
+    from scipy.spatial import Delaunay
+except ImportError:
+    print 'No Delaunay'
 
 from ivs.sed import limbdark
 from ivs.coordinates import vectors
