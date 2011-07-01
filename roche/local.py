@@ -3,7 +3,7 @@ Derive local quantities such as effective temperature and surface gravity for Ro
 """
 import numpy as np
 import pylab as pl
-from numpy import pi,cos,sin
+from numpy import pi,cos,sin,sqrt
 from scipy.optimize import newton
 try:
     from scipy.spatial import Delaunay
