@@ -245,6 +245,7 @@ def intensity(teff,grav,mu=None,photband='OPEN.BOL'):
     if (grav<0.01).any() or np.isnan(grav).any():
         print 'WARNING: point outside of grid, minimum gravity is 0 dex'
         grav = np.where((np.log10(grav*100)<0.) | np.isnan(grav),0.01,grav)
+    print mu
     intens = np.array([limbdark.get_itable(teff=iteff,logg=np.log10(igrav*100),absolute=True,mu=imu,photbands=[photband])[0] for iteff,igrav,imu in zip(teff.ravel(),grav.ravel(),mu.ravel())])
     return intens.reshape(teff.shape)
     
