@@ -265,9 +265,9 @@ def projected_intensity(teff,gravity,areas,line_of_sight,photband='OPEN.BOL'):
     grav_ = vectors.norm(gravity)
     #-- intensity is less if we look at the limb
     intens = intensity(teff,grav_,mu=mus,photband=photband)
-    #-- intensity is less if the surface element area is small (and the area
-    #   needs to be projected!!)
-    return intens*areas*mus,mus
+    #-- intensity is less if the surface element area is small (it does not need
+    #   to be projected anymore!)
+    return intens*areas,mus
 
 
 def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
