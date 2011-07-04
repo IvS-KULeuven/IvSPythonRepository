@@ -355,7 +355,7 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         new_star = pl.mlab.rec_append_fields(new_star,'y',y*scale_factor)
         new_star = pl.mlab.rec_append_fields(new_star,'z',z*scale_factor)
     new_star = pl.mlab.rec_append_fields(new_star,'projflux',proj_flux)
-    new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas/mus)
+    new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas)
     new_star = pl.mlab.rec_append_fields(new_star,'mu',mus)
     
     #-- clip visible areas and sort in plotting order if necessary
