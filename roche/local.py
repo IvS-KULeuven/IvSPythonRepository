@@ -267,7 +267,7 @@ def projected_intensity(teff,gravity,areas,line_of_sight,photband='OPEN.BOL'):
     intens = intensity(teff,grav_,mu=mus,photband=photband)
     #-- intensity is less if the surface element area is small (it does not need
     #   to be projected anymore!)
-    return intens*areas,mus
+    return intens*areas*mus,mus
 
 
 def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
