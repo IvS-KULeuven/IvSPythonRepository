@@ -7,7 +7,7 @@ import logging
 
 import numpy as np
 from ivs.units import conversions
-from ivs.misc import xmlparser
+from ivs.aux import xmlparser
 from ivs.catalogs import vizier
 
 logger = logging.getLogger("CAT.SESAME")

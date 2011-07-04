@@ -76,16 +76,14 @@ import os
 import logging
 import numpy as np
 import pyfits
-try:
-    from ivs.catalogs import sesame
-    from ivs.io import ascii
-    from ivs.misc import loggers
-    from ivs.spectra import airmass
-    from ivs.spectra.barycentric_correction import helcorr
-    from ivs.units import conversions
-    from ivs import config
-except ImportError:
-    print "I hope you're running as mercator..."
+
+from ivs.catalogs import sesame
+from ivs.io import ascii
+from ivs.aux import loggers
+from ivs.observations import airmass
+from ivs.observations.barycentric_correction import helcorr
+from ivs.units import conversions
+from ivs import config
 
 logger = logging.getLogger("CAT.HERMES")
 logger.addHandler(loggers.NullHandler)

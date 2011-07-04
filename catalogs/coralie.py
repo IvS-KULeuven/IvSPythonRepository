@@ -11,7 +11,7 @@ import numpy as np
 import pyfits
 from ivs.catalogs import sesame
 from ivs.io import ascii
-from ivs.misc import loggers
+from ivs.aux import loggers
 from ivs import config
 
 logger = logging.getLogger("CAT.CORALIE")
