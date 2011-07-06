@@ -175,7 +175,7 @@ if __name__=="__main__":
     
                 for i,t in enumerate(np.linspace(0,2*pi,100)):
                     print k,l,m,i
-                    r,th,ph = surface(theta,phi,l,m,t,asl=asl)
+                    r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
                     mlab.clf()
