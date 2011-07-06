@@ -160,6 +160,7 @@ if __name__=="__main__":
     from ivs.roche import local
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
+    from divers import multimedia
     theta,phi,grid = local.get_grid(40,40,gtype='delaunay')
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
@@ -183,5 +184,6 @@ if __name__=="__main__":
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
                 mlab.close()
+                multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
                 
         
