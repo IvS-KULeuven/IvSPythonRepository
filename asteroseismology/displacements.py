@@ -179,7 +179,7 @@ if __name__=="__main__":
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
                     mlab.clf()
-                    mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
+                    mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
