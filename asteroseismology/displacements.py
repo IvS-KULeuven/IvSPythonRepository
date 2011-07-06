@@ -143,8 +143,12 @@ def longitudinal(theta,phi,l,m,t,Omega,k):
 
 def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.,asl=1):
     ksi_r = asl*sqrt(4*pi)*radial(theta,phi,l,m,t)
-    ksi_theta = asl*sqrt(4*pi)*colatitudinal(theta,phi,l,m,t,Omega,k)
-    ksi_phi = asl*sqrt(4*pi)*longitudinal(theta,phi,l,m,t,Omega,k)
+    if l>0:
+        ksi_theta = asl*sqrt(4*pi)*colatitudinal(theta,phi,l,m,t,Omega,k)
+        ksi_phi = asl*sqrt(4*pi)*longitudinal(theta,phi,l,m,t,Omega,k)
+    else:
+        ksi_theta = np.zeros_like(theta)
+        ksi_phi = np.zeros_like(phi)
     
     return radius+ksi_r, theta + ksi_theta, phi + ksi_phi
     
