@@ -150,8 +150,8 @@ def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.,asl=0.1):
         ksi_theta = np.zeros_like(theta)
         ksi_phi = np.zeros_like(phi)
     
-    return np.real_if_close(radius+ksi_r),
-           np.real_if_close(theta + ksi_theta),
+    return np.real_if_close(radius+ksi_r),\
+           np.real_if_close(theta + ksi_theta),\
            np.real_if_close(phi + ksi_phi)
     
 #}
