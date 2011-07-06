@@ -160,7 +160,7 @@ if __name__=="__main__":
     from ivs.roche import local
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
-    theta,phi,grid = get_grid(20,40,gtype='delaunay')
+    theta,phi,grid = local.get_grid(20,40,gtype='delaunay')
     l,m = 0,0
     
     mlab.figure(size=(1000,800))
@@ -173,5 +173,5 @@ if __name__=="__main__":
         mlab.clf()
         mlab.points3d(x,y,z,scale_factor=0.05,scale_mode='none')
         mlab.savefig('pulsation_%03d.png'%(i))
-    mlab.show()
+    
         
