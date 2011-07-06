@@ -168,7 +168,7 @@ if __name__=="__main__":
     asl = 0.01
     
     for k in [0,1.,100.]:
-        for l in range(0,5):
+        for l in range(1,5):
             for m in range(0,l+1,1):
                 mlab.figure(size=(1000,800))
                 mlab.gcf().scene.disable_render = True
