@@ -163,7 +163,9 @@ if __name__=="__main__":
     theta,phi,grid = local.get_grid(40,40,gtype='delaunay')
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
-    l,m = 2,0
+    l,m = 2,2
+    
+    #for l,m in zip([0,1,2,3],[0]):
     asl = 0.01
     
     mlab.figure(size=(1000,800))
@@ -179,5 +181,6 @@ if __name__=="__main__":
         mlab.view(distance=5,azimuth=-90,elevation=90)
         mlab.colorbar()
         mlab.savefig('pulsation_%03d.png'%(i))
-    mlab.show()
+    mlab.close()
+    
         
