@@ -16,7 +16,16 @@ def spher2cart_coord(r,phi,theta):
     y = r*sin(phi)*sin(theta)
     z = r*cos(theta)
     return x,y,z
-    
+
+def cart2spher_coord(x,y,z):
+    """
+    theta colatitude
+    phi longitude
+    """
+    rho = np.sqrt(x**2+y**2+z**2)
+    phi = np.arctan2(y,x)
+    theta = np.arctan2(np.sqrt(x**2+y**2)/z)
+    return rho,phi,theta
     
 def rotate(x,y,theta,x0=0.,y0=0.):
     """
@@ -38,6 +47,17 @@ def spher2cart((r,phi,theta),(a_r,a_phi,a_theta)):
                          [sin(theta)*sin(phi),  cos(theta)*sin(phi),  cos(phi)],
                          [cos(theta)         , -sin(theta)         ,  0       ]])
     vector = np.matrix([a_r,a_theta,a_phi]).T
+    return np.asarray((transfo*vector).T)[0]
+
+def cart2spher((x0,y0,z0),(x1,y1,z1)):
+    """
+    theta is angle from z-axis (colatitude)
+    phi is longitude
+    """
+    transfo = np.matrix([[sin(theta)*cos(phi),  sin(theta)*sin(phi),  cos(theta)],
+                         [cos(theta)*cos(phi),  cos(theta)*sin(phi), -sin(theta)],
+                         [-sin(theta)        ,  cos(phi)         ,  0       ]])
+    vector = np.matrix([x0,y0,z0]).T
     return np.asarray((transfo*vector).T)[0]
 
 #}
