@@ -1,5 +1,22 @@
 """
 Vector and coordinate identities and transformations
+
+Transform cartesian coordinates to spherical coordinates and back
+>>> x,y,z = np.random.uniform(low=-1,high=1,size=(3,10))
+>>> r,phi,theta = cart2spher_coord(x,y,z)
+>>> x_,y_,z_ = spher2cart_coord(r,phi,theta)
+>>> np.allclose(x,x_),np.allclose(y,y_),np.allclose(z,z_)
+(True, True, True)
+
+Transform cartesian vectors to spherical vectors and back
+>>> x0,y0,z0 = np.random.uniform(low=-1,high=1,size=(3,10))
+>>> x1,y1,z1 = np.random.uniform(low=-1,high=1,size=(3,10))
+>>> r0,phi0,theta0 = cart2spher_coord(x0,y0,z0)
+>>> r1,phi1,theta1 = cart2spher((x0,y0,z0),(x1,y1,z1))
+>>> x1_,y1_,z1_ = spher2cart((r0,phi0,theta0),(r1,phi1,theta1))
+>>> np.allclose(x1,x1_),np.allclose(y1,y1_),np.allclose(z1,z1_)
+(True, True, True)
+
 """
 
 import numpy as np
@@ -42,12 +59,19 @@ def spher2cart((r,phi,theta),(a_r,a_phi,a_theta)):
     """
     theta is angle from z-axis (colatitude)
     phi is longitude
+    
+    E.g. http://www.engin.brown.edu/courses/en3/Notes/Vector_Web2/Vectors6a/Vectors6a.htm
+    
+    >>> np.random.seed(111)
+    >>> r,phi,theta = np.random.uniform(low=-1,high=1,size=(3,2))
+    >>> a_r,a_phi,a_theta = np.random.uniform(low=-1,high=1,size=(3,2))
+    >>> a_x,a_y,a_z = spher2cart((r,phi,theta),(a_r,a_phi,a_theta))
     """
-    transfo = np.matrix([[sin(theta)*cos(phi),  cos(theta)*cos(phi), -sin(phi)],
-                         [sin(theta)*sin(phi),  cos(theta)*sin(phi),  cos(phi)],
-                         [cos(theta)         , -sin(theta)         ,  0       ]])
-    vector = np.matrix([a_r,a_theta,a_phi]).T
-    return np.asarray((transfo*vector).T)[0]
+    ax = sin(theta)*cos(phi)*a_r + cos(theta)*cos(phi)*a_theta - sin(phi)*a_phi
+    ay = sin(theta)*sin(phi)*a_r + cos(theta)*sin(phi)*a_theta + cos(phi)*a_phi
+    az = cos(theta)         *a_r - sin(theta)         *a_theta
+    return ax,ay,az
+    
 
 def cart2spher((x0,y0,z0),(x1,y1,z1)):
     """
@@ -56,14 +80,11 @@ def cart2spher((x0,y0,z0),(x1,y1,z1)):
     
     return r,phi,theta
     """
-    r,phi,theta = cart2spher_coord(x1,y1,z1)
-    transfo = np.matrix([[sin(theta)*cos(phi),  sin(theta)*sin(phi),  cos(theta)],
-                         [cos(theta)*cos(phi),  cos(theta)*sin(phi), -sin(theta)],
-                         [-sin(theta)        ,  cos(phi)         ,  0       ]])
-    vector = np.matrix([x1,y1,z1]).T
-    result = np.asarray((transfo*vector).T)[0] # in r,theta,phi
-    result = np.array([result[0],result[2],result[1]])
-    return result
+    r,phi,theta = cart2spher_coord(x0,y0,z0)
+    ar     = sin(theta)*cos(phi)*x1 + sin(theta)*sin(phi)*y1 + cos(theta)*z1
+    atheta = cos(theta)*cos(phi)*x1 + cos(theta)*sin(phi)*y1 - sin(theta)  *z1
+    aphi   = -sin(phi)          *x1 + cos(phi)           *y1
+    return ar,aphi,atheta
 
 #}
 
@@ -96,3 +117,9 @@ def cos_angle(vec1,vec2):
     return (vec1*vec2).sum(axis=0) / (norm(vec1)*norm(vec2))
 
 #}
+
+
+if __name__=="__main__":
+    import doctest
+    import pylab as pl
+    doctest.testmod()
