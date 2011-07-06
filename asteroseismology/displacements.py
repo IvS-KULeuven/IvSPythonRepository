@@ -161,7 +161,7 @@ if __name__=="__main__":
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     theta,phi,grid = local.get_grid(20,40,gtype='delaunay')
-    keep = phi>pi/2
+    keep = phi>pi
     theta,phi = theta[keep],phi[keep]
     l,m = 0,0
     
