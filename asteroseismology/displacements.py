@@ -151,7 +151,7 @@ def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.):
 #}
 
 if __name__=="__main__":
-    from roche import local
+    from ivs.roche import local
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     theta,phi,grid = get_grid(20,40,gtype='delaunay')
