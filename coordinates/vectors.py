@@ -24,7 +24,7 @@ def cart2spher_coord(x,y,z):
     """
     rho = np.sqrt(x**2+y**2+z**2)
     phi = np.arctan2(y,x)
-    theta = np.arctan2(np.sqrt(x**2+y**2)/z)
+    theta = np.arctan2(np.sqrt(x**2+y**2),z)
     return rho,phi,theta
     
 def rotate(x,y,theta,x0=0.,y0=0.):
