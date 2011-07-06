@@ -161,6 +161,8 @@ if __name__=="__main__":
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     theta,phi,grid = local.get_grid(20,40,gtype='delaunay')
+    keep = phi>pi/2
+    theta,phi = theta[keep],phi[keep]
     l,m = 0,0
     
     mlab.figure(size=(1000,800))
@@ -172,7 +174,7 @@ if __name__=="__main__":
         x,y,z = vectors.spher2cart_coord(r,th,ph)
         mlab.clf()
         mlab.points3d(x,y,z,r,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-0.2,vmax=1+0.2)
-        mlab.view(distance=5)
+        mlab.view(distance=5,azimuth=90,elevation=90)
         mlab.colorbar()
         mlab.savefig('pulsation_%03d.png'%(i))
     
