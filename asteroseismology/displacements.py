@@ -166,7 +166,7 @@ if __name__=="__main__":
     mlab.figure(size=(1000,800))
     mlab.gcf().scene.disable_render = True
     
-    for i,t in enumerate(np.linspace(0,2*pi,10)):
+    for i,t in enumerate(np.linspace(0,2*pi,25)):
         print i
         r,th,ph = surface(theta,phi,l,m,t)
         x,y,z = vectors.spher2cart_coord(r,th,ph)
