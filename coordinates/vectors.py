@@ -56,6 +56,7 @@ def cart2spher((x0,y0,z0),(x1,y1,z1)):
     
     return r,phi,theta
     """
+    r,phi,theta = cart2spher_coord(x1,y1,z1)
     transfo = np.matrix([[sin(theta)*cos(phi),  sin(theta)*sin(phi),  cos(theta)],
                          [cos(theta)*cos(phi),  cos(theta)*sin(phi), -sin(theta)],
                          [-sin(theta)        ,  cos(phi)         ,  0       ]])
