@@ -141,7 +141,7 @@ def longitudinal(theta,phi,l,m,t,Omega,k):
     term3 = -norm_atlm1(l,m,Omega,k) * dsph_harm_dtheta(theta,phi,l-1,m)*exp(1j*t-pi/2)
     return term1 + term2 + term3
 
-def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.,asl=1):
+def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.,asl=0.1):
     ksi_r = asl*sqrt(4*pi)*radial(theta,phi,l,m,t)
     if l>0:
         ksi_theta = asl*sqrt(4*pi)*colatitudinal(theta,phi,l,m,t,Omega,k)
@@ -166,7 +166,7 @@ if __name__=="__main__":
     
     for i,t in enumerate(np.linspace(0,1,10)):
         r,th,ph = surface(theta,phi,l,m,t)
-        x,y,z = vectors.spher2cart_coords(r,th,ph)
+        x,y,z = vectors.spher2cart_coord(r,th,ph)
         mlab.clf()
         mlab.points3d(x,y,z,scale_fator=0.05,scale_mode='none')
         mlab.savefig('pulsation_%03d.png'%(i))
