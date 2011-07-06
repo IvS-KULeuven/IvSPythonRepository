@@ -161,7 +161,7 @@ if __name__=="__main__":
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     from divers import multimedia
-    theta,phi,grid = local.get_grid(40,40,gtype='delaunay')
+    theta,phi,grid = local.get_grid(50,50,gtype='delaunay')
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
     l,m = 2,2
