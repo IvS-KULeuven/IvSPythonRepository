@@ -172,9 +172,10 @@ if __name__=="__main__":
     for i,t in enumerate(np.linspace(0,2*pi,25)):
         print i
         r,th,ph = surface(theta,phi,l,m,t,asl=asl)
+        if i==0: colors = r
         x,y,z = vectors.spher2cart_coord(r,ph,th)
         mlab.clf()
-        mlab.points3d(x,y,z,r,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
+        mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
         mlab.view(distance=5,azimuth=-90,elevation=90)
         mlab.colorbar()
         mlab.savefig('pulsation_%03d.png'%(i))
