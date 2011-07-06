@@ -164,23 +164,24 @@ if __name__=="__main__":
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
     l,m = 2,2
-    
-    #for l,m in zip([0,1,2,3],[0]):
     asl = 0.01
     
-    mlab.figure(size=(1000,800))
-    mlab.gcf().scene.disable_render = True
+    for k in [0,1.,100.]:
+        for l in range(0,5):
+            for m in range(0,l+1,1):
+                mlab.figure(size=(1000,800))
+                mlab.gcf().scene.disable_render = True
     
-    for i,t in enumerate(np.linspace(0,2*pi,25)):
-        print i
-        r,th,ph = surface(theta,phi,l,m,t,asl=asl)
-        if i==0: colors = r
-        x,y,z = vectors.spher2cart_coord(r,ph,th)
-        mlab.clf()
-        mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
-        mlab.view(distance=5,azimuth=-90,elevation=90)
-        mlab.colorbar()
-        mlab.savefig('pulsation_%03d.png'%(i))
-    mlab.close()
-    
+                for i,t in enumerate(np.linspace(0,2*pi,100)):
+                    print k,l,m,i
+                    r,th,ph = surface(theta,phi,l,m,t,asl=asl)
+                    if i==0: colors = r
+                    x,y,z = vectors.spher2cart_coord(r,ph,th)
+                    mlab.clf()
+                    mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
+                    mlab.view(distance=5,azimuth=-90,elevation=90)
+                    mlab.colorbar()
+                    mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
+                mlab.close()
+                
         
