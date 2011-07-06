@@ -177,5 +177,5 @@ if __name__=="__main__":
         mlab.view(distance=5,azimuth=90,elevation=90)
         mlab.colorbar()
         mlab.savefig('pulsation_%03d.png'%(i))
-    
+    mlab.show()
         
