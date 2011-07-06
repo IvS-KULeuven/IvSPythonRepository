@@ -164,16 +164,17 @@ if __name__=="__main__":
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
     l,m = 2,0
+    asl = 0.1
     
     mlab.figure(size=(1000,800))
     mlab.gcf().scene.disable_render = True
     
     for i,t in enumerate(np.linspace(0,2*pi,25)):
         print i
-        r,th,ph = surface(theta,phi,l,m,t)
-        x,y,z = vectors.spher2cart_coord(r,th,ph)
+        r,th,ph = surface(theta,phi,l,m,t,asl=asl)
+        x,y,z = vectors.spher2cart_coord(r,ph,th)
         mlab.clf()
-        mlab.points3d(x,y,z,r,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-0.2,vmax=1+0.2)
+        mlab.points3d(x,y,z,r,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=1-asl,vmax=1+asl)
         mlab.view(distance=5,azimuth=-90,elevation=90)
         mlab.colorbar()
         mlab.savefig('pulsation_%03d.png'%(i))
