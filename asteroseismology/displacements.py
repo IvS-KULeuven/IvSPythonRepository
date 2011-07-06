@@ -127,7 +127,7 @@ def radial(theta,phi,l,m,t):
     
     t in phase units
     """
-    return asl * sph_harm(theta,phi,l,m) * exp(1j*t)
+    return sph_harm(theta,phi,l,m) * exp(1j*t)
 
 def colatitudinal(theta,phi,l,m,t,Omega,k):
     term1 = k * dsph_harm_dtheta(theta,phi,l,m) * exp(1j*t)
