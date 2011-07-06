@@ -160,10 +160,10 @@ if __name__=="__main__":
     from ivs.roche import local
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
-    theta,phi,grid = local.get_grid(20,40,gtype='delaunay')
+    theta,phi,grid = local.get_grid(40,40,gtype='delaunay')
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
-    l,m = 0,0
+    l,m = 2,0
     
     mlab.figure(size=(1000,800))
     mlab.gcf().scene.disable_render = True
