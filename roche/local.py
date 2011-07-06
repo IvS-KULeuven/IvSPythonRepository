@@ -74,8 +74,8 @@ def get_grid(*args,**kwargs):
         else:            res1,res2 = args      # different resolution
         
         u,v = np.random.uniform(size=res1*res2),np.random.uniform(size=res1*res2)
-        theta = 2*pi*u
-        phi = np.arccos(2*v-1)
+        phi = 2*pi*u
+        theta = np.arccos(2*v-1)
 
         x = sin(theta)*sin(phi)
         y = sin(theta)*cos(phi)
