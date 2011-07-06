@@ -164,7 +164,7 @@ if __name__=="__main__":
     keep = phi>pi
     theta,phi = theta[keep],phi[keep]
     l,m = 2,0
-    asl = 0.1
+    asl = 0.01
     
     mlab.figure(size=(1000,800))
     mlab.gcf().scene.disable_render = True
