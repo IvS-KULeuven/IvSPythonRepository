@@ -3,7 +3,7 @@ Calculate the stellar surface displacements due to pulsations.
 
 
 """
-
+import numpy as np
 from numpy import sqrt,pi,sin,cos,exp
 from scipy.special import lpmv,legendre
 from scipy.misc.common import factorial
