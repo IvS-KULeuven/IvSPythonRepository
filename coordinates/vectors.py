@@ -53,12 +53,16 @@ def cart2spher((x0,y0,z0),(x1,y1,z1)):
     """
     theta is angle from z-axis (colatitude)
     phi is longitude
+    
+    return r,phi,theta
     """
     transfo = np.matrix([[sin(theta)*cos(phi),  sin(theta)*sin(phi),  cos(theta)],
                          [cos(theta)*cos(phi),  cos(theta)*sin(phi), -sin(theta)],
                          [-sin(theta)        ,  cos(phi)         ,  0       ]])
     vector = np.matrix([x0,y0,z0]).T
-    return np.asarray((transfo*vector).T)[0]
+    result = np.asarray((transfo*vector).T)[0] # in r,theta,phi
+    result = np.array([result[0],result[2],result[1]])
+    return 
 
 #}
 
