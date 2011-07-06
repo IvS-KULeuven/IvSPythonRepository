@@ -171,7 +171,7 @@ if __name__=="__main__":
         r,th,ph = surface(theta,phi,l,m,t)
         x,y,z = vectors.spher2cart_coord(r,th,ph)
         mlab.clf()
-        mlab.points3d(x,y,z,scale_fator=0.05,scale_mode='none')
+        mlab.points3d(x,y,z,scale_factor=0.05,scale_mode='none')
         mlab.savefig('pulsation_%03d.png'%(i))
     mlab.show()
         
