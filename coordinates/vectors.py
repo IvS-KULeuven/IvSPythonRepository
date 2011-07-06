@@ -63,7 +63,7 @@ def cart2spher((x0,y0,z0),(x1,y1,z1)):
     vector = np.matrix([x0,y0,z0]).T
     result = np.asarray((transfo*vector).T)[0] # in r,theta,phi
     result = np.array([result[0],result[2],result[1]])
-    return 
+    return result
 
 #}
 
