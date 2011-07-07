@@ -161,7 +161,7 @@ if __name__=="__main__":
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     from divers import multimedia
-    theta,phi,grid = local.get_grid(50,25,gtype='delaunay')
+    theta,phi = local.get_grid(50,25,gtype='triangular')
     #keep = phi>pi
     #theta,phi = theta[keep],phi[keep]
     l,m = 2,2
@@ -182,7 +182,7 @@ if __name__=="__main__":
                     r,th,ph = surface(theta,phi,l,m,t,asl=0.,k=k)
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
-                    normal,size,cos_gamma = local.surface_normals(r,(theta,phi,grid),gtype='delaunay')
+                    center,size,normal,cos_gamma = local.surface_normals(r,th,ph,gtype='triangular')
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     print normal.shape
