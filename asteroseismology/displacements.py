@@ -186,7 +186,8 @@ if __name__=="__main__":
                     
                     if i==0:
                         colors = r
-                        colors_ = center
+                        r_c,phi_c,theta_c = vectors.cart2spher_coord(*center)
+                        colors_ = r_c
                     
                     
                     mlab.clf()
