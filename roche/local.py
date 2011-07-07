@@ -189,10 +189,10 @@ def surface_normals(r,mygrid,gtype='spher'):
             print side1,side2,normals[i]
             from enthought.mayavi import mlab
             mlab.figure()
-            mlab.points3d(vertx[indices],verty[indices],vertz[indices])
+            mlab.points3d(vertx[indices]*r[i],verty[indices]*r[i],vertz[indices]*r[i])
             mlab.points3d(x[i],y[i],z[i])
-            mlab.quiver3d(vertx[indices[0]],verty[indices[0]],vertz[indices[0]],side1[0],side1[1],side1[2])
-            mlab.quiver3d(vertx[indices[0]],verty[indices[0]],vertz[indices[0]],side2[0],side2[1],side2[2])
+            mlab.quiver3d(vertx[indices[0]]*r[i],verty[indices[0]]*r[i],vertz[indices[0]]*r[i],side1[0],side1[1],side1[2])
+            mlab.quiver3d(vertx[indices[0]]*r[i],verty[indices[0]]*r[i],vertz[indices[0]]*r[i],side2[0],side2[1],side2[2])
             mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
             mlab.show()
         
