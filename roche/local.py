@@ -50,7 +50,7 @@ def get_grid(*args,**kwargs):
         theta,phi = np.mgrid[theta0:thetan:res1*1j,phi0:phin:res2*1j]
         return theta,phi
     
-    if 'cil' in gtype.lower():
+    elif 'cil' in gtype.lower():
         if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
         else:            res1,res2 = args      # different resolution
         
@@ -68,7 +68,7 @@ def get_grid(*args,**kwargs):
         sintheta,phi = np.mgrid[sintheta0:sinthetan:res1*1j,phi0:phin:res2*1j]
         return np.arccos(sintheta),phi
     
-    if 'delaunay' in gtype.lower():
+    elif 'delaunay' in gtype.lower():
         #-- resolution doesn't matter that much anymore 
         if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
         else:            res1,res2 = args      # different resolution
@@ -90,7 +90,17 @@ def get_grid(*args,**kwargs):
         
         return theta,phi,grid
         
+    elif 'tri' in gtype.lower():
+        #-- resolution doesn't matter that much anymore 
+        if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
+        else:            res1,res2 = args      # different resolution
         
+        u,v = np.random.uniform(size=res1*res2),np.random.uniform(size=res1*res2)
+        phi = 2*pi*u
+        theta = np.arccos(2*v-1)
+        return theta,phi
+        
+    
         
         
         
@@ -154,48 +164,50 @@ def stitch_grid(theta,phi,*quant,**kwargs):
     return out
 
 #}
-def surface_normals(r,mygrid,gtype='spher'):
+def surface_normals(r,phi,theta,gtype='spher'):
     """
     Numerically compute surface normals of a grid (in absence of analytical alternative).
     
     Also computes the surface elements, making L{surface_elements} obsolete.
     """
-    theta,phi = mygrid[:2]
     if gtype=='spher':
         raise NotImplementedError
     elif gtype=='delaunay':
+        raise NotImplementedError
+    elif gtype=='triangular':
         #-- compute the angle between the surface normal and the radius vector
         x,y,z = vectors.spher2cart_coord(r,phi,theta)
-        a = np.array([x,y,z])
+        points = np.array([x,y,z]).T
+        grid = Delaunay(points)
         
-        delaunay_grid = mygrid[2]
+        centers = np.zeros((len(grid.convex_hull),3))
+        normals = np.zeros((len(grid.convex_hull),3))
+        sizes = np.zeros(len(grid.convex_hull))
+        
+        #vertx,verty,vertz = points.T
 
-        sizes = np.zeros(len(delaunay_grid.convex_hull))
-        normals = np.zeros((len(delaunay_grid.convex_hull),3))
-        points = delaunay_grid.points
-        vertx,verty,vertz = points.T
-                
-        centers = np.zeros((len(delaunay_grid.convex_hull),3))
-        for i,indices in enumerate(delaunay_grid.convex_hull):
-            #centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
-            a = sqrt((vertx[indices[0]]-vertx[indices[1]])**2 + (verty[indices[0]]-verty[indices[1]])**2 + (vertz[indices[0]]-vertz[indices[1]])**2)
-            b = sqrt((vertx[indices[0]]-vertx[indices[2]])**2 + (verty[indices[0]]-verty[indices[2]])**2 + (vertz[indices[0]]-vertz[indices[2]])**2)
-            c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
+        #-- compute centers,normals and sizes
+        for i,indices in enumerate(grid.convex_hull):
+            #-- center is triangle's barycenter
+            centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
+            #-- size is size of triangle
+            a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
+            b = sqrt((x[indices[0]]-x[indices[2]])**2 + (y[indices[0]]-y[indices[2]])**2 + (z[indices[0]]-z[indices[2]])**2)
+            c = sqrt((x[indices[1]]-x[indices[2]])**2 + (y[indices[1]]-y[indices[2]])**2 + (z[indices[1]]-z[indices[2]])**2)
             s = 0.5*(a+b+c)
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
-            side1 = [vertx[indices[1]]-vertx[indices[0]],verty[indices[1]]-verty[indices[0]],vertz[indices[1]]-vertz[indices[0]]]
-            side2 = [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]]
+            #-- normal is cross product of two sides
+            side1 = [x[indices[1]]-x[indices[0]],y[indices[1]]-y[indices[0]],z[indices[1]]-z[indices[0]]]
+            side2 = [x[indices[2]]-x[indices[0]],y[indices[2]]-y[indices[0]],z[indices[2]]-z[indices[0]]]
             normals[i] = np.cross(side1,side2)
-            print 'radius',r[i]
-            print 'side1,side2,normal',np.array(side1)*r[i],np.array(side2)*r[i],normals[i]
-            print 'center',(x[i],y[i],z[i])
+
             from enthought.mayavi import mlab
             mlab.figure()
             
-            mlab.points3d(vertx[indices]*r[i],verty[indices]*r[i],vertz[indices]*r[i])
-            #mlab.points3d(x[i],y[i],z[i])
-            mlab.quiver3d(vertx[indices[0]]*r[i],verty[indices[0]]*r[i],vertz[indices[0]]*r[i],side1[0],side1[1],side1[2])
-            mlab.quiver3d(vertx[indices[0]]*r[i],verty[indices[0]]*r[i],vertz[indices[0]]*r[i],side2[0],side2[1],side2[2])
+            mlab.points3d(x[indices],y[indices],z[indices])
+            mlab.points3d(x[i],y[i],z[i])
+            mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side1[0],side1[1],side1[2])
+            mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side2[0],side2[1],side2[2])
             mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
             mlab.show()
         
