@@ -190,8 +190,12 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         wave,teffs,loggs,flux,flux_grid,cont_grid = get_grid_mesh(wave=template_wave)
         logger.debug('Model spectrum interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
         wave = wave + 0.
-        flux = flux_grid(np.log10(teff),logg) + 0.
-        cont = cont_grid(np.log10(teff),logg) + 0.
+        try:
+            flux = flux_grid(np.log10(teff),logg) + 0.
+            cont = cont_grid(np.log10(teff),logg) + 0.
+        except ValueError:
+            logger.error('teff=%f, logg=%f'%(teff,logg))
+            raise
     
     #-- convert to arrays
     wave = np.array(wave,float)
