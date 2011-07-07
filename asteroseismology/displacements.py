@@ -184,14 +184,14 @@ if __name__=="__main__":
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
                     center,size,normal = local.surface_normals(r,ph,th,gtype='triangular')
                     mlab.clf()
-                    mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
+                    #mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     mlab.points3d(center.T[0],center.T[1],center.T[2],scale_factor=0.05,scale_mode='none')
-                    mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
+                    #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
                     if i==1:
-                        mlab.quiver3d(center.T[0],center.T[1],center.T[2],center.T[0]-old_center.T[0],center.T[0]-old_center.T[0],center.T[1]-old_center.T[2],colormap='spectral',scale_mode='none')
+                        mlab.quiver3d(center.T[0],center.T[1],center.T[2],center.T[0]-old_center.T[0],center.T[0]-old_center.T[0],center.T[1]-old_center.T[2],colormap='spectral')
                         mlab.show()
                     old_center = center
                 mlab.close()
