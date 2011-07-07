@@ -176,7 +176,7 @@ if __name__=="__main__":
         for l in range(1,5):
             for m in range(0,l+1,1):
                 mlab.figure(size=(1000,800))
-                #mlab.gcf().scene.disable_render = True
+                mlab.gcf().scene.disable_render = True
                 if l==0 or l==1:
                     asl = 0.1
                 else:
