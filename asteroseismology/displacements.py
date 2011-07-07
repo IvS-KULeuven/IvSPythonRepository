@@ -198,7 +198,7 @@ if __name__=="__main__":
                     #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     
                     mlab.colorbar()
-                    mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
+                    
                     if i>1:
                         mlab.quiver3d(center.T[0],center.T[1],center.T[2],\
                                       center.T[0]-old_center.T[0],\
@@ -207,6 +207,7 @@ if __name__=="__main__":
                         #mlab.show()
                     old_center = center.copy()
                     mlab.view(distance=5,azimuth=-90,elevation=90)
+                    mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
                 mlab.close()
                 multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
                 
