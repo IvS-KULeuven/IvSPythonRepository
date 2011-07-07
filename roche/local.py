@@ -213,7 +213,7 @@ def surface_normals(r,phi,theta,gtype='spher'):
         normals = normals_T / vectors.norm(normals_T)
         cos_gamma = vectors.cos_angle(a,normals)
         
-        return centers, sizes*r**2, normals_T, cos_gamma
+        return centers, sizes, normals_T, cos_gamma
 
 #{ Derivation of local quantities
 
