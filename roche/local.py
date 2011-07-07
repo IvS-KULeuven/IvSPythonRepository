@@ -186,7 +186,8 @@ def surface_normals(r,mygrid,gtype='spher'):
             side1 = [vertx[indices[1]]-vertx[indices[0]],verty[indices[1]]-verty[indices[0]],vertz[indices[1]]-vertz[indices[0]]]
             side2 = [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]]
             normals[i] = np.cross(side1,side2)
-            print side1,side2,normals[i]
+            print 'side1,side2,normal',side1*r[i],side2*r[i],normals[i]
+            print 'center',(x[i],y[i],z[i])
             from enthought.mayavi import mlab
             mlab.figure()
             
