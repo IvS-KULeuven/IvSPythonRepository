@@ -182,7 +182,7 @@ if __name__=="__main__":
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
-                    normal,size,cos_gamma = local.surface_normals(r,(theta,phi,grid))
+                    normal,size,cos_gamma = local.surface_normals(r,(theta,phi,grid),gtype='delaunay')
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     mlab.quiver3d(x,y,z,normal[0],normal[1],normal[2],scalars=np.arccos(cos_gamma),colormap='spectral')
