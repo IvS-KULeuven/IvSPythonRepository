@@ -185,6 +185,7 @@ if __name__=="__main__":
                     normal,size,cos_gamma = local.surface_normals(r,(theta,phi,grid),gtype='delaunay')
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
+                    print normal.shape
                     mlab.quiver3d(x,y,z,normal[0],normal[1],normal[2],scalars=np.arccos(cos_gamma),colormap='spectral')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
