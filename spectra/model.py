@@ -4,15 +4,18 @@ Interface to stellar spectra library and functions to manipulate them.
 
 Make a plot of the domains of all spectral grids. First collect all the grid
 names
+
 >>> grids = get_gridnames()
 
 Prepare the plot
+
 >>> p = pl.figure()
 >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
 >>> p = pl.gca().set_color_cycle(color_cycle)
 
 And plot all the grid points. We have to set some custom default values for
 some grids.
+
 >>> for grid in grids:
 ...    vturb = 'ostar' in grid and 10 or 2
 ...    t = 0.
@@ -21,6 +24,7 @@ some grids.
 ...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
 
 Now take care of the plot details
+
 >>> p = pl.xlim(pl.xlim()[::-1])
 >>> p = pl.ylim(pl.ylim()[::-1])
 >>> p = pl.xlabel('Effective temperature [K]')
