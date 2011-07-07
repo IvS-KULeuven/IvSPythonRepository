@@ -201,14 +201,14 @@ def surface_normals(r,phi,theta,gtype='spher'):
             side2 = [x[indices[2]]-x[indices[0]],y[indices[2]]-y[indices[0]],z[indices[2]]-z[indices[0]]]
             normals[i] = np.cross(side1,side2)
 
-            from enthought.mayavi import mlab
-            mlab.figure()
+            #from enthought.mayavi import mlab
+            #mlab.figure()
             
-            mlab.points3d(np.hstack([x[indices],centers[i][0]]),np.hstack([y[indices],centers[i][1]]),np.hstack([z[indices],centers[i][2]]))
-            mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side1[0],side1[1],side1[2])
-            mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side2[0],side2[1],side2[2])
-            mlab.quiver3d(centers[i][0],centers[i][1],centers[i][2],normals[i][0],normals[i][1],normals[i][2])
-            mlab.show()
+            #mlab.points3d(np.hstack([x[indices],centers[i][0]]),np.hstack([y[indices],centers[i][1]]),np.hstack([z[indices],centers[i][2]]))
+            #mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side1[0],side1[1],side1[2])
+            #mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side2[0],side2[1],side2[2])
+            #mlab.quiver3d(centers[i][0],centers[i][1],centers[i][2],normals[i][0],normals[i][1],normals[i][2])
+            #mlab.show()
         
         normals = normals / vectors.norm(normals.T)
         cos_gamma = vectors.cos_angle(a,normals.T)
