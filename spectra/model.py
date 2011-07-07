@@ -196,7 +196,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         except ValueError:
             teffs,loggs = get_grid_dimensions(**kwargs)
             index = np.argmin(np.abs(  (teffs-teff)**2 + (loggs-logg)**2 ))
-            logger.error('teff=%f-->%f, logg=%f-->%f'%(teff,teffs[index],logg,loggs[index]))
+            #logger.error('teff=%f-->%f, logg=%f-->%f'%(teff,teffs[index],logg,loggs[index]))
             flux = flux_grid(np.log10(teffs[index]),loggs[index]) + 0.
             cont = cont_grid(np.log10(teffs[index]),loggs[index]) + 0.
     
