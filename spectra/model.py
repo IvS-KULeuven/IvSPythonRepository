@@ -1,6 +1,37 @@
 # -*- coding: utf-8 -*-
 """
 Interface to stellar spectra library and functions to manipulate them.
+
+Make a plot of the domains of all spectral grids. First collect all the grid
+names
+>>> grids = get_gridnames()
+
+Prepare the plot
+>>> p = pl.figure()
+>>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+>>> p = pl.gca().set_color_cycle(color_cycle)
+
+And plot all the grid points. We have to set some custom default values for
+some grids.
+>>> for grid in grids:
+...    vturb = 'ostar' in grid and 10 or 2
+...    t = 0.
+...    if 'marcs' in grid: t = 1.
+...    teffs,loggs = get_grid_dimensions(grid=grid,vturb=vturb,t=t)
+...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
+
+Now take care of the plot details
+>>> p = pl.xlim(pl.xlim()[::-1])
+>>> p = pl.ylim(pl.ylim()[::-1])
+>>> p = pl.xlabel('Effective temperature [K]')
+>>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
+>>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+>>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
+>>> p = pl.legend(loc='upper left',prop=dict(size='small'))
+>>> p = pl.grid()
+
+]include figure]]ivs_spectra_model_grid.png]
+
 """
 import os
 import logging
@@ -10,7 +41,7 @@ import pyrotin4
 from ivs import config
 from ivs.units import constants
 from ivs.units import conversions
-from ivs.misc.decorators import memoized
+from ivs.aux.decorators import memoized
 
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
@@ -37,6 +68,16 @@ def set_defaults(**kwargs):
         if key in defaults:
             defaults[key] = kwargs[key]
        
+
+def get_gridnames():
+    """
+    Return a list of available grid names.
+    
+    @return: list of grid names
+    @rtype: list of str
+    """
+    return ['cmfgen','ostar2002','bstar2006','atlas','marcs']
+
 
 
 def get_file(**kwargs):
@@ -393,4 +434,6 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
 #}
 if __name__=="__main__":
     import doctest
+    import pylab as pl
     doctest.testmod()
+    pl.show()
