@@ -176,13 +176,13 @@ if __name__=="__main__":
                     asl = 0.1
                 else:
                     asl = 0.01
-    
+                old_center=None
                 for i,t in enumerate(np.linspace(0,2*pi,100)):
                     print k,l,m,i
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
-                    center,size,normal,cos_gamma = local.surface_normals(r,ph,th,gtype='triangular')
+                    center,size,normal = local.surface_normals(r,ph,th,gtype='triangular')
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     mlab.points3d(center.T[0],center.T[1],center.T[2],scale_factor=0.05,scale_mode='none')
@@ -190,7 +190,10 @@ if __name__=="__main__":
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
-                    mlab.show()
+                    if i==1:
+                        mlab.quiver3d(center.T[0],center.T[1],center.T[2],center.T[0]-old_center.T[0],center.T[0]-old_center.T[0],center.T[1]-old_center.T[2],colormap='spectral',scale_mode='none')
+                        mlab.show()
+                    old_center = center
                 mlab.close()
                 multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
                 
