@@ -189,6 +189,7 @@ def surface_normals(r,phi,theta,gtype='spher'):
         #-- compute centers,normals and sizes
         for i,indices in enumerate(grid.convex_hull):
             #-- center is triangle's barycenter
+            print indices.shape
             centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
             #-- size is size of triangle
             a = sqrt((x[indices[0]]-x[indices[1]])**2 + (y[indices[0]]-y[indices[1]])**2 + (z[indices[0]]-z[indices[1]])**2)
