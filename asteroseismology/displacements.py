@@ -186,6 +186,7 @@ if __name__=="__main__":
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     print normal.shape
+                    print center.shape
                     mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
