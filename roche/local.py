@@ -205,6 +205,12 @@ def surface_normals(r,phi,theta,gtype='spher'):
         normals = normals_T / vectors.norm(normals_T)
         cos_gamma = vectors.cos_angle(a,normals)
         
+        #-- make sure the normal is pointed outwards
+        normal_r,normal_phi,normal_theta = vectors.cart2spher(centers.T,normals)
+        normal_r = np.abs(normal_r)
+        centers_sph = vectors.cart2spher_coord(*centers.T)
+        normals = np.array(vectors.spher2cart(centers_sph,(normal_r,normal_phi,normal_theta))
+        
         return centers, sizes, normals.T, cos_gamma
 
 #{ Derivation of local quantities
