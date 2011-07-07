@@ -183,7 +183,7 @@ if __name__=="__main__":
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
                     center,size,normal = local.surface_normals(r,ph,th,gtype='triangular')
-                    mlab.clf()
+                    mlab.figure(size=(1000,800))
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     #mlab.points3d(center.T[0],center.T[1],center.T[2],scale_factor=0.05,scale_mode='none')
                     #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
