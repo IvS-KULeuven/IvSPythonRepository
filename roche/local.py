@@ -209,12 +209,11 @@ def surface_normals(r,phi,theta,gtype='spher'):
             #mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side2[0],side2[1],side2[2])
             #mlab.quiver3d(centers[i][0],centers[i][1],centers[i][2],normals[i][0],normals[i][1],normals[i][2])
             #mlab.show()
-        print normals.shape
-        print vectors.norm(normals.T).shape
-        normals = normals / vectors.norm(normals.T)
-        cos_gamma = vectors.cos_angle(a,normals.T)
+        normals_T = normals.T
+        normals = normals_T / vectors.norm(normals_T)
+        cos_gamma = vectors.cos_angle(a,normals)
         
-        return centers, sizes*r**2, normals, cos_gamma
+        return centers, sizes*r**2, normals_T, cos_gamma
 
 #{ Derivation of local quantities
 
