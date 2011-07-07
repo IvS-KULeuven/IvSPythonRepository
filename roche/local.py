@@ -154,7 +154,7 @@ def stitch_grid(theta,phi,*quant,**kwargs):
     return out
 
 #}
-def surface_normals(r,mygrid):
+def surface_normals(r,mygrid,gtype='spher'):
     """
     Numerically compute surface normals of a grid (in absence of analytical alternative).
     
