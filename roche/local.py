@@ -188,6 +188,7 @@ def surface_normals(r,mygrid,gtype='spher'):
             normals[i] = np.cross(side1,side2)
             print side1,side2,normals[i]
         
+        normals = normals / vectors.norm(normals.T)
         cos_gamma = vectors.cos_angle(a,normals.T)
         
         return normals, sizes*r**2, cos_gamma
