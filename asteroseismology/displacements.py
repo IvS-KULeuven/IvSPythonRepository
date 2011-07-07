@@ -199,11 +199,13 @@ if __name__=="__main__":
                     
                     mlab.colorbar()
                     
+                    vx,vy,vz = center.T[0]-old_center.T[0],\
+                               center.T[1]-old_center.T[1],\
+                               center.T[2]-old_center.T[2]
+                    v = np.sqrt(vx**2+vy**2+vz**2)
                     if i>1:
                         mlab.quiver3d(center.T[0],center.T[1],center.T[2],\
-                                      center.T[0]-old_center.T[0],\
-                                      center.T[1]-old_center.T[1],\
-                                      center.T[2]-old_center.T[2],colormap='spectral',scale_mode='none')
+                                      vx,vy,vz,v,colormap='spectral',scale_mode='scalars')
                         #mlab.show()
                     old_center = center.copy()
                     mlab.view(distance=5,azimuth=-90,elevation=90)
