@@ -154,7 +154,41 @@ def stitch_grid(theta,phi,*quant,**kwargs):
     return out
 
 #}
+def surface_normals(r,mygrid):
+    """
+    Numerically compute surface normals of a grid (in absence of analytical alternative).
+    
+    Also computes the surface elements, making L{surface_elements} obsolete.
+    """
+    theta,phi = mygrid[:2]
+    if gtype=='spher':
+        raise NotImplementedError
+    elif gtype=='delaunay':
+        #-- compute the angle between the surface normal and the radius vector
+        x,y,z = vectors.spher2cart_coord(r,phi,theta)
+        a = np.array([x,y,z])
+        
+        delaunay_grid = mygrid[2]
 
+        sizes = np.zeros(len(delaunay_grid.convex_hull))
+        normals = np.zeros((len(delaunay_grid.convex_hull),3))
+        points = delaunay_grid.points
+        vertx,verty,vertz = points.T
+                
+        centers = np.zeros((len(delaunay_grid.convex_hull),3))
+        for i,indices in enumerate(delaunay_grid.convex_hull):
+            #centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
+            a = sqrt((vertx[indices[0]]-vertx[indices[1]])**2 + (verty[indices[0]]-verty[indices[1]])**2 + (vertz[indices[0]]-vertz[indices[1]])**2)
+            b = sqrt((vertx[indices[0]]-vertx[indices[2]])**2 + (verty[indices[0]]-verty[indices[2]])**2 + (vertz[indices[0]]-vertz[indices[2]])**2)
+            c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
+            s = 0.5*(a+b+c)
+            sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
+            normals[i] = np.cross([vertx[indices[1]]-vertx[indices[0]],verty[indices[1]]-verty[indices[0]],vertz[indices[1]]-vertz[indices[0]]],\
+                                  [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]])
+        
+        cos_gamma = vectors.cos_angle(a,normals.T)
+        
+        return normals, sizes*r**2, cos_gamma
 
 #{ Derivation of local quantities
 
@@ -216,7 +250,6 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
         #mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.05,scale_mode='none',colormap='RdBu')
         #mlab.show()
         
-        print gtype
         #pl.show()
         
         return sizes*r**2, cos_gamma
@@ -355,7 +388,7 @@ def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
         new_star = pl.mlab.rec_append_fields(new_star,'y',y*scale_factor)
         new_star = pl.mlab.rec_append_fields(new_star,'z',z*scale_factor)
     new_star = pl.mlab.rec_append_fields(new_star,'projflux',proj_flux)
-    new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas)
+    new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas/mu)
     new_star = pl.mlab.rec_append_fields(new_star,'mu',mus)
     
     #-- clip visible areas and sort in plotting order if necessary
