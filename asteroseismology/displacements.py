@@ -63,7 +63,7 @@ def sph_harm(theta,phi,l=2,m=1):
 
 def dsph_harm_dtheta(theta,phi,l=2,m=1):
     """
-    Derivative of spherical harmonic to colatitude.
+    Derivative of spherical harmonic wrt colatitude.
     
     Using Y_l^m(theta,phi).
     
@@ -84,7 +84,7 @@ def dsph_harm_dtheta(theta,phi,l=2,m=1):
 
 def dsph_harm_dphi(theta,phi,l=2,m=1):
     """
-    Derivative of spherical harmonic to longitude.
+    Derivative of spherical harmonic wrt longitude.
     
     Using Y_l^m(theta,phi).
     
@@ -141,7 +141,7 @@ def longitudinal(theta,phi,l,m,t,Omega,k):
     term3 = -norm_atlm1(l,m,Omega,k) * dsph_harm_dtheta(theta,phi,l-1,m)*exp(1j*t-pi/2)
     return term1 + term2 + term3
 
-def surface(theta,phi,l,m,t,Omega=0.1,k=1.,radius=1.,asl=0.2):
+def surface(theta,phi,l,m,t,Omega=0.1,k=1.,asl=0.2,radius=1.):
     ksi_r = asl*sqrt(4*pi)*radial(theta,phi,l,m,t)
     if l>0:
         ksi_theta = asl*sqrt(4*pi)*colatitudinal(theta,phi,l,m,t,Omega,k)
@@ -162,12 +162,12 @@ if __name__=="__main__":
     from enthought.mayavi import mlab
     from divers import multimedia
     theta,phi,grid = local.get_grid(50,50,gtype='delaunay')
-    keep = phi>pi
-    theta,phi = theta[keep],phi[keep]
+    #keep = phi>pi
+    #theta,phi = theta[keep],phi[keep]
     l,m = 2,2
     asl = 0.01
     
-    for k in [0,1.,100.]:
+    for k in [0,1.,2.]:
         for l in range(1,5):
             for m in range(0,l+1,1):
                 mlab.figure(size=(1000,800))
@@ -182,11 +182,14 @@ if __name__=="__main__":
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
                     if i==0: colors = r
                     x,y,z = vectors.spher2cart_coord(r,ph,th)
+                    normal,size,cos_gamma = local.surface_normal(r,(theta,phi,grid))
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
+                    mlab.quiver3d(x,y,z,normal[0],normal[1],normal[2],scalars=np.arccos(cos_gamma),colormap='spectral')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
+                    mlab.show()
                 mlab.close()
                 multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
                 
