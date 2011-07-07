@@ -187,6 +187,13 @@ def surface_normals(r,mygrid,gtype='spher'):
             side2 = [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]]
             normals[i] = np.cross(side1,side2)
             print side1,side2,normals[i]
+            from enthought.mayavi import mlab
+            mlab.figure()
+            mlab.points3d(vertx,verty,vertz)
+            mlab.points3d(x[i],y[i],z[i])
+            mlab.quiver3d(vertx[0],verty[0],vertz[0],side1[0],side1[1],side1[2])
+            mlab.quiver3d(vertx[0],verty[0],vertz[0],side2[0],side2[1],side2[2])
+            mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
         
         normals = normals / vectors.norm(normals.T)
         cos_gamma = vectors.cos_angle(a,normals.T)
