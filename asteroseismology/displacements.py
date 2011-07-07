@@ -161,7 +161,7 @@ if __name__=="__main__":
     from ivs.coordinates import vectors
     from enthought.mayavi import mlab
     from divers import multimedia
-    theta,phi,grid = local.get_grid(50,50,gtype='delaunay')
+    theta,phi,grid = local.get_grid(50,25,gtype='delaunay')
     #keep = phi>pi
     #theta,phi = theta[keep],phi[keep]
     l,m = 2,2
@@ -186,7 +186,7 @@ if __name__=="__main__":
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     print normal.shape
-                    mlab.quiver3d(x,y,z,normal.T[0],normal.T[1],normal.T[2],scalars=np.arccos(cos_gamma),colormap='spectral')
+                    mlab.quiver3d(x,y,z,normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
