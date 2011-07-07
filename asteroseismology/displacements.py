@@ -204,7 +204,7 @@ if __name__=="__main__":
                                       center.T[0]-old_center.T[0],\
                                       center.T[1]-old_center.T[1],\
                                       center.T[2]-old_center.T[2],colormap='spectral',scale_mode='none')
-                        mlab.show()
+                        #mlab.show()
                     old_center = center.copy()
                 mlab.close()
                 multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
