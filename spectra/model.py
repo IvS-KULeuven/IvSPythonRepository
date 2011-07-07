@@ -194,8 +194,11 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
             flux = flux_grid(np.log10(teff),logg) + 0.
             cont = cont_grid(np.log10(teff),logg) + 0.
         except ValueError:
-            logger.error('teff=%f, logg=%f'%(teff,logg))
-            raise
+            teffs,loggs = get_grid_dimensions(**kwargs)
+            index = np.argmin(np.abs(  (teffs-teff)**2 + (loggs-logg)**2 ))
+            logger.error('teff=%f-->%f, logg=%f-->%f'%(teff,teffs[index],logg,loggs[index]))
+            flux = flux_grid(np.log10(teffs[index]),loggs[index]) + 0.
+            cont = cont_grid(np.log10(teffs[index]),loggs[index]) + 0.
     
     #-- convert to arrays
     wave = np.array(wave,float)
