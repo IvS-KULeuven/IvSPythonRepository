@@ -185,7 +185,7 @@ if __name__=="__main__":
                 for i,t in enumerate(np.linspace(0,2*pi,100)):
                     print k,l,m,i
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
-                    center,size,normal = local.surface_normals(r,ph,th,gtype='triangular')
+                    center,size,normal = local.surface_normals(r,ph,th,grid,gtype='triangular')
                     
                     if i==0:
                         colors = r
