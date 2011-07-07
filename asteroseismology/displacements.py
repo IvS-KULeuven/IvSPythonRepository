@@ -199,7 +199,7 @@ if __name__=="__main__":
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
-                    if i==1:
+                    if i>1:
                         mlab.quiver3d(center.T[0],center.T[1],center.T[2],\
                                       center.T[0]-old_center.T[0],\
                                       center.T[1]-old_center.T[1],\
