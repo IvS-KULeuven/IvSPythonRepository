@@ -204,7 +204,7 @@ if __name__=="__main__":
                                    center.T[2]-old_center.T[2]
                         v = np.sqrt(vx**2+vy**2+vz**2)
                         mlab.quiver3d(center.T[0],center.T[1],center.T[2],\
-                                      vx,vy,vz,v,colormap='spectral',scale_mode='scalars')
+                                      vx,vy,vz,scalars=v,colormap='spectral',scale_mode='scalars')
                         #mlab.show()
                     old_center = center.copy()
                     mlab.view(distance=5,azimuth=-90,elevation=90)
