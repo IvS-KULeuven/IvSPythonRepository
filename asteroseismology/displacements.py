@@ -8,6 +8,7 @@ from numpy import sqrt,pi,sin,cos,exp
 from scipy.special import lpmv,legendre
 from scipy.misc.common import factorial
 from scipy.integrate import dblquad,quad
+from scipy.spatial import Delaunay
 
 #{ Helper functions
 
@@ -162,6 +163,10 @@ if __name__=="__main__":
     from enthought.mayavi import mlab
     from divers import multimedia
     theta,phi = local.get_grid(50,25,gtype='triangular')
+    r = np.ones_like(theta)
+    x,y,z = vectors.spher2cart_coord(r,phi,theta)
+    points = np.array([x,y,z]).T
+    grid = Delaunay(points)
     #keep = phi>pi
     #theta,phi = theta[keep],phi[keep]
     l,m = 2,2
@@ -180,8 +185,6 @@ if __name__=="__main__":
                 for i,t in enumerate(np.linspace(0,2*pi,100)):
                     print k,l,m,i
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
-                    
-                    x,y,z = vectors.spher2cart_coord(r,ph,th)
                     center,size,normal = local.surface_normals(r,ph,th,gtype='triangular')
                     
                     if i==0:
@@ -191,7 +194,6 @@ if __name__=="__main__":
                     
                     
                     mlab.clf()
-                    #mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
                     mlab.points3d(center.T[0],center.T[1],center.T[2],colors_,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors_.min(),vmax=colors_.max())
                     #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.view(distance=5,azimuth=-90,elevation=90)

@@ -164,7 +164,7 @@ def stitch_grid(theta,phi,*quant,**kwargs):
     return out
 
 #}
-def surface_normals(r,phi,theta,gtype='spher'):
+def surface_normals(r,phi,theta,grid,gtype='spher'):
     """
     Numerically compute surface normals of a grid (in absence of analytical alternative).
     
@@ -177,8 +177,6 @@ def surface_normals(r,phi,theta,gtype='spher'):
     elif gtype=='triangular':
         #-- compute the angle between the surface normal and the radius vector
         x,y,z = vectors.spher2cart_coord(r,phi,theta)
-        points = np.array([x,y,z]).T
-        grid = Delaunay(points)
         
         centers = np.zeros((len(grid.convex_hull),3))
         normals = np.zeros((len(grid.convex_hull),3))
