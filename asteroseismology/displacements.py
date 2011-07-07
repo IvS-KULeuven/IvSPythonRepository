@@ -195,15 +195,14 @@ if __name__=="__main__":
                     
                     mlab.clf()
                     mlab.points3d(center.T[0],center.T[1],center.T[2],colors_,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors_.min(),vmax=colors_.max())
-                    #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
-                    
+                    #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')                    
                     mlab.colorbar()
                     
-                    vx,vy,vz = center.T[0]-old_center.T[0],\
-                               center.T[1]-old_center.T[1],\
-                               center.T[2]-old_center.T[2]
-                    v = np.sqrt(vx**2+vy**2+vz**2)
-                    if i>1:
+                    if i>=1:
+                        vx,vy,vz = center.T[0]-old_center.T[0],\
+                                   center.T[1]-old_center.T[1],\
+                                   center.T[2]-old_center.T[2]
+                        v = np.sqrt(vx**2+vy**2+vz**2)
                         mlab.quiver3d(center.T[0],center.T[1],center.T[2],\
                                       vx,vy,vz,v,colormap='spectral',scale_mode='scalars')
                         #mlab.show()
