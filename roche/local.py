@@ -191,8 +191,8 @@ def surface_normals(r,mygrid,gtype='spher'):
             mlab.figure()
             mlab.points3d(vertx,verty,vertz)
             mlab.points3d(x[i],y[i],z[i])
-            mlab.quiver3d(vertx[0],verty[0],vertz[0],side1[0],side1[1],side1[2])
-            mlab.quiver3d(vertx[0],verty[0],vertz[0],side2[0],side2[1],side2[2])
+            mlab.quiver3d(vertx[indices[0]],verty[indices[0]],vertz[indices[0]],side1[0],side1[1],side1[2])
+            mlab.quiver3d(vertx[indices[0]],verty[indices[0]],vertz[indices[0]],side2[0],side2[1],side2[2])
             mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
             mlab.show()
         
