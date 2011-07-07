@@ -183,8 +183,10 @@ def surface_normals(r,mygrid,gtype='spher'):
             c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
             s = 0.5*(a+b+c)
             sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
-            normals[i] = np.cross([vertx[indices[1]]-vertx[indices[0]],verty[indices[1]]-verty[indices[0]],vertz[indices[1]]-vertz[indices[0]]],\
-                                  [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]])
+            side1 = [vertx[indices[1]]-vertx[indices[0]],verty[indices[1]]-verty[indices[0]],vertz[indices[1]]-vertz[indices[0]]]
+            side2 = [vertx[indices[2]]-vertx[indices[0]],verty[indices[2]]-verty[indices[0]],vertz[indices[2]]-vertz[indices[0]]]
+            normals[i] = np.cross(side1,side2)
+            print side1,side2,normals[i]
         
         cos_gamma = vectors.cos_angle(a,normals.T)
         
