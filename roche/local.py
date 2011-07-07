@@ -194,6 +194,7 @@ def surface_normals(r,mygrid,gtype='spher'):
             mlab.quiver3d(vertx[0],verty[0],vertz[0],side1[0],side1[1],side1[2])
             mlab.quiver3d(vertx[0],verty[0],vertz[0],side2[0],side2[1],side2[2])
             mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
+            mlab.show()
         
         normals = normals / vectors.norm(normals.T)
         cos_gamma = vectors.cos_angle(a,normals.T)
