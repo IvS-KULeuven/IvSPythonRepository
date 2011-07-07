@@ -200,16 +200,17 @@ def surface_normals(r,phi,theta,gtype='spher'):
             side1 = [x[indices[1]]-x[indices[0]],y[indices[1]]-y[indices[0]],z[indices[1]]-z[indices[0]]]
             side2 = [x[indices[2]]-x[indices[0]],y[indices[2]]-y[indices[0]],z[indices[2]]-z[indices[0]]]
             normals[i] = np.cross(side1,side2)
-
-        normals_T = normals.T
-        normals = normals_T / vectors.norm(normals_T)
-        cos_gamma = vectors.cos_angle(a,normals)
         
         #-- make sure the normal is pointed outwards
         normal_r,normal_phi,normal_theta = vectors.cart2spher(centers.T,normals)
         normal_r = np.abs(normal_r)
         centers_sph = vectors.cart2spher_coord(*centers.T)
         normals = np.array(vectors.spher2cart(centers_sph,(normal_r,normal_phi,normal_theta)))
+        
+        #-- normalise and compute angles
+        normals_T = normals.T
+        normals = normals_T / vectors.norm(normals_T)
+        cos_gamma = vectors.cos_angle(a,normals)
         
         return centers, sizes, normals.T, cos_gamma
 
