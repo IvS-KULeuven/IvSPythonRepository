@@ -204,17 +204,16 @@ def surface_normals(r,phi,theta,gtype='spher'):
             from enthought.mayavi import mlab
             mlab.figure()
             
-            mlab.points3d(x[indices],y[indices],z[indices])
-            mlab.points3d(x[i],y[i],z[i])
+            mlab.points3d(np.hstack([x[indices],centers[i][0]]),np.hstack([y[indices],centers[i][1]]),np.hstack([z[indices],centers[i][2]]))
             mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side1[0],side1[1],side1[2])
             mlab.quiver3d(x[indices[0]],y[indices[0]],z[indices[0]],side2[0],side2[1],side2[2])
-            mlab.quiver3d(x[i],y[i],z[i],normals[i][0],normals[i][1],normals[i][2])
+            mlab.quiver3d(centers[i][0],centers[i][1],centers[i][2],normals[i][0],normals[i][1],normals[i][2])
             mlab.show()
         
         normals = normals / vectors.norm(normals.T)
         cos_gamma = vectors.cos_angle(a,normals.T)
         
-        return normals, sizes*r**2, cos_gamma
+        return centers, sizes*r**2, normals, cos_gamma
 
 #{ Derivation of local quantities
 
