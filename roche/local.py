@@ -202,7 +202,7 @@ def surface_normals(r,phi,theta,gtype='spher'):
             normals[i] = np.cross(side1,side2)
         
         #-- make sure the normal is pointed outwards
-        normal_r,normal_phi,normal_theta = vectors.cart2spher(centers.T,normals)
+        normal_r,normal_phi,normal_theta = vectors.cart2spher(centers.T,normals.T)
         normal_r = np.abs(normal_r)
         centers_sph = vectors.cart2spher_coord(*centers.T)
         normals = np.array(vectors.spher2cart(centers_sph,(normal_r,normal_phi,normal_theta)))
