@@ -185,6 +185,7 @@ if __name__=="__main__":
                     center,size,normal,cos_gamma = local.surface_normals(r,th,ph,gtype='triangular')
                     mlab.clf()
                     mlab.points3d(x,y,z,colors,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors.min(),vmax=colors.max())
+                    mlab.points3d(center.T[0],center.T[1],center.T[2],scale_factor=0.05,scale_mode='none')
                     mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.view(distance=5,azimuth=-90,elevation=90)
                     mlab.colorbar()
