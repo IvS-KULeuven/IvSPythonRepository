@@ -639,6 +639,10 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 myflux[2*i:2*i+2,4:] = ext[index-1:index+1]
             #-- interpolate in log10 of temperature
             myflux[:,0] = np.log10(myflux[:,0])
+            print myflux[:,:4]
+            print myflux[:,4:]
+            print myflux[:,:4].shape
+            print myflux[:,4:].shape
             flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
                 
                 
