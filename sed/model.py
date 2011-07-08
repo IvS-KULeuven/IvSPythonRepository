@@ -69,6 +69,7 @@ You can change the defaults with the function L{set_defaults}:
 {'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
 
 And reset the 'default' default values by calling L{set_defaults} without arguments
+
 >>> set_defaults()
 >>> print defaults
 {'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
@@ -99,11 +100,10 @@ The default settings will not change in this case.
 
 The default units of the SEDs are angstrom and erg/s/cm2/A/sr. To change them, do:
 
->>> wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid='tlusty',\
-                     wave_units='micron',flux_units='Jy/sr')
+>>> wave,flux = get_table(teff=16321,logg=4.321,wave_units='micron',flux_units='Jy/sr')
 
 To remove the steradian from the units when you know the angular diameter of your
-star in milliarcseconds, you can do
+star in milliarcseconds, you can do (we have to convert diameter to surface):
 
 >>> ang_diam = 3.21 # mas
 >>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
@@ -111,7 +111,7 @@ star in milliarcseconds, you can do
 >>> flux *= scale**2
 
 The example above is representative for the case of Vega. So, if we now calculate
-the synthetic flux in the 2MASS.J band, we should end up with the zeropoint
+the synthetic flux in the GENEVA.V band, we should end up with the zeropoint
 magnitude of this band, which is close to zero:
 
 >>> flam = synthetic_flux(wave,flux,photbands=['GENEVA.V'])
@@ -119,8 +119,42 @@ magnitude of this band, which is close to zero:
 0.063
 
 Compare this with the calibrated value
+
 >>> print filters.get_info(['GENEVA.V'])['vegamag'][0]
 0.061
+
+Section 3. Retrieval of integrated photometry
+=============================================
+
+Instead of retrieving a model SED, you can immediately retrieve pre-calculated
+integrated photometry. The benefit of this approach is that it is B{much} faster
+than retrieving the model SED and then calculating the synthetic flux. Also,
+you can supply arbitrary metallicities within the grid boundaries, as interpolation
+is done in effective temperature, surface gravity, reddening B{and} metallicity.
+
+Note that also the reddening law is fixed now, you need to recalculate the
+tables for different parameters if you need them.
+
+All defaults set for the retrieval of model SEDs are applicable for the integrated
+photometry tables as well.
+
+When retrieving integrated photometry, you also get the absolute luminosity
+(integration of total SED) as a bonus. This is the absolute luminosity assuming
+the star has a radius of 1Rsol. Multiply by Rstar**2 to get the true luminosity.
+
+Because photometric filters cannot trivially be assigned a wavelength to, by
+default, no wavelength information is retrieved. If you want to retrieve the
+effective wavelengths of the filters themselves (not taking into account the
+model atmospheres), you can give an extra keyword argument C{wave_units}.
+
+Note that the integration only gives you fluxes, and is thus independent from
+the zeropoints of the filters (but dependent on the transmission curves).
+
+Examples:
+
+>>> fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=['GENEVA.U','2MASS.J'])
+>>> wave,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=['GENEVA.U','2MASS.J'],wave_units='A')
+
 
 """
 import os
@@ -130,6 +164,11 @@ import pyfits
 import time
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
+try:
+    from scipy.interpolate import LinearNDInterpolator
+    new_scipy = True
+except ImportError:
+    new_scipy = False
 from multiprocessing import Process,Manager
 
 from ivs import config
@@ -496,8 +535,8 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @type wave_units: str
     @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
     @type flux_units: str
-    @return: wavelength,flux
-    @rtype: (ndarray,ndarray)
+    @return: (wave,) flux, absolute luminosity
+    @rtype: (ndarray,)ndarray,float
     """
     ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
     zrange = kwargs.pop('zrange',(-np.inf,np.inf))
@@ -719,41 +758,70 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     if loggrange is not None:
         sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
         loggs = loggs[sa]
-    #-- clip if necessary
-    teffs = list(set(list(teffs)))
-    loggs = list(set(list(loggs)))
-    teffs = np.sort(teffs)
-    loggs = np.sort(loggs)
-    if wave is not None:
-        flux = np.ones((len(teffs),len(loggs),len(wave)))
-    #-- run over teff and logg, and interpolate the models onto the supplied
-    #   wavelength range
-    gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
-    for i,teff in enumerate(teffs):
-        for j,logg in enumerate(loggs):
+    
+    #-- ScientificPython interface
+    if new_scipy:
+        #-- clip if necessary
+        teffs = list(set(list(teffs)))
+        loggs = list(set(list(loggs)))
+        teffs = np.sort(teffs)
+        loggs = np.sort(loggs)
+        if wave is not None:
+            flux = np.ones((len(teffs),len(loggs),len(wave)))
+        #-- run over teff and logg, and interpolate the models onto the supplied
+        #   wavelength range
+        gridfile = get_file(**kwargs)
+        ff = pyfits.open(gridfile)
+        for i,teff in enumerate(teffs):
+            for j,logg in enumerate(loggs):
+                try:
+                    mod_name = "T%05d_logg%01.02f" %(teff,logg)
+                    mod = ff[mod_name]
+                    wave_ = mod.data.field('wavelength')#array(mod.data.tolist())[:,0]
+                    flux_ = mod.data.field('flux')#array(mod.data.tolist())[:,1]
+                    #-- if there is no wavelength range given, we assume that
+                    #   the whole grid has the same resolution, and the first
+                    #   wave-array will be used as a template
+                    if wave is None:
+                        wave = wave_
+                        flux = np.ones((len(teffs),len(loggs),len(wave)))
+                except KeyError:
+                    continue
+                #-- it could be that we're lucky and the grid is completely
+                #   homogeneous. In that case, there is no need for interpolation
+                try:
+                    flux[i,j,:] = flux_
+                except:
+                    flux[i,j,:] = np.interp(wave,wave_,flux_)
+        ff.close()
+        flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
+        logger.info('Constructed SED interpolation grid')
+    
+    #-- Scipy interface
+    else:
+        #-- run over teff and logg, and interpolate the models onto the supplied
+        #   wavelength range
+        gridfile = get_file(**kwargs)
+        ff = pyfits.open(gridfile)
+        if wave is not None:
+            fluxes = np.zeros((len(teffs),len(wave)))
+        for i,(teff,logg) in enumerate(zip(teffs,loggs)):
+            mod_name = "T%05d_logg%01.02f" %(teff,logg)
+            mod = ff[mod_name]
+            wave_ = mod.data.field('wavelength')
+            flux_ = mod.data.field('flux')
+            #-- if there is no wavelength range given, we assume that
+            #   the whole grid has the same resolution, and the first
+            #   wave-array will be used as a template
+            if wave is None:
+                wave = wave_
+                flux = np.ones((len(teffs),len(loggs),len(wave)))
             try:
-                mod_name = "T%05d_logg%01.02f" %(teff,logg)
-                mod = ff[mod_name]
-                wave_ = mod.data.field('wavelength')#array(mod.data.tolist())[:,0]
-                flux_ = mod.data.field('flux')#array(mod.data.tolist())[:,1]
-                #-- if there is no wavelength range given, we assume that
-                #   the whole grid has the same resolution, and the first
-                #   wave-array will be used as a template
-                if wave is None:
-                    wave = wave_
-                    flux = np.ones((len(teffs),len(loggs),len(wave)))
-            except KeyError:
-                continue
-            #-- it could be that we're lucky and the grid is completely
-            #   homogeneous. In that case, there is no need for interpolation
-            try:
-                flux[i,j,:] = flux_
+                flux[i] = flux_
             except:
-                flux[i,j,:] = np.interp(wave,wave_,flux_)
-    ff.close()
-    flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
-    logger.info('Constructed SED interpolation grid')
+                flux[i] = np.interp(wave,wave_,flux_)            
+        ff.close()
+        flux_grid = scipy.interpolate.LinearNDInterpolator(np.array([teffs,loggs]).T,flux)
     return wave,teffs,loggs,flux,flux_grid
 
 
