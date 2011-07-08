@@ -163,11 +163,12 @@ import copy
 import pyfits
 import time
 import numpy as np
-from Scientific.Functions.Interpolation import InterpolatingFunction
 try:
     from scipy.interpolate import LinearNDInterpolator
+    from scipy.interpolate import griddata
     new_scipy = True
 except ImportError:
+    from Scientific.Functions.Interpolation import InterpolatingFunction
     new_scipy = False
 from multiprocessing import Process,Manager
 
@@ -564,69 +565,83 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     except KeyError:
         #c1_ = 0
         #-- cheat edges in interpolating function
-        teff = teff+1e-2
-        logg = logg-1e-6
-        ebv = ebv+1e-6
-        #-- it is possible we have to interpolate: identify the grid points in
-        #   the immediate vicinity of the given fundamental parameters
-        i_teff = max(1,g_teff.searchsorted(teff))
-        i_logg = max(1,g_logg.searchsorted(logg))
-        i_ebv  = max(1,g_ebv.searchsorted(ebv))
-        i_z  = max(1,g_z.searchsorted(z))
-        if i_teff==len(g_teff): i_teff -= 1
-        if i_logg==len(g_logg): i_logg -= 1
-        if i_ebv==len(g_ebv): i_ebv -= 1
-        if i_z==len(g_z): i_z -= 1
-        #-- prepare fluxes matrix for interpolation, and x,y an z axis
-        teffs_subgrid = g_teff[i_teff-1:i_teff+1]
-        loggs_subgrid = g_logg[i_logg-1:i_logg+1]
-        ebvs_subgrid = g_ebv[i_ebv-1:i_ebv+1]
-        zs_subgrid = g_z[i_z-1:i_z+1]
-        #-- iterates over df-1 values (df=degrees of freedom): we know that the
-        #   grid is ordered via z in the last part (about twice as fast).
-        #   Reducing the grid size to 2 increases the speed again with a factor 2.
-        
-        #-- if metallicity needs to be interpolated
-        if not (z in g_z):
-            fluxes = np.zeros((2,2,2,2,len(photbands)+1))
-            for i,j,k in itertools.lproduct(xrange(2),xrange(2),xrange(2)):
-                input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
-                                                int(round(teffs_subgrid[j])),\
-                                                int(round(loggs_subgrid[k]*100)),\
-                                                int(round(ebvs_subgrid[1]*100))))
-                index = markers.searchsorted(input_code)
-                fluxes[i,j,k] = ext[index-1:index+1]
-                #print 'fake1',index,input_code
-            myf = InterpolatingFunction([zs_subgrid,np.log10(teffs_subgrid),
-                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
-            flux = 10**myf(z,np.log10(teff),logg,ebv) + 0.
-        
-        #-- if only teff,logg and ebv need to be interpolated (faster)
+        if not new_scipy:
+            teff = teff+1e-2
+            logg = logg-1e-6
+            ebv = ebv+1e-6
+            #-- it is possible we have to interpolate: identify the grid points in
+            #   the immediate vicinity of the given fundamental parameters
+            i_teff = max(1,g_teff.searchsorted(teff))
+            i_logg = max(1,g_logg.searchsorted(logg))
+            i_ebv  = max(1,g_ebv.searchsorted(ebv))
+            i_z  = max(1,g_z.searchsorted(z))
+            if i_teff==len(g_teff): i_teff -= 1
+            if i_logg==len(g_logg): i_logg -= 1
+            if i_ebv==len(g_ebv): i_ebv -= 1
+            if i_z==len(g_z): i_z -= 1
+            #-- prepare fluxes matrix for interpolation, and x,y an z axis
+            teffs_subgrid = g_teff[i_teff-1:i_teff+1]
+            loggs_subgrid = g_logg[i_logg-1:i_logg+1]
+            ebvs_subgrid = g_ebv[i_ebv-1:i_ebv+1]
+            zs_subgrid = g_z[i_z-1:i_z+1]
+            #-- iterates over df-1 values (df=degrees of freedom): we know that the
+            #   grid is ordered via z in the last part (about twice as fast).
+            #   Reducing the grid size to 2 increases the speed again with a factor 2.
+            
+            #-- if metallicity needs to be interpolated
+            if not (z in g_z):
+                fluxes = np.zeros((2,2,2,2,len(photbands)+1))
+                for i,j,k in itertools.lproduct(xrange(2),xrange(2),xrange(2)):
+                    input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
+                                                    int(round(teffs_subgrid[j])),\
+                                                    int(round(loggs_subgrid[k]*100)),\
+                                                    int(round(ebvs_subgrid[1]*100))))
+                    index = markers.searchsorted(input_code)
+                    fluxes[i,j,k] = ext[index-1:index+1]
+                myf = InterpolatingFunction([zs_subgrid,np.log10(teffs_subgrid),
+                                        loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
+                flux = 10**myf(z,np.log10(teff),logg,ebv) + 0.
+            
+            #-- if only teff,logg and ebv need to be interpolated (faster)
+            else:
+                fluxes = np.zeros((2,2,2,len(photbands)+1))
+                for i,j in itertools.lproduct(xrange(2),xrange(2)):
+                    input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
+                                                    int(round(teffs_subgrid[i])),\
+                                                    int(round(loggs_subgrid[j]*100)),\
+                                                    int(round(ebvs_subgrid[1]*100))))
+                    index = markers.searchsorted(input_code)
+                    fluxes[i,j] = ext[index-1:index+1]
+                myf = InterpolatingFunction([np.log10(teffs_subgrid),
+                                        loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
+                flux = 10**myf(np.log10(teff),logg,ebv) + 0.
+        #-- new scipy version
         else:
-            #print teff,logg,ebv
-            fluxes = np.zeros((2,2,2,len(photbands)+1))
-            for i,j in itertools.lproduct(xrange(2),xrange(2)):
+            #-- take care of inner edge of grid
+            i_teff = max(1,g_teff.searchsorted(teff))
+            i_logg = max(1,g_logg.searchsorted(logg))
+            i_ebv  = max(1,g_ebv.searchsorted(ebv))
+            i_z  = max(1,g_z.searchsorted(z))
+            #-- take care of outer edge of grid
+            if i_teff==len(g_teff): i_teff -= 1
+            if i_logg==len(g_logg): i_logg -= 1
+            if i_ebv==len(g_ebv): i_ebv -= 1
+            if i_z==len(g_z): i_z -= 1
+            #-- prepare fluxes matrix for interpolation, and x,y an z axis
+            myflux = np.zeros((16,4+len(photbands)+1))
+            mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_ebv[i_ebv-1:i_ebv+1],g_z[i_z-1:i_z+1]):
+            for i,(t,g,e,z) in enumerate(mygrid):
+                myflux[i,:4] = t,g,e,z
                 input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
-                                                int(round(teffs_subgrid[i])),\
-                                                int(round(loggs_subgrid[j]*100)),\
-                                                int(round(ebvs_subgrid[1]*100))))
+                                                    int(round(t)),int(round(g*100)),\
+                                                    int(round(g_ebv[i_ebv]*100))))
                 index = markers.searchsorted(input_code)
-                fluxes[i,j] = ext[index-1:index+1]
-                #print 'fake2',index,input_code_,fluxes[i,j]
-            #print teffs_subgrid,loggs_subgrid,ebvs_subgrid
-            myf = InterpolatingFunction([np.log10(teffs_subgrid),
-                                     loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
-            flux = 10**myf(np.log10(teff),logg,ebv) + 0.
-            #print ''
-            #print np.log10(teffs_subgrid)
-            ##print loggs_subgrid
-            #pr#nt ebvs_subgrid
-            #print np.log10(fluxes)
-            #print np.log10(teff),logg,ebv
-            #p#rint myf(np.log10(teff),logg,ebv)
-            #print ''
-            
-            
+                fluxes[2*i:2*i+2,4:] = ext[index-1:index+1]
+            #-- interpolate in log10 of temperature
+            fluxes[:,0] = np.log10(fluxes[:,0])
+            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
+                
+                
         
         
         #logger.debug('Model iSED interpolated from grid (%s)'%(kwargs))
@@ -825,72 +840,6 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
         ff.close()
         flux_grid = LinearNDInterpolator(np.array([np.log10(teffs),loggs]).T,flux)
     return wave,teffs,loggs,flux,flux_grid
-
-
-
-
-
-
-#@memoized
-def get_igrid_mesh(photbands=None,teffrange=None,loggrange=None,ebvrange=None,
-                   include_Labs=False,**kwargs):
-    """
-    Return InterpolatingFunction spanning the available grid of atmosphere models.
-    
-    WARNING: the grid must be entirely defined on a mesh grid, but it does not
-    need to be equidistant.
-            
-    It might take a long a time and cost a lot of memory if you load the entire
-    grid. Therefore, you can also set range of temperature, gravity and
-    reddening.
-    
-    Example usage:
-    
-    @param photbands: photometric passbands
-    @type photbands: array of strings
-    @param teffrange: starting and ending of the grid in teff
-    @type teffrange: tuple of floats
-    @param loggrange: starting and ending of the grid in logg
-    @type loggrange: tuple of floats
-    @param ebvrange: starting and ending of the grid in E(B-V)
-    @type ebvrange: tuple of floats
-    @return: wavelengths, teffs, loggs, ebvs and fluxes of grid,
-    and the interpolating function
-    @rtype: (4 x 1Darray,4Darray,InterpolatingFunction)
-    """
-    #-- get the dimensions of the grid
-    teffs,loggs,ebvs = get_igrid_dimensions(**kwargs)
-    #-- clip if necessary
-    teffs = np.sort(list(set(teffs)))
-    loggs = np.sort(list(set(loggs)))
-    ebvs = np.sort(list(set(ebvs)))
-    #-- run over teff and logg, and interpolate the models onto the supplied
-    #   wavelength range
-    gridfile = get_file(integrated=True,**kwargs)
-    flux = np.zeros((3,3,3,len(photbands)))
-    #-- use cartesian product!!!
-    ff = pyfits.open(gridfile)
-    for i,teff in enumerate(teffs):
-        for j,logg in enumerate(loggs):
-            for k,ebv in enumerate(ebvs):
-                print teff,logg,ebv
-                right_teff = ff[1].data.field('teff')==teff
-                right_logg = ff[1].data.field('logg')==logg
-                right_ebv = ff[1].data.field('ebv')==ebv
-                flux[i,j,k,:] = [ff[1].data.field(photband)[right_teff & right_logg & right_ebv][0] for photband in photbands]
-    ff.close()
-    flux_grid = InterpolatingFunction([np.log10(teffs),loggs,ebvs],flux)
-    logger.info('Constructed SED interpolation grid')
-    return teffs,loggs,ebvs,flux,flux_grid
-
-
-
-
-
-
-
-
-
 
 #}
 
