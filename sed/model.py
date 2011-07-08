@@ -647,7 +647,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             print myflux[:,4:]
             print myflux[:,:4].shape
             print myflux[:,4:].shape
-            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
+            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,z,ebv))
                 
                 
         
