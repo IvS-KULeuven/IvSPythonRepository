@@ -629,8 +629,6 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             if i_z==len(g_z): i_z -= 1
             #-- prepare fluxes matrix for interpolation, and x,y an z axis
             myflux = np.zeros((16,4+len(photbands)+1))
-            print g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_ebv[i_ebv-1:i_ebv+1],g_z[i_z-1:i_z+1]
-            print g_z
             mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
             for i,(t,g,z) in enumerate(mygrid):
                 myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
@@ -643,11 +641,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 myflux[2*i+1,4:] = ext[index]
             #-- interpolate in log10 of temperature
             myflux[:,0] = np.log10(myflux[:,0])
-            print myflux[:,:4]
-            print myflux[:,4:]
-            print myflux[:,:4].shape
-            print myflux[:,4:].shape
-            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
+            flux = 10**griddata(myflux[:,:4],np.log10(myflux[:,4:]),(np.log10(teff),logg,ebv,z))
                 
                 
         
