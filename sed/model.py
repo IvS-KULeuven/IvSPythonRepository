@@ -823,7 +823,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
             except:
                 flux[i] = np.interp(wave,wave_,flux_)            
         ff.close()
-        flux_grid = scipy.interpolate.LinearNDInterpolator(np.array([teffs,loggs]).T,flux)
+        flux_grid = LinearNDInterpolator(np.array([teffs,loggs]).T,flux)
     return wave,teffs,loggs,flux,flux_grid
 
 
