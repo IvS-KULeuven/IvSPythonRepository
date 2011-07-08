@@ -629,7 +629,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             if i_z==len(g_z): i_z -= 1
             #-- prepare fluxes matrix for interpolation, and x,y an z axis
             myflux = np.zeros((16,4+len(photbands)+1))
-            mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_ebv[i_ebv-1:i_ebv+1],g_z[i_z-1:i_z+1]):
+            mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_ebv[i_ebv-1:i_ebv+1],g_z[i_z-1:i_z+1])
             for i,(t,g,e,z) in enumerate(mygrid):
                 myflux[i,:4] = t,g,e,z
                 input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
