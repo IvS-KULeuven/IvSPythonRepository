@@ -9,6 +9,119 @@ The most basic usage of this module is:
 This will retrieve the model SED with the specified effective temperature and
 logg, from the standard grid, in standard units and with zero reddening. All
 these things can be specified though.
+
+Section 1. Available grids
+==========================
+
+Make a plot of the domains of all spectral grids. First collect all the grid
+names
+
+>>> grids = get_gridnames()
+
+Prepare the plot
+
+>>> p = pl.figure(figsize=(10,8))
+>>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+>>> p = pl.gca().set_color_cycle(color_cycle)
+
+And plot all the grid points. We have to set some custom default values for
+some grids.
+
+>>> for grid in grids:
+...    teffs,loggs = get_grid_dimensions(grid=grid)
+...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
+
+Now take care of the plot details
+
+>>> p = pl.xlim(pl.xlim()[::-1])
+>>> p = pl.ylim(pl.ylim()[::-1])
+>>> p = pl.xlabel('Effective temperature [K]')
+>>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
+>>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+>>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
+>>> p = pl.legend(loc='upper left',prop=dict(size='small'))
+>>> p = pl.grid()
+
+]include figure]]ivs_sed_model_grid.png]
+
+Section 2. Retrieval of model SEDs
+==================================
+
+Subsection 2.1 Default settings
+-------------------------------
+
+To get information on the grid that is currently defined, you can type (not all
+parameters are relevant for all grids, e.g. the convection theory parameter C{ct}
+has no influence when the Kurucz grid is chosen.
+
+>>> print defaults
+{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+
+or
+
+>>> print os.path.basename(get_file())
+kurucz93_z0.0_k2odfnew_sed.fits
+
+You can change the defaults with the function L{set_defaults}:
+
+>>> set_defaults(z=0.5)
+>>> print defaults
+{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
+
+And reset the 'default' default values by calling L{set_defaults} without arguments
+>>> set_defaults()
+>>> print defaults
+{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+
+Subsection 2.2 Model SEDs
+-------------------------
+
+Be careful when you supply parameters: e.g., not all grids are calculated for
+the same range of metallicities. In L{get_table}, only the effective temperature
+and logg are 'interpolatable' quantities (the reddening is not interpolated by
+caculated, so also there you can give whatever value).
+
+>>> wave,flux = get_table(teff=12345,logg=4.321,ebv=0.12345,z=0.5)
+
+but
+
+>>> try:
+...     wave,flux = get_table(teff=12345,logg=4.321,ebv=0.12345,z=0.6)
+... except IOError,msg:
+...     print msg
+File sedtables/modelgrids/kurucz93_z0.6_k2odfnew_sed.fits not found in any of the specified data directories /STER/pieterd/IVSDATA/, /STER/kristofs/IVSdata
+
+Instead of changing the defaults of this module with L{set_defaults}, you can
+also give extra arguments to L{get_table} to specify the grid you want to use.
+The default settings will not change in this case.
+
+>>> wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid='tlusty')
+
+The default units of the SEDs are angstrom and erg/s/cm2/A/sr. To change them, do:
+
+>>> wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid='tlusty',\
+                     wave_units='micron',flux_units='Jy/sr')
+
+To remove the steradian from the units when you know the angular diameter of your
+star in milliarcseconds, you can do
+
+>>> ang_diam = 3.21 # mas
+>>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+>>> wave,flux = get_table(teff=9602,logg=4.1,ebv=0.0,z=0.0,grid='kurucz')
+>>> flux *= scale**2
+
+The example above is representative for the case of Vega. So, if we now calculate
+the synthetic flux in the 2MASS.J band, we should end up with the zeropoint
+magnitude of this band, which is close to zero:
+
+>>> flam = synthetic_flux(wave,flux,photbands=['GENEVA.V'])
+>>> print '%.3f'%(conversions.convert('erg/s/cm2/A','mag',flam,photband='GENEVA.V')[0])
+0.063
+
+Compare this with the calibrated value
+>>> print filters.get_info(['GENEVA.V'])['vegamag'][0]
+0.061
+
 """
 import os
 import logging
@@ -22,10 +135,10 @@ from multiprocessing import Process,Manager
 from ivs import config
 from ivs.units import conversions
 from ivs.units import constants
-from ivs.misc import loggers
-from ivs.misc.decorators import memoized,clear_memoization
-from ivs.misc import itertools
-from ivs.misc import numpy_ext
+from ivs.aux import loggers
+from ivs.aux.decorators import memoized,clear_memoization
+from ivs.aux import itertools
+from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.sed import reddening
 from ivs.io import ascii
@@ -124,6 +237,7 @@ def get_file(integrated=False,**kwargs):
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])
     if os.path.isfile(grid):
+        logger.debug('Selected %s'%(grid))
         return grid
     
     grid = grid.lower()
@@ -248,28 +362,35 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     
     Example usage:
     
-    >>> from pylab import figure,plot,legend,gca,subplot,title,show,gcf,loglog
-    >>> p = figure()
+    >>> from pylab import figure,gca,subplot,title,gcf,loglog
+    >>> p = figure(figsize=(10,6))
     >>> p=gcf().canvas.set_window_title('Test of <get_table>')
     >>> p = subplot(131)
-    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0))
-    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0))
-    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0))
+    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0),**dict(label='Fastwind'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0),**dict(label='Kurucz'))
+    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0),**dict(label='Tlusty'))
+    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0),**dict(label='Marcs'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0),**dict(label='Kurucz'))
+    >>> p = pl.xlabel('Wavelength [angstrom]');p = pl.ylabel('Flux [erg/s/cm2/A/sr]')
+    >>> p = pl.legend(loc='upper right',prop=dict(size='small'))
     >>> p = subplot(132)
-    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = subplot(133)
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=10000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=10250,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=10500,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=10750,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = loglog(*get_table(grid='KURUCZ',teff=11000,logg=4.0,wave_units='micron',flux_units='Jy/sr'))
-    >>> p = show()
+    >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Fastwind'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Kurucz'))
+    >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Tlusty'))
+    >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Marcs'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Kurucz'))
+    >>> p = pl.xlabel('Wavelength [micron]');p = pl.ylabel('Flux [Jy/sr]')
+    >>> p = pl.legend(loc='upper right',prop=dict(size='small'))
+    >>> p = subplot(133);p = title('Kurucz')
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='10000'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10250,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='10250'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10500,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='10500'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=10750,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='10750'))
+    >>> p = loglog(*get_table(grid='KURUCZ',teff=11000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='11000'))
+    >>> p = pl.xlabel('Wavelength [micron]');p = pl.ylabel('Flux [Jy/sr]')
+    >>> p = pl.legend(loc='upper right',prop=dict(size='small'))
+    
+    ]]include figure]]ivs_sed_model_comparison.png]
         
     @param teff: effective temperature
     @type teff: float
@@ -505,30 +626,6 @@ def get_grid_dimensions(**kwargs):
     Retrieve possible effective temperatures and gravities from a grid.
     
     E.g. kurucz, sdB, fastwind...
-    
-    Example usage:
-    
-    >>> from pylab import plot,legend,figure,fill,getp,gca,xlabel,ylabel,gcf,show
-    >>> from pylab import title,xlim,ylim,cm
-    >>> from sigproc.base import bplot
-    >>> import matplotlib
-    >>> matplotlib.axes.set_default_color_cycle(bplot.get_color_cycle(cm.spectral,res=2))
-    >>> p = figure();p=title('Grid of SEDs')
-    >>> p=gcf().canvas.set_window_title('Test of <get_grid_dimensions>')
-    >>> sizes = range(15,1,-1)
-    >>> gridnames = get_gridnames()
-    >>> for s,gridname in zip(sizes,np.sort(gridnames)):
-    ...    teffs,loggs = get_grid_dimensions(grid=gridname)
-    ...    teffs = np.log10(teffs)
-    ...    p=plot(teffs,loggs,'o',label=gridname,mew=0,ms=s)
-    ...    hull_pts = bplot.convex_hull(np.array([teffs,loggs]))
-    ...    p=fill(hull_pts[:,0],hull_pts[:,1],color=getp(p[0],'color'),alpha=0.2)
-    >>> p=legend(loc='upper left')
-    >>> p=xlabel('log(Teff)')
-    >>> p=ylabel('logg')
-    >>> p=xlim(xlim()[::-1])
-    >>> p=ylim(ylim()[::-1])
-    >>> set_defaults()
     
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
@@ -934,18 +1031,19 @@ def synthetic_flux(wave,flux,photbands,units=None):
     erg/s/cm2/Hz where Fnu was given.
     
     The difference is only marginal for 'blue' bands. For example, integrating
-    2MASS in Flambda or Fnu is only different below the 0.1% level:
+    2MASS in Flambda or Fnu is only different below the 1.1% level:
     
-    >>> energys = model.synthetic_flux(wave,flux,['2MASS.J','2MASS.J'],units=['flambda','fnu'])
+    >>> wave,flux = get_table(teff=10000,logg=4.0)
+    >>> energys = synthetic_flux(wave,flux,['2MASS.J','2MASS.J'],units=['flambda','fnu'])
     >>> e0_conv = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',energys[0],photband='2MASS.J')
-    >>> np.abs(energys[1]-e0_conv)<0.001
+    >>> np.abs(energys[1]-e0_conv)/energys[1]<0.012
     True
     
     But this is not the case for IRAS.F12:
     
-    >>> energys = model.synthetic_flux(wave,flux,['IRAS.F12','IRAS.F12'],units=['flambda','fnu'])
+    >>> energys = synthetic_flux(wave,flux,['IRAS.F12','IRAS.F12'],units=['flambda','fnu'])
     >>> e0_conv = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',energys[0],photband='IRAS.F12')
-    >>> np.abs(energys[1]-e0_conv)>0.1
+    >>> np.abs(energys[1]-e0_conv)/energys[1]>0.1
     True
     
     If you have a spectrum in micron vs Jy and want to calculate the synthetic
@@ -959,7 +1057,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
     >>> wave,flux = np.linspace(0.1,200,10000),np.ones(10000)
     >>> flam = conversions.convert('Jy','erg/s/cm2/A',flux,wave=(wave,'micron'))
     >>> lam = conversions.convert('micron','A',wave)
-    >>> energys = model.synthetic_flux(lam,flam,['IRAS.F12','IRAS.F25','IRAS.F60','IRAS.F100'],units=['Fnu','Fnu','Fnu','Fnu'])
+    >>> energys = synthetic_flux(lam,flam,['IRAS.F12','IRAS.F25','IRAS.F60','IRAS.F100'],units=['Fnu','Fnu','Fnu','Fnu'])
     >>> energys = conversions.convert('erg/s/cm2/Hz','Jy',energys)
     
     You are responsible yourself for having a response curve covering the
@@ -1310,5 +1408,7 @@ def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
 
 if __name__=="__main__":
     import doctest
+    import pylab as pl
     doctest.testmod()
+    pl.show()
     
