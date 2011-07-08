@@ -633,8 +633,8 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             print g_z
             mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
             for i,(t,g,z) in enumerate(mygrid):
-                myflux[2*i,:4] = t,g,z,g_ebv[i_ebv-1]
-                myflux[2*i+1,:4] = t,g,z,g_ebv[i_ebv]
+                myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
+                myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
                 input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(t)),int(round(g*100)),\
                                                     int(round(g_ebv[i_ebv]*100))))
@@ -647,7 +647,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             print myflux[:,4:]
             print myflux[:,:4].shape
             print myflux[:,4:].shape
-            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,z,ebv))
+            flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
                 
                 
         
