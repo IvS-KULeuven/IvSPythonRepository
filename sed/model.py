@@ -817,7 +817,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
             #   wave-array will be used as a template
             if wave is None:
                 wave = wave_
-                flux = np.ones((len(teffs),len(loggs),len(wave)))
+                flux = np.ones((len(teffs),len(wave)))
             try:
                 flux[i] = flux_
             except:
