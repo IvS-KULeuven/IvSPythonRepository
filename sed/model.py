@@ -760,7 +760,8 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
         loggs = loggs[sa]
     
     #-- ScientificPython interface
-    if new_scipy:
+    if not new_scipy:
+        logger.warning('SCIENTIFIC PYTHON')
         #-- clip if necessary
         teffs = list(set(list(teffs)))
         loggs = list(set(list(loggs)))
@@ -799,6 +800,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     
     #-- Scipy interface
     else:
+        logger.warning('SCIPY')
         #-- run over teff and logg, and interpolate the models onto the supplied
         #   wavelength range
         gridfile = get_file(**kwargs)
