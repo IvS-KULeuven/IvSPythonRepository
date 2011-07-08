@@ -13,25 +13,26 @@ these things can be specified though.
 Section 1. Available grids
 ==========================
 
-Make a plot of the domains of all spectral grids. First collect all the grid
-names
+We make a plot of the domains of all spectral grids. Therefore, we first collect
+all the grid names
 
 >>> grids = get_gridnames()
 
-Prepare the plot
+Preparation of the plot: set the color cycle of the current axes.
 
 >>> p = pl.figure(figsize=(10,8))
 >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
 >>> p = pl.gca().set_color_cycle(color_cycle)
 
-And plot all the grid points. We have to set some custom default values for
-some grids.
+To plot all the grid points, we run over all grid names (which are strings), and
+retrieve their dimensions. The dimensions are just two arrays giving the teff-
+and logg-coordinate of each SED in the grid. They can thus be easily plot:
 
 >>> for grid in grids:
 ...    teffs,loggs = get_grid_dimensions(grid=grid)
 ...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
 
-Now take care of the plot details
+And we need to set some of the plotting details to make it look nicer.
 
 >>> p = pl.xlim(pl.xlim()[::-1])
 >>> p = pl.ylim(pl.ylim()[::-1])
@@ -50,9 +51,10 @@ Section 2. Retrieval of model SEDs
 Subsection 2.1 Default settings
 -------------------------------
 
-To get information on the grid that is currently defined, you can type (not all
-parameters are relevant for all grids, e.g. the convection theory parameter C{ct}
-has no influence when the Kurucz grid is chosen.
+To get information on the grid that is currently defined, you can type the
+following. Note that not all parameters are relevant for all grids, e.g. the
+convection theory parameter C{ct} has no influence when the Kurucz grid is
+chosen.
 
 >>> print defaults
 {'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
@@ -79,8 +81,9 @@ Subsection 2.2 Model SEDs
 
 Be careful when you supply parameters: e.g., not all grids are calculated for
 the same range of metallicities. In L{get_table}, only the effective temperature
-and logg are 'interpolatable' quantities (the reddening is not interpolated by
-caculated, so also there you can give whatever value).
+and logg are 'interpolatable' quantities. You have to set the metallicity to a
+grid value. The reddening value can take any value: it is not interpolated but
+calculated. You can thus also specify the type of reddening law (see L{reddening}).
 
 >>> wave,flux = get_table(teff=12345,logg=4.321,ebv=0.12345,z=0.5)
 
@@ -92,13 +95,17 @@ but
 ...     print msg
 File sedtables/modelgrids/kurucz93_z0.6_k2odfnew_sed.fits not found in any of the specified data directories /STER/pieterd/IVSDATA/, /STER/kristofs/IVSdata
 
+Since the Kurucz model atmospheres have not been calculated for the value of
+C{z=0.6}.
+
 Instead of changing the defaults of this module with L{set_defaults}, you can
 also give extra arguments to L{get_table} to specify the grid you want to use.
 The default settings will not change in this case.
 
 >>> wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid='tlusty')
 
-The default units of the SEDs are angstrom and erg/s/cm2/A/sr. To change them, do:
+The default B{units} of the SEDs are angstrom and erg/s/cm2/A/sr. To change them,
+do:
 
 >>> wave,flux = get_table(teff=16321,logg=4.321,wave_units='micron',flux_units='Jy/sr')
 
@@ -147,14 +154,67 @@ default, no wavelength information is retrieved. If you want to retrieve the
 effective wavelengths of the filters themselves (not taking into account the
 model atmospheres), you can give an extra keyword argument C{wave_units}.
 
+>>> photbands = ['GENEVA.U','2MASS.J']
+>>> fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands)
+>>> waves,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands,wave_units='A')
+
 Note that the integration only gives you fluxes, and is thus independent from
-the zeropoints of the filters (but dependent on the transmission curves).
+the zeropoints of the filters (but dependent on the transmission curves). To
+get the synthetic magnitudes, you can do
 
-Examples:
+>>> mymags = [conversions.convert('erg/s/cm2/A','mag',fluxes[i],photband=photbands[i]) for i in range(len(photbands))]
 
->>> fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=['GENEVA.U','2MASS.J'])
->>> wave,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=['GENEVA.U','2MASS.J'],wave_units='A')
+The don't mean anything in this case because they have not been corrected for
+the distance to the star.
 
+Subsection 3. Full example
+==========================
+
+We build an SED of Vega and compute synthetic magnitudes in the GENEVA and
+2MASS bands.
+
+These are the relevant parameters of Vega and photometric passbands
+
+>>> ang_diam = 3.21 # mas
+>>> teff = 9602
+>>> logg = 4.1
+>>> ebv = 0.0
+>>> z = 0.0
+>>> photbands = ['GENEVA.U','GENEVA.G','2MASS.J','2MASS.H','2MASS.KS']
+
+We can compute (R/d)^2 to scale the synthetic flux as
+
+>>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+
+We retrieve the SED
+
+>>> wave,flux = get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz')
+>>> flux *= scale**2
+
+Then compute the synthetic fluxes, and compare them with the synthetic fluxes as
+retrieved from the pre-calculated tables
+
+>>> fluxes_calc = synthetic_flux(wave,flux,photbands)
+>>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
+>>> fluxes_int *= scale**2
+
+Convert to magnitudes:
+
+>>> m1 = [conversions.convert('erg/s/cm2/A','mag',fluxes_calc[i],photband=photbands[i]) for i in range(len(photbands))]
+>>> m2 = [conversions.convert('erg/s/cm2/A','mag',fluxes_int[i],photband=photbands[i]) for i in range(len(photbands))]
+
+And make a nice plot
+
+>>> p = pl.figure()
+>>> p = pl.loglog(wave,flux,'k-',label='Kurucz model')
+>>> p = pl.plot(wave_int,fluxes_calc,'ro',label='Calculated')
+>>> p = pl.plot(wave_int,fluxes_int,'bx',ms=10,mew=2,label='Pre-calculated')
+>>> p = [pl.annotate('%s: %.3f'%(b,m),(w,f),color='r') for b,m,w,f in zip(photbands,m1,wave_int,fluxes_calc)]
+>>> p = [pl.annotate('%s: %.3f'%(b,m),(w-1000,0.8*f),color='b') for b,m,w,f in zip(photbands,m2,wave_int,fluxes_int)]
+>>> p = pl.xlabel('Wavelength [Angstrom]')
+>>> p = pl.ylabel('Flux [erg/s/cm2/A]')
+
+]include figure]]ivs_sed_model_example.png]
 
 """
 import os
@@ -500,7 +560,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
 
 
 def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
-               wave_units='A',flux_units='erg/s/cm2/A/sr',**kwargs):
+               wave_units=None,flux_units='erg/s/cm2/A/sr',**kwargs):
                    
     """
     Retrieve the spectral energy distribution of a model atmosphere in
@@ -642,20 +702,10 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             #-- interpolate in log10 of temperature
             myflux[:,0] = np.log10(myflux[:,0])
             flux = 10**griddata(myflux[:,:4],np.log10(myflux[:,4:]),(np.log10(teff),logg,ebv,z))
-                
-                
-        
-        
-        #logger.debug('Model iSED interpolated from grid (%s)'%(kwargs))
-        
-    #c3 = time.time() - c0 - c1 - c2
-    #print '%.6e %.6e %.6e %.6e'%(c1,c2,c3,time.time()-c0)
+    
     if np.any(np.isinf(flux)):
-        #logger.error('infinity encountered during interpolation: results are lost')
-        #print teff,logg,ebv,z
-        #sys.exit()
         flux = np.zeros(fluxes.shape[-1])
-    return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
+    #return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
     
     #-- convert to arrays: remember that last column of the fluxes is actually
     #   absolute luminosity
