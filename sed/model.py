@@ -633,6 +633,8 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
             for i,(t,g,z) in enumerate(mygrid):
                 myflux[2*i:2*i+2,:3] = t,g,z
+                print t,g,z
+                print g_ebv,myflux[2*i:2*i+2,3]
                 myflux[2*i:2*i+2,3] = g_ebv
                 input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(t)),int(round(g*100)),\
