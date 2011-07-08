@@ -636,9 +636,9 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                                                     int(round(t)),int(round(g*100)),\
                                                     int(round(g_ebv[i_ebv]*100))))
                 index = markers.searchsorted(input_code)
-                fluxes[2*i:2*i+2,4:] = ext[index-1:index+1]
+                myflux[2*i:2*i+2,4:] = ext[index-1:index+1]
             #-- interpolate in log10 of temperature
-            fluxes[:,0] = np.log10(fluxes[:,0])
+            myflux[:,0] = np.log10(myflux[:,0])
             flux = griddata(myflux[:,:4],myflux[:,4:],(np.log10(teff),logg,ebv,z))
                 
                 
