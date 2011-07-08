@@ -634,8 +634,8 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             for i,(t,g,z) in enumerate(mygrid):
                 myflux[2*i:2*i+2,:3] = t,g,z
                 print t,g,z
-                print g_ebv,myflux[2*i:2*i+2,3]
-                myflux[2*i:2*i+2,3] = g_ebv
+                print g_ebv[i_ebv-1:i_ebv+1],myflux[2*i:2*i+2,3]
+                myflux[2*i:2*i+2,3] = g_ebv[i_ebv-1:i_ebv+1]
                 input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(t)),int(round(g*100)),\
                                                     int(round(g_ebv[i_ebv]*100))))
