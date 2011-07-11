@@ -76,6 +76,10 @@ if __name__=="__main__":
                   'timeseries/pyGLS','sigproc/pyKEP']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
+        if len(sys.argv)>=3:
+            compiler = sys.argv[2]
+        else:
+            compiler = 'intel'
         if sys.argv[1]=='compile':
             #-- catch all output from f2py
             devnull = open(os.devnull,'wb')
@@ -85,7 +89,7 @@ if __name__=="__main__":
                 if not os.path.isfile(name+'.so'):
                     #-- build the command to compile the program and log it to
                     #   the user
-                    cmd = 'f2py --fcompiler=intel -c %s.f -m %s'%(os.path.join(direc,pname),pname)
+                    cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
                     #-- call the compiling command
                     p = subprocess.Popen(cmd,shell=True,stdout=devnull)
