@@ -55,7 +55,7 @@ Set the color cycle of the Fourier Transform plot to spectral
 >>> p = pl.subplot(122)
 >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, 10)]
 >>> p = pl.gca().set_color_cycle(color_cycle)
->>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2)
+>>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2,label='Correct')
 >>> p = pl.gca().set_yscale('log')
 
 Now compute the vsini of the noisy spectrum, assuming different limb darkening
