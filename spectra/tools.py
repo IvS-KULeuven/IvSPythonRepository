@@ -1,11 +1,80 @@
 """
-Manipulate or extract information from spectra
+Manipulate or extract information from spectra.
+
+Subsection 1. Example usage
+===========================
+
+In this example, we:
+
+1. retrieve a synthetic spectrum
+2. apply a doppler shift of 20 km/s
+3. rotationally broaden the synthetic spectrum according to a vsini of 66 km/s,
+a solar-like limb darkening, and an instrumental profile with FWHM=0.25 angstrom
+4. add noise to the synthetic spectrum
+5. calculate the vsini with the Fourier Transform Method and check the influence
+of the limb darkening coefficients
+
+Retrieve a synthetic spectrum with effective temperature and surface gravity
+resembling a main sequence star of spectral type A0. For this purpose, we do
+not need the whole spectrum but just cut out a piece
+
+>>> from ivs.spectra import model
+>>> wave = np.linspace(4570,4574,100)
+>>> wave,flux,cont = model.get_table(teff=10000,logg=4.0,wave=wave)
+>>> clam = wave[np.argmin(flux)]
+
+Apply a doppler shift of 20 km/s (the star travels away from us)
+
+>>> wave_ = doppler_shift(wave,20.)
+>>> clam_shift = doppler_shift(clam,20.)
+
+Rotationally broaden the spectrum and convolve with an instrumental profile
+
+>>> wave_,flux_ = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=0.0)
+>>> wave_1,flux_1 = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=1.0)
+
+Add some noise
+
+>>> fluxn_ = flux_ + np.random.normal(size=len(flux_),scale=0.01)
+
+Calculate the vsini with the Fourier transform method. To compare the results,
+first compute the FT of the synthetic broadened spectrum without noise:
+
+>>> print clam,clam_shift
+>>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5))
+>>> print vsinis
+
+Make a plot of what we already have:
+
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.plot(wave,flux,'k-')
+>>> p = pl.plot(wave_,fluxn_,'b-')
+>>> p = pl.plot(wave_,flux_,'r-',lw=2)
+>>> p = pl.plot(wave_1,flux_1,'g-',lw=2)
+
+>>> p = pl.subplot(122)
+>>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2)
+>>> p = pl.gca().set_yscale('log')
+
+Now compute the vsini of the noisy spectrum, assuming different limb darkening
+parameters
+
+>>> for epsilon in np.linspace(0.0,1.0,10):
+...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
+...   p = pl.plot(pergram[0],pergram[1])
+
+
 """
+import pyrotin4
 import numpy as np
 from numpy import pi,sin,cos,sqrt
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
+from ivs.aux import loggers
+
+logger = loggers.get_basic_logger()
 
 def doppler_shift(wave,vrad,vrad_units='km/s'):
     """
@@ -84,59 +153,66 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     >>> p=pl.subplot(131)
     >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(epsilons))]
     >>> p = pl.gca().set_color_cycle(color_cycle)
+    >>> p=pl.subplot(133);p=pl.title('Broadening kernel')
+    >>> p = pl.gca().set_color_cycle(color_cycle)
     
     Now run over all epsilons and vsinis and determine the q1 constant:
     
-    >>> for j,epsilon in enumerate(epsilons):
-    ...    for i,vsini in enumerate(vsinis):
-    ...       vsini = conversions.convert('km/s','A/s',vsini)
-    ...       delta = clam*vsini/c
-    ...       lambdas = np.linspace(-5.,+5.,20000)
-    ...       #-- analytical rotational broadening kernel
-    ...       y = 1-(lambdas/delta)**2
-    ...       G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))
-    ...       lambdas = lambdas[-np.isnan(G)]
-    ...       G = G[-np.isnan(G)]
-    ...       G /= max(G)
-    ...       #-- analytical FT of rotational broadening kernel
-    ...       g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))
-    ...       #-- numerical FT of rotational broadening kernel
-    ...       sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm='power')
-    ...       myx = 2*pi*delta*sigma
-    ...       #-- get the minima
-    ...       rise = np.diff(g_[1:])>=0
-    ...       fall = np.diff(g_[:-1])<=0
-    ...       minima = sigma[1:-1][rise & fall]
-    ...       minvals = g_[1:-1][rise & fall]
-    ...       q1s[j,i] =  vsini / (c/clam/minima[0])
-    ...       q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
-    ...    p= pl.plot(vsinis,q1s[j],'o',label='$\epsilon$=%.2f'%(epsilon));pl.gca()._get_lines.count -= 1
-    ...    p= pl.plot(vsinis,q1s_pred[j],'-')
+    #>>> for j,epsilon in enumerate(epsilons):
+    #...    for i,vsini in enumerate(vsinis):
+    #...       vsini = conversions.convert('km/s','A/s',vsini)
+    #...       delta = clam*vsini/c
+    #...       lambdas = np.linspace(-5.,+5.,20000)
+    #...       #-- analytical rotational broadening kernel
+    #...       y = 1-(lambdas/delta)**2
+    #...       G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))
+    #...       lambdas = lambdas[-np.isnan(G)]
+    #...       G = G[-np.isnan(G)]
+    #...       G /= max(G)
+    #...       #-- analytical FT of rotational broadening kernel
+    #...       g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))
+    #...       #-- numerical FT of rotational broadening kernel
+    #...       sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm='power')
+    #...       myx = 2*pi*delta*sigma
+    #...       #-- get the minima
+    #...       rise = np.diff(g_[1:])>=0
+    #...       fall = np.diff(g_[:-1])<=0
+    #...       minima = sigma[1:-1][rise & fall]
+    #...       minvals = g_[1:-1][rise & fall]
+    #...       q1s[j,i] =  vsini / (c/clam/minima[0])
+    #...       q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
+    #...    p= pl.subplot(131)
+    #...    p= pl.plot(vsinis,q1s[j],'o',label='$\epsilon$=%.2f'%(epsilon));pl.gca()._get_lines.count -= 1
+    #...    p= pl.plot(vsinis,q1s_pred[j],'-')
+    #...    p= pl.subplot(133)
+    #...    p= pl.plot(lambdas,G,'-')
     
-    And plot the results:
+    #And plot the results:
     
-    >>> p= pl.xlabel('v sini [km/s]');p = pl.ylabel('q1')
-    >>> p= pl.legend(prop=dict(size='small'))
-    >>> p= pl.subplot(132)
-    >>> p= pl.plot(x,g**2,'k-',label='Analytical FT')
-    >>> p= pl.plot(myx,g_/max(g_),'r-',label='Computed FT')
-    >>> p= pl.plot(minima*2*pi*delta,minvals/max(g_),'bo',label='Minima')
-    >>> p= pl.legend(prop=dict(size='small'))
-    >>> p= pl.gca().set_yscale('log')
-    >>> p= pl.subplot(133)
-    >>> p= pl.plot(lambdas,G,'r-')
+    #>>> p= pl.subplot(131)
+    #>>> p= pl.xlabel('v sini [km/s]');p = pl.ylabel('q1')
+    #>>> p= pl.legend(prop=dict(size='small'))
     
-    ]include figure]]ivs_spectra_vsini_kernel.png]
+    
+    #>>> p= pl.subplot(132);p=pl.title('Fourier transform')
+    #>>> p= pl.plot(x,g**2,'k-',label='Analytical FT')
+    #>>> p= pl.plot(myx,g_/max(g_),'r-',label='Computed FT')
+    #>>> p= pl.plot(minima*2*pi*delta,minvals/max(g_),'bo',label='Minima')
+    #>>> p= pl.legend(prop=dict(size='small'))
+    #>>> p= pl.gca().set_yscale('log')
+    
+    ]include figure]]ivs_spectra_tools_vsini_kernel.png]
     
     Extra keyword arguments are passed to L{pergrams.deeming}
     """
-    #-- what is the central wavelength? If not given, it's the middle of the
-    #   wavelength range
-    if clam is None: clam = ((window[0]+window[1])/2)
+    cc = conversions.convert('m/s','A/s',constants.cc)
     #-- clip the wavelength and flux region if needed:
     if window is not None:
         keep = (window[0]<=wave) & (wave<=window[1])
         wave,flux = wave[keep],flux[keep]
+    #-- what is the central wavelength? If not given, it's the middle of the
+    #   wavelength range
+    if clam is None: clam = ((wave[0]+wave[-1])/2)
     #-- take care of the limb darkening
     q1 = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
     #-- do the Fourier transform and normalise
@@ -147,7 +223,9 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     fall = np.diff(ampls[:-1])<=0
     minima = freqs[1:-1][rise & fall]
     minvals = ampls[1:-1][rise & fall]
-    vsini_values = conversions.convert('m-1','km/s',q1/minima,wave=(clam,'A'))
+    #-- compute the vsini and convert to km/s
+    vsini_values = cc/clam*q1/minima
+    vsini_values = conversions.convert('A/s','km/s',vsini_values,wave=(clam,'A'))
     
     return (freqs,ampls),(minima,minvals),vsini_values
 
