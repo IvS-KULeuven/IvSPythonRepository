@@ -2,8 +2,8 @@
 """
 Calculate the distance to a star with Lutz-Kelker bias
 
-Section 1. Examples
-===================
+Section 1. Bias introduced by the shape of the Galaxy
+=====================================================
 
 To correctly compute the distance to a star given it's parallax, we need to
 know it's position wrt the galactic plane. So, we need information on the
@@ -73,7 +73,7 @@ distribution shows a bias (the Lutz-Kelker bias), but also have tails can appear
 >>> p = pl.xlabel('Distance (pc)');p = pl.ylabel('Unnormalised probability')
 >>> p = pl.legend()
 
-]include figure]]ivs_observations_distance_LK]
+]include figure]]ivs_observations_distance_LK.png]
 
 """
 import numpy as np
