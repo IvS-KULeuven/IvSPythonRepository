@@ -5,6 +5,18 @@ Calculate the distance to a star with Lutz-Kelker bias
 Section 1. Bias introduced by the shape of the Galaxy
 =====================================================
 
+In this section, we compare the distance calculation via the inverse of the
+parallax with a method that takes into account the distribution of stars in the
+Milky Way. The latter can be important when the error on the parallax is larger
+than 25%: then, it becomes more likely to have observed a star located further
+in the galaxy but which appears erronously closer, just because there are many
+more stars in the volume Delta_d (as the volume is much larger). This depends
+on the the location of the star in the Milky Way (in the Halo, the number of
+stars is low anyway) and thus also on the shape of the Milky Way. Here, the
+Galaxy is approximated as the sum of a self-gravitating isothermal disk and a
+Gaussian Halo (L{rho}). For more details, see, e.g., Maiz-Apellaniz, Alfaro and
+Sota 2007/2008 (Poster).
+
 To correctly compute the distance to a star given it's parallax, we need to
 know it's position wrt the galactic plane. So, we need information on the
 coordinates of the star:
@@ -12,9 +24,9 @@ coordinates of the star:
 >>> from ivs.catalogs import sesame
 
 We take three examples: Vega, which has a well known parallax, HIP14, which has a
-mediocre value, and HIP15, which has a bad value. When retrieving the information
-from SIMBAD, make sure we have Van Leeuwen's (2007) parallax, and that we have
-the galactic coordinates of the target.
+mediocre value, and HIP15, which has a badly determined value. When retrieving
+the information from SIMBAD, make sure we have Van Leeuwen's (2007) parallax,
+and that we have the galactic coordinates of the target.
 
 >>> vega = sesame.search('vega',fix=True)
 >>> hip14= sesame.search('hip14',fix=True)
@@ -26,7 +38,7 @@ We have the following parameters::
     HIP14: 4.86 +/- 0.67 (13.79%)
     HIP15: 1.91 +/- 1.14 (59.69%)
 
-Compute the distance probability functions:
+We can compute the distance probability functions via L{distprob}:
 
 >>> r1 = np.linspace(7,8,1000)
 >>> r2 = np.linspace(0,500,1000)
@@ -35,8 +47,9 @@ Compute the distance probability functions:
 >>> prob2 = distprob(r2,hip14['galpos'][1],(hip14['plx']['v'],hip14['plx']['e']))
 >>> prob3 = distprob(r3,hip15['galpos'][1],(hip15['plx']['v'],hip15['plx']['e']))
 
-And compare with the Gaussian approximation. First we need some extra modules
-to compute with uncertainties, and to evaluate the Gaussian function.
+It is useful to compare with the Gaussian approximation. First we need some
+extra modules to compute with uncertainties, and to evaluate the Gaussian
+function.
 
 >>> from ivs.sigproc import evaluate
 >>> from ivs.units.uncertainties import ufloat
@@ -51,9 +64,9 @@ parallax (in arcsec).
 >>> prob2_ = evaluate.gauss(r2,[1.,hip14_.nominal_value,hip14_.std_dev()])
 >>> prob3_ = evaluate.gauss(r3,[1.,hip15_.nominal_value,hip15_.std_dev()])
 
-And we summarize everything in a plot: up to a relative error of ~25%, the
-Gaussian approximation works pretty well. From then on, even the peak of the
-distribution shows a bias (the Lutz-Kelker bias), but also have tails can appear.
+We summarize everything in a plot: up to a relative error of ~25%, the Gaussian
+approximation works pretty well. From then on, even the peak of the distribution
+shows a bias (the Lutz-Kelker bias), but also have tails can appear.
 
 >>> p = pl.figure()
 >>> p = pl.subplot(221)
@@ -130,6 +143,7 @@ def probability_cd(r,plx):
     @param plx: parallax (mas) and error
     @type plx: tuple of float/array
     @return: probability function
+    @rtype: float/array
     """
     plx,e_plx = plx[0]/1000,plx[1]/1000.
     A = 1.
@@ -145,6 +159,15 @@ def distprob(r,theta,plx,**kwargs):
     plx is a tuple!
     
     returns (unnormalised) probability density function.
+    
+    @param r: distance (pc)
+    @type r: float/array
+    @param theta: galactic latitude (deg)
+    @type theta: float
+    @param plx: parallax (mas) and error
+    @type plx: tuple of float/array
+    @return: probability function
+    @rtype: float/array
     """
     z = r*sin(theta/180.*pi)
     pcd = probability_cd(r,plx)
