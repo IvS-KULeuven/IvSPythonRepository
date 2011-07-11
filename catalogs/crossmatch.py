@@ -12,16 +12,17 @@ from ivs.catalogs import gator
 from ivs.catalogs import gcpd
 from ivs.catalogs import mast
 from ivs.units import conversions
-from ivs.misc import numpy_ext
-from ivs.misc import progressMeter
-from ivs.misc import loggers
+from ivs.aux import numpy_ext
+from ivs.aux import progressMeter
+from ivs.aux import loggers
 from ivs.io import ascii
 
 from scipy.spatial import KDTree
 
 logger = logging.getLogger("CAT.XMATCH")
 
-def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],**kwargs):
+def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],include=None,
+         exclude=None,**kwargs):
     """
     Collect photometry from different sources.
     
@@ -46,6 +47,10 @@ def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],**kwargs):
     to handle it: probably some default values need to be inserted if these
     extra columns are not available in some catalog. It is safest just to leave
     it blank.
+    
+    You can include or exclude search sources via C{include} and C{exclude}.
+    When given, these should be a list containing strings. The default is to
+    include C{gator}, C{vizier} and C{gcpd}.
     
     Extra keyword arguments are passed to each C{get_photometry} functions in
     this package's modules.
@@ -74,12 +79,32 @@ def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],**kwargs):
     @type ID: str
     @param to_units: units to convert everything to.
     @type to_units:
+    @param include: sources to include
+    @type include: list of strings (from C{gator}, C{vizier} or C{gcpd})
+    @param exclude: sources to include
+    @type exclude: list of strings (from C{gator}, C{vizier} or C{gcpd})
     @return: record array where eacht entry is a photometric measurement
     @rtype: record array
     """
-    kwargs['master'] = gator.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
-    kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
-    kwargs['master'] = gcpd.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+    #-- make sure all catalog names are lower case
+    if include is not None: include = [i.lower() for i in include]
+    if exclude is not None: exclude = [i.lower() for i in exclude]
+    
+    #-- check which sources to include/exclude
+    searchables = ['gator','vizier','gcpd']
+    if includes is not None:
+        searchables = include
+    if exclude is not None:
+        for exclude_ in exclude:
+            searchables.remove(exclude_)
+    
+    #-- and search photometry
+    if 'gator' in searchables:
+        kwargs['master'] = gator.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+    if 'vizier' in searchables:
+        kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+    if 'gcpd' in searchables:
+        kwargs['master'] = gcpd.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     #master = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     master = kwargs['master']
     
