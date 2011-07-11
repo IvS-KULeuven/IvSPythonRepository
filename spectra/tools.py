@@ -50,7 +50,8 @@ Make a plot of what we already have:
 >>> p = pl.plot(wave,flux,'k-')
 >>> p = pl.plot(wave_,fluxn_,'b-')
 >>> p = pl.plot(wave_,flux_,'r-',lw=2)
->>> p = pl.plot(wave_1,flux_1,'g-',lw=2)
+>>> p = pl.plot(wave_1,flux_1,'g--',lw=2)
+>>> p = pl.xlim(0,10)
 
 >>> p = pl.subplot(122)
 >>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2)
