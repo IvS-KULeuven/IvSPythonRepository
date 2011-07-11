@@ -2,12 +2,8 @@
 """
 Functions relevant for photometric calibration
 
-Example usage:
-    
-#>>> for band in ['J','H','KS']:
-#...    p = pl.plot(*get_response('2MASS.%s'%(band)))
-
 Section 1. Available response functions
+=======================================
 
 Short list of available systems:
 
@@ -69,18 +65,28 @@ Short list of available systems:
       WISE (  4 filters)
       WOOD ( 12 filters)
 
+Plots of all passbands of all systems:
+
 >>> for i,resp in enumerate(responses):
+...    # what system is this, and how many filters are in this system?
 ...    this_system = resp.split('.')[0]
 ...    nr_filters = systems.count(this_system)
+...    # call the plot containing the filters of the same system. If this is the
+...    # the first time the plot is called (first filter of system), then set
+...    # the title and color cycle
 ...    p = pl.figure(set_responses.index(this_system),figsize=(10,4.5))
 ...    if not pl.gca()._get_lines.count:
 ...        color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)]
 ...        p = pl.gca().set_color_cycle(color_cycle)
 ...        p = pl.title(resp.split('.')[0])
+...    # get the response curve and plot it
 ...    wave,trans = get_response(resp)
 ...    p = pl.plot(wave/1e4,trans,label=resp)
+...    # and set labels
 ...    p = pl.xlabel('Wavelength [micron]')
 ...    p = pl.ylabel('Transmission')
+...    # if there are not more filters in this systems, save the plot to a file
+...    # and close it
 ...    if pl.gca()._get_lines.count==nr_filters:
 ...        p = pl.legend(prop=dict(size='small'))
 ...        p = pl.savefig('/home/pieterd/python/ivs/doc/images/ivs_sed_filters_%s'%(this_system));p = pl.close()
