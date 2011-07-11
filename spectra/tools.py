@@ -64,7 +64,8 @@ parameters
 ...   p = pl.plot(pergram[0],pergram[1])
 >>> xticks = np.array([25,35,50,60,75,100][::-1])
 >>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
->>> p = pl.xlim(0,0.04)
+>>> print xticks
+>>> p = pl.xlim(0,0.1)
 
 """
 import pyrotin4
