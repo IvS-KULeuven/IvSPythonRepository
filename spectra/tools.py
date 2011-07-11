@@ -65,7 +65,7 @@ parameters
 
 >>> for epsilon in np.linspace(0.0,1.0,10):
 ...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
-...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f'%(epsilon))
+...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f: vsini = %.1f km/s'%(epsilon,vsinis[0]))
 
 Set the xticks to vsini values for clarity:
 
