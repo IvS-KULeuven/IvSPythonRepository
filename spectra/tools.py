@@ -73,6 +73,10 @@ Set the xticks to vsini values for clarity:
 >>> p = pl.ylim(5e-4,1)
 >>> p = pl.legend(loc='lower left',prop=dict(size='small'))
 
+]include figure]]ivs_spectra_tools_vsini01.png]
+
+]include figure]]ivs_spectra_tools_vsini02.png]
+
 """
 import pyrotin4
 import numpy as np
