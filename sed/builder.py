@@ -12,59 +12,59 @@ Section 1. Retrieving photometry of a target
 >>> mysed = SED('HD180642')
 >>> mysed.get_photometry()
 
-You can give a search radius to C{get_photometry} via the keyword C{radius}. The
-default value is 10 arcseconds for for stars dimmer than 6th magnitude, and 60
-arcseconds for brighter stars. The best value of course depends on the density
+You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
+The default value is 10 arcseconds for for stars dimmer than 6th magnitude, and
+60 arcseconds for brighter stars. The best value of course depends on the density
 of the field.
 
-You best switch on the logger C{see loggers.get_basic_logger} to see the progress:
+You best B{switch on the logger} C{see loggers.get_basic_logger} to see the progress:
 sometimes, access to catalogs can take a long time (the GATOR sources are
 typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow,
-you can include/exclude these source via the keywords C{include} or C{exclude},
+you can B{include/exclude these sources} via the keywords C{include} or C{exclude},
 which take a list of strings (choose from C{gator}, C{vizier} and/or C{gcpd}).
 
-The results will be written to the file 'HD180642.phot'. An example content is::
+The results will be written to the file B{HD180642.phot}. An example content is::
 
-    #  meas    e_meas flag unit photband          source                        _r   _RAJ2000    _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
-    #float64   float64 |S20 |S30 |S30              |S50                     float64    float64     float64 float64     float64     float64 |S50         bool    bool
+  #  meas    e_meas flag unit photband          source                        _r   _RAJ2000    _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
+  #float64   float64 |S20 |S30 |S30              |S50                     float64    float64     float64 float64     float64     float64 |S50         bool    bool
     7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/A     0       1
     7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/A     0       1
-    7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/A     0       1
+     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/A     0       1
     7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/A     0       1
     8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/A     0       1
     8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/A     0       1
-    8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
-    0.22       nan nan  mag  JOHNSON.B-V       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.40749    0.140749 flux_ratio      1       0
+     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+     0.22       nan nan  mag  JOHNSON.B-V       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.21491    0.121491 flux_ratio      1       0
-    8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-    7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
+     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
     2.601       nan nan  mag  STROMGREN.HBN-HBW J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.66181    0.166181 flux_ratio      1       0
-    -0.043       nan nan  mag  STROMGREN.M1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan    0.961281   0.0961281 flux_ratio      1       0
+   -0.043       nan nan  mag  STROMGREN.M1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan    0.961281   0.0961281 flux_ratio      1       0
     8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/A     0       1
     0.009       nan nan  mag  STROMGREN.C1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     0.93125    0.093125 flux_ratio      1       0
     0.238       nan nan  mag  STROMGREN.B-Y     J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.28058    0.128058 flux_ratio      1       0
     8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/A     0       1
     8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/A     0       1
     8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/A     0       1
-    7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/A     0       1
-    7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/A     0       1
-    7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/A     0       1
-    8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/A     0       1
+     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/A     0       1
+     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/A     0       1
+     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/A     0       1
+   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/A     0       1
     8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/A     0       1
     8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/A     0       1
-    8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/A     0       1
+     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/A     0       1
     8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/A     0       1
-    8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/A     0       1
-    8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/A     0       1
+     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/A     0       1
+     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/A     0       1
     8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/A     0       1
     8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/A     0       1
     7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/A     0       1
     7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/A     0       1
     7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/A     0       1
     8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/A     0       1
-        1.8     0.004 nan  mag  GENEVA.G-B        GCPD                         nan        nan         nan     nan    0.669837  0.00669837 flux_ratio      1       0
+      1.8     0.004 nan  mag  GENEVA.G-B        GCPD                         nan        nan         nan     nan    0.669837  0.00669837 flux_ratio      1       0
     1.384     0.004 nan  mag  GENEVA.V1-B       GCPD                         nan        nan         nan     nan    0.749504  0.00749504 flux_ratio      1       0
-    0.85     0.004 nan  mag  GENEVA.B1-B       GCPD                         nan        nan         nan     nan     1.05773   0.0105773 flux_ratio      1       0
+     0.85     0.004 nan  mag  GENEVA.B1-B       GCPD                         nan        nan         nan     nan     1.05773   0.0105773 flux_ratio      1       0
     1.517     0.004 nan  mag  GENEVA.B2-B       GCPD                         nan        nan         nan     nan    0.946289  0.00946289 flux_ratio      1       0
     0.668     0.004 nan  mag  GENEVA.V-B        GCPD                         nan        nan         nan     nan    0.726008  0.00726008 flux_ratio      1       0
     0.599     0.004 nan  mag  GENEVA.U-B        GCPD                         nan        nan         nan     nan     1.13913   0.0113913 flux_ratio      1       0
@@ -74,21 +74,38 @@ The results will be written to the file 'HD180642.phot'. An example content is::
     8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/A     0       1
     9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/A     0       1
     8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/A     0       1
-    8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
-    0.22       nan nan  mag  JOHNSON.B-V       GCPD                         nan        nan         nan     nan     1.40749    0.140749 flux_ratio      1       0
+     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+     0.22       nan nan  mag  JOHNSON.B-V       GCPD                         nan        nan         nan     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       GCPD                         nan        nan         nan     nan     1.21491    0.121491 flux_ratio      1       0
-    8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-    7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
-    -0.035       nan nan  mag  STROMGREN.M1      GCPD                         nan        nan         nan     nan    0.954224   0.0954224 flux_ratio      1       0
+     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
+     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+   -0.035       nan nan  mag  STROMGREN.M1      GCPD                         nan        nan         nan     nan    0.954224   0.0954224 flux_ratio      1       0
     0.031       nan nan  mag  STROMGREN.C1      GCPD                         nan        nan         nan     nan     0.91257    0.091257 flux_ratio      1       0
     0.259       nan nan  mag  STROMGREN.B-Y     GCPD                         nan        nan         nan     nan     1.25605    0.125605 flux_ratio      1       0
-    -0.009 0.0478853 nan  mag  2MASS.J-H         II/246/out                 0.118 -2.783e-05   1.715e-05     nan     2.68719    0.118516 flux_ratio      1       0
-    -0.033 0.0469574 nan  mag  2MASS.KS-H        II/246/out                 0.118 -2.783e-05   1.715e-05     nan    0.385286   0.0166634 flux_ratio      1       0
+   -0.009 0.0478853 nan  mag  2MASS.J-H         II/246/out                 0.118 -2.783e-05   1.715e-05     nan     2.68719    0.118516 flux_ratio      1       0
+   -0.033 0.0469574 nan  mag  2MASS.KS-H        II/246/out                 0.118 -2.783e-05   1.715e-05     nan    0.385286   0.0166634 flux_ratio      1       0
     -0.01 0.0412311 nan  mag  JOHNSON.J-H       J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06     nan     2.73514    0.103867 flux_ratio      1       0
     -0.04 0.0412311 nan  mag  JOHNSON.K-H       J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06     nan    0.375718    0.014268 flux_ratio      1       0
     0.209 0.0206155 nan  mag  TYCHO2.BT-VT      I/259/tyc2                 0.042   7.17e-06    1.15e-06     nan     1.43014    0.027155 flux_ratio      1       0
 
-Example usage:
+Once a .phot file is written and C{get_photometry} is called again for the same
+target, the script will not retrieve the photometry from the internet, but will
+use the contents of the file instead. The purpose is minimizing network traffic
+and maximizing speed.
+
+The content of the .phot file is most easily read using the C{ascii.read2recarry}
+function:
+
+>>> data = ascii.read2recarray('HD180642.phot')
+
+But the contents can also be plotted via
+
+>>> p = mysed.plot_data()
+
+]]include figure]]ivs_sed_builder_example_photometry.png]
+
+Section 2. Example fitting
+==========================
 
 Make an SED of HD180642:
 
@@ -103,9 +120,9 @@ some systems and colours which we know are untrustworthy
 
 Start the grid based fitting process and show some plots
 
->>> mysed.igrid_search()
->>> mysed.make_plots()
->>> pl.show()
+#>>> mysed.igrid_search()
+#>>> mysed.make_plots()
+#>>> pl.show()
 """
 import sys
 import time
@@ -813,9 +830,40 @@ class SED(object):
         elif ptype=='ebv': cbar.set_label('E(B-V) [mag]')
         
         logger.info('Plotted teff-logg diagram of %s'%(ptype))
-            
-    def plot_sed(self,colors=False,mtype='igrid_search'):
+    
+    def plot_data(self):
+        """
+        Plot only the SED data.
+        """
+        wave,flux,e_flux = self.master.cwave,self.master.cmeas,self.master.e_cmeas
+        iscolor = np.array(self.master.color,bool)
+        photbands = self.master.photband
+        allsystems = np.array([i.split('.')[0] for i in photbands])
+        systems = sorted(set(allsystems))
         
+        color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(systems))]
+        pl.gca().set_color_cycle(color_cycle)
+        pl.gca().set_xscale('log',nonposx='clip')
+        pl.gca().set_yscale('log',nonposy='clip')
+        
+        for system in systems:
+            keep = (allsystems==system) & -iscolor
+            if keep.sum():
+                pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7)
+        pl.legend(prop=dict(size='small'))
+        pl.grid()
+        pl.title(self.ID)
+        pl.ylabel(r'$F_\lambda$ [erg/s/cm$^2/A$]')
+        pl.xlabel('wavelength [$\AA$]')
+        
+        return None
+        
+    
+    
+    def plot_sed(self,colors=False,mtype='igrid_search'):
+        """
+        Plot a fitted SED together with the data.
+        """
         
         def plot_sed_getcolors(master,color_dict=None):
             myphotbands = [iphotb.split('.')[1] for iphotb in master['photband'][master['color']]]
@@ -1224,6 +1272,10 @@ class SED(object):
 
 
 if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+    pl.show()
+    sys.exit()
     #-- PCA analysis
     master['include'] = True
     exclude(master,names=['STROMGREN.HBN-HBW','USNOB1'],wrange=(1.5e4,np.inf))
