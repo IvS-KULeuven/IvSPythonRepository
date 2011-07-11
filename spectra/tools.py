@@ -62,9 +62,9 @@ parameters
 >>> for epsilon in np.linspace(0.0,1.0,10):
 ...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
 ...   p = pl.plot(pergram[0],pergram[1])
->>> p = pl.xlim(0,0.1)
->>> xticks = np.array([5,10,25,50,75,100,150,200,250][::-1])
->>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
+#>>> p = pl.xlim(0,0.1)
+#>>> xticks = np.array([5,10,25,50,75,100,150,200,250][::-1])
+#>>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
 
 """
 import pyrotin4
