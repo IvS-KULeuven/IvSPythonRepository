@@ -223,6 +223,8 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     minima = freqs[1:-1][rise & fall]
     minvals = ampls[1:-1][rise & fall]
     #-- compute the vsini and convert to km/s
+    freqs = freqs*clam/q1/cc
+    freqs = conversions.convert('A/s','km/s',freqs,wave=(clam,'A'))
     vsini_values = cc/clam*q1/minima
     vsini_values = conversions.convert('A/s','km/s',vsini_values,wave=(clam,'A'))
     
