@@ -50,8 +50,7 @@ Make a plot of what we already have:
 >>> p = pl.plot(wave,flux,'k-')
 >>> p = pl.plot(wave_,fluxn_,'b-')
 >>> p = pl.plot(wave_,flux_,'r-',lw=2)
->>> p = pl.plot(wave_1,flux_1,'g--',lw=2)
->>> p = pl.xlim(0,10)
+>>> p = pl.plot(wave_1,flux_1,'g-',lw=2)
 
 >>> p = pl.subplot(122)
 >>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2)
@@ -63,7 +62,7 @@ parameters
 >>> for epsilon in np.linspace(0.0,1.0,10):
 ...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
 ...   p = pl.plot(pergram[0],pergram[1])
-
+>>> p = pl.xlim(0,6)
 
 """
 import pyrotin4
