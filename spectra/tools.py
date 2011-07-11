@@ -19,7 +19,7 @@ resembling a main sequence star of spectral type A0. For this purpose, we do
 not need the whole spectrum but just cut out a piece
 
 >>> from ivs.spectra import model
->>> wave = np.linspace(4570,4574,100)
+>>> wave = np.linspace(4570,4574,200)
 >>> wave,flux,cont = model.get_table(teff=10000,logg=4.0,wave=wave)
 >>> clam = wave[np.argmin(flux)]
 
@@ -40,7 +40,6 @@ Add some noise
 Calculate the vsini with the Fourier transform method. To compare the results,
 first compute the FT of the synthetic broadened spectrum without noise:
 
->>> print clam,clam_shift
 >>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5))
 >>> print vsinis
 
