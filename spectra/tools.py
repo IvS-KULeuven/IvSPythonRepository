@@ -65,7 +65,7 @@ parameters
 
 >>> for epsilon in np.linspace(0.0,1.0,10):
 ...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
-...   p = pl.plot(pergram[0],pergram[1])
+...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f'%(epsilon))
 
 Set the xticks to vsini values for clarity:
 
@@ -73,6 +73,7 @@ Set the xticks to vsini values for clarity:
 >>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
 >>> p = pl.xlim(0,0.04);p = pl.grid()
 >>> p = pl.ylim(5e-4,1)
+>>> p = pl.legend(loc='lower left',prop=dict(size='small'))
 
 """
 import pyrotin4
