@@ -64,14 +64,40 @@ def glob(relative_path,arg='*'):
     
 
 if __name__=="__main__":    
-    to_install = ['spectra/pyrotin4']
+    import subprocess
+    from ivs.aux import loggers
+    import shutil
+    import time
+    logger = loggers.get_basic_logger()
+    
+    to_install = ['spectra/pyrotin4',
+                  'timeseries/deeming','timeseries/eebls','timeseries/multih',
+                  'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
+                  'timeseries/pyGLS','sigproc/pyKEP']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if sys.argv[1]=='compile':
+            #-- catch all output from f2py
+            devnull = open(os.devnull,'wb')
             for name in to_install:
+                #-- break up fortran filepath in file and directory name
                 direc,pname = os.path.dirname(name),os.path.basename(name)
-                os.chdir(direc)
                 if not os.path.isfile(name+'.so'):
-                    os.system('f2py -c %s.f -m %s'%(pname,pname))
-                os.chdir(main_dir)
-       
+                    #-- build the command to compile the program and log it to
+                    #   the user
+                    cmd = 'f2py --fcompiler=intel -c %s.f -m %s'%(os.path.join(direc,pname),pname)
+                    logger.info('Compiling %s: %s'%(pname.upper(),cmd))
+                    #-- call the compiling command
+                    p = subprocess.Popen(cmd,shell=True,stdout=devnull)
+                    #-- wait for the file to be written to the disk and move
+                    #   it to the right subdirectory
+                    time.sleep(3)
+                    #-- check if compilation went fine
+                    if os.path.isfile(pname+'.so'):
+                        shutil.move(pname+'.so',name+'.so')
+                        logger.info('... succeeded')
+                    else:
+                        logger.error('FAILED')
+                else:
+                    logger.info('%s already compiled'%(pname.upper()))
+            devnull.close()
