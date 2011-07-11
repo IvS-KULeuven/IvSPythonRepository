@@ -65,7 +65,7 @@ parameters
 >>> xticks = np.array([25,35,50.,60,75,100,500][::-1])
 >>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
 >>> print xticks
->>> p = pl.xlim(0,0.1)
+>>> p = pl.xlim(0,0.04)
 
 """
 import pyrotin4
