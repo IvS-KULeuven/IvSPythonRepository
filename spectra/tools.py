@@ -52,7 +52,11 @@ Make a plot of what we already have:
 >>> p = pl.plot(wave_,flux_,'r-',lw=2)
 >>> p = pl.plot(wave_1,flux_1,'g-',lw=2)
 
+Set the color cycle of the Fourier Transform plot to spectral
+
 >>> p = pl.subplot(122)
+>>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, 10)]
+>>> p = pl.gca().set_color_cycle(color_cycle)
 >>> p = pl.plot(pergram[0],pergram[1],'r-',lw=2)
 >>> p = pl.gca().set_yscale('log')
 
@@ -62,10 +66,13 @@ parameters
 >>> for epsilon in np.linspace(0.0,1.0,10):
 ...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
 ...   p = pl.plot(pergram[0],pergram[1])
->>> xticks = np.array([25,35,50.,60,75,100,500][::-1])
+
+Set the xticks to vsini values for clarity:
+
+>>> xticks = np.array([25,35,50.,66,80,100,500][::-1])
 >>> p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])
->>> print xticks
->>> p = pl.xlim(0,0.04)
+>>> p = pl.xlim(0,0.04);p = pl.grid()
+>>> p = pl.ylim(5e-4,1)
 
 """
 import pyrotin4
