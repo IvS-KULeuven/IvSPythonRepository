@@ -19,11 +19,11 @@ the galactic coordinates of the target.
 >>> vega = sesame.search('vega',fix=True)
 >>> hip14= sesame.search('hip14',fix=True)
 >>> hip15= sesame.search('hip15',fix=True)
->>> print 'vega : %.2f +/- %.2f (%.2f%%)'%(vega['plx']['v'],vega['plx']['e'],vega['plx']['e']/vega['plx']['v']*100)
+
+We have the following parameters::
+
 vega : 130.23 +/- 0.36 (0.28%)
->>> print 'HIP14: %.2f +/- %.2f (%.2f%%)'%(hip14['plx']['v'],hip14['plx']['e'],hip14['plx']['e']/hip14['plx']['v']*100)
 HIP14: 4.86 +/- 0.67 (13.79%)
->>> print 'HIP15: %.2f +/- %.2f (%.2f%%)'%(hip15['plx']['v'],hip15['plx']['e'],hip15['plx']['e']/hip15['plx']['v']*100)
 HIP15: 1.91 +/- 1.14 (59.69%)
 
 Compute the distance probability functions:
