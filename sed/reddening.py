@@ -14,15 +14,19 @@ Use the general interface to get different curves:
 ...   p = pl.plot(1e4/wave_,mag_,label=name)
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
->>> p = pl.legend()
 
 Use the general interface to get the same curves but with different Rv:
 
 >>> for Rv in [2.0,3.1,5.1]:
 ...   wave_,mag_ = get_law('cardelli1989',wave=wave,Rv=Rv)
-...   p = pl.plot(1e4/wave_,mag_,'--',lw=2)
+...   p = pl.plot(1e4/wave_,mag_,'--',lw=2,label='cardelli1989 Rv=%.1f'%(Rv))
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
+>>> p = pl.xlabel('1/$\lambda$ [1/$\mu$m]')
+>>> p = pl.ylabel('Extinction E(B-V) [mag]')
+>>> p = pl.legend(prop=dict(size='small'),loc='lower right')
+
+]include figure]]ivs_sed_reddening_curves.png]
 
 Get the curves seperately:
 
@@ -32,17 +36,6 @@ Get the curves seperately:
 >>> wave4,mag4 = fitzpatrick1999()
 >>> wave5,mag5 = fitzpatrick2004()
 
-And plot them:
-
->>> p = pl.figure()
->>> p = pl.plot(1e4/wave1,mag1*3.1)
->>> p = pl.plot(1e4/wave2,mag2*3.1)
->>> p = pl.plot(1e4/wave3,mag3*3.1)
->>> p = pl.plot(1e4/wave4,mag4*3.1)
->>> p = pl.plot(1e4/wave5,mag5*3.1)
->>> p = pl.xlim(0,10)
->>> p = pl.ylim(0,12)
->>> p = pl.show()
 """
 
 import os
@@ -50,8 +43,8 @@ import numpy as np
 import logging
 
 from ivs.io import ascii
-from ivs.misc import loggers
-from ivs.misc.decorators import memoized
+from ivs.aux import loggers
+from ivs.aux.decorators import memoized
 from ivs.units import conversions
 from ivs.sed import filters
 
