@@ -19,7 +19,7 @@ resembling a main sequence star of spectral type A0. For this purpose, we do
 not need the whole spectrum but just cut out a piece
 
 >>> from ivs.spectra import model
->>> wave = np.linspace(4570,4574,200)
+>>> wave = np.linspace(4570,4574,300)
 >>> wave,flux,cont = model.get_table(teff=10000,logg=4.0,wave=wave)
 >>> clam = wave[np.argmin(flux)]
 
