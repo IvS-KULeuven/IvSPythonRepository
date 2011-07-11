@@ -39,7 +39,7 @@ Add some noise
 Calculate the vsini with the Fourier transform method. To compare the results,
 first compute the FT of the synthetic broadened spectrum without noise:
 
->>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5))
+>>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 
 Make a plot of what we already have:
 
