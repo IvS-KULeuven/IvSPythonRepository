@@ -22,9 +22,9 @@ the galactic coordinates of the target.
 
 We have the following parameters::
 
-vega : 130.23 +/- 0.36 (0.28%)
-HIP14: 4.86 +/- 0.67 (13.79%)
-HIP15: 1.91 +/- 1.14 (59.69%)
+    vega : 130.23 +/- 0.36 (0.28%)
+    HIP14: 4.86 +/- 0.67 (13.79%)
+    HIP15: 1.91 +/- 1.14 (59.69%)
 
 Compute the distance probability functions:
 
