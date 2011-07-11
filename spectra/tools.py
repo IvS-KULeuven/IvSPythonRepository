@@ -30,8 +30,7 @@ Apply a doppler shift of 20 km/s (the star travels away from us)
 
 Rotationally broaden the spectrum and convolve with an instrumental profile
 
->>> wave_,flux_ = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=0.0)
->>> wave_1,flux_1 = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=1.0)
+>>> wave_,flux_ = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=0.6)
 
 Add some noise
 
@@ -41,16 +40,14 @@ Calculate the vsini with the Fourier transform method. To compare the results,
 first compute the FT of the synthetic broadened spectrum without noise:
 
 >>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5))
->>> print vsinis
 
 Make a plot of what we already have:
 
 >>> p = pl.figure()
 >>> p = pl.subplot(121)
->>> p = pl.plot(wave,flux,'k-')
->>> p = pl.plot(wave_,fluxn_,'b-')
->>> p = pl.plot(wave_,flux_,'r-',lw=2)
->>> p = pl.plot(wave_1,flux_1,'g-',lw=2)
+>>> p = pl.plot(wave,flux,'k-',label='Original template')
+>>> p = pl.plot(wave_,fluxn_,'b-',label='Spectrum + noise')
+>>> p = pl.plot(wave_,flux_,'r-',lw=2,label='Broadened')
 
 Set the color cycle of the Fourier Transform plot to spectral
 
@@ -64,7 +61,7 @@ Now compute the vsini of the noisy spectrum, assuming different limb darkening
 parameters
 
 >>> for epsilon in np.linspace(0.0,1.0,10):
-...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5))
+...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 ...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f: vsini = %.1f km/s'%(epsilon,vsinis[0]))
 
 Set the xticks to vsini values for clarity:
