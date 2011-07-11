@@ -4,10 +4,192 @@ Functions relevant for photometric calibration
 
 Example usage:
     
->>> from pylab import plot,show
->>> for band in ['J','H','KS']:
-...    p = plot(*get_response('2MASS.%s'%(band)))
->>> p = show()
+#>>> for band in ['J','H','KS']:
+#...    p = pl.plot(*get_response('2MASS.%s'%(band)))
+
+Section 1. Available response functions
+
+Short list of available systems:
+
+>>> responses = list_response()
+>>> systems = [response.split('.')[0] for response in responses]
+>>> set_responses = sorted(set([response.split('.')[0] for response in systems]))
+>>> for i,resp in enumerate(set_responses):
+...    print '%10s (%3d filters)'%(resp,systems.count(resp))
+     2MASS (  3 filters)
+    ACSHRC ( 17 filters)
+    ACSSBC (  6 filters)
+    ACSWFC ( 12 filters)
+     AKARI ( 13 filters)
+       ANS (  6 filters)
+     ARGUE (  3 filters)
+    BESSEL (  6 filters)
+   BESSELL (  6 filters)
+     COROT (  2 filters)
+   COUSINS (  2 filters)
+     DENIS (  3 filters)
+     DIRBE ( 10 filters)
+     ESOIR ( 10 filters)
+      GAIA (  4 filters)
+     GALEX (  2 filters)
+    GENEVA (  7 filters)
+ HIPPARCOS (  1 filters)
+     IPHAS (  3 filters)
+      IRAC (  4 filters)
+      IRAS (  4 filters)
+    ISOCAM ( 21 filters)
+   JOHNSON ( 11 filters)
+    KEPLER (  1 filters)
+      KRON (  2 filters)
+   LANDOLT (  6 filters)
+      MIPS (  3 filters)
+      MOST (  1 filters)
+       MSX (  6 filters)
+    NARROW (  1 filters)
+    NICMOS (  6 filters)
+      PACS (  3 filters)
+      SAAO (  4 filters)
+     SCUBA (  6 filters)
+      SDSS ( 10 filters)
+     SLOAN (  2 filters)
+     SPIRE (  3 filters)
+   STISCCD (  2 filters)
+   STISFUV (  4 filters)
+   STISNUV (  7 filters)
+ STROMGREN (  6 filters)
+       TD1 (  4 filters)
+     TYCHO (  2 filters)
+    TYCHO2 (  2 filters)
+  ULTRACAM (  5 filters)
+    USNOB1 (  2 filters)
+   VILNIUS (  7 filters)
+     VISIR ( 13 filters)
+  WALRAVEN (  5 filters)
+     WFPC2 ( 21 filters)
+      WISE (  4 filters)
+      WOOD ( 12 filters)
+
+>>> for i,resp in enumerate(responses):
+...    this_system = resp.split('.')[0]
+...    nr_filters = systems.count(this_system)
+...    p = pl.figure(set_responses.index(this_system),figsize=(10,4.5))
+...    if not pl.gca()._get_lines.count:
+...        color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)]
+...        p = pl.gca().set_color_cycle(color_cycle)
+...        p = pl.title(resp.split('.')[0])
+...    wave,trans = get_response(resp)
+...    p = pl.plot(wave/1e4,trans,label=resp)
+...    p = pl.xlabel('Wavelength [micron]')
+...    p = pl.ylabel('Transmission')
+...    if pl.gca()._get_lines.count==nr_filters:
+...        p = pl.legend(prop=dict(size='small'))
+...        p = pl.savefig('/home/pieterd/python/ivs/doc/images/ivs_sed_filters_%s'%(this_system));p = pl.close()
+
+]include figure]]ivs_sed_filters_2MASS.png]
+
+]include figure]]ivs_sed_filters_ACSHRC.png]
+
+]include figure]]ivs_sed_filters_ACSSBC.png]
+
+]include figure]]ivs_sed_filters_ACSWFC.png]
+
+]include figure]]ivs_sed_filters_AKARI.png]
+
+]include figure]]ivs_sed_filters_ANS.png]
+
+]include figure]]ivs_sed_filters_ARGUE.png]
+
+]include figure]]ivs_sed_filters_BESSEL.png]
+
+]include figure]]ivs_sed_filters_BESSELL.png]
+
+]include figure]]ivs_sed_filters_COROT.png]
+
+]include figure]]ivs_sed_filters_COUSINS.png]
+
+]include figure]]ivs_sed_filters_DENIS.png]
+
+]include figure]]ivs_sed_filters_DIRBE.png]
+
+]include figure]]ivs_sed_filters_ESOIR.png]
+
+]include figure]]ivs_sed_filters_GAIA.png]
+
+]include figure]]ivs_sed_filters_GALEX.png]
+
+]include figure]]ivs_sed_filters_GENEVA.png]
+
+]include figure]]ivs_sed_filters_HIPPARCOS.png]
+
+]include figure]]ivs_sed_filters_IPHAS.png]
+
+]include figure]]ivs_sed_filters_IRAC.png]
+
+]include figure]]ivs_sed_filters_IRAS.png]
+
+]include figure]]ivs_sed_filters_ISOCAM.png]
+
+]include figure]]ivs_sed_filters_JOHNSON.png]
+
+]include figure]]ivs_sed_filters_KEPLER.png]
+
+]include figure]]ivs_sed_filters_KRON.png]
+
+]include figure]]ivs_sed_filters_LANDOLT.png]
+
+]include figure]]ivs_sed_filters_MIPS.png]
+
+]include figure]]ivs_sed_filters_MOST.png]
+
+]include figure]]ivs_sed_filters_MSX.png]
+
+]include figure]]ivs_sed_filters_NARROW.png]
+
+]include figure]]ivs_sed_filters_NICMOS.png]
+
+]include figure]]ivs_sed_filters_PACS.png]
+
+]include figure]]ivs_sed_filters_SAAO.png]
+
+]include figure]]ivs_sed_filters_SCUBA.png]
+
+]include figure]]ivs_sed_filters_SDSS.png]
+
+]include figure]]ivs_sed_filters_SLOAN.png]
+
+]include figure]]ivs_sed_filters_SPIRE.png]
+
+]include figure]]ivs_sed_filters_STISCCD.png]
+
+]include figure]]ivs_sed_filters_STISFUV.png]
+
+]include figure]]ivs_sed_filters_STISNUV.png]
+
+]include figure]]ivs_sed_filters_STROMGREN.png]
+
+]include figure]]ivs_sed_filters_TD1.png]
+
+]include figure]]ivs_sed_filters_TYCHO.png]
+
+]include figure]]ivs_sed_filters_TYCHO2.png]
+
+]include figure]]ivs_sed_filters_ULTRACAM.png]
+
+]include figure]]ivs_sed_filters_USNOB1.png]
+
+]include figure]]ivs_sed_filters_VILNIUS.png]
+
+]include figure]]ivs_sed_filters_VISIR.png]
+
+]include figure]]ivs_sed_filters_WALRAVEN.png]
+
+]include figure]]ivs_sed_filters_WFPC2.png]
+
+]include figure]]ivs_sed_filters_WISE.png]
+
+]include figure]]ivs_sed_filters_WOOD.png]
+
+
 """
 import os
 import glob
@@ -16,8 +198,8 @@ import logging
 import numpy as np
 
 from ivs import config
-from ivs.misc.decorators import memoized
-from ivs.misc import loggers
+from ivs.aux.decorators import memoized
+from ivs.aux import loggers
 from ivs.io import ascii
 
 basedir = os.path.dirname(__file__)
@@ -213,4 +395,6 @@ def update_info(zp):
 
 if __name__=="__main__":
     import doctest
+    import pylab as pl
     doctest.testmod()
+    pl.show()
