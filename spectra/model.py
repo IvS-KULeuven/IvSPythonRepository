@@ -41,11 +41,11 @@ import os
 import logging
 import copy
 import pyfits
-import pyrotin4
 from ivs import config
 from ivs.units import constants
 from ivs.units import conversions
 from ivs.aux.decorators import memoized
+from ivs.spectra import tools
 
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
@@ -178,6 +178,10 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         flux = mod.data.field('flux')
         cont = mod.data.field('cont')
         logger.debug('Model spectrum taken directly from file (%s)'%(os.path.basename(gridfile)))
+        if template_wave is not None:
+            flux = np.interp(template_wave,wave,flux)
+            cont = np.interp(template_wave,wave,cont)
+            wave = template_wave
         #-- if the teff/logg is not present, use the interpolation thing
     except KeyError:
         #-- it is possible we first have to set the interpolation function.
@@ -207,10 +211,10 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     if vrot>0:
         #-- calculate rotational broadening but reinterpolate on original
         #   wavelength grid
-        wave_,flux_ = rotational_broadening(wave,flux,vrot,**kwargs)
+        wave_,flux_ = tools.rotational_broadening(wave,flux,vrot,**kwargs)
         flux = np.interp(wave,wave_,flux_)
     if vrad!=0:
-        wave_ = doppler_shift(wave,vrad)
+        wave_ = tools.doppler_shift(wave,vrad)
         flux = np.interp(wave,wave_,flux)
     
     ff.close()
@@ -328,121 +332,6 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 
 #}
 
-#{ Analysis
-
-def doppler_shift(wave,vrad,vrad_units='km/s'):
-    """
-    Shift a spectrum with towards the red or blue side with some radial velocity.
-    
-    You can give units with the extra keywords C{vrad_units} (units of
-    wavelengths are not important). The shifted wavelengths will be in the same
-    units as the input wave array.
-    
-    If units are not supplied, the radial velocity is assumed to be in km/s.
-    
-    If you want to apply a barycentric correction, you'd probably want to
-    reverse the sign!
-    
-    Example usage: shift a spectrum to the blue ('left') with 20 km/s.
-    
-    >>> wave = np.linspace(3000,8000,1000)
-    >>> wave_shift1 = doppler_shift(wave,20.)
-    >>> wave_shift2 = doppler_shift(wave,20000.,vrad_units='m/s')
-    >>> print(wave_shift1[0],wave_shift1[-1])
-    (3000.200138457119, 8000.5337025523177)
-    >>> print(wave_shift2[0],wave_shift2[-1])
-    (3000.200138457119, 8000.5337025523177)
-    
-    @param wave: wavelength array
-    @type wave: ndarray
-    @param vrad: radial velocity (negative shifts towards blue, positive towards red)
-    @type vrad: float (units: km/s) or tuple (float,'units')
-    @param vrad_units: units of radial velocity (default: km/s)
-    @type vrad_units: str (interpretable for C{units.conversions.convert})
-    @return: shifted wavelength array
-    @rtype: ndarray
-    """ 
-    cc = constants.cc
-    cc = conversions.convert('m/s',vrad_units,cc)
-    wave_out = wave * (1+vrad/cc)
-    return wave_out
-
-
-def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
-                         chard=None,stepr=0,stepi=0,alam0=None,alam1=None,
-                         irel=0,cont=None):
-    """
-    Apply rotational broadening to a spectrum assuming a linear limb darkening
-    law.
-    
-    This function is based on the ROTIN program. See Fortran file for
-    explanations of parameters.
-    
-    Limb darkening law is linear, default value is epsilon=0.6
-    
-    Possibility to normalize as well by giving continuum in 'cont' parameter.
-    2. parameters for rotational convolution 
-
-    VROT  - v sin i (in km/s):
-             - if VROT=0 - rotational convolution is 
-                 a) either not calculated,
-                 b) or, if simultaneously FWHM is rather large
-                    (vrot/c*lambda < FWHM/20.),
-                    vrot is set to  FWHM/20*c/lambda;
-             - if VROT >0 but the previous condition b) applies, the
-                     value of VROT is changed as  in the previous case
-             - if VROT<0 - the value of abs(VROT) is used regardless of
-                     how small compared to FWHM it is
-     CHARD - characteristic scale of the variations of unconvolved:
-           - stellar spectrum (basically, characteristic distance
-             between two neighbouring wavelength points) - in A
-           - if =0 - program sets up default (0.01 A)
-     STEPR - wavelength step for evaluation rotational convolution;
-           - if =0, the program sets up default (the wavelength
-                    interval corresponding to the rotational velocity
-                    devided by 3.)                           
-           - if <0, convolved spectrum calculated on the original
-             (detailed) SYNSPEC wavelength mesh
-
-
-     3. parameters for instrumental convolution
-
-     FWHM  - full width at half maximum for Gaussian instrumental 
-             profile
-     STEPI - wavelength step for evaluating instrumental convolution
-           - if =0, the program sets up default (FWHM/10.)
-           - if <0, convolved spectrum calculated with the previous
-                    wavelength mesh:
-                    either the original (SYNSPEC) one if vrot=0,
-                    or the one used in rotational convolution (vrot > 0)
-
-
-     4. wavelength interval and normalization of spectra
-
-     ALAM0 - initial wavelength
-     ALAM1 - final wavelength
-     IREL  - for =1 relative spectrum
-                 =0 absolute spectrum
-    
-    @return: wavelength,flux
-    @rtype: array, array
-    """
-    #-- set arguments
-    if alam0 is None: alam0 = wave_spec[0]
-    if alam1 is None: alam1 = wave_spec[-1]
-    if cont is None: cont = (np.ones(1),np.ones(1))
-    contw,contf = cont
-    if chard is None:
-        chard = np.diff(wave_spec).mean()
-    
-    #-- apply broadening
-    w3,f3,ind = pyrotin4.pyrotin(wave_spec,flux_spec,contw,contf,
-                  vrot,chard,stepr,fwhm,stepi,alam0,alam1,irel,epsilon)
-    logger.info('ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'%(vrot,epsilon))
-    
-    return w3[:ind],f3[:ind]
-    
-#}
 if __name__=="__main__":
     import doctest
     import pylab as pl
