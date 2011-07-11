@@ -48,6 +48,7 @@ Make a plot of what we already have:
 >>> p = pl.plot(wave,flux,'k-',label='Original template')
 >>> p = pl.plot(wave_,fluxn_,'b-',label='Spectrum + noise')
 >>> p = pl.plot(wave_,flux_,'r-',lw=2,label='Broadened')
+>>> p = pl.legend(loc='lower right',prop=dict(size='small'))
 
 Set the color cycle of the Fourier Transform plot to spectral
 
@@ -165,48 +166,48 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     
     Now run over all epsilons and vsinis and determine the q1 constant:
     
-    #>>> for j,epsilon in enumerate(epsilons):
-    #...    for i,vsini in enumerate(vsinis):
-    #...       vsini = conversions.convert('km/s','A/s',vsini)
-    #...       delta = clam*vsini/c
-    #...       lambdas = np.linspace(-5.,+5.,20000)
-    #...       #-- analytical rotational broadening kernel
-    #...       y = 1-(lambdas/delta)**2
-    #...       G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))
-    #...       lambdas = lambdas[-np.isnan(G)]
-    #...       G = G[-np.isnan(G)]
-    #...       G /= max(G)
-    #...       #-- analytical FT of rotational broadening kernel
-    #...       g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))
-    #...       #-- numerical FT of rotational broadening kernel
-    #...       sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm='power')
-    #...       myx = 2*pi*delta*sigma
-    #...       #-- get the minima
-    #...       rise = np.diff(g_[1:])>=0
-    #...       fall = np.diff(g_[:-1])<=0
-    #...       minima = sigma[1:-1][rise & fall]
-    #...       minvals = g_[1:-1][rise & fall]
-    #...       q1s[j,i] =  vsini / (c/clam/minima[0])
-    #...       q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
-    #...    p= pl.subplot(131)
-    #...    p= pl.plot(vsinis,q1s[j],'o',label='$\epsilon$=%.2f'%(epsilon));pl.gca()._get_lines.count -= 1
-    #...    p= pl.plot(vsinis,q1s_pred[j],'-')
-    #...    p= pl.subplot(133)
-    #...    p= pl.plot(lambdas,G,'-')
+    >>> for j,epsilon in enumerate(epsilons):
+    ...    for i,vsini in enumerate(vsinis):
+    ...       vsini = conversions.convert('km/s','A/s',vsini)
+    ...       delta = clam*vsini/c
+    ...       lambdas = np.linspace(-5.,+5.,20000)
+    ...       #-- analytical rotational broadening kernel
+    ...       y = 1-(lambdas/delta)**2
+    ...       G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))
+    ...       lambdas = lambdas[-np.isnan(G)]
+    ...       G = G[-np.isnan(G)]
+    ...       G /= max(G)
+    ...       #-- analytical FT of rotational broadening kernel
+    ...       g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))
+    ...       #-- numerical FT of rotational broadening kernel
+    ...       sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm='power')
+    ...       myx = 2*pi*delta*sigma
+    ...       #-- get the minima
+    ...       rise = np.diff(g_[1:])>=0
+    ...       fall = np.diff(g_[:-1])<=0
+    ...       minima = sigma[1:-1][rise & fall]
+    ...       minvals = g_[1:-1][rise & fall]
+    ...       q1s[j,i] =  vsini / (c/clam/minima[0])
+    ...       q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
+    ...    p= pl.subplot(131)
+    ...    p= pl.plot(vsinis,q1s[j],'o',label='$\epsilon$=%.2f'%(epsilon));pl.gca()._get_lines.count -= 1
+    ...    p= pl.plot(vsinis,q1s_pred[j],'-')
+    ...    p= pl.subplot(133)
+    ...    p= pl.plot(lambdas,G,'-')
     
-    #And plot the results:
+    And plot the results:
     
-    #>>> p= pl.subplot(131)
-    #>>> p= pl.xlabel('v sini [km/s]');p = pl.ylabel('q1')
-    #>>> p= pl.legend(prop=dict(size='small'))
+    >>> p= pl.subplot(131)
+    >>> p= pl.xlabel('v sini [km/s]');p = pl.ylabel('q1')
+    >>> p= pl.legend(prop=dict(size='small'))
     
     
-    #>>> p= pl.subplot(132);p=pl.title('Fourier transform')
-    #>>> p= pl.plot(x,g**2,'k-',label='Analytical FT')
-    #>>> p= pl.plot(myx,g_/max(g_),'r-',label='Computed FT')
-    #>>> p= pl.plot(minima*2*pi*delta,minvals/max(g_),'bo',label='Minima')
-    #>>> p= pl.legend(prop=dict(size='small'))
-    #>>> p= pl.gca().set_yscale('log')
+    >>> p= pl.subplot(132);p=pl.title('Fourier transform')
+    >>> p= pl.plot(x,g**2,'k-',label='Analytical FT')
+    >>> p= pl.plot(myx,g_/max(g_),'r-',label='Computed FT')
+    >>> p= pl.plot(minima*2*pi*delta,minvals/max(g_),'bo',label='Minima')
+    >>> p= pl.legend(prop=dict(size='small'))
+    >>> p= pl.gca().set_yscale('log')
     
     ]include figure]]ivs_spectra_tools_vsini_kernel.png]
     
