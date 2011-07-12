@@ -8,15 +8,16 @@ import pyfits
 import itertools
 
 import numpy as np
+from numpy import inf
 from scipy.interpolate import Rbf
 
 from ivs.statistics import pca
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed.decorators import iterate_gridsearch,parallel_gridsearch
-from ivs.misc import numpy_ext
-from ivs.misc import progressMeter
-from ivs.misc.decorators import make_parallel
+from ivs.aux import numpy_ext
+from ivs.aux import progressMeter
+from ivs.aux.decorators import make_parallel
 
 
 logger = logging.getLogger("SED.FIT")
@@ -220,26 +221,17 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     else:
         return chisq.sum(),scale,e_scale
 
-@iterate_gridsearch
-def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
-                 loggrange=(-np.inf,np.inf),ebvrange=(-np.inf,np.inf),
-                 zrange=(-np.inf,np.inf),
-                 points=None,res=None,**kwargs):
+def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
+                  ebvrange=(-inf,inf),zrange=(-inf,inf),
+                  points=None,res=None):
     """
-    Fit measured photometry to an interpolated grid of SEDs.
-    
-    Usage of this function is extend via the decorator.
-    
-    If you give an extra keyword C{iterations}, the function will iteratively
-    zoom in on the minimum found in the previous stage.
-    
-    If you give an extra keyword C{threads}, the gridsearch will be threaded.
+    Generate grid points at which to fit an interpolated grid of SEDs.
     
     If C{points=None}, the grid search is done on the predefined grid points.
     Otherwise, C{points} grid points will be generated, uniformly distributed
     between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange},
     and afterwards all the points outside the grid are removed (i.e., you could
-    end up with less points that given). It is probably safest to go for
+    end up with less points than given). It is probably safest to go for
     C{points=None} and adapt the resolution of the grid (C{res}=2). If you set
     the resolution to '2', one out of every two points will be selected.
     
@@ -250,6 +242,81 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     
     You can fix one parameter e.g. via setting teffrange=(10000,10000), but make
     sure to either fix it on a grid point, or encompassing grid points!
+    
+    >>> photbands = ['GENEVA.G','GENEVA.B-V']
+    
+    Start a figure:
+    
+    >>> p = pl.figure()
+    >>> rows,cols = 2,4
+    
+    On the grid points, but only one in every 100 points (otherwise we have over
+    a million points):
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,res=100)
+    
+    
+    >>> p = pl.subplot(rows,cols,1)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    
+    >>> p = pl.subplot(rows,cols,1+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    
+    Randomly distributed over the grid's ranges:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,points=10000)
+    
+    
+    >>> p = pl.subplot(rows,cols,2)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    
+    >>> p = pl.subplot(rows,cols,2+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    
+    Confined to a small area in the grid's range:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8000,10000),loggrange=(4.1,4.2),zrange=(0,inf),ebvrange=(1.,2),points=10000)
+    
+    
+    >>> p = pl.subplot(rows,cols,3)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    
+    >>> p = pl.subplot(rows,cols,3+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    
+    Confined to a small area in the grid's range with some parameters fixed:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8765,8765),loggrange=(4.1,4.2),zrange=(0,0),ebvrange=(1,2),points=10000)
+    
+    
+    >>> p = pl.subplot(rows,cols,4)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    
+    >>> p = pl.subplot(rows,cols,4+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    
+    ]include figure]]ivs_sed_fit_grids.png]
+    
     
     @param meas: array of measurements
     @type meas: 1D array
@@ -276,12 +343,11 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     factors
     @rtype: record array
     """
-    colors = np.array([filters.is_color(photband) for photband in photbands],bool)
     logger.info('Grid search with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
     
     #-- we first get/set the grid. Calling this function means it will be
     #   memoized, so that we can safely thread (and don't have to memoize for
-    #   each thread)
+    #   each thread). We also have an exact view of the size of the grid here...
     markers,(unique_teffs,unique_loggs,unique_ebvs,unique_zs),gridpnts,flux = \
                  model._get_itable_markers(photbands,ebvrange=(-np.inf,np.inf),
                         zrange=(-np.inf,np.inf),include_Labs=True)
@@ -291,7 +357,8 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
     unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
     
     #-- if we gave a certain number of points, we need to choose our points
-    #   randomly in the grid
+    #   randomly in the grid: the grid is usually not a square, so we have to
+    #   subdivide it
     if points:
         #-- generate appropriate evaluation points uniformly within the predefined
         #   edges
@@ -320,7 +387,7 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
             max_logg = min(loggrange[1],max_logg)
             #-- make sure there are points defined even if some range in parameters
             #   equals zero
-            if (max_teff-min_teff)>1 and (max_logg-min_logg)>1:
+            if (max_teff-min_teff)>1 and (max_logg-min_logg)>0.01:
                 size = (max_teff-min_teff)*(max_logg-min_logg)
             elif (max_teff-min_teff)>1:
                 size = (max_teff-min_teff)
@@ -328,77 +395,95 @@ def igrid_search(meas,e_meas,photbands,teffrange=(-np.inf,np.inf),
                 size = (max_logg-min_logg)
             else:
                 size = int(float(points)/(len(unique_min_loggs)))
-            #print 'size',size
-            limits_and_sizes.append([(min_teff,max_teff),(min_logg,max_logg),size])
+            if size==0: size=2
+            #-- sizes of ebv and z:
+            zrange_   = max(  zrange[0],min(unique_zs)),   min(  zrange[1],max(unique_zs))
+            ebvrange_ = max(ebvrange[0],min(unique_ebvs)), min(ebvrange[1],max(unique_ebvs))
+            limits_and_sizes.append([(min_teff,max_teff),(min_logg,max_logg),ebvrange_,zrange_,size])
         total_size = sum([row[-1] for row in limits_and_sizes])
-        #print total_size
-        #print limits_and_sizes
-        teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],ebvrange[0],zrange[0]],
-                                                       high=[lims[0][1],lims[1][1],ebvrange[1],zrange[1]],
+        #-- in the following case, we fall in between the grid points. We correct
+        #   for this
+        if len(limits_and_sizes)==0:
+            total_size = points
+            limits_and_sizes = [[teffrange,loggrange,ebvrange,zrange,points]]
+        teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],lims[2][0],lims[3][0]],
+                                                       high=[lims[0][1],lims[1][1],lims[2][1],lims[3][1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
-        #print teffs.shape
     keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
             (loggrange[0]<=loggs) & (loggs<=loggrange[1]) &\
             (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1]) &\
             (zrange[0]<=zs) & (zs<=zrange[1])
-    #print sum(keep)
     teffs,loggs,ebvs,zs = teffs[keep],loggs[keep],ebvs[keep],zs[keep]
     
     if res:
         teffs,loggs,ebvs,zs = teffs[::res],loggs[::res],ebvs[::res],zs[::res]
     logger.info('Evaluating %d points in parameter space'%(len(teffs)))
     
-    #-- run over the grid and calculate chisq and scale factors for each point
-    @parallel_gridsearch
-    @make_parallel
-    def do_grid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs):
-        """
-        index is to trace the results after parallelization
-        """
-        index = kwargs.pop('index',None)
-        chisqs = np.zeros_like(teffs)
-        scales = np.zeros_like(teffs)
-        e_scales = np.zeros_like(teffs)
-        lumis = np.zeros_like(teffs)
-        if index is None:
-            p = progressMeter.ProgressMeter(total=len(teffs))
-        for n,(teff,logg,ebv,z) in enumerate(itertools.izip(teffs,loggs,ebvs,zs)):
-            if index is None: p.update(1)
-            syn_flux,Labs = model.get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
-            chisqs[n],scales[n],e_scales[n] = stat_chi2(meas,e_meas,colors,syn_flux)
-            lumis[n] = Labs
-        return chisqs,scales,e_scales,lumis,index
-    
-    #-- then we do the grid search
-    chisqs,scales,e_scales,lumis,index = do_grid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs)
-    #-- transform output to record array
-    data_rec = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
-                   dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
-                          ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
-    return data_rec
+    ##-- run over the grid and calculate chisq and scale factors for each point
+    ##-- then we do the grid search
+    #chisqs,scales,e_scales,lumis,index = do_grid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs)
+    ##-- transform output to record array
+    #data_rec = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
+                   #dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
+                          #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
+    return teffs,loggs,ebvs,zs
 
 #}
-def do_grid_search2(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs):
+
+@parallel_gridsearch
+@make_parallel
+def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,func=stat_chi2,**kwargs):
         """
-        index is to trace the results after parallelization
+        Run over gridpoints and evaluate fit via C{func}.
+        
+        The grid points are defined via C{teffs, loggs, ebvs, zs}. They should
+        be 1d arrays of equal length.
+        
+        The measurements are defined via C{meas, e_meas, photbands, colors} and
+        should also by 1d arrays of equal length. C{colors} should be a boolean
+        array, C{photbands} should be a string array.
+        
+        At each grid point, the pre-calculated photometry will be retrieved and
+        compared to the measurements via C{func}. This function should be of the
+        same form as L{stat_chi2}.
+        
+        Extra arguments are passed to L{parallel_gridsearch} for parallelization.
+        
+        The index array is returned to trace the results after parallelization.
+        
+        @return: (chi squares, scale factors, error on scale factors, absolute
+        luminosities (R=1Rsol), index
+        @rtype: 5X1d array
         """
         index = kwargs.pop('index',None)
+        #-- prepare output arrays
         chisqs = np.zeros_like(teffs)
         scales = np.zeros_like(teffs)
         e_scales = np.zeros_like(teffs)
         lumis = np.zeros_like(teffs)
+        #-- show a progressMeter when not parallelized
         if index is None:
             p = progressMeter.ProgressMeter(total=len(teffs))
+        #-- run over the grid, retrieve synthetic fluces and compare with
+        #   observations.
         for n,(teff,logg,ebv,z) in enumerate(itertools.izip(teffs,loggs,ebvs,zs)):
             if index is None: p.update(1)
             syn_flux,Labs = model.get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
-            chisqs[n],scales[n],e_scales[n] = stat_chi2(meas,e_meas,colors,syn_flux)
+            chisqs[n],scales[n],e_scales[n] = func(meas,e_meas,colors,syn_flux)
             lumis[n] = Labs
+        #-- return results
         return chisqs,scales,e_scales,lumis,index
 
 
 
 if __name__=="__main__":
+    import doctest
+    import pylab as pl
+    doctest.testmod()
+    pl.show()
+    
+    
+    sys.exit()
     from ivs.misc import loggers
     from pylab import *
     from numpy import *

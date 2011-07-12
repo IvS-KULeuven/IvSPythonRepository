@@ -92,7 +92,7 @@ def get_photometry(ID,to_units='erg/s/cm2/A',extra_fields=[],include=None,
     
     #-- check which sources to include/exclude
     searchables = ['gator','vizier','gcpd']
-    if includes is not None:
+    if include is not None:
         searchables = include
     if exclude is not None:
         for exclude_ in exclude:
