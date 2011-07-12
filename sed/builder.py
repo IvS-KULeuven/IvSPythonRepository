@@ -6,22 +6,39 @@ To construct an SED, use the SED class. The functions defined in this module
 are mainly convenience functions specifically for that class, but can be used
 outside of the SED class if you know what you're doing.
 
-Section 1. Retrieving photometry of a target
-============================================
+Section 1. Retrieving and plotting photometry of a target
+=========================================================
 
 >>> mysed = SED('HD180642')
 >>> mysed.get_photometry()
+>>> mysed.plot_data()
+
+and call Pylab's C{show} function to show to the screen:
+
+]]include figure]]ivs_sed_builder_example_photometry.png]
 
 You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
-The default value is 10 arcseconds for for stars dimmer than 6th magnitude, and
-60 arcseconds for brighter stars. The best value of course depends on the density
+The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
+arcseconds for brighter stars. The best value of course depends on the density
 of the field.
 
-You best B{switch on the logger} C{see loggers.get_basic_logger} to see the progress:
+>>> mysed.get_photometry(radius=5.)
+
+If your star's name is not recognised by any catalog, you can give coordinates
+to look for photometry. In that case, the ID of the star given in the C{SED}
+command will not be used to search photometry (only to save the phot file):
+
+>>> mysed.get_photometry(ra=289.31167983,dec=1.05941685)
+
+Note that C{ra} and C{dec} are given in B{degrees}.
+
+You best B{switch on the logger} (see L{ivs.aux.loggers.get_basic_logger}) to see the progress:
 sometimes, access to catalogs can take a long time (the GATOR sources are
 typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow,
 you can B{include/exclude these sources} via the keywords C{include} or C{exclude},
 which take a list of strings (choose from C{gator}, C{vizier} and/or C{gcpd}).
+
+>>> mysed.get_photometry(exclude=['gator'])
 
 The results will be written to the file B{HD180642.phot}. An example content is::
 
@@ -88,41 +105,236 @@ The results will be written to the file B{HD180642.phot}. An example content is:
     -0.04 0.0412311 nan  mag  JOHNSON.K-H       J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06     nan    0.375718    0.014268 flux_ratio      1       0
     0.209 0.0206155 nan  mag  TYCHO2.BT-VT      I/259/tyc2                 0.042   7.17e-06    1.15e-06     nan     1.43014    0.027155 flux_ratio      1       0
 
-Once a .phot file is written and C{get_photometry} is called again for the same
-target, the script will not retrieve the photometry from the internet, but will
-use the contents of the file instead. The purpose is minimizing network traffic
-and maximizing speed.
+Once a .phot file is written and L{get_photometry} is called again for the same
+target, the script will B{not retrieve the photometry from the internet again},
+but will use the contents of the file instead. The purpose is minimizing network
+traffic and maximizing speed. If you want to refresh the search, simply manually
+delete the .phot file.
 
-The content of the .phot file is most easily read using the C{ascii.read2recarry}
-function:
+The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarry}
+function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
 
-But the contents can also be plotted via
+Section 2. SED fitting using a grid based approach
+==================================================
 
->>> p = mysed.plot_data()
-
-]]include figure]]ivs_sed_builder_example_photometry.png]
-
-Section 2. Example fitting
-==========================
-
-Make an SED of HD180642:
+We make an SED of HD180642 by simply B{exploring a whole grid of Kurucz models}
+(constructed via L{fit.generate_grid}, iterated over via L{fit.igrid_search} and
+evaluated with L{fit.stat_chi2}). The model with the best parameters is picked
+out and we make a full SED with those parameters.
 
 >>> mysed = SED('HD180642')
 >>> mysed.get_photometry()
 
-Use colours and one absolute flux per system, but exclude IR photometry and
-some systems and colours which we know are untrustworthy
+Now we have collected B{all fluxes and colors}, but we do not want to use them
+all: first, B{fluxes and colors are not independent}, so you probably want to use
+either only absolute fluxes or only colors (plus perhaps one absolute flux per
+system to compute the angular diameter) (see L{SED.set_photometry_scheme}). Second,
+B{some photometry is better suited for fitting an SED than others}; typically IR
+photometry does not add much to the fitting of massive stars, or it can be
+contaminated with circumstellar material. Third, B{some photometry is not so
+reliable}, i.e. the measurements can have large systematic uncertainties due to
+e.g. calibration effects, which are typically not included in the error bars.
+
+Here, we chose to use colors and one absolute flux per system, but exclude IR
+photometry (wavelength range above 2.5 micron), and some systems and colors which
+we know are not so trustworthy:
 
 >>> mysed.set_photometry_scheme('combo')
 >>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
 
-Start the grid based fitting process and show some plots
+Start the grid based fitting process and show some plots. We use 100000 randomly
+distributed points over the grid:
 
-#>>> mysed.igrid_search()
-#>>> mysed.make_plots()
-#>>> pl.show()
+>>> mysed.igrid_search(points=100000)
+
+and make the plot
+
+>>> p = pl.figure()
+>>> p = pl.subplot(131);mysed.plot_sed()
+>>> p = pl.subplot(132);mysed.plot_grid(limit=None)
+>>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
+
+]]include figure]]ivs_sed_builder_example_fitting01.png]
+
+The grid is a bit too coarse for our liking around the minimum, so we zoom in on
+the results:
+
+>>> teffrange = mysed.results['igrid_search']['CI']['teffL'],mysed.results['igrid_search']['CI']['teffU']
+>>> loggrange = mysed.results['igrid_search']['CI']['loggL'],mysed.results['igrid_search']['CI']['loggU']
+>>> ebvrange = mysed.results['igrid_search']['CI']['ebvL'],mysed.results['igrid_search']['CI']['ebvU']
+>>> mysed.igrid_search(points=100000,teffrange=teffrange,loggrange=loggrange,ebvrange=ebvrange)
+
+and repeat the plot
+
+>>> p = pl.figure()
+>>> p = pl.subplot(131);mysed.plot_sed()
+>>> p = pl.subplot(132);mysed.plot_grid(limit=None)
+>>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
+
+]]include figure]]ivs_sed_builder_example_fitting02.png]
+
+With the L{SED.plot_grid} function, you can easily visualize the correlation between
+effective temperature and E(B-V) for these massive stars:
+
+>>> p = pl.figure()
+>>> mysed.plot_grid(x='teff',y='ebv',limit=None)
+
+]]include figure]]ivs_sed_builder_example_fitting03.png]
+
+Subsection 2.1 Saving SED fits
+------------------------------
+
+You can save all the data to a multi-extension FITS file via
+
+>>> mysed.save_fits()
+
+This FITS file then contains all B{measurements} (it includes the .phot file),
+the B{resulting SED}, and also the B{whole fitted grid}: in the above case, the
+extensions of the FITS file contain the following information (we print each
+header)::
+
+    EXTNAME = 'DATA    '
+    XTENSION= 'BINTABLE'           / binary table extension                         
+    BITPIX  =                    8 / array data type                                
+    NAXIS   =                    2 / number of array dimensions                     
+    NAXIS1  =                  270 / length of dimension 1                          
+    NAXIS2  =                   67 / length of dimension 2                          
+    PCOUNT  =                    0 / number of group parameters                     
+    GCOUNT  =                    1 / number of groups                               
+    TFIELDS =                   18 / number of table fields                         
+    TTYPE1  = 'meas    '                                                            
+    TFORM1  = 'D       '                                                            
+    TTYPE2  = 'e_meas  '                                                            
+    TFORM2  = 'D       '                                                            
+    TTYPE3  = 'flag    '                                                            
+    TFORM3  = '20A     '                                                            
+    TTYPE4  = 'unit    '                                                            
+    TFORM4  = '30A     '                                                            
+    TTYPE5  = 'photband'                                                            
+    TFORM5  = '30A     '                                                            
+    TTYPE6  = 'source  '                                                            
+    TFORM6  = '50A     '                                                            
+    TTYPE7  = '_r      '                                                            
+    TFORM7  = 'D       '                                                            
+    TTYPE8  = '_RAJ2000'                                                            
+    TFORM8  = 'D       '                                                            
+    TTYPE9  = '_DEJ2000'                                                            
+    TFORM9  = 'D       '                                                            
+    TTYPE10 = 'cwave   '                                                            
+    TFORM10 = 'D       '                                                            
+    TTYPE11 = 'cmeas   '                                                            
+    TFORM11 = 'D       '                                                            
+    TTYPE12 = 'e_cmeas '                                                            
+    TFORM12 = 'D       '                                                            
+    TTYPE13 = 'cunit   '                                                            
+    TFORM13 = '50A     '                                                            
+    TTYPE14 = 'color   '                                                            
+    TFORM14 = 'L       '                                                            
+    TTYPE15 = 'include '                                                            
+    TFORM15 = 'L       '                                                            
+    TTYPE16 = 'synflux '                                                            
+    TFORM16 = 'D       '                                                            
+    TTYPE17 = 'mod_eff_wave'                                                        
+    TFORM17 = 'D       '                                                            
+    TTYPE18 = 'chi2    '                                                            
+    TFORM18 = 'D       '                                                            
+
+    EXTNAME = 'MODEL   '      
+    XTENSION= 'BINTABLE'           / binary table extension                         
+    BITPIX  =                    8 / array data type                                
+    NAXIS   =                    2 / number of array dimensions                     
+    NAXIS1  =                   24 / length of dimension 1                          
+    NAXIS2  =                 1221 / length of dimension 2                          
+    PCOUNT  =                    0 / number of group parameters                     
+    GCOUNT  =                    1 / number of groups                               
+    TFIELDS =                    3 / number of table fields                                                                               
+    TTYPE1  = 'wave    '                                                            
+    TFORM1  = 'D       '                                                            
+    TUNIT1  = 'A       '                                                            
+    TTYPE2  = 'flux    '                                                            
+    TFORM2  = 'D       '                                                            
+    TUNIT2  = 'erg/s/cm2/A'                                                         
+    TTYPE3  = 'dered_flux'                                                          
+    TFORM3  = 'D       '                                                            
+    TUNIT3  = 'erg/s/cm2/A'                                                         
+    TEFFL   =    23000.68377498454                                                  
+    TEFF    =    23644.49138963689                                                  
+    TEFFU   =    29999.33189058337                                                  
+    LOGGL   =    3.014445328877565                                                  
+    LOGG    =    4.984788506855546                                                  
+    LOGGU   =    4.996095055525759                                                  
+    EBVL    =   0.4703171900728142                                                  
+    EBV     =   0.4933185398871652                                                  
+    EBVU    =   0.5645144879211454                                                  
+    ZL      =   -2.499929434601112                                                  
+    Z       =   0.4332336811329144     
+    ZU      =   0.4999776537652627                                                  
+    SCALEL  = 2.028305798068863E-20                                                 
+    SCALE   = 2.444606991671813E-20                                                 
+    SCALEU  = 2.830281842143698E-20                                                 
+    E_SCALEL= 8.844041760265867E-22                                                 
+    E_SCALE = 1.391012126969951E-21                                                 
+    E_SCALEU= 2.366112834925025E-21                                                 
+    LABSL   =    250.9613352757437                                                  
+    LABS    =     281.771013453664                                                  
+    LABSU   =    745.3149766772975                                                  
+    CHISQL  =    77.07958742733673                                                  
+    CHISQ   =    77.07958742733673                                                  
+    CHISQU  =    118.8587169011471                                                      
+    CI_RAWL =   0.9999999513255379                                                  
+    CI_RAW  =   0.9999999513255379                                                  
+    CI_RAWU =   0.9999999999999972                                                  
+    CI_RED  =   0.5401112973063139                                                  
+    CI_REDL =   0.5401112973063139                                                  
+    CI_REDU =   0.9500015229597392                                                  
+    
+    EXTNAME = 'IGRID_SEARCH' 
+    XTENSION= 'BINTABLE'           / binary table extension                         
+    BITPIX  =                    8 / array data type                                
+    NAXIS   =                    2 / number of array dimensions                     
+    NAXIS1  =                   80 / length of dimension 1                          
+    NAXIS2  =                99996 / length of dimension 2                          
+    PCOUNT  =                    0 / number of group parameters                     
+    GCOUNT  =                    1 / number of groups                               
+    TFIELDS =                   10 / number of table fields                         
+    TTYPE1  = 'teff    '                                                            
+    TFORM1  = 'D       '                                                            
+    TTYPE2  = 'logg    '                                                            
+    TFORM2  = 'D       '                                                            
+    TTYPE3  = 'ebv     '                                                            
+    TFORM3  = 'D       '                                                            
+    TTYPE4  = 'z       '                                                            
+    TFORM4  = 'D       '                                                            
+    TTYPE5  = 'chisq   '                                                            
+    TFORM5  = 'D       '                                                            
+    TTYPE6  = 'scale   '                                                            
+    TFORM6  = 'D       '                                                            
+    TTYPE7  = 'e_scale '                                                            
+    TFORM7  = 'D       '                                                            
+    TTYPE8  = 'Labs    '                                                            
+    TFORM8  = 'D       '                                                            
+    TTYPE9  = 'CI_raw  '                                                            
+    TFORM9  = 'D       '                                                            
+    TTYPE10 = 'CI_red  '                                                            
+    TFORM10 = 'D       '                                                            
+
+
+Subsection 2.2 Loading SED fits
+-------------------------------
+
+Once saved, you can load the contents of the FITS file again into an SED object
+via
+
+>>> mysed = SED('HD180642')
+>>> mysed.load_fits()
+
+and then you can build all the plots again easily. You can of course use the
+predefined plotting scripts to start a plot, and then later on change the
+properties of the labels, legends etc... for higher quality plots or to better
+suit your needs.
+
 """
 import sys
 import time
@@ -347,10 +559,11 @@ def photometry2str(master):
     @type master: numpy record array
     """
     master = master[np.argsort(master['photband'])]
-    print '%20s %12s %12s %12s %10s %12s %12s %11s %s'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
-    print '=========================================================================================================================='
+    txt = '%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
+    txt+= '==========================================================================================================================\n'
     for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
-        print '%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s'%(i,j,k,l,m,n,o,p)
+        txt+='%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s\n'%(i,j,k,l,m,n,o,p)
+    return txt
 
 @memoized
 def get_schaller_grid():
@@ -462,7 +675,11 @@ class SED(object):
         #-- keep information on the star from SESAME, but override parallax with
         #   the value from Van Leeuwen's new reduction. Set the galactic
         #   coordinates, which are not available from SESAME.
-        self.info = sesame.search(ID,fix=True)
+        try:
+            self.info = sesame.search(ID,fix=True)
+        except KeyError:
+            logger.warning('Star %s not recognised by sesame'%(ID))
+            self.info = {}
         if plx is not None:
             if not 'plx' in self.info:
                 self.info['plx'] = {}
@@ -495,16 +712,17 @@ class SED(object):
                                        include=include,exclude=exclude,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
-                master = crossmatch.get_photometry(ra=ra,dec=dec,radius=radius,
+                master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
                                        include=include,exclude=exclude,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
-            master['_RAJ2000'] -= self.info['jradeg']
-            master['_DEJ2000'] -= self.info['jdedeg']
+            if 'jradeg' in self.info:
+                master['_RAJ2000'] -= self.info['jradeg']
+                master['_DEJ2000'] -= self.info['jdedeg']
             
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
-            photometry2str(master)
+            print(photometry2str(master))
             
             #-- write to file
             self.save_photometry()
@@ -646,16 +864,22 @@ class SED(object):
                           points=None,compare=True):
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
-        logger.info('The following measurements are include in the fitting process:')
-        photometry2str(self.master[include_grid])
-        grid_results = fit.igrid_search(self.master['cmeas'][include_grid],
-                                        self.master['e_cmeas'][include_grid],
-                                        self.master['photband'][include_grid],
-                                    teffrange=teffrange,loggrange=loggrange,
-                                    ebvrange=ebvrange,zrange=zrange,
-                                    threads=threads,iterations=iterations,
-                                    increase=increase,speed=speed,res=res,points=points)
+        logger.info('The following measurements are include in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
+        
+        #-- build the grid
+        teffs,loggs,ebvs,zs = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
+                                               loggrange=loggrange,ebvrange=ebvrange,zrange=zrange,
+                                               res=res,points=points)
+        #-- run over the grid and calculate the CHI2
+        chisqs,scales,e_scales,lumis = fit.igrid_search(teffs,loggs,ebvs,zs,
+                                 self.master['cmeas'][include_grid],
+                                 self.master['e_cmeas'][include_grid],
+                                 self.master['photband'][include_grid])
+        grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
+                     dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
+                  ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
+                
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
         
@@ -697,7 +921,7 @@ class SED(object):
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         self.set_best_model()
-        if compare:
+        if False:
             self.set_distance()
             d,dprob = self.results['igrid_search']['d'] # in parsecs
             dcumprob = np.cumsum(dprob[1:]*np.diff(d))
@@ -730,6 +954,7 @@ class SED(object):
         Get reddenend and unreddened model
         """
         #-- get reddened and unreddened model
+        logger.info('Interpolating approximate full SED of best model')
         scale = self.results[mtype]['CI']['scale']
         wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
                                     logg=self.results[mtype]['CI']['logg'],
@@ -786,13 +1011,16 @@ class SED(object):
     #}
     
     #{ Input and output
-    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search'):
+    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95):
         """
         Plot grid as scatter plot
         
         Possible plot types: 'CI_red','z','ebv'
         """
-        region = self.results[mtype]['grid']['CI_red']<0.95
+        if limit is not None:
+            region = self.results[mtype]['grid']['CI_red']<limit
+        else:
+            region = self.results[mtype]['grid']['CI_red']<np.inf
         #-- get the colors and the color scale
         colors = self.results[mtype]['grid'][ptype][region]
         vmin,vmax = colors.min(),colors.max()
@@ -855,8 +1083,6 @@ class SED(object):
         pl.title(self.ID)
         pl.ylabel(r'$F_\lambda$ [erg/s/cm$^2/A$]')
         pl.xlabel('wavelength [$\AA$]')
-        
-        return None
         
     
     
