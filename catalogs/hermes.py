@@ -286,6 +286,25 @@ def make_list_star(ID,direc=''):
                        data['bjd'],data['bvcor'],data['prog_id'],data['exptime'],
                        data['airmass'],data['pmtotal']],fname,axis0='cols')
     
+def make_mask_file(wavelength,depth,filename='mymask.fits'):
+    """
+    Make a mask file for RV calculations with the Hermes pipeline.
+    
+    See L{ivs.units.linelists} to select appropriate masks. You readily use the
+    columns C{wavelength} and C{depth} as input for this function.
+    
+    @param wavelength: wavelength in angstrom
+    @type wavelength: 1D numpy array
+    @param strength: strenght of the line (1-normalised flux minimum)
+    @type strength: 1D numpy array
+    """
+    data = np.array([wavelength,depth]).T
+    hdulist = pyfits.PrimaryHDU(data1)
+    hdulist.writeto(filename)
+    hdulist.close()
+
+
+
 
 #}
 
