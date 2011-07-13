@@ -2,6 +2,9 @@
 """
 Interface the spectra from the Hermes spectrograph.
 
+Developer's to-do: remove doubles entries from the catalog, and I{derive}
+the path names of the different datafiles (?).
+
 The most important function is L{search}. This looks in SIMBAD for the coordinates
 of a given object, and finds all spectra matching those within a given radius.
 If the object's name is not recognised, it will look for correspondence between
@@ -74,6 +77,7 @@ import sys
 import glob
 import os
 import logging
+import datetime
 import numpy as np
 import pyfits
 
@@ -90,14 +94,19 @@ logger.addHandler(loggers.NullHandler)
 
 #{ User functions
 
-def search(ID,data_type='cosmicsremoved_log',radius=1.,filename=None):
+def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,filename=None):
     """
     Retrieve datafiles from the Hermes catalogue.
     
-    A string search is performed to match the 'object' field in the FITS headers.
-    The coordinates are pulled from SIMBAD. If the star ID is recognised by
-    SIMBAD, an additional search is done based only on the coordinates. The union
-    of both searches is the final result.
+    B{If C{ID} is given}: A string search is performed to match the 'object'
+    field in the FITS headers. The coordinates are pulled from SIMBAD. If the
+    star ID is recognised by SIMBAD, an additional search is done based only on
+    the coordinates. The union of both searches is the final result.
+    
+    B{If C{time_range} is given}: The search is confined within the defined
+    range. If you only give one day, the search is confined to the observations
+    made during the night starting at that day. If C{ID} is not given, all
+    observations will be returned of the given datatype.
     
     Data type can be any of:
         1. cosmicsremoved_log: return log merged without cosmics
@@ -156,8 +165,26 @@ def search(ID,data_type='cosmicsremoved_log',radius=1.,filename=None):
     
     >>> telalts = [pyfits.getheader(fname)['telalt'] for fname in myselection['filename']]
     
+    Search for all data of HD50230 taken in the night of 22 September 2009:
+    
+    >>> data = hermes.search('HD50230',time_range='2009-9-22')
+    
+    Or within an interval of a few days:
+    
+    >>> data = hermes.search('HD50230',time_range=('2009-9-23','2009-9-30'))
+    
+    Search for all data observed in a given night:
+    
+    >>> data = hermes.search(time_range='2009-9-22')
+    
+    B{Warning:} the heliocentric correction is not calculated when no ID is given,
+    so make sure it is present in the header if you need it, or calculate it yourself.
+    
     @param ID: ID of the star, understandable by SIMBAD
     @type ID: str
+    @param time_range: range of dates to confine the search to
+    @type time_range: tuple strings of type '2009-09-23T04:24:35.712556' or '2009-09-23'
+    @type time_range: tuple strings
     @param data_type: if None, all data will be returned. Otherwise, subset
     'cosmicsremoved', 'merged' or 'raw'
     @type data_type: str
@@ -172,19 +199,33 @@ def search(ID,data_type='cosmicsremoved_log',radius=1.,filename=None):
     #-- read in the data from the overview file, and get SIMBAD information
     #   of the star
     data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv'),splitchar='\t')
-    info = sesame.search(ID)
-    
-    #-- first search on object name only
-    ID = ID.replace(' ','').replace('.','').replace('+','').replace('-','').replace('*','')
-    match_names = np.array([objectn.replace(' ','').replace('.','').replace('+','').replace('-','').replace('*','') for objectn in data['object']],str)
-    keep = [((((ID in objectn) or (objectn in ID)) and len(objectn)) and True or False) for objectn in match_names]
-    keep = np.array(keep)
-    #   if we found the star on SIMBAD, we use its RA and DEC to match the star
-    if info:
-        ra,dec = info['jradeg'],info['jdedeg']
-        keep = keep | (np.sqrt((data['ra']-ra)**2 + (data['dec']-dec)**2) < radius/60.)
+    keep = np.array(np.ones(len(data)),bool)
+    #-- confined search within given time range
+    if time_range is not None:
+        if isinstance(time_range,str):
+            time_range = _timestamp2datetime(time_range)
+            time_range = (time_range,time_range+datetime.timedelta(days=1))
+        else:
+            time_range = (_timestamp2datetime(time_range[0]),_timestamp2datetime(time_range[1]))
+        keep = keep & np.array([(time_range[0]<=_timestamp2datetime(i)<=time_range[1]) for i in data['date-avg']],bool)
+        info = None
         
     
+    #-- search on ID
+    if ID is not None:
+        info = sesame.search(ID)
+    
+        #-- first search on object name only
+        ID = ID.replace(' ','').replace('.','').replace('+','').replace('-','').replace('*','')
+        match_names = np.array([objectn.replace(' ','').replace('.','').replace('+','').replace('-','').replace('*','') for objectn in data['object']],str)
+        keep_id = [((((ID in objectn) or (objectn in ID)) and len(objectn)) and True or False) for objectn in match_names]
+        keep_id = np.array(keep_id)
+        #   if we found the star on SIMBAD, we use its RA and DEC to match the star
+        if info:
+            ra,dec = info['jradeg'],info['jdedeg']
+            keep_id = keep_id | (np.sqrt((data['ra']-ra)**2 + (data['dec']-dec)**2) < radius/60.)
+        keep = keep & keep_id
+        
     #-- if some data is found, we check if the C{data_type} string is contained
     #   with the file's name. If not, we remove it.
     if np.any(keep):
@@ -373,6 +414,23 @@ def _timestamp2jd(timestamp):
     minute = float(minute)
     second = float(second)
     return conversions.convert("CD","JD",(year, month, day, hour, minute, second))
+
+def _timestamp2datetime(timestamp):
+    """
+    Convert the time stamp from a HERMES FITS 'date-avg' to a datetime object.
+    
+    @param timestamp: string from 'date-avg'
+    @type timestamp: string
+    @return: datetime object
+    @rtype: datetime
+    """
+    if timestamp=='nan':
+        timestamp = '1000-01-01T00:00:00'
+    timestamp = [float(i) for i in ' '.join(' '.join(' '.join(timestamp.split('-')).split('T')).split(':')).split()]
+    #-- only the day is given, make sure to switch it to mid-day
+    if len(timestamp)==3:
+        timestamp += [12,0,0]
+    return datetime.datetime(*timestamp)
 
 #}
 
