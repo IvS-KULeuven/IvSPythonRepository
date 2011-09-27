@@ -7,8 +7,8 @@ import os
 import pyfits
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
-from ivs.misc import loggers
-from ivs.misc.decorators import memoized,clear_memoization
+from ivs.aux import loggers
+from ivs.aux.decorators import memoized,clear_memoization
 from ivs import config
 
 logger = logging.getLogger("SED.LIMBDARK")
