@@ -252,6 +252,23 @@ def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
     Omega is fraction of critical velocity.
     
     See Cranmer & Owocki, Apj (1995)
+    
+    @param r: radius of the surface element to calculate the surface gravity
+    @type r: float/ndarray
+    @param theta: colatitude of surface element
+    @type theta: float/ndarray
+    @param phi: longitude of surface element
+    @type phi: float/ndarray
+    @param r_pole: polar radius of model
+    @type r_pole: float
+    @param omega: fraction of critical rotation velocity
+    @type omega: float
+    @param M: mass of the star
+    @type M: float
+    @param norm: compute magnitude of surface gravity (True) or vector (False)
+    @type norm: boolean
+    @return: surface gravity magnitude or vector
+    @rtype: 3Xfloat/3Xndarray
     """
     GG = constants.GG_sol
     #-- calculate r-component of local gravity
@@ -292,6 +309,18 @@ def get_fastrot_roche_radius(theta,r_pole,omega):
 def critical_angular_velocity(M,R_pole,units='Hz'):
     """
     Compute the critical angular velocity (Hz).
+    
+    Definition taken from Cranmer and Owocki, 1995 and equal to
+    
+    Omega_crit = sqrt( 8GM / 27Rp**3 )
+    
+    Example usage (includes conversion to period in days):
+    
+    >>> Omega = critical_angular_velocity(1.,1.)
+    >>> P = 2*pi/Omega
+    >>> P = conversions.convert('s','d',P)
+    >>> print 'Critical rotation period of the Sun: %.3f days'%(P)
+    Critical rotation period of the Sun: 0.213 days
         
     @param M: mass (solar masses)
     @type M: float
@@ -309,9 +338,24 @@ def critical_angular_velocity(M,R_pole,units='Hz'):
         omega_crit = conversions.convert('Hz',units,omega_crit)
     return omega_crit
 
-def critical_velocity(M,R_pole,units='km/s'):
+def critical_velocity(M,R_pole,units='km/s',definition=1):
     """
     Compute the critical velocity (km/s)
+    
+    Definition 1 from Cranmer and Owocki, 1995:
+    
+    v_c = 2 pi R_eq(omega_c) * omega_c
+    
+    Definition 2 from Townsend 2004:
+    
+    v_c = sqrt ( 2GM/3Rp )
+    
+    which both amount to the same value:
+    
+    >>> critical_velocity(1.,1.,definition=1)
+    356.71131858379499
+    >>> critical_velocity(1.,1.,definition=2)
+    356.71131858379488
     
     @param M: mass (solar masses)
     @type M: float
@@ -322,11 +366,15 @@ def critical_velocity(M,R_pole,units='km/s'):
     @return: critical velocity in km/s
     @rtype: float
     """
-    omega_crit = critical_angular_velocity(M,R_pole)
-    P = 1./omega_crit
-    R_eq = get_fastrot_roche_radius(pi/2,R_pole,omega_crit)*constants.Rsol
-    veq = 2*pi*R_eq/P
+    if definition==1:
+        omega_crit = critical_angular_velocity(M,R_pole)
+        P = 2*pi/omega_crit
+        R_eq = get_fastrot_roche_radius(pi/2.,R_pole,1.)*constants.Rsol
+        veq = 2*pi*R_eq/P
+    elif definition==2:
+        veq = np.sqrt( 2*constants.GG * M*constants.Msol / (3*R_pole*constants.Rsol))
     veq = conversions.convert('m/s',units,veq)
+        
     return veq
 
 
@@ -350,6 +398,21 @@ def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
         
     where M{b = -1 / (aXrp) and c = 1/(aX),}
     and M{a = Omega_e^2/(GM) and X = (x^2 + x + 1)/(6x^2)}
+    
+    @param r: radius of the surface element to calculate the surface gravity
+    @type r: float/ndarray
+    @param theta: colatitude of surface element
+    @type theta: float/ndarray
+    @param r_pole: polar radius of model
+    @type r_pole: float
+    @param M: mass of the star
+    @type M: float
+    @param omega_eq: fraction of critical rotation velocity at equator
+    @type omega_eq: float
+    @param omega_pole: fraction of critical rotation velocity at pole
+    @type omega_pole: float
+    @return: roche potential value
+    @rtype: float/ndarray
     """
     GG = constants.GG_sol
     
@@ -391,7 +454,26 @@ def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=
     """
     Surface gravity from differentially rotation Roche potential.
     
-    Magnitude is OK, direction doesn't seem to be.
+    Magnitude is OK, please carefully check direction.
+    
+    @param r: radius of the surface element to calculate the surface gravity
+    @type r: float/ndarray
+    @param theta: colatitude of surface element
+    @type theta: float/ndarray
+    @param phi: longitude of surface element
+    @type phi: float/ndarray
+    @param r_pole: polar radius of model
+    @type r_pole: float
+    @param M: mass of the star
+    @type M: float
+    @param omega_eq: fraction of critical rotation velocity at equator
+    @type omega_eq: float
+    @param omega_pole: fraction of critical rotation velocity at pole
+    @type omega_pole: float
+    @param norm: compute magnitude of surface gravity (True) or vector (False)
+    @type norm: boolean
+    @return: surface gravity magnitude or vector
+    @rtype: 3Xfloat/3Xndarray
     """
     GG = constants.GG_sol
     Omega_crit = sqrt(8*GG*M/ (27*r_pole**3))
