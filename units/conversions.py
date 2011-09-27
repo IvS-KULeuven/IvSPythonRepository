@@ -56,15 +56,14 @@ import numpy as np
 #-- optional libraries: WARNING: when these modules are not installed, the
 #   module's use is restricted
 try: import ephem
-except ImportError: print("Unable to load pyephem, coordinate transfos unavailable")
+except ImportError: print("Unable to load pyephem, stellar coordinate transformations unavailable")
 
 #-- from IVS repository
 from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc
 from ivs.units.uncertainties.unumpy import log10,sqrt
 from ivs.sed import filters
-from ivs.io import ascii
-from ivs.misc import loggers
+from ivs.aux import loggers
 
 logger = logging.getLogger("UNITS.CONV")
 logger.addHandler(loggers.NullHandler)
@@ -99,13 +98,13 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('km','cm',1.)
     100000.0
     >>> convert('m/s','km/h',1,0.1)
-    (3.5999999999999996, 0.35999999999999999)
+    (3.5999999999999996, 0.36)
     
     Keyword arguments can give extra information, for example when converting
     from Flambda to Fnu, and should be tuples (float(,error),'unit'):
     
     >>> convert('A','km/s',4553,0.1,wave=(4552.,0.1,'A'))
-    (65.859503075576129, 9.3149633624641144)
+    (65.85950307557613, 9.314963362464114)
     
     Extra
     =====
@@ -137,15 +136,15 @@ def convert(_from,_to,*args,**kwargs):
     B{Spectra}:
     
     >>> convert('A','km/s',4553.,wave=(4552.,'A'))
-    65.859503075576129
+    65.85950307557613
     >>> convert('A','km/s',4553.,wave=(4552.,0.1,'A'))
-    (65.859503075576129, 6.5873971331958607)
+    (65.85950307557613, 6.587397133195861)
     >>> convert('nm','m/s',455.3,wave=(0.4552,'mum'))
-    65859.503075645873
+    65859.50307564587
     >>> convert('km/s','A',65.859503075576129,wave=(4552.,'A'))
     4553.0
     >>> convert('nm','Ghz',1000.)
-    299792.45799999993
+    299792.4579999999
     >>> convert('km h-1','nRsol s-1',1.)
     0.39939292275740873
     >>> convert('erg s-1 cm-2 A-1','SI',1.)
@@ -154,17 +153,17 @@ def convert(_from,_to,*args,**kwargs):
     B{Fluxes}:
     
     >>> convert('erg/s/cm2/A','Jy',1e-10,wave=(10000.,'angstrom'))
-    333.56409519815202
+    333.564095198152
     >>> convert('erg/s/cm2/A','Jy',1e-10,freq=(cc/1e-6,'hz'))
-    333.56409519815202
+    333.564095198152
     >>> convert('erg/s/cm2/A','Jy',1e-10,freq=(cc,'Mhz'))
-    333.56409519815202
+    333.564095198152
     >>> convert('Jy','erg/s/cm2/A',333.56409519815202,wave=(10000.,'A'))
     1e-10
     >>> convert('Jy','erg/s/cm2/A',333.56409519815202,freq=(cc,'Mhz'))
     1e-10
     >>> convert('W/m2/mum','erg/s/cm2/A',1e-10,wave=(10000.,'A'))
-    1.0000000000000001e-11
+    1.0000000000000003e-11
     >>> convert('Jy','W/m2/Hz',1.)
     1e-26
     >>> print convert('W/m2/Hz','Jy',1.)
@@ -178,13 +177,13 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('erg/s/cm2','Jy',1.,wave=(2.,'micron'))
     667128190.39630413
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
-    4511059.8298101583
+    4511059.829810158
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
-    3542978.1053089043
+    3542978.105308904
     >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
     2.2167739682629828e-07
     >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
-    7.4948114500000012e-10
+    7.49481145e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
     >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
@@ -192,7 +191,7 @@ def convert(_from,_to,*args,**kwargs):
     
     B{Angles}:
     >>> convert('sr','deg2',1.)
-    3282.8063500117441
+    3282.806350011744
     
     B{Magnitudes and amplitudes}:
     
@@ -207,9 +206,9 @@ def convert(_from,_to,*args,**kwargs):
     >>> print(convert('ppm','muAmag',1.))
     1.0857356618
     >>> print(convert('mAmag','ppt',1.,0.1))
-    (0.92145831929579813, 0.092188273167354881)
+    (0.9214583192957981, 0.09218827316735488)
     >>> convert('mag_color','flux_ratio',0.599,0.004,photband='GENEVA.U-B')
-    (1.1391327795013375, 0.0041967202512330449)
+    (1.1391327795013375, 0.004196720251233045)
     
     B{Frequency analysis}:
     
@@ -225,13 +224,13 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('cm','cy/arcmin',8500.,wave=(2200,'nm'))/60.
     187.3143767923207
     >>> convert('cy/arcsec','m',187.,wave=(2.2,'mum'))
-    84.857341290055459
+    84.85734129005546
     >>> convert('cyc/arcsec','m',187.,wave=(1,'mum'))
-    38.571518768207028
+    38.57151876820703
     >>> convert('cycles/arcsec','m',187.,freq=(300000.,'Ghz'))
     38.54483473437972
     >>> convert('cycles/mas','m',0.187,freq=(300000.,'Ghz'))
-    38.544834734379712
+    38.54483473437971
     
     B{Temperature}:
     
@@ -255,9 +254,9 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('JD','CD',2446257.81458)
     (1985.0, 7.0, 11.314580000005662)
     >>> convert('CD','JD',(1985,7,11.31))
-    2446257.8100000001
+    2446257.81
     >>> convert('CD','JD',(1985,7,11,7,31,59))
-    2446257.8138773148
+    2446257.813877315
     >>> convert('MJD','CD',0.,jtype='corot')
     (2000.0, 1.0, 1.5)
     >>> convert('JD','MJD',2400000.5,jtype='mjd')
@@ -531,7 +530,7 @@ def components(unit):
     >>> print(components('g2'))
     (0.001, 'kg', 2)
     >>> print(components('hg3'))
-    (0.10000000000000001, 'kg', 3)
+    (0.1, 'kg', 3)
     >>> print(components('Mg4'))
     (1000.0, 'kg', 4)
     >>> print(components('mm'))
@@ -1015,16 +1014,33 @@ def derive_logg(mass,radius):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = unumpy.uarray([mass[0],mass[1]])
-    M = convert(mass[-1],'SI',*mass[:-1])
+        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+    M = convert(mass[-1],'g',*mass[:-1])
     #-- take care of radius
     if len(radius)==3:
-        radius = unumpy.uarray([radius[0],radius[1]])
+        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'cm',*radius[:-1])
     #-- calculate surface gravity in logarithmic CGS units
-    logg = log10(GG_cgs*mass*Msol_cgs / (R**2))
+    logg = log10(GG_cgs*M / (R**2))
     return logg
-    
+
+
+def derive_mass(surface_gravity,radius):
+    """
+    Convert surface gravity and radius to stellar mass.
+    """
+    #-- take care of logg
+    if len(surface_gravity)==3:
+        surface_gravity = (unumpy.uarray([surface_gravity[0],surface_gravity[1]]),surface_gravity[2])
+    grav = convert(surface_gravity[-1],'m/s2',*surface_gravity[:-1])
+    #-- take care of radius
+    if len(radius)==3:
+        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+    R = convert(radius[-1],'m',*radius[:-1])
+    #-- calculate mass in SI
+    M = grav*R**2/GG
+    return M
+
 
 #}
 
@@ -1323,6 +1339,7 @@ _factors = {
            'cr':    (100*365*24*3600,'s'),    # century
            'hz':    (1e+00,         'cy s-1'),# Hertz
            'JD':    (1e+00,         'JD'), # Julian Day
+           'HJD':   (1e+00,         'JD'), # Heliocentric Julian Day
            'CD':    (JulianDay,     'JD'), # Calender Day
            'MJD':   (ModJulianDay,  'JD'), # Modified Julian Day
            'j':     (1/60.,         's'),  # jiffy
@@ -1363,6 +1380,8 @@ _factors = {
 # AREA
            'ac':    (4046.8564224,  'm2'), # acre (international)
            'a':     (100.,          'm2'), # are
+# VOLUME
+           'gallon':(0.00378541178, 'm3'), # US gallon
 # FLUX
 # -- absolute magnitudes
            'Jy':      (1e-26,         'kg s-2 cy-1'), # W/m2/Hz
