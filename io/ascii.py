@@ -7,7 +7,7 @@ import logging
 import os
 
 import numpy as np
-from ivs.misc import loggers
+from ivs.aux import loggers
 
 logger = logging.getLogger("IO.ASCII")
 logger.addHandler(loggers.NullHandler)

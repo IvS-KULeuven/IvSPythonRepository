@@ -8,7 +8,7 @@ import os
 import pyfits
 
 import numpy as np
-from ivs.misc import loggers
+from ivs.aux import loggers
 from ivs.units import conversions
 
 logger = logging.getLogger("IO.FITS")
@@ -50,11 +50,11 @@ def read_spectrum(filename, return_header=False):
 
 
 def read_corot(fits_file,  return_header=False, type_data='hel',
-                         channel='sismo', remove_flagged=True):
+                         remove_flagged=True):
     """
     Read CoRoT data from a CoRoT FITS file.
     
-    Currently only SISMO data is implemented.
+    Both SISMO and EXO data are recognised and extracted accordingly.
     
     type_data is one of:
         - type_data='raw'
@@ -67,8 +67,6 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
     @type return_header: bool
     @param type_data: type of data to return
     @type type_data: string (one of 'raw','hel' or 'helreg')
-    @param channel: type of CoRoT data
-    @type channel: string (one of 'sismo' or 'exo')
     @param remove_flagged: remove flagged datapoints
     @type remove_flagged: True
     @return: CoRoT data (times, flux, error, flags)
@@ -77,22 +75,37 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
     #-- read in the FITS file
     # headers: ['DATE', 'DATEJD', 'DATEHEL', 'STATUS', 'WHITEFLUX', 'WHITEFLUXDEV', 'BG', 'CORREC']
     fits_file_    = pyfits.open(fits_file)
-    times,flux,error,flags = fits_file_[type_data].data.field(0),\
-                             fits_file_[type_data].data.field(1),\
-                             fits_file_[type_data].data.field(2),\
-                             fits_file_[type_data].data.field(3)
-    # extract the header if asked
-    if return_header:
-        header = fits_file_[0].header
-    fits_file_.close()
-    
-    logger.debug('Read CoRoT file %s'%(fits_file))
-    
+    if fits_file_[0].header['hlfccdid'][0]=='A':
+        times,flux,error,flags = fits_file_[type_data].data.field(0),\
+                                 fits_file_[type_data].data.field(1),\
+                                 fits_file_[type_data].data.field(2),\
+                                 fits_file_[type_data].data.field(3)
+        # extract the header if asked
+        if return_header:
+            header = fits_file_[0].header
+        fits_file_.close()
+        
+        logger.debug('Read CoRoT SISMO file %s'%(fits_file))
+    elif fits_file_[0].header['hlfccdid'][0]=='E':
+        times = fits_file_['bintable'].data.field('datehel')
+        blueflux,e_blueflux = fits_file_['bintable'].data.field('blueflux'),fits_file_['bintable'].data.field('bluefluxdev')
+        greenflux,e_greenflux = fits_file_['bintable'].data.field('greenflux'),fits_file_['bintable'].data.field('greenfluxdev')
+        redflux,e_redflux = fits_file_['bintable'].data.field('redflux'),fits_file_['bintable'].data.field('redfluxdev')
+        #-- chromatic light curves
+        if type_data=='colors':
+            flux = np.column_stack([blueflux,greenflux,redflux])
+            error = np.column_stack([e_blueflux,e_greenflux,e_redflux]).min(axis=1)
+        #-- white light curves
+        else:
+            flux = blueflux + greenflux + redflux
+            error = np.sqrt(e_blueflux**2 + e_greenflux**2 + e_redflux**2)
+        flags = fits_file_['bintable'].data.field('status')
+        
     # remove flagged datapoints if asked
     if remove_flagged:
         keep1 = (flags==0)
         keep2 = (error!=-1)
-        logger.info('Remove: flagged (%d) no valid error (%d) datapoints (%d)'%(len(keep1)-sum(keep1),len(keep2)-sum(keep2),len(keep1)))
+        logger.info('Remove: flagged (%d) no valid error (%d) datapoints (%d)'%(len(keep1)-keep1.sum(),len(keep2)-keep2.sum(),len(keep1)))
         keep = keep1 & keep2
         times,flux,error,flags = times[keep], flux[keep], error[keep], flags[keep]
     
@@ -103,6 +116,109 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
         return times, flux, error, flags, header
     else:
         return times, flux, error, flags
+
+
+def read_fuse(ff,return_header=False):
+    """
+    Read FUSE spectrum.
+    
+    Modified JD: JD-2400000.5.
+    
+    Do 'EXPEND'-'EXPSTART'
+    
+    V_GEOCEN,V_HELIO
+    """
+    ff = pyfits.open(ff)
+    if hdr['SRC_TYPE']=='EE':
+        logger.warning("Warning: %s is not thrustworty (see manual)"%(ff))
+    wave = ff[1].data.field('WAVE')
+    flux = ff[1].data.field('FLUX')
+    errr = ff[1].data.field('ERROR')
+    hdr = ff[0].header
+    ff.close()
+    
+    
+    if return_header:
+        return wave,flux,errr,hdr
+    else:
+        return wave,flux,errr
+        
+def read_iue(filename,return_header=False):
+    """
+    Read IUE spectrum
+    
+    Instrumental profiles: http://starbrite.jpl.nasa.gov/pds/viewInstrumentProfile.jsp?INSTRUMENT_ID=LWR&INSTRUMENT_HOST_ID=IUE
+    
+    Better only use .mxlo for reliable absolute calibration
+    
+    LWP
+ 
+    - Large-aperture spectral resolution is best between 2700 and 2900 A
+    with an average FWHM of 5.2 A and decreases to approximately 8.0 A on
+    either side of this range. Small-aperture resolution is optimal
+    between 2400 and 3000 A with an average FWHM of 5.5 A and decreases to
+    8.1 A at the extreme wavelengths.
+
+    SWP
+ 
+    - The best resolution occurs around 1200 A, with a FWHM of 4.6 A in the
+    large aperture and 3.0 A in the small aperture, and gradually worsens
+    towards longer wavelengths: 6.7 A at 1900 A in the large aperture and
+    6.3 A in the small. On average, the small-aperture resolution is
+    approximately 10% better than the large-aperture resolution.
+
+    
+    """
+    ff = pyfits.open(filename)
+    header = None
+    if os.path.splitext(filename)[1]=='.mxlo':
+        try:
+            flux = ff[1].data.field('flux')[0]
+            error = ff[1].data.field('sigma')[0]
+        except:
+            flux = ff[1].data.field('abs_cal')[0]
+            error = flux
+        nu0 = ff[1].data.field('wavelength')[0]
+        dnu = ff[1].data.field('deltaw')[0]
+        nun = nu0 + len(flux)*dnu
+        wavelength = np.linspace(nu0,nun,len(flux))
+    elif os.path.splitext(filename)[1]=='.mxhi':
+        orders_w = []
+        orders_f = []
+        orders_e = []
+        for i in range(len(ff[1].data.field('abs_cal'))):
+            flux = ff[1].data.field('abs_cal')[i]
+            error = ff[1].data.field('noise')[i]
+            quality = ff[1].data.field('quality')[i]
+            npoints = ff[1].data.field('npoints')[i]
+            startpix = ff[1].data.field('startpix')[i]
+            flux = flux[startpix:startpix+npoints+1]
+            error = error[startpix:startpix+npoints+1]      
+            quality = quality[startpix:startpix+npoints+1]
+            flux[quality!=0] = 0
+            nu0 = ff[1].data.field('wavelength')[i]
+            dnu = ff[1].data.field('deltaw')[i]
+            nun = nu0 + len(flux)*dnu
+            wavelength = np.linspace(nu0,nun,len(flux))
+            if len(orders_f)>0:
+                orders_f[-1][wavelength[0]<orders_w[-1]] = 0
+            orders_w.append(wavelength)
+            orders_f.append(flux)
+            orders_e.append(error)
+        wavelength = np.hstack(orders_w)
+        flux = np.hstack(orders_f)
+        error = np.hstack(orders_e)
+    
+    wavelength = wavelength[flux!=0]
+    error = error[flux!=0]
+    flux = flux[flux!=0]
+    
+    logger.info("IUE spectrum %s read"%(filename))
+    ff.close()
+    if not return_header:
+        return wavelength,flux,error
+    else:
+        return wavelength,flux,error,header_
 
 #}
 
@@ -146,7 +262,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         hdulist.writeto(filename)
         hdulist.close()
     
-    if is_file:
+    if is_file or isinstance(filename,str):
         hdulist = pyfits.open(filename,mode='update')
     else:
         hdulist = filename
