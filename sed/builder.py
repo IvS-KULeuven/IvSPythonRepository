@@ -6,6 +6,13 @@ To construct an SED, use the SED class. The functions defined in this module
 are mainly convenience functions specifically for that class, but can be used
 outside of the SED class if you know what you're doing.
 
+Table of contents:
+    
+    1. Retrieving and plotting photometry of a target
+    2. SED fitting using a grid based approach
+        - Saving SED fits
+        - Loading SED fits
+
 Section 1. Retrieving and plotting photometry of a target
 =========================================================
 
@@ -175,13 +182,12 @@ and repeat the plot
 
 ]]include figure]]ivs_sed_builder_example_fitting02.png]
 
-With the L{SED.plot_grid} function, you can easily visualize the correlation between
-effective temperature and E(B-V) for these massive stars:
+You can automatically make plots of:
 
->>> p = pl.figure()
->>> mysed.plot_grid(x='teff',y='ebv',limit=None)
+    1. the grid (see L{SED.plot_grid})
+    2. the SED (see L{SED.plot_sed}) 
+    3. the fit statistics (see L{SED.plot_chi2}) 
 
-]]include figure]]ivs_sed_builder_example_fitting03.png]
 
 Subsection 2.1 Saving SED fits
 ------------------------------
@@ -191,9 +197,9 @@ You can save all the data to a multi-extension FITS file via
 >>> mysed.save_fits()
 
 This FITS file then contains all B{measurements} (it includes the .phot file),
-the B{resulting SED}, and also the B{whole fitted grid}: in the above case, the
-extensions of the FITS file contain the following information (we print each
-header)::
+the B{resulting SED}, the B{confidence intervals of all parameters} and also the
+B{whole fitted grid}: in the above case, the extensions of the FITS file contain
+the following information (we print part of each header)::
 
     EXTNAME = 'DATA    '
     XTENSION= 'BINTABLE'           / binary table extension                         
@@ -201,63 +207,36 @@ header)::
     NAXIS   =                    2 / number of array dimensions                     
     NAXIS1  =                  270 / length of dimension 1                          
     NAXIS2  =                   67 / length of dimension 2                          
-    PCOUNT  =                    0 / number of group parameters                     
-    GCOUNT  =                    1 / number of groups                               
-    TFIELDS =                   18 / number of table fields                         
-    TTYPE1  = 'meas    '                                                            
-    TFORM1  = 'D       '                                                            
+    TTYPE1  = 'meas    '                                                                                                                   
     TTYPE2  = 'e_meas  '                                                            
-    TFORM2  = 'D       '                                                            
     TTYPE3  = 'flag    '                                                            
-    TFORM3  = '20A     '                                                            
     TTYPE4  = 'unit    '                                                            
-    TFORM4  = '30A     '                                                            
     TTYPE5  = 'photband'                                                            
-    TFORM5  = '30A     '                                                            
     TTYPE6  = 'source  '                                                            
-    TFORM6  = '50A     '                                                            
     TTYPE7  = '_r      '                                                            
-    TFORM7  = 'D       '                                                            
     TTYPE8  = '_RAJ2000'                                                            
-    TFORM8  = 'D       '                                                            
     TTYPE9  = '_DEJ2000'                                                            
-    TFORM9  = 'D       '                                                            
     TTYPE10 = 'cwave   '                                                            
-    TFORM10 = 'D       '                                                            
     TTYPE11 = 'cmeas   '                                                            
-    TFORM11 = 'D       '                                                            
     TTYPE12 = 'e_cmeas '                                                            
-    TFORM12 = 'D       '                                                            
     TTYPE13 = 'cunit   '                                                            
-    TFORM13 = '50A     '                                                            
     TTYPE14 = 'color   '                                                            
-    TFORM14 = 'L       '                                                            
     TTYPE15 = 'include '                                                            
-    TFORM15 = 'L       '                                                            
     TTYPE16 = 'synflux '                                                            
-    TFORM16 = 'D       '                                                            
     TTYPE17 = 'mod_eff_wave'                                                        
-    TFORM17 = 'D       '                                                            
     TTYPE18 = 'chi2    '                                                            
-    TFORM18 = 'D       '                                                            
 
     EXTNAME = 'MODEL   '      
     XTENSION= 'BINTABLE'           / binary table extension                         
     BITPIX  =                    8 / array data type                                
     NAXIS   =                    2 / number of array dimensions                     
     NAXIS1  =                   24 / length of dimension 1                          
-    NAXIS2  =                 1221 / length of dimension 2                          
-    PCOUNT  =                    0 / number of group parameters                     
-    GCOUNT  =                    1 / number of groups                               
-    TFIELDS =                    3 / number of table fields                                                                               
+    NAXIS2  =                 1221 / length of dimension 2                                                                                
     TTYPE1  = 'wave    '                                                            
-    TFORM1  = 'D       '                                                            
     TUNIT1  = 'A       '                                                            
     TTYPE2  = 'flux    '                                                            
-    TFORM2  = 'D       '                                                            
     TUNIT2  = 'erg/s/cm2/A'                                                         
     TTYPE3  = 'dered_flux'                                                          
-    TFORM3  = 'D       '                                                            
     TUNIT3  = 'erg/s/cm2/A'                                                         
     TEFFL   =    23000.68377498454                                                  
     TEFF    =    23644.49138963689                                                  
@@ -273,10 +252,7 @@ header)::
     ZU      =   0.4999776537652627                                                  
     SCALEL  = 2.028305798068863E-20                                                 
     SCALE   = 2.444606991671813E-20                                                 
-    SCALEU  = 2.830281842143698E-20                                                 
-    E_SCALEL= 8.844041760265867E-22                                                 
-    E_SCALE = 1.391012126969951E-21                                                 
-    E_SCALEU= 2.366112834925025E-21                                                 
+    SCALEU  = 2.830281842143698E-20                                                                                               
     LABSL   =    250.9613352757437                                                  
     LABS    =     281.771013453664                                                  
     LABSU   =    745.3149766772975                                                  
@@ -296,29 +272,16 @@ header)::
     NAXIS   =                    2 / number of array dimensions                     
     NAXIS1  =                   80 / length of dimension 1                          
     NAXIS2  =                99996 / length of dimension 2                          
-    PCOUNT  =                    0 / number of group parameters                     
-    GCOUNT  =                    1 / number of groups                               
-    TFIELDS =                   10 / number of table fields                         
     TTYPE1  = 'teff    '                                                            
-    TFORM1  = 'D       '                                                            
     TTYPE2  = 'logg    '                                                            
-    TFORM2  = 'D       '                                                            
     TTYPE3  = 'ebv     '                                                            
-    TFORM3  = 'D       '                                                            
     TTYPE4  = 'z       '                                                            
-    TFORM4  = 'D       '                                                            
     TTYPE5  = 'chisq   '                                                            
-    TFORM5  = 'D       '                                                            
     TTYPE6  = 'scale   '                                                            
-    TFORM6  = 'D       '                                                            
     TTYPE7  = 'e_scale '                                                            
-    TFORM7  = 'D       '                                                            
     TTYPE8  = 'Labs    '                                                            
-    TFORM8  = 'D       '                                                            
     TTYPE9  = 'CI_raw  '                                                            
-    TFORM9  = 'D       '                                                            
     TTYPE10 = 'CI_red  '                                                            
-    TFORM10 = 'D       '                                                            
 
 
 Subsection 2.2 Loading SED fits
@@ -732,7 +695,11 @@ class SED(object):
     def exclude(self,names=None,wrange=None):
         """
         Exclude photometry from fitting process.
+        
+        If you call without arguments, all photometry will be excluded.
         """
+        if names is None and wrange is None:
+            wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='all')
     
     def exclude_colors(self,names=None,wrange=None):
@@ -907,6 +874,10 @@ class SED(object):
         grid_results = mlab.rec_append_fields(grid_results, 'CI_red', CI_red)
         if not 'igrid_search' in self.results:
             self.results['igrid_search'] = {}
+        elif 'grid' in self.results['igrid_search']:
+            grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
+            sa = np.argsort(grid_results['chisq'])[::-1]
+            grid_results = grid_results[sa]
         
         self.results['igrid_search']['grid'] = grid_results
         self.results['igrid_search']['factor'] = factor
@@ -1010,12 +981,30 @@ class SED(object):
     
     #}
     
-    #{ Input and output
+    #{ Plotting routines
     def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95):
         """
         Plot grid as scatter plot
         
-        Possible plot types: 'CI_red','z','ebv'
+        PrameterC{ptype} sets the colors of the scattered points (e.g., 'CI_red','z','ebv').
+        
+        Example usage:
+        
+        First set the SED:
+        
+        >>> mysed = SED('HD180642')
+        >>> mysed.load_fits()
+        
+        Then make the plots:
+        
+        >>> p = pl.figure()
+        >>> p = pl.subplot(221);mysed.plot_grid(limit=None)
+        >>> p = pl.subplot(222);mysed.plot_grid(x='ebv',y='z',limit=None)
+        >>> p = pl.subplot(223);mysed.plot_grid(x='teff',y='ebv',limit=None)
+        >>> p = pl.subplot(224);mysed.plot_grid(x='logg',y='z',limit=None)
+        
+        ]]include figure]]ivs_sed_builder_plot_grid_01.png]
+        
         """
         if limit is not None:
             region = self.results[mtype]['grid']['CI_red']<limit
@@ -1089,6 +1078,23 @@ class SED(object):
     def plot_sed(self,colors=False,mtype='igrid_search'):
         """
         Plot a fitted SED together with the data.
+        
+        Example usage:
+        
+        First set the SED:
+        
+        >>> mysed = SED('HD180642')
+        >>> mysed.load_fits()
+        
+        Then make the plots:
+        
+        >>> p = pl.figure()
+        >>> p = pl.subplot(121)
+        >>> mysed.plot_sed(colors=False)
+        >>> p = pl.subplot(122)
+        >>> mysed.plot_sed(colors=True)
+        
+        ]]include figure]]ivs_sed_builder_plot_sed_01.png]
         """
         
         def plot_sed_getcolors(master,color_dict=None):
@@ -1193,6 +1199,34 @@ class SED(object):
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         
     def plot_chi2(self,colors=False,mtype='igrid_search'):
+        """
+        Plot chi2 statistic for every datapoint included in the fit.
+        
+        To plot the statistic from the included absolute values, set
+        C{colors=False}.
+        
+        To plot the statistic from the included colors, set C{colors=True}.
+        
+        Example usage:
+        
+        First set the SED:
+        
+        >>> mysed = SED('HD180642')
+        >>> mysed.load_fits()
+        
+        Then make the plots:
+        
+        >>> p = pl.figure()
+        >>> p = pl.subplot(121)
+        >>> mysed.plot_chi2(colors=False)
+        >>> p = pl.subplot(122)
+        >>> mysed.plot_chi2(colors=True)
+        
+        ]]include figure]]ivs_sed_builder_plot_chi2_01.png]
+        
+        @param colors: flag to distinguish between colors and absolute values
+        @type colors: boolean
+        """
         
         include_grid = self.master['include']
         eff_waves,synflux,photbands = self.results['synflux']
@@ -1436,9 +1470,18 @@ class SED(object):
         pl.axes([0,0.5,0.5,0.5]);self.plot_MW_top()
         pl.axes([0.5,0.5,0.5,0.5]);self.plot_finderchart()
     
+    #}
+    
+    #{Input and output
+    
     def save_fits(self,filename=None,overwrite=True):
         """
         Save fitting parameters and results to a FITS file.
+        
+        Example usage:
+        
+        >>> #mysed.save_fits()
+        >>> #mysed.save_fits(filename='myname.fits')
         """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
@@ -1458,6 +1501,8 @@ class SED(object):
             if 'CI' in key:
                 for ikey in self.results['igrid_search'][key]:
                     results_dict[ikey] = self.results['igrid_search'][key][ikey]
+            if key=='factor':
+                results_dict[key] = self.results['igrid_search'][key]
                     
         fits.write_recarray(master,filename,header_dict=dict(extname='data'))
         fits.write_array(list(self.results['model']),filename,
@@ -1481,6 +1526,7 @@ class SED(object):
         fields = ff[3].columns.names
         master = np.rec.fromarrays([ff[3].data.field(field) for field in fields],names=','.join(fields))
         self.results['igrid_search']['grid'] = master
+        self.results['igrid_search']['factor'] = ff['igrid_search'].header['factor']
         
         self.results['model'] = ff[2].data.field('wave'),ff[2].data.field('flux'),ff[2].data.field('dered_flux')
         self.results['chi2'] = ff[1].data.field('chi2')
@@ -1501,6 +1547,9 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
     pl.show()
+    #-- clean up
+    if os.path.isfile('HD180642.fits'):
+        os.remove('HD180642.fits')
     sys.exit()
     #-- PCA analysis
     master['include'] = True
@@ -1574,6 +1623,7 @@ if __name__ == "__main__":
         pl.ylim(pars[:,2].min(),pars[:,2].max())
         pl.colorbar()
     pl.show()
+    
 
 
 

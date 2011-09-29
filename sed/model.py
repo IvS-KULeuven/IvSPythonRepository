@@ -6,19 +6,20 @@ The most basic usage of this module is:
 
 >>> wave,flux = get_table(teff=10000,logg=4.0)
 
-This will retrieve the model SED with the specified effective temperature and
-logg, from the standard grid, in standard units and with zero reddening. All
-these things can be specified though.
+This will retrieve the model SED with the specified B{effective temperature} and
+B{logg}, from the standard B{grid}, in standard B{units} and with zero
+B{reddening}. All these things can be specified though (see below).
 
-Section 1. Available grids
-==========================
+Section 1. Available model grids
+================================
 
 We make a plot of the domains of all spectral grids. Therefore, we first collect
 all the grid names
 
 >>> grids = get_gridnames()
 
-Preparation of the plot: set the color cycle of the current axes.
+Preparation of the plot: set the color cycle of the current axes to the spectral
+color cycle.
 
 >>> p = pl.figure(figsize=(10,8))
 >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
@@ -109,8 +110,8 @@ do:
 
 >>> wave,flux = get_table(teff=16321,logg=4.321,wave_units='micron',flux_units='Jy/sr')
 
-To remove the steradian from the units when you know the angular diameter of your
-star in milliarcseconds, you can do (we have to convert diameter to surface):
+To B{remove the steradian} from the units when you know the angular diameter of
+your star in milliarcseconds, you can do (we have to convert diameter to surface):
 
 >>> ang_diam = 3.21 # mas
 >>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
@@ -118,7 +119,7 @@ star in milliarcseconds, you can do (we have to convert diameter to surface):
 >>> flux *= scale**2
 
 The example above is representative for the case of Vega. So, if we now calculate
-the synthetic flux in the GENEVA.V band, we should end up with the zeropoint
+the B{synthetic flux} in the GENEVA.V band, we should end up with the zeropoint
 magnitude of this band, which is close to zero:
 
 >>> flam = synthetic_flux(wave,flux,photbands=['GENEVA.V'])
@@ -139,20 +140,30 @@ than retrieving the model SED and then calculating the synthetic flux. Also,
 you can supply arbitrary metallicities within the grid boundaries, as interpolation
 is done in effective temperature, surface gravity, reddening B{and} metallicity.
 
-Note that also the reddening law is fixed now, you need to recalculate the
+Note that also the B{reddening law is fixed} now, you need to recalculate the
 tables for different parameters if you need them.
+
+The B{massive speed-up} is accomplished the following way: it may take a few tens
+of seconds to retrieve the first pre-integrated SED, because all available
+files from the specified grid will be loaded into memory, and a `markerarray'
+will be made allowing a binary search in the grid. This makes it easy to retrieve
+all models around the speficied point in N-dimensional space. Next, a linear
+interpolation method is applied to predict the photometric values of the
+specified point.
 
 All defaults set for the retrieval of model SEDs are applicable for the integrated
 photometry tables as well.
 
-When retrieving integrated photometry, you also get the absolute luminosity
+When retrieving integrated photometry, you also get the B{absolute luminosity}
 (integration of total SED) as a bonus. This is the absolute luminosity assuming
 the star has a radius of 1Rsol. Multiply by Rstar**2 to get the true luminosity.
 
-Because photometric filters cannot trivially be assigned a wavelength to, by
-default, no wavelength information is retrieved. If you want to retrieve the
-effective wavelengths of the filters themselves (not taking into account the
-model atmospheres), you can give an extra keyword argument C{wave_units}.
+Because photometric filters cannot trivially be assigned a B{wavelength} to (see
+L{filters.eff_wave}), by default, no wavelength information is retrieved. If you
+want to retrieve the effective wavelengths of the filters themselves (not taking
+into account the model atmospheres), you can give an extra keyword argument
+C{wave_units}. If you want to take into account the model atmosphere, use
+L{filters.eff_wave}.
 
 >>> photbands = ['GENEVA.U','2MASS.J']
 >>> fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands)
@@ -182,7 +193,7 @@ These are the relevant parameters of Vega and photometric passbands
 >>> z = 0.0
 >>> photbands = ['GENEVA.U','GENEVA.G','2MASS.J','2MASS.H','2MASS.KS']
 
-We can compute (R/d)^2 to scale the synthetic flux as
+We can compute (R/d) to scale the synthetic flux as
 
 >>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
 
@@ -281,18 +292,27 @@ def set_defaults(**kwargs):
 
 
 
-def get_gridnames():
+def get_gridnames(grid=None):
     """
     Return a list of available grid names.
     
+    If you specificy the grid's name, you get two lists: one with all available
+    original, non-integrated grids, and one with the pre-calculated photometry.
+    
+    @parameter grid: name of the type of grid (optional)
+    @type grid: string
     @return: list of grid names
     @rtype: list of str
     """
-    return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-            'tlusty','uvblue','atlas12','nemo','tkachenko']
-            #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
-
-
+    if grid is None:
+        return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
+                'tlusty','uvblue','atlas12','nemo','tkachenko']
+                #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
+    else:
+        files = config.glob(basedir,'*%s*.fits'%(grid))
+        integrated = [os.path.basename(ff) for ff in files if os.path.basename(ff)[0]=='i']
+        original = [os.path.basename(ff) for ff in files if os.path.basename(ff)[0]!='i']
+        return original,integrated
 
 
 

@@ -57,7 +57,7 @@ def parallel_gridsearch(fctn):
         lumis = np.hstack([output[3] for output in arr])
         index = np.hstack([output[4] for output in arr])
         sa = np.argsort(index)
-        return chisqs[sa],scales[sa],e_scales[sa],lumis[sa],index[sa]
+        return chisqs[sa],scales[sa],e_scales[sa],lumis[sa]#,index[sa]
         
     return globpar
 

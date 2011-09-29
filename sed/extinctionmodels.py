@@ -7,8 +7,8 @@ Uniformly rewritten by K. Smolders
 
 from ivs.catalogs import vizier
 from ivs.sed.reddening import get_law
-from ivs.misc.decorators import memoized
-from ivs.misc import loggers
+from ivs.aux.decorators import memoized
+from ivs.aux import loggers
 from ivs import config
 
 import numpy  as np

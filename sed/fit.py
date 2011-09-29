@@ -227,21 +227,17 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     """
     Generate grid points at which to fit an interpolated grid of SEDs.
     
-    If C{points=None}, the grid search is done on the predefined grid points.
+    If C{points=None}, the points are chosen on the predefined grid points.
     Otherwise, C{points} grid points will be generated, uniformly distributed
-    between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange},
-    and afterwards all the points outside the grid are removed (i.e., you could
-    end up with less points than given). It is probably safest to go for
-    C{points=None} and adapt the resolution of the grid (C{res}=2). If you set
-    the resolution to '2', one out of every two points will be selected.
+    between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange}. If
+    you set the resolution to C{2}, one out of every two points will be selected.
     
     Extra keyword arguments can be used to give more details on the atmosphere
     models to use.
     
     Colors are automatically detected.
     
-    You can fix one parameter e.g. via setting teffrange=(10000,10000), but make
-    sure to either fix it on a grid point, or encompassing grid points!
+    You can fix one parameter e.g. via setting teffrange=(10000,10000).
     
     >>> photbands = ['GENEVA.G','GENEVA.B-V']
     
@@ -318,10 +314,6 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     ]include figure]]ivs_sed_fit_grids.png]
     
     
-    @param meas: array of measurements
-    @type meas: 1D array
-    @param e_meas: array containing measurements errors
-    @type e_meas: 1D array
     @param photbands: a list of photometric passbands, corresponding each
     measurement
     @type photbands: list of strings
@@ -409,6 +401,11 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],lims[2][0],lims[3][0]],
                                                        high=[lims[0][1],lims[1][1],lims[2][1],lims[3][1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
+    #-- override grid generation... seems to still be troubled....                                                   
+    #if points:
+    #    teffs,loggs,ebvs,zs = np.random.uniform(low=[teffrange[0],loggrange[0],ebvrange_[0],zrange_[0]],
+    #                                                   high=[teffrange[1],loggrange[1],ebvrange_[1],zrange_[1]],
+    #                                                   size=(points,4)).T
     keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
             (loggrange[0]<=loggs) & (loggs<=loggrange[1]) &\
             (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1]) &\
@@ -428,11 +425,9 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                           #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
     return teffs,loggs,ebvs,zs
 
-#}
-
 @parallel_gridsearch
 @make_parallel
-def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,func=stat_chi2,**kwargs):
+def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,func=stat_chi2,**kwargs):
         """
         Run over gridpoints and evaluate fit via C{func}.
         
@@ -453,7 +448,7 @@ def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,func=stat_chi2
         
         @return: (chi squares, scale factors, error on scale factors, absolute
         luminosities (R=1Rsol), index
-        @rtype: 5X1d array
+        @rtype: 4/5X1d array
         """
         index = kwargs.pop('index',None)
         #-- prepare output arrays
@@ -461,6 +456,7 @@ def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,func=stat_chi2
         scales = np.zeros_like(teffs)
         e_scales = np.zeros_like(teffs)
         lumis = np.zeros_like(teffs)
+        colors = np.array([filters.is_color(photband) for photband in photbands],bool)
         #-- show a progressMeter when not parallelized
         if index is None:
             p = progressMeter.ProgressMeter(total=len(teffs))
@@ -472,8 +468,12 @@ def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,func=stat_chi2
             chisqs[n],scales[n],e_scales[n] = func(meas,e_meas,colors,syn_flux)
             lumis[n] = Labs
         #-- return results
-        return chisqs,scales,e_scales,lumis,index
+        if index is not None:
+            return chisqs,scales,e_scales,lumis,index
+        else:
+            return chisqs,scales,e_scales,lumis
 
+#}
 
 
 if __name__=="__main__":

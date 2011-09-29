@@ -2,9 +2,8 @@
 """
 Definitions of interstellar reddening curves
 
-Example usage:
-    
->>> import pylab as pl
+Section 1. General interface
+============================
 
 Use the general interface to get different curves:
 
@@ -27,6 +26,9 @@ Use the general interface to get the same curves but with different Rv:
 >>> p = pl.legend(prop=dict(size='small'),loc='lower right')
 
 ]include figure]]ivs_sed_reddening_curves.png]
+
+Section 2. Individual curve definitions
+=======================================
 
 Get the curves seperately:
 
@@ -419,4 +421,6 @@ def seaton1979(Rv=3.1,wave=None,**kwargs):
 
 if __name__=="__main__":
     import doctest
+    import pylab as pl
     doctest.testmod()
+    pl.show()

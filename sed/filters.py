@@ -67,30 +67,6 @@ Short list of available systems:
 
 Plots of all passbands of all systems:
 
->>> for i,resp in enumerate(responses):
-...    # what system is this, and how many filters are in this system?
-...    this_system = resp.split('.')[0]
-...    nr_filters = systems.count(this_system)
-...    # call the plot containing the filters of the same system. If this is the
-...    # the first time the plot is called (first filter of system), then set
-...    # the title and color cycle
-...    p = pl.figure(set_responses.index(this_system),figsize=(10,4.5))
-...    if not pl.gca()._get_lines.count:
-...        color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)]
-...        p = pl.gca().set_color_cycle(color_cycle)
-...        p = pl.title(resp.split('.')[0])
-...    # get the response curve and plot it
-...    wave,trans = get_response(resp)
-...    p = pl.plot(wave/1e4,trans,label=resp)
-...    # and set labels
-...    p = pl.xlabel('Wavelength [micron]')
-...    p = pl.ylabel('Transmission')
-...    # if there are not more filters in this systems, save the plot to a file
-...    # and close it
-...    if pl.gca()._get_lines.count==nr_filters:
-...        p = pl.legend(prop=dict(size='small'))
-...        p = pl.savefig('/home/pieterd/python/ivs/doc/images/ivs_sed_filters_%s'%(this_system));p = pl.close()
-
 ]include figure]]ivs_sed_filters_2MASS.png]
 
 ]include figure]]ivs_sed_filters_ACSHRC.png]
@@ -400,7 +376,35 @@ def update_info(zp):
 
 
 if __name__=="__main__":
-    import doctest
-    import pylab as pl
-    doctest.testmod()
-    pl.show()
+    import sys
+    
+    if not sys.argv[1:]:
+        import doctest
+        import pylab as pl
+        doctest.testmod()
+        pl.show()
+    
+    else:  
+        for i,resp in enumerate(responses):
+            # what system is this, and how many filters are in this system?
+            this_system = resp.split('.')[0]
+            nr_filters = systems.count(this_system)
+            # call the plot containing the filters of the same system. If this is the
+            # the first time the plot is called (first filter of system), then set
+            # the title and color cycle
+            p = pl.figure(set_responses.index(this_system),figsize=(10,4.5))
+            if not pl.gca()._get_lines.count:
+                color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)]
+                p = pl.gca().set_color_cycle(color_cycle)
+                p = pl.title(resp.split('.')[0])
+            # get the response curve and plot it
+            wave,trans = get_response(resp)
+            p = pl.plot(wave/1e4,trans,label=resp)
+            # and set labels
+            p = pl.xlabel('Wavelength [micron]')
+            p = pl.ylabel('Transmission')
+            # if there are not more filters in this systems, save the plot to a file
+            # and close it
+            if pl.gca()._get_lines.count==nr_filters:
+                p = pl.legend(prop=dict(size='small'))
+                p = pl.savefig('/home/pieterd/python/ivs/doc/images/ivs_sed_filters_%s'%(this_system));p = pl.close()
