@@ -24,6 +24,8 @@ and call Pylab's C{show} function to show to the screen:
 
 ]]include figure]]ivs_sed_builder_example_photometry.png]
 
+Catch IndexErrors and TypeErrors in case no photometry is found.
+
 You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
 The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
 arcseconds for brighter stars. The best value of course depends on the density
