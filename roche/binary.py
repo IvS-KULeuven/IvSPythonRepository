@@ -1,5 +1,5 @@
 """
-Compute stellar shapes via Roche potential and gradients.
+Roche models of binary or multiple stars.
 
 The premisse of the Roche potential is that the stellar mass can be represented
 by a point source.
@@ -22,237 +22,7 @@ This module can be used to calculate the following information:
     10. a L{synthetic spectrum<spectral_synthesis>} starting from a library of spectra
     11. a L{synthetic light curve<binary_light_curve_synthesis>} from the projected intensities
 
-Section 1. Non-rotating spherically symmetric single star
-=========================================================
-
-The most trivial usage of this module would be to construct a non-rotating,
-spherically symmetric single star. All quantities should be constant over the
-stellar surface, except of course the projected ones. We compute this via the
-zero-rotation limit of the fast rotating model:
-
-First set some parameters: the rotation rate, effective temperature at the pole,
-polar radius, mass and viewing angle.
-
->>> omega = 0.00       # ratio to critical velocity
->>> T_pole = 5500.     # K
->>> r_pole = 1.        # solar radii
->>> M = 1.             # solar mass
->>> view_angle = pi/2  # radians
-
-Construct a coordinate grid with a resolution of 50 points, covering the whole
-star. Unravel, so that we have access to 1D coordinate arrays
-
->>> theta,phi = get_grid(50,full=True)
->>> thetas,phis = np.ravel(theta),np.ravel(phi)
-
-Calculate the shape of the stellar surface and the local gravity for every point
-in the grid. This is a 3D vector in Cartesian coordinates, so reshape all
-components to match the grid shape. As a reference, also explicitly calculate
-the polar surface gravity, which is the z-component of the gravity vector.
-
->>> radius = np.array([get_fastrot_roche_radius(itheta,r_pole,omega) for itheta in thetas]).reshape(theta.shape)
->>> grav_local = np.array([fastrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,omega,M) for iradius,itheta,iphi in zip(radius.ravel(),thetas,phis)]).T
->>> grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
->>> g_pole = fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]
-
-Calculate the value of the surface gravity in SI-units:
-
->>> grav = vectors.norm(grav_local)
-
-Compute the size of all surface elements, and the angle with respect to the
-radius vector (should be all zero). The normal to the surface is the negative of
-the surface gravity vector, which is directed inwards:
-
->>> areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
-
-Now we can calculate the local effective temperature (assuming radiative
-atmosphere in Von Zeipel law), and bolometric intensities:
-
->>> teff_local = local_temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
->>> ints_local = local_intensity(teff_local,grav,photband='OPEN.BOL')
-
-Define the line-of-sight vector:
-
->>> line_of_sight = np.zeros_like(grav_local)
->>> line_of_sight[0] = -sin(view_angle)
->>> line_of_sight[2] = -cos(view_angle)
-
-Compute the angles between surface normals and line-of-sight. We do this in 1D:
-
->>> gravity = np.array([igrav.ravel() for igrav in grav_local])
->>> line_of_sight = np.array([ilos.ravel() for ilos in line_of_sight])
->>> angles = vectors.angle(-gravity,line_of_sight)
->>> mus = cos(angles)
-
-Now compute the bolometric projected intensity, taking care of limbdarkening
-effects:
-
->>> intens_proj = local_intensity(teff_local.ravel(),grav.ravel(),mus,photband='OPEN.BOL').reshape(theta.shape)
-
-The total and projected luminosity can then be calculated the following way:
-
->>> print pi*(ints_local*areas_local*constants.Rsol_cgs**2).sum()/constants.Lsol_cgs
-0.992471247895
->>> print pi*np.nansum(intens_proj*areas_local*constants.Rsol_cgs**2)/constants.Lsol_cgs
-0.360380373413
-
-Now make some plots showing the local quantities:
-
->>> quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
->>> names = 'Area','log g', 'Teff', 'Flux', 'Proj. flux', 'Angle'
->>> p = pl.figure()
->>> rows,cols = 2,3    
->>> for i,(quantity,name) in enumerate(zip(quantities,names)):
-...    p = pl.subplot(rows,cols,i+1)
-...    p = pl.title(name)
-...    q = quantity.ravel()
-...    vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
-...    if vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
-...    p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors='none',vmin=vmin,vmax=vmax)
-...    p = pl.colorbar()
-...    p = pl.xlim(0,360)
-...    p = pl.ylim(180,0)
-
-]include figure]]ivs_binary_rochepotential_nonrotstar.png]
-
-Section 2. Fast and uniformly rotating star
-===========================================
-
-Repeating the same example as above, but now with parameters
-
->>> omega = 0.98
-
-Gives the figure below:
-
-]include figure]]ivs_binary_rochepotential_fastrotstar.png]
-
-Changing the viewing angle to 80 degrees
-
->>> view_angle = 80/180.*pi
-
-gives: Note that the maximum projected intensity is higher than in the previous
-example: this is because we view directly at higher latitudes now, which are
-hotter than the equator. The least flux is coming from the equatorial zone.
-
-]include figure]]ivs_binary_rochepotential_fastrotstar_80incl.png]
-
-To generate an image of the star, it is wise to convert the coordinates to
-Cartesian coordinates:
-
->>> x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
->>> p = pl.figure()
->>> p = pl.subplot(121,aspect='equal')
->>> p = pl.title('top view')
->>> p = pl.scatter(x,y,c=teff_local.ravel(),edgecolors='none')
->>> p = pl.subplot(122,aspect='equal')
->>> p = pl.title('side view')
->>> p = pl.scatter(y,z,c=teff_local.ravel(),edgecolors='none')
-
-The movie below is obtained by calculating the projected intensity in the line
-of sight
-
->>> proj_intens,mus = projected_intensity(teff_local,grav_local,areas_local,np.array([0,-sin(view_angle),-cos(view_angle)]),photband='OPEN.BOL')
-
-for different lines of sight, and then for each line of sight computing the
-Cartesian coordinates, and finally rotating in Y-Z plane.
-
->>> y,z = vectors.rotate(y,z,-(pi/2-view_angle))
-
-]include figure]]ivs_binary_rochepotential_fastrotstar_shape.png]
-
-]include figure]]ivs_binary_rochepotential_fastrot.gif]
-
-Section 3. Differentially rotating star
-=======================================
-
-The differential rotation rate has to follow the stereotypical law
-
-Omega(theta) = Omega_pole + b * sin(theta)
-
-The critical velocity can now easily be  exceeded at the equator, if the rotation
-rate increases towards the pole.
-
-First set some parameters: the rotation rate of the equator and pole, effective
-temperature at the pole, polar radius, mass and viewing angle.
-
->>> omega_eq = 0.1       # ratio to critical rotation rate (equatorial)
->>> omega_pl = 0.9       # ratio to critical rotation rate (polar)
->>> T_pole = 5500.       # K
->>> r_pole = 1.0         # solar radii
->>> M = 1.               # solar mass
->>> view_angle = pi/2    # radians
-
-We now do very similar stuff as in Section 1, except for the different Roche
-potential. (We can skip making the grid now)
-
->>> radius = np.array([get_diffrot_roche_radius(itheta,r_pole,M,omega_eq,omega_pl) for itheta in thetas]).reshape(theta.shape)
->>> grav_local = np.array([diffrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,M,omega_eq,omega_pl) for iradius,itheta,iphi in zip(radius.ravel(),thetas,phis)]).T
->>> grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
->>> g_pole = diffrot_roche_surface_gravity(r_pole,0,0,r_pole,M,omega_eq,omega_pl)[-1]
-
-Calculate the value of the surface gravity in SI-units:
-
->>> grav = vectors.norm(grav_local)
-
-Compute the size of all surface elements, and the angle with respect to the
-radius vector (should be all zero). The normal to the surface is the negative of
-the surface gravity vector, which is directed inwards:
-
->>> areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
-
-Now we can calculate the local effective temperature (assuming radiative
-atmosphere in Von Zeipel law), and bolometric intensities:
-
->>> teff_local = local_temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
->>> ints_local = local_intensity(teff_local,grav,photband='OPEN.BOL')
-
-Compute the angles between surface normals and line-of-sight. We do this in 1D:
-
->>> gravity = np.array([igrav.ravel() for igrav in grav_local])
->>> line_of_sight = np.array([ilos.ravel() for ilos in line_of_sight])
->>> angles = vectors.angle(-gravity,line_of_sight)
->>> mus = cos(angles)
-
-Now compute the bolometric projected intensity, taking care of limbdarkening
-effects:
-
->>> intens_proj = local_intensity(teff_local.ravel(),grav.ravel(),mus,photband='OPEN.BOL').reshape(theta.shape)
-
-Now make some plots showing the local quantities:
-
->>> quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
->>> names = 'Area','log g', 'Teff', 'Flux', 'Proj. flux', 'Angle'
->>> p = pl.figure()
->>> rows,cols = 2,3    
->>> for i,(quantity,name) in enumerate(zip(quantities,names)):
-...    p = pl.subplot(rows,cols,i+1)
-...    p = pl.title(name)
-...    q = quantity.ravel()
-...    vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
-...    if vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
-...    p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors='none',vmin=vmin,vmax=vmax)
-...    p = pl.colorbar()
-...    p = pl.xlim(0,360)
-...    p = pl.ylim(180,0)
-
-]include figure]]ivs_binary_rochepotential_diffrotstar.png]
-
-To generate an image of the star, it is wise to convert the coordinates to
-Cartesian coordinates:
-
->>> x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
->>> p = pl.figure()
->>> p = pl.subplot(121,aspect='equal')
->>> p = pl.title('top view')
->>> p = pl.scatter(x,y,c=teff_local.ravel(),edgecolors='none')
->>> p = pl.subplot(122,aspect='equal')
->>> p = pl.title('side view')
->>> p = pl.scatter(y,z,c=teff_local.ravel(),edgecolors='none')
-
-]include figure]]ivs_binary_rochepotential_diffrotstar_shape.png]
-
-
-Section 4. Binary star
+Section 1. Binary star
 ======================
 
 As an example we take the binary star SX Aurigae. This is the minimum set of
@@ -442,16 +212,20 @@ import numpy as np
 from numpy import pi,cos,sin,sqrt,nan
 from scipy.optimize import newton
 from scipy.spatial import KDTree
-from scipy.spatial import Delaunay
+try:
+    from scipy.spatial import Delaunay
+except ImportError:
+    print "import Error Delaunay"
 import time
-from ivs.binary import keplerorbit
+from ivs.timeseries import keplerorbit
 from ivs.units import constants
-from ivs.units import vectors
 from ivs.units import conversions
+from ivs.coordinates import vectors
 from ivs.sed import model as sed_model
 from ivs.sed import limbdark
 from ivs.spectra import model as spectra_model
-from ivs.misc import loggers
+from ivs.roche import local
+from ivs.aux import loggers
 from ivs.io import ascii
 from ivs.io import fits
 
@@ -594,501 +368,6 @@ def get_binary_roche_radius(theta,phi,Phi,q,d,F,r_pole=None):
 
 #}
 
-#{ Fast rotation Roche potential
-
-def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
-    """
-    Calculate components of the local surface gravity of the fast rotating
-    Roche model.
-    
-    Input units are solar units.
-    Output units are SI.
-    Omega is fraction of critical velocity.
-    
-    See Cranmer & Owocki, Apj (1995)
-    """
-    GG = constants.GG_sol
-    #-- calculate r-component of local gravity
-    x = r/r_pole
-    grav_r = GG*M/r_pole**2 * (-1./x**2 + 8./27.*x*omega**2*sin(theta)**2)
-    #-- calculate theta-component of local gravity
-    grav_th = GG*M/r_pole**2 * (8./27.*x*omega**2*sin(theta)*cos(theta))
-    
-    grav = np.array([grav_r,grav_th])
-    #-- now we transform to spherical coordinates
-    grav = vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) )
-    grav = grav*constants.Rsol
-    if norm:
-        return vectors.norm(grav)
-    else:
-        return grav
-
-def get_fastrot_roche_radius(theta,r_pole,omega):
-    """
-    Calculate Roche radius for a fast rotating star.
-    
-    @param theta: angle from rotation axis
-    @type theta: float
-    @param r_pole: polar radius in solar units
-    @type r_pole: float
-    @param omega: angular velocity (in units of the critical angular velocity)
-    @omega_: float
-    @return: radius at angle theta in solar units
-    @rtype: float
-    """
-    #-- calculate surface
-    Rstar = 3*r_pole/(omega*sin(theta)) * cos((pi + np.arccos(omega*sin(theta)))/3.)
-    #-- solve singularities
-    if np.isinf(Rstar) or sin(theta)<1e-10:
-        Rstar = r_pole
-    return Rstar
-    
-def critical_angular_velocity(M,R_pole,units='Hz'):
-    """
-    Compute the critical angular velocity (Hz).
-        
-    @param M: mass (solar masses)
-    @type M: float
-    @param R_pole: polar radius (solar radii)
-    @type R_pole: float
-    @param units: if you wish other units than Hz, you can give them here
-    @type units: string understandable by L{<units.conversions.convert>}
-    @return: critical angular velocity in Hz
-    @rtype: float
-    """
-    M = M*constants.Msol
-    R = R_pole*constants.Rsol
-    omega_crit = np.sqrt( 8*constants.GG*M / (27.*R**3))
-    if units.lower()!='hz':
-        omega_crit = conversions.convert('Hz',units,omega_crit)
-    return omega_crit
-
-def critical_velocity(M,R_pole,units='km/s'):
-    """
-    Compute the critical velocity (km/s)
-    
-    @param M: mass (solar masses)
-    @type M: float
-    @param R_pole: polar radius (solar radii)
-    @type R_pole: float
-    @param units: if you wish other units than Hz, you can give them here
-    @type units: string understandable by L{units.conversions.convert}
-    @return: critical velocity in km/s
-    @rtype: float
-    """
-    omega_crit = critical_angular_velocity(M,R_pole)
-    P = 1./omega_crit
-    R_eq = get_fastrot_roche_radius(pi/2,R_pole,omega_crit)*constants.Rsol
-    veq = 2*pi*R_eq/P
-    veq = conversions.convert('m/s',units,veq)
-    return veq
-
-
-#}
-#{ Differential rotation Roche potential
-
-def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
-    """
-    Definition of Roche potential due to differentially rotating star
-    
-    We first solve the cubic equation
-    
-    M{re/rp = 1 + f (x^2 + x + 1)/(6x^2)}
-        
-    where M{f = re^3 Omega_e^2 / (G M)}
-    and   M{x = Omega_e / Omega_p}
-    
-    This transforms to solving
-    
-    M{re^3 + b * re + c = 0}
-        
-    where M{b = -1 / (aXrp) and c = 1/(aX),}
-    and M{a = Omega_e^2/(GM) and X = (x^2 + x + 1)/(6x^2)}
-    """
-    GG = constants.GG_sol
-    
-    Omega_crit = sqrt(8*GG*M/ (27*r_pole**3))
-    omega_eq = omega_eq*Omega_crit
-    omega_pole = omega_pole*Omega_crit
-    x = omega_eq / omega_pole
-    
-    #-- find R_equator solving a cubic equation:
-    a = omega_eq**2/(GG*M)
-    X = (x**2+x+1)/(6*x**2)
-    b,c = -1./(a*X*r_pole), +1./(a*X)
-    m,k = 27*c+0*1j,-3*b+0*1j
-    n = m**2-4*k**3 + 0*1j
-    om1 = -0.5 + 0.5*sqrt(3)*1j
-    om2 = -0.5 - 0.5*sqrt(3)*1j
-    c1 = (0.5*(m+sqrt(n)))**(1./3.)
-    c2 = (0.5*(m-sqrt(n)))**(1./3.)
-    x1 = -1./3. * ( c1 + c2 )
-    x2 = -1./3. * ( om2*c1 + om1*c2 )
-    x3 = -1./3. * ( om1*c1 + om2*c2 )
-    re = x2.real
-    
-    #   ratio of centrifugal to gravitational force at the equator
-    f = re**3 * omega_eq**2 / (GG*M)
-    #   ratio Re/Rp
-    rat = 1 + (f*(x**2+x+1))/(6.*x**2)
-    #   some coefficients for easy evaluation
-    alpha = f*(x-1)**2/(6*x**2)*(1/rat)**7
-    beta  = f*(x-1)   /(2*x**2)*(1/rat)**5
-    gamma = f         /(2*x**2)*(1/rat)**3
-    #   implicit equation for the surface
-    sinth = sin(theta)
-    y = r/r_pole
-    surf = alpha*y**7*sinth**6 + beta*y**5*sinth**4 + gamma*y**3*sinth**2 - y +1
-    return surf
-
-def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=False):
-    """
-    Surface gravity from differentially rotation Roche potential.
-    
-    Magnitude is OK, direction doesn't seem to be.
-    """
-    GG = constants.GG_sol
-    Omega_crit = sqrt(8*GG*M/ (27*r_pole**3))
-    omega_eq = omega_eq*Omega_crit
-    omega_pole = omega_pole*Omega_crit
-    x = omega_eq / omega_pole
-    
-    #-- find R_equator solving a cubic equation:
-    a = omega_eq**2/(GG*M)
-    X = (x**2+x+1)/(6*x**2)
-    b,c = -1./(a*X*r_pole), +1./(a*X)
-    m,k = 27*c+0*1j,-3*b+0*1j
-    n = m**2-4*k**3 + 0*1j
-    om1 = -0.5 + 0.5*sqrt(3)*1j
-    om2 = -0.5 - 0.5*sqrt(3)*1j
-    c1 = (0.5*(m+sqrt(n)))**(1./3.)
-    c2 = (0.5*(m-sqrt(n)))**(1./3.)
-    x1 = -1./3. * ( c1 + c2 )
-    x2 = -1./3. * ( om2*c1 + om1*c2 )
-    x3 = -1./3. * ( om1*c1 + om2*c2 )
-    re = x2.real
-    
-    #   ratio of centrifugal to gravitational force at the equator
-    f = re**3 * omega_eq**2 / (GG*M)
-    #   ratio Re/Rp
-    rat = 1 + (f*(x**2+x+1))/(6.*x**2)
-    #   some coefficients for easy evaluation
-    alpha = f*(x-1)**2/(6*x**2)*(1/rat)**7
-    beta  = f*(x-1)   /(2*x**2)*(1/rat)**5
-    gamma = f         /(2*x**2)*(1/rat)**3
-    #   implicit equation for the surface
-    sinth = sin(theta)
-    y = r/r_pole
-    grav_th = (6*alpha*y**7*sinth**5 + 4*beta*y**5*sinth**3 + 2*gamma*y**3*sinth)*cos(theta)
-    grav_r = 7*alpha/r_pole*y**6*sinth**6 + 5*beta/r_pole*y**4*sinth**4 + 3*gamma/r_pole*y**2*sinth**2 - 1./r_pole
-    
-    fr = 6*alpha*y**7*sinth**4 + 4*beta*y**5*sinth**2 + 2*gamma*y**3
-    magn = GG*M/r**2 * sqrt(cos(theta)**2 + (1-fr)**2 *sin(theta)**2)
-    magn_fake = np.sqrt(grav_r**2+(grav_th/r)**2)
-    grav_r,grav_th = grav_r/magn_fake*magn,(grav_th/r)/magn_fake*magn
-    
-    grav = np.array([grav_r*constants.Rsol,grav_th*constants.Rsol])
-    #-- now we transform to spherical coordinates
-    grav = vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) )
-    
-    if norm:
-        return vectors.norm(grav)
-    else:
-        return grav
-
-
-def get_diffrot_roche_radius(theta,r_pole,M,omega_eq,omega_pole):
-    """
-    Calculate Roche radius for a differentially rotating star.
-    
-    @param theta: angle from rotation axis
-    @type theta: float
-    @param r_pole: polar radius in solar units
-    @type r_pole: float
-    @param M: mass in solar units
-    @type M: float
-    @param omega_eq: equatorial angular velocity (in units of the critical angular velocity)
-    @omega_eq: float
-    @param omega_pole: polar angular velocity (in units of the critical angular velocity)
-    @omega_pole: float
-    @return: radius at angle theta in solar units
-    @rtype: float
-    """
-    try:
-        r = newton(diffrot_roche_potential,r_pole,args=(theta,r_pole,M,omega_eq,omega_pole))
-    except RuntimeError:
-        r = nan    
-    return r
-
-def diffrot_law(omega_eq,omega_pole,theta):
-    """
-    Evaluate a differential rotation law of the form Omega = b1+b2*omega**2
-    
-    The relative differential rotation rate is the ratio of the rotational shear
-    to the equatorial velocity
-    
-    alpha = omega_eq - omega_pole / omega_eq
-    
-    The units of angular velocity you put in, you get out (i.e. in terms of
-    the critical angular velocity or not).
-    
-    @param omega_eq: equatorial angular velocity
-    @type omega_eq: float
-    @param omega_pole: polar angular velocity
-    @type omega_pole: float
-    @param theta: colatitude (0 at the pole) in radians
-    @type theta: float (radians)
-    @return: the angular velocity at colatitude theta
-    @rtype: float
-    """
-    b1 = omega_eq
-    b2 = omega_pole - omega_eq
-    omega_theta = b1 + b2 * cos(theta)**2
-    return omega_theta
-
-
-def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
-    """
-    Calculate the velocity vector of every surface element.
-    
-    @param coordinates: polar coordinates of stellar surface (phi,theta,radius)
-    make sure the radius is in SI units!
-    @type coordinates: 3xN array
-    @param omega_eq: equatorial angular velocity (as a fraction of the critical one)
-    @type omega_eq: float
-    @param omega_pole: polar angular velocity (as a fraction of the critical one)
-    @type omega_pole: float
-    @param R_pole: polar radius in solar radii
-    @type R_pole: float
-    @param M: stellar mass in solar mass
-    @type M: float
-    @return: velocity vectors of all surface elements
-    @rtype 3xN array
-    """
-    #-- angular velocity of every surface element
-    Omega_crit = critical_angular_velocity(M,R_pole)
-    phi,theta,radius = coordinates
-    omega_local = diffrot_law(omega_eq,omega_pole,theta)*Omega_crit
-    #-- direction of local angular velocity in Cartesian coordinates (directed in upwards z)
-    omega_local_vec = np.array([np.zeros_like(omega_local),np.zeros_like(omega_local),omega_local]).T
-    
-    x,y,z = vectors.spher2cart_coord(radius,phi,theta)
-    surface_element = np.array([x,y,z]).T
-
-    velo_local = np.array([np.cross(ielement,iomega_local_vec) for ielement,iomega_local_vec in zip(surface_element,omega_local_vec)]).T
-    return velo_local
-
-#}
-
-#{ Derivation of local quantities
-
-def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='spher'):
-    """
-    Compute surface area of elements in a grid.
-    
-    theta,phi must be generated like mgrid(theta_range,phi_range)
-    
-    usually, the surfnormals are acquired via differentiation of a gravity potential,
-    and is then equal to the *negative* of the local surface gravity.
-    """
-    theta,phi = mygrid[:2]
-    if gtype=='spher':
-        #-- compute the grid size at each location
-        dtheta = theta[1:]-theta[:-1]
-        dtheta = np.vstack([dtheta,dtheta[-1]])
-        
-        dphi = phi[:,1:]-phi[:,:-1]
-        dphi = np.column_stack([dphi,dphi[:,-1]])
-        #-- compute the angle between the surface normal and the radius vector
-        x,y,z = vectors.spher2cart_coord(r,phi,theta)
-        
-        a = np.array([x,y,z])
-        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])
-        
-        cos_gamma = vectors.cos_angle(a,b)
-        
-        return r**2 * sin(theta) * dtheta * dphi / cos_gamma, cos_gamma
-    
-    elif gtype=='delaunay':
-        #-- compute the angle between the surface normal and the radius vector
-        x,y,z = vectors.spher2cart_coord(r,phi,theta)
-        a = np.array([x,y,z])
-        b = np.array([surfnormal_x,surfnormal_y,surfnormal_z])        
-        cos_gamma = vectors.cos_angle(a,b)
-        
-        delaunay_grid = mygrid[2]
-
-        sizes = np.zeros(len(delaunay_grid.convex_hull))
-        points = delaunay_grid.points
-        vertx,verty,vertz = points.T
-        
-        #from enthought.mayavi import mlab
-        #mlab.figure()
-        #mlab.triangular_mesh(vertx,verty,vertz,delaunay_grid.convex_hull,scalars=np.ones_like(vertx),colormap='gray',representation='wireframe')
-        #mlab.points3d(x/r,y/r,z/r,scale_factor=0.02)
-        
-        centers = np.zeros((len(delaunay_grid.convex_hull),3))
-        for i,indices in enumerate(delaunay_grid.convex_hull):
-            #centers[i] = [vertx[indices].sum()/3,verty[indices].sum()/3,vertz[indices].sum()/3]
-            a = sqrt((vertx[indices[0]]-vertx[indices[1]])**2 + (verty[indices[0]]-verty[indices[1]])**2 + (vertz[indices[0]]-vertz[indices[1]])**2)
-            b = sqrt((vertx[indices[0]]-vertx[indices[2]])**2 + (verty[indices[0]]-verty[indices[2]])**2 + (vertz[indices[0]]-vertz[indices[2]])**2)
-            c = sqrt((vertx[indices[1]]-vertx[indices[2]])**2 + (verty[indices[1]]-verty[indices[2]])**2 + (vertz[indices[1]]-vertz[indices[2]])**2)
-            s = 0.5*(a+b+c)
-            sizes[i] = sqrt( s*(s-a)*(s-b)*(s-c))
-            
-        #theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        #mlab.points3d(centers[:,0],centers[:,1],centers[:,2],sizes,scale_factor=0.05,scale_mode='none',colormap='RdBu')
-        #mlab.show()
-        
-        print gtype
-        #pl.show()
-        
-        return sizes*r**2, cos_gamma
-
-def local_temperature(surface_gravity,g_pole,T_pole,beta=1.):
-    """
-    Calculate local temperature.
-    
-    beta is gravity darkening parameter.
-    """
-    Grav = abs(surface_gravity/g_pole)**beta
-    Teff = Grav**0.25 * T_pole
-    return Teff
-
-def local_intensity(teff,grav,mu=None,photband='OPEN.BOL'):
-    """
-    Calculate local intensity.
-    
-    beta is gravity darkening parameter.
-    """
-    if mu is None:
-        mu = np.ones_like(teff)
-    if (teff<3500).any() or np.isnan(teff).any():
-        print 'WARNING: point outside of grid, minimum temperature is 3500K'
-        teff = np.where((teff<3500) | np.isnan(teff),3500,teff)
-    if (grav<0.01).any() or np.isnan(grav).any():
-        print 'WARNING: point outside of grid, minimum gravity is 0 dex'
-        grav = np.where((np.log10(grav*100)<0.) | np.isnan(grav),0.01,grav)
-    intens = np.array([limbdark.get_itable(teff=iteff,logg=np.log10(igrav*100),absolute=True,mu=imu,photbands=[photband])[0] for iteff,igrav,imu in zip(teff.ravel(),grav.ravel(),mu.ravel())])
-    return intens.reshape(teff.shape)
-    
-
-def projected_intensity(teff,gravity,areas,line_of_sight,photband='OPEN.BOL'):
-    """
-    Compute projected intensity in the line of sight.
-    
-    gravity is vector directed inwards in the star
-    line of sight is vector.
-    """
-    ones = np.ones_like(gravity[0])
-    losx = line_of_sight[0]*ones
-    losy = line_of_sight[1]*ones
-    losz = line_of_sight[2]*ones
-    angles = vectors.angle(-gravity,np.array([losx,losy,losz]))
-    mus = cos(angles)
-    grav_ = vectors.norm(gravity)
-    #-- intensity is less if we look at the limb
-    intens = local_intensity(teff,grav_,mu=mus,photband=photband)
-    #-- intensity is less if the surface element area is small (and the area
-    #   needs to be projected!!)
-    return intens*areas*mus,mus
-
-
-def project(star,view_long=(0,0,0),view_lat=(pi/2,0,0),photband='OPEN.BOL',
-            only_visible=False,plot_sort=False,scale_factor=1.):
-    """
-    Project and transform coordinates and vectors to align with the line-of-sight.
-    
-    Parameter C{star} should be a record array containing fields 'teff','gravx',
-    'gravy','gravz','areas','vx','vy','vz'
-    
-    and either you suply ('r','theta','phi') or ('x','y','z')
-    
-    The XY direction is then the line-of-sight, and the YZ plane is the plane
-    of the sky.
-    
-    An extra column 'projflux' and 'eyeflux' will be added. Projected flux
-    takes care of limb darkening, and projected surface area. Eye flux only
-    takes care of limbdarkening, and should only be used for plotting reasons.
-    
-    view_long[0] of 0 means looking in the XY line, pi means looking in the YX line.
-    view_lat[0] of pi/2 means edge on, 0 or pi is pole-on.
-    
-    This function updates all Cartesian coordinates present in the star, but not
-    the polar coordinates! The projected fluxes are added as a field 'projflux'
-    to the returned record array.
-    
-    If you set 'only_visible' to True, only the information on the visible parts
-    of the star will be contained.
-    
-    If you set 'plot_sort' to True, the arrays will be returned in a sorted order,
-    where the areas at the back come first. This is especially handy for plotting.
-    
-    @parameters star: record array containing all necessary information on the
-    star
-    @type star: numpy record array
-    @parameter view_long: longitude viewing angle (radians) and coordinate zeropoint
-    @type view_long: tuple floats  (radians,x,y)
-    @parameter view_lat: inclination viewing angle (radians) and coordinate zeropoint
-    @type view_lat: tuple floats (radians,x,z)
-    @parameter photband: photometric passband
-    @type photband: string
-    @parameter only_visible: flag to return only information on visible surface elements
-    @type only_visible: boolean
-    @parameter plot_sort: flag to sort the surface elements from back to front
-    @type plot_sort: boolean
-    """
-    myshape = star['gravx'].shape
-    gravx,gravy,gravz = np.array([star['gravx'].ravel(),star['gravy'].ravel(),star['gravz'].ravel()])
-    areas = star['areas'].ravel()
-    teff = star['teff'].ravel()
-    vx,vy,vz = star['vx'].ravel(),star['vy'].ravel(),star['vz'].ravel()
-    #-- if 'x' is not in the star's record array, we assume the polar coordinates
-    #   are in there and convert them to Cartesian coordinates
-    if not 'x' in star.dtype.names:
-        x,y,z = vectors.spher2cart_coord(star['r'].ravel(),star['phi'].ravel(),star['theta'].ravel())
-    else:
-        x,y,z = star['x'].ravel(),star['y'].ravel(),star['z'].ravel(),
-    
-    #-- first we rotate in the XY plane (only for surface coordinates is the
-    #   coordinate zeropoint important, the rest are vectors!):
-    x,y = vectors.rotate(x,y,view_long[0],x0=view_long[1],y0=view_long[2])
-    gravx,gravy = vectors.rotate(gravx,gravy,view_long[0])
-    vx,vy = vectors.rotate(vx,vy,view_long[0])
-    #-- then we rotate in the YZ plane:
-    if view_lat[0]!=pi/2:
-        rot_i = -(pi/2 - view_lat[0])
-        x,z = vectors.rotate(x,z,rot_i)
-        gravx,gravz = vectors.rotate(gravx,gravz,rot_i)
-        vx,vz = vectors.rotate(vx,vz,rot_i)
-    #-- ... and project the fluxes in the line of sight, which is now in the XY
-    #   direction:
-    view_vector = np.array([1.,0,0])#np.array([-sin(pi/2),0,-cos(pi/2)])
-    grav_local = np.array([gravx,gravy,gravz])
-    proj_flux,mus = projected_intensity(teff,grav_local,areas,view_vector,photband=photband)
-    
-    #-- we now construct a copy of the star record array with the changed
-    #   coordinates
-    new_star = star.copy()
-    new_star['gravx'],new_star['gravy'],new_star['gravz'] = gravx,gravy,gravz
-    new_star['vx'],new_star['vy'],new_star['vz'] = vx,vy,vz
-    if 'x' in star.dtype.names:
-        new_star['x'],new_star['y'],new_star['z'] = x*scale_factor,y*scale_factor,z*scale_factor
-    else:
-        new_star = pl.mlab.rec_append_fields(new_star,'x',x*scale_factor)
-        new_star = pl.mlab.rec_append_fields(new_star,'y',y*scale_factor)
-        new_star = pl.mlab.rec_append_fields(new_star,'z',z*scale_factor)
-    new_star = pl.mlab.rec_append_fields(new_star,'projflux',proj_flux)
-    new_star = pl.mlab.rec_append_fields(new_star,'eyeflux',proj_flux/areas/mus)
-    
-    #-- clip visible areas and sort in plotting order if necessary
-    if only_visible:
-        new_star = new_star[-np.isnan(new_star['projflux'])]
-    if plot_sort:
-        new_star = new_star[np.argsort(new_star['x'])]
-    return new_star
-
-
 
 
 def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
@@ -1200,146 +479,6 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
 
 #}
 
-#{ Gridding functions
-
-def get_grid(*args,**kwargs):
-    """
-    Construct a coordinate grid
-    
-    If you give two resolutions, the first is for theta, the second for phi
-    
-    @param args: one or two integers indicating number of grid points in theta
-    and phi direction
-    @type args: integer
-    @keyword gtype: grid type ('spher' or 'delaunay')
-    @type gtype: str
-    @return: theta,phi(,grid)
-    """
-    gtype = kwargs.get('gtype','spherical')
-    full = kwargs.get('full',False)
-    
-    if 'spher' in gtype.lower():
-        if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
-        else:            res1,res2 = args      # different resolution
-        
-        dtheta = pi/res1 # step size coordinate 1
-        dphi = pi/res2     # step size coordinate 2
-        
-        #-- full grid or only one quadrant
-        if full:
-            theta0,thetan = dtheta, pi-dtheta
-            phi0,phin = 0,2*pi-2*dphi
-        else:
-            theta0,thetan = dtheta/4,pi/2-dtheta/4
-            phi0,phin = 0,pi-dphi
-            
-        theta,phi = np.mgrid[theta0:thetan:res1*1j,phi0:phin:res2*1j]
-        return theta,phi
-    
-    if 'cil' in gtype.lower():
-        if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
-        else:            res1,res2 = args      # different resolution
-        
-        dsintheta = 2./res1 # step size sin(theta)
-        dphi = pi/res2     # step size coordinate 2
-        
-        #-- full grid or only one quadrant
-        if full:
-            sintheta0,sinthetan = -1+dsintheta, 1.-dsintheta
-            phi0,phin = 0,2*pi-dphi
-        else:
-            sintheta0,sinthetan = dsintheta,1-dsintheta
-            phi0,phin = 0,pi-dphi
-            
-        sintheta,phi = np.mgrid[sintheta0:sinthetan:res1*1j,phi0:phin:res2*1j]
-        return np.arccos(sintheta),phi
-    
-    if 'delaunay' in gtype.lower():
-        #-- resolution doesn't matter that much anymore 
-        if len(args)==1: res1 = res2 = args[0] # same resolution for both coordinates
-        else:            res1,res2 = args      # different resolution
-        
-        u,v = np.random.uniform(size=res1*res2),np.random.uniform(size=res1*res2)
-        phi = 2*pi*u
-        theta = np.arccos(2*v-1)
-
-        x = sin(theta)*sin(phi)
-        y = sin(theta)*cos(phi)
-        z = cos(theta)
-        
-        points = np.array([x,y,z]).T
-        grid = Delaunay(points)
-        centers = np.zeros((len(grid.convex_hull),3))
-        for i,indices in enumerate(grid.convex_hull):
-            centers[i] = [x[indices].sum()/3,y[indices].sum()/3,z[indices].sum()/3]
-        theta,phi = np.arccos(centers[:,2]),np.arctan2(centers[:,1],centers[:,0])+pi
-        
-        return theta,phi,grid
-        
-        
-        
-        
-        
-    
-
-def stitch_grid(theta,phi,*quant,**kwargs):
-    """
-    Stitch a grid together that was originally defined on 1 quadrant.
-    
-    We add the three other quandrants.
-    """
-    seamless = kwargs.get('seamless',False)
-    vtype = kwargs.get('vtype',['scalar' for i in quant])
-    gtype = kwargs.get('gtype','spher')
-    ravel = kwargs.get('ravel',False)
-    
-    if gtype == 'spher':
-        #-- basic coordinates
-        alltheta = np.vstack([np.hstack([theta,theta]),np.hstack([theta+pi/2,theta+pi/2])])
-        allphi   = np.vstack([np.hstack([phi,phi+pi]),np.hstack([phi,phi+pi])])
-    
-        #-- all other quantities
-        allquan = []
-        for i,iquant in enumerate(quant):
-            #-- if they are scalar values, they do not change direction
-            top1,top2 = iquant,iquant[:,::-1]
-            bot1,bot2 = iquant[::-1],iquant[::-1][:,::-1]
-            if vtype[i]=='scalar':
-                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-            #-- vector components do change direction
-            elif vtype[i]=='x':
-                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-            elif vtype[i]=='y':
-                allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
-            elif vtype[i]=='z':
-                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
-            elif vtype[i]=='vx':
-                allquan.append(np.vstack([np.hstack([top1,-top2]),np.hstack([bot1,-bot2])]))
-            elif vtype[i]=='vy':
-                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([bot1,bot2])]))
-            elif vtype[i]=='vz':
-                allquan.append(np.vstack([np.hstack([top1,top2]),np.hstack([-bot1,-bot2])]))
-        
-        out = [alltheta,allphi]+allquan
-        
-        #-- for plotting reasons, remove the vertical seam and the the bottom hole.
-        if seamless:
-            #-- vertical seam
-            out = [np.column_stack([i,i[:,0]]) for i in out]
-            out[1][:,-1] += 2*pi
-            #-- fill bottom hole
-            out = [np.vstack([i,i[0]]) for i in out]
-            out[0][-1] += pi
-        
-        #-- ravel to 1d arrays if asked for
-        if ravel:
-            out = [i.ravel() for i in out]
-    else:
-        out = [theta,phi] + list(quant)
-        
-    return out
-
-#}
 def spectral_synthesis(*stars,**kwargs):
     """
     Generate a synthetic spectrum of one or more stars.
@@ -1525,10 +664,10 @@ def binary_light_curve_synthesis(**parameters):
     
     #-- construct the grid to calculate stellar shapes
     if hasattr(res,'__iter__'):
-        mygrid = get_grid(res[0],res[1],gtype=gtype)
+        mygrid = local.get_grid(res[0],res[1],gtype=gtype)
         theta,phi = mygrid[:2]
     else:
-        mygrid = get_grid(res,gtype=gtype)
+        mygrid = local.get_grid(res,gtype=gtype)
         theta,phi = mygrid[:2]
     thetas,phis = np.ravel(theta),np.ravel(phi)
     
@@ -1581,9 +720,9 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity
             grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
             grav = vectors.norm(grav_local)
-            areas_local,cos_gamma = surface_elements((radius,mygrid),-grav_local,gtype=gtype)
-            teff_local = local_temperature(grav,g_pole,T_pole,beta=beta1)
-            ints_local = local_intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
+            areas_local,cos_gamma = local.surface_elements((radius,mygrid),-grav_local,gtype=gtype)
+            teff_local = local.temperature(grav,g_pole,T_pole,beta=beta1)
+            ints_local = local.intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
             velo_local = np.cross(np.array([x,y,z]).T*to_SI,omega_rot_vec).T
             
             #-- here we can compute the global quantities: total surface area
@@ -1616,9 +755,9 @@ def binary_light_curve_synthesis(**parameters):
             #   effective temperature, flux and velocity  
             grav_local2 = np.array([i.reshape(theta.shape) for i in grav_local2])
             grav2 = vectors.norm(grav_local2)
-            areas_local2,cos_gamma2 = surface_elements((radius2,mygrid),-grav_local2,gtype=gtype)
-            teff_local2 = local_temperature(grav2,g_pole2,T_pole2,beta=beta2)
-            ints_local2 = local_intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
+            areas_local2,cos_gamma2 = local.surface_elements((radius2,mygrid),-grav_local2,gtype=gtype)
+            teff_local2 = local.temperature(grav2,g_pole2,T_pole2,beta=beta2)
+            ints_local2 = local.intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
             velo_local2 = np.cross(np.array([x2,y2,z2]).T*to_SI,omega_rot_vec).T
             
             #-- here we can compute the global quantities: total surface area
@@ -1644,13 +783,13 @@ def binary_light_curve_synthesis(**parameters):
                     
             #-- stitch the grid!
             theta_,phi_,radius,gravx,gravy,gravz,grav,areas,teff,ints,vx,vy,vz = \
-                         stitch_grid(theta,phi,radius,grav_local[0],grav_local[1],grav_local[2],
+                         local.stitch_grid(theta,phi,radius,grav_local[0],grav_local[1],grav_local[2],
                                     grav,areas_local,teff_local,ints_local,velo_local[0],velo_local[1],velo_local[2],
                                     seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
             #-- stitch the grid!
             theta2_,phi2_,radius2,gravx2,gravy2,gravz2,grav2,areas2,teff2,ints2,vx2,vy2,vz2 = \
-                         stitch_grid(theta,phi,radius2,grav_local2[0],grav_local2[1],grav_local2[2],
+                         local.stitch_grid(theta,phi,radius2,grav_local2[0],grav_local2[1],grav_local2[2],
                                     grav2,areas_local2,teff_local2,ints_local2,velo_local2[0],velo_local2[1],velo_local2[2],
                                     seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
@@ -1692,10 +831,10 @@ def binary_light_curve_synthesis(**parameters):
         #-- if we want to save the binary to a file, we'd better want it in some
         #   real units, and the entire star, instead of just the projected star:
         if direc is not None:
-            prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
+            prim = local.project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                         view_lat=(view_angle,0,0),photband=photband,
                         only_visible=False,plot_sort=False,scale_factor=scale_factor)
-            secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
+            secn = local.project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                         view_lat=(view_angle,0,0),photband=photband,
                         only_visible=False,plot_sort=False,scale_factor=scale_factor)
             #-- calculate center-of-mass (is this correct?)
@@ -1714,10 +853,10 @@ def binary_light_curve_synthesis(**parameters):
             outputfile_prim = fits.write_recarray(prim,outputfile_prim,close=close,header_dict=prim_header)
             outputfile_secn = fits.write_recarray(secn,outputfile_secn,close=close,header_dict=secn_header)
         
-        prim = project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
+        prim = local.project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
-        secn = project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
+        secn = local.project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
