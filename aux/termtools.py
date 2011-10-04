@@ -6,11 +6,7 @@ import inspect
 
 def add_text(fctn):
     """
-    Run periodogram calculations in parallel.
-    
-    This splits up the frequency range between f0 and fn in 'threads' parts.
-    
-    This must decorate a 'make_parallel' decorator.
+    Add possibility of text to each function.
     """
     @functools.wraps(fctn)
     def with_text(*args):
