@@ -162,14 +162,17 @@ def search(ID,db='S',fix=False):
     ff.close()
     
     if fix:
-        #-- fix the parallax
-        data,units,comms = vizier.search('I/311/hip2',ID=ID)
-        if data is not None and len(data):
-            if not 'plx' in database:
-                database['plx'] = {}
-            database['plx']['v'] = data['Plx'][0]
-            database['plx']['e'] = data['e_Plx'][0]
-            database['plx']['r'] = 'I/311/hip2'
+        #-- fix the parallax: make sure we have the Van Leeuwen 2007 value.
+        #   simbad seems to have changed to old values to the new ones somewhere
+        #   in 2011. We check if this is the case for all stars:
+        if 'plx' in database and not ('2007' in database['plx']['r']):
+            data,units,comms = vizier.search('I/311/hip2',ID=ID)
+            if data is not None and len(data):
+                if not 'plx' in database:
+                    database['plx'] = {}
+                database['plx']['v'] = data['Plx'][0]
+                database['plx']['e'] = data['e_Plx'][0]
+                database['plx']['r'] = 'I/311/hip2'
         #-- fix the spectral type
         data,units,comms = vizier.search('B/mk/mktypes',ID=ID)
         if data is not None and len(data):

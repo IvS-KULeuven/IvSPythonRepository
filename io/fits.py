@@ -311,11 +311,12 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     Instead of writing the file, you can give a hdulist and append to it.
     Supply a HDUList for 'filename', and set close=False
     """
-    if close:
-        if not os.path.isfile(filename):
+    if isinstance(filename,str) and not os.path.isfile(filename):
             primary = np.array([[0]])
             hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
             hdulist.writeto(filename)
+            
+    if isinstance(filename,str):
         hdulist = pyfits.open(filename,mode='update')
     else:
         hdulist = filename

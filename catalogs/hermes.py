@@ -71,6 +71,18 @@ convert the spectra to velocity space afterwards for plotting purposes.
 
 ]include figure]]ivs_catalogs_hermes_HD170580_velo.png]
 
+Section 2. Extracting information
+=================================
+
+If you want to list the observers of a certain target, and the amount of spectra
+they took, you can do the following:
+
+>>> data = search('HD50230')
+>>> print [(i,list(data['observer']).count(i)) for i in set(data['observer'])]
+[('Robin Lombaert', 4), ('Steven Bloemen', 6), ('Pieter Degroote', 25), ('Michel Hillen', 3)]
+
+
+
 """
 import re
 import sys
@@ -78,6 +90,7 @@ import glob
 import os
 import logging
 import datetime
+import subprocess
 import numpy as np
 import pyfits
 
@@ -260,9 +273,9 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     else:
         return data
     
-def make_list_star(ID,direc=''):
+def make_list_star(ID,direc=None):
     """
-    Mimics HermesTool MakeListStar without airmass and pm column.
+    Mimics HermesTool MakeListStar.
     
     This should work as input for HermesTool CCFList.py
     
@@ -280,6 +293,8 @@ def make_list_star(ID,direc=''):
     directory)
     @type direc: string
     """
+    if direc is None:
+        direc = os.getcwd()
     data = search(ID)
     fname = os.path.join(direc,'%s.list'%(ID))
     ascii.write_array([data['unseq'],data['date-avg'],[ID for i in data['unseq']],
@@ -304,6 +319,66 @@ def make_mask_file(wavelength,depth,filename='mymask.fits'):
     hdulist.close()
 
 
+#}
+
+#{ Hermes DRS wrappers
+
+def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,flatfield=False):
+    """
+    Calculate radial velocities for Hermes stars.
+    
+    WARNING: you have to have the DRS installed locally!
+    WARNING: this function changes your hermesConfig.xml file, you'd better
+    backup it before use
+    """
+    #-- build the command
+    make_list_star(ID)
+    cmd = 'python /STER/mercator/mercator/HermesTools/CCFList.py -i %s.list'%(ID)
+    if mask_file is not None:
+        cmd += ' -m %s'%(os.path.abspath(mask_file))
+    if not cosmic_clipping:
+        cmd += ' -nc'
+    if flatfield:
+        cmd += ' -f'
+        
+    #-- change configFile
+    if config_dir is None:
+        config_dir = os.path.expanduser('~/hermesRun')
+    if out_dir is None:
+        out_dir = os.getcwd()
+    out_dir = os.path.abspath(out_dir)
+    
+    config_file = r"""<hermes>
+<Nights>/STER/mercator/hermes</Nights>
+<CurrentNight>/STER/mercator/hermes/20110501</CurrentNight>
+<Reduced>/STER/mercator/hermes/20110501/reduced</Reduced>
+<AnalysesResults>%s</AnalysesResults>
+<DebugPath>%s</DebugPath>
+<Raw>raw</Raw>
+<ConsoleLogSeverity>debug</ConsoleLogSeverity>
+<LogFileName>%s</LogFileName>
+<LogFileFormater>%%(asctime)s  ::  %%(levelname)s  ::
+  %%(message)s</LogFileFormater>
+</hermes>"""%(out_dir,out_dir,os.path.join(out_dir,'hermes.log'))
+    
+    #   write to file
+    config = open(os.path.join(config_dir,'hermesConfig.xml'),'w')
+    config.write(config_file)
+    config.close()
+    
+    try:
+        retcode = subprocess.call(cmd, shell=True)
+        if retcode < 0:
+            logger.error("Child (%s) was terminated by signal %d"%(cmd,-retcode))
+        else:
+            logger.error("Child (%s) returned %d"%(cmd,retcode))
+    except OSError, e:
+        logger.error("Execution (%s) failed: %s"%(cmd,e))
+    
+    
+
+    
+    
 
 
 #}
@@ -357,13 +432,14 @@ def make_data_overview():
     
     #-- keep track of what is already in the file, if it exists:
     try:
-        overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
+        overview_file = os.path.join('/STER/100/pieterd/IVSDATA/catalogs/hermes','HermesFullDataOverview.tsv')
+        #overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
         overview_data = ascii.read2recarray(overview_file,splitchar='\t')
         outfile = open(overview_file,'a')
         logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
     #   if not, begin a new file
     except IOError:
-        overview_file = os.path.join('/STER/pieterd/IVSDATA/catalogs/hermes','HermesFullDataOverview.tsv')
+        overview_file = os.path.join('/STER/100/pieterd/IVSDATA/catalogs/hermes','HermesFullDataOverview.tsv')
         outfile = open(overview_file,'w')
         outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime pmtotal date-avg airmass filename\n')
         outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 >f8 a30 >f8 a200\n')
@@ -470,7 +546,7 @@ if __name__=="__main__":
         while 1:
             make_data_overview()
             
-            source = '/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
+            source = '/STER/100/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
             destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
             if os.path.isfile(destination):
                 original_size = os.path.getsize(destination)
@@ -489,7 +565,7 @@ if __name__=="__main__":
             
     elif sys.argv[1].lower()=='copy':
         while 1:
-            source = '/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
+            source = '/STER/100/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
             destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
             if os.path.isfile(destination):
                 original_size = os.path.getsize(destination)

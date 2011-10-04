@@ -1,3 +1,15 @@
+"""
+Calculate the visibility of an object in the sky.
+
+Example:
+
+>>> eph = Ephemeris()
+>>> eph.set_objects(objects=['HD50230'])
+>>> eph.set_date(startdate='2011/09/27 12:00:00.0',dt=10.,days=10)
+>>> eph.set_site(sitename='lapalma')
+>>> eph.visibility()
+>>> eph.plot(fmt='bo-')
+"""
 import pylab as pl
 from matplotlib.dates import date2num,DayLocator,HourLocator,DateFormatter
 import numpy as np
@@ -39,8 +51,9 @@ class Ephemeris(object):
     #{ Set object, site and dates
     
     def set_objects(self,objects=None,**kwargs):
-        objects = [self.__get_object(name) for name in objects]
-        self.objects = objects
+        if objects is not None:
+            objects = [self.__get_object(name) for name in objects]
+            self.objects = objects
     
     def set_site(self,sitename='lapalma',sitelat=None,sitelong=None,siteelev=None,**kwargs):
         """
@@ -193,7 +206,6 @@ class Ephemeris(object):
         for i,obj in enumerate(self.objects):
             keep = (during_night==1) & (0<=airmass[i,:]) & (airmass[i,:]<=2.5)
             logger.info('Object %s: %s visible during night time (%.1f<airmass<%.1f)'%(obj.name,-np.any(keep) and 'not' or '',sum(keep) and airmass[i,keep].min() or np.nan,sum(keep) and airmass[i,keep].max() or np.nan))
-        return hours,dates,alts,airmass,during_night
         
     def plot(self,**kwargs):
         #-- plot
@@ -231,10 +243,15 @@ class Ephemeris(object):
     
     
 if __name__=="__main__":
-    from ivs.aux import loggers
-    logger = loggers.get_basic_logger()
+    if len(sys.argv)<2:
+        import doctest
+        doctest.testmod()
+        pl.show()
+    else:
+        from ivs.aux import loggers
+        logger = loggers.get_basic_logger()
     
-    eph = Ephemeris(objects=sys.argv[1].split(','))
-    eph.visibility()
-    eph.plot()
-    pl.show()
+        eph = Ephemeris(objects=sys.argv[1].split(','))
+        eph.visibility()
+        eph.plot()
+        pl.show()

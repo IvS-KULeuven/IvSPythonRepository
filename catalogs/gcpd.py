@@ -9,8 +9,8 @@ import ConfigParser
 
 import numpy as np
 
-from ivs.misc import loggers
-from ivs.misc import numpy_ext
+from ivs.aux import loggers
+from ivs.aux import numpy_ext
 from ivs.catalogs import sesame
 from ivs.catalogs import vizier
 from ivs.sed import filters

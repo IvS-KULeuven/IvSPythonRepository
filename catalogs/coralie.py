@@ -85,10 +85,10 @@ def make_data_overview():
             header = pyfits.getheader(obj_file)
         except:
             continue
-        if 'ESO DRS TEXP' in header:     contents['exptime'] = float(header['ESO DRS TEXP'])
-        if 'ESO DRS OBSERVER' in header: contents['observer'] = header['ESO DRS OBSERVER']
+        if 'ESO OBS TEXP' in header:     contents['exptime'] = float(header['ESO OBS TEXP'])
+        if 'OBSERVER' in header: contents['observer'] = header['OBSERVER']
         if 'ESO DRS BJD' in header:      contents['bjd'] = float(header['ESO DRS BJD'])
-        if 'ESO DRS FDATE' in header:    contents['date-avg'] = header['ESO DRS FDATE']
+        if 'ESO OBS FDATE' in header:    contents['date-avg'] = header['ESO OBS FDATE']
         if 'ESO TEL TARG ALPHA' in header:    contents['ra']  = float(header['ESO TEL TARG ALPHA'])
         if 'ESO TEL TARG DELTA' in header:    contents['dec'] = float(header['ESO TEL TARG DELTA'])
         if 'ESO OBS TARG NAME' in header:     contents['object'] = header['ESO OBS TARG NAME']
@@ -96,3 +96,8 @@ def make_data_overview():
         outfile.write('%(unseq)d\t%(prog_id)d\t%(obsmode)s\t%(bvcor)f\t%(observer)s\t%(object)s\t%(ra)f\t%(dec)f\t%(bjd)f\t%(exptime)f\t%(date-avg)s\t%(filename)s\n'%contents)
         outfile.flush()
     outfile.close()
+
+if __name__=="__main__":
+    args = sys.argv[1:]
+    if args and args[0]=='makedata':
+        make_data_overview()

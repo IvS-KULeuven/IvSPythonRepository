@@ -90,8 +90,8 @@ from scipy.spatial import KDTree
 #-- IvS repository
 from ivs.io import ascii
 from ivs.units import conversions
-from ivs.misc import loggers
-from ivs.misc import numpy_ext
+from ivs.aux import loggers
+from ivs.aux import numpy_ext
 from ivs.sed import filters
 
 logger = logging.getLogger("CAT.VIZIER")
@@ -813,7 +813,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     if out_all: base_url += '&-out.all'
     if out_max: base_url += '&-out.max=%s'%(out_max)
     if radius:  base_url += '&-c.rs=%s'%(radius)
-    if ID is not None: base_url += '&-c=%s'%(urllib.quote(ID))
+    if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.quote(ID))
     if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
     
     logger.debug(base_url)

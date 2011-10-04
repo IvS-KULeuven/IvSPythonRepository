@@ -12,10 +12,10 @@ import numpy as np
 import pyfits
 
 from ivs.sed import filters
-from ivs.misc import xmlparser
-from ivs.misc import loggers
-from ivs.misc import numpy_ext
-from ivs.misc.decorators import retry_http
+from ivs.aux import xmlparser
+from ivs.aux import loggers
+from ivs.aux import numpy_ext
+from ivs.aux.decorators import retry_http
 from ivs.io import ascii
 from ivs.units import conversions
 from ivs.catalogs import vizier

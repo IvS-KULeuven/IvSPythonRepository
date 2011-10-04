@@ -11,7 +11,7 @@ import logging
 import os
 import pyfits
 import numpy as np
-from ivs.misc import loggers
+from ivs.aux import loggers
 from ivs.catalogs import sesame
 from ivs.io import fits
 from ivs import config

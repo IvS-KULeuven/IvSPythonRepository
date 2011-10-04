@@ -8,8 +8,8 @@ import logging
 import ConfigParser
 import numpy as np
 
-from ivs.misc import loggers
-from ivs.misc import numpy_ext
+from ivs.aux import loggers
+from ivs.aux import numpy_ext
 from ivs.io import ascii
 from ivs.sed import filters
 from ivs.units import conversions
@@ -414,13 +414,14 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
             objstr = ra+dec
         else:
             objstr = ID
+            
     #-- this is when ra and dec are given
     if ra is not None and dec is not None:
         ra = str(ra)
         dec = str(dec)
         ra = ra.replace(' ','+').replace(':','+')
         dec = dec.replace(' ','+').replace(':','+')
-        objstr = ''.join([ra,dec])
+        objstr = '+'.join([ra,dec])
     
     #-- build up the URI
     if 'objstr' is not None:   base_url += '&objstr=%s'%(objstr)
