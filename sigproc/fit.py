@@ -10,7 +10,7 @@ Necessary imports:
 
 >>> from ivs.catalogs import vizier
 >>> from ivs.timeseries import pergrams
->>> from ivs.misc import numpy_ext
+>>> from ivs.aux import numpy_ext
 >>> import pylab as pl
 
 Read in the data, and remove the outliers:
@@ -59,6 +59,8 @@ Now plot everything:
 >>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
 >>> p = pl.ylabel('Amplitude [km s$^{-1}$]')
 >>> p = pl.legend()
+
+]include figure]]ivs_sigproc_fit_01.png]
 
 Section 2. Pulsation frequency analysis
 =======================================
@@ -110,6 +112,8 @@ Now plot everything:
 >>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
 >>> p = pl.ylabel('Amplitude [mag]')
 
+]include figure]]ivs_sigproc_fit_02.png]
+
 
 Section 3. Exoplanet transit analysis
 =====================================
@@ -156,6 +160,8 @@ Now plot everything and print the results to the screen:
 >>> p = pl.xlabel('Phase [$2\pi^{-1}$]')
 >>> p = pl.ylabel('Depth [%]')
 
+]include figure]]ivs_sigproc_fit_03.png]
+
 Section 4. Eclipsing binary fit
 ===============================
 
@@ -176,8 +182,8 @@ from numpy import pi,cos,sin
 from scipy.interpolate import splrep
 import scipy.optimize
 
-from ivs.misc import loggers
-from ivs.timeseries import evaluate
+from ivs.aux import loggers
+from ivs.sigproc import evaluate
 import pyKEP
 
 logger = logging.getLogger('TS.FIT')
@@ -377,7 +383,7 @@ def periodic_spline(times, signal, freq, t0=None, order=20, k=3):
 
     return parameters
 
-def kepler(times, signal, freq, sigma=None, wexp=2.):
+def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01):
     """
     Fit a Kepler orbit to a time series.
     
@@ -426,9 +432,6 @@ def kepler(times, signal, freq, sigma=None, wexp=2.):
     if sigma is None:
         sigma = np.ones_like(times)
     T = times[-1]-times[0]
-    e0 = 0
-    en = 0.99
-    de = 0.01
     x00 = 0.
     x0n = 359.9
     #-- initialize parameters
@@ -524,7 +527,103 @@ def box(times,signal,freq,b0=0,bn=1,order=50,t0=None):
                     parameters[fnr]['cont'] = contini_sig2
                     best_fit = chisquare2
     return parameters
+
+def gauss(x,y,threshold=0.1,constant=False,full_output=False):
+    """
+    Fit a Gaussian profile to data using a polynomial fit.
     
+    y = A * exp( -(x-mu)**2 / (2*sigma**2))
+    
+    ln(y) = ln(A) - (x-mu)**2 / (2*sigma**2)
+    ln(y) = ln(A) - mu**2 / (2*sigma**2) + mu / (sigma**2) * x - x**2 / (2*sigma**2)
+    
+    then the parameters are given by
+    
+    p0 =       -  1    / (2*sigma**2)
+    p1 =         mu    / (  sigma**2)
+    p2 = ln(A) - mu**2 / (2*sigma**2)
+    
+    Note that not all datapoints are used, but only those above a certain values (namely
+    10% of the maximum value), In this way, we reduce the influence of the continuum
+    and concentrate on the shape of the peak itself.
+    
+    Afterwards, we perform a non linear least square fit with above parameters
+    as starting values, but only accept it if the CHI2 has improved.
+    
+    If a constant has to be fitted, the nonlinear options has to be True.
+    
+    Example: we generate a Lorentzian curve and fit a Gaussian to it:
+    
+    >>> x = np.linspace(-10,10,1000)
+    >>> y = evaluate.lorentz(x,[5.,0.,2.]) + np.random.normal(scale=0.1,size=len(x))
+    >>> pars1,e_pars1 = gauss(x,y)
+    >>> pars2,e_pars2 = gauss(x,y,constant=True)
+    >>> y1 = evaluate.gauss(x,pars1)
+    >>> y2 = evaluate.gauss(x,pars2)
+    >>> p = pl.figure()
+    >>> p = pl.plot(x,y,'k-')
+    >>> p = pl.plot(x,y1,'r-',lw=2)
+    >>> p = pl.plot(x,y2,'b-',lw=2)
+    
+    @param x: x axis data
+    @type x: numpy array
+    @param y: y axis data
+    @type y: numpy array
+    @param nl: flag for performing a non linear least squares fit
+    @type nl: boolean
+    @param constant: fit also a constant
+    @type constant: boolean
+    @rtype: tuple
+    @return: A, mu, sigma (,C)
+    """
+    #-- transform to a polynomial function and perform a fit
+    #   first clip where y==0
+    threshold *= max(y)
+    use_in_fit = y>=threshold
+    xc = x[use_in_fit]
+    yc = y[use_in_fit]
+    
+    lnyc = np.log(yc)
+    p   = np.polyfit(xc, lnyc, 2)
+    
+    #-- determine constants
+    sigma = np.sqrt(-1. / (2.*p[0]))
+    mu    = sigma**2.*p[1]
+    A     = np.exp(p[2] + mu**2. / (2.*sigma**2.))
+    C     = 0.
+    
+    #-- handle NaN Exceptions
+    if A!=A or mu!=mu or sigma!=sigma:
+        logger.error('Gaussian fit failed')
+        init_success = False
+        A = 1.
+        mu = 1.
+        sigma = 1.
+    else:
+        init_success = True
+    
+    #-- check chi2
+    if constant:
+        p0 = evaluate.gauss_preppars(np.asarray([A,mu,sigma,C]))
+    else:
+        p0 = evaluate.gauss_preppars(np.asarray([A,mu,sigma]))
+    yf = evaluate.gauss(xc,p0)
+    chi2 = np.sum((yc-yf)**2)
+    
+    #-- perform non linear least square fit
+    if constant:
+        pars,e_pars,gain = optimize(x,y,p0,'gauss', minimizer='leastsq')
+    else:
+        pars,e_pars,gain = optimize(x,y,p0,'gauss', minimizer='leastsq')
+        if gain<0:
+            pars = p0
+    pars['sigma'] = np.abs(pars['sigma'])
+    if not full_output:
+        return pars,e_pars
+    else:
+        return pars,e_pars,p0,use_in_fit,init_success
+
+
 #}
 #{ Error determination
 
@@ -666,7 +765,7 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
                                      args=(times,signal,evalfunc),full_output=1)#,diag=[1.,10,1000,1.,100000000.])
         #-- calculate new chisquare, and check if we have improved it
         chisq = np.sum(info['fvec']*info['fvec'])
-        if flag!=1 or chisq>chisq_init:
+        if chisq>chisq_init or flag!=1:
             logger.error('Optimization not successful [flag=%d] (%g --> %g)'%(flag,chisq_init,chisq))
             chisq = np.inf
     
@@ -697,7 +796,6 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
     e_parameters.dtype.names = ['e_'+name for name in e_parameters.dtype.names]
     
     return parameters,e_parameters, gain
-
 
 #}
 #{ General purpose
