@@ -1,7 +1,14 @@
 """
 Vector and coordinate identities and transformations
 
+General conventions:
+
+    - theta is the colatitude, i.e. the angle from the Z-axis
+    - phi is the longitude
+
+
 Transform cartesian coordinates to spherical coordinates and back
+
 >>> x,y,z = np.random.uniform(low=-1,high=1,size=(3,10))
 >>> r,phi,theta = cart2spher_coord(x,y,z)
 >>> x_,y_,z_ = spher2cart_coord(r,phi,theta)
@@ -9,6 +16,7 @@ Transform cartesian coordinates to spherical coordinates and back
 (True, True, True)
 
 Transform cartesian vectors to spherical vectors and back
+
 >>> x0,y0,z0 = np.random.uniform(low=-1,high=1,size=(3,10))
 >>> x1,y1,z1 = np.random.uniform(low=-1,high=1,size=(3,10))
 >>> r0,phi0,theta0 = cart2spher_coord(x0,y0,z0)
@@ -110,7 +118,7 @@ def angle(vec1,vec2):
  
 def cos_angle(vec1,vec2):
     """
-    Compute angle between two vectors (or between two grids of vectors).
+    Compute cosine of angle between two vectors (or between two grids of vectors).
     
     Input vectors should be numpy arrays.
     """
