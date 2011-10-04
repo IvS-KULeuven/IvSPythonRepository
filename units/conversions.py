@@ -63,6 +63,7 @@ from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc
 from ivs.units.uncertainties.unumpy import log10,sqrt
 from ivs.sed import filters
+from ivs.io import ascii
 from ivs.aux import loggers
 
 logger = logging.getLogger("UNITS.CONV")
@@ -1339,7 +1340,6 @@ _factors = {
            'cr':    (100*365*24*3600,'s'),    # century
            'hz':    (1e+00,         'cy s-1'),# Hertz
            'JD':    (1e+00,         'JD'), # Julian Day
-           'HJD':   (1e+00,         'JD'), # Heliocentric Julian Day
            'CD':    (JulianDay,     'JD'), # Calender Day
            'MJD':   (ModJulianDay,  'JD'), # Modified Julian Day
            'j':     (1/60.,         's'),  # jiffy
@@ -1380,8 +1380,6 @@ _factors = {
 # AREA
            'ac':    (4046.8564224,  'm2'), # acre (international)
            'a':     (100.,          'm2'), # are
-# VOLUME
-           'gallon':(0.00378541178, 'm3'), # US gallon
 # FLUX
 # -- absolute magnitudes
            'Jy':      (1e-26,         'kg s-2 cy-1'), # W/m2/Hz
