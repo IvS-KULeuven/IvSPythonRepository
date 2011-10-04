@@ -38,18 +38,22 @@ We have the following parameters::
     HIP14: 4.86 +/- 0.67 (13.79%)
     HIP15: 1.91 +/- 1.14 (59.69%)
 
-We can compute the distance probability functions via L{distprob}:
+We can compute the distance probability functions via L{distprob}, but first
+we have to define arrays of distances to compute the probability on (in parsec):
 
->>> r1 = np.linspace(7,8,1000)
->>> r2 = np.linspace(0,500,1000)
->>> r3 = np.linspace(0,1.5e4,1000)
+>>> r1 = np.linspace(7,8,1000)     # vega is closeby
+>>> r2 = np.linspace(0,500,1000)   # this one is around 200 pc
+>>> r3 = np.linspace(0,1.5e4,1000) # this one seems to have a heavy tail
+
+We only need the galactic latitude and the parallax:
+
 >>> prob1 = distprob(r1,vega['galpos'][1],(vega['plx']['v'],vega['plx']['e']))
 >>> prob2 = distprob(r2,hip14['galpos'][1],(hip14['plx']['v'],hip14['plx']['e']))
 >>> prob3 = distprob(r3,hip15['galpos'][1],(hip15['plx']['v'],hip15['plx']['e']))
 
 It is useful to compare with the Gaussian approximation. First we need some
-extra modules to compute with uncertainties, and to evaluate the Gaussian
-function.
+extra modules to handle computations with uncertainties, and to evaluate the
+Gaussian function.
 
 >>> from ivs.sigproc import evaluate
 >>> from ivs.units.uncertainties import ufloat
@@ -66,7 +70,7 @@ parallax (in arcsec).
 
 We summarize everything in a plot: up to a relative error of ~25%, the Gaussian
 approximation works pretty well. From then on, even the peak of the distribution
-shows a bias (the Lutz-Kelker bias), but also have tails can appear.
+shows a bias (the Lutz-Kelker bias), but also heavy tails can appear.
 
 >>> p = pl.figure()
 >>> p = pl.subplot(221)
@@ -75,11 +79,15 @@ shows a bias (the Lutz-Kelker bias), but also have tails can appear.
 >>> p = pl.legend()
 >>> p = pl.xlabel('Distance (pc)');p = pl.ylabel('Unnormalised probability')
 >>> p = pl.xlim(7.55,7.8)
+
+
 >>> p = pl.subplot(222)
 >>> p = pl.plot(r2,prob2/prob2.max(),'k-',lw=2,label='HIP14 (LK)')
 >>> p = pl.plot(r2,prob2_,'r--',lw=2,label='HIP14 (GA)')
 >>> p = pl.xlabel('Distance (pc)');p = pl.ylabel('Unnormalised probability')
 >>> p = pl.legend()
+
+
 >>> p = pl.subplot(212)
 >>> p = pl.plot(r3,prob3/prob3.max(),'k-',lw=2,label='HIP15 (LK)')
 >>> p = pl.plot(r3,prob3_,'r--',lw=2,label='HIP15 (GA)')
