@@ -201,7 +201,7 @@ c
    90          WLAM1(I)=ALAM0+STEPR*(I-1)
          end if
          CALL ROTINS(1,FLAM0,FLAM1,WLAM0,WLAM1,NLAM0,NLAM1,
-     *               NROT,VROT,0.D0)
+     *               NROT,VROT,0.D0,EPS)
 c
        else
 c
@@ -251,7 +251,7 @@ c         write(6,*) 'number of integration points - instrum.',nins
   120          WLAM2(I)=ALAM0+STEPI*(I-1)
          end if
          CALL ROTINS(2,FLAM1,FLAM2,WLAM1,WLAM2,NLAM1,NLAM2,
-     *               NINS,0.D0,FWHM)
+     *               NINS,0.D0,FWHM,EPS)
       else
          nlam2=nlam1
 	 do 130 i=1,nlam2
@@ -298,7 +298,7 @@ c ********************************************************************
 c
 
       SUBROUTINE ROTINS(MODE,HINP,HOUT,XLAM,YLAM,NLAMX,NLAMY,
-     *                  NR,VROT,FWHM)
+     *                  NR,VROT,FWHM,EPS)
 C
 C ---------------------------------------------------------------
 C
@@ -352,7 +352,8 @@ C
 c
 c  initial kernel function (rotation);
 c  or the general kernel function (for instrumental)
-c
+c     
+      write(*,*) 'bla',EPS
       CALL KERNEL(MODE,NR,VROT,SLAM,FWHM,XLMAX,G,EPS)
       DLAM=XLMAX/NR
 c

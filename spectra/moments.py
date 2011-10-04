@@ -3,6 +3,7 @@ Compute the moments of a line profile.
 """
 import numpy as np
 import scipy.integrate
+import pylab as pl
 
 def moments(velo,flux,SNR=200.,max_mom=3):
     """
@@ -32,7 +33,7 @@ def moments(velo,flux,SNR=200.,max_mom=3):
     return mymoms,e_mymoms
 
 
-def moments_fromfiles(filelist,read_func,max_mom=3):
+def moments_fromfiles(filelist,read_func,max_mom=3,**kwargs):
     """
     Compute the moments from a list of files containg line profiles.
     
@@ -59,11 +60,51 @@ def moments_fromfiles(filelist,read_func,max_mom=3):
     errors = [np.zeros(len(filelist)) for i in range(max_mom+1)]
     for i,f in enumerate(filelist):
         #-- read in the profile
-        velo,flux,SNR = read_func(f)
+        velo,flux,SNR = read_func(f,**kwargs)
         mymoms,e_mymoms = moments(velo,flux,SNR)
         for n in range(len(mymoms)):
             output[n][i] = mymoms[n]
             errors[n][i] = e_mymoms[n]
-           
+        pl.plot(velo,flux+i*0.01)
     return output,errors
+
+def profiles_fromfiles(filelist,read_func,max_mom=3,**kwargs):
+    """
+    Compute an average profile from a file list of profiles.
+    
+    The C{read_func} should return 2 arrays and a float, representing velocities,
+    normalised fluxes and the SNR of the line profile.
+    
+    m0: equivalent width
+    m1: radial velocity
+    m2: variance
+    m3: skewness
+    
+    @param filelist: list of filenames
+    @type filelist: list of strings
+    @param read_func: function which reads in a file and returns velocities (array),
+    the line profile (array) and the SNR of the whole profile (float)
+    @type read_func: Python function
+    @param max_mom: maximum moment to compute
+    @type max_mom: integer
+    @return: a list containg the moments and a list containing the errors
+    @rtype: velo,av_prof,fluxes
+    """
+    
+    output = [np.zeros(len(filelist)) for i in range(max_mom+1)]
+    errors = [np.zeros(len(filelist)) for i in range(max_mom+1)]
+    for i,f in enumerate(filelist):
+        #-- read in the profile
+        velo,flux,SNR = read_func(f,**kwargs)
+        if i==0:
+            template_velo = velo
+            fluxes = np.zeros((len(filelist),len(flux)))
+            fluxes[0] = flux
+        else:
+            fluxes[i] = np.interp(template_velo,velo,flux)
+    
+    av_prof = fluxes.mean(axis=0)
+    fluxes -= av_prof
+    
+    return template_velo,av_prof,fluxes
     

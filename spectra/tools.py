@@ -6,13 +6,13 @@ Subsection 1. Example usage
 
 In this example, we:
 
-1. retrieve a synthetic spectrum
-2. apply a doppler shift of 20 km/s
-3. rotationally broaden the synthetic spectrum according to a vsini of 66 km/s,
-a solar-like limb darkening, and an instrumental profile with FWHM=0.25 angstrom
-4. add noise to the synthetic spectrum
-5. calculate the vsini with the Fourier Transform Method and check the influence
-of the limb darkening coefficients
+    1. retrieve a synthetic spectrum
+    2. apply a doppler shift of 20 km/s
+    3. rotationally broaden the synthetic spectrum according to a vsini of 66 km/s,
+    a solar-like limb darkening, and an instrumental profile with FWHM=0.25 angstrom
+    4. add noise to the synthetic spectrum
+    5. calculate the vsini with the Fourier Transform Method and check the influence
+    of the limb darkening coefficients
 
 Retrieve a synthetic spectrum with effective temperature and surface gravity
 resembling a main sequence star of spectral type A0. For this purpose, we do
@@ -259,48 +259,56 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     Limb darkening law is linear, default value is epsilon=0.6
     
     Possibility to normalize as well by giving continuum in 'cont' parameter.
-    2. parameters for rotational convolution 
+    
+    Section 1. Parameters for rotational convolution 
+    ================================================
 
-    VROT  - v sin i (in km/s):
-             - if VROT=0 - rotational convolution is 
+    C{VROT}: v sin i (in km/s):
+    
+        -  if VROT=0 - rotational convolution is 
                  a) either not calculated,
                  b) or, if simultaneously FWHM is rather large
-                    (vrot/c*lambda < FWHM/20.),
-                    vrot is set to  FWHM/20*c/lambda;
-             - if VROT >0 but the previous condition b) applies, the
-                     value of VROT is changed as  in the previous case
-             - if VROT<0 - the value of abs(VROT) is used regardless of
-                     how small compared to FWHM it is
-     CHARD - characteristic scale of the variations of unconvolved:
-           - stellar spectrum (basically, characteristic distance
-             between two neighbouring wavelength points) - in A
-           - if =0 - program sets up default (0.01 A)
-     STEPR - wavelength step for evaluation rotational convolution;
-           - if =0, the program sets up default (the wavelength
-                    interval corresponding to the rotational velocity
-                    devided by 3.)                           
-           - if <0, convolved spectrum calculated on the original
-             (detailed) SYNSPEC wavelength mesh
+                 (vrot/c*lambda < FWHM/20.),
+                 vrot is set to  FWHM/20*c/lambda;
+        -  if VROT >0 but the previous condition b) applies, the
+        value of VROT is changed as  in the previous case
+        -  if VROT<0 - the value of abs(VROT) is used regardless of
+        how small compared to FWHM it is
+     
+    C{CHARD}: characteristic scale of the variations of unconvolved stellar
+    spectrum (basically, characteristic distance between two neighbouring
+    wavelength points) - in A:
+     
+        - if =0 - program sets up default (0.01 A)
+        
+    C{STEPR}: wavelength step for evaluation rotational convolution;
+     
+        - if =0, the program sets up default (the wavelength
+        interval corresponding to the rotational velocity
+        devided by 3.)                           
+        - if <0, convolved spectrum calculated on the original
+        (detailed) SYNSPEC wavelength mesh
 
 
-     3. parameters for instrumental convolution
+    Section 2. parameters for instrumental convolution
+    ==================================================
 
-     FWHM  - full width at half maximum for Gaussian instrumental 
-             profile
-     STEPI - wavelength step for evaluating instrumental convolution
-           - if =0, the program sets up default (FWHM/10.)
-           - if <0, convolved spectrum calculated with the previous
-                    wavelength mesh:
-                    either the original (SYNSPEC) one if vrot=0,
-                    or the one used in rotational convolution (vrot > 0)
+    C{FWHM}: full width at half maximum for Gaussian instrumental profile
+    
+    C{STEPI}: wavelength step for evaluating instrumental convolution
+          - if =0, the program sets up default (FWHM/10.)
+          - if <0, convolved spectrum calculated with the previous
+          wavelength mesh:
+          either the original (SYNSPEC) one if vrot=0,
+          or the one used in rotational convolution (vrot > 0)
 
 
-     4. wavelength interval and normalization of spectra
+    Section 3. wavelength interval and normalization of spectra
+    ===========================================================
 
-     ALAM0 - initial wavelength
-     ALAM1 - final wavelength
-     IREL  - for =1 relative spectrum
-                 =0 absolute spectrum
+    C{ALAM0}: initial wavelength
+    C{ALAM1}: final wavelength
+    C{IREL}: for =1 relative spectrum, =0 absolute spectrum
     
     @return: wavelength,flux
     @rtype: array, array
