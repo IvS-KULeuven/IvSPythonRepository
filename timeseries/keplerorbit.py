@@ -330,4 +330,7 @@ def true_anomaly(M,e,itermax=8):
 
 if __name__=="__main__":
     import doctest
+    import pylab as pl
     doctest.testmod()
+    pl.show()
+    

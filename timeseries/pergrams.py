@@ -18,7 +18,7 @@ All periodograms can be computed in parallel, by supplying an extra keyword
 """
 import numpy as np
 from numpy import cos,sin,pi
-from ivs.misc.decorators import make_parallel
+from ivs.aux.decorators import make_parallel
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram
 
 import pyscargle

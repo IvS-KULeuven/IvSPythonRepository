@@ -8,7 +8,7 @@ import functools
 import logging
 from multiprocessing import Manager,Process
 import numpy as np
-from ivs.misc import loggers
+from ivs.aux import loggers
 #from ivs.timeseries import windowfunctions
 
 logger = logging.getLogger("TS.DEC")
