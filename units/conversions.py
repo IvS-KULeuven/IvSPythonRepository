@@ -546,13 +546,25 @@ def components(unit):
     @return: 3-tuple with factor, SI base unit and power
     @rtype: (float,str,int)
     """
+    factor = 1.
+    #-- manually check if there is a prefactor of the form '10-14' or '10e-14'
+    #   and expand it if necessary
+    m = re.search('\d\d[-+]\d\d',unit[:5])
+    if m is not None:
+        factor *= float(m.group(0)[:2])**(float(m.group(0)[2]+'1')*float(m.group(0)[3:5]))
+        unit = unit[5:]
+    m = re.search('\d\d[[eE][-+]\d\d',unit[:6])
+    if m is not None:
+        factor *= float(m.group(0)[:2])**(float(m.group(0)[3]+'1')*float(m.group(0)[4:6]))
+        unit = unit[6:]
+    
     if not unit[-1].isdigit(): unit += '1'
     #-- decompose unit in base name and power
     m = re.search(r'(\d*)(.+?)(-{0,1}\d+)',unit)
     if m is not None:
-        factor,basis,power = m.group(1),m.group(2),int(m.group(3))
-        if factor: factor = float(factor)
-        else: factor = 1.
+        factor_,basis,power = m.group(1),m.group(2),int(m.group(3))
+        if factor_:
+            factor *= float(factor_)
     else:
         factor,basis,power = 1.,unit,1
     #-- decompose the base name (which can be a composition of a prefix
