@@ -1418,6 +1418,7 @@ _scalings ={'y':       1e-24, # yocto
             'p':       1e-12, # pico
             'n':       1e-09, # nano
             'mu':      1e-06, # micro
+            'u':       1e-06, # micro
             'm':       1e-03, # milli
             'c':       1e-02, # centi
             'd':       1e-01, # deci
