@@ -84,11 +84,16 @@ import urllib
 import logging
 import os
 import pyfits
+import tarfile
+import tempfile
+import shutil
 import ConfigParser
 from scipy.spatial import KDTree
 
 #-- IvS repository
 from ivs.io import ascii
+from ivs.io import fits
+from ivs.io import http
 from ivs.units import conversions
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
@@ -359,6 +364,93 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
 
 
 #}
+
+#{ Interface to specific catalogs
+
+def get_IUE_spectrum(**kwargs):
+    """
+    Download IUE spectra.
+    
+    If you just want to download all the spectral files, set C{directory='/home/user/'}
+    If you don't want to unzip them, set unzip=False
+    Otherwise, the function will return a list of all extracted spectra.
+    
+    """
+    directory = kwargs.get('directory',None)
+    unzip = kwargs.get('unzip',True)
+    if directory is None:
+        direc = os.getcwd()
+        filename = None
+    else:
+        direc = directory
+        
+    output = []
+    #-- construct the download link form the camera and image data
+    data,units,comments = search('VI/110/inescat/',**kwargs)
+    for spectrum in data:
+        download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%s&mission=iue&action=Download_MX"%(spectrum['Camera'],spectrum['Image'])
+        logger.info('IUE spectrum %s/%s: %s'%(spectrum['Camera'],spectrum['Image'],download_link))
+    
+        #-- prepare to download the spectra to a temparorary file
+        if directory is not None:
+            filename = download_link.split('iue_mark=')[1].split('&')[0]
+            filename = os.path.join(direc,filename)
+        mytarfile = http.download(download_link,filename=filename)
+        if filename is None:
+            mytarfile,url = mytarfile
+        
+        #-- perhaps unzipping is not necessary
+        if directory is not None and not unzip:
+            output.append(mytarfile)
+            url.close()
+            continue
+        #-- then unpack tar files and copy spectra to directory
+        #   remember the location of the files:
+        if not tarfile.is_tarfile(mytarfile):
+            logger.info("Not a tarfile: %s"%(mytarfile))
+            continue
+        tarf = tarfile.open(mytarfile)
+        files = tarf.getmembers(),tarf.getnames()
+        deldirs = []
+        for mem,name in zip(*files):
+            #-- first check if it is a spectrum.
+            myname = name.lower()
+            if 'lwp' in name or 'swp' in name or 'lwr' in name:
+                #-- first unpack this file
+                tarf.extract(mem,path=direc)
+                #-- move it to the direc directory
+                outfile = os.path.join(direc,os.path.basename(name))
+                dirname = os.path.dirname(name)
+                shutil.move(os.path.join(direc,name),outfile)
+                logger.info("Extracted %s to %s"%(name,outfile))
+                #-- remove any left over empty directory
+                deldirs.append(dirname)
+            else:
+                logger.debug("Did not extract %s (probably not a spectrum)"%(name))
+        for dirname in deldirs:
+            if dirname and os.path.isdir(dirname) and os.listdir(dirname)==[]:
+                os.rmdir(dirname)
+                logger.warning("Deleted left over (empty) directory %s"%(dirname))
+        tarf.close()
+        if filename is None: url.close()
+        
+        #-- only read in the data if they need to be extracted
+        if directory is not None:
+            output.append(outfile)
+            continue
+        if os.path.isfile(outfile):
+            wavelength,flux,error,header = fits.read_iue(outfile,return_header=True)
+            os.unlink(outfile)
+            output.append([wavelength,flux,error,header])
+        else:
+            logger.info('Unsuccesfull extraction of %s'%(outfile))
+        
+    return output
+    
+
+#}
+
+
 #{ Convenience functions
 def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
