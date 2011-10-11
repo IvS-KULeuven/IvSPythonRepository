@@ -462,8 +462,11 @@ def get_UVSST_spectrum(**kwargs):
     Get a spectrum from the UVSST spectrograph onboard TD1.
     
     From vizier catalog III/39A.
+    
+    Also have a look at II/86/suppl.
     """
     data,units,comments = search('III/39A/catalog',**kwargs)
+    if data is None: return None,None
     fields = sorted([field for field in data.dtype.names if (field[0]=='F' and len(field)==5)])
     spectrum = np.zeros((len(fields),3))
     units_ = []
