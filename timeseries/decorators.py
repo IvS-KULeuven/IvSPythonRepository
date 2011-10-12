@@ -125,9 +125,11 @@ def defaults_filtering(fctn):
     @functools.wraps(fctn)
     def globpar(*args,**kwargs):
         #-- this is the information we need the compute everything
-        x = args[0]
+        #   it is possible a template x-axis has been given. If so, the parallelization
+        #   depends on the length of the template, not of the original thing.
+	fn = ('x_template' in kwargs) and len(kwargs['x_template']) or len(args[0])
         f0 = kwargs.get('f0',0)
-        fn = kwargs.get('fn',len(x))
+        fn = kwargs.get('fn',fn)
         kwargs['f0'] = f0
         kwargs['fn'] = fn
         return fctn(*args,**kwargs)

@@ -72,9 +72,10 @@ def filter_signal(x,y,ftype,f0=None,fn=None,step=1,x_template=None,**kwargs):
     @rtype: tuple
     @return: output from the used filter
     """
+    if x_template is None:
+        x_template = x + 0.
     if f0 is None: f0 = 0
-    if fn is None and x_template is None: fn = len(x)
-    elif fn is None: fn = len(x_template)
+    if fn is None: fn = len(x_template)
     
     #-- set window and kernel function
     ftype = ftype.lower()    
@@ -88,8 +89,6 @@ def filter_signal(x,y,ftype,f0=None,fn=None,step=1,x_template=None,**kwargs):
     
     #-- start running through timeseries (make searchsorted local for speedup)
     logger.debug("FILTER between index %d-%d with step %d"%(f0,fn,step))
-    if x_template is None:
-        x_template = x + 0.
     x_template = x_template[f0:fn:step]
     
     searchsorted = x.searchsorted
