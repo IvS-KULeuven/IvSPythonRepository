@@ -139,7 +139,7 @@ def read2recarray(filename,**kwargs):
         header = comm[-2].replace('|',' ').split()
         types = comm[-1].replace('|','').split()
         dtype = [(head,typ) for head,typ in zip(header,types)]
-        
+    
     #-- cast all columns to the specified type
     dtype = np.dtype(dtype)
     data = [np.cast[dtype[i]](data[i]) for i in range(len(data))]

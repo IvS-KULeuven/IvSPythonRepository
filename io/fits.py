@@ -218,7 +218,7 @@ def read_iue(filename,return_header=False):
     if not return_header:
         return wavelength,flux,error
     else:
-        return wavelength,flux,error,header_
+        return wavelength,flux,error,header
 
 #}
 
