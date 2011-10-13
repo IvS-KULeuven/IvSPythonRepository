@@ -440,6 +440,9 @@ def fix_master(master,e_default=None):
         if 'USNOB1' in photband or 'ANS' in photband:
             master['e_cmeas'][i] = max(0.30*master['cmeas'][i],master['e_cmeas'][i])
     
+    #-- remove negative fluxes
+    master = master[master['cmeas']>0]
+    
     return master
 
 
