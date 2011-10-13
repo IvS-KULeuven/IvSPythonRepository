@@ -44,11 +44,11 @@ Author: Pieter Degroote
 import logging
 import numpy as np
 import pylab as pl
-from ivs.timeseries import fit
-from ivs.timeseries import evaluate
+from ivs.sigproc import fit
+from ivs.sigproc import evaluate
 from ivs.timeseries import pergrams
 from ivs.timeseries.decorators import defaults_pergram
-from ivs.misc import numpy_ext
+from ivs.aux import numpy_ext
 
 logger = logging.getLogger("TS.FREQANAL")
 
