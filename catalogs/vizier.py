@@ -375,9 +375,12 @@ def get_IUE_spectrum(**kwargs):
     If you don't want to unzip them, set unzip=False
     Otherwise, the function will return a list of all extracted spectra.
     
+    You can retrieve the contents of the vizier catalog via {cat_info=True}. The
+    files will not be retrieved then.
     """
     directory = kwargs.get('directory',None)
     unzip = kwargs.get('unzip',True)
+    cat_info = kwargs.get('cat_info',False)
     if directory is None:
         direc = os.getcwd()
         filename = None
@@ -387,6 +390,13 @@ def get_IUE_spectrum(**kwargs):
     output = []
     #-- construct the download link form the camera and image data
     data,units,comments = search('VI/110/inescat/',**kwargs)
+    
+    if cat_info:
+        return data,units,comments
+    
+    if data is None:
+        return output
+    
     for spectrum in data:
         download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%s&mission=iue&action=Download_MX"%(spectrum['Camera'],spectrum['Image'])
         logger.info('IUE spectrum %s/%s: %s'%(spectrum['Camera'],spectrum['Image'],download_link))
@@ -447,7 +457,25 @@ def get_IUE_spectrum(**kwargs):
         
     return output
     
-
+def get_UVSST_spectrum(**kwargs):
+    """
+    Get a spectrum from the UVSST spectrograph onboard TD1.
+    
+    From vizier catalog III/39A.
+    
+    Also have a look at II/86/suppl.
+    """
+    data,units,comments = search('III/39A/catalog',**kwargs)
+    if data is None: return None,None
+    fields = sorted([field for field in data.dtype.names if (field[0]=='F' and len(field)==5)])
+    spectrum = np.zeros((len(fields),3))
+    units_ = []
+    for i,field in enumerate(fields):
+        spectrum[i][0] = int(field[1:])
+        spectrum[i][1] = data[field][0]
+        spectrum[i][2] = data['e_'+field][0]/100.*data[field][0]
+        units_.append(units[field])
+    return spectrum,units_
 #}
 
 
