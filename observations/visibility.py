@@ -1,14 +1,33 @@
 """
 Calculate the visibility of an object in the sky.
 
-Example:
+Examples:
+
+Plot the visibility of an object for 10 days, every 10 minutes.
 
 >>> eph = Ephemeris()
 >>> eph.set_objects(objects=['HD50230'])
 >>> eph.set_date(startdate='2011/09/27 12:00:00.0',dt=10.,days=10)
 >>> eph.set_site(sitename='lapalma')
 >>> eph.visibility()
->>> eph.plot(fmt='bo-')
+>>> eph.plot(fmt='bo')
+
+You can get the same behaviour in less commands:
+
+>>> eph = Ephemeris(objects=['HD50230'],startdate='2011/09/27 12:00:00.0',dt=10.,days=10,sitename='lapalma')
+>>> eph.visibility()
+
+Or, equivalently,
+
+>>> eph = Ephemeris()
+>>> eph.visibility(objects=['HD50230'],startdate='2011/09/27 12:00:00.0',dt=10.,days=10,sitename='lapalma')
+
+Plot the visibility of an object only for today:
+
+>>> p = pl.figure()
+>>> eph.visibility(days=1)
+>>> eph.plot(fmt='y-',lw=2)
+
 """
 import pylab as pl
 from matplotlib.dates import date2num,DayLocator,HourLocator,DateFormatter
@@ -23,6 +42,7 @@ import ephem
 from ivs.units import conversions
 from ivs.catalogs import sesame
 from ivs.observations import airmass as obs_airmass
+from ivs.aux import decorators
 
 logger = logging.getLogger("OBS.VIS")
 
@@ -32,8 +52,8 @@ class Ephemeris(object):
         """
         Initialize an Ephemeris object.
         
-        You can set the site via additional keyword arguments.
-        You can set the date via additional keyword arguments.
+        You can set the site, date and objects via additional keyword arguments during initialization.
+        You can also give the same information when calling 'visibility'.
         """
         self.set_site(**kwargs)
         self.set_date(**kwargs)
@@ -49,13 +69,14 @@ class Ephemeris(object):
         return myobject
     
     #{ Set object, site and dates
-    
+    @decorators.filter_kwargs
     def set_objects(self,objects=None,**kwargs):
         if objects is not None:
             objects = [self.__get_object(name) for name in objects]
             self.objects = objects
     
-    def set_site(self,sitename='lapalma',sitelat=None,sitelong=None,siteelev=None,**kwargs):
+    @decorators.filter_kwargs
+    def set_site(self,sitename='lapalma',sitelat=None,sitelong=None,siteelev=None):
         """
         Set the observing site.
         
@@ -100,8 +121,9 @@ class Ephemeris(object):
                 mysite.long = sitelong
         self.thesite = mysite
         logger.info('Set site to %s (long=%s EAST, lat=%s NORTH, elev=%s m)'%(mysite.name,mysite.long,mysite.lat,mysite.elevation))
-        
-    def set_date(self,startdate=None,days=20,dt=10.,**kwargs):
+    
+    @decorators.filter_kwargs
+    def set_date(self,startdate=None,days=20,dt=10.):
         """
         Set the start date for ephemeris calculations.
         
@@ -133,7 +155,7 @@ class Ephemeris(object):
     
     #{ Compute visibilities
     
-    def visibility(self,midnight=None):
+    def visibility(self,midnight=None,**kwargs):
         """
         Calculate ephemeris.
         
@@ -144,6 +166,11 @@ class Ephemeris(object):
             - sunsets
             - night time / day time (boolean 1-0)
         """
+        #-- set optional additional keywords
+        self.set_site(**kwargs)
+        self.set_date(**kwargs)
+        self.set_objects(**kwargs)
+        
         sun = ephem.Sun()
         #moon = ephem.Moon()
         #moon_theta = 34.1 # minutes
@@ -160,8 +187,6 @@ class Ephemeris(object):
         alts = np.zeros((len(self.objects),total_minutes))
         hours = np.zeros(total_minutes)
         during_night = np.zeros(total_minutes)
-        #sunrises = zeros_like(alts)
-        #sunsets = zeros_like(alts)
         #moon_separation = zeros_like(alts)
         
         #-- run over all timesteps
@@ -215,29 +240,44 @@ class Ephemeris(object):
         alts = self.vis['alts']
         airmass = self.vis['airmass']
         during_night = self.vis['during_night']
-        fmt = kwargs.get('fmt','bo')
+        yaxis = kwargs.pop('yaxis','airmass')
         
         for i in range(len(airmass)):
             #-- only keep times during the night and with an airmass between 0 and 2.5
             keep = (during_night==1) & (0<=airmass[i,:]) & (airmass[i,:]<=2.5)
+
+            if yaxis=='airmass':
+                pl.plot_date(dates[keep],airmass[i,keep],xdate=True,tz=pytz.utc,**kwargs)
+            elif yaxis=='degree':
+                pl.plot_date(dates[keep],alts[i,keep]/pi*180,xdate=True,tz=pytz.utc,**kwargs)
         
-            pl.subplot(121);pl.plot_date(dates[keep],alts[i,keep]/pi*180,fmt=fmt,xdate=True,tz=pytz.utc)
-            pl.subplot(122);pl.plot_date(dates[keep],airmass[i,keep],fmt=fmt,xdate=True,tz=pytz.utc)
-        
-        pl.subplot(121)
+        #-- take care of the x-axis labelling format
         pl.gca().xaxis.set_major_formatter(DateFormatter("%d %b '%y %H:%M"))
         #gca().fmt_xdata = DateFormatter('%H:%M')
         pl.gcf().autofmt_xdate()
         pl.xlabel('time (UTC)')
-        pl.ylabel('Altitude (degrees)')
         
-        pl.subplot(122)
-        pl.gca().xaxis.set_major_formatter(DateFormatter("%d %b '%y %H:%M"))
-        pl.xlabel('time (UTC)')
-        pl.ylabel('Airmass')
-        pl.gcf().autofmt_xdate()
-        if pl.ylim()[0]<pl.ylim()[1]:
-            pl.ylim(pl.ylim()[::-1])
+        #-- take care of labels and direction of the y-axis
+        if yaxis=='airmass':
+            pl.ylabel('Airmass')  
+            if pl.ylim()[0]<pl.ylim()[1]:
+                pl.ylim(pl.ylim()[::-1])
+        elif yaxis=='degree':
+            pl.ylabel('Altitude (degrees)')
+        
+        pl.gca().set_autoscale_on(False)
+        start_nights = dates[:-1][np.diff(during_night)==1]
+        end_nights = dates[:-1][np.diff(during_night)==-1]
+        for start,end in zip(start_nights,end_nights):
+            pl.fill([start,start,end,end],[pl.ylim()[0],pl.ylim()[1],pl.ylim()[1],pl.ylim()[0]],'k',alpha=0.5)
+            
+        #-- if only one night was asked, show the whole night
+        if len(start_nights)==1:
+            width = pl.xlim()[1] - pl.xlim()[0]
+            pl.xlim(start-0.05*width,end+0.05*width)
+        #-- add a grid
+        pl.grid()
+        
         
     #}
     
