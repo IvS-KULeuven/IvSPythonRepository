@@ -18,6 +18,7 @@ import sys
 import math
 import socket
 import logging
+import inspect
 
 logger = logging.getLogger("DEC")
 memory = {}
@@ -252,6 +253,22 @@ def logprintinfo(func):
         finally:
             sys.stdout = stdobak
     return pwrapper
+
+
+def filter_kwargs(fctn):
+    """
+    Remove keyword arguments which are not used by a function.
+    """
+    @functools.wraps(fctn)
+    def do_filter(*args,**kwargs):
+        args_,varargs,keywords,defaults = inspect.getargspec(fctn)
+        #-- loop over all keywords given by the user, and remove them from the
+        #   kwargs dictionary if their names are not present in 'args'
+        for key in kwargs.keys():
+            if not key in args_[-len(defaults):]:
+                thrash = kwargs.pop(key)
+        return fctn(*args,**kwargs)
+    return do_filter
 #}
 
 #{ Disable decorator
