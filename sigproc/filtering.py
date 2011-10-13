@@ -12,7 +12,7 @@ Example usage:
 Generate some data:
 
 >>> x = np.linspace(0,150,10000)
->>> x_= np.linspace(0,150,2000)
+>>> x_= np.linspace(0,150,100)
 >>> y = np.sin(2*pi/20.*x)+np.random.normal(size=len(x))
 
 Apply some filter:
@@ -24,10 +24,11 @@ Apply some filter:
 
 >>> import pylab as pl
 >>> p = pl.plot(x,y,'ko')
->>> p = pl.plot(x1,y1,'ro',mec='r')
->>> p = pl.plot(x2,y2,'bo',mec='b')
->>> p = pl.plot(x3,y3,'go',mec='g')
->>> p = pl.plot(x3_,y3_,'gs')
+>>> p = pl.plot(x1,y1,'ro',mec='r',label='Gauss')
+>>> p = pl.plot(x2,y2,'bo',mec='b',label='Pijpers')
+>>> p = pl.plot(x3,y3,'go',mec='g',label='Box')
+>>> p = pl.plot(x3_,y3_,'gs',label='Box with template')
+>>> p = pl.legend()
 
 """
 import copy
@@ -54,18 +55,20 @@ def filter_signal(x,y,ftype,f0=None,fn=None,step=1,x_template=None,**kwargs):
     
     Example usage:
     
-    #Generate some data:
-        #>>> import time
-        #>>> x = linspace(0,150,10000)
-        #>>> y = sin(2*pi/20.*x)+random.normal(size=len(x))
+    Generate some data:
     
-    #Apply some filter:
-        #>>> c0 = time.time()
-        #>>> y1,pnts = filter_signal(x,y,"gauss",sigma=1)
-        #>>> print time.time()-c0
-        #>>> c0 = time.time()
-        #>>> y1,pnts = filter_signal(x,y,"gauss",sigma=1,threads=2)
-        #>>> print time.time()-c0
+    >>> import time
+    >>> x = np.linspace(0,150,10000)
+    >>> y = np.sin(2*np.pi/20.*x)+np.random.normal(size=len(x))
+    
+    Apply some filter:
+    
+    >>> c0 = time.time()
+    >>> x1,y1,pnts = filter_signal(x,y,"gauss",sigma=1)
+    >>> print time.time()-c0
+    >>> c0 = time.time()
+    >>> x1,y1,pnts = filter_signal(x,y,"gauss",sigma=1,threads=2)
+    >>> print time.time()-c0
 
     @param ftype: one of 'gauss','pijpers','box','inl'
     @type ftype: string
@@ -90,7 +93,6 @@ def filter_signal(x,y,ftype,f0=None,fn=None,step=1,x_template=None,**kwargs):
     #-- start running through timeseries (make searchsorted local for speedup)
     logger.debug("FILTER between index %d-%d with step %d"%(f0,fn,step))
     x_template = x_template[f0:fn:step]
-    
     searchsorted = x.searchsorted
     out = [kernel(x,y,t,index=searchsorted([t-1e-30-lower_window,t+1e-30+higher_window]),
                         **kwargs) for t in x_template]
