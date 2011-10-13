@@ -12,6 +12,8 @@ Plot the visibility of an object for 10 days, every 10 minutes.
 >>> eph.visibility()
 >>> eph.plot(fmt='bo')
 
+]]include figure]]ivs_observations_visibility_period.png]
+
 You can get the same behaviour in less commands:
 
 >>> eph = Ephemeris(objects=['HD50230'],startdate='2011/09/27 12:00:00.0',dt=10.,days=10,sitename='lapalma')
@@ -27,6 +29,8 @@ Plot the visibility of an object only for today:
 >>> p = pl.figure()
 >>> eph.visibility(days=1)
 >>> eph.plot(fmt='y-',lw=2)
+
+]]include figure]]ivs_observations_visibility_today.png]
 
 """
 import pylab as pl
