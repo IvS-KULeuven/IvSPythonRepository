@@ -1,97 +1,78 @@
 """
 Tools for cursor and color control in the terminal
+
+Example usage (this does not work in the documentation):
+
+>>> print green('this text is green')
+this text is green
+>>> print blink('this text blinks')+' this text does not blink'
+this text blinks this text does not blink
+
+You can combine all the possibilities, as the functions are generated on the fly:
+
+>>> print blink_green_bgred_bold('blinking green bold text on red background')
+blinking green bold text on red background
+    
 """
 import functools
 import inspect
+import sys
+import types
 
-def add_text(fctn):
-    """
-    Add possibility of text to each function.
-    """
-    @functools.wraps(fctn)
-    def with_text(*args):
-        #-- how many arguments does this function need?
-        arguments = inspect.getargspec(fctn)[0]
-        #-- if no extra arguments are given, just pass them
-        if len(args)==len(arguments):
-            return fctn(*args)
-        #-- if an extra argument is given, assume it is text
-        elif len(args)==len(arguments)+1:
-            return fctn(*args[:-1])+ args[-1] + reset()
-        else:
-            raise ValueError('too many arguments')
-    return with_text
-        
-colors = {'black':"\033[30m",
+instructs = {'black':"\033[30m",
           'red':"\033[31m",
           'green':"\033[32m",
           'yellow':"\033[33m",
           'blue':"\033[34m",
           'magenta':"\033[35m",
           'cyan':"\033[36m",
-          'white':"\033[37m"}
-#BGGREEN=`echo "\033[42m"` # background to green 
-#BGCYAN=`echo "\033[45m"` # background to cyan 
-#BGWHITE=`echo "\033[47m"` # background to white 
-#BGYELLOW=`echo "\033[43m"` # background to yellow 
-#BGBLACK=`echo "\033[40m"` # background to black 
-#BGBLUE=`echo "\033[44m"` # background to blue 
-#BGRED=`echo "\033[41m"` # background to red 
-#BGCYAN=`echo "\033[45m"` # background to cyan 
-#BGMAGENTA=`echo "\033[45m"` # background to magenta 
+          'white':"\033[37m",
+          'bgblack':"\033[40m",
+          'bgred':"\033[41m",
+          'bggreen':"\033[42m",
+          'bgyellow':"\033[43m",
+          'bgblue':"\033[44m",
+          'bgmagenta':"\033[45m",
+          'bgcyan':"\033[46m",
+          'bgwhite':"\033[47m",
+          'blink':'\033[5m',
+          'underline':'\033[4m',
+          'bold':'\033[1m',
+          'reset':'\033[m'}
 
-#BGWHITEFGBLUE=`echo "\033[91m"` # background to white & foreground to blue 
-##BGWHITEFGBLUE=`echo "\033[94m"` # background to white & foreground to blue 
-#BGWHITEFGMAGENTA=`echo "\033[95m"` # background to white & fg to magenta 
-#REVERSE=`echo "\033[7m"` #terminal to reverse video 
-
-
-def reset():
+class CallInstruct:
     """
-    Reset terminal to normal color.
+    Generate a callable function on-the-fly.
+    
+    The function takes text as an input and will first print all the terminal
+    instructions, then the text and then reset the terminal settings to the
+    normal value.
     """
-    return '\033[m'
-
-@add_text
-def blink():
-    """
-    Set terminal to blink
-    """
-    return '\033[5m'
-
-@add_text
-def underline():
-    """
-    Set terminal to underline
-    """
-    return '\033[4m'
-
-@add_text
-def nounderline():
-    """
-    Set terminal not to underline
-    """
-    return '\033[24m'
-
-@add_text
-def bold():
-    """
-    Set terminal text to bold.
-    """
-    return '\033[1m'
-
-@add_text
-def color(clr):
-    return colors[clr]
+    def __init__(self,instr):
+        """
+        Remember which instructions to print.
+        """
+        self.instr = instr
+    def __call__(self,text):
+        """
+        Print the instructions, the text and reset the terminal.
+        """
+        return "".join([instructs[i] for i in self.instr.split('_')]) + text + '\033[m'
 
 
-if __name__=="__main__":
-    print color('green')
-    print 'this should be green'
-    print reset()
-    print 'this should be normal'
-    print color('red','this should be red')
-    print 'this should be normal again'
-    for color_ in colors:
-        print color(color_,'this should be %s'%(color_))
-    print blink('this should be blinking')+' this should not be blinking'
+
+class Wrapper(object):
+  """
+  Wrap the module so that the C{getattr} function can be redefined.
+  """
+  def __init__(self, wrapped):
+    self.wrapped = wrapped
+  def __getattr__(self, name):
+    # Perform custom logic here
+    try:
+      return getattr(self.wrapped, name)
+    except AttributeError:
+      return CallInstruct(name) # Some sensible default
+
+#-- Wrap the module so that the C{getattr} function can be redefined.
+sys.modules[__name__] = Wrapper(sys.modules[__name__])
