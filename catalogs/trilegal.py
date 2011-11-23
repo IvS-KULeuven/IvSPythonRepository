@@ -9,7 +9,7 @@ from time import sleep
 from urllib import urlretrieve
 from mechanize import Browser, urlopen
 
-def trilegal(outputFilePath,
+def trilegal(outputFileName,
              useGalacticCoordinates = True,
              eqRightAscension = 0, eqDeclination = 0, 
              galLongitude = 0, galLatitude = 90, 
@@ -28,7 +28,8 @@ def trilegal(outputFilePath,
     
     >>> trilegal("output.txt", useGalacticCoordinates=True, galLongitude=3, galLatitude=14, fieldArea=1, magnitudeLimit=7)
     
-    
+    @param outputFileName: name of file wherein trilegal output will be saved
+    @type outputFileName: string
     @param galCoordinates: if True: use galactic coordinates and ignore equatorial coordinates, 
                            if False: use equatorial coordinates and ignore galactic coordinates
     @type galCoordinates: boolean                       
@@ -120,9 +121,41 @@ def trilegal(outputFilePath,
     print("Retrieving TRILEGAL output file")
     
     outputLink = myBrowser.links(url_regex="lgirardi/tmp/output").next()
-    urlretrieve(outputLink.absolute_url, outputFilePath)
+    urlretrieve(outputLink.absolute_url, outputFileName)
     myBrowser.close()
     
     # Save the parameters in an info file
     
-    
+    parameterInfo = """
+    useGalacticCoordinates {0}
+    eqRightAscension {1}
+    eqDeclination {2}
+    galLongitude {3}
+    galLatitude {4}
+    fieldArea {5}
+    passband {6}
+    magnitudeLimit {7}
+    magnitudeResolution {8}
+    IMFtype {9}
+    includeBinaries {10}
+    binaryFraction {11}
+    lowerBinaryMassRatio {12}
+    upperBinaryMassRatio {13}
+    """.format(useGalacticCoordinates,
+               eqRightAscension,
+               eqDeclination,
+               galLongitude, 
+               galLatitude, 
+               fieldArea,
+               passband, 
+               magnitudeLimit, 
+               magnitudeResolution,
+               IMFtype,
+               includeBinaries, 
+               binaryFraction, 
+               lowerBinaryMassRatio, 
+               upperBinaryMassRatio)
+                  
+    infoFileName = "info_" + outputFileName
+    with open(infoFileName, 'w') as infoFile:
+        infoFile.write(parameterInfo)
