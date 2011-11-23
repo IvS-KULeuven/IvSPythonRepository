@@ -9,8 +9,11 @@ from time import sleep
 from urllib import urlretrieve
 from mechanize import Browser, urlopen
 
-def trilegal(outputFilePath, 
-             galLongitude = 0, galLatitude = 90, fieldArea = 1,
+def trilegal(outputFilePath,
+             useGalacticCoordinates = True,
+             eqRightAscension = 0, eqDeclination = 0, 
+             galLongitude = 0, galLatitude = 90, 
+             fieldArea = 1,
              passband = 4, magnitudeLimit = 26, magnitudeResolution = 0.1,
              IMFtype = 3,
              includeBinaries = True, binaryFraction = 0.3, lowerBinaryMassRatio = 0.7, upperBinaryMassRatio = 1.0):
@@ -23,11 +26,19 @@ def trilegal(outputFilePath,
     
     Example:
     
-    >>> trilegal("output.txt", galLongitude=3, galLatitude=14, fieldArea=1, magnitudeLimit=7)
+    >>> trilegal("output.txt", useGalacticCoordinates=True, galLongitude=3, galLatitude=14, fieldArea=1, magnitudeLimit=7)
     
-    @param galLongitude: galactic longitude in degrees
+    
+    @param galCoordinates: if True: use galactic coordinates and ignore equatorial coordinates, 
+                           if False: use equatorial coordinates and ignore galactic coordinates
+    @type galCoordinates: boolean                       
+    @param eqRightAscension: equatorial right ascension (alpha) in degrees
+    @type eqRightAscension: integer
+    @param eqDeclination: equatorial declination (delta) in degrees
+    @type eqDeclination: integer
+    @param galLongitude: galactic longitude (l) in degrees
     @type galLongitude: integer
-    @param galLatitude: galactic latitude in degrees
+    @param galLatitude: galactic latitude (b) in degrees
     @type galLatitude: integer
     @param fieldArea: total field area in square degrees (max. 10 deg^2)
     @type fieldArea: integer
@@ -72,15 +83,17 @@ def trilegal(outputFilePath,
     
     print("Filling TRILEGAL web form")
     
-    myBrowser["gal_coord"] = ["1"]              # galactic coordinates
-    myBrowser["gc_l"] = str(galLongitude)
-    myBrowser["gc_b"] = str(galLatitude)
-    myBrowser["field"] = str(fieldArea)
-    myBrowser["icm_lim"] = str(passband) 
-    myBrowser["mag_lim"] = str(magnitudeLimit)
-    myBrowser["mag_res"] = str(magnitudeResolution)
-    myBrowser["binary_kind"] = [str(int(includeBinaries))]
-    myBrowser["binary_frac"] = str(binaryFraction)
+    myBrowser["gal_coord"]    = [str(int(useGalacticCoordinates)+1)]   # 1 or 2
+    myBrowser["eq_alpha"]     = str(eqRightAscension)
+    myBrowser["eq_delta"]     = str(eqDeclination)
+    myBrowser["gc_l"]         = str(galLongitude)
+    myBrowser["gc_b"]         = str(galLatitude)
+    myBrowser["field"]        = str(fieldArea)
+    myBrowser["icm_lim"]      = str(passband) 
+    myBrowser["mag_lim"]      = str(magnitudeLimit)
+    myBrowser["mag_res"]      = str(magnitudeResolution)
+    myBrowser["binary_kind"]  = [str(int(includeBinaries))]
+    myBrowser["binary_frac"]  = str(binaryFraction)
     myBrowser["binary_mrinf"] = str(lowerBinaryMassRatio)
     myBrowser["binary_mrsup"] = str(upperBinaryMassRatio)
      
@@ -109,5 +122,7 @@ def trilegal(outputFilePath,
     outputLink = myBrowser.links(url_regex="lgirardi/tmp/output").next()
     urlretrieve(outputLink.absolute_url, outputFilePath)
     myBrowser.close()
+    
+    # Save the parameters in an info file
     
     
