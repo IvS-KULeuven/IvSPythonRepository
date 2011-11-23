@@ -2,4 +2,4 @@
 
 __all__ = ["timeresolved", "sesame", 
            "vizier", "gator", "mast", "gcpd",
-           "hermes", "coralie"]
+           "hermes", "coralie", "trilegal"]
