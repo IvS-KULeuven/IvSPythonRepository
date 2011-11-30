@@ -33,7 +33,7 @@ def trilegal(outputFileName,
     @param galCoordinates: if True: use galactic coordinates and ignore equatorial coordinates, 
                            if False: use equatorial coordinates and ignore galactic coordinates
     @type galCoordinates: boolean                       
-    @param eqRightAscension: equatorial right ascension (alpha) in degrees
+    @param eqRightAscension: equatorial right ascension (alpha) in hours
     @type eqRightAscension: integer
     @param eqDeclination: equatorial declination (delta) in degrees
     @type eqDeclination: integer
@@ -42,7 +42,7 @@ def trilegal(outputFileName,
     @param galLatitude: galactic latitude (b) in degrees
     @type galLatitude: integer
     @param fieldArea: total field area in square degrees (max. 10 deg^2)
-    @type fieldArea: integer
+    @type fieldArea: float
     @param passband: U,B,V,R,I,J,H,K = 1,2,3,4,5,6,7,8 for magnitude limit
     @type passband: integer
     @param magnitudeLimit: magnitude limit in specified passband
