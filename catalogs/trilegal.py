@@ -10,13 +10,15 @@ from urllib import urlretrieve
 from mechanize import Browser, urlopen
 
 def trilegal(outputFileName,
-             useGalacticCoordinates = True,
-             eqRightAscension = 0, eqDeclination = 0, 
-             galLongitude = 0, galLatitude = 90, 
+             longitude = 0, latitude = 0,
+             coordinateType = "galactic",
              fieldArea = 1,
              passband = 4, magnitudeLimit = 26, magnitudeResolution = 0.1,
              IMFtype = 3,
-             includeBinaries = True, binaryFraction = 0.3, lowerBinaryMassRatio = 0.7, upperBinaryMassRatio = 1.0):
+             includeBinaries = True, binaryFraction = 0.3, lowerBinaryMassRatio = 0.7, upperBinaryMassRatio = 1.0,
+             useThinDisc = False,
+             useThickDisc = False,
+             useBulge = True):
     
     """
     Query the web interface of the TRILEGAL population synthesis code.
@@ -26,21 +28,16 @@ def trilegal(outputFileName,
     
     Example:
     
-    >>> trilegal("output.txt", useGalacticCoordinates=True, galLongitude=3, galLatitude=14, fieldArea=1, magnitudeLimit=7)
+    >>> trilegal("output.txt", longitude=3, latitude=14, coordinateType="galactic", fieldArea=1, magnitudeLimit=7, useThinDisc=True)
     
     @param outputFileName: name of file wherein trilegal output will be saved
     @type outputFileName: string
-    @param galCoordinates: if True: use galactic coordinates and ignore equatorial coordinates, 
-                           if False: use equatorial coordinates and ignore galactic coordinates
-    @type galCoordinates: boolean                       
-    @param eqRightAscension: equatorial right ascension (alpha) in hours
-    @type eqRightAscension: integer
-    @param eqDeclination: equatorial declination (delta) in degrees
-    @type eqDeclination: integer
-    @param galLongitude: galactic longitude (l) in degrees
-    @type galLongitude: integer
-    @param galLatitude: galactic latitude (b) in degrees
-    @type galLatitude: integer
+    @param longitude: galactic longitude (degrees) or right ascension (hours)
+    @type longitude: integer
+    @param latitude:  galactic latitude (degrees) or declination (degrees)
+    @type latitude: integer
+    @param coordinateType: either "galactic", or "equatorial" 
+    @type coordinateType: string
     @param fieldArea: total field area in square degrees (max. 10 deg^2)
     @type fieldArea: float
     @param passband: U,B,V,R,I,J,H,K = 1,2,3,4,5,6,7,8 for magnitude limit
@@ -59,8 +56,13 @@ def trilegal(outputFileName,
     @type lowerBinaryMassRatio: float
     @param upperBinaryMassRatio: upper limit of binary mass fraction
     @type upperBinaryMassRatio: float
+    @param useThinDisk: if True use squared hyperbolic secant along z, if False don't include
+    @type useThinDisk: boolean
+    @param useThickDisk: if True use squared hyperbolic secant along z, if False don't include
+    @type useThickDisk: boolean
+    @param useBulge: if True use triaxal bulge, if False don't include
+    @type useBulge: boolean
     @return None. A file is retrieved
-    
     """
     
     # The latest Trilegal web version
@@ -84,11 +86,15 @@ def trilegal(outputFileName,
     
     print("Filling TRILEGAL web form")
     
-    myBrowser["gal_coord"]    = [str(int(useGalacticCoordinates)+1)]   # 1 or 2
-    myBrowser["eq_alpha"]     = str(eqRightAscension)
-    myBrowser["eq_delta"]     = str(eqDeclination)
-    myBrowser["gc_l"]         = str(galLongitude)
-    myBrowser["gc_b"]         = str(galLatitude)
+    if coordinateType == "galactic":
+        myBrowser["gal_coord"] = ["1"]
+        myBrowser["gc_l"]      = str(longitude)
+        myBrowser["gc_b"]      = str(latitude)
+    else:
+        myBrowser["gal_coord"] = ["2"]
+        myBrowser["eq_alpha"]  = str(longitude)
+        myBrowser["eq_delta"]  = str(latitude)
+    
     myBrowser["field"]        = str(fieldArea)
     myBrowser["icm_lim"]      = str(passband) 
     myBrowser["mag_lim"]      = str(magnitudeLimit)
@@ -97,6 +103,21 @@ def trilegal(outputFileName,
     myBrowser["binary_frac"]  = str(binaryFraction)
     myBrowser["binary_mrinf"] = str(lowerBinaryMassRatio)
     myBrowser["binary_mrsup"] = str(upperBinaryMassRatio)
+
+    if useThinDisc:
+        myBrowser["thindisk_kind"] = ["3"]
+    else:
+        myBrowser["thindisk_kind"] = ["0"]
+        
+    if useThickDisc:
+        myBrowser["thickdisk_kind"] = ["3"]
+    else:
+        myBrowser["thickdisk_kind"] = ["0"]
+        
+    if useBulge:
+        myBrowser["bulge_kind"] = ["2"]
+    else:
+        myBrowser["bulge_kind"] = ["0"]
      
     # Submit the completed form
     
@@ -127,25 +148,21 @@ def trilegal(outputFileName,
     # Save the parameters in an info file
     
     parameterInfo = """
-    useGalacticCoordinates {0}
-    eqRightAscension {1}
-    eqDeclination {2}
-    galLongitude {3}
-    galLatitude {4}
-    fieldArea {5}
-    passband {6}
-    magnitudeLimit {7}
-    magnitudeResolution {8}
-    IMFtype {9}
-    includeBinaries {10}
-    binaryFraction {11}
-    lowerBinaryMassRatio {12}
-    upperBinaryMassRatio {13}
-    """.format(useGalacticCoordinates,
-               eqRightAscension,
-               eqDeclination,
-               galLongitude, 
-               galLatitude, 
+    coordinateType {0}
+    longitude {1}
+    latitude {2}
+    fieldArea {3}
+    passband {4}
+    magnitudeLimit {5}
+    magnitudeResolution {6}
+    IMFtype {7}
+    includeBinaries {8}
+    binaryFraction {9}
+    lowerBinaryMassRatio {10}
+    upperBinaryMassRatio {11}
+    """.format(coordinateType,
+               longitude,
+               latitude,
                fieldArea,
                passband, 
                magnitudeLimit, 
