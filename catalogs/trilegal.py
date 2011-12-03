@@ -46,7 +46,12 @@ def trilegal(outputFileName,
     @type magnitudeLimit: float
     @param magnitudeResolution: Distance modulus resolution of Galaxy components (mag)
     @type magnitudeResolution: float
-    @param IMFtype: type of Initial Mass Function of single stars (1 = Salpeter with cutoff at 0.01, Msun, 2 = Chabrier exponential, 3 = Chabrier lognormal, 4 = Kroupa corrected for binaries, 5 = Kroupa not corrected for binaries)
+    @param IMFtype: type of Initial Mass Function of single stars 
+                    1 = Salpeter with cutoff at 0.01, Msun, 
+                    2 = Chabrier exponential, 
+                    3 = Chabrier lognormal, 
+                    4 = Kroupa corrected for binaries, 
+                    5 = Kroupa not corrected for binaries
     @type IMFtype: integer
     @param includeBinaries: include binaries in the population (True or False)
     @type includeBinaries: boolean
