@@ -76,6 +76,8 @@ def sigmaEllipse(xc, yc, covMatrix, nSigma):
     @type covMatrix: 2x2 float nd-array
     @param nSigma: the nSigma-contour of the ellipse will be returned   
     @type nSigma: float
+    @return: (x,y): the x and y values of the ellipse 
+    @rtype: tuple of two float ndarrays
     """
 
     a = covMatrix[0,0]
