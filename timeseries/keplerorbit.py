@@ -124,6 +124,7 @@ Plot it:
 import numpy as np
 from ivs.units import conversions
 from ivs.units.constants import *
+from ivs.coordinates import vectors
 
 #{ Radial velocities
 
@@ -187,7 +188,7 @@ def radial_velocity(parameters,times=None,theta=None,itermax=8):
         
     return RVfit
 
-def orbit_in_plane(times,parameters,component='primary'):
+def orbit_in_plane(times,parameters,component='primary',coordinate_frame='polar'):
     """
     Construct an orbit in the orbital plane.
     
@@ -201,9 +202,17 @@ def orbit_in_plane(times,parameters,component='primary'):
     
     Return r (m) and theta (radians)
     
+    @param times: times of observations (days)
+    @type times: array
+    @param parameters: list of parameters (P,e,a,T0)
+    @type parameters: list
     @param component: component to calculate the orbit of. If it's the secondary,
     the angles will be shifted by 180 degrees
     @type component: string, one of 'primary' or 'secondary'
+    @param coordinate_frame: type of coordinates
+    @type coordinate_frame: str, ('polar' or 'cartesian')
+    @return: coord1,coord2
+    @rtype: 2xarray
     """
     P,e,a,T0 = parameters
     P = conversions.convert('d','s',P)
@@ -223,9 +232,45 @@ def orbit_in_plane(times,parameters,component='primary'):
     if 'sec' in component.lower():
         theta += np.pi
     
-    return r,theta
+    if coordinate_frame=='polar':
+        return r,theta
+    elif coordinate_frame=='cartesian':
+        return r*np.cos(theta),r*np.sin(theta)
 
-
+def velocity_in_plane(times,parameters,component='primary',coordinate_frame='polar'):
+    """
+    Calculate the velocity in the orbital plane.
+    
+    @param times: times of observations (days)
+    @type times: array
+    @param parameters: list of parameters (P,e,a,T0)
+    @type parameters: list
+    @param component: component to calculate the orbit of. If it's the secondary,
+    the angles will be shifted by 180 degrees
+    @type component: string, one of 'primary' or 'secondary'
+    @param coordinate_frame: type of coordinates
+    @type coordinate_frame: str, ('polar' or 'cartesian')
+    @return: coord1,coord2
+    @rtype: 2xarray
+    """
+    #-- calculate the orbit in the plane
+    r,theta = orbit_in_plane(times,parameters,component=component,coordinate_frame='polar')
+    P,e,a,T0 = parameters
+    P = conversions.convert('d','s',P)
+    a = conversions.convert('au','m',a)
+    
+    #-- compute rdot and thetadot
+    l = r*(1+e*np.cos(theta))
+    L = 2*np.pi*a**2/P*np.sqrt(1-e**2)
+    rdot = L/l*e*np.sin(theta)
+    thetadot = L/r**2
+    
+    #-- convert to the right coordinate frame
+    if coordinate_frame=='polar':
+        return rdot,thetadot
+    elif coordinate_frame=='cartesian':
+        vx,vy,vz = vectors.spher2cart((r,theta,np.pi/2.),(rdot,r*thetadot,0))
+        return vx,vy
 
 
 def project_orbit(r,theta,parameters):
