@@ -5,7 +5,9 @@ Decorators specifically for SED package
 import functools
 import logging
 import numpy as np
+import pylab as pl
 from multiprocessing import Manager,Process,cpu_count
+from ivs.sed import model
 
 logger = logging.getLogger('SED.DEC')
 
@@ -33,13 +35,14 @@ def parallel_gridsearch(fctn):
         elif threads=='safe':
             threads = cpu_count()-1
         threads = int(threads)
-        index = np.arange(len(args[0]))
+        index = np.arange(len(args[-1]))
         
         #-- distribute the periodogram calcs over different threads, and wait
         for i in range(threads):
             #-- extend the arguments to include the parallel array, and split
-            #   up the first three input arrays
-            myargs = tuple([args[0][i::threads],args[1][i::threads],args[2][i::threads],args[3][i::threads]] + list(args[4:]) + [arr] )
+            #   up the first four input arrays
+            #myargs = tuple([args[0][i::threads],args[1][i::threads],args[2][i::threads],args[3][i::threads]] + list(args[4:]) + [arr] )
+            myargs = tuple(list(args[:3]) + [args[j][i::threads] for j in range(3,len(args))] +  [arr] )
             kwargs['index'] = index[i::threads]
             logger.debug("parallel: starting process %s"%(i))
             p = Process(target=fctn, args=myargs, kwargs=kwargs) 
@@ -102,3 +105,36 @@ def iterate_gridsearch(fctn):
         return data
         
     return globpar
+
+    
+    
+def standalone_figure(fctn):
+    """
+    Accept 'savefig' as an extra keyword. If it is given, start a new figure and
+    save it to the filename given, and close it!
+    """
+    @functools.wraps(fctn)
+    def dofig(*args,**kwargs):
+        savefig = kwargs.pop('savefig',None)
+        colors = kwargs.get('colors',False)
+        #-- if savefig is not a string but a boolean, make name: it consists
+        #   of the ID, the model used and the function name
+        if savefig is True:
+            savefig = args[0].ID + '__%s_'%(args[0].label) + model.defaults2str()
+            for char in ['/','*']:
+                savefig = savefig.replace(char,'_')
+            savefig = savefig.replace('.','p')
+            savefig = savefig + '_' + fctn.__name__
+            if colors:
+                savefig = savefig + '_colors'
+        #-- start figure
+        if savefig:
+            pl.figure()
+        out = fctn(*args,**kwargs)        
+        #-- end figure
+        if savefig:
+            pl.savefig(savefig)
+            pl.close()
+        return out
+        
+    return dofig

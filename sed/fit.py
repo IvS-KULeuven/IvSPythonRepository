@@ -223,7 +223,7 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
 
 def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                   ebvrange=(-inf,inf),zrange=(-inf,inf),
-                  points=None,res=None):
+                  points=None,res=None,clear_memory=True,**kwargs):
     """
     Generate grid points at which to fit an interpolated grid of SEDs.
     
@@ -251,68 +251,55 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     
     >>> teffs,loggs,ebvs,zs = generate_grid(photbands,res=100)
     
-    
     >>> p = pl.subplot(rows,cols,1)
     >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
     >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
     
-    
     >>> p = pl.subplot(rows,cols,1+cols)
     >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
     
-    
     Randomly distributed over the grid's ranges:
     
     >>> teffs,loggs,ebvs,zs = generate_grid(photbands,points=10000)
-    
     
     >>> p = pl.subplot(rows,cols,2)
     >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
     >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
     
-    
     >>> p = pl.subplot(rows,cols,2+cols)
     >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
     
-    
     Confined to a small area in the grid's range:
     
     >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8000,10000),loggrange=(4.1,4.2),zrange=(0,inf),ebvrange=(1.,2),points=10000)
-    
     
     >>> p = pl.subplot(rows,cols,3)
     >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
     >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
     
-    
     >>> p = pl.subplot(rows,cols,3+cols)
     >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
     
-    
     Confined to a small area in the grid's range with some parameters fixed:
     
     >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8765,8765),loggrange=(4.1,4.2),zrange=(0,0),ebvrange=(1,2),points=10000)
-    
     
     >>> p = pl.subplot(rows,cols,4)
     >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
     >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
     
-    
     >>> p = pl.subplot(rows,cols,4+cols)
     >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
     >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
     
-    
     ]include figure]]ivs_sed_fit_grids.png]
-    
     
     @param photbands: a list of photometric passbands, corresponding each
     measurement
@@ -327,10 +314,9 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     @type points: int
     @param res: resolution of the original grid (the higher, the coarser)
     @type res: int
-    @keyword threads: number of threads to use (defaults to 1)
-    @type threads: int
-    @keyword iterations: number of iterations for zoom-in
-    @type iterations: int
+    @keyword clear_memory: flag to clear memory from previously loaded SED tables.
+    If you set it to False, you can easily get an overloaded memory!
+    @type clear_memory: boolean
     @return: record array containing the searched grid, chi-squares and scale
     factors
     @rtype: record array
@@ -342,11 +328,23 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     #   each thread). We also have an exact view of the size of the grid here...
     markers,(unique_teffs,unique_loggs,unique_ebvs,unique_zs),gridpnts,flux = \
                  model._get_itable_markers(photbands,ebvrange=(-np.inf,np.inf),
-                        zrange=(-np.inf,np.inf),include_Labs=True)
+                        zrange=(-np.inf,np.inf),include_Labs=True,
+                        clear_memory=clear_memory,**kwargs)
+    if not kwargs:
+        logger.info('Received grid (%s)'%model.defaults2str())
+    else:
+        logger.info('Received custom grid (%s)'%kwargs)
     teffs,loggs,ebvs,zs = gridpnts.T
     
-    unique_teffs = unique_teffs[(teffrange[0]<=unique_teffs) & (unique_teffs<=teffrange[1])]
-    unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
+    #-- we need to avoid having only one grid point!
+    #unique_teffs = unique_teffs[(teffrange[0]<=unique_teffs) & (unique_teffs<=teffrange[1])]
+    #unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
+    index1 = max(0,unique_teffs.searchsorted(teffrange[0])-1)
+    index2 = unique_teffs.searchsorted(teffrange[1])+1
+    unique_teffs = unique_teffs[index1:index2+1]
+    index1 = max(0,unique_teffs.searchsorted(loggrange[0])-1)
+    index2 = unique_teffs.searchsorted(loggrange[1])+1
+    unique_loggs = unique_loggs[index1:index2+1]
     
     #-- if we gave a certain number of points, we need to choose our points
     #   randomly in the grid: the grid is usually not a square, so we have to
@@ -398,6 +396,7 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         if len(limits_and_sizes)==0:
             total_size = points
             limits_and_sizes = [[teffrange,loggrange,ebvrange,zrange,points]]
+        logger.info('Limits and sizes of boxes:'+str(limits_and_sizes))
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],lims[2][0],lims[3][0]],
                                                        high=[lims[0][1],lims[1][1],lims[2][1],lims[3][1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
@@ -425,47 +424,130 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                           #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
     return teffs,loggs,ebvs,zs
 
+def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
+                  loggrange=((-inf,inf),(-inf,inf)),
+                  ebvrange=(-inf,inf),
+                  zrange=((-inf,inf),(-inf,inf)),
+                  radiusrange=((1,1),(0.1,10.)),grids=(None,None),
+                  points=None,res=None,clear_memory=False):
+    """
+    Generate grid points at which to fit an interpolated grid of multiple SEDs.
+    
+    By default, a binary SED is assumed, but any multiple system can possibly
+    be defined.
+    
+    Remark that you can give different grid specifications via the keyword 
+    C{grids}. It has to be a tuple of dictionaries (or 'None's).
+    
+    >>> photbands = ['GENEVA.G','GENEVA.B-V']
+    >>> teffs,loggs,ebvs,zs,rads = generate_grid_multiple(photbands,
+    ...          teffrange=((3000,10000),(15000,45000)),
+    ...          loggrange=((0.0,3.5),(3.0,4.5)),
+    ...          zrange=(0,np.inf),ebvrange=(1.,2),
+    ...          radiusrange=((1,1),(0.1,10)),points=10000)
+    >>> p = pl.figure()
+    >>> p = pl.scatter(teffs[:,0],loggs[:,0],c=rads[:,0],edgecolors='none')
+    >>> p = pl.scatter(teffs[:,1],loggs[:,1],c=rads[:,1],edgecolors='none')
+    >>> p = pl.xlim(pl.xlim()[::-1])
+    >>> p = pl.ylim(pl.ylim()[::-1])
+    """
+    #-- first collect the effetive temperatures, loggs, ebvs, zs for the
+    #   different stars in the multiple system
+    pars = []
+    for i,grid in enumerate(grids):
+        grid_kwargs = grids[i] is not None and grids[i] or {}
+        #-- it is possible that we want certain parameters to be the same for
+        #   all components
+        teffrange_ = hasattr(teffrange[0],'__iter__') and teffrange[i] or teffrange
+        loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
+        ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
+        zrange_ = hasattr(zrange[0],'__iter__') and zrange[i] or zrange
+        print grid_kwargs,teffrange[i],loggrange[i],ebvrange,zrange[i]
+        pars += list(generate_grid(photbands,teffrange=teffrange_,
+                      loggrange=loggrange_,ebvrange=ebvrange_,
+                      zrange=zrange_,points=points,**grid_kwargs))
+    #-- the L{generate_grid} method does not guarantee the number of points.
+    #   We have to strip some points if the arrays don't have the same shape
+    nmin = np.min([len(i) for i in pars])
+    pars = [i[:nmin] for i in pars]
+    pars = np.array(pars)
+    #-- make arrays of the output parameters
+    teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
+    #-- keep in mind that we probably want all the members in the system to have
+    #   the same value for the interstellar reddening and metallicity, though
+    #   this is not prerequisitatory
+    print teffs.shape,loggs.shape,ebvs.shape,zs.shape
+    if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
+    if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
+    if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
+    if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
+    print teffs.shape,loggs.shape,ebvs.shape,zs.shape
+    #-- we also have different radii of the stars
+    radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
+                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))
+    return teffs,loggs,ebvs,zs,radii                     
+    
+    
 @parallel_gridsearch
 @make_parallel
-def igrid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,func=stat_chi2,**kwargs):
+def igrid_search(meas,e_meas,photbands,*args,**kwargs):
         """
-        Run over gridpoints and evaluate fit via C{func}.
-        
-        The grid points are defined via C{teffs, loggs, ebvs, zs}. They should
-        be 1d arrays of equal length.
+        Run over gridpoints and evaluate model C{model_func} via C{stat_func}.
         
         The measurements are defined via C{meas, e_meas, photbands, colors} and
-        should also by 1d arrays of equal length. C{colors} should be a boolean
+        should be 1d arrays of equal length. C{colors} should be a boolean
         array, C{photbands} should be a string array.
         
-        At each grid point, the pre-calculated photometry will be retrieved and
-        compared to the measurements via C{func}. This function should be of the
-        same form as L{stat_chi2}.
+        The grid points are defined via C{args}. C{args} should be a tuple of 
+        1x? dimensional arrays of equal length. For single stars, this is
+        typically effective temperatures, loggs, reddenings and metallicities.
+        For multiple systems, (at least some of the) previously mentioned
+        parameters are typically doubled, and radius ratios are added. Remember
+        to specify the C{model_func} to match single or multiple systems.
         
-        Extra arguments are passed to L{parallel_gridsearch} for parallelization.
+        At each grid point, the pre-calculated photometry will be retrieved via
+        the keyword C{model_func} and compared to the measurements via the function
+        definded via C{stat_func}. This function should be of the same form as
+        L{stat_chi2}.
+        
+        Extra arguments are passed to L{parallel_gridsearch} for parallelization
+        and to {model_func} for further specification of grids etc.
         
         The index array is returned to trace the results after parallelization.
         
+        @param meas: the measurements that have to be compared with the models
+        @type meas: 1D numpy array of floats
+        @param e_meas: errors on the measurements
+        @type e_meas: 1D numpy array of floats
+        @param photbands: names of the photometric passbands
+        @type photbands: 1D numpy array of strings
+        @keyword model_func: function to translate parameters to synthetic (model) data
+        @type model_func: function
+        @keyword stat_func: function to evaluate the fit
+        @type stat_func: function
         @return: (chi squares, scale factors, error on scale factors, absolute
         luminosities (R=1Rsol), index
         @rtype: 4/5X1d array
         """
+        model_func = kwargs.pop('model_func',model.get_itable)
+        stat_func = kwargs.pop('stat_func',stat_chi2)
         index = kwargs.pop('index',None)
+        N = len(args[0])
         #-- prepare output arrays
-        chisqs = np.zeros_like(teffs)
-        scales = np.zeros_like(teffs)
-        e_scales = np.zeros_like(teffs)
-        lumis = np.zeros_like(teffs)
+        chisqs = np.zeros(N)
+        scales = np.zeros(N)
+        e_scales = np.zeros(N)
+        lumis = np.zeros(N)
         colors = np.array([filters.is_color(photband) for photband in photbands],bool)
         #-- show a progressMeter when not parallelized
         if index is None:
-            p = progressMeter.ProgressMeter(total=len(teffs))
+            p = progressMeter.ProgressMeter(total=N)
         #-- run over the grid, retrieve synthetic fluces and compare with
         #   observations.
-        for n,(teff,logg,ebv,z) in enumerate(itertools.izip(teffs,loggs,ebvs,zs)):
+        for n,pars in enumerate(itertools.izip(*args)):
             if index is None: p.update(1)
-            syn_flux,Labs = model.get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
-            chisqs[n],scales[n],e_scales[n] = func(meas,e_meas,colors,syn_flux)
+            syn_flux,Labs = model_func(*pars,photbands=photbands,**kwargs)
+            chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux)
             lumis[n] = Labs
         #-- return results
         if index is not None:

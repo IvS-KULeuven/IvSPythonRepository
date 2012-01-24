@@ -22,7 +22,7 @@ Use the general interface to get the same curves but with different Rv:
 >>> p = pl.xlim(0,10)
 >>> p = pl.ylim(0,12)
 >>> p = pl.xlabel('1/$\lambda$ [1/$\mu$m]')
->>> p = pl.ylabel('Extinction E(B-V) [mag]')
+>>> p = pl.ylabel(r'Extinction E(B-$\lambda$) [mag]')
 >>> p = pl.legend(prop=dict(size='small'),loc='lower right')
 
 ]include figure]]ivs_sed_reddening_curves.png]

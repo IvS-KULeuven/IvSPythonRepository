@@ -17,6 +17,7 @@
 #      response curve
 # BESSEL response curves from CHORIZOS, zeropoints from Bessel, 1990
 # IPHAS is defined as 0 magnitude for r', i' and Ha band for Vega (Drew et al., 2005)
+# UVEX is defined as 0 magnitude in all bands (Paul Groot, priv. comm.)
 # WISE zeropoints defined in Wright 2010 ""zeropoints on the Vega system in the WISE passbands of Flam = 8.180e−15, 2.415e−15, 6.515e−17 & 5.090e−18 W/cm2/µm, which convert""
 # STROMGREN calibration from Maiz-Apellaniz (2007) (used to be from synphot user guide and earlier from Asagio A&A card)
 #    ----> used to be STROMGREN   U   3.25e-09   0   0   0   1.288   1.06679608688e-08   
@@ -100,8 +101,8 @@
  ESOIR.H0          15398.2 CCD           0           1   nan         0   nan         0    1.37e-12 W/m2/nm             1        1140 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.K0            22210 CCD           0           1   nan         0   nan         0    3.97e-13 W/m2/nm             1         653 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.L0            37060 CCD           0           1   nan         0   nan         0    5.78e-14 W/m2/nm             1         265 Jy                  1 van_Der_Bliek_1996                                                   
- ESOIR.N            114659 CCD           0           1   nan         0   nan         0    1.09e-16 W/m2/nm             1        12.3 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.N            114659 CCD           0           1   nan         0   nan         0    1.29e-15 W/m2/nm             1        41.7 Jy                  1 van_Der_Bliek_1996                                                   
+ ESOIR.N            114659 CCD           0           1   nan         0   nan         0    1.09e-16 W/m2/nm             1        12.3 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.N1            83610 CCD           0           1   nan         0   nan         0     2.5e-15 W/m2/nm             1        57.8 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.N2            97870 CCD           0           1   nan         0   nan         0     1.4e-15 W/m2/nm             1        43.5 Jy                  1 van_Der_Bliek_1996                                                   
  ESOIR.N3           128190 CCD           0           1   nan         0   nan         0    4.64e-16 W/m2/nm             1        25.3 Jy                  1 van_Der_Bliek_1996                                                   
@@ -181,7 +182,7 @@
  MSX.C              122001 BOL         nan           0   nan         0   nan         0 5.42559e-14 erg/s/cm2/A         0 2.67234e-22 erg/s/cm2/Hz        0 nan                                                                  
  MSX.D              147307 BOL         nan           0   nan         0   nan         0 2.56529e-14 erg/s/cm2/A         0 1.84361e-22 erg/s/cm2/Hz        0 nan                                                                  
  MSX.E              218026 BOL         nan           0   nan         0   nan         0 5.75741e-15 erg/s/cm2/A         0 8.87805e-23 erg/s/cm2/Hz        0 nan                                                                  
- OPEN.BOL                1 BOL         nan           0   nan         0   nan         0 3.00272e-05 erg/s/cm2/A         0 9.02168e-21 erg/s/cm2/Hz        0 Bolometric_open_filters                                              
+ OPEN.BOL                1 BOL         nan           0   nan         0   nan         0 3.00274e-05 erg/s/cm2/A         0 9.02168e-21 erg/s/cm2/Hz        0 Bolometric_open_filters                                              
  PACS.B             703898 BOL         nan           0   nan         0   nan         0 4.89079e-17 erg/s/cm2/A         0 8.17069e-24 erg/s/cm2/Hz        0 nan                                                                  
  PACS.G        1.00191e+06 BOL         nan           0   nan         0   nan         0 1.18461e-17 erg/s/cm2/A         0 4.01403e-24 erg/s/cm2/Hz        0 nan                                                                  
  PACS.R        1.60218e+06 BOL         nan           0   nan         0   nan         0 1.81605e-18 erg/s/cm2/A         0 1.58757e-24 erg/s/cm2/Hz        0 nan                                                                  
@@ -190,11 +191,11 @@
  SAAO.K            21968.5 CCD       0.014           1   nan         0   nan         0  3.9814e-11 erg/s/cm2/A         0 6.47633e-21 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
  SAAO.L            34308.7 CCD       0.032           1   nan         0   nan         0 7.45373e-12 erg/s/cm2/A         0 2.95196e-21 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
  SCUBA.350NB   3.45424e+06 BOL         nan           0   nan         0   nan         0 1.41979e-19 erg/s/cm2/A         0 4.20985e-25 erg/s/cm2/Hz        0 nan                                                                  
- SCUBA.450NB   4.45476e+06 BOL         nan           0   nan         0   nan         0        -nan erg/s/cm2/A         0        -nan erg/s/cm2/Hz        0 nan                                                                  
- SCUBA.450WB   4.56406e+06 BOL         nan           0   nan         0   nan         0        -nan erg/s/cm2/A         0        -nan erg/s/cm2/Hz        0 nan                                                                  
- SCUBA.750NB     7.457e+06 BOL         nan           0   nan         0   nan         0        -nan erg/s/cm2/A         0        -nan erg/s/cm2/Hz        0 nan                                                                  
- SCUBA.850NB   8.61883e+06 BOL         nan           0   nan         0   nan         0        -nan erg/s/cm2/A         0        -nan erg/s/cm2/Hz        0 nan                                                                  
- SCUBA.850WB    8.5886e+06 BOL         nan           0   nan         0   nan         0        -nan erg/s/cm2/A         0        -nan erg/s/cm2/Hz        0 nan                                                                  
+ SCUBA.450NB   4.45476e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
+ SCUBA.450WB   4.56406e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
+ SCUBA.750NB     7.457e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
+ SCUBA.850NB   8.61883e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
+ SCUBA.850WB    8.5886e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
  SDSS.G            4694.35 CCD   -0.109977           0     0         1   nan         0 5.46588e-09 erg/s/cm2/A         0 4.01094e-20 erg/s/cm2/Hz        0 Maiz-Appellaniz2007                                                  
  SDSS.GP           4758.58 CCD        -0.1           1   nan         0   nan         0 5.29168e-09 erg/s/cm2/A         0   3.952e-20 erg/s/cm2/Hz        0 http://www.ucolick.org/~cnaw/sun.html                                
  SDSS.I            7505.34 CCD    0.353925           0     0         1   nan         0 1.39479e-09 erg/s/cm2/A         0 2.60652e-20 erg/s/cm2/Hz        0 Maiz-Appellaniz2007                                                  
@@ -224,6 +225,11 @@
  TYCHO2.VT         5321.86 CCD       0.032           1   nan         0   nan         0 3.91305e-09 erg/s/cm2/A         0 3.70691e-20 erg/s/cm2/Hz        0 Maiz-Appellaniz2007                                                  
  USNOB1.B1         4448.06 CCD        0.03           1   nan         0   nan         0  6.1307e-09 erg/s/cm2/A         0 4.02221e-20 erg/s/cm2/Hz        0 Johnson-like                                                         
  USNOB1.R1         6939.52 CCD        0.07           1   nan         0   nan         0 1.81615e-09 erg/s/cm2/A         0 2.88912e-20 erg/s/cm2/Hz        0 Johnson-like                                                         
+ UVEX.G            4857.28 CCD           0           1   nan         0   nan         0 5.04692e-09 erg/s/cm2/A         0 3.93739e-20 erg/s/cm2/Hz        0 Groot_et_al._2009                                                    
+ UVEX.HA           6568.17 CCD           0           1   nan         0   nan         0 1.81345e-09 erg/s/cm2/A         0 2.60954e-20 erg/s/cm2/Hz        0 Groot_et_al._2009                                                    
+ UVEX.I               7746 CCD           0           1   nan         0   nan         0 1.26651e-09 erg/s/cm2/A         0 2.52626e-20 erg/s/cm2/Hz        0 Groot_et_al._2009                                                    
+ UVEX.R            6230.09 CCD           0           1   nan         0   nan         0 2.45948e-09 erg/s/cm2/A         0 3.23041e-20 erg/s/cm2/Hz        0 Groot_et_al._2009                                                    
+ UVEX.U            3617.28 CCD           0           1   nan         0   nan         0 3.98957e-09 erg/s/cm2/A         0 1.76363e-20 erg/s/cm2/Hz        0 Groot_et_al._2009                                                    
  VILNIUS.P         3737.53 CCD       1.275           1   nan         0   nan         0 4.32219e-09 erg/s/cm2/A         0  2.0527e-20 erg/s/cm2/Hz        0 GCPD                                                                 
  VILNIUS.S         6527.78 CCD       -0.11           1   nan         0   nan         0 2.02595e-09 erg/s/cm2/A         0 2.87864e-20 erg/s/cm2/Hz        0 GCPD                                                                 
  VILNIUS.U         3444.61 CCD         1.9           1   nan         0   nan         0 3.19379e-09 erg/s/cm2/A         0 1.26758e-20 erg/s/cm2/Hz        0 GCPD                                                                 

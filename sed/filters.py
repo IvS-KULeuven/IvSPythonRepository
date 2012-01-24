@@ -255,6 +255,8 @@ def is_color(photband):
     
     @param photband: name of the photometric passband
     @type photband: string
+    @return: True or False
+    @rtype: bool
     """
     if '-' in photband.split('.')[1]:
         return True
@@ -264,6 +266,25 @@ def is_color(photband):
         return False
 
 
+def get_color_photband(photband):
+    """
+    Retrieve the photometric bands from color
+    
+    @param photband: name of the photometric passband
+    @type photband: string
+    @return: tuple of strings
+    @rtype: tuple
+    """
+    system,band = photband.split('.')
+    band = band.strip() # remove extra spaces
+    if '-' in band:
+        bands = tuple(['%s.%s'%(system,iband) for iband in band.split('-')])
+    elif band.upper()=='M1':
+        bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','Y']])
+    elif band.upper()=='C1':
+        bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','U']])
+    
+    return bands
 
 
 def eff_wave(photband,model=None):
@@ -366,6 +387,9 @@ def update_info(zp):
     """
     Update information in zeropoint file, e.g. after calibration.
     
+    Call first L{ivs.sed.model.calibrate} without arguments, and pass the output
+    to this function.
+    
     @param zp: updated contents from C{zeropoints.dat}
     @type zp: recarray
     """
@@ -377,14 +401,17 @@ def update_info(zp):
 
 if __name__=="__main__":
     import sys
-    
+    import pylab as pl
     if not sys.argv[1:]:
         import doctest
-        import pylab as pl
         doctest.testmod()
         pl.show()
     
-    else:  
+    else:
+        responses = list_response()
+        systems = [response.split('.')[0] for response in responses]
+        set_responses = sorted(set([response.split('.')[0] for response in systems]))
+        this_filter = 0
         for i,resp in enumerate(responses):
             # what system is this, and how many filters are in this system?
             this_system = resp.split('.')[0]
@@ -405,6 +432,8 @@ if __name__=="__main__":
             p = pl.ylabel('Transmission')
             # if there are not more filters in this systems, save the plot to a file
             # and close it
-            if pl.gca()._get_lines.count==nr_filters:
+            this_filter+=1
+            if this_filter==nr_filters:
+                this_filter = 0
                 p = pl.legend(prop=dict(size='small'))
                 p = pl.savefig('/home/pieterd/python/ivs/doc/images/ivs_sed_filters_%s'%(this_system));p = pl.close()

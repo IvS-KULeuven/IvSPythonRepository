@@ -206,7 +206,7 @@ Then compute the synthetic fluxes, and compare them with the synthetic fluxes as
 retrieved from the pre-calculated tables
 
 >>> fluxes_calc = synthetic_flux(wave,flux,photbands)
->>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands)
+>>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands,wave_units='A')
 >>> fluxes_int *= scale**2
 
 Convert to magnitudes:
@@ -241,6 +241,7 @@ try:
 except ImportError:
     from Scientific.Functions.Interpolation import InterpolatingFunction
     new_scipy = False
+from scipy.interpolate import interp1d
 from multiprocessing import Process,Manager
 
 from ivs import config
@@ -289,7 +290,11 @@ def set_defaults(**kwargs):
             logger.info('Set %s to %s'%(key,kwargs[key]))
         
 
-
+def defaults2str():
+    """
+    Convert the defaults to a string, e.g. for saving files.
+    """
+    return '_'.join([str(i)+str(defaults[i]) for i in sorted(defaults.keys())])
 
 
 def get_gridnames(grid=None):
@@ -306,7 +311,7 @@ def get_gridnames(grid=None):
     """
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-                'tlusty','uvblue','atlas12','nemo','tkachenko']
+                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2']
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -358,6 +363,8 @@ def get_file(integrated=False,**kwargs):
     grid = kwargs.get('grid',defaults['grid'])
     if os.path.isfile(grid):
         logger.debug('Selected %s'%(grid))
+        if integrated:
+            return os.path.join(os.path.dirname(grid),'i'+os.path.basename(grid))
         return grid
     
     grid = grid.lower()
@@ -577,11 +584,8 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     return wave,flux
 
 
-
-
 def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                wave_units=None,flux_units='erg/s/cm2/A/sr',**kwargs):
-                   
     """
     Retrieve the spectral energy distribution of a model atmosphere in
     photometric passbands.
@@ -601,8 +605,6 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     Extra kwargs can specify constraints on the size of the grid to interpolate.
     Extra kwargs can specify reddening law types.
     Extra kwargs can specify information for conversions.
-    
-    Example usage:
         
     @param teff: effective temperature
     @type teff: float
@@ -616,16 +618,21 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @type wave_units: str
     @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
     @type flux_units: str
+    @keyword clear_memory: flag to clear memory from previously loaded SED tables.
+    If you set it to False, you can easily get an overloaded memory!
+    @type clear_memory: boolean
     @return: (wave,) flux, absolute luminosity
     @rtype: (ndarray,)ndarray,float
     """
     ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
     zrange = kwargs.pop('zrange',(-np.inf,np.inf))
+    clear_memory = kwargs.pop('clear_memory',True)
     #-- get the FITS-file containing the tables
     #c0 = time.time()
     #c1 = time.time() - c0
     #-- retrieve structured information on the grid (memoized)
-    markers,(g_teff,g_logg,g_ebv,g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,include_Labs=True,**kwargs)
+    markers,(g_teff,g_logg,g_ebv,g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
+                            include_Labs=True,clear_memory=clear_memory,**kwargs)
     #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
     try:
@@ -707,21 +714,38 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             if i_logg==len(g_logg): i_logg -= 1
             if i_ebv==len(g_ebv): i_ebv -= 1
             if i_z==len(g_z): i_z -= 1
-            #-- prepare fluxes matrix for interpolation, and x,y an z axis
-            myflux = np.zeros((16,4+len(photbands)+1))
-            mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
-            for i,(t,g,z) in enumerate(mygrid):
-                myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
-                myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
-                input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
-                                                    int(round(t)),int(round(g*100)),\
-                                                    int(round(g_ebv[i_ebv]*100))))
-                index = markers.searchsorted(input_code)
-                myflux[2*i,4:] = ext[index-1]
-                myflux[2*i+1,4:] = ext[index]
-            #-- interpolate in log10 of temperature
-            myflux[:,0] = np.log10(myflux[:,0])
-            flux = 10**griddata(myflux[:,:4],np.log10(myflux[:,4:]),(np.log10(teff),logg,ebv,z))
+            if not (z in g_z):
+                #-- prepare fluxes matrix for interpolation, and x,y an z axis
+                myflux = np.zeros((16,4+len(photbands)+1))
+                mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
+                for i,(t,g,z) in enumerate(mygrid):
+                    myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
+                    myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
+                    input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
+                                                        int(round(t)),int(round(g*100)),\
+                                                        int(round(g_ebv[i_ebv]*100))))
+                    index = markers.searchsorted(input_code)
+                    myflux[2*i,4:] = ext[index-1]
+                    myflux[2*i+1,4:] = ext[index]
+                #-- interpolate in log10 of temperature
+                myflux[:,0] = np.log10(myflux[:,0])
+                flux = 10**griddata(myflux[:,:4],np.log10(myflux[:,4:]),(np.log10(teff),logg,ebv,z))
+            else:
+                #-- prepare fluxes matrix for interpolation, and x,y axis
+                myflux = np.zeros((8,3+len(photbands)+1))
+                mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1])
+                for i,(t,g) in enumerate(mygrid):
+                    myflux[2*i,:3] = t,g,g_ebv[i_ebv-1]
+                    myflux[2*i+1,:3] = t,g,g_ebv[i_ebv]
+                    input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
+                                                        int(round(t)),int(round(g*100)),\
+                                                        int(round(g_ebv[i_ebv]*100))))
+                    index = markers.searchsorted(input_code)
+                    myflux[2*i,3:] = ext[index-1]
+                    myflux[2*i+1,3:] = ext[index]
+                #-- interpolate in log10 of temperature
+                myflux[:,0] = np.log10(myflux[:,0])
+                flux = 10**griddata(myflux[:,:3],np.log10(myflux[:,3:]),(np.log10(teff),logg,ebv))
     
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
@@ -745,6 +769,167 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         return flux,Labs
 
 
+def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
+              wave_units='A',flux_units='erg/cm2/s/A/sr',grids=None,full_output=False,**kwargs):
+    """
+    Retrieve the spectral energy distribution of a combined model atmosphere.
+    
+    Example usage:
+    
+    >>> teff1,teff2 = 20200,5100
+    >>> logg1,logg2 = 4.35,2.00
+    >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=0.2)
+    >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=0.2)
+    >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=(0.2,0.2),radius=[1,20])
+    
+    >>> p = pl.figure()
+    >>> p = pl.gcf().canvas.set_window_title('Test of <get_table_multiple>')
+    >>> p = pl.loglog(wave1,flux1,'r-')
+    >>> p = pl.loglog(wave2,flux2,'b-')
+    >>> p = pl.loglog(wave2,flux2*20**2,'b--')
+    >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
+    
+    @param teff: effective temperature
+    @type teff: tuple floats
+    @param logg: logarithmic gravity (cgs)
+    @type logg: tuple floats
+    @param ebv: tuple reddening coefficients
+    @type ebv: tuple floats
+    @param radius: radii of the stars
+    @type radius: tuple of floats
+    @param wave_units: units to convert the wavelengths to (if not given, A)
+    @type wave_units: str
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @type flux_units: str
+    @param grids: specifications for grid1
+    @type grids: list of dict
+    @param full_output: return all individual SEDs
+    @type full_output: boolean
+    @return: wavelength,flux
+    @rtype: (ndarray,ndarray)
+    """
+    #-- set default parameters
+    if grids is None:
+        grids = [{} for i in teff]
+    if radius is None:
+        radius = tuple([1. for i in teff])
+    #-- gather all the SEDs from the individual components
+    waves,fluxes = [],[]
+    for i in range(len(teff)):
+        iteff,ilogg,iebv = teff[i],logg[i],ebv[i]
+        mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
+        iwave,iflux = get_table(teff=iteff,logg=ilogg,ebv=iebv,**mykwargs)
+        waves.append(iwave)
+        fluxes.append(iflux)
+    #-- what's the total wavelength range? Merge all wavelength arrays and
+    #   remove double points
+    waves_ = np.sort(np.hstack(waves))
+    waves_ = np.hstack([waves_[0],waves_[1:][np.diff(waves_)>0]])
+    #   cut out the part which is common to every wavelength range
+    wstart = max([w[0] for w in waves])
+    wend = min([w[-1] for w in waves])
+    waves_ = waves_[( (wstart<=waves_) & (waves_<=wend))]
+    if full_output:
+        fluxes_ = []
+    else:
+        fluxes_ = 0.
+    #-- interpolate onto common grid in log!
+    for i,(wave,flux) in enumerate(zip(waves,fluxes)):
+        intf = interp1d(np.log10(wave),np.log10(flux),kind='linear')
+        if full_output:
+            fluxes_.append(radius[i]**2*10**intf(np.log10(waves_)))
+        else:
+            fluxes_ += radius[i]**2*10**intf(np.log10(waves_))
+    if flux_units!='erg/cm2/s/A/sr':
+        fluxes_ = conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes_,wave=(waves_,'A'),**kwargs)
+    if wave_units!='A':
+        waves_ = conversions.convert('A',wave_units,waves_,**kwargs)
+    #-- where the fluxes are zero, log can do weird
+    if full_output:
+        fluxes_ = np.vstack(fluxes_)
+        keep = -np.isnan(np.sum(fluxes_,axis=0))
+        waves_ = waves_[keep]
+        fluxes_ = fluxes_[:,keep]
+    else:
+        keep = -np.isnan(fluxes_)
+        waves_ = waves_[keep]
+        fluxes_ = fluxes_[keep]
+    return waves_,fluxes_
+    
+def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
+              photbands=None,wave_units=None,flux_units='erg/cm2/s/A/sr',grids=None,**kwargs):
+    """
+    Retrieve the integrated spectral energy distribution of a combined model
+    atmosphere.
+    
+    >>> teff1,teff2 = 20200,5100
+    >>> logg1,logg2 = 4.35,2.00
+    >>> ebv = 0.2,0.2
+    >>> photbands = ['JOHNSON.U','JOHNSON.V','2MASS.J','2MASS.H','2MASS.KS']
+    
+    >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=ebv[0])
+    >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
+    >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])
+    
+    >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='A')
+    >>> iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
+    >>> iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)
+    
+    >>> p = pl.figure()
+    >>> p = pl.gcf().canvas.set_window_title('Test of <get_itable_multiple>')
+    >>> p = pl.loglog(wave1,flux1,'r-')
+    >>> p = pl.loglog(iwave1,iflux1,'ro',ms=10)
+    >>> p = pl.loglog(wave2,flux2*20**2,'b-')
+    >>> p = pl.loglog(iwave1,iflux2*20**2,'bo',ms=10)
+    >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
+    >>> p = pl.loglog(iwave1,iflux3,'kx',ms=10,mew=2)
+    
+    @param teff: effective temperature
+    @type teff: tuple floats
+    @param logg: logarithmic gravity (cgs)
+    @type logg: tuple floats
+    @param ebv: reddening coefficient
+    @type ebv: tuple floats
+    @param z: metallicity
+    @type z: tuple floats
+    @param radius: ratio of R_i/(R_{i-1})
+    @type radius: tuple of floats
+    @param photbands: photometric passbands
+    @type photbands: list
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @type flux_units: str
+    @param grids: specifications for grid1
+    @type grids: list of dict
+    @param full_output: return all individual SEDs
+    @type full_output: boolean
+    @return: wavelength,flux
+    @rtype: (ndarray,ndarray)
+    """
+    #-- set default parameters
+    if grids is None:
+        grids = [{} for i in teff]
+    if radius is None:
+        radius = tuple([1. for i in teff])
+    #-- gather all the SEDs from the individual components
+    fluxes,Labs = [],[]
+    for i in range(len(teff)):
+        iteff,ilogg,iz,irrad,iebv = teff[i],logg[i],z[i],radius[i],ebv[0]
+        mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
+        iflux,iLabs = get_itable(teff=iteff,logg=ilogg,ebv=iebv,z=iz,photbands=photbands,clear_memory=False,**mykwargs)
+        fluxes.append(iflux*irrad**2)
+        Labs.append(iLabs*irrad**2)
+    fluxes = np.sum(fluxes,axis=0)
+    Labs = np.sum(Labs)
+    if flux_units!='erg/cm2/s/A/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+        
+    if wave_units is not None:
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='A':
+            wave = wave = conversions.convert('A',wave_units,wave)
+        return wave,flux,Labs
+    return fluxes,Labs
 
 
 def get_grid_dimensions(**kwargs):
@@ -1198,7 +1383,6 @@ def synthetic_flux(wave,flux,photbands,units=None):
         transr = np.interp(wave_,waver,transr,left=0,right=0)
         
         #-- integrated flux: different for bolometers and CCDs
-        
         #-- WE WORK IN FLAMBDA
         if units is None or ((units is not None) and (units[i].upper()=='FLAMBDA')):
             if photband=='OPEN.BOL':
@@ -1393,12 +1577,15 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
 def _get_itable_markers(photbands,
                     teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf),
                     ebvrange=(-np.inf,np.inf),zrange=(-np.inf,np.inf),
-                    include_Labs=True,**kwargs):
+                    include_Labs=True,clear_memory=True,**kwargs):
     """
     Get a list of markers to more easily retrieve integrated fluxes.
     """
-    clear_memoization(keys=['ivs.sed.model'])
+    if clear_memory:
+        clear_memoization(keys=['ivs.sed.model'])
     gridfiles = get_file(z='*',integrated=True,**kwargs)
+    if isinstance(gridfiles,str):
+        gridfiles = [gridfiles]
     #-- sort gridfiles per metallicity
     metals_sa = np.argsort([pyfits.getheader(ff,1)['z'] for ff in gridfiles])
     gridfiles = np.array(gridfiles)[metals_sa]
@@ -1469,27 +1656,30 @@ def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
         index = slice(None) #-- full range
     fluxes = []
     for photband in photbands:
-        if not filters.is_color(photband):
-            fluxes.append(fits_ext.data.field(photband)[index])
-        else:
-            system,color = photband.split('.')
-            if '-' in color:
-                band0,band1 = color.split('-')
-                fluxes.append(fits_ext.data.field('%s.%s'%(system,band0))[index]/fits_ext.data.field('%s.%s'%(system,band1))[index])
-            elif color=='M1':
-                fv = fits_ext.data.field('STROMGREN.V')[index]
-                fy = fits_ext.data.field('STROMGREN.Y')[index]
-                fb = fits_ext.data.field('STROMGREN.B')[index]
-                fluxes.append(fv*fy/fb**2)
-            elif color=='C1':
-                fu = fits_ext.data.field('STROMGREN.U')[index]
-                fv = fits_ext.data.field('STROMGREN.V')[index]
-                fb = fits_ext.data.field('STROMGREN.B')[index]
-                fluxes.append(fu*fb/fv**2)
+        try:
+            if not filters.is_color(photband):
+                fluxes.append(fits_ext.data.field(photband)[index])
+            else:
+                system,color = photband.split('.')
+                if '-' in color:
+                    band0,band1 = color.split('-')
+                    fluxes.append(fits_ext.data.field('%s.%s'%(system,band0))[index]/fits_ext.data.field('%s.%s'%(system,band1))[index])
+                elif color=='M1':
+                    fv = fits_ext.data.field('STROMGREN.V')[index]
+                    fy = fits_ext.data.field('STROMGREN.Y')[index]
+                    fb = fits_ext.data.field('STROMGREN.B')[index]
+                    fluxes.append(fv*fy/fb**2)
+                elif color=='C1':
+                    fu = fits_ext.data.field('STROMGREN.U')[index]
+                    fv = fits_ext.data.field('STROMGREN.V')[index]
+                    fb = fits_ext.data.field('STROMGREN.B')[index]
+                    fluxes.append(fu*fb/fv**2)
+        except KeyError:
+            logger.warning('Passband %s missing from table'%(photband))
+            fluxes.append(np.nan*np.ones(len(fits_ext.data)))
     #-- possibly include absolute luminosity
     if include_Labs:
         fluxes.append(fits_ext.data.field("Labs")[index])
-        
     fluxes = np.array(fluxes).T
     if index is not None:
         fluxes = fluxes
