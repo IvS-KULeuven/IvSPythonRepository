@@ -479,6 +479,7 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
     #-- permute parameters so that the different blocks from the generate_grid
     #   are not clustered together
     for i in range(0,len(pars),4):
+		
         permutation = np.random.permutation(len(pars[0]))
         pars[i:i+4] = pars[i:i+4,permutation]
     #-- make arrays of the output parameters
