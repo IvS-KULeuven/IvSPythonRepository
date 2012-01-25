@@ -1,3 +1,3 @@
 
-__all__ = ["linearregression"]
+__all__ = ["linearregression", "pca"]
 
