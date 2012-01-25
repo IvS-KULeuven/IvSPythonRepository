@@ -57,6 +57,10 @@ negative H-K index, you can do
 >>> selection = (data['Hmag'] - data['Kmag']) < 0
 >>> data = data[selection] 
 
+You can also read in a data file you've previously downloaded via
+
+>>> data,units,comms = tvs2recordarray('vanleeuwen.tsv')
+
 Section 1.3 List relevant catalogs
 ----------------------------------
 

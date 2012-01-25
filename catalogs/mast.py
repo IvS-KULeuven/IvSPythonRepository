@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Interface to the MAST archive.
+
+Because the MAST archive is very inhomegeneous, this module is very limited in
+use, and sometimes confusing. It is probably best to check the data or retrieve
+the data manually from the archive.
 """
 import urllib
 import socket
@@ -76,13 +80,14 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='CSV',
     else:
         base_url += '%s/search.php?action=Search'%(name)
     
-    if ID is not None:
+    #-- only use the ID if ra and dec are not given
+    if ID is not None and (ra is None and dec is None):
         base_url += '&target=%s'%(ID)
     
     if ra is not None and dec is not None:
-        base_url += '&SR=%s'%(radius/60.)
+        base_url += '&radius=%s'%(radius/60.)
         if ra is not None: base_url += '&RA=%s'%(ra)
-        if dec is not None: base_url += '&DEC=%s'%(ra)
+        if dec is not None: base_url += '&DEC=%s'%(dec)
     elif radius is not None:
         base_url += '&SIZE=%s'%(radius/60.)
     
@@ -91,10 +96,18 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='CSV',
         base_url += '&resolver=%s'%(resolver)
         #base_url += '&max_records=%d'%(out_max)
         base_url += '&coordformat=%s'%(coord)
+    
     return base_url
 
 
 
+def galex(ra,dec,radius=5.):
+    """
+    Cone search for Galex targets.
+    """
+    radius = radius/60.
+    url = 'http://galex.stsci.edu/gxws/conesearch/conesearch.asmx/ConeSearchToXml?ra={ra:f}&dec={dec:f}&sr={radius:f}&verb=1'.format(ra,dec,radius)
+    
 
 
 
@@ -215,12 +228,22 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
     dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
     
+    #-- MAST has no unified terminology:
+    translations = {'kepler/kgmatch':{'_r':"Ang Sep (')",
+                                      '_RAJ2000':'KIC RA (J2000)',
+                                      '_DEJ2000':'KIC Dec (J2000)'}}
+    
     #-- extra can be added:
     names = list(results.dtype.names)
     if extra_fields is not None:
-        translation = dict(dist='_r',ra='_RAJ2000',dec='_DEJ2000')
+        translation = translations[source]
         for e_dtype in extra_fields:
-            dtypes.append((translation[e_dtype],results.dtype[names.index(e_dtype)].str))
+            try:
+                dtypes.append((e_dtype,results.dtype[names.index(translation[e_dtype])].str))
+            except ValueError:
+                if e_dtype != '_r': raise
+                dtypes.append((e_dtype,results.dtype[names.index('AngSep')].str))
+                
     
     #-- create empty master if not given
     newmaster = False
@@ -319,7 +342,7 @@ def csv2recarray(filename):
 
 
 
-def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
+def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     """
     Download all available photometry from a star to a record array.
     
@@ -372,7 +395,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
 
 
 #@retry_http(3)
-def get_dss_image(ID,width=5,height=5):
+def get_dss_image(ID,ra=None,dec=None,width=5,height=5):
     """
     Retrieve an image from DSS
     
@@ -385,8 +408,9 @@ def get_dss_image(ID,width=5,height=5):
     #-- set a reasonable timeout
     timeout = socket.getdefaulttimeout()
     socket.setdefaulttimeout(30.)
-    info = sesame.search(ID)
-    ra,dec = info['jradeg'],info['jdedeg']
+    if ra is None or dec is None:
+        info = sesame.search(ID)
+        ra,dec = info['jradeg'],info['jdedeg']
     url  = urllib.URLopener()
     myurl = "http://archive.stsci.edu/cgi-bin/dss_search?ra=%s&dec=%s&equinox=J2000&height=%s&generation=%s&width=%s&format=FITS"%(ra,dec,height,'2i',width)
     out = url.retrieve(myurl)

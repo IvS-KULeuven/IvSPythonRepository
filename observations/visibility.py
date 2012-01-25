@@ -176,7 +176,7 @@ class Ephemeris(object):
         self.set_objects(**kwargs)
         
         sun = ephem.Sun()
-        #moon = ephem.Moon()
+        moon = ephem.Moon()
         #moon_theta = 34.1 # minutes
         
         #-- set stuff for calculations
@@ -191,7 +191,8 @@ class Ephemeris(object):
         alts = np.zeros((len(self.objects),total_minutes))
         hours = np.zeros(total_minutes)
         during_night = np.zeros(total_minutes)
-        #moon_separation = zeros_like(alts)
+        moon_separation = np.zeros_like(alts)
+        moon_alts = np.zeros_like(hours)
         
         #-- run over all timesteps
         if midnight is None:
@@ -200,11 +201,15 @@ class Ephemeris(object):
                 prev_set = float(self.thesite.previous_setting(sun))
                 prev_rise = float(self.thesite.previous_rising(sun))
                 hours[i] = float(self.thesite.date)
+                #-- compute the moon position
+                moon.compute(self.thesite)
+                moon_alts[i] = float(moon.alt)
                 if (prev_rise<=prev_set):
                     during_night[i] = 1
                 for j,star in enumerate(self.objects):               
                     star.compute(self.thesite)
                     alts[j,i] = float(star.alt)
+                    moon_separation[j,i] = ephem.separation(moon,star)
                     
         else:
             i = 0
@@ -229,9 +234,11 @@ class Ephemeris(object):
                     
         #-- calculate airmass
         airmass = obs_airmass.airmass(90-alts/pi*180)
+        moon_airmass = obs_airmass.airmass(90-moon_alts/pi*180)
         #-- calculate dates for plotting reasons
         dates = np.array([date2num(ephem.date(h).datetime()) for h in hours])
         self.vis = dict(hours=hours,dates=dates,alts=alts,airmass=airmass,during_night=during_night)
+        self.moon = dict(alts=moon_alts,airmass=moon_airmass,separation=moon_separation)
         for i,obj in enumerate(self.objects):
             keep = (during_night==1) & (0<=airmass[i,:]) & (airmass[i,:]<=2.5)
             logger.info('Object %s: %s visible during night time (%.1f<airmass<%.1f)'%(obj.name,-np.any(keep) and 'not' or '',sum(keep) and airmass[i,keep].min() or np.nan,sum(keep) and airmass[i,keep].max() or np.nan))
@@ -239,6 +246,7 @@ class Ephemeris(object):
     def plot(self,**kwargs):
         #-- plot
         #figure()
+        moon = kwargs.get('moon',True)
         hours = self.vis['hours']
         dates = self.vis['dates']
         alts = self.vis['alts']
@@ -246,14 +254,24 @@ class Ephemeris(object):
         during_night = self.vis['during_night']
         yaxis = kwargs.pop('yaxis','airmass')
         
+        factor = (yaxis=='alts') and 180./pi or 1.
+            
+        
+        #-- run over all objects and plot them
         for i in range(len(airmass)):
             #-- only keep times during the night and with an airmass between 0 and 2.5
-            keep = (during_night==1) & (0<=airmass[i,:]) & (airmass[i,:]<=2.5)
-
-            if yaxis=='airmass':
-                pl.plot_date(dates[keep],airmass[i,keep],xdate=True,tz=pytz.utc,**kwargs)
-            elif yaxis=='degree':
-                pl.plot_date(dates[keep],alts[i,keep]/pi*180,xdate=True,tz=pytz.utc,**kwargs)
+            keep = (during_night==1) & (0<=airmass[i,:]) & (airmass[i,:]<=3.5)
+            pl.plot_date(dates[keep],self.vis[yaxis][i,keep]*factor,xdate=True,tz=pytz.utc,**kwargs)
+            
+            #-- check the moon separation!
+            index = np.argmin(self.moon['separation'][i]*factor)
+            closest = (self.moon['separation'][i]*factor)[index]
+            if closest<40.:
+                t = dates[index]
+                time_closest = pytz.datetime.datetime.fromordinal(int(t)) + pytz.datetime.timedelta(days=t-int(t))
+                logger.warning('Object-moon distance is %.1f deg at %s'%(closest,time_closest))
+        if moon:
+            pl.plot_date(dates[keep],self.moon[yaxis][keep]*factor,xdate=True,tz=pytz.utc,fmt='r-',lw=2)
         
         #-- take care of the x-axis labelling format
         pl.gca().xaxis.set_major_formatter(DateFormatter("%d %b '%y %H:%M"))

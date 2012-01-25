@@ -60,7 +60,7 @@ basedir = 'spectables'
 
 def set_defaults(**kwargs):
     """
-    Set defaults of this module
+    Set defaults of this module.
     
     If you give no keyword arguments, the default values will be reset.
     """

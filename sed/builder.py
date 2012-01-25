@@ -870,7 +870,7 @@ class SED(object):
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
-            print(photometry2str(master))
+            logger.info('\n'+photometry2str(master))
             
             #-- write to file
             self.save_photometry()
@@ -1051,9 +1051,9 @@ class SED(object):
     #}
     #{ Fitting routines
     def igrid_search(self,teffrange=None,loggrange=None,
-                          ebvrange=None,zrange=None,
+                          ebvrange=None,zrange=None,radiusrange=None,
                           threads='max',iterations=3,increase=1,speed=1,res=1,
-                          points=None,compare=True,df=5):
+                          points=None,compare=True,df=5,CI_limit=None,type='single'):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -1063,45 +1063,77 @@ class SED(object):
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
         """
+        if CI_limit is None:
+            CI_limit = self.CI_limit
         #-- set defaults limits
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
         if exist_previous and teffrange is None:
             teffrange = self.results['igrid_search']['CI']['teffL'],self.results['igrid_search']['CI']['teffU']
+            if type=='multiple':
+                teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2L'],self.results['igrid_search']['CI']['teff-2U']))
         elif teffrange is None:
             teffrange = (-np.inf,np.inf)
+            if type=='multiple':
+                teffrange = teffrange,(-np.inf,np.inf)
             
         if exist_previous and loggrange is None:
             loggrange = self.results['igrid_search']['CI']['loggL'],self.results['igrid_search']['CI']['loggU']
+            if type=='multiple':
+                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2L'],self.results['igrid_search']['CI']['logg-2U']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
+            if type=='multiple':
+                loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
             ebvrange = self.results['igrid_search']['CI']['ebvL'],self.results['igrid_search']['CI']['ebvU']
+            if type=='multiple':
+                ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2L'],self.results['igrid_search']['CI']['ebv-2U']))
         elif ebvrange is None:
             ebvrange = (-np.inf,np.inf)
+            if type=='multiple':
+                ebvrange = ebvrange,(-np.inf,np.inf)
             
         if exist_previous and zrange is None:
             zrange = self.results['igrid_search']['CI']['zL'],self.results['igrid_search']['CI']['zU']
+            if type=='multiple':
+                zrange = (zrange,(self.results['igrid_search']['CI']['z-2L'],self.results['igrid_search']['CI']['z-2U']))
         elif zrange is None:
             zrange = (-np.inf,np.inf)
+            if type=='multiple':
+                zrange = zrange,(-np.inf,np.inf)
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
-        logger.info('The following measurements are include in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
+        logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
-        #-- build the grid
-        teffs,loggs,ebvs,zs = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
+        #-- build the grid, run over the grid and calculate the CHI2
+        if type=='single':
+            teffs,loggs,ebvs,zs = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
                                                loggrange=loggrange,ebvrange=ebvrange,zrange=zrange,
                                                res=res,points=points)
-        #teffs = np.random.uniform(size=points,low=teffrange[0],high=teffrange[1])
-        #-- run over the grid and calculate the CHI2
-        chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
+            chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
                                  teffs,loggs,ebvs,zs,threads=threads)
-        grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
+            grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
                      dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
                   ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
+        elif type=='multiple':
+            teffs,loggs,ebvs,zs,radii = fit.generate_grid_multiple(self.master['photband'][include_grid],teffrange=teffrange,
+                    loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
+                    points=points,res=res)
+            chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
+                                 self.master['e_cmeas'][include_grid],
+                                 self.master['photband'][include_grid],
+                                 teffs,loggs,ebvs,zs,radii,threads=threads,model_func=model.get_itable_multiple)
+            grid_results = np.rec.fromarrays([teffs[:,0],loggs[:,0],ebvs[:,0],zs[:,0],radii[:,0],
+                                              teffs[:,1],loggs[:,1],ebvs[:,1],zs[:,1],radii[:,1],
+                                              chisqs,scales,e_scales,lumis],
+                                              dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),('rad','f8'),
+                                              ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
+                                              ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
+        
                 
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
@@ -1139,7 +1171,7 @@ class SED(object):
         self.results['igrid_search']['factor'] = factor
         self.results['igrid_search']['CI'] = {}
         
-        start_CI = np.argmin(np.abs(grid_results['CI_red']-self.CI_limit))
+        start_CI = np.argmin(np.abs(grid_results['CI_red']-CI_limit))
         for name in grid_results.dtype.names:
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
@@ -1148,7 +1180,7 @@ class SED(object):
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
-        self.set_best_model()
+        self.set_best_model(type=type)
         if False:
             self.set_distance()
             d,dprob = self.results['igrid_search']['d'] # in parsecs
@@ -1169,28 +1201,38 @@ class SED(object):
             #for di,dprobi in zip(d,dprob):
             #    self.results['igrid_search']['grid']['scale']*d_min
             
-        
-        
-        
+   
         
     #}
     
     #{ Interfaces
     
-    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004'):
+    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',type='single'):
         """
         Get reddenend and unreddened model
         """
         #-- get reddened and unreddened model
         logger.info('Interpolating approximate full SED of best model')
         scale = self.results[mtype]['CI']['scale']
-        wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
+        if type=='single':
+            wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
                                     logg=self.results[mtype]['CI']['logg'],
                                     ebv=self.results[mtype]['CI']['ebv'],
                                     law=law)
-        wave_ur,flux_ur = model.get_table(teff=self.results[mtype]['CI']['teff'],
+            wave_ur,flux_ur = model.get_table(teff=self.results[mtype]['CI']['teff'],
                                           logg=self.results[mtype]['CI']['logg'],
                                           ebv=0,
+                                          law=law)
+        elif type=='multiple':
+            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
+                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
+                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
+                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+                                    law=law)
+            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
+                                          logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
+                                          ebv=(0,0),
+                                          radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
                                           law=law)
         flux,flux_ur = flux*scale,flux_ur*scale
         
@@ -1198,9 +1240,17 @@ class SED(object):
         include = self.master['include']
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
-        synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
+        if type=='single':
+            synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
+                                  photbands=self.master['photband'][keep])
+        elif type=='multiple':
+            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
+                                  logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
+                                  ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
+                                  z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z-2']),
+                                  radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
                                   photbands=self.master['photband'][keep])
         synflux[keep] = synflux_
         

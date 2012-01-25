@@ -197,7 +197,6 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     @type ID: str
     @param time_range: range of dates to confine the search to
     @type time_range: tuple strings of type '2009-09-23T04:24:35.712556' or '2009-09-23'
-    @type time_range: tuple strings
     @param data_type: if None, all data will be returned. Otherwise, subset
     'cosmicsremoved', 'merged' or 'raw'
     @type data_type: str
@@ -310,8 +309,8 @@ def make_mask_file(wavelength,depth,filename='mymask.fits'):
     
     @param wavelength: wavelength in angstrom
     @type wavelength: 1D numpy array
-    @param strength: strenght of the line (1-normalised flux minimum)
-    @type strength: 1D numpy array
+    @param depth: strenght of the line (1-normalised flux minimum)
+    @type depth: 1D numpy array
     """
     data = np.array([wavelength,depth]).T
     hdulist = pyfits.PrimaryHDU(data1)

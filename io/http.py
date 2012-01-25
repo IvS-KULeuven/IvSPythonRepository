@@ -4,7 +4,7 @@ Read or download files from the internet.
 import urllib
 from ivs.aux import decorators
 
-@decorators.retry_http(3)
+#@decorators.retry_http(3)
 def download(link,filename=None):
     """
     Download a file from a link.

@@ -363,7 +363,7 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
 
 #{ Internal helper functions
 
-def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'):
+def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone',**kwargs):
     """
     Build GATOR URI from available options.
     

@@ -222,6 +222,34 @@ def read_iue(filename,return_header=False):
 
 #}
 
+#{ Generic reading
+
+def read2recarray(fits_file,ext=1):
+    """
+    Read the contents of a FITS file to a record array.
+    
+    Should add a test that the strings were not chopped of...
+    """
+    dtype_translator = dict(L=np.bool,D=np.float64)
+    with pyfits.open(fits_file) as ff:
+        data = ff[ext].data
+        names = ff[ext].columns.names
+        formats = ff[ext].columns.formats
+        dtypes = []
+        for name,dtype in zip(names,formats):
+            if 'A' in dtype:
+                dtypes.append((name,'S60'))
+            else:
+                dtypes.append((name,dtype_translator[dtype]))
+        dtypes = np.dtype(dtypes)
+        data = [np.cast[dtypes[i]](data.field(name)) for i,name in enumerate(names)]
+        data = np.rec.array(data,dtype=dtypes)
+    return data
+
+
+
+#}
+
 
 #{ Output
 

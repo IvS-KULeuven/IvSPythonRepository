@@ -396,7 +396,7 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         if len(limits_and_sizes)==0:
             total_size = points
             limits_and_sizes = [[teffrange,loggrange,ebvrange,zrange,points]]
-        logger.info('Limits and sizes of boxes:'+str(limits_and_sizes))
+        logger.debug('Limits and sizes of boxes:'+str(limits_and_sizes))
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],lims[2][0],lims[3][0]],
                                                        high=[lims[0][1],lims[1][1],lims[2][1],lims[3][1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
@@ -428,7 +428,7 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
                   loggrange=((-inf,inf),(-inf,inf)),
                   ebvrange=(-inf,inf),
                   zrange=((-inf,inf),(-inf,inf)),
-                  radiusrange=((1,1),(0.1,10.)),grids=(None,None),
+                  radiusrange=((1,1),(0.1,10.)),grids=None,
                   points=None,res=None,clear_memory=False):
     """
     Generate grid points at which to fit an interpolated grid of multiple SEDs.
@@ -454,34 +454,45 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
     #-- first collect the effetive temperatures, loggs, ebvs, zs for the
     #   different stars in the multiple system
     pars = []
+    if grids is None:
+        grids = model.defaults_multiple
+        #-- but remove metallicity, as it will be fitted!
+        for grid in grids:
+            if 'z' in grid:
+                thrash = grid.pop('z')
     for i,grid in enumerate(grids):
-        grid_kwargs = grids[i] is not None and grids[i] or {}
         #-- it is possible that we want certain parameters to be the same for
         #   all components
         teffrange_ = hasattr(teffrange[0],'__iter__') and teffrange[i] or teffrange
         loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
         ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
         zrange_ = hasattr(zrange[0],'__iter__') and zrange[i] or zrange
-        print grid_kwargs,teffrange[i],loggrange[i],ebvrange,zrange[i]
+        #print grid_kwargs,teffrange[i],loggrange[i],ebvrange,zrange[i]
         pars += list(generate_grid(photbands,teffrange=teffrange_,
                       loggrange=loggrange_,ebvrange=ebvrange_,
-                      zrange=zrange_,points=points,**grid_kwargs))
+                      zrange=zrange_,points=points,**grid))
     #-- the L{generate_grid} method does not guarantee the number of points.
     #   We have to strip some points if the arrays don't have the same shape
     nmin = np.min([len(i) for i in pars])
     pars = [i[:nmin] for i in pars]
     pars = np.array(pars)
+    #-- permute parameters so that the different blocks from the generate_grid
+    #   are not clustered together
+    for i in range(0,len(pars),4):
+        permutation = np.random.permutation(len(pars[0]))
+        pars[i:i+4] = pars[i:i+4,permutation]
     #-- make arrays of the output parameters
     teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
     #-- keep in mind that we probably want all the members in the system to have
     #   the same value for the interstellar reddening and metallicity, though
     #   this is not prerequisitatory
-    print teffs.shape,loggs.shape,ebvs.shape,zs.shape
+    #print teffs.shape,loggs.shape,ebvs.shape,zs.shape
     if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
     if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
-    if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
-    if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
-    print teffs.shape,loggs.shape,ebvs.shape,zs.shape
+    #if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
+    #if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
+    ebvs = np.column_stack([ebvs[:,0]]*len(grids))
+    zs = np.column_stack([zs[:,0]]*len(grids))
     #-- we also have different radii of the stars
     radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
                               high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))

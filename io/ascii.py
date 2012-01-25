@@ -7,12 +7,11 @@ import logging
 import os
 
 import numpy as np
-from ivs.aux import loggers
 
 logger = logging.getLogger("IO.ASCII")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(logging.NullHandler)
 
-#{ Input
+#{ General Input
 def read2list(filename,**kwargs):
     """
     Load an ASCII file to list of lists.
@@ -148,7 +147,7 @@ def read2recarray(filename,**kwargs):
     return return_comments and (data,comm) or data
 #}
 
-#{ Output
+#{ General Output
 
 def write_array(data, filename, **kwargs):
     """

@@ -107,7 +107,10 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
     keep = (wrange[0]<=data['wavelength']) & (data['wavelength']<=wrange[1])
     data = data[keep]
     #-- only keep those transitions that belong to certain ions or atoms
-    keep = np.array(np.zeros(len(data)),bool)
+    if atoms is not None or ions is not None:
+        keep = np.array(np.zeros(len(data)),bool)
+    else:
+        keep = np.array(np.ones(len(data)),bool)
     if atoms is not None:
         #-- convert all atoms to their number and select the appropriate ones
         atoms = [(isinstance(atom,str) and atomcode.index(atom.title()) or atom) for atom in atoms]

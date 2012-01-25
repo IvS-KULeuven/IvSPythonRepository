@@ -18,7 +18,8 @@ import functools
 import inspect
 import sys
 import types
-
+RED="\[\033[0;35m\]"
+YELLOW="\[\033[0;33m\]"
 instructs = {'black':"\033[30m",
           'red':"\033[31m",
           'green':"\033[32m",

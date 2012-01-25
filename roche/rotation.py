@@ -279,7 +279,7 @@ def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
     
     grav = np.array([grav_r,grav_th])
     #-- now we transform to spherical coordinates
-    grav = vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) )
+    grav = np.array(vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) ))
     grav = grav*constants.Rsol
     if norm:
         return vectors.norm(grav)

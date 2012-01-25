@@ -266,28 +266,43 @@ defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 He=97,                                    # WD
                 ct='mlt',                                 # NEMO (convection theory)
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
+defaults_multiple = [defaults.copy(),defaults.copy()]
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
 
 #{ Interface to library
 
-def set_defaults(**kwargs):
+def set_defaults(*args,**kwargs):
     """
     Set defaults of this module
     
     If you give no keyword arguments, the default values will be reset.
     """
     clear_memoization(keys=['ivs.sed.model'])
+    #-- these are the default defaults
     if not kwargs:
         kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
-                alpha=False,nover=False,                  # KURUCZ
-                He=97,                                    # WD
-                t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
-    
+                    alpha=False,nover=False,                  # KURUCZ
+                    He=97,                                    # WD
+                    t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
+                
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
+    
+
+def set_defaults_multiple(*args):
+    """
+    Set defaults for multiple stars
+    """
+    if not args:
+        args = [defaults for i in range(len(defaults_multiple))]
+    for i,arg in enumerate(args):
+        for key in arg:
+            if key in defaults_multiple[i]:
+                defaults_multiple[i][key] = arg[key]
+                logger.info('Set %s to %s (star %d)'%(key,arg[key],i))
         
 
 def defaults2str():
@@ -295,6 +310,12 @@ def defaults2str():
     Convert the defaults to a string, e.g. for saving files.
     """
     return '_'.join([str(i)+str(defaults[i]) for i in sorted(defaults.keys())])
+
+def defaults_multiple2str():
+    """
+    Convert the defaults to a string, e.g. for saving files.
+    """
+    return '_'.join([str(i)+str(defaults[i]) for defaults in defaults_multiple for i in sorted(sorted(defaults.keys()))])
 
 
 def get_gridnames(grid=None):
@@ -311,7 +332,7 @@ def get_gridnames(grid=None):
     """
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2']
+                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap']
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -444,7 +465,8 @@ def get_file(integrated=False,**kwargs):
         if ct=='mlt': ct = ct+'072'
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
-    
+    elif grid=='tmap':
+        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
         if integrated:
@@ -469,7 +491,7 @@ def get_file(integrated=False,**kwargs):
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
-              wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
+              wave_units='A',flux_units='erg/s/cm2/A/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere.
         
@@ -810,7 +832,7 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
     """
     #-- set default parameters
     if grids is None:
-        grids = [{} for i in teff]
+        grids = [defaults_multiple[i] for i in range(len(teff))]
     if radius is None:
         radius = tuple([1. for i in teff])
     #-- gather all the SEDs from the individual components
@@ -857,7 +879,7 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
     return waves_,fluxes_
     
 def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
-              photbands=None,wave_units=None,flux_units='erg/cm2/s/A/sr',grids=None,**kwargs):
+              photbands=None,wave_units=None,flux_units='erg/s/cm2/A/sr',grids=None,**kwargs):
     """
     Retrieve the integrated spectral energy distribution of a combined model
     atmosphere.
@@ -907,7 +929,7 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
     """
     #-- set default parameters
     if grids is None:
-        grids = [{} for i in teff]
+        grids = [defaults_multiple[i] for i in range(len(teff))]
     if radius is None:
         radius = tuple([1. for i in teff])
     #-- gather all the SEDs from the individual components
@@ -915,20 +937,23 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
     for i in range(len(teff)):
         iteff,ilogg,iz,irrad,iebv = teff[i],logg[i],z[i],radius[i],ebv[0]
         mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
+        if 'z' in mykwargs:
+            thrash = mykwargs.pop('z')
+        #mykwargs = dict(list(kwargs.items()))
         iflux,iLabs = get_itable(teff=iteff,logg=ilogg,ebv=iebv,z=iz,photbands=photbands,clear_memory=False,**mykwargs)
         fluxes.append(iflux*irrad**2)
         Labs.append(iLabs*irrad**2)
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs)
-    if flux_units!='erg/cm2/s/A/sr':
+    if flux_units!='erg/s/cm2/A/sr':
         fluxes = np.array([conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
         
     if wave_units is not None:
-        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv,**kwargs)
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='A':
             wave = wave = conversions.convert('A',wave_units,wave)
-        return wave,flux,Labs
+        return wave,fluxes,Labs
     return fluxes,Labs
 
 
@@ -1502,7 +1527,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     c0 = time.time()
     output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
     start = 0
-    print len(teffs)
+    print '# teff: ' + str(len(teffs))
+    exceptions = 0
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
@@ -1522,13 +1548,17 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         for p in all_processes:
             p.join()
         
-        #-- collect the results and add them to 'output'
-        arr = np.vstack([row for row in arr])
-        sa = np.argsort(arr[:,0])
-        arr = arr[sa]
-        output[start:start+arr.shape[0],:3] = teff,logg,Labs
-        output[start:start+arr.shape[0],3:] = arr
-        start += arr.shape[0]
+        try:
+            #-- collect the results and add them to 'output'
+            arr = np.vstack([row for row in arr])
+            sa = np.argsort(arr[:,0])
+            arr = arr[sa]
+            output[start:start+arr.shape[0],:3] = teff,logg,Labs
+            output[start:start+arr.shape[0],3:] = arr
+            start += arr.shape[0]
+        except:
+            print sys.exc_info()[1]
+            exceptions = exceptions + 1
     
     #-- make FITS columns
     gridfile = get_file()
@@ -1569,7 +1599,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         hdulist.flush()
         hdulist.close()
     
-    
+    print 'Encountered %s exceptions!'%(exceptions)
 
 #}
 

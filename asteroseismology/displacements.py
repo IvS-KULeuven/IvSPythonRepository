@@ -154,7 +154,23 @@ def surface(theta,phi,l,m,t,Omega=0.1,k=1.,asl=0.2,radius=1.):
     return (radius+ksi_r.real),\
            (theta + ksi_theta.real),\
            (phi + ksi_phi.real)
-    
+
+def observables(theta,phi,teff,logg,l,m,t,Omega=0.1,k=1.,asl=0.2,radius=1.,delta_T=0.01+0j,delta_g=0.01+0.5j):
+    rad_part = radial(theta,phi,l,m,t)
+    ksi_r = asl*sqrt(4*pi)*rad_part
+    if l>0:
+        ksi_theta = asl*sqrt(4*pi)*colatitudinal(theta,phi,l,m,t,Omega,k)
+        ksi_phi = asl*sqrt(4*pi)*longitudinal(theta,phi,l,m,t,Omega,k)
+    else:
+        ksi_theta = np.zeros_like(theta)
+        ksi_phi = np.zeros_like(phi)
+    gravity = 10**(logg-2)
+    return (radius+ksi_r.real),\
+           (theta + ksi_theta.real),\
+           (phi + ksi_phi.real),\
+           (teff + (delta_T*rad_part*teff).real),\
+           np.log10(gravity+(delta_g*rad_part*gravity).real)+2
+           
 #}
 
 if __name__=="__main__":

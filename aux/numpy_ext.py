@@ -109,6 +109,79 @@ def match_arrays(a,b):
     indices = sa[closest_index]
     return indices
 
+def stdw(data,weights=None): 
+    """
+    Calculates the weighted (sample) standard deviation of a list of numbers.  
+     
+    @type data: list 
+    @param data: input data, must be a two dimensional list in format [value, weight] 
+    @rtype: float 
+    @return: weighted standard deviation 
+    """ 
+    if len(data)==1:
+        return 0
+    listMean=np.average(data,weights=weights) 
+    sum=0 
+    wSum=0 
+    wNonZero=0 
+    for el,w in zip(data,weights): 
+        if w>0.0: 
+            sum=sum+float((el-listMean)/w)*float((el-listMean)/w) 
+            wSum=wSum+float(1.0/w)*float(1.0/w) 
+             
+    nFactor=float(len(data))/float(len(data)-1) 
+    stdev=np.sqrt(nFactor*(sum/wSum))
+    
+    return stdev    
+    
+    
+def deriv(x,y):
+    """
+    3 point Lagrangian differentiation.
+    
+    Returns z = dy/dx
+    
+    Example usage:
+    
+    >>> X = np.array([ 0.1, 0.3, 0.4, 0.7, 0.9])
+    >>> Y = np.array([ 1.2, 2.3, 3.2, 4.4, 6.6])
+    >>> deriv(X,Y)
+    array([  3.16666667,   7.83333333,   7.75      ,   8.2       ,  13.8       ])
+    """
+    #-- body derivation
+    x0_x1 = np.roll(x,1)-x
+    x1_x2 = x-np.roll(x,-1)
+    x0_x2 = np.roll(x,1)-np.roll(x,-1)
+    derivee = np.roll(y,1)*x1_x2/(x0_x1*x0_x2)
+    derivee = derivee + y*(1/x1_x2-1/x0_x1)
+    derivee = derivee - np.roll(y,-1)*x0_x1/(x0_x2*x1_x2)
+    #-- edges
+    derivee[0]=y[0]*(1./x0_x1[1]+1./x0_x2[1])
+    derivee[0]=derivee[0]-y[1]*x0_x2[1]/(x0_x1[1]*x1_x2[1])
+    derivee[0]=derivee[0]+y[2]*x0_x1[1]/(x0_x2[1]*x1_x2[1])
+    nm3=len(x)-3
+    nm2=len(x)-2
+    nm1=len(x)-1
+    derivee[nm1]=-y[nm3]*x1_x2[nm2]/(x0_x1[nm2]*x0_x2[nm2])
+    derivee[nm1]=derivee[nm1]+y[nm2]*x0_x2[nm2]/(x0_x1[nm2]*x1_x2[nm2])
+    derivee[nm1]=derivee[nm1]-y[nm1]*(1./x0_x2[nm2]+1./x1_x2[nm2])
+    
+    return derivee
+
+
+#def deriv_noise(x,y):
+    #"""
+    #Compact finite difference scheme on non-uniform mesh.
+    
+    #See Gamet, Ducros, Nicoud et al., 1999.
+    #"""
+    #alpha = 
+    #beta = 
+    #hi_1 = 
+    #hi0 = 
+    #hi1 = 
+    #hi_1*
+
 #}
 #{ Record arrays
 

@@ -188,14 +188,6 @@ def get_itable(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False
         return Imu
 
 
-def ld_eval(mu,coeffs):
-    """
-    Evaluate Claret's limb darkening law.
-    """
-    a1,a2,a3,a4 = coeffs
-    Imu = 1-a1*(1-mu**0.5)-a2*(1-mu)-a3*(1-mu**1.5)-a4*(1-mu**2.)    
-    return Imu
-
 def get_ld_grid_dimensions(**kwargs):
     """
     Returns the gridpoints of the limbdarkening grid (not unique values).
@@ -208,6 +200,32 @@ def get_ld_grid_dimensions(**kwargs):
     teff_,logg_ = ff[1].data.field('Teff'),ff[1].data.field('logg')
     ff.close()
     return teff_,logg_
+
+#}
+#{ Laws
+
+def ld_eval(mu,coeffs):
+    """
+    Evaluate Claret's limb darkening law.
+    """
+    a1,a2,a3,a4 = coeffs
+    Imu = 1-a1*(1-mu**0.5)-a2*(1-mu)-a3*(1-mu**1.5)-a4*(1-mu**2.)    
+    return Imu
+    
+def ld_claret(mu,coeffs):
+    return ld_eval(mu,coeffs)
+    
+def ld_nonlinear(mu,coeffs):
+    return 1-coeffs[0]*(1-mu)-coeffs[1]*mu*np.log(mu)
+
+def ld_quadratic(mu,coeffs):
+    return 1-coeffs[0]*(1-mu)-coeffs[1]*(1-mu)**2.0
+
+def ld_uniform(mu,coeffs):
+    return 1. 
+    
+#}
+
 
 @memoized
 def get_ld_grid(photband,**kwargs):
