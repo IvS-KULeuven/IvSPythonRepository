@@ -17,15 +17,16 @@ Import necessary modules:
 Read in the data and do an iterative prewhitening frequency analysis:
 
 >>> data,units,comms = vizier.search('J/A+A/415/241/table1')
->>> params = iterative_prewhitening(data.HJD,data.Umag-data.Umag.mean(),f0=6.2,fn=7.2,maxiter=6)
+>>> params = iterative_prewhitening(data.HJD,data.Umag-data.Umag.mean(),f0=6.2,fn=7.2,maxiter=6,\
+          stopcrit=(stopcrit_scargle_snr,4.,6,))
 >>> print pl.mlab.rec2txt(params,precision=6)
-      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase
-   0.000317   0.014698   6.461699    0.315793   0.000401   0.001331   0.000006   0.090586
-   0.000000   0.014891   6.978305    0.346205   0.000000   0.001223   0.000006   0.082163
-   0.000000   0.011687   6.449590   -0.361744   0.000000   0.001087   0.000007   0.092995
-   0.000000   0.011568   6.990430   -0.234580   0.000000   0.001000   0.000006   0.086491
-   0.000000   0.009386   6.590939   -0.456697   0.000000   0.000941   0.000007   0.100237
-   0.000000   0.007637   6.966174   -0.172689   0.000000   0.000868   0.000008   0.113673
+      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase   stopcrit
+   0.000310   0.014722   6.461700    0.443450   0.000401   0.001323   0.000006   0.089865   4.950496
+   0.000000   0.014866   6.978306   -0.050189   0.000000   0.001224   0.000006   0.082305   5.677022
+   0.000000   0.011687   6.449591    0.016647   0.000000   0.001090   0.000007   0.093280   5.747565
+   0.000000   0.011546   6.990431   -0.482814   0.000000   0.001001   0.000006   0.086678   6.454955
+   0.000000   0.009380   6.590938   -0.382048   0.000000   0.000938   0.000007   0.100016   6.510729
+   0.000000   0.007645   6.966174    0.323627   0.000000   0.000863   0.000008   0.112876   5.703801   
 
 Plot the results:
 
@@ -39,6 +40,113 @@ Plot the results:
 >>> p = pl.xlim(6.2,7.2)
 >>> p = pl.ylim(0,0.018)
 
+
+Section 2: Line profile variability
+===================================
+
+We generate some line profiles as Gaussian profiles, with varying average. This
+as an analogue for purely radial variability.
+
+>>> wave = np.linspace(4950.,5000.,200.)
+>>> times = np.linspace(0,1.,100)
+>>> A,sigma,mu = 0.5, 5., 4975.
+>>> frequency = 1/0.2
+>>> wshifts = 10.*np.sin(2*np.pi*frequency*times)
+>>> spectra = np.zeros((len(times),len(wave)))
+>>> for i,wshift in enumerate(wshifts):
+...    spectra[i] = 1.-evaluate.gauss(wave,[A,mu+wshift,sigma])+np.random.normal(size=len(wave),scale=0.01)
+   
+Once the line profiles are constructed, we can compute the Fourier transform
+of these lines:
+   
+>>> output = spectrum_2D(times,wave,spectra,f0=frequency/2.,fn=3*frequency,df=0.001,threads=2,method='scargle',subs_av=True,full_output=True)
+    
+With this output, we can find retrieve the frequency. We plot the periodograms
+for each wavelength bin on the left, and on the right the average over all
+wavelength bins:
+
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.imshow(output['pergram'][1][::-1],extent=[wave[0],wave[-1],frequency/2,3*frequency],aspect='auto')
+>>> p = pl.xlabel('Wavelength (A)')
+>>> p = pl.ylabel('Frequency (c/d)')
+>>> cbar = pl.colorbar()
+>>> cbar.set_label('Amplitude')
+>>> p = pl.subplot(122)
+>>> p = pl.plot(output['pergram'][1].mean(axis=1),output['pergram'][0],'k-')
+>>> p = pl.ylim(frequency/2,3*frequency)
+>>> p = pl.xlabel('Amplitude')
+>>> p = pl.ylabel('Frequency (c/d)')
+
+]]include figure]]timeseries_freqanalyse_02.png]
+
+We can then fix the frequency and compute all the parameters. However, we now
+choose not to subtract the average profile, but instead use the GLS periodogram
+to include the constant
+
+>>> output = spectrum_2D(times,wave,spectra,f0=frequency-0.05,fn=frequency+0.05,df=0.001,threads=2,method='gls',subs_av=False,full_output=True)
+
+>>> p = pl.figure()
+>>> p = pl.subplot(221)
+>>> p = pl.errorbar(wave,output['pars']['const'],yerr=output['pars']['e_const'],fmt='ko-')
+>>> p,q = pl.xlabel('Wavelength (A)'),pl.ylabel('Constant')
+>>> p = pl.subplot(222)
+>>> p = pl.errorbar(wave,output['pars']['ampl'],yerr=output['pars']['e_ampl'],fmt='ro-')
+>>> p,q = pl.xlabel('Wavelength (A)'),pl.ylabel('Amplitude')
+>>> p = pl.subplot(223)
+>>> p = pl.errorbar(wave,output['pars']['freq'],yerr=output['pars']['e_freq'],fmt='ko-')
+>>> p,q = pl.xlabel('Wavelength (A)'),pl.ylabel('Frequency (c/d)')
+>>> p = pl.subplot(224)
+>>> p = pl.errorbar(wave,output['pars']['phase'],yerr=output['pars']['e_phase'],fmt='ro-')
+>>> p,q = pl.xlabel('Wavelength (A)'),pl.ylabel('Phase')
+
+]]include figure]]timeseries_freqanalyse_03.png]
+
+Section 3. Time-frequency analysis
+==================================
+
+Example usage: we generate some data where the frequency jumps to double
+its value in the middle of the time series. The first half is thus given by
+
+>>> params = np.rec.fromarrays([[10.],[1.],[0.],[0.]],names=['freq','ampl','const','phase'])
+>>> times = np.linspace(0,15,1000)
+>>> signal = evaluate.sine(times,params)
+
+And the second half by
+
+>>> params['freq'] = 20.
+>>> signal[:len(times)/2] = evaluate.sine(times[:len(times)/2],params)
+
+The time-frequency analysis is calculate via the command
+
+>>> output = time_frequency(times,signal,fn=30.)
+
+And the outcome can be plotted via
+
+>>> p = pl.figure()
+>>> p = pl.imshow(output['pergram'][1].T[::-1],aspect='auto',extent=[times[0],times[-1],output['pergram'][0][0],output['pergram'][0][-1]])
+>>> p,q = pl.xlabel('Time (d)'),pl.ylabel('Frequency (c/d)')
+
+]]include figure]]timeseries_freqanalyse_04.png]
+
+or
+
+>>> p = pl.figure()
+>>> p = pl.subplot(221)
+>>> p = pl.errorbar(output['times'],output['pars']['const'],yerr=output['pars']['e_const'],fmt='ko-')
+>>> p,q = pl.xlabel('Time (d)'),pl.ylabel('Constant')
+>>> p = pl.subplot(222)
+>>> p = pl.errorbar(output['times'],output['pars']['ampl'],yerr=output['pars']['e_ampl'],fmt='ro-')
+>>> p,q = pl.xlabel('Time (d)'),pl.ylabel('Amplitude')
+>>> p = pl.subplot(223)
+>>> p = pl.errorbar(output['times'],output['pars']['freq'],yerr=output['pars']['e_freq'],fmt='ko-')
+>>> p,q = pl.xlabel('Time (d)'),pl.ylabel('Frequency (c/d)')
+>>> p = pl.subplot(224)
+>>> p = pl.errorbar(output['times'],output['pars']['phase'],yerr=output['pars']['e_phase'],fmt='ro-')
+>>> p,q = pl.xlabel('Time (d)'),pl.ylabel('Phase')
+
+]]include figure]]timeseries_freqanalyse_05.png]
+
 Author: Pieter Degroote
 """
 import logging
@@ -49,30 +157,32 @@ from ivs.sigproc import evaluate
 from ivs.timeseries import pergrams
 from ivs.timeseries.decorators import defaults_pergram
 from ivs.aux import numpy_ext
+import os
 
 logger = logging.getLogger("TS.FREQANAL")
 
 #{ Convenience functions
 
-@defaults_pergram
-def find_frequency(times,signal,
-            f0=None,fn=None,df=None,optimize=0,
-            max_loops=20, scale_region=0.1, scale_df=0.20,
+def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
+            optimize=0,max_loops=20, scale_region=0.1, scale_df=0.20,
             **kwargs):
     """
     Find one frequency, automatically going to maximum precision and return
     parameters & error estimates.
     
-    This routine will make the frequency grid finer until it is finer than the
-    estimated error on the frequency. After that, it will compute harmonic
+    This routine makes the frequency grid finer until it is finer than the
+    estimated error on the frequency. After that, it will compute (harmonic)
     parameters and estimate errors.
     
-    There is a possibility to escape this optimization by setting dfscale=0 or
+    There is a possibility to escape this optimization by setting scale_df=0 or
     freqregscale=0.
     
     You can include a nonlinear least square update of the parameters, by
-    setting the keyword C{optimize} to 1 (optimization outside loop) or
-    2 (optimization after each iteration).
+    setting the keyword C{optimize=1} (optimization outside loop) or
+    C{optimize=2} (optimization after each iteration).
+    
+    The method with which to find the frequency can be set with the keyword
+    C{method}, the model used to fit and optimize should be set with C{model}.
     
     Possible Extra keywords: see definition of the used periodogram function,
     evaluating and fitting functions, etc...
@@ -81,40 +191,76 @@ def find_frequency(times,signal,
         - 'correlation_correction', default=True
         - 'freqregscale', default=0.5: factor for zooming in on frequency
         - 'dfscale', default = 0.25: factor for optimizing frequency resolution
+        
+    Example usage: We generate a sine signal
     
-    There is a possibility to enter frequency search range in units of the
-    Nyquist frequency, by setting the keyword 'units' to 'relative'.
+    >>> times = np.linspace(0,100,1000)
+    >>> signal = np.sin(2*np.pi*2.5*times) + np.random.normal(size=len(times))
     
-    Example usage:
+    Compute the frequency
     
-    @rtype: record array
+    >>> parameters, pgram, model = find_frequency(times,signal,full_output=True)
+    
+    Make a plot:
+    
+    >>> p = pl.figure()
+    >>> p = pl.axes([0.1,0.3,0.85,0.65])
+    >>> p = pl.plot(pgram[0],pgram[1],'k-')
+    >>> p = pl.xlim(2.2,2.8)
+    >>> p = pl.ylabel('Amplitude')
+    >>> p = pl.axes([0.1,0.1,0.85,0.2])
+    >>> p = pl.plot(pgram[0][:-1],np.diff(pgram[0]),'k-')
+    >>> p = pl.xlim(2.2,2.8)
+    >>> p,q = pl.xlabel('Frequency (c/d)'),pl.ylabel('Frequency resolution $\Delta F$')
+    
+    ]]include figure]]timeseries_freqanalyse_06.png]
+    
+    @rtype: record array(, tuple, 1Darray)
     @return: parameters and errors
     """
-    
     #-- initial values
     e_f = 0
     freq_diff = np.inf
     prev_freq = -np.inf
     counter = 0
     
-    f_max = fn + 0.
-    f_min = f0 + 0.
+    f_max = np.inf
+    f_min = -np.inf
     
     #-- calculate periodogram until frequency precision is
-    #   under 1/10th of correlation corrected version
+    #   under 1/10th of correlation corrected version of frequency error
+    if full_output:
+        freqs_,ampls_ = [],[]
     while freq_diff>e_f/10.:
+        #-- possibly, we might want to use different periodograms for the first
+        #   calculation than for the zoom in, since some periodograms are faster
+        #   than others but do not have the ability to 'zoom in' (e.g. the FFT)
+        if freq_diff==np.inf and not isinstance(method,str):
+            method_ = method[1]
+            method = method[0]  # override method to be a string the next time
         #-- calculate periodogram
-        freqs,ampls = pergrams.scargle(times,signal,f0=f0,fn=fn,df=df,**kwargs)
-        frequency = freqs[np.argmax(ampls)]
+        freqs,ampls = getattr(pergrams,method)(times,signal,**kwargs)
+        f0,fn,df = freqs[0],freqs[-1],freqs[1]-freqs[0]
+        #-- now use the second method for the zoom-ins from now on
+        if freq_diff==np.inf and not isinstance(method,str):
+            method = method_
+        #-- extract the frequency: this part should be generalized, but for now,
+        #   it will do:
+        if method in ['pdm']:
+            frequency = freqs[np.argmin(ampls)]
+        else:
+            frequency = freqs[np.argmax(ampls)]
+        if full_output:
+            freqs_,ampls_ = np.hstack([freqs_,freqs]),np.hstack([ampls_,ampls])
         
         #-- estimate parameters and calculate a fit, errors and residuals
-        params = fit.sine(times,signal,frequency)
-        errors = fit.e_sine(times,signal,params)
+        params = getattr(fit,model)(times,signal,frequency)
+        errors = getattr(fit,'e_'+model)(times,signal,params)
         
         #-- optimize inside loop if necessary and if we gained prediction
         #   value:
         if optimize==2:
-            params_,errors_,gain = fit.optimize(times,signal,params,'sine')
+            params_,errors_,gain = fit.optimize(times,signal,params,model)
             if gain>0:
                 params = params_
                 logger.info('Accepted optimization (gained %g%%)'%gain)
@@ -126,6 +272,9 @@ def find_frequency(times,signal,
         f0 = max(f_min,frequency-freq_region*scale_region/2.)
         fn = min(f_max,frequency+freq_region*scale_region/2.)
         df *= scale_df
+        kwargs.setdefault('f0',f0)
+        kwargs.setdefault('fn',fn)
+        kwargs.setdefault('df',df)
         
         #-- possibilities to escape iterative zoom in
         if scale_region==0 or scale_df==0: break
@@ -136,18 +285,30 @@ def find_frequency(times,signal,
         
     #-- optimize parameters outside of loop if necessary:
     if optimize==1:
-        params_,errors_,gain = fit.optimize(times,signal,params,'sine')
+        params_,errors_,gain = fit.optimize(times,signal,params,model)
         if gain>0:
             params = params_
             logger.info('Accepted optimization (gained %g%%)'%gain)
     
     params = numpy_ext.recarr_join(params,errors)
     
-    return params
+    logger.info("%s model parameters via %s periodogram:\n"%(model,method)+pl.mlab.rec2txt(params,precision=8))
+    
+    #-- when full output is required, return parameters, periodogram and fitting
+    #   function
+    if full_output:
+        sa = np.argsort(freqs_)
+        freqs_ = freqs_[sa]
+        ampls_ = ampls_[sa]
+        mymodel = getattr(evaluate,model)(times,params)
+        return params,(freqs_,ampls_),mymodel
+    else:
+        return params
 
 
 
-def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,**kwargs):
+def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle',
+    model='sine',full_output=False,stopcrit=None,**kwargs):
     """
     Fit one or more functions to a timeseries via iterative prewhitening.
     
@@ -158,55 +319,327 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,**kwargs):
     
     It is always the original signal that is used to fit all parameters again;
     only the (optimized) frequency is remembered from step to step.
-    """
     
+    You best set C{maxiter} to some sensable value, to hard-limit the number of
+    frequencies that will be searched for. You can additionally use a C{stopcrit}
+    and stop looking for frequencies once it is reached. C{stopcrit} should be
+    a tuple; the first argument is the function to call, the other arguments
+    are passed to the function, after the mandatory arguments C{times,signal,
+    modelfunc,allparams,pergram}. See L{stopcrit_scargle_snr} for an example.
+    
+    @return: parameters, model
+    @rtype: rec array(, ndarray)
+    """
     residuals = signal.copy()
     frequencies = []
-    
+    stop_criteria = []
     while maxiter:
         #-- compute the next frequency from the residuals
-        params = find_frequency(times,residuals,**kwargs)
+        params,pergram,this_fit = find_frequency(times,residuals,full_output=True,**kwargs)
         
         #-- do the fit including all frequencies
         frequencies.append(params['freq'][-1])
-        allparams = fit.sine(times,signal,frequencies)
+        allparams = getattr(fit,model)(times,signal,frequencies)
         
         #-- if there's a need to optimize, optimize the last n parameters
         if optimize>0:
             residuals_for_optimization = residuals
             if optimize<=len(params):
-                model_fixed_params = evaluate.sine(times,allparams[:-optimize])
+                model_fixed_params = getattr(evaluate,model)(times,allparams[:-optimize])
                 residuals_for_optimization -= model_fixed_params
-            uparams,e_uparams, gain = fit.optimize(times,residuals_for_optimization,allparams[-optimize:],'sine')
+            uparams,e_uparams, gain = fit.optimize(times,residuals_for_optimization,allparams[-optimize:],model)
             #-- only accept the optimization if we gained prediction power
             if gain>0:
                 allparams[-optimize:] = uparams
                 logger.info('Accepted optimization (gained %g%%)'%gain)
         
         #-- compute the residuals to use in the next prewhitening step
-        modelfunc = evaluate.sine(times,allparams)
+        modelfunc = getattr(evaluate,model)(times,allparams)
         residuals = signal - modelfunc
         
         #-- exhaust the counter
         maxiter -= 1
         
+        #-- check stop criterion
+        if stopcrit is not None:
+            func = stopcrit[0]
+            args = stopcrit[1:]
+            condition,value = func(times,signal,modelfunc,allparams,pergram,*args) 
+            logger.info('Stop criterion (%s): %.3g'%(func.__name__,value))
+            stop_criteria.append(value)
+            if condition:
+                logger.info('Stop criterion reached')
+                break
+        
     #-- calculate the errors
-    e_allparams = fit.e_sine(times,signal,allparams)
+    e_allparams = getattr(fit,'e_'+model)(times,signal,allparams)
     
     allparams = numpy_ext.recarr_join(allparams,e_allparams)
+    if stopcrit is not None:
+        allparams = numpy_ext.recarr_join(allparams,np.rec.fromarrays([stop_criteria],names=['stopcrit']))
     
-    return allparams
+    if full_output:
+        return allparams,modelfunc
+    else:
+        return allparams
+    
+
     
     
+def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,outputfile=None,
+                subs_av=True,full_output=False,**kwargs):
+    """
+    Compute a 2D periodogram.
+    
+    Rows (first axis) should be spectra chronologically
+    
+    x are time points
+    y are second axis units (e.g. wavelengths)
+    
+    If the periodgram/wavelength combination has a large range, please
+    supply an 'outputfile' argument, since this script will produce a ValueError.
+    
+    Example usage: first we generate some variable line profiles. In this case,
+    this is just a radial velocity variation
+    
+    >>> times = np.linspace(0,150,100)
+    >>> wavel = np.r_[4500:4600:1.0]
+    >>> matrix = np.zeros((len(times),len(wavel)))
+    >>> for i in xrange(len(times)):
+    ...   central_wave = 5*np.sin(2*np.pi/10*times[i])
+    ...   matrix[i,:] = 1 - 0.5*np.exp( -(wavel-4550-central_wave)**2/10**2)
+   
+    Once the line profiles are constructed, we can compute the Fourier transform
+    of these lines:
+   
+    >>> output = spectrum_2D(times,wavel,matrix,method='scargle',model='sine',f0=0.05,fn=0.3,subs_av=True,full_output=True)
+    
+    With this output, we can find retrieve the frequency. We plot the periodograms
+    for each wavelength bin on the left, and on the right the average over all
+    wavelength bins:
+    
+    >>> p = pl.figure()
+    >>> p = pl.subplot(121)
+    >>> p = pl.imshow(output['pergram'][1][::-1],extent=[wavel[0],wavel[-1],0.05,0.3],aspect='auto')
+    >>> p = pl.subplot(122)
+    >>> p = pl.plot(output['pergram'][1].mean(axis=1),output['pergram'][0],'k-')
+    >>> p = pl.ylim(0.05,0.3)
+    
+    We can then fix the frequency and compute all the parameters. However, we now
+    choose not to subtract the average profile, but instead use the GLS periodogram
+    to include the constant
+    
+    >>> output = spectrum_2D(times,wavel,matrix,method='gls',model='sine',f0=0.095,fn=0.105,full_output=True)
+    
+    >>> p = pl.figure()
+    >>> p = pl.subplot(221)
+    >>> p = pl.errorbar(wavel,output['pars']['const'],yerr=output['pars']['e_const'],fmt='ko-')
+    >>> p = pl.subplot(222)
+    >>> p = pl.errorbar(wavel,output['pars']['ampl'],yerr=output['pars']['e_ampl'],fmt='ro-')
+    >>> p = pl.subplot(223)
+    >>> p = pl.errorbar(wavel,output['pars']['freq'],yerr=output['pars']['e_freq'],fmt='ko-')
+    >>> p = pl.subplot(224)
+    >>> p = pl.errorbar(wavel,output['pars']['phase'],yerr=output['pars']['e_phase'],fmt='ro-')
+    
+    @return: dict with keys C{avprof} (2D array), C{pars} (rec array), C{model} (1D array), C{pergram} (freqs,2Darray)
+    @rtype: dict
+    """
+    #-- compute average profile
+    matrix_av = np.outer(np.ones(len(matrix)),matrix.mean(axis=0))
+    if subs_av:
+        matrix = matrix - matrix_av
+    
+    #-- prepare output of sine-parameters
+    residuals = np.zeros_like(matrix)
+    params = []
+    freq_spectrum = []
+    mymodel = []
+    #-- do frequency analysis
+    for iwave in xrange(len(matrix[0])):
+        signal = matrix[:,iwave]
+        if weights_2d is not None:
+            weights = weights_2d[:,iwave]
+            kwargs['weights'] = weights
+            
+        #-- make sure output is always a tuple, in case full output was asked
+        #   we don't want iterative zoom in so set scale_df=0
+        out = find_frequency(x,signal,full_output=full_output,scale_df=0,**kwargs)
+        #-- add the parameters of this wavelength bin to the list
+        
+        if full_output:
+            params.append(out[0])
+            freq_spectrum.append(out[1][1])
+            mymodel.append(out[2])
+        else:
+            params.append(out)
+        
+        #-- most of the time, we cannot output the whole periodogram for every
+        #   wavelength bin (2GB internal memory limit). We could either select
+        #   certain wavelengths, or output to a file. We choose the latter
+        #   approach
+    
+    #-- prepare output
+    output = {}
+    output['avprof']    = matrix_av
+    output['pars']      = np.hstack(params)
+    if full_output:
+        output['pergram']   = out[1][0],np.vstack(freq_spectrum).T
+        output['model']   = np.vstack(mymodel).T
+    
+    return output
+
+@defaults_pergram
+def time_frequency(times,signal,window_width=None,n_windows=100,
+         window='rectangular',detrend=None,**kwargs):
+    """
+    Short Time (Fourier) Transform.
+    
+    Slide a window through the timeseries, multiply the timeseries with the
+    window, and perform a Fourier Transform.
+    
+    It is best to fix explicitly C{f0}, C{fn} and C{df}, to limit the computation
+    time!
+    
+    
+    @param n_windows: number of slices
+    @type n_windows: integer
+    @param window_width: width of each slice
+    @type window_width: float
+    @param detrend: detrending function, accepting times and signal as args
+    @type detrend: callable
+    @param window: window function to apply
+    @type window: string
+    @return: spectrogram, times used, parameters, errors, points used per slice
+    @rtype: dict
+    """
+    if window_width is None:
+        window_width = kwargs.get('window_width',times.ptp()/20.)
+    #-- cut light curve until window fits exactly
+    stft_times = np.linspace(times[0]+window_width/2.,times[-1]-window_width/2.,n_windows)
+    
+    #-- get f0,fn and df to fix in all computations. If they are not given, they
+    #   are set to default values by the decorator
+    f0 = kwargs.pop('f0')
+    fn = kwargs.pop('fn')
+    df = kwargs.pop('df')
+    nyq_stat = kwargs.pop('nyq_stat',fn)
+    
+    #-- prepare arrays for parameters, points and spectrum
+    pars = []
+    pnts = np.zeros(n_windows)
+    spec = None
+    #-- compute the periodogram for each slice
+    for i,t in enumerate(stft_times):
+        region = (abs(times-t) <= (window_width/2.))
+        times_ = times[region]
+        signal_ = signal[region]
+        if detrend:
+            times_,signal_ = detrend(times_,signal_)
+        pnts[i] = len(times_)
+        if len(times_)>1:
+            output = find_frequency(times_,signal_,full_output=True,f0=f0,fn=fn,df=df,nyq_stat=nyq_stat,scale_df=0,**kwargs)
+            if spec is None:
+                spec = np.ones((n_windows,len(output[1][1])))
+            pars.append(output[0])
+            spec[i,:len(output[1][1])] = output[1][1]
+        else:
+            nanpars = np.rec.array(np.nan*np.ones(len(pars[-1].dtype.names)),dtype=pars[-1].dtype)
+            pars.append(nanpars)
+            #try:
+            #    pars.append(np.nan*pars[-1])
+            #except:
+            #    print pars
+            #    print pars[-1]
+            #    print pars[-1].dtype
+            #    print 0*pars[-1]
+            #    print np.nan*pars[-1]
+            #    raise
+            spec[i] = np.nan
+    out = {}
+    out['times']     = stft_times
+    out['pars']      = np.hstack(pars)
+    out['pergram']   = (output[1][0],spec)
+    return out
+
+#{ Convenience stop-criteria
+
+def stopcrit_scargle_prob(times,signal,modelfunc,allparams,pergram,crit_value):
+    """
+    Stop criterium based on probability.
+    """
+    value = pergrams.scargle_probability(pergram[1].max(),times,pergram[0])
+    return value>crit_value,value
+
+def stopcrit_scargle_snr(times,signal,modelfunc,allparams,pergram,crit_value,width=6.):
+    """
+    Stop criterium based on signal-to-noise ratio.
+    """
+    width = width/2.
+    argmax = np.argmax(pergram[1])
+    ampls = pergram[1]
+    start = max(0,pergram[0][argmax]-width)
+    stop = min(pergram[0][argmax]+width,pergram[0][-1])
+    if start==0:
+        stop += width-pergram[0][argmax]
+    if stop==pergram[0][-1]:
+        start = pergram[0][-1]-pergram[0][argmax]+width
+    ampls = ampls[(start<=pergram[0]) & (pergram[0]<=stop)]
+    value = pergram[1][argmax]/ampls.mean()
+    return value<crit_value,value
+#}
+
 
 
 if __name__=="__main__":
     import doctest
     import pylab as pl
     import sys
-    doctest.testmod()
-    pl.show()
-    sys.exit()
+    from ivs.aux import argkwargparser
+    from ivs.io import ascii
+    
+    #-- if no arguments are given, we just do a test run
+    if not sys.argv[1:]:
+        doctest.testmod()
+        pl.show()
+        sys.exit()
+    
+    #-- if arguments are given, we assume the user wants to run one of the
+    #   functions with arguments given in the command line
+    # EXAMPLES:
+    # $:> python freqanalyse.py find_frequency infile=test.dat full_output=True
+    # $:> python freqanalyse.py time_frequency infile=test.dat full_output=True
+    else:
+        method,args,kwargs = argkwargparser.parse()
+        print "Running method %s with arguments %s and keyword arguments %s"%(method,args,kwargs)
+        if '--help' in args or 'help' in args or 'help' in kwargs:
+            sys.exit()
+        full_output = kwargs.get('full_output',False)
+        times,signal = ascii.read2array(kwargs.pop('infile')).T[:2]
+        out = globals()[method](times,signal, **kwargs)
+        
+        #-- when find_frequency is called
+        if method=='find_frequency' and full_output:
+            print pl.mlab.rec2txt(out[0],precision=8)
+            pl.figure()
+            pl.subplot(211)
+            pl.plot(out[1][0],out[1][1],'k-')
+            pl.subplot(212)
+            pl.plot(times,signal,'ko',ms=2)
+            pl.plot(times,out[2],'r-',lw=2)
+            pl.show()
+        elif method=='find_frequency':
+            print pl.mlab.rec2txt(out)
+        
+        #-- when time_frequency is called
+        elif method=='time_frequency':
+            print pl.mlab.rec2txt(out['pars'],precision=8)
+            pl.figure()
+            pl.imshow(out['pergram'][1].T[::-1],aspect='auto',extent=[out['times'][0],out['times'][-1],out['pergram'][0][0],out['pergram'][0][-1]])
+         
+        
+        pl.show()
+        
+    
 
 
 

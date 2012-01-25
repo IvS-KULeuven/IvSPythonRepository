@@ -6,7 +6,7 @@ Various decorator functions for time series analysis
 """
 import functools
 import logging
-from multiprocessing import Manager,Process
+from multiprocessing import Manager,Process,cpu_count
 import numpy as np
 from ivs.aux import loggers
 #from ivs.timeseries import windowfunctions
@@ -31,10 +31,19 @@ def parallel_pergram(fctn):
         #-- get information on frequency range
         f0 = kwargs['f0']
         fn = kwargs['fn']
-        threads = float(kwargs.pop('threads',1))
+        threads = kwargs.pop('threads',1)
+        if threads=='max':
+            threads = cpu_count()
+        elif threads=='safe':
+            threads = cpu_count()-1
+        else:
+            threads = float(threads)
         
         #-- extend the arguments to include the parallel array
         myargs = tuple(list(args) + [arr] )
+        #-- however, some functions cannot be parallelized
+        if fctn.__name__ in ['fasper']:
+            threads = 1
         
         #-- distribute the periodogram calcs over different threads, and wait
         for i in range(int(threads)):
