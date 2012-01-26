@@ -1038,6 +1038,7 @@ class SED(object):
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
         extra_array_ = np.rec.fromarrays(extra_cols,names=['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag'])
         #-- in right order:
+        print self.master.dtype.names
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
         for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
@@ -1873,7 +1874,7 @@ class SED(object):
         eff_waves,synflux,photbands = self.results['synflux']
         chi2 = self.results['chi2']
         
-        master = mlab.rec_append_fields(self.master, 'synflux',synflux)
+        master = mlab.rec_append_fields(self.master.copy(), 'synflux',synflux)
         master = mlab.rec_append_fields(master, 'mod_eff_wave',eff_waves)
         master = mlab.rec_append_fields(master, 'chi2',chi2)
         
