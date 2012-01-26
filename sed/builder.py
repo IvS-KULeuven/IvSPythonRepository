@@ -1050,10 +1050,10 @@ class SED(object):
 
     #}
     #{ Fitting routines
-    def igrid_search(self,teffrange=None,loggrange=None,
-                          ebvrange=None,zrange=None,radiusrange=None,
-                          threads='max',iterations=3,increase=1,speed=1,res=1,
-                          points=None,compare=True,df=5,CI_limit=None,type='single'):
+    def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
+                          zrange=None,radiusrange=None,masses=None,
+                          threads='safe',iterations=3,increase=1,speed=1,res=1,
+                          points=None,compare=True,df=5,CI_limit=None,type='single', **kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -1069,39 +1069,44 @@ class SED(object):
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
         if exist_previous and teffrange is None:
             teffrange = self.results['igrid_search']['CI']['teffL'],self.results['igrid_search']['CI']['teffU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2L'],self.results['igrid_search']['CI']['teff-2U']))
         elif teffrange is None:
             teffrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 teffrange = teffrange,(-np.inf,np.inf)
             
         if exist_previous and loggrange is None:
             loggrange = self.results['igrid_search']['CI']['loggL'],self.results['igrid_search']['CI']['loggU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2L'],self.results['igrid_search']['CI']['logg-2U']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
             ebvrange = self.results['igrid_search']['CI']['ebvL'],self.results['igrid_search']['CI']['ebvU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2L'],self.results['igrid_search']['CI']['ebv-2U']))
         elif ebvrange is None:
             ebvrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 ebvrange = ebvrange,(-np.inf,np.inf)
             
         if exist_previous and zrange is None:
             zrange = self.results['igrid_search']['CI']['zL'],self.results['igrid_search']['CI']['zU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 zrange = (zrange,(self.results['igrid_search']['CI']['z-2L'],self.results['igrid_search']['CI']['z-2U']))
         elif zrange is None:
             zrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 zrange = zrange,(-np.inf,np.inf)
+        
+        if type=='binary' and masses is None:
+            # if masses are not given it doesn`t make much sense to use a binary grid...
+            logger.warning('Using igridsearch with type binary, but no masses are provided for the components. Using masses=(1,1)')
+            masses = (1,1)
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
@@ -1119,10 +1124,15 @@ class SED(object):
             grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
                      dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
                   ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
-        elif type=='multiple':
-            teffs,loggs,ebvs,zs,radii = fit.generate_grid_multiple(self.master['photband'][include_grid],teffrange=teffrange,
-                    loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
-                    points=points,res=res)
+        elif type=='multiple' or type=='binary':
+            if type=='multiple':
+                teffs,loggs,ebvs,zs,radii = fit.generate_grid_multiple(self.master['photband'][include_grid],teffrange=teffrange,
+                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
+                        points=points,res=res)
+            elif type=='binary':
+                teffs,loggs,ebvs,zs,radii = fit.generate_grid_binary(self.master['photband'][include_grid], masses=masses,teffrange=teffrange,
+                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
+                        points=points,res=res, **kwargs)
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
