@@ -187,6 +187,10 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     Possible Extra keywords: see definition of the used periodogram function,
     evaluating and fitting functions, etc...
     
+    B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain
+    the same timepoint twice}. Otherwise, a 'ValueError, concatenation problem'
+    can occur.
+    
     Example keywords:
         - 'correlation_correction', default=True
         - 'freqregscale', default=0.5: factor for zooming in on frequency
@@ -215,8 +219,8 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     
     ]]include figure]]timeseries_freqanalyse_06.png]
     
-    @rtype: record array(, tuple, 1Darray)
-    @return: parameters and errors
+    @rtype: record array(, 2x1Darray, 1Darray)
+    @return: parameters and errors(, periodogram, model function)
     """
     #-- initial values
     e_f = 0
@@ -225,7 +229,7 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     counter = 0
     
     f_max = np.inf
-    f_min = -np.inf
+    f_min = 0.#-np.inf
     
     #-- calculate periodogram until frequency precision is
     #   under 1/10th of correlation corrected version of frequency error
@@ -318,16 +322,18 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
     for a new frequency in the residuals.
     
     It is always the original signal that is used to fit all parameters again;
-    only the (optimized) frequency is remembered from step to step.
+    B{only the (optimized) frequency is remembered from step to step} (Vanicek's
+    method).
     
     You best set C{maxiter} to some sensable value, to hard-limit the number of
     frequencies that will be searched for. You can additionally use a C{stopcrit}
     and stop looking for frequencies once it is reached. C{stopcrit} should be
     a tuple; the first argument is the function to call, the other arguments
     are passed to the function, after the mandatory arguments C{times,signal,
-    modelfunc,allparams,pergram}. See L{stopcrit_scargle_snr} for an example.
+    modelfunc,allparams,pergram}. See L{stopcrit_scargle_snr} for an example of
+    such a function.
     
-    @return: parameters, model
+    @return: parameters, model(, model function)
     @rtype: rec array(, ndarray)
     """
     residuals = signal.copy()

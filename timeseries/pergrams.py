@@ -20,6 +20,10 @@ Many periodograms can be computed in parallel, by supplying an extra keyword
 
 >>> freq,ampl = scargle(times,signal,threads=2)
 
+B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain the
+same timepoint twice}. Otherwise, a 'ValueError, concatenation problem' can
+occur.
+
 Section 1. Speed comparison
 ===========================
 
