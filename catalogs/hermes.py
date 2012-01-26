@@ -245,8 +245,12 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     
         if data_type is not None:
             data_type == data_type.lower()
-            keep = np.array([(data_type in ff.lower() and True or False) for ff in data['filename']])
-            data = data[keep]
+            #-- now derive the location of the 'data_type' types from the raw
+            #   files
+            if not data_type=='raw':
+                data['filename'] = [_derive_filelocation_from_raw(ff,data_type) for ff in data['filename']]
+                existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
+                data = data[existing_files]
             seqs = sorted(set(data['unseq']))
         logger.info('%s: Found %d spectra (data type=%s with unique unseqs)'%(ID,len(seqs),data_type))
     else:
@@ -424,10 +428,10 @@ def make_data_overview():
     #-- collect in those directories the raw and relevant reduced files
     for idir in dirs:
         obj_files += sorted(glob.glob(os.path.join(idir,'raw','*.fits')))
-        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged.fits')))
-        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged_c.fits')))
-        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged.fits')))
-        obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged_c.fits')))
+        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged.fits')))
+        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged_c.fits')))
+        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged.fits')))
+        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged_c.fits')))
     
     #-- keep track of what is already in the file, if it exists:
     try:
@@ -488,6 +492,27 @@ def make_data_overview():
         sys.stdout.write(chr(27)+'[u') # reset cursor
     outfile.close()
 
+def _derive_filelocation_from_raw(rawfile,data_type):
+    """
+    Derive the location of a reduced file from the raw file.
+    """
+    redfile = rawfile.replace('raw','reduced')
+    redfiledir,redfilebase = os.path.dirname(redfile),os.path.basename(redfile)
+    base,ext = os.path.splitext(redfilebase)
+    if data_type.lower()=='cosmicsremoved_log':
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','log','merged','c']))+'.fits'
+    elif data_type.lower()=='cosmicsremoved_wavelength':
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','wavelength','merged','c']))+'.fits'
+    elif data_type.lower()=='log':
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','log','merged']))+'.fits'
+    elif data_type.lower()=='wavelength':
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','wavelength','merged']))+'.fits'
+    else:
+        redfile = rawfile
+    #-- extra check to see if it exists
+    if not os.path.isfile(redfile):
+        return 'naf'
+    return redfile
 
 def _timestamp2jd(timestamp):
     """
