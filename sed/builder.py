@@ -1132,7 +1132,7 @@ class SED(object):
             elif type=='binary':
                 teffs,loggs,ebvs,zs,radii = fit.generate_grid_binary(self.master['photband'][include_grid], masses=masses,teffrange=teffrange,
                         loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
-                        points=points,res=res, **kwargs)
+                        points=points,res=res)          
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
@@ -1144,7 +1144,7 @@ class SED(object):
                                               ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
-                
+        print grid_results['chisq']
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
         
@@ -1233,7 +1233,7 @@ class SED(object):
                                           logg=self.results[mtype]['CI']['logg'],
                                           ebv=0,
                                           law=law)
-        elif type=='multiple':
+        elif type=='multiple' or type=='binary':
             wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                     logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
                                     ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
@@ -1255,7 +1255,7 @@ class SED(object):
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
                                   photbands=self.master['photband'][keep])
-        elif type=='multiple':
+        elif type=='multiple' or type=='binary':
             synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                   logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
                                   ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
