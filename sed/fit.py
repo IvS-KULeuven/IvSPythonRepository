@@ -222,7 +222,7 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     else:
         return chisq.sum(),scale,e_scale
 
-def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
+def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                   ebvrange=(-inf,inf),zrange=(-inf,inf),
                   points=None,res=None,clear_memory=True,**kwargs):
     """
@@ -425,12 +425,12 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                           #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
     return teffs,loggs,ebvs,zs
 
-def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
-                  loggrange=((-inf,inf),(-inf,inf)),
-                  ebvrange=(-inf,inf),
+def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
+                  loggrange=((-inf,inf),(-inf,inf)),ebvrange=(-inf,inf),
                   zrange=((-inf,inf),(-inf,inf)),
                   radiusrange=((1,1),(0.1,10.)),grids=None,
-                  points=None,res=None,clear_memory=False):
+                  points=None,res=None,clear_memory=False,
+                  type='single', **kwargs):
     """
     Generate grid points at which to fit an interpolated grid of multiple SEDs.
     
@@ -452,6 +452,16 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
     >>> p = pl.xlim(pl.xlim()[::-1])
     >>> p = pl.ylim(pl.ylim()[::-1])
     """
+    #-- Select the grid
+    #   but remove metallicity, as it will be fitted!
+    if type=='single':
+        #--Single grid, uses the basic function
+        teffs,loggs,ebvs,zs = generate_grid_single(photbands,teffrange=teffrange,
+                      loggrange=loggrange,ebvrange=ebvrange,
+                      zrange=zrange,points=points)
+        radii = [1 for i in teffs]
+        return teffs,loggs,ebvs,zs,radii
+    
     #-- first collect the effetive temperatures, loggs, ebvs, zs for the
     #   different stars in the multiple system
     pars = []
@@ -468,10 +478,7 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
         loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
         ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
         zrange_ = hasattr(zrange[0],'__iter__') and zrange[i] or zrange
-        #print grid_kwargs,teffrange[i],loggrange[i],ebvrange,zrange[i]
-        if not type(grid) is dict:
-            grid = {'grid':grid}
-        pars += list(generate_grid(photbands,teffrange=teffrange_,
+        pars += list(generate_grid_single(photbands,teffrange=teffrange_,
                       loggrange=loggrange_,ebvrange=ebvrange_,
                       zrange=zrange_,points=points,**grid))
     #-- the L{generate_grid} method does not guarantee the number of points.
@@ -482,71 +489,37 @@ def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
     #-- permute parameters so that the different blocks from the generate_grid
     #   are not clustered together
     for i in range(0,len(pars),4):
-		
         permutation = np.random.permutation(len(pars[0]))
         pars[i:i+4] = pars[i:i+4,permutation]
     #-- make arrays of the output parameters
     teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
+    
     #-- keep in mind that we probably want all the members in the system to have
     #   the same value for the interstellar reddening and metallicity, though
     #   this is not prerequisitatory
-    #print teffs.shape,loggs.shape,ebvs.shape,zs.shape
     if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
     if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
     #if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
     #if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
     ebvs = np.column_stack([ebvs[:,0]]*len(grids))
     zs = np.column_stack([zs[:,0]]*len(grids))
-    #-- we also have different radii of the stars
-    radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
-                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))
-    return teffs,loggs,ebvs,zs,radii                     
     
-def generate_grid_binary(photbands,masses=(1,1),teffrange=((-inf,inf),(-inf,inf)),
-                  loggrange=((-inf,inf),(-inf,inf)),ebvrange=(-inf,inf),
-                  zrange=((-inf,inf),(-inf,inf)),radiusrange=((1,1),(0.1,10.)),
-                  grids=None,points=None,res=None,clear_memory=False, strictradius=False): 
-    """
-    Generates grids using the mass of both components of a binary system as further constraints.
-    """
-    
-    #--adjust loggrange if nessessary
-    G = constants.GG_cgs
-    Msol = constants.Msol_cgs
-    Rsol = constants.Rsol_cgs
-    if strictradius:
-        loggrange1 = (np.log10(G*masses[0]*Msol/(radiusrange[0][1]*Rsol)**2), np.log10(G*masses[0]*Msol/(radiusrange[0][0]*Rsol)**2))
-        loggrange2 = (np.log10(G*masses[1]*Msol/(radiusrange[1][1]*Rsol)**2), np.log10(G*masses[1]*Msol/(radiusrange[1][0]*Rsol)**2))
-        #TODO
-    
-    #--generate grids for both stars:
-    teffs,loggs,ebvs,zs,radii = generate_grid_multiple(photbands,teffrange=teffrange,loggrange=loggrange,ebvrange=ebvrange,
-                  zrange=zrange,radiusrange=((1,1),(1,1)),grids=grids,points=points,res=res,clear_memory=clear_memory)
-    pars = np.array([teffs[:,0],loggs[:,0],ebvs[:,0],zs[:,0],teffs[:,1],loggs[:,1],ebvs[:,1],zs[:,1]]).T
-    
-    #--calculate the radius for each gridpoint from the logg and M
-    radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])/Rsol
-    radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])/Rsol
-    radii = radius2/radius1
-    
-    #--remove models that do not apply with the radius limitations
-    #TODO
-    #if strictradius:
-        #pars = pars[(radius1 >= radiusrange[0,0]) & (radius1 <= radiusrange[0,1]) & (radius2 >= radiusrange[1,0]) & (radius2 <= radiusrange[1,1])]
-        #radii = radii[(radius1 >= radiusrange[0,0]) & (radius1 <= radiusrange[0,1]) & (radius2 >= radiusrange[1,0]) & (radius2 <= radiusrange[1,1])]
-    #else:
-        #minrad = min([radiusrange[1][0]/radiusrange[0][0],radiusrange[1][0]/radiusrange[0][1],radiusrange[1][1]/radiusrange[0][0],radiusrange[1][1]/radiusrange[0][1]])
-        #maxrad = max([radiusrange[1][0]/radiusrange[0][0],radiusrange[1][0]/radiusrange[0][1],radiusrange[1][1]/radiusrange[0][0],radiusrange[1][1]/radiusrange[0][1]])
-        #print minrad,maxrad
-        #pars = pars[(radii >= minrad) & (radii <= maxrad)]
-        #radii = radii[(radii >= minrad) & (radii <= maxrad)]
+    if type=='binary':
+        #-- The radius of the stars is calculated bassed on logg and the provided masses
+        masses = 'masses' in kwargs and  kwargs['masses'] or (1,1)
+        G = constants.GG_cgs
+        Msol = constants.Msol_cgs
+        radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])
+        radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])
+        radii = radius2/radius1
         
-    #-- make arrays of the output parameters
-    pars = pars.T
-    teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
-    radii = np.array([np.ones(len(radii)),radii]).T
+        radii = np.array([np.ones(len(radii)),radii]).T
+    elif type=='multiple':
+        #-- We have random different radii for the stars
+        radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
+                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
     
-    return teffs,loggs,ebvs,zs,radii
+    return teffs,loggs,ebvs,zs,radii                     
     
 @parallel_gridsearch
 @make_parallel

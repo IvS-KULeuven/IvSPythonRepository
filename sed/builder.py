@@ -1106,7 +1106,7 @@ class SED(object):
         
         if type=='binary' and masses is None:
             # if masses are not given it doesn`t make much sense to use a binary grid...
-            logger.warning('Using igridsearch with type binary, but no masses are provided for the components. Using masses=(1,1)')
+            logger.warning('Using igridsearch with type binary, but no masses are provided for the components! Using masses=(1,1)')
             masses = (1,1)
         
         #-- grid search on all include data: extract the best CHI2
@@ -1114,10 +1114,10 @@ class SED(object):
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
         #-- build the grid, run over the grid and calculate the CHI2
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
+                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
+                        points=points,res=res, type=type) 
         if type=='single':
-            teffs,loggs,ebvs,zs = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
-                                               loggrange=loggrange,ebvrange=ebvrange,zrange=zrange,
-                                               res=res,points=points)
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
@@ -1125,15 +1125,8 @@ class SED(object):
             grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
                      dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
                   ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
-        elif type=='multiple' or type=='binary':
-            if type=='multiple':
-                teffs,loggs,ebvs,zs,radii = fit.generate_grid_multiple(self.master['photband'][include_grid],teffrange=teffrange,
-                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
-                        points=points,res=res)
-            elif type=='binary':
-                teffs,loggs,ebvs,zs,radii = fit.generate_grid_binary(self.master['photband'][include_grid], masses=masses,teffrange=teffrange,
-                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
-                        points=points,res=res)          
+                  
+        elif type=='multiple' or type=='binary':  
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
@@ -1145,7 +1138,6 @@ class SED(object):
                                               ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
-        print grid_results['chisq']
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
         
@@ -1409,7 +1401,7 @@ class SED(object):
             
     
     @standalone_figure
-    def plot_sed(self,colors=False,mtype='igrid_search',**kwargs):
+    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1506,7 +1498,8 @@ class SED(object):
             if 'model' in self.results:
                 wave,flux,flux_ur = self.results['model']
                 pl.plot(wave,wave*flux,'r-',**kwargs)
-                pl.plot(wave,wave*flux_ur,'k-',**kwargs)
+                if plot_deredded:
+                    pl.plot(wave,wave*flux_ur,'k-',**kwargs)
             pl.ylabel(r'$\lambda F_\lambda$ [erg/s/cm$^2$]')
             pl.xlabel('wavelength [$\AA$]')
         else:
@@ -1529,7 +1522,14 @@ class SED(object):
             ebv = self.results[mtype]['grid']['ebv'][-1]
             scale = self.results[mtype]['grid']['scale'][-1]
             angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
-            pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
+            try:
+                teff2 = self.results[mtype]['grid']['teff-2'][-1]
+                logg2 = self.results[mtype]['grid']['logg-2'][-1]
+                radii = self.results[mtype]['grid']['rad-2'][-1]/self.results[mtype]['grid']['rad'][-1]
+                pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
+                        loc,xycoords='axes fraction')
+            except:
+                pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
                         loc,xycoords='axes fraction')
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         
