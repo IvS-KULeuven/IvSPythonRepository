@@ -1179,7 +1179,7 @@ class SED(object):
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
             self.results['igrid_search']['CI'][name+'U'] = grid_results[name][start_CI:].max()
-            logger.info('95%% CI %s: %g <= %g <= %g'%(name,self.results['igrid_search']['CI'][name+'L'],
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit,name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
@@ -1425,6 +1425,8 @@ class SED(object):
         
         def plot_sed_getcolors(master,color_dict=None):
             myphotbands = [iphotb.split('.')[1] for iphotb in master['photband'][master['color']]]
+            if not myphotbands:  #-- If there are no colours none can be returned (added by joris 30-01-2012)
+                return [],[],[],None
             if color_dict is None:
                 color_dict = {myphotbands[0]:0}
                 for mycol in myphotbands[1:]:

@@ -337,11 +337,12 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         logger.info('Received custom grid (%s)'%kwargs)
     teffs,loggs,ebvs,zs = gridpnts.T
     
-    #-- we need to avoid having only one grid point!
-    #unique_teffs = unique_teffs[(teffrange[0]<=unique_teffs) & (unique_teffs<=teffrange[1])]
-    #unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
-    index1 = max(0,unique_teffs.searchsorted(teffrange[0])-1)
-    index2 = unique_teffs.searchsorted(teffrange[1])+1
+    #-- We need to avoid having only one grid point! If nessessary the grid needs to be 
+    #   broader to get points in the entire intervall. 
+    index1 = teffrange[0] in unique_teffs and unique_teffs.searchsorted(teffrange[0]) or \
+            max(0,unique_teffs.searchsorted(teffrange[0])-1)
+    index2 = teffrange[1] in unique_teffs and unique_teffs.searchsorted(teffrange[1]) or \
+            min(len(unique_teffs),unique_teffs.searchsorted(teffrange[1]))
     unique_teffs = unique_teffs[index1:index2+1]
     index1 = max(0,unique_teffs.searchsorted(loggrange[0])-1)
     index2 = unique_teffs.searchsorted(loggrange[1])+1
@@ -592,6 +593,28 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
 
 
 if __name__=="__main__":
+    from ivs.aux import loggers
+    import time
+    import pylab as plt
+    logger = loggers.get_basic_logger(clevel='DEBUG')
+    
+    photbands = ['GENEVA.G','GENEVA.B-V']
+    
+    c0 = time.time()
+    teffs,loggs,ebvs,zs,radii = generate_grid(photbands,teffrange=(5000,5800),loggrange=(4.20,4.70),zrange=(0,0),ebvrange=(0.05,0.08), grid='kurucz',points=10000)
+    print 'Time: %i'%(time.time()-c0)
+    
+    plt.figure(2)
+    plt.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=plt.cm.spectral)
+    plt.xlim(plt.xlim()[::-1])
+    plt.ylim(plt.ylim()[::-1])
+    plt.xlabel('Teff')
+    plt.ylabel('Logg')
+    plt.show()
+    
+    sys.exit()
+    
+    
     import doctest
     import pylab as pl
     doctest.testmod()
