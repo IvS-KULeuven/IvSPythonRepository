@@ -587,8 +587,11 @@ def tsv2recarray(filename):
         cols = []
         for i,key in enumerate(data[0]):
              col = data[3:,i]
-             #-- fill empty values with nan
-             cols.append([(row.isspace() or not row) and np.nan or row for row in col])
+             #-- fill empty values with nan, and make sure each string in the
+             #   array is at least three spaces long (otherwise we cannot fit
+             #   'nan' in the row and the casting will not work properly in a
+             #   few lines
+             cols.append([(row.isspace() or not row) and np.nan or 3*' '+row for row in col])
              #-- fix unit name
              #if source in cat_info.sections() and cat_info.has_option(source,data[1,i]):
              #   units[key] = cat_info.get(source,data[1,i])
