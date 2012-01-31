@@ -224,6 +224,32 @@ But for the sake of the examples, we'll switch back to the default SI...
 >>> set_convention()
 ('cgs', 'mesa')
 
+
+Section 4.  Examples
+====================
+
+B{Example 1:} The following is an exam question on the Biophysics exam (1st year
+Bachelor) about error propagation.
+
+Question: Suppose there is a party to celebrate the end of the Biophysics exam.
+You want to invite 4 persons, and you want to know if 1 liter of champagne is
+enough to fill 5 glasses. The glasses are cylinders with a circumference of
+15.5+/-0.5cm, and a height of 10.0+/-0.5cm. Calculate the volume of one glass
+and its uncertainty. Can you pour 5 glasses of champagne from the 1 liter
+bottle?
+
+Answer:
+
+>>> r = Unit( (15.5/(2*np.pi), 0.5/(2*np.pi)), 'cm')
+>>> h = Unit( (10.0,0.5), 'cm')
+>>> V = np.pi*r**2*h
+>>> print V
+0.000191184875389+/-1.56051027314e-05 m3
+>>> print (5*V).convert('dm3')
+0.955924376946+/-0.0780255136569
+
+It is not sufficient within about 1 sigma.
+
 """
 #-- standard libraries
 import itertools
@@ -361,7 +387,7 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('Jy','erg/s/cm2/A',333.56409519815202,freq=(constants.cc,'Mhz'))
     1e-10
     >>> convert('W/m2/mum','erg/s/cm2/A',1e-10,wave=(10000.,'A'))
-    1.0000000000000001e-11
+    1.0000000000000003e-11
     >>> convert('Jy','W/m2/Hz',1.)
     1e-26
     >>> print convert('W/m2/Hz','Jy',1.)
@@ -377,11 +403,11 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
     4511059.829810158
     >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
-    3542978.1053089043
+    3542978.105308904
     >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
     2.2167739682629828e-07
     >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
-    7.494811450000001e-10
+    7.49481145e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
     >>> print convert('Jy','erg s-1 cm-2 micron-1 sr-1',1.,ang_diam=(2.,'mas'),wave=(1.,'micron'))
@@ -469,7 +495,7 @@ def convert(_from,_to,*args,**kwargs):
     
     >>> x,y = convert('equ','gal',('17:45:40.4','-29:00:28.1'),epoch='2000')
     >>> print (x,y)
-    (6.282224277178722, -0.000825178833899172)
+    (6.282224277178722, -0.000825178833899176)
     >>> print x,y
     359:56:41.8 -0:02:50.2
     >>> x,y = convert('gal','equ',('00:00:00.00','00:00:00.0'),epoch='2000')
