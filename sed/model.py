@@ -249,7 +249,7 @@ from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized,clear_memoization
-from ivs.aux import itertools
+import itertools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.sed import reddening
@@ -459,7 +459,8 @@ def get_file(integrated=False,**kwargs):
         if not isinstance(z,str): z = '%.1f'%(z)
         basename = 'atlas12_z%s_sed.fits'%(z)
     elif grid=='tkachenko':
-        basename = 'tkachenko_z%.2f.fits'%(z)
+        if not isinstance(z,str): z = '%.2f'%(z)
+        basename = 'tkachenko_z%s.fits'%(z)
     elif grid=='nemo':
         ct = ct.lower()
         if ct=='mlt': ct = ct+'072'
@@ -700,7 +701,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             #-- if metallicity needs to be interpolated
             if not (z in g_z):
                 fluxes = np.zeros((2,2,2,2,len(photbands)+1))
-                for i,j,k in itertools.lproduct(xrange(2),xrange(2),xrange(2)):
+                for i,j,k in itertools.product(xrange(2),xrange(2),xrange(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
                                                     int(round(teffs_subgrid[j])),\
                                                     int(round(loggs_subgrid[k]*100)),\
@@ -714,7 +715,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             #-- if only teff,logg and ebv need to be interpolated (faster)
             else:
                 fluxes = np.zeros((2,2,2,len(photbands)+1))
-                for i,j in itertools.lproduct(xrange(2),xrange(2)):
+                for i,j in itertools.product(xrange(2),xrange(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(teffs_subgrid[i])),\
                                                     int(round(loggs_subgrid[j]*100)),\
@@ -739,7 +740,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             if not (z in g_z):
                 #-- prepare fluxes matrix for interpolation, and x,y an z axis
                 myflux = np.zeros((16,4+len(photbands)+1))
-                mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
+                mygrid = itertools.product(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
                 for i,(t,g,z) in enumerate(mygrid):
                     myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
                     myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
@@ -755,7 +756,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
             else:
                 #-- prepare fluxes matrix for interpolation, and x,y axis
                 myflux = np.zeros((8,3+len(photbands)+1))
-                mygrid = itertools.lproduct(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1])
+                mygrid = itertools.product(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1])
                 for i,(t,g) in enumerate(mygrid):
                     myflux[2*i,:3] = t,g,g_ebv[i_ebv-1]
                     myflux[2*i+1,:3] = t,g,g_ebv[i_ebv]
