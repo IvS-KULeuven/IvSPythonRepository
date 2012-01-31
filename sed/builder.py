@@ -1876,9 +1876,7 @@ class SED(object):
         eff_waves,synflux,photbands = self.results['synflux']
         chi2 = self.results['chi2']
         
-        master = mlab.rec_append_fields(self.master.copy(), 'synflux',synflux)
-        master = mlab.rec_append_fields(master, 'mod_eff_wave',eff_waves)
-        master = mlab.rec_append_fields(master, 'chi2',chi2)
+        master = self.master.copy()
         
         results_dict = dict(extname='model')
         keys = sorted(self.results['igrid_search'])
@@ -1897,6 +1895,12 @@ class SED(object):
         
         results_dict['extname'] = 'igrid_search'
         fits.write_recarray(self.results['igrid_search']['grid'],filename,header_dict=results_dict)
+        
+        results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
+        results_dict['extname'] = 'synflux'
+        fits.write_recarray(results,filename,header_dict=results_dict)
+        
+
     
     def load_fits(self,filename=None):
         """
@@ -1919,8 +1923,8 @@ class SED(object):
         self.results['igrid_search']['factor'] = ff['igrid_search'].header['factor']
         
         self.results['model'] = ff[2].data.field('wave'),ff[2].data.field('flux'),ff[2].data.field('dered_flux')
-        self.results['chi2'] = ff[1].data.field('chi2')
-        self.results['synflux'] = ff[1].data.field('mod_eff_wave'),ff[1].data.field('synflux'),ff[1].data.field('photband')
+        self.results['chi2'] = ff[4].data.field('chi2')
+        self.results['synflux'] = ff[4].data.field('mod_eff_wave'),ff[4].data.field('synflux'),ff[1].data.field('photband')
         
         
         #-- observed photometry
