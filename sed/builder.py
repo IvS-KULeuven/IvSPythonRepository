@@ -598,7 +598,7 @@ def fix_master(master,e_default=None):
     return master
 
 
-def decide_phot(master,names=None,wrange=None,ptype='all',sources=None,include=False):
+def decide_phot(master,names=None,wrange=None,ptype='all',include=False):
     """
     Exclude/include photometric passbands containing one of the strings listed in
     photbands.
@@ -675,13 +675,6 @@ def decide_phot(master,names=None,wrange=None,ptype='all',sources=None,include=F
         #-- exclude/include passbands based on their wavelength
         if not ptype=='col':
             master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
-    #-- exclude/include measurements based on the catalog names
-    if sources is not None:
-        for index,isource in enumerate(master['photband']):
-            for source in sources:
-                if source in isource:
-                    master['include'][index] = include
-                    break
 
 
 def photometry2str(master,comment=''):
@@ -838,11 +831,13 @@ class SED(object):
         else:
             self.load_photometry()
         #--load information from the FITS file if it exists
+        self.results = {}
         if load_fits:
             self.load_fits()
+            
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
-        self.results = {}
+        
     
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,include=None,exclude=None):
@@ -882,7 +877,7 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def exclude(self,names=None,wrange=None,sources=None):
+    def exclude(self,names=None,wrange=None):
         """
         Exclude (any) photometry from fitting process.
         
@@ -890,15 +885,15 @@ class SED(object):
         """
         if names is None and wrange is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='all')
     
-    def exclude_colors(self,names=None,wrange=None,sources=None):
+    def exclude_colors(self,names=None,wrange=None):
         """
         Exclude (color) photometry from fitting process.
         """
         if names is None and wrange is None:
             wrange = (-np.inf,0)
-        decide_phot(self.master,names=names,wrange=wrange,sources=None,include=False,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='col')
     
     def exclude_abs(self,names=None,wrange=None):
         """
@@ -1045,6 +1040,7 @@ class SED(object):
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
         extra_array_ = np.rec.fromarrays(extra_cols,names=['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag'])
         #-- in right order:
+        print self.master.dtype.names
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
         for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
@@ -1057,10 +1053,10 @@ class SED(object):
 
     #}
     #{ Fitting routines
-    def igrid_search(self,teffrange=None,loggrange=None,
-                          ebvrange=None,zrange=None,radiusrange=None,
-                          threads='max',iterations=3,increase=1,speed=1,res=1,
-                          points=None,compare=True,df=5,CI_limit=None,type='single'):
+    def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
+                          zrange=None,radiusrange=None,masses=None,
+                          threads='safe',iterations=3,increase=1,speed=1,res=1,
+                          points=None,compare=True,df=5,CI_limit=None,type='single', **kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -1076,49 +1072,54 @@ class SED(object):
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
         if exist_previous and teffrange is None:
             teffrange = self.results['igrid_search']['CI']['teffL'],self.results['igrid_search']['CI']['teffU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2L'],self.results['igrid_search']['CI']['teff-2U']))
         elif teffrange is None:
             teffrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 teffrange = teffrange,(-np.inf,np.inf)
             
         if exist_previous and loggrange is None:
             loggrange = self.results['igrid_search']['CI']['loggL'],self.results['igrid_search']['CI']['loggU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2L'],self.results['igrid_search']['CI']['logg-2U']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
             ebvrange = self.results['igrid_search']['CI']['ebvL'],self.results['igrid_search']['CI']['ebvU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2L'],self.results['igrid_search']['CI']['ebv-2U']))
         elif ebvrange is None:
             ebvrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 ebvrange = ebvrange,(-np.inf,np.inf)
             
         if exist_previous and zrange is None:
             zrange = self.results['igrid_search']['CI']['zL'],self.results['igrid_search']['CI']['zU']
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 zrange = (zrange,(self.results['igrid_search']['CI']['z-2L'],self.results['igrid_search']['CI']['z-2U']))
         elif zrange is None:
             zrange = (-np.inf,np.inf)
-            if type=='multiple':
+            if type=='multiple' or type=='binary':
                 zrange = zrange,(-np.inf,np.inf)
+        
+        if type=='binary' and masses is None:
+            # if masses are not given it doesn`t make much sense to use a binary grid...
+            logger.warning('Using igridsearch with type binary, but no masses are provided for the components! Using masses=(1,1)')
+            masses = (1,1)
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
         #-- build the grid, run over the grid and calculate the CHI2
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
+                        loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
+                        points=points,res=res, type=type) 
         if type=='single':
-            teffs,loggs,ebvs,zs = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
-                                               loggrange=loggrange,ebvrange=ebvrange,zrange=zrange,
-                                               res=res,points=points)
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
@@ -1126,10 +1127,8 @@ class SED(object):
             grid_results = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
                      dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
                   ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
-        elif type=='multiple':
-            teffs,loggs,ebvs,zs,radii = fit.generate_grid_multiple(self.master['photband'][include_grid],teffrange=teffrange,
-                    loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange,
-                    points=points,res=res)
+                  
+        elif type=='multiple' or type=='binary':  
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
                                  self.master['photband'][include_grid],
@@ -1141,7 +1140,6 @@ class SED(object):
                                               ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
-                
         #-- exclude failures
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
         
@@ -1170,6 +1168,7 @@ class SED(object):
         if not 'igrid_search' in self.results:
             self.results['igrid_search'] = {}
         elif 'grid' in self.results['igrid_search']:
+            logger.info('New results appended to previous results')
             grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
             sa = np.argsort(grid_results['chisq'])[::-1]
             grid_results = grid_results[sa]
@@ -1183,7 +1182,7 @@ class SED(object):
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
             self.results['igrid_search']['CI'][name+'U'] = grid_results[name][start_CI:].max()
-            logger.info('95%% CI %s: %g <= %g <= %g'%(name,self.results['igrid_search']['CI'][name+'L'],
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit,name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
@@ -1230,7 +1229,7 @@ class SED(object):
                                           logg=self.results[mtype]['CI']['logg'],
                                           ebv=0,
                                           law=law)
-        elif type=='multiple':
+        elif type=='multiple' or type=='binary':
             wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                     logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
                                     ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
@@ -1252,7 +1251,7 @@ class SED(object):
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
                                   photbands=self.master['photband'][keep])
-        elif type=='multiple':
+        elif type=='multiple' or type=='binary':
             synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                   logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
                                   ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
@@ -1405,7 +1404,7 @@ class SED(object):
             
     
     @standalone_figure
-    def plot_sed(self,colors=False,mtype='igrid_search',**kwargs):
+    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1429,6 +1428,8 @@ class SED(object):
         
         def plot_sed_getcolors(master,color_dict=None):
             myphotbands = [iphotb.split('.')[1] for iphotb in master['photband'][master['color']]]
+            if not myphotbands:  #-- If there are no colours none can be returned (added by joris 30-01-2012)
+                return [],[],[],None
             if color_dict is None:
                 color_dict = {myphotbands[0]:0}
                 for mycol in myphotbands[1:]:
@@ -1502,7 +1503,8 @@ class SED(object):
             if 'model' in self.results:
                 wave,flux,flux_ur = self.results['model']
                 pl.plot(wave,wave*flux,'r-',**kwargs)
-                pl.plot(wave,wave*flux_ur,'k-',**kwargs)
+                if plot_deredded:
+                    pl.plot(wave,wave*flux_ur,'k-',**kwargs)
             pl.ylabel(r'$\lambda F_\lambda$ [erg/s/cm$^2$]')
             pl.xlabel('wavelength [$\AA$]')
         else:
@@ -1525,7 +1527,14 @@ class SED(object):
             ebv = self.results[mtype]['grid']['ebv'][-1]
             scale = self.results[mtype]['grid']['scale'][-1]
             angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
-            pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
+            try:
+                teff2 = self.results[mtype]['grid']['teff-2'][-1]
+                logg2 = self.results[mtype]['grid']['logg-2'][-1]
+                radii = self.results[mtype]['grid']['rad-2'][-1]/self.results[mtype]['grid']['rad'][-1]
+                pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
+                        loc,xycoords='axes fraction')
+            except:
+                pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
                         loc,xycoords='axes fraction')
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         
@@ -1865,14 +1874,15 @@ class SED(object):
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
         if overwrite:
-            if os.path.isfile(filename): os.remove(filename)
+            if os.path.isfile(filename):
+                os.remove(filename)
+                logger.info('Old FITS file removed')
             
         eff_waves,synflux,photbands = self.results['synflux']
         chi2 = self.results['chi2']
         
-        master = mlab.rec_append_fields(self.master, 'synflux',synflux)
-        master = mlab.rec_append_fields(master, 'mod_eff_wave',eff_waves)
-        master = mlab.rec_append_fields(master, 'chi2',chi2)
+        master = self.master.copy()
+        fits.write_recarray(master,filename,header_dict=dict(extname='data'))
         
         results_dict = dict(extname='model')
         keys = sorted(self.results['igrid_search'])
@@ -1882,8 +1892,7 @@ class SED(object):
                     results_dict[ikey] = self.results['igrid_search'][key][ikey]
             if key=='factor':
                 results_dict[key] = self.results['igrid_search'][key]
-                    
-        fits.write_recarray(master,filename,header_dict=dict(extname='data'))
+        
         fits.write_array(list(self.results['model']),filename,
                                 names=('wave','flux','dered_flux'),
                                 units=('A','erg/s/cm2/A','erg/s/cm2/A'),
@@ -1891,6 +1900,14 @@ class SED(object):
         
         results_dict['extname'] = 'igrid_search'
         fits.write_recarray(self.results['igrid_search']['grid'],filename,header_dict=results_dict)
+        
+        results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
+        
+        fits.write_recarray(results,filename,dict(extname='synflux'))
+        
+        logger.info('Results saved to FITS file: %s'%(filename))
+        
+
     
     def load_fits(self,filename=None):
         """
@@ -1913,8 +1930,8 @@ class SED(object):
         self.results['igrid_search']['factor'] = ff['igrid_search'].header['factor']
         
         self.results['model'] = ff[2].data.field('wave'),ff[2].data.field('flux'),ff[2].data.field('dered_flux')
-        self.results['chi2'] = ff[1].data.field('chi2')
-        self.results['synflux'] = ff[1].data.field('mod_eff_wave'),ff[1].data.field('synflux'),ff[1].data.field('photband')
+        self.results['chi2'] = ff[4].data.field('chi2')
+        self.results['synflux'] = ff[4].data.field('mod_eff_wave'),ff[4].data.field('synflux'),ff[1].data.field('photband')
         
         
         #-- observed photometry
