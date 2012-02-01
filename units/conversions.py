@@ -32,6 +32,7 @@ Some of the many possibilities include:
     for this to work, since the latest currency definitions and rates need to
     queried from the European Central Bank (automatically done when using the
     terminal tool).
+    10. Computations with units.
 
 B{Warning 1:} frequency units are technically given in cycles per time (cy).
 This means that if you want to convert e.g. muHz to d-1 (or 1/d), you need to
@@ -44,7 +45,9 @@ with prefixes. This is a list of non-exhaustive ambiguities (the preffered one
 in italic):
 
     - C{as}: I{arcsecond} vs attosecond
+    - C{am}: I{arcminute} vs attominute
     - C{min}: I{minute} vs milli-inch
+    - C{yd}: I{yard} vs yoctoday
     
 This module can be used as:
 
@@ -253,6 +256,7 @@ Section 4. Calculating with units
 
 There exists a class L{Unit}, which allows you to calculate with values with
 units. 
+
 B{Example 1:} Calculate the inclination of star, given a measured
 C{vsini=150+/-11} km/s, a rotation period of C{2+/-1} days and a radius of
 C{12+/-0.5} solar radii. First we give in our data:
@@ -653,7 +657,10 @@ def convert(_from,_to,*args,**kwargs):
         left_over = " ".join(['%s%d'%(i,j) for i,j in only_from_c])
         left_over+= " "+" ".join(['%s%d'%(i,-j) for i,j in only_to_c])
         left_over = breakdown(left_over)[1]
-        only_from = "".join(left_over.split())
+        #-- but be sure to convert everything to SI units so that the switch
+        #   can be interpreted.
+        left_over = [change_convention('SI',ilo) for ilo in left_over.split()]
+        only_from = "".join(left_over)
         only_to = ''
 
         #-- first we remove any differences concerning (ster)radians
@@ -863,6 +870,9 @@ def set_convention(units='SI',values='standard'):
         
     constants._current_convention = units
     constants._current_values = values
+    #-- when we set everything back to SI, make sure we have no rounding errors:
+    if units=='SI':
+        reload(constants)
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
@@ -2103,7 +2113,7 @@ class Unit(object):
     >>> print a+b
     4002.0 m1
     
-    For example, when you want to calculated the equatorial velocity of the sun,
+    For example, when you want to calculated the equatorial velocity of the Sun,
     you could do:
     
     >>> distance = Unit(2*np.pi,'Rsol')
@@ -2116,6 +2126,8 @@ class Unit(object):
     >>> print (distance/time).convert('km/s')
     2.29903495719
     
+    and with uncertainties:
+    
     >>> distance = Unit((2*np.pi,0.1),'Rsol')
     >>> print (distance/time).convert('km/s')
     2.29903495719+/-0.0365902777778
@@ -2127,7 +2139,7 @@ class Unit(object):
     >>> R = Unit(constants.Rsol,constants.Rsol_units)
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
     >>> print "{0:.6f}".format(logg)
-    4.437889
+    4.438307
     
     or 
     
@@ -2136,7 +2148,7 @@ class Unit(object):
     >>> R = Unit(1.,'Rsol')
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
     >>> print "{0:.6f}".format(logg)
-    4.438336
+    4.438307
     
     or 
     
@@ -2147,7 +2159,7 @@ class Unit(object):
     >>> R = Unit((1.,0.01),'Rsol')
     >>> logg = np.log10(G*M/R**2)
     >>> print logg
-    4.43833602285+/-0.00971111983789 
+    4.43830739117+/-0.00971111983789 
     
     >>> old = set_convention('SI')
     
