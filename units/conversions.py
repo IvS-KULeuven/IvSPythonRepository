@@ -304,6 +304,7 @@ It is not sufficient within about 1 sigma.
 """
 #-- standard libraries
 import itertools
+import collections
 import re
 import os
 import sys
@@ -843,9 +844,12 @@ def set_convention(units='SI',values='standard'):
         setattr(constants,const,new_value)
         setattr(constants,const+'_units',new_units)
     #-- convert the _factors in this module to the new convention
+    new_factors = {}
     for fac in _factors:
         _from = _factors[fac][1]
-        if not _from: continue
+        if not _from:
+            new_factors[fac] = _factors[fac]
+            continue
         _to = change_convention(units,_from)
         #-- if this unit is one of the base units of any system, make sure not
         #   to set the '1' at the end, or we'll get in trouble...
@@ -860,11 +864,15 @@ def set_convention(units='SI',values='standard'):
         if _from==_to[:-1] and _to[-1]=='1':
             _to = _to[:-1]
         try:
-            _factors[fac] = (convert(_from,_to,_factors[fac][0]),_to,_factors[fac][2],_factors[fac][3])
+            new_factors[fac] = (convert(_from,_to,_factors[fac][0]),_to,_factors[fac][2],_factors[fac][3])
         except ValueError:
+            new_factors[fac] = _factors[fac]
             continue
         except TypeError:
+            new_factors[fac] = _factors[fac]
             continue
+    for fac in _factors:
+        _factors[fac] = new_factors[fac]
     #-- convert the switches in this module to the new convention
     #for switch in _switch:
         
@@ -1059,6 +1067,7 @@ def components(unit):
     #   (e.g., 'mu') and a unit name (e.g. 'm')) into prefix and unit name
     #-- check if basis is part of _factors dictionary. If not, find the
     #   combination of _scalings and basis which is inside the dictionary!
+    
     for scale in _scalings:
         scale_unit,base_unit = basis[:len(scale)],basis[len(scale):]
         if scale_unit==scale and base_unit in _factors and not basis in _factors:
@@ -1081,6 +1090,8 @@ def components(unit):
     basis = _factors[basis][1]
     
     return factor,basis,power
+
+
 
 def breakdown(unit):
     """
@@ -2288,107 +2299,107 @@ class Unit(object):
             
 _fluxcalib = os.path.join(os.path.abspath(os.path.dirname(__file__)),'fluxcalib.dat')
 #-- basic units which the converter should know about
-_factors = {
+_factors = collections.OrderedDict([
 # DISTANCE
-           'm':     (  1e+00,       'm','distance','meter'), # meter
-           'A':     (  1e-10,       'm','distance','angstrom'), # Angstrom
-           'AU':    (constants.au,    constants.au_units,'distance','astronomical unit'), # astronomical unit
-           'pc':    (constants.pc,    constants.pc_units,'distance','parsec'), # parsec
-           'ly':    (constants.ly,    constants.ly_units,'distance','light year'), # light year
-           'Rsol':  (constants.Rsol,  constants.Rsol_units,'distance','Solar radius'), # Solar radius
-           'Rearth':(constants.Rearth,constants.Rearth_units,'distance','Earth radius'), # Earth radius
-           'ft':    (0.3048,        'm','distance','foot (international)'), # foot (international)
-           'in':    (0.0254,        'm','distance','inch (international)'), # inch (international)
-           'mi':    (1609.344,      'm','distance','mile (international)'), # mile (international)
-           'a0':    (constants.a0,  constants.a0_units,'distance','Bohr radius'), # Bohr radius
-           'ell':   (1.143,         'm','distance','ell'), # ell
-           'yd':    (0.9144,        'm','distance','yard (international)'), # yard (international)
+           ('m',     (  1e+00,       'm','distance','meter')), # meter
+           ('A',     (  1e-10,       'm','distance','angstrom')), # Angstrom
+           ('AU',    (constants.au,    constants.au_units,'distance','astronomical unit')), # astronomical unit
+           ('pc',    (constants.pc,    constants.pc_units,'distance','parsec')), # parsec
+           ('ly',    (constants.ly,    constants.ly_units,'distance','light year')), # light year
+           ('Rsol',  (constants.Rsol,  constants.Rsol_units,'distance','Solar radius')), # Solar radius
+           ('Rearth',(constants.Rearth,constants.Rearth_units,'distance','Earth radius')), # Earth radius
+           ('ft',    (0.3048,        'm','distance','foot (international)')), # foot (international)
+           ('in',    (0.0254,        'm','distance','inch (international)')), # inch (international)
+           ('mi',    (1609.344,      'm','distance','mile (international)')), # mile (international)
+           ('a0',    (constants.a0,  constants.a0_units,'distance','Bohr radius')), # Bohr radius
+           ('ell',   (1.143,         'm','distance','ell')), # ell
+           ('yd',    (0.9144,        'm','distance','yard (international)')), # yard (international)
 # MASS
-           'g':     (  1e-03,       'kg','mass','gram'), # gram
-           'amu':   (1.66053892173e-27,'kg','mass','atomic mass'), # atomic mass unit (wikipedia)
-           'Msol':  (constants.Msol,   constants.Msol_units,'mass','Solar mass'), # Solar mass
-           'Mearth':(constants.Mearth, constants.Mearth_units,'mass','Earth mass'), # Earth mass
-           'Mjup':  (constants.Mjup,   constants.Mjup_units,'mass','Jupiter mass'), # Jupiter mass
-           'Mlun':  (constants.Mlun,   constants.Mlun_units,'mass','Lunar mass'), # Lunar mass
-           'lbs':   (0.45359237,    'kg','mass','pound'), # pound
-           'st':    (6.35029318,    'kg','mass','stone'), # stone
-           'ounce': (0.0283495231,  'kg','mass','ounce'), # ounce
-           'mol':   (1./constants.NA,'mol','mass','molar mass'), # not really a mass...
+           ('g',     (  1e-03,       'kg','mass','gram')), # gram
+           ('amu',   (1.66053892173e-27,'kg','mass','atomic mass')), # atomic mass unit (wikipedia)
+           ('Msol',  (constants.Msol,   constants.Msol_units,'mass','Solar mass')), # Solar mass
+           ('Mearth',(constants.Mearth, constants.Mearth_units,'mass','Earth mass')), # Earth mass
+           ('Mjup',  (constants.Mjup,   constants.Mjup_units,'mass','Jupiter mass')), # Jupiter mass
+           ('Mlun',  (constants.Mlun,   constants.Mlun_units,'mass','Lunar mass')), # Lunar mass
+           ('lbs',   (0.45359237,    'kg','mass','pound')), # pound
+           ('st',    (6.35029318,    'kg','mass','stone')), # stone
+           ('ounce', (0.0283495231,  'kg','mass','ounce')), # ounce
+           ('mol',   (1./constants.NA,'mol','mass','molar mass')), # not really a mass...
 # TIME
-           's':     (  1e+00,       's','time','second'),     # second
-           'min':   (  60.,         's','time','minute'),     # minute
-           'h':     (3600.,         's','time','hour'),     # hour 
-           'd':     (24*3600.,      's','time','day'),     # day
-           'wk':    (7*24*3600.,    's','time','week'),     # week
-           'mo':    (30*7*24*3600., 's','time','month'),     # month
-           'sidereal': (1.0027379093,'','time','sidereal day'),     # sidereal
-           'yr':    (3.1558149984e7,'s','time','year'),     # year
-           'cr':    (100*365*24*3600,'s','time','century'),    # century
-           'hz':    (1e+00,         'cy s-1','time','Hertz'),# Hertz
-           'JD':    (1e+00,         'JD','time','Julian day'), # Julian Day
-           'CD':    (JulianDay,     'JD','time','calender day'), # Calender Day
-           'MJD':   (ModJulianDay,  'JD','time','modified Julian day'), # Modified Julian Day
-           'j':     (1/60.,         's','time','jiffy'),  # jiffy
+           ('s',     (  1e+00,       's','time','second')),     # second
+           ('min',   (  60.,         's','time','minute')),     # minute
+           ('h',     (3600.,         's','time','hour')),     # hour 
+           ('d',     (24*3600.,      's','time','day')),     # day
+           ('wk',    (7*24*3600.,    's','time','week')),     # week
+           ('mo',    (30*7*24*3600., 's','time','month')),     # month
+           ('sidereal', (1.0027379093,'','time','sidereal day')),     # sidereal
+           ('yr',    (3.1558149984e7,'s','time','year')),     # year
+           ('cr',    (100*365*24*3600,'s','time','century')),    # century
+           ('hz',    (1e+00,         'cy s-1','time','Hertz')),# Hertz
+           ('JD',    (1e+00,         'JD','time','Julian day')), # Julian Day
+           ('CD',    (JulianDay,     'JD','time','calender day')), # Calender Day
+           ('MJD',   (ModJulianDay,  'JD','time','modified Julian day')), # Modified Julian Day
+           ('j',     (1/60.,         's','time','jiffy')),  # jiffy
 # ANGLES
-           'rad':         (1e+00,               'rad','angle','radian'),  # radian
-           'cy':          (1e+00,               'cy','angle','cycle'),   # cycle
-           'deg':         (np.pi/180.,          'rad','angle','degree'),  # degree
-           'am':          (np.pi/180./60.,      'rad','angle','arcminute'),  # arcminute
-           'as':          (np.pi/180./3600.,    'rad','angle','arcsecond'),  # arcsecond
-           'sr':          (1,                   'rad2','angle','sterradian'), # sterradian #1/39.4784176045
-           'rpm':         (0.104719755,         'rad/s','angle','revolutions per minute'),# revolutions per minute
+           ('rad',         (1e+00,               'rad','angle','radian')),  # radian
+           ('cy',          (1e+00,               'cy','angle','cycle')),   # cycle
+           ('deg',         (np.pi/180.,          'rad','angle','degree')),  # degree
+           ('am',          (np.pi/180./60.,      'rad','angle','arcminute')),  # arcminute
+           ('as',          (np.pi/180./3600.,    'rad','angle','arcsecond')),  # arcsecond
+           ('sr',          (1,                   'rad2','angle','sterradian')), # sterradian #1/39.4784176045
+           ('rpm',         (0.104719755,         'rad/s','angle','revolutions per minute')),# revolutions per minute
 # COORDINATES
-           'complex_coord':(1e+00+0*1j, 'complex_coord','coordinate','<own unit>'), # own unit
-           'equ':          (EquCoords,  'complex_coord','coordinate','equatorial'), # Equatorial coordinates
-           'gal':          (GalCoords,  'complex_coord','coordinate','galactic'), # Galactic coordinates
-           'ecl':          (EclCoords,  'complex_coord','coordinate','ecliptic'), # Ecliptic coordinates
-           'deg_coord':    (DegCoords,  'complex_coord','coordinate','degrees'), # Coordinates in degrees
-           'rad_coord':    (RadCoords,  'complex_coord','coordinate','radians'), # Coordinates in radians
+           ('complex_coord',(1e+00+0*1j, 'complex_coord','coordinate','<own unit>')), # own unit
+           ('equ',          (EquCoords,  'complex_coord','coordinate','equatorial')), # Equatorial coordinates
+           ('gal',          (GalCoords,  'complex_coord','coordinate','galactic')), # Galactic coordinates
+           ('ecl',          (EclCoords,  'complex_coord','coordinate','ecliptic')), # Ecliptic coordinates
+           ('deg_coord',    (DegCoords,  'complex_coord','coordinate','degrees')), # Coordinates in degrees
+           ('rad_coord',    (RadCoords,  'complex_coord','coordinate','radians')), # Coordinates in radians
 # FORCE
-           'N':     (1e+00,         'kg m s-2','force','Newton'), # newton
-           'dyn':   (1e-05,         'kg m s-2','force','dyne'), # dyne
+           ('N',     (1e+00,         'kg m s-2','force','Newton')), # newton
+           ('dyn',   (1e-05,         'kg m s-2','force','dyne')), # dyne
 # TEMPERATURE
-           'K':      (1e+00,        'K','temperature','Kelvin'), # Kelvin
-           'F':      (Fahrenheit,   'K','temperature','Fahrenheit'), # Fahrenheit
-           'C':      (Celcius,      'K','temperature','Celcius'), # Celcius
-           'Tsol':   (constants.Tsol,constants.Tsol_units,'temperature','Solar temperature'), # solar temperature
+           ('K',      (1e+00,        'K','temperature','Kelvin')), # Kelvin
+           ('F',      (Fahrenheit,   'K','temperature','Fahrenheit')), # Fahrenheit
+           ('C',      (Celcius,      'K','temperature','Celcius')), # Celcius
+           ('Tsol',   (constants.Tsol,constants.Tsol_units,'temperature','Solar temperature')), # solar temperature
 # ENERGY & POWER
-           'J':     (  1e+00,       'kg m2 s-2','energy/power','Joule'), # Joule
-           'W':     (  1e+00,       'kg m2 s-3','energy/power','Watt'), # Watt
-           'erg':   (  1e-07,       'kg m2 s-2','energy/power','ergon'), # ergon
-           'eV':    (1.60217646e-19,'kg m2 s-2','energy/power','electron volt'), # electron volt
-           'cal':   (4.1868,        'kg m2 s-2','energy/power','calorie (international table)'),# calorie (International table)
-           'Lsol':  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity'), # solar luminosity
-           'hp':    (745.699872,    'kg m2 s-3','energy/power','Horsepower'), # horsepower
+           ('J',     (  1e+00,       'kg m2 s-2','energy/power','Joule')), # Joule
+           ('W',     (  1e+00,       'kg m2 s-3','energy/power','Watt')), # Watt
+           ('erg',   (  1e-07,       'kg m2 s-2','energy/power','ergon')), # ergon
+           ('eV',    (1.60217646e-19,'kg m2 s-2','energy/power','electron volt')), # electron volt
+           ('cal',   (4.1868,        'kg m2 s-2','energy/power','calorie (international table)')),# calorie (International table)
+           ('Lsol',  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity')), # solar luminosity
+           ('hp',    (745.699872,    'kg m2 s-3','energy/power','Horsepower')), # horsepower
 # PRESSURE
-           'Pa':    (  1e+00,       'kg m-1 s-2','pressure','Pascal'), # Pascal
-           'bar':   (  1e+05,       'kg m-1 s-2','pressure','baros'), # baros
-           'at':    (  98066.5,     'kg m-1 s-2','pressure','atmosphere (technical)'), # atmosphere (technical)
-           'atm':   ( 101325,       'kg m-1 s-2','pressure','atmosphere (standard)'), # atmosphere (standared)
-           'torr':  (    133.322,   'kg m-1 s-2','pressure','Torricelli'), # Torricelli
-           'psi':   (   6894.,      'kg m-1 s-2','pressure','pound per square inch'), # pound per square inch
+           ('Pa',    (  1e+00,       'kg m-1 s-2','pressure','Pascal')), # Pascal
+           ('bar',   (  1e+05,       'kg m-1 s-2','pressure','baros')), # baros
+           ('at',    (  98066.5,     'kg m-1 s-2','pressure','atmosphere (technical)')), # atmosphere (technical)
+           ('atm',   ( 101325,       'kg m-1 s-2','pressure','atmosphere (standard)')), # atmosphere (standared)
+           ('torr',  (    133.322,   'kg m-1 s-2','pressure','Torricelli')), # Torricelli
+           ('psi',   (   6894.,      'kg m-1 s-2','pressure','pound per square inch')), # pound per square inch
 # AREA
-           'ac':    (4046.8564224,  'm2','area','acre (international)'), # acre (international)
-           'a':     (100.,          'm2','area','are'), # are
+           ('ac',    (4046.8564224,  'm2','area','acre (international)')), # acre (international)
+           ('a',     (100.,          'm2','area','are')), # are
 # FLUX
 # -- absolute magnitudes
-           'Jy':      (1e-26,         'kg s-2 cy-1','flux','Jansky'), # W/m2/Hz
-           'vegamag': (VegaMag,       'kg m-1 s-3','flux','Vega magnitude'),  # W/m2/m
-           'mag':     (VegaMag,       'kg m-1 s-3','flux','magnitude'),  # W/m2/m
-           'STmag':   (STMag,         'kg m-1 s-3','flux','ST magnitude'),  # W/m2/m
-           'ABmag':   (ABMag,         'kg s-2 cy-1','flux','AB magnitude'), # W/m2/Hz
+           ('Jy',      (1e-26,         'kg s-2 cy-1','flux','Jansky')), # W/m2/Hz
+           ('vegamag', (VegaMag,       'kg m-1 s-3','flux','Vega magnitude')),  # W/m2/m
+           ('mag',     (VegaMag,       'kg m-1 s-3','flux','magnitude')),  # W/m2/m
+           ('STmag',   (STMag,         'kg m-1 s-3','flux','ST magnitude')),  # W/m2/m
+           ('ABmag',   (ABMag,         'kg s-2 cy-1','flux','AB magnitude')), # W/m2/Hz
 # -- magnitude differences (colors)
-           'mag_color':(Color,         'flux_ratio','flux','color'),
-           'flux_ratio':(1+00,         'flux_ratio','flux','flux ratio'),
+           ('mag_color',(Color,         'flux_ratio','flux','color')),
+           ('flux_ratio',(1+00,         'flux_ratio','flux','flux ratio')),
 # -- magnitude amplitudes
-           'ampl':    (1e+00,         'ampl','flux','fractional amplitude'),
-           'Amag':    (AmplMag,       'ampl','flux','amplitude in magnitude'),
-           'pph':     (1e-02,         'ampl','flux','amplitude in parts per hundred'), # amplitude
-           'ppt':     (1e-03,         'ampl','flux','amplitude in parts per thousand'), # amplitude
-           'ppm':     (1e-06,         'ampl','flux','amplitude in parts per million'), # amplitude
+           ('ampl',    (1e+00,         'ampl','flux','fractional amplitude')),
+           ('Amag',    (AmplMag,       'ampl','flux','amplitude in magnitude')),
+           ('pph',     (1e-02,         'ampl','flux','amplitude in parts per hundred')), # amplitude
+           ('ppt',     (1e-03,         'ampl','flux','amplitude in parts per thousand')), # amplitude
+           ('ppm',     (1e-06,         'ampl','flux','amplitude in parts per million')), # amplitude
 # -- currency
-           'EUR':     (1e+00,         'EUR','currency','EURO')
-           }
+           ('EUR',     (1e+00,         'EUR','currency','EURO'))
+           ])
 #-- set of conventions:
 _conventions = {'SI': dict(mass='kg',length='m', time='s',temperature='K',
                           electric_current='ampere',lum_intens='cd',amount='mol'), # International standard
