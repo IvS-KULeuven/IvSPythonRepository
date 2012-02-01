@@ -833,9 +833,11 @@ class SED(object):
         #--load information from the FITS file if it exists
         if load_fits:
             self.load_fits()
+        else:
+            self.results = {}
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
-        self.results = {}
+        
     
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,include=None,exclude=None):
@@ -1166,6 +1168,7 @@ class SED(object):
         if not 'igrid_search' in self.results:
             self.results['igrid_search'] = {}
         elif 'grid' in self.results['igrid_search']:
+            logger.info('New results appended to previous results')
             grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
             sa = np.argsort(grid_results['chisq'])[::-1]
             grid_results = grid_results[sa]
