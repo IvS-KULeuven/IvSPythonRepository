@@ -2,6 +2,16 @@
 """
 Convert one unit (and uncertainty) to another.
 
+Contents:
+
+    1. B{The Python module}: basic usage of the Python module
+    2. B{The Terminal tool}: basic usage of the terminal tool
+    3. B{Fundamental constants and base unit systems}
+        - Changing base unit system
+        - Changing the values of the fundamental constants
+    4. B{Calculating with units}
+    5. B{Examples}
+
 Some of the many possibilities include:
     
     1. Conversions between equal-type units: meter to nano-lightyears, erg/s
@@ -23,9 +33,18 @@ Some of the many possibilities include:
     queried from the European Central Bank (automatically done when using the
     terminal tool).
 
-B{Warning:} frequency units are technically given in cycles per time (cy).
+B{Warning 1:} frequency units are technically given in cycles per time (cy).
 This means that if you want to convert e.g. muHz to d-1 (or 1/d), you need to
 ask for cy/d.
+
+B{Warning 2:} there is some ambiguity between units. For example, C{as} can be
+interpreted as 'arcsecond', but also as 'attosecond'. In case of ambiguity,
+the basic units will be preferred (in this case 'arcsecond'), instead of the one
+with prefixes. This is a list of non-exhaustive ambiguities (the preffered one
+in italic):
+
+    - C{as}: I{arcsecond} vs attosecond
+    - C{min}: I{minute} vs milli-inch
     
 This module can be used as:
 
@@ -191,8 +210,12 @@ maybe want to work in cgs by default, which means that typing the postfix every
 time is time consuming. For this purpose, you can redefine all constants in a
 different base system with the simply command
 
+>>> print constants.Msol,constants.GG
+1.988547e+30 6.67384e-11
 >>> set_convention(units='cgs')
 ('SI', 'standard')
+>>> print constants.Msol,constants.GG
+1.988547e+33 6.67384e-08
 
 and resetting to the default SI can be done by calling L{set_convention} without
 any arguments, or simply
@@ -200,7 +223,7 @@ any arguments, or simply
 >>> set_convention(units='SI')
 ('cgs', 'standard')
 
-B{Warning:} The value of the constants are changed in B{all} modules, where
+B{Warning:} Changing the value of the constants affects B{all} modules, where
 an import statement C{from ivs.units import constants} is made. It will B{not}
 change the values in modules where the import is done via
 C{from ivs.units.constants import *}. If you want to get the value of a
@@ -225,10 +248,34 @@ But for the sake of the examples, we'll switch back to the default SI...
 ('cgs', 'mesa')
 
 
-Section 4.  Examples
-====================
+Section 4. Calculating with units
+=================================
 
-B{Example 1:} The following is an exam question on the Biophysics exam (1st year
+There exists a class L{Unit}, which allows you to calculate with values with
+units. 
+B{Example 1:} Calculate the inclination of star, given a measured
+C{vsini=150+/-11} km/s, a rotation period of C{2+/-1} days and a radius of
+C{12+/-0.5} solar radii. First we give in our data:
+
+>>> vsini = Unit((150.,11),'km/s')
+>>> P = Unit((2.,1.),'d')
+>>> R = Unit((12.,0.5),'Rsol')
+
+Now we can calculate the C{sini}:
+
+>>> sini =  vsini * P / (2*np.pi*R) 
+
+And take the arcsine to recover the inclination angle in radians. Because we
+are working with the L{Unit} class, we can also immediately retrieve it in
+degrees:
+
+>>> print np.arcsin(sini)
+0.517004704077+/-0.288312219664 rad
+>>> print np.arcsin(sini).convert('deg')
+29.622187532+/-16.5190733688
+
+
+B{Example 2:} The following is an exam question on the Biophysics exam (1st year
 Bachelor) about error propagation.
 
 Question: Suppose there is a party to celebrate the end of the Biophysics exam.
@@ -243,9 +290,9 @@ Answer:
 >>> r = Unit( (15.5/(2*np.pi), 0.5/(2*np.pi)), 'cm')
 >>> h = Unit( (10.0,0.5), 'cm')
 >>> V = np.pi*r**2*h
->>> print V
+>>> print(V)
 0.000191184875389+/-1.56051027314e-05 m3
->>> print (5*V).convert('dm3')
+>>> print((5*V).convert('dm3'))
 0.955924376946+/-0.0780255136569
 
 It is not sufficient within about 1 sigma.
@@ -269,7 +316,9 @@ except ImportError: print("Unable to load pyephem, stellar coordinate transforma
 from ivs.units import constants
 #from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc,ufloat
-from ivs.units.uncertainties.unumpy import log10,sqrt,sin,cos
+from ivs.units.uncertainties.unumpy import log10,log,exp,sqrt
+from ivs.units.uncertainties.unumpy import sin,cos,tan
+from ivs.units.uncertainties.unumpy import arcsin,arccos,arctan
 from ivs.sed import filters
 from ivs.io import ascii
 from ivs.aux import loggers
@@ -376,19 +425,19 @@ def convert(_from,_to,*args,**kwargs):
     
     B{Fluxes}:
     
-    >>> convert('erg/s/cm2/A','Jy',1e-10,wave=(10000.,'angstrom'))
-    333.564095198152
-    >>> convert('erg/s/cm2/A','Jy',1e-10,freq=(constants.cc/1e-6,'hz'))
-    333.564095198152
-    >>> convert('erg/s/cm2/A','Jy',1e-10,freq=(constants.cc,'Mhz'))
-    333.564095198152
-    >>> convert('Jy','erg/s/cm2/A',333.56409519815202,wave=(10000.,'A'))
+    >>> print(convert('erg/s/cm2/A','Jy',1e-10,wave=(10000.,'angstrom')))
+    333.564095198
+    >>> print(convert('erg/s/cm2/A','Jy',1e-10,freq=(constants.cc/1e-6,'hz')))
+    333.564095198
+    >>> print(convert('erg/s/cm2/A','Jy',1e-10,freq=(constants.cc,'Mhz')))
+    333.564095198
+    >>> print(convert('Jy','erg/s/cm2/A',333.56409519815202,wave=(10000.,'A')))
     1e-10
-    >>> convert('Jy','erg/s/cm2/A',333.56409519815202,freq=(constants.cc,'Mhz'))
+    >>> print(convert('Jy','erg/s/cm2/A',333.56409519815202,freq=(constants.cc,'Mhz')))
     1e-10
     >>> convert('W/m2/mum','erg/s/cm2/A',1e-10,wave=(10000.,'A'))
     1.0000000000000003e-11
-    >>> convert('Jy','W/m2/Hz',1.)
+    >>> print(convert('Jy','W/m2/Hz',1.))
     1e-26
     >>> print convert('W/m2/Hz','Jy',1.)
     1e+26
@@ -396,17 +445,17 @@ def convert(_from,_to,*args,**kwargs):
     1e-23
     >>> print convert('erg/cm2/s/Hz','Jy',1.)
     1e+23
-    >>> convert('Jy','erg/s/cm2',1.,wave=(2.,'micron'))
+    >>> print(convert('Jy','erg/s/cm2',1.,wave=(2.,'micron')))
     1.49896229e-09
-    >>> convert('erg/s/cm2','Jy',1.,wave=(2.,'micron'))
-    667128190.3963041
-    >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
-    4511059.829810158
-    >>> convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas'))
-    3542978.105308904
-    >>> convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas'))
-    2.2167739682629828e-07
-    >>> convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron'))
+    >>> print(convert('erg/s/cm2','Jy',1.,wave=(2.,'micron')))
+    667128190.396
+    >>> print(convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),ang_diam=(3.,'mas')))
+    4511059.82981
+    >>> print(convert('Jy','erg/s/cm2/micron/sr',1.,wave=(2.,'micron'),pix=(3.,'mas')))
+    3542978.10531
+    >>> print(convert('erg/s/cm2/micron/sr','Jy',1.,wave=(2.,'micron'),ang_diam=(3.,'mas')))
+    2.21677396826e-07
+    >>> print(convert('Jy','erg/s/cm2/micron',1.,wave=(2,'micron')))
     7.49481145e-10
     >>> print(convert('10mW m-2 nm-1','erg s-1 cm-2 A-1',1.))
     1.0
@@ -575,7 +624,7 @@ def convert(_from,_to,*args,**kwargs):
             kwargs_SI[key] = kwargs[key]
     
     #-- add some default values if necessary
-    if uni_from!=uni_to and uni_from=='m1' and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
+    if uni_from!=uni_to and is_type(uni_from,'length') and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
         kwargs_SI['wave'] = fac_from*start_value
         logger.warning('Assumed input value to serve also for "wave" key')
     elif uni_from!=uni_to and uni_from=='cy1 s-1' and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
@@ -734,8 +783,8 @@ def change_convention(to_,units):
     powers = re.findall(r'[0-9\W]+',units, re.I)
     #-- make the translation dictionary
     translator = {}
-    for key in sorted(_conventions['SI'].keys()):
-        translator[_conventions['SI'][key]] = _conventions[to_][key]
+    for key in sorted(_conventions[constants._current_convention].keys()):
+        translator[_conventions[constants._current_convention][key]] = _conventions[to_][key]
     #-- translate
     new_units = [unit in translator and translator[unit] or unit for unit in new_units]
     #-- weave them back in
@@ -758,10 +807,11 @@ def set_convention(units='SI',values='standard'):
     @return: name of old convention
     @rtype: str
     """
+    constants._current_convention
     to_return = constants._current_convention,constants._current_values
     values = values.lower()
     #-- first reload the constants to their original values (i.e. SI based)
-    reload(constants)
+    #reload(constants)
     #-- then, where possible, replace all the constants with the value from
     #   the other convention:
     cvars = dir(constants)
@@ -785,10 +835,53 @@ def set_convention(units='SI',values='standard'):
         #-- and attach to the constants module
         setattr(constants,const,new_value)
         setattr(constants,const+'_units',new_units)
+    #-- convert the _factors in this module to the new convention
+    for fac in _factors:
+        _from = _factors[fac][1]
+        if not _from: continue
+        _to = change_convention(units,_from)
+        #-- if this unit is one of the base units of any system, make sure not
+        #   to set the '1' at the end, or we'll get in trouble...
+        try:
+            for conv in _conventions:
+                for typ in _conventions[conv]:
+                    if _conventions[conv][typ]==_to[:-1] and _to[-1]=='1':
+                        _to = _to[:-1]
+                        raise StopIteration
+        except StopIteration:
+            pass
+        if _from==_to[:-1] and _to[-1]=='1':
+            _to = _to[:-1]
+        try:
+            _factors[fac] = (convert(_from,_to,_factors[fac][0]),_to,_factors[fac][2],_factors[fac][3])
+        except ValueError:
+            continue
+        except TypeError:
+            continue
+    #-- convert the switches in this module to the new convention
+    #for switch in _switch:
+        
     constants._current_convention = units
     constants._current_values = values
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
+
+def is_type(unit,type):
+    """
+    Change if a unit is a basic unit, i.e. of type mass, length...
+    
+    @parameter unit: unit to check
+    @type unit: str
+    @parameter type: type to check
+    @type type: str
+    """
+    for conv in _conventions:
+        if unit==_conventions[conv][type] or (unit[:-1]==_conventions[conv][type] and unit[-1]=='1'):
+            return True
+    else:
+        return False
+            
+            
 
 def get_constant(constant_name,units='SI',value='standard'):
     """
@@ -918,7 +1011,7 @@ def components(unit):
     >>> print(components('mm'))
     (0.001, 'm', 1)
     >>> print(components('W3'))
-    (1.0, 'kg m2 s-3', 3)
+    (1.0, 'm2 kg1 s-3', 3)
     >>> print(components('s-2'))
     (1.0, 's', -2)
     
@@ -1753,7 +1846,7 @@ class ABMag(NonLinearConverter):
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         zp = filters.get_info()
-        F0 = 3.6307805477010024e-23
+        F0 = convert('W/m2/Hz',constants._current_convention,3.6307805477010024e-23)
         match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
         mag0 = float(zp['ABmag'][match][0])
@@ -1775,7 +1868,7 @@ class STMag(NonLinearConverter):
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         zp = filters.get_info()
-        F0 = 0.036307805477010027
+        F0 = conversions.convert('erg/s/cm2/A',constants._current_convention,3.6307805477010028e-09)#0.036307805477010027
         match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
         mag0 = float(zp['STmag'][match][0])
@@ -2027,21 +2120,36 @@ class Unit(object):
     >>> print (distance/time).convert('km/s')
     2.29903495719+/-0.0365902777778
     
-    To compute the surface gravity of the sun:
+    To compute the surface gravity of the Sun:
     
     >>> G = Unit(constants.GG,constants.GG_units)
     >>> M = Unit(constants.Msol,constants.Msol_units)
     >>> R = Unit(constants.Rsol,constants.Rsol_units)
-    >>> print np.log10((G*M/R**2).convert('cgs'))
-    4.43830739117
+    >>> logg = np.log10((G*M/R**2).convert('cgs'))
+    >>> print "{0:.6f}".format(logg)
+    4.437889
     
     or 
     
     >>> G = Unit(constants.GG,constants.GG_units)
     >>> M = Unit(1.,'Msol')
     >>> R = Unit(1.,'Rsol')
-    >>> print np.log10((G*M/R**2).convert('cgs'))
-    4.43830739117
+    >>> logg = np.log10((G*M/R**2).convert('cgs'))
+    >>> print "{0:.6f}".format(logg)
+    4.438336
+    
+    or 
+    
+    >>> old = set_convention('cgs')
+    
+    >>> G = constants.GG
+    >>> M = Unit((1.,0.01),'Msol')
+    >>> R = Unit((1.,0.01),'Rsol')
+    >>> logg = np.log10(G*M/R**2)
+    >>> print logg
+    4.43833602285+/-0.00971111983789 
+    
+    >>> old = set_convention('SI')
     
     
     """
@@ -2058,7 +2166,7 @@ class Unit(object):
         
         #-- values and units to work with
         if self.unit is not None:
-            self._SI_value = convert(self.unit,'SI',self.value,**kwargs)
+            self._SI_value = convert(self.unit,constants._current_convention,self.value,**kwargs)
         else:
             self._SI_value = self.value
         self._basic_unit = breakdown(self.unit)[1]
@@ -2145,12 +2253,20 @@ class Unit(object):
         #fac,new_unit = breakdown(new_unit)
         #return Unit(self._SI_value**power,new_unit)
     
+    def sin(self): return Unit(sin(self.convert('rad')),'')
+    def cos(self): return Unit(cos(self.convert('rad')),'')
+    def tan(self): return Unit(tan(self.convert('rad')),'')
+    def arcsin(self): return Unit(arcsin(self.value),'rad')
+    def arccos(self): return Unit(arccos(self.value),'rad')
+    def arctan(self): return Unit(arctan(self.value),'rad')
+    def log10(self): return Unit(log10(self.value),'')
+    def log(self): return Unit(log(self.value),'')
+    def exp(self): return Unit(exp(self.value),'')
+    def sqrt(self): return self**0.5
+        
+    
     def __str__(self):
         return '%s %s'%(self.value,self.unit)
-    
-def usin(unit):
-    value = sin(unit.convert('rad'))
-    return value
         
         
 
