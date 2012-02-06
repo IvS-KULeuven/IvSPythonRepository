@@ -329,7 +329,7 @@ degrees:
 >>> print np.arcsin(sini)
 0.517004704077+/-0.287337185083 rad
 >>> print np.arcsin(sini).convert('deg')
-29.622187532+/-16.4632080024
+29.622187532+/-16.4632080024 deg
 
 
 B{Example 2:} The following is an exam question on the Biophysics exam (1st year
@@ -349,8 +349,8 @@ Answer:
 >>> V = np.pi*r**2*h
 >>> print(V)
 0.000191184875389+/-1.56051027314e-05 m3
->>> print((5*V).convert('dm3'))
-0.955924376946+/-0.0780255136569
+>>> print((5*V).convert('liter'))
+0.955924376946+/-0.0780255136569 liter
 
 It is not sufficient within about 1 sigma.
 
@@ -619,9 +619,13 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('equ','rad_coord',('17:45:40.4','-29:00:28.1'))
     (4.649877104342426, -0.5062817157227474)
     
-    B{Magnetism and Electricity}:
+    B{Magnetism and Electricity}: The stored energy in a magnet, called magnet
+    performance or maximum energy product (often abbreviated BHmax), is
+    typically measured in units of megagauss-oersteds (MGOe). One MGOe is
+    approximately equal to 7957.74715 J/m3 (wikipedia):
     
-    >>> 
+    >>> convert('MG Oe','J/m3',1.)
+    7957.747154594768
     
     @param _from: units to convert from
     @type _from: str
@@ -2200,8 +2204,7 @@ class Unit(object):
     >>> print a+b
     4002.0 m1
     
-    For example, when you want to calculated the equatorial velocity of the Sun,
-    you could do:
+    B{Example 1:} You want to calculated the equatorial velocity of the Sun:
     
     >>> distance = Unit(2*np.pi,'Rsol')
     >>> time = Unit(22.,'d')
@@ -2211,22 +2214,22 @@ class Unit(object):
     or directly to km/s:
     
     >>> print (distance/time).convert('km/s')
-    2.29903495719
+    2.29903495719 km/s
     
     and with uncertainties:
     
     >>> distance = Unit((2*np.pi,0.1),'Rsol')
     >>> print (distance/time).convert('km/s')
-    2.29903495719+/-0.0365902777778
+    2.29903495719+/-0.0365902777778 km/s
     
-    To compute the surface gravity of the Sun:
+    B{Example 2}: The surface gravity of the Sun:
     
     >>> G = Unit(constants.GG,constants.GG_units)
     >>> M = Unit(constants.Msol,constants.Msol_units)
     >>> R = Unit(constants.Rsol,constants.Rsol_units)
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
-    >>> print "{0:.6f}".format(logg)
-    4.438307
+    >>> print logg
+    4.43830739117 
     
     or 
     
@@ -2234,8 +2237,8 @@ class Unit(object):
     >>> M = Unit(1.,'Msol')
     >>> R = Unit(1.,'Rsol')
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
-    >>> print "{0:.6f}".format(logg)
-    4.438307
+    >>> print logg
+    4.43830739117 
     
     or 
     
@@ -2250,6 +2253,16 @@ class Unit(object):
     
     >>> old = set_convention('SI')
     
+    B{Example 3}: The speed of light in vacuum:
+    
+    >>> eps0 = Unit('eps0')
+    >>> mu0 = Unit('mu0')
+    >>> cc = Unit('cc')
+    >>> cc_ = 1./np.sqrt(eps0*mu0)
+    >>> print cc_
+    299792458.004 m1 s-1
+    >>> print cc_/cc
+    1.00000000001 
     
     """
     def __init__(self,value,unit=None,**kwargs):
@@ -2262,6 +2275,10 @@ class Unit(object):
         
         if isinstance(self.value,tuple):
             self.value = ufloat(self.value)
+        if isinstance(self.value,str):
+            self.unit = getattr(constants,self.value+'_units')
+            self.value = getattr(constants,self.value)
+            
         
         #-- values and units to work with
         if self.unit is not None:
@@ -2271,7 +2288,12 @@ class Unit(object):
         self._basic_unit = breakdown(self.unit)[1]
     
     def convert(self,unit):
-        return convert(self.unit,unit,self.value,**self.kwargs)
+        if unit in _conventions:
+            unit_ = change_convention(unit,self.unit)
+        else:
+            unit_ = unit
+        new_value = convert(self.unit,unit_,self.value,**self.kwargs)
+        return Unit(new_value,unit_)
     
     def __lt__(self,other):
         return self._SI_value<other._SI_value
@@ -2337,8 +2359,20 @@ class Unit(object):
             fac,new_unit = breakdown(new_unit)
             outcome = other._SI_value/self._SI_value
         else:
+            new_unit = ''
+            isalpha = True
+            prev_char_min = False
+            for i,char in enumerate(self._basic_unit):
+                if char=='-':
+                    prev_char_min = True
+                    continue
+                if isalpha and not char.isalpha() and not prev_char_min:
+                    new_unit += '-'
+                prev_char_min = False
+                new_unit += char
+                isalpha = char.isalpha()
+            fac,new_unit = breakdown(new_unit)
             outcome = other/self.value
-            new_unit = self.unit
         return Unit(outcome,new_unit)
     
     def __pow__(self,power):
@@ -2450,6 +2484,7 @@ _factors = collections.OrderedDict([
 # PRESSURE
            ('Pa',    (  1e+00,       'kg m-1 s-2','pressure','Pascal')), # Pascal
            ('bar',   (  1e+05,       'kg m-1 s-2','pressure','baros')), # baros
+           ('ba',    (  0.1,         'kg m-1 s-2','pressure','barye')), # Barye
            ('at',    (  98066.5,     'kg m-1 s-2','pressure','atmosphere (technical)')), # atmosphere (technical)
            ('atm',   ( 101325,       'kg m-1 s-2','pressure','atmosphere (standard)')), # atmosphere (standared)
            ('torr',  (    133.322,   'kg m-1 s-2','pressure','Torricelli')), # Torricelli
@@ -2459,6 +2494,7 @@ _factors = collections.OrderedDict([
            ('C',     (      1.,      'Am s', 'electric charge','Coulomb')),
            ('T',     (      1.,      'kg s-2 Am-1','magnetic field strength','Tesla')),
            ('G',     (      1e-4,    'kg s-2 Am-1','magnetic field strength','Gauss')),
+           ('Oe',    (1000/(4*np.pi),'Am m-1','magnetizing field','Oersted')),
            ('V',     (      1.,      'kg m2 s-3 Am-1','electric potential difference','Volt')),
            ('F',     (      1.,      'kg-1 m-2 s4 Am2','electric capacitance','Farad')),
            ('O',     (      1.,      'kg m2 s-3 Am-2','electric resistance','Ohm')),
@@ -2467,9 +2503,10 @@ _factors = collections.OrderedDict([
            ('H',     (      1.,      'kg m2 s-2 Am-2','inductance','Henry')),
            ('lm',    (      1.,      'cd','luminous flux','lumen')),
            ('lx',    (      1.,      'm-2 cd','illuminance','lux')),
-# AREA
+# AREA & VOLUME
            ('ac',    (4046.8564224,  'm2','area','acre (international)')), # acre (international)
            ('a',     (100.,          'm2','area','are')), # are
+           ('l',     (  1e-3,        'm3','volume','liter')),
 # FLUX
 # -- absolute magnitudes
            ('Jy',      (1e-26,         'kg s-2 cy-1','flux','Jansky')), # W/m2/Hz
@@ -2527,9 +2564,9 @@ _scalings ={'y':       1e-24, # yocto
 #-- some common aliases
 _aliases = [('micron','mum'),('au','AU'),
             ('micro','mu'),('milli','m'),('kilo','k'),('mega','M'),('giga','G'),
-            ('nano','n'),
+            ('nano','n'),('dyne','dyn'),
             ('watt','W'),('Watt','W'),
-            ('Hz','hz'),
+            ('Hz','hz'), ('liter','l'),
             ('Tesla','T'),('Ampere','Am'),('Coulomb','C'),
             ('joule','J'),('Joule','J'),
             ('jansky','Jy'),('Jansky','Jy'),('jy','Jy'),
