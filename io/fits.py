@@ -246,6 +246,9 @@ def read2recarray(fits_file,ext=1,return_header=False):
         data = np.rec.array(data,dtype=dtypes)
         header = {}
         for key in ff[ext].header.keys():
+            if 'TTYPE' in key: continue
+            if 'TUNIT' in key: continue
+            if 'TFORM' in key: continue
             header[key] = ff[ext].header[key]
     if not return_header:
         return data
