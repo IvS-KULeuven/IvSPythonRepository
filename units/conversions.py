@@ -627,6 +627,7 @@ def convert(_from,_to,*args,**kwargs):
     >>> convert('MG Oe','J/m3',1.)
     7957.747154594768
     
+    
     @param _from: units to convert from
     @type _from: str
     @param _to: units to convert to
@@ -876,9 +877,11 @@ def set_convention(units='SI',values='standard'):
     @return: name of old convention
     @rtype: str
     """
-    constants._current_convention
     to_return = constants._current_convention,constants._current_values
     values = values.lower()
+    if to_return==(units,values):
+        logger.info('No need to change convention or values')
+        return to_return
     #-- first reload the constants to their original values (i.e. SI based)
     #reload(constants)
     #-- then, where possible, replace all the constants with the value from
@@ -892,8 +895,12 @@ def set_convention(units='SI',values='standard'):
         old_units = getattr(constants,const+'_units')
         const_ = const+'_'+values
         if hasattr(constants,const_):
-            logger.info('Override {0} value to {1}'.format(const,values))
+            #logger.info('Override {0} value to {1}'.format(const,values))
             old_value = getattr(constants,const_)
+            #-- remember, the old values is always in SI
+            if not to_return[1]=='SI':
+                SI_units = change_convention('SI',old_units)
+                old_value = convert(SI_units,old_units,old_value)
         else:
             old_value = getattr(constants,const)
         factor,old_units = breakdown(old_units)
@@ -948,6 +955,7 @@ def set_convention(units='SI',values='standard'):
     #-- when we set everything back to SI, make sure we have no rounding errors:
     if units=='SI':
         reload(constants)
+        logger.warning('Reloading of constants')
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
@@ -988,11 +996,12 @@ def get_constant(constant_name,units='SI',value='standard'):
     value = value.lower()
     #-- see if we need (and have) a different value than the standard one
     const_ = constant_name+'_'+value
+    old_units = getattr(constants,constant_name+'_units')
     if hasattr(constants,const_):
         old_value = getattr(constants,const_)
+        old_units = change_convention('SI',old_units)
     else:
         old_value = getattr(constants,constant_name)
-    old_units = getattr(constants,constant_name+'_units')
     new_value = convert(old_units,units,old_value)
     return new_value
 
@@ -1574,6 +1583,8 @@ def times_cy(arg,**kwargs):
 
 def period2freq(arg,**kwargs):
     return 1./arg
+
+    
 
 def do_nothing(arg,**kwargs):
     logger.debug('Experimental: probably just dropped the "cy" unit, please check results')
@@ -2602,7 +2613,8 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            'cy1_to_':      do_nothing,
            'cy-1_to_':     do_nothing,
            'cy2_to_':      do_nothing,
-           'cy-2_to_':     do_nothing}
+           'cy-2_to_':     do_nothing,
+           }
  
  
 if __name__=="__main__":
@@ -2652,6 +2664,11 @@ if __name__=="__main__":
     options = vars(options)
     _from = options.pop('_from')
     _to = options.pop('_to')
+    if _to in _conventions:
+        _to = change_convention(_to,_from)
+    if _from in _conventions:
+        _from = change_convention(_from,_to)
+    
     #-- in case of normal floats or floats with errors
     if not any([',' in i for i in args]):
         args = tuple([float(i) for i in args])
