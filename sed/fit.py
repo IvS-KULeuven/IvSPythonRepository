@@ -18,7 +18,6 @@ from ivs.sed.decorators import iterate_gridsearch,parallel_gridsearch
 from ivs.aux import numpy_ext
 from ivs.aux import progressMeter
 from ivs.aux.decorators import make_parallel
-from ivs.units import constants
 
 
 logger = logging.getLogger("SED.FIT")
@@ -222,7 +221,7 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     else:
         return chisq.sum(),scale,e_scale
 
-def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
+def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                   ebvrange=(-inf,inf),zrange=(-inf,inf),
                   points=None,res=None,clear_memory=True,**kwargs):
     """
@@ -337,12 +336,11 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         logger.info('Received custom grid (%s)'%kwargs)
     teffs,loggs,ebvs,zs = gridpnts.T
     
-    #-- We need to avoid having only one grid point! If nessessary the grid needs to be 
-    #   broader to get points in the entire intervall. 
-    index1 = teffrange[0] in unique_teffs and unique_teffs.searchsorted(teffrange[0]) or \
-            max(0,unique_teffs.searchsorted(teffrange[0])-1)
-    index2 = teffrange[1] in unique_teffs and unique_teffs.searchsorted(teffrange[1]) or \
-            min(len(unique_teffs),unique_teffs.searchsorted(teffrange[1]))
+    #-- we need to avoid having only one grid point!
+    #unique_teffs = unique_teffs[(teffrange[0]<=unique_teffs) & (unique_teffs<=teffrange[1])]
+    #unique_loggs = unique_loggs[(loggrange[0]<=unique_loggs) & (unique_loggs<=loggrange[1])]
+    index1 = max(0,unique_teffs.searchsorted(teffrange[0])-1)
+    index2 = unique_teffs.searchsorted(teffrange[1])+1
     unique_teffs = unique_teffs[index1:index2+1]
     index1 = max(0,unique_teffs.searchsorted(loggrange[0])-1)
     index2 = unique_teffs.searchsorted(loggrange[1])+1
@@ -426,12 +424,12 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                           #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
     return teffs,loggs,ebvs,zs
 
-def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
-                  loggrange=((-inf,inf),(-inf,inf)),ebvrange=(-inf,inf),
+def generate_grid_multiple(photbands,teffrange=((-inf,inf),(-inf,inf)),
+                  loggrange=((-inf,inf),(-inf,inf)),
+                  ebvrange=(-inf,inf),
                   zrange=((-inf,inf),(-inf,inf)),
                   radiusrange=((1,1),(0.1,10.)),grids=None,
-                  points=None,res=None,clear_memory=False,
-                  type='single', **kwargs):
+                  points=None,res=None,clear_memory=False):
     """
     Generate grid points at which to fit an interpolated grid of multiple SEDs.
     
@@ -453,16 +451,6 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     >>> p = pl.xlim(pl.xlim()[::-1])
     >>> p = pl.ylim(pl.ylim()[::-1])
     """
-    #-- Select the grid
-    #   but remove metallicity, as it will be fitted!
-    if type=='single':
-        #--Single grid, uses the basic function
-        teffs,loggs,ebvs,zs = generate_grid_single(photbands,teffrange=teffrange,
-                      loggrange=loggrange,ebvrange=ebvrange,
-                      zrange=zrange,points=points)
-        radii = [1 for i in teffs]
-        return teffs,loggs,ebvs,zs,radii
-    
     #-- first collect the effetive temperatures, loggs, ebvs, zs for the
     #   different stars in the multiple system
     pars = []
@@ -479,7 +467,8 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
         ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
         zrange_ = hasattr(zrange[0],'__iter__') and zrange[i] or zrange
-        pars += list(generate_grid_single(photbands,teffrange=teffrange_,
+        #print grid_kwargs,teffrange[i],loggrange[i],ebvrange,zrange[i]
+        pars += list(generate_grid(photbands,teffrange=teffrange_,
                       loggrange=loggrange_,ebvrange=ebvrange_,
                       zrange=zrange_,points=points,**grid))
     #-- the L{generate_grid} method does not guarantee the number of points.
@@ -490,37 +479,26 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     #-- permute parameters so that the different blocks from the generate_grid
     #   are not clustered together
     for i in range(0,len(pars),4):
+		
         permutation = np.random.permutation(len(pars[0]))
         pars[i:i+4] = pars[i:i+4,permutation]
     #-- make arrays of the output parameters
     teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
-    
     #-- keep in mind that we probably want all the members in the system to have
     #   the same value for the interstellar reddening and metallicity, though
     #   this is not prerequisitatory
+    #print teffs.shape,loggs.shape,ebvs.shape,zs.shape
     if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
     if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
     #if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
     #if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
     ebvs = np.column_stack([ebvs[:,0]]*len(grids))
     zs = np.column_stack([zs[:,0]]*len(grids))
-    
-    if type=='binary':
-        #-- The radius of the stars is calculated bassed on logg and the provided masses
-        masses = 'masses' in kwargs and  kwargs['masses'] or (1,1)
-        G = constants.GG_cgs
-        Msol = constants.Msol_cgs
-        radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])
-        radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])
-        radii = radius2/radius1
-        
-        radii = np.array([np.ones(len(radii)),radii]).T
-    elif type=='multiple':
-        #-- We have random different radii for the stars
-        radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
-                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
-    
+    #-- we also have different radii of the stars
+    radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
+                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))
     return teffs,loggs,ebvs,zs,radii                     
+    
     
 @parallel_gridsearch
 @make_parallel
@@ -593,28 +571,6 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
 
 
 if __name__=="__main__":
-    from ivs.aux import loggers
-    import time
-    import pylab as plt
-    logger = loggers.get_basic_logger(clevel='DEBUG')
-    
-    photbands = ['GENEVA.G','GENEVA.B-V']
-    
-    c0 = time.time()
-    teffs,loggs,ebvs,zs,radii = generate_grid(photbands,teffrange=(5000,5800),loggrange=(4.20,4.70),zrange=(0,0),ebvrange=(0.05,0.08), grid='kurucz',points=10000)
-    print 'Time: %i'%(time.time()-c0)
-    
-    plt.figure(2)
-    plt.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=plt.cm.spectral)
-    plt.xlim(plt.xlim()[::-1])
-    plt.ylim(plt.ylim()[::-1])
-    plt.xlabel('Teff')
-    plt.ylabel('Logg')
-    plt.show()
-    
-    sys.exit()
-    
-    
     import doctest
     import pylab as pl
     doctest.testmod()
