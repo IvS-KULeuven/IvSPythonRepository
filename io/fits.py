@@ -224,7 +224,7 @@ def read_iue(filename,return_header=False):
 
 #{ Generic reading
 
-def read2recarray(fits_file,ext=1):
+def read2recarray(fits_file,ext=1,return_header=False):
     """
     Read the contents of a FITS file to a record array.
     
@@ -244,7 +244,13 @@ def read2recarray(fits_file,ext=1):
         dtypes = np.dtype(dtypes)
         data = [np.cast[dtypes[i]](data.field(name)) for i,name in enumerate(names)]
         data = np.rec.array(data,dtype=dtypes)
-    return data
+        header = {}
+        for key in ff[ext].header.keys():
+            header[key] = ff[ext].header[key]
+    if not return_header:
+        return data
+    else:
+        return data,header
 
 
 
