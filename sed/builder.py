@@ -1987,9 +1987,29 @@ class SED(object):
 
 
 if __name__ == "__main__":
+    import sys
     import doctest
-    doctest.testmod()
-    pl.show()
+    import pprint
+    from ivs.aux import loggers
+    if not sys.argv[1:]:
+        doctest.testmod()
+        pl.show()
+    else:
+        logger = loggers.get_basic_logger("")
+        mysed = SED(" ".join(sys.argv[1:]))
+        pprint.PrettyPrinter(indent=4).pprint(mysed.info)
+            
+            
+            
+        mysed.get_photometry()
+        mysed.plot_data()
+        pl.show()
+        answer = raw_input('Keep photometry file %s (y/N)'%(mysed.photfile))
+        if not 'y' in answer.lower():
+            os.unlink(mysed.photfile)
+            logger.info('Removed %s'%(mysed.photfile))
+    raise SystemExit
+    
     #-- clean up
     if os.path.isfile('HD180642.fits'):
         os.remove('HD180642.fits')
