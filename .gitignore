@@ -1,0 +1,33 @@
+# Compiled source 
+
+*.pyc
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages
+
+*.7z
+*.dmg
+*.gz
+*.tgz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.bz2
+
+# Logs and databases
+
+*.log
+*.sql
+*.sqlite
+
+# OSX generated files
+
+.DS_Store*
+Icon?
+Thumbs.db
