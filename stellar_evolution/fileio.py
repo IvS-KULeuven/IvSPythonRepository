@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 """
-Read and write files from different stellar evolution codes.
+Read and write files from stellar evolution codes.
 
-we use the MESA naming conventions for the physical quantities as the defaults.
+We use the MESA naming conventions for the physical quantities as the defaults.
 """
 
 import logging
@@ -662,3 +663,4 @@ def standardize(star,_from,info='local',units='cgs'):
     #-- that's it!
     return new_star
         
+#}
