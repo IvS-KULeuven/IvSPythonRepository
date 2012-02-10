@@ -16,6 +16,7 @@ def trilegal(outputFileName,
              passband = 4, magnitudeLimit = 26, magnitudeResolution = 0.1,
              IMFtype = 3,
              includeBinaries = True, binaryFraction = 0.3, lowerBinaryMassRatio = 0.7, upperBinaryMassRatio = 1.0,
+             extinctionType = 2, extinctionValue = 0.0378, extinctionSigma = 0.0,
              useThinDisc = False,
              useThickDisc = False,
              useBulge = True):
@@ -61,6 +62,16 @@ def trilegal(outputFileName,
     @type lowerBinaryMassRatio: float
     @param upperBinaryMassRatio: upper limit of binary mass fraction
     @type upperBinaryMassRatio: float
+    @param extinctionType: Type of extinction
+                           0: no dust extinction
+                           1: local calibration
+                           2: calibration at infinity
+    @type extinctionType: integer
+    @param extinctionValue: for a local calibration this is dAv/dr in mag/pc
+                            for the calibration at infinity this is Av at infinity in mag.
+    @type extinctionValue: float
+    @param extinctionSigma: 1-sigma extinction dispersion / total extinction (max. 0.3)
+    @type extinctionSigma: float
     @param useThinDisk: if True use squared hyperbolic secant along z, if False don't include
     @type useThinDisk: boolean
     @param useThickDisk: if True use squared hyperbolic secant along z, if False don't include
@@ -72,7 +83,7 @@ def trilegal(outputFileName,
     
     # The latest Trilegal web version
     
-    trilegalURL = "http://stev.oapd.inaf.it/cgi-bin/trilegal_1.4"
+    trilegalURL = "http://stev.oapd.inaf.it/cgi-bin/trilegal"
     
     # Get the web form
     
@@ -116,6 +127,13 @@ def trilegal(outputFileName,
     myBrowser["binary_frac"]  = str(binaryFraction)
     myBrowser["binary_mrinf"] = str(lowerBinaryMassRatio)
     myBrowser["binary_mrsup"] = str(upperBinaryMassRatio)
+
+    myBrowser["extinction_kind"] = [str(extinctionType)]
+    if extinctionType == 1:
+        myBrowser["extinction_rho_sun"] = str(extinctionValue)
+    if extinctionType == 2:
+        myBrowser["extinction_infty"] = str(extinctionValue)
+        myBrowser["extinction_sigma"] = str(extinctionSigma)
 
     if useThinDisc:
         myBrowser["thindisk_kind"] = ["3"]
@@ -176,6 +194,9 @@ def trilegal(outputFileName,
     binaryFraction {9}
     lowerBinaryMassRatio {10}
     upperBinaryMassRatio {11}
+    extinctionType {12}
+    extinctionValue {13}
+    extinctionSigma {14}
     """.format(coordinateType,
                longitude,
                latitude,
@@ -187,7 +208,10 @@ def trilegal(outputFileName,
                includeBinaries, 
                binaryFraction, 
                lowerBinaryMassRatio, 
-               upperBinaryMassRatio)
+               upperBinaryMassRatio,
+               extinctionType,
+               extinctionValue,
+               extinctionSigma)
                   
     infoFileName = "info_" + outputFileName
     with open(infoFileName, 'w') as infoFile:
