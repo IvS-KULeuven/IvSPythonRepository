@@ -315,7 +315,8 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
     
     #   put it in the right place
-    if ext=='new':
+    extnames = [iext.header['extname'] for iext in hdulist if 'extname' in iext.header.keys()]
+    if ext=='new' or not ext in extnames:
         hdulist.append(tbhdu)
         ext = -1
     else:
