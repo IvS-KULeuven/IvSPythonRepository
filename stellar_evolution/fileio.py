@@ -4,7 +4,6 @@ Read and write files from stellar evolution codes.
 
 We use the MESA naming conventions for the physical quantities as the defaults.
 """
-
 import logging
 import struct
 import os
