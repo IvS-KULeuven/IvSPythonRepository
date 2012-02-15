@@ -452,15 +452,16 @@ def convert(_from,_to,*args,**kwargs):
     1.0
     
     But there is a limit on the interpretation of this prefactor also. Floats
-    will probably not work, as are exponentials require two digits.
+    will probably not work, and exponentials require exactly two digits.
     
     Parentheses are in no circumstances accepted. Some common aliases are also
     resolved (for a full list, see dictionary C{_aliases}):
     
     C{erg/s/cm2/angstrom}
     
-    You don't really have to spell both units if one is consistently within one
-    base unit. But of course you have to give at least one!:
+    You don't really have to spell both units if either the 'from' or 'to' units
+    is consistently within one convention (SI, cgs, solar...). But of course you
+    have to give at least one!:
     
     >>> convert('kg','cgs',1.)
     1000.0
