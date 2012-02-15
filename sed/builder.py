@@ -131,7 +131,7 @@ function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
 
-Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make picture of where
+Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
 your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
 you can check the location of your photometry, and also see if proper motions
 etc are available.
@@ -189,10 +189,11 @@ Currently, four standard schemes are implemented, which you can set via L{SED.se
     1. C{absolute}: use only absolute values
     2. C{colors}: use only colors (no angular diameter values calculated)
     3. C{combo}: use all colors and one absolute value per photometric system
-    4. C{irfm}: use colors for wavelengths shorter than infrared wavelengths,
-    and absolute values for systems in the infrared. The infrared is defined
-    as wavelength longer than 1 micron, but this can be customized with the
-    keyword C{infrared=(value,unit)} in L{SED.set_photometry_scheme}.
+    4. C{irfm}: (infrared flux method) use colors for wavelengths shorter than
+    infrared wavelengths, and absolute values for systems in the infrared. The
+    infrared is defined as wavelength longer than 1 micron, but this can be
+    customized with the keyword C{infrared=(value,unit)} in
+    L{SED.set_photometry_scheme}.
 
 Here, we chose to use colors and one absolute flux per system, but exclude IR
 photometry (wavelength range above 2.5 micron), and some systems and colors which
