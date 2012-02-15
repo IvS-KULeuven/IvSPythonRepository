@@ -2335,6 +2335,12 @@ class Unit(object):
         new_value = convert(self.unit,unit_,self.value,**self.kwargs)
         return Unit(new_value,unit_)
     
+    def __getitem__(self,key):
+        if key==0:
+            return self.value
+        elif key==1:
+            return self.unit
+    
     def __lt__(self,other):
         return self._SI_value<other._SI_value
     
