@@ -34,7 +34,7 @@ Catch IndexErrors and TypeErrors in case no photometry is found.
 
 You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
 The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
-arcseconds for brighter stars. The best value of course de-ssh -X pends on the density
+arcseconds for brighter stars. The best value of course depends on the density
 of the field.
 
 >>> mysed.get_photometry(radius=5.)
@@ -126,12 +126,12 @@ but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
 delete the .phot file.
 
-The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarry}
+The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
 
-Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make picture of where
+Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
 your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
 you can check the location of your photometry, and also see if proper motions
 etc are available.
@@ -189,10 +189,11 @@ Currently, four standard schemes are implemented, which you can set via L{SED.se
     1. C{absolute}: use only absolute values
     2. C{colors}: use only colors (no angular diameter values calculated)
     3. C{combo}: use all colors and one absolute value per photometric system
-    4. C{irfm}: use colors for wavelengths shorter than infrared wavelengths,
-    and absolute values for systems in the infrared. The infrared is defined
-    as wavelength longer than 1 micron, but this can be customized with the
-    keyword C{infrared=(value,unit)} in L{SED.set_photometry_scheme}.
+    4. C{irfm}: (infrared flux method) use colors for wavelengths shorter than
+    infrared wavelengths, and absolute values for systems in the infrared. The
+    infrared is defined as wavelength longer than 1 micron, but this can be
+    customized with the keyword C{infrared=(value,unit)} in
+    L{SED.set_photometry_scheme}.
 
 Here, we chose to use colors and one absolute flux per system, but exclude IR
 photometry (wavelength range above 2.5 micron), and some systems and colors which
@@ -226,7 +227,7 @@ the results:
 and repeat the plot
 
 >>> p = pl.figure()
->>> p = pl.subplot(131);mysed.plot_sed()
+>>> p = pl.subplot(131);mysed.plot_sed(plot_deredded=True)
 >>> p = pl.subplot(132);mysed.plot_grid(limit=None)
 >>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
 
@@ -687,8 +688,8 @@ def photometry2str(master,comment=''):
     master = master[np.argsort(master['photband'])]
     txt = comment+'%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= comment+'==========================================================================================================================\n'
-    for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s\n'%(i,j,k,l,m,n,o,p)
+    for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
+        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %12s %s\n'%(i,j,k,l,m,n,o,p,q)
     return txt
 
 @memoized
@@ -840,7 +841,9 @@ class SED(object):
         
     
     #{ Handling photometric data
-    def get_photometry(self,radius=None,ra=None,dec=None,include=None,exclude=None):
+    def get_photometry(self,radius=None,ra=None,dec=None,
+                       include=None,exclude=None,
+                       units='erg/s/cm2/A'):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -859,11 +862,11 @@ class SED(object):
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
                 master = crossmatch.get_photometry(ID=self.ID,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
                 master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             if 'jradeg' in self.info:
                 master['_RAJ2000'] -= self.info['jradeg']
@@ -872,6 +875,7 @@ class SED(object):
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
+            print self.master.dtype.names
             logger.info('\n'+photometry2str(master))
             
             #-- write to file
@@ -1182,7 +1186,7 @@ class SED(object):
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
             self.results['igrid_search']['CI'][name+'U'] = grid_results[name][start_CI:].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit,name,self.results['igrid_search']['CI'][name+'L'],
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
@@ -1383,7 +1387,8 @@ class SED(object):
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
-            pl.ylabel(r'$F_\lambda$ [erg/s/cm$^2/A$]')
+            if keep.sum():
+                pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
             pl.xlabel('wavelength [$\AA$]')
         else:
             names = []
@@ -1872,7 +1877,7 @@ class SED(object):
         >>> #mysed.save_fits(filename='myname.fits')
         """
         if filename is None:
-            filename = os.path.splitext(self.photfile)[0]+'.fits'
+            filename = str(os.path.splitext(self.photfile)[0]+'.fits')
         if overwrite:
             if os.path.isfile(filename):
                 os.remove(filename)
@@ -1903,7 +1908,7 @@ class SED(object):
         
         results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
         
-        fits.write_recarray(results,filename,dict(extname='synflux'))
+        fits.write_recarray(results,filename,header_dict=dict(extname='synflux'))
         
         logger.info('Results saved to FITS file: %s'%(filename))
         
@@ -1987,9 +1992,33 @@ class SED(object):
 
 
 if __name__ == "__main__":
+    import sys
     import doctest
-    doctest.testmod()
-    pl.show()
+    import pprint
+    from ivs.aux import loggers
+    
+    if not sys.argv[1:]:
+        doctest.testmod()
+        pl.show()
+    else:
+        name = " ".join([string for string in sys.argv[1:] if not '=' in string])
+        units = [string.split('=')[1] for string in sys.argv[1:] if 'units=' in string]
+        if not units:
+            units = 'erg/s/cm2/A'
+        else:
+            units = units[0]
+        logger = loggers.get_basic_logger("")
+        mysed = SED(name)
+        pprint.PrettyPrinter(indent=4).pprint(mysed.info)
+        mysed.get_photometry(units=units)
+        mysed.plot_data()
+        pl.show()
+        answer = raw_input('Keep photometry file %s (y/N)'%(mysed.photfile))
+        if not 'y' in answer.lower():
+            os.unlink(mysed.photfile)
+            logger.info('Removed %s'%(mysed.photfile))
+    raise SystemExit
+    
     #-- clean up
     if os.path.isfile('HD180642.fits'):
         os.remove('HD180642.fits')
