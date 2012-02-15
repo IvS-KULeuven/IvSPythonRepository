@@ -34,7 +34,7 @@ The timeseries is generated for N=500,1000,2000,5000,10000,20000,50000
 >>> techniques = ['scargle','deeming','gls','fasper',
 ...               'schwarzenberg_czerny','pdm','box']
 >>> Ns = [1000,2000,5000,10000,20000,30000]
->>> for tech in techniques:
+>>> for tech in techniques[:0]:
 ...     freqs = []
 ...     clock = []
 ...     for N in Ns:
@@ -46,11 +46,75 @@ The timeseries is generated for N=500,1000,2000,5000,10000,20000,50000
 ...         freqs.append(len(freq))
 ...     p = pl.plot(freqs,clock,'o-',label=tech)
 ...     print tech,np.polyfit(np.log10(np.array(freqs)),np.log10(np.array(clock)),1)
->>> p = pl.legend(loc='best',fancybox=True)
->>> p = p.get_frame().set_alpha(0.5)
->>> p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')
+>>> #p = pl.legend(loc='best',fancybox=True)
+>>> #q = p.get_frame().set_alpha(0.5)
+>>> #p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')
 
 ]]include figure]]ivs_timeseries_pergram_speeds.png]
+
+Section 2. Periodogram comparison
+=================================
+
+We generate a sinusoidal signal, add some noise and compute the periodogram with
+the different methods.
+
+>>> times = np.sort(np.random.uniform(size=500,low=0,high=100))
+>>> signal = np.sin(2*np.pi/10.*times)
+>>> signal += np.random.normal(size=500)
+
+Fourier based periodgrams suited for unequidistant data: L{scargle}, L{deeming},
+L{fasper} and L{schwarzenberg_czerny}.
+
+>>> f1,a1 = scargle(times,signal,fn=0.35)
+>>> f2,a2 = fasper(times,signal,fn=0.35)
+>>> f3,a3 = deeming(times,signal,fn=0.35)
+>>> f4,a4 = scargle(times,signal,norm='power',fn=0.35)
+>>> f5,a5 = schwarzenberg_czerny(times,signal,fn=0.35,nh=1,mode=2)
+
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.plot(f1,a1,'k-',lw=4,label='scargle')
+>>> p = pl.plot(f2,a2,'r--',lw=4,label='fasper')
+>>> p = pl.plot(f3,a3,'b-',lw=2,label='deeming')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+>>> p = pl.subplot(122)
+>>> p = pl.plot(f4,a4,'k-',lw=2,label='scargle')
+>>> p = pl.plot(f5,a5/2.,'r--',lw=2,label='schwarzenberg-czerny')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_fourier.png]
+
+Least-square fitting: L{gls} and L{kepler}.
+
+>>> f1,a1 = gls(times,signal,fn=0.35)
+>>> f2,a2 = kepler(times,signal,fn=0.35)
+
+>>> p = pl.figure()
+>>> p = pl.plot(f1,a1,'k-',lw=2,label='gls')
+>>> p = pl.plot(f2,a2,'r--',lw=2,label='kepler')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_lsq.png]
+
+Phase folding techniques: L{box} and L{pdm}
+
+>>> f1,a1 = box(times,signal,fn=0.35)
+>>> f2,a2 = pdm(times,signal,fn=0.35)
+
+>>> p = pl.figure()
+>>> p = pl.plot(f1,a1,'k-',lw=2,label='box')
+>>> p = pl.plot(f2,a2,'r--',lw=2,label='pdm')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_phase.png]
 
 """
 import numpy as np
@@ -182,9 +246,10 @@ def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude
     """
     #-- average nyquist frequency and oversampling rate
     nyq = 1./(2*np.diff(times).mean())
+    mynyq = 1./(2*np.diff(times).min())
     T = times.ptp()
     ofac = 1./(df*T)
-    hifac = min(1.,fn/nyq)
+    hifac = min(1.,fn/mynyq)*mynyq/nyq
     #-- prepare input for fasper
     n = len(times)
     nout = int(4*ofac*hifac*n*4.)
@@ -337,6 +402,8 @@ def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
     >>> p=pl.plot(p3[0],p3[1],'b-',label="Clean (g=0.1)")
     >>> p=pl.legend()
     
+    ]]include figure]]ivs_timeseries_pergrams_clean.png]
+    
     @keyword freqbins: frequency bins for clean computation
     @type freqbins: list or array
     @keyword niter: number of iterations
@@ -384,6 +451,10 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
     If the number of the number of harmonics is 1, then this peridogram reduces
     to the Lomb-Scargle periodogram except for its better statistic behaviour.
     This script uses a Fortran procedure written by Schwarzenberg-Czerny.
+    
+    Modes:
+        - mode=1: AoV Fisher-Snedecor F(df1,df2) statistic
+        - mode=2: total power fitted in all harmonics for mode=2
     
     @param times: list of observations times
     @type times: numpy 1d array
@@ -437,7 +508,7 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
     @param df: see startfreq
     @type df: float
     @return: power spectrum of the signal
-    @rtype: ndarray 
+    @rtype: array 
     """
     freqs = np.arange(f0,fn,df)
     Ntime = len(time)
@@ -541,7 +612,7 @@ def FFTpower(signal, timestep):
     @param timestep: time step fo the equidistant time series
     @type timestep: float
     @return: frequencies and the power spectrum
-    @rtype: ndarray,ndarray
+    @rtype: array,array
     
     """
   
@@ -587,7 +658,7 @@ def FFTpowerdensity(signal, timestep):
     @param timestep: time step fo the equidistant time series
     @type timestep: float
     @return: frequencies and the power density spectrum
-    @rtype: ndarray,ndarray
+    @rtype: array,array
 
     """
   
@@ -639,7 +710,7 @@ def weightedpower(time, signal, weight, freq):
                  needs to be computed
     @type freq: ndarray
     @return: weighted power [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     
     """
 
@@ -886,7 +957,7 @@ def Zwavelet(time, signal, freq, position, sigma=10.0):
     @param sigma: smoothing parameter in time domain: sigma in Foster's paper
     @type sigma: float
     @return: Z[0..Npos-1, 0..Nfreq-1]: the Z-transform: time-freq diagram
-    @rtype: ndarray
+    @rtype: array
     
     """
   
@@ -987,7 +1058,7 @@ def pdm_py(time, signal, f0=None, fn=None, df=None, Nbin=10, Ncover=5, D=0.):
     @param D: linear frequency shift parameter
     @type D: float
     @return: theta-statistic for each given frequency [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     """
     freq = np.arange(f0,fn+df,df)
     
@@ -1190,7 +1261,7 @@ def windowfunction(time, freq):
     @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
     @type freq: ndarray       
     @return: |W(freq)|^2      [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     
     """
   
@@ -1292,6 +1363,9 @@ def scargle_probability(peak_value,times,freqs,correct_for_frange=False,**kwargs
     >>> p = pl.plot([1e-6,100],[1e-6,100],'r-',lw=2)
     >>> p = pl.xlabel('Should observe this many points below threshold')
     >>> p = pl.ylabel('Observed this many points below threshold')
+    
+    ]]include figure]]ivs_timeseries_pergrams_prob.png]
+    
     """
     #-- independent frequencies
     nr_obs = len(times)
@@ -1314,7 +1388,7 @@ if __name__=="__main__":
     logger = loggers.get_basic_logger()
     
     #-- run tests
-    if '--test' or '-t' in sys.argv[1]:
+    if '--test' in sys.argv[1] or '-t' in sys.argv[1]:
         import doctest
         doctest.testmod()
         pl.show()
