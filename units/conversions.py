@@ -12,7 +12,8 @@ Contents:
     4. B{Calculating with units}
     5. B{Examples}
 
-Some of the many possibilities include:
+Some of the many possibilities include (see L{convert} for an extensive set of
+examples):
     
     1. Conversions between equal-type units: meter to nano-lightyears, erg/s
     to W, cy/d to muHz, but also erg/s/cm2/A to W/m2/mum, sr to deg2, etc...
