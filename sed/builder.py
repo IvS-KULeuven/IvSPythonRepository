@@ -34,7 +34,7 @@ Catch IndexErrors and TypeErrors in case no photometry is found.
 
 You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
 The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
-arcseconds for brighter stars. The best value of course de-ssh -X pends on the density
+arcseconds for brighter stars. The best value of course depends on the density
 of the field.
 
 >>> mysed.get_photometry(radius=5.)
