@@ -2747,6 +2747,7 @@ if __name__=="__main__":
         print "%s %s    =    %s,%s %s"%(args[0],_from,output[0],output[1],_to)
     elif _to.lower()=='cd':
         year,month,day = output
+        year,month = int(year),int(month)
         day,fraction = int(day),day-int(day)
         hour = fraction*24
         hour,fraction = int(hour),hour-int(hour)
@@ -2754,6 +2755,6 @@ if __name__=="__main__":
         minute,fraction = int(minute),minute-int(minute)
         second = int(fraction*60)
         dt = datetime.datetime(year,month,day,hour,minute,second)
-        print "%g %s    =    %s %s"%(args[0],_from,dt,_to)
+        print "%.10g %s    =    %s %s (YYYY-MM-DD HH:MM:SS)"%(args[0],_from,dt,_to)
     else:
-        print "%g %s    =    %g %s"%(args[0],_from,output,_to)
+        print "%.10g %s    =    %.10g %s"%(args[0],_from,output,_to)
