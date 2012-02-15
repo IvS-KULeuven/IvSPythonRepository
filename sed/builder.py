@@ -687,8 +687,8 @@ def photometry2str(master,comment=''):
     master = master[np.argsort(master['photband'])]
     txt = comment+'%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= comment+'==========================================================================================================================\n'
-    for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s\n'%(i,j,k,l,m,n,o,p)
+    for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
+        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %12s %s\n'%(i,j,k,l,m,n,o,p,q)
     return txt
 
 @memoized
@@ -840,7 +840,9 @@ class SED(object):
         
     
     #{ Handling photometric data
-    def get_photometry(self,radius=None,ra=None,dec=None,include=None,exclude=None):
+    def get_photometry(self,radius=None,ra=None,dec=None,
+                       include=None,exclude=None,
+                       units='erg/s/cm2/A'):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -859,11 +861,11 @@ class SED(object):
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
                 master = crossmatch.get_photometry(ID=self.ID,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
                 master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             if 'jradeg' in self.info:
                 master['_RAJ2000'] -= self.info['jradeg']
@@ -872,6 +874,7 @@ class SED(object):
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
+            print self.master.dtype.names
             logger.info('\n'+photometry2str(master))
             
             #-- write to file
@@ -1116,6 +1119,7 @@ class SED(object):
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
         #-- build the grid, run over the grid and calculate the CHI2
+        print 'test'
         teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
                         loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
                         points=points,res=res, type=type) 
@@ -1383,7 +1387,8 @@ class SED(object):
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
-            pl.ylabel(r'$F_\lambda$ [erg/s/cm$^2/A$]')
+            if keep.sum():
+                pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
             pl.xlabel('wavelength [$\AA$]')
         else:
             names = []
@@ -1991,17 +1996,21 @@ if __name__ == "__main__":
     import doctest
     import pprint
     from ivs.aux import loggers
+    
     if not sys.argv[1:]:
         doctest.testmod()
         pl.show()
     else:
+        name = " ".join([string for string in sys.argv[1:] if not '=' in string])
+        units = [string.split('=')[1] for string in sys.argv[1:] if 'units=' in string]
+        if not units:
+            units = 'erg/s/cm2/A'
+        else:
+            units = units[0]
         logger = loggers.get_basic_logger("")
-        mysed = SED(" ".join(sys.argv[1:]))
+        mysed = SED(name)
         pprint.PrettyPrinter(indent=4).pprint(mysed.info)
-            
-            
-            
-        mysed.get_photometry()
+        mysed.get_photometry(units=units)
         mysed.plot_data()
         pl.show()
         answer = raw_input('Keep photometry file %s (y/N)'%(mysed.photfile))
