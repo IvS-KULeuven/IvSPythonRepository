@@ -53,6 +53,7 @@ def getP7Data(ID=None,code=None,include_nans=True):
         
     catfile = config.get_datafile('catalogs/p7','p7photometry.fits')
     ff = pyfits.open(catfile)
+
     valid = ff[1].data.field('CODE')==code
     hjd = ff[1].data.field('HJD')[valid]
     U = ff[1].data.field('U')[valid]
