@@ -227,7 +227,7 @@ the results:
 and repeat the plot
 
 >>> p = pl.figure()
->>> p = pl.subplot(131);mysed.plot_sed()
+>>> p = pl.subplot(131);mysed.plot_sed(plot_deredded=True)
 >>> p = pl.subplot(132);mysed.plot_grid(limit=None)
 >>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
 
@@ -1186,7 +1186,7 @@ class SED(object):
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
             self.results['igrid_search']['CI'][name+'U'] = grid_results[name][start_CI:].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit,name,self.results['igrid_search']['CI'][name+'L'],
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
