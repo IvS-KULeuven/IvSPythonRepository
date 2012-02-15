@@ -321,6 +321,7 @@ def generate_grid(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     factors
     @rtype: record array
     """
+    #test
     logger.info('Grid search with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
     
     #-- we first get/set the grid. Calling this function means it will be
