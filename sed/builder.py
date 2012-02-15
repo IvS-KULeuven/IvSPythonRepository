@@ -1877,7 +1877,7 @@ class SED(object):
         >>> #mysed.save_fits(filename='myname.fits')
         """
         if filename is None:
-            filename = os.path.splitext(self.photfile)[0]+'.fits'
+            filename = str(os.path.splitext(self.photfile)[0]+'.fits')
         if overwrite:
             if os.path.isfile(filename):
                 os.remove(filename)
@@ -1908,7 +1908,7 @@ class SED(object):
         
         results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
         
-        fits.write_recarray(results,filename,dict(extname='synflux'))
+        fits.write_recarray(results,filename,header_dict=dict(extname='synflux'))
         
         logger.info('Results saved to FITS file: %s'%(filename))
         
