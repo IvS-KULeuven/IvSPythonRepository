@@ -48,6 +48,8 @@ in italic):
     - C{am}: I{arcminute} vs attominute
     - C{min}: I{minute} vs milli-inch
     - C{yd}: I{yard} vs yoctoday
+
+B{Warning 3:} the unit name of angstrom is A, ampere is Am.
     
 This module can be used as:
 
@@ -2299,6 +2301,12 @@ class Unit(object):
     >>> mu0 = Unit('mu0')
     >>> cc = Unit('cc')
     >>> cc_ = 1./np.sqrt(eps0*mu0)
+    >>> print eps0
+    8.85418781762e-12 F m-1
+    >>> print mu0
+    1.2566370614e-06 T m Am-1
+    >>> print cc
+    299792458.0 m s-1
     >>> print cc_
     299792458.004 m1 s-1
     >>> print cc_/cc
