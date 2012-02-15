@@ -1239,7 +1239,10 @@ def get_help():
     """
     Return a string with a list and explanation of all defined units
     """
-    set_exchange_rates()
+    #try:
+    #    set_exchange_rates()
+    #except IOError:
+    #    logger.warning('Unable to connect to ecb.europa.eu')
     help_text = {}
     for fac in sorted(_factors.keys()):
         if _factors[fac][2] not in help_text:
@@ -2627,7 +2630,7 @@ _aliases = [('micron','mum'),('au','AU'),
             ('arcsec','as'),('arcmin','am'),
             ('cycles','cy'),('cycle','cy'),('cyc','cy'),
             ('angstrom','A'),('Angstrom','A'),
-            ('inch','in'),
+            ('inch','in'),('stone','st'),
             ('^',''),('**',''),
             ('celcius','C'),('fahrenheit','F'),('hr','h'),
             ('galactic','gal'),('equatorial','equ'),('ecliptic','ecl'),
