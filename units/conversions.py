@@ -2540,6 +2540,8 @@ _factors = collections.OrderedDict([
            ('cal',   (4.1868,        'kg m2 s-2','energy/power','calorie (international table)')),# calorie (International table)
            ('Lsol',  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity')), # solar luminosity
            ('hp',    (745.699872,    'kg m2 s-3','energy/power','Horsepower')), # horsepower
+# VELOCITY
+           ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # PRESSURE
            ('Pa',    (  1e+00,       'kg m-1 s-2','pressure','Pascal')), # Pascal
            ('bar',   (  1e+05,       'kg m-1 s-2','pressure','baros')), # baros
