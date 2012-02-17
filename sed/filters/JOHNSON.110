@@ -1,0 +1,42 @@
+# PASS_SET  Johnson 13 Color Narrow band photometric system
+# PASSBAND  110
+# REFERENCE Johnson, and Mitchell, 1976, RMex A.A. 1, 299
+# Table taken from ADPS http://ulisse.pd.astro.it/Astro/ADPS/Systems/index.html         
+ 10200  0.050  
+ 10300  0.106 
+ 10400  0.160 
+ 10500  0.231 
+ 10600  0.363 
+ 10700  0.523  
+ 10800  0.729  
+ 10900  0.886  
+ 11000  1.000  
+ 11100  0.963  
+ 11200  0.789  
+ 11300  0.663  
+ 11400  0.480  
+ 11500  0.363  
+ 11600  0.286  
+ 11700  0.211  
+ 11800  0.174  
+ 11900  0.137  
+ 12000  0.100              
+ 
+ 
+ 
+ 
+ 
+ 
+              
+                         
+                                                  
+                                                  
+                                     
+             
+             
+             
+            
+            
+
+
+
