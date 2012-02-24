@@ -2475,6 +2475,7 @@ _factors = collections.OrderedDict([
            ('AU',    (constants.au,    constants.au_units,'distance','astronomical unit')), # astronomical unit
            ('pc',    (constants.pc,    constants.pc_units,'distance','parsec')), # parsec
            ('ly',    (constants.ly,    constants.ly_units,'distance','light year')), # light year
+           ('bs',    ( 5e-9,         'm','distance','beard second')),
            ('Rsol',  (constants.Rsol,  constants.Rsol_units,'distance','Solar radius')), # Solar radius
            ('Rearth',(constants.Rearth,constants.Rearth_units,'distance','Earth radius')), # Earth radius
            ('ft',    (0.3048,        'm','distance','foot (international)')), # foot (international)
@@ -2483,6 +2484,9 @@ _factors = collections.OrderedDict([
            ('a0',    (constants.a0,  constants.a0_units,'distance','Bohr radius')), # Bohr radius
            ('ell',   (1.143,         'm','distance','ell')), # ell
            ('yd',    (0.9144,        'm','distance','yard (international)')), # yard (international)
+           ('potrzebie',(0.002263348517438173216473,'m','distance','potrzebie')),
+           ('smoot', (1.7018,        'm','distance','smooth')),
+           ('furlong',(201.168,      'm','distance','furlong')),
 # MASS
            ('g',     (  1e-03,       'kg','mass','gram')), # gram
            ('amu',   (1.66053892173e-27,'kg','mass','atomic mass')), # atomic mass unit (wikipedia)
@@ -2494,6 +2498,7 @@ _factors = collections.OrderedDict([
            ('st',    (6.35029318,    'kg','mass','stone')), # stone
            ('ounce', (0.0283495231,  'kg','mass','ounce')), # ounce
            ('mol',   (1./constants.NA,'mol','mass','molar mass')), # not really a mass...
+           ('firkin',(40.8233,       'kg','mass','firkin')),
 # TIME
            ('s',     (  1e+00,       's','time','second')),     # second
            ('min',   (  60.,         's','time','minute')),     # minute
@@ -2509,6 +2514,7 @@ _factors = collections.OrderedDict([
            ('CD',    (JulianDay,     'JD','time','calender day')), # Calender Day
            ('MJD',   (ModJulianDay,  'JD','time','modified Julian day')), # Modified Julian Day
            ('j',     (1/60.,         's','time','jiffy')),  # jiffy
+           ('fortnight',(1209600.,    's','second','fortnight')),
 # ANGLES
            ('rad',         (1e+00,               'rad','angle','radian')),  # radian
            ('cy',          (1e+00,               'cy','angle','cycle')),   # cycle
@@ -2540,6 +2546,7 @@ _factors = collections.OrderedDict([
            ('cal',   (4.1868,        'kg m2 s-2','energy/power','calorie (international table)')),# calorie (International table)
            ('Lsol',  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity')), # solar luminosity
            ('hp',    (745.699872,    'kg m2 s-3','energy/power','Horsepower')), # horsepower
+           ('dp',    (250.,          'kg m2 s-3','energy/power','Donkeypower')),
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # PRESSURE
@@ -2567,7 +2574,9 @@ _factors = collections.OrderedDict([
 # AREA & VOLUME
            ('ac',    (4046.8564224,  'm2','area','acre (international)')), # acre (international)
            ('a',     (100.,          'm2','area','are')), # are
+           ('b',     (1e-28,         'm2','area','barn')), # barn
            ('l',     (  1e-3,        'm3','volume','liter')),
+           ('ngogn', (1.1594560721765171e-05,'m3','volume','1000 cubic potrzebies')),
 # FLUX
 # -- absolute magnitudes
            ('Jy',      (1e-26,         'kg s-2 cy-1','flux','Jansky')), # W/m2/Hz
