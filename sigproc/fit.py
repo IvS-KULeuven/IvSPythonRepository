@@ -528,7 +528,7 @@ def box(times,signal,freq,b0=0,bn=1,order=50,t0=None):
                     best_fit = chisquare2
     return parameters
 
-def gauss(x,y,threshold=0.1,constant=False,full_output=False):
+def gauss(x,y,threshold=0.1,constant=False,full_output=False,init_guess_method='analytical'):
     """
     Fit a Gaussian profile to data using a polynomial fit.
     
@@ -576,29 +576,36 @@ def gauss(x,y,threshold=0.1,constant=False,full_output=False):
     @rtype: tuple
     @return: A, mu, sigma (,C)
     """
+    #-- if a constant needs to be determined, take the median of the 5% lowest
+    #   points (but take at least three):
+    if constant:
+        N = len(y)
+        C = np.median(np.sort(y)[:max(int(0.05*N),3)])
+    else:
+        C = 0.
+        
     #-- transform to a polynomial function and perform a fit
     #   first clip where y==0
-    threshold *= max(y)
-    use_in_fit = y>=threshold
+    threshold *= max(y-C)
+    use_in_fit = (y-C)>=threshold
     xc = x[use_in_fit]
     yc = y[use_in_fit]
     
-    lnyc = np.log(yc)
+    lnyc = np.log(yc-C)
     p   = np.polyfit(xc, lnyc, 2)
     
     #-- determine constants
     sigma = np.sqrt(-1. / (2.*p[0]))
     mu    = sigma**2.*p[1]
     A     = np.exp(p[2] + mu**2. / (2.*sigma**2.))
-    C     = 0.
     
     #-- handle NaN Exceptions
     if A!=A or mu!=mu or sigma!=sigma:
-        logger.error('Gaussian fit failed')
+        logger.error('Initial Gaussian fit failed')
         init_success = False
-        A = 1.
-        mu = 1.
-        sigma = 1.
+        A = (yc-C).max()
+        mu = xc[yc.argmax()]
+        sigma = xc.ptp()/3.
     else:
         init_success = True
     

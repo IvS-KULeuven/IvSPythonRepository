@@ -41,6 +41,7 @@ import os
 import logging
 import copy
 import pyfits
+import inspect
 from ivs import config
 from ivs.units import constants
 from ivs.units import conversions
@@ -210,8 +211,14 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     
     if vrot>0:
         #-- calculate rotational broadening but reinterpolate on original
-        #   wavelength grid
-        wave_,flux_ = tools.rotational_broadening(wave,flux,vrot,**kwargs)
+        #   wavelength grid. First we need to check which arguments we can pass
+        #   through
+        argspec = inspect.getargspec(tools.rotational_broadening)
+        mykwargs = dict(zip(argspec.args[-len(argspec.defaults):],argspec.defaults))
+        for key in kwargs:
+            if key in mykwargs:
+                mykwargs[key] = kwargs[key]
+        wave_,flux_ = tools.rotational_broadening(wave,flux,vrot,**mykwargs)
         flux = np.interp(wave,wave_,flux_)
     if vrad!=0:
         wave_ = tools.doppler_shift(wave,vrad)
