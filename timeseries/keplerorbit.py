@@ -121,10 +121,14 @@ Plot it:
 ]include figure]]ivs_binary_keplerorbit_capella.png]
 
 """
+import logging
 import numpy as np
+from scipy import optimize
 from ivs.units import conversions
 from ivs.units.constants import *
 from ivs.coordinates import vectors
+
+logger = logging.getLogger('IVS.KEPLER')
 
 #{ Radial velocities
 
@@ -364,13 +368,111 @@ def true_anomaly(M,e,itermax=8):
         F = Fn
         Mn = F-e*np.sin(F)
         Fn = F+(M-Mn)/(1.-e*np.cos(F))
-        if all(abs((Fn-F)/F)<0.00001):
+        keep = F!=0 #-- take care of zerodivision
+        if hasattr(F,'__iter__'):
+            if np.all(abs((Fn-F)[keep]/F[keep])<0.00001):
+                break
+        elif (abs((Fn-F)/F)<0.00001):
             break
     #-- relationship between true anomaly (theta) and eccentric
     #   anomalie (Fn)
     true_an = 2.*np.arctan(np.sqrt((1.+e)/(1.-e))*np.tan(Fn/2.))
     return Fn,true_an
 
+
+
+
+def calculate_phase(T,e,omega,pshift=0):
+    """
+    Compute orbital phase from true anomaly T
+    
+    @parameter T: true anomaly
+    @type T: float
+    @parameter omega: argument of periastron (radians)
+    @type omega: float
+    @parameter e: eccentricity
+    @type e: float
+    @parameter pshift: phase shift
+    @type pshift: float
+    @return: phase of superior conjunction, phase of periastron passage
+    @rtype: float,float
+    """
+    E = 2.0*np.arctan(np.sqrt((1-e)/(1+e)) * np.tan(T/2.0))
+    M = E - e*np.sin(E)
+    return (M+omega)/(2.0*np.pi) - 0.25 + pshift
+
+    
+    
+def calculate_critical_phases(omega,e,pshift=0):
+    """
+    Compute phase of superior conjunction and periastron passage.
+    
+    Example usage:
+    >>> omega = np.pi/4.0
+    >>> e = 0.3
+    >>> print calculate_critical_phases(omega,e)
+    (-0.125, -0.057644612788576133, -0.42054512757020118, -0.19235538721142384, 0.17054512757020118)
+    
+    @parameter omega: argument of periastron (radians)
+    @type omega: float
+    @parameter e: eccentricity
+    @type e: float
+    @parameter pshift: phase shift
+    @type pshift: float
+    @return: phase of superior conjunction, phase of periastron passage
+    @rtype: float,float
+    """
+    #-- Phase of periastron passage
+    Phi_omega = (omega - np.pi/2.0)/(2.0*np.pi) + pshift
+    #-- Phase of inferior/superior conjunction
+    Phi_conj  = calculate_phase(np.pi/2.0-omega,e,omega,pshift)
+    Phi_inf   = calculate_phase(3.0*np.pi/2.0-omega,e,omega,pshift)
+    Phi_asc   = calculate_phase(-omega,e,omega,pshift)
+    Phi_desc  = calculate_phase(np.pi-omega,e,omega,pshift)
+    return Phi_omega,Phi_conj,Phi_inf,Phi_asc,Phi_desc
+
+
+def eclipse_separation(e,omega):
+    """
+    Calculate the eclipse separation between primary and secondary in a light curve.
+    
+    Minimum separation at omega=pi
+    Maximum spearation at omega=0
+    
+    @parameter e: eccentricity
+    @type e: float
+    @parameter omega: argument of periastron (radians)
+    @type omega: float
+    @return: separation in phase units (0.5 is half)
+    @rtype: float
+    """
+    radians = np.pi+2*np.arctan(e*np.cos(omega)/np.sqrt(1-e**2)) + 2*e*np.cos(omega)*np.sqrt(1-e**2)/(1-e**2*np.sin(omega)**2)
+    return radians/(2*np.pi)
+
+def omega_from_eclipse_separation(separation,e):
+    """
+    Caculate the argument of periastron from the eclipse separation and eccentricity.
+    
+    separation in phase units.
+    
+    @parameter separation: separation in phase units (0.5 is half)
+    @type separation: float
+    @parameter e: eccentricity
+    @type e: float
+    @return: omega (longitude of periastron) in radians
+    @rtype: float
+    """
+    minsep_omega = np.pi
+    maxsep_omega = 0.
+    minsep = eclipse_separation(e,minsep_omega)
+    maxsep = eclipse_separation(e,maxsep_omega)
+    if separation<minsep or maxsep<separation:
+        logger.warning('Phase separation must be between %.3g and %.3g when e=%.3g'%(minsep,maxsep,e))
+        return np.nan
+    else:
+        omega = optimize.bisect(lambda x:separation-eclipse_separation(e,x),maxsep_omega,minsep_omega)
+        return omega
+    
 #}
 
 if __name__=="__main__":
