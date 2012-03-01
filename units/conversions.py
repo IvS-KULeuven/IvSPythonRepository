@@ -2542,8 +2542,10 @@ _factors = collections.OrderedDict([
            ('J',     (  1e+00,       'kg m2 s-2','energy/power','Joule')), # Joule
            ('W',     (  1e+00,       'kg m2 s-3','energy/power','Watt')), # Watt
            ('erg',   (  1e-07,       'kg m2 s-2','energy/power','ergon')), # ergon
+           ('foe',   (  1e44,        'kg m2 s-2','energy/power','(ten to the) fifty one ergs')),
            ('eV',    (1.60217646e-19,'kg m2 s-2','energy/power','electron volt')), # electron volt
-           ('cal',   (4.1868,        'kg m2 s-2','energy/power','calorie (international table)')),# calorie (International table)
+           ('cal',   (4.1868,        'kg m2 s-2','energy/power','small calorie (international table)')),# calorie (International table)
+           ('Cal',   (4186.8,        'kg m2 s-2','energy/power','large calorie (international table)')),# calorie (International table)
            ('Lsol',  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity')), # solar luminosity
            ('hp',    (745.699872,    'kg m2 s-3','energy/power','Horsepower')), # horsepower
            ('dp',    (250.,          'kg m2 s-3','energy/power','Donkeypower')),
