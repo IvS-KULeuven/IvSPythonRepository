@@ -314,18 +314,28 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         cols.append(pyfits.Column(name=name,format=format,array=recarr[name],unit=unit))
     tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
     
-    #   put it in the right place
-    extnames = [iext.header['extname'] for iext in hdulist if 'extname' in iext.header.keys()]
-    if ext=='new' or not ext in extnames:
-        hdulist.append(tbhdu)
-        ext = -1
-    else:
-        hdulist[ext] = tbhdu
-    
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            hdulist[ext].header.update(key,header_dict[key])
+            if len(key)>8 and not key in tbhdu.header.keys():
+                key_ = 'HIERARCH '+key
+            else:
+                key_ = key
+            tbhdu.header.update(key_,header_dict[key])
+        if ext!='new':
+            tbhdu.header.update('EXTNAME',ext)
+    
+    
+    #   put it in the right place
+    extnames = [iext.header['EXTNAME'] for iext in hdulist if ('extname' in iext.header.keys()) or ('EXTNAME' in iext.header.keys())]
+    if ext=='new' or not ext in extnames:
+        logger.info('Creating new extension %s'%(ext))
+        hdulist.append(tbhdu)
+        ext = -1
+    else:
+        logger.info('Overwriting existing extension %s'%(ext))
+        hdulist[ext] = tbhdu
+        
     if close:
         hdulist.close()
         return filename
