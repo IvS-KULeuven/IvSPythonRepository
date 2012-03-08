@@ -449,6 +449,7 @@ def eclipse_separation(e,omega):
     radians = np.pi+2*np.arctan(e*np.cos(omega)/np.sqrt(1-e**2)) + 2*e*np.cos(omega)*np.sqrt(1-e**2)/(1-e**2*np.sin(omega)**2)
     return radians/(2*np.pi)
 
+
 def omega_from_eclipse_separation(separation,e):
     """
     Caculate the argument of periastron from the eclipse separation and eccentricity.
@@ -474,6 +475,40 @@ def omega_from_eclipse_separation(separation,e):
         return omega
     
 #}
+
+#{ Kepler's laws
+
+def third_law(M=None,a=None,P=None):
+    """
+    Kepler's third law.
+    
+    Give two quantities, derived the third.
+    
+    M = total mass system (solar units)
+    a = semi-major axis (au)
+    P = period (d)
+    
+    >>> print third_law(M=1.,a=1.)
+    365.256891359 
+    >>> print third_law(a=1.,P=365.25)
+    1.00003773538
+    >>> print third_law(M=1.,P=365.25)
+    0.999987421856
+    """
+    if a is not None:
+        a *= au
+    if P is not None:
+        P *= (24*3600.)
+    if M is not None:
+        M *= Msol
+    
+    if M is None:
+        return 4*np.pi**2*a**3/P**2/GG/Msol
+    if a is None:
+        return (GG*M*P**2/(4*np.pi**2))**(1./3.)/au
+    if P is None:
+        return np.sqrt(4*np.pi**2*a**3/(GG*M))/(24*3600.)
+    
 
 if __name__=="__main__":
     import doctest
