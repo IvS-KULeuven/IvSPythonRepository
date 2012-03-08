@@ -819,11 +819,11 @@ class SED(object):
                 self.info = sesame.search(ID,fix=True)
             except KeyError:
                 logger.warning('Star %s not recognised by SIMBAD'%(ID))
-            try:
-                self.info = sesame.search(ID,db='N',fix=True)
-                logger.info('Star %s recognised by NED'%(ID))
-            except KeyError:
-                logger.warning('Star %s not recognised by NED'%(ID))
+                try:
+                    self.info = sesame.search(ID,db='N',fix=True)
+                    logger.info('Star %s recognised by NED'%(ID))
+                except KeyError:
+                    logger.warning('Star %s not recognised by NED'%(ID))
             if plx is not None:
                 if not 'plx' in self.info:
                     self.info['plx'] = {}

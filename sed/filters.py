@@ -89,6 +89,8 @@ Plots of all passbands of all systems:
 
 ]include figure]]ivs_sed_filters_COUSINS.png]
 
+]include figure]]ivs_sed_filters_DDO.png]
+
 ]include figure]]ivs_sed_filters_DENIS.png]
 
 ]include figure]]ivs_sed_filters_DIRBE.png]
@@ -128,6 +130,8 @@ Plots of all passbands of all systems:
 ]include figure]]ivs_sed_filters_NARROW.png]
 
 ]include figure]]ivs_sed_filters_NICMOS.png]
+
+]include figure]]ivs_sed_filters_OAO2.png]
 
 ]include figure]]ivs_sed_filters_PACS.png]
 
@@ -408,6 +412,7 @@ if __name__=="__main__":
         pl.show()
     
     else:
+        import itertools
         responses = list_response()
         systems = [response.split('.')[0] for response in responses]
         set_responses = sorted(set([response.split('.')[0] for response in systems]))
@@ -420,13 +425,14 @@ if __name__=="__main__":
             # the first time the plot is called (first filter of system), then set
             # the title and color cycle
             p = pl.figure(set_responses.index(this_system),figsize=(10,4.5))
-            if not pl.gca()._get_lines.count:
-                color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)]
-                p = pl.gca().set_color_cycle(color_cycle)
-                p = pl.title(resp.split('.')[0])
+            if not hasattr(pl.gca(),'color_cycle'):
+                color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)])
+                p = pl.gca().color_cycle = color_cycle
+            color = pl.gca().color_cycle.next()
+            p = pl.title(resp.split('.')[0])
             # get the response curve and plot it
             wave,trans = get_response(resp)
-            p = pl.plot(wave/1e4,trans,label=resp)
+            p = pl.plot(wave/1e4,trans,label=resp,color=color)
             # and set labels
             p = pl.xlabel('Wavelength [micron]')
             p = pl.ylabel('Transmission')
