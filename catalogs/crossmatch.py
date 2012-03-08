@@ -19,6 +19,7 @@ from ivs.catalogs import vizier
 from ivs.catalogs import gator
 from ivs.catalogs import gcpd
 from ivs.catalogs import mast
+from ivs.catalogs import sesame
 from ivs.units import conversions
 from ivs.aux import numpy_ext
 from ivs.aux import progressMeter
@@ -107,11 +108,17 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
         searchables = list( set(searchables)- set(exclude))
     
     #-- and search photometry
-    if 'mast' in searchables:
-        kwargs['master'] = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+    #if 'mast' in searchables:
+    #    kwargs['master'] = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'gator' in searchables:
         kwargs['master'] = gator.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'vizier' in searchables:
+        #-- first query catalogs that can only be queried via HD number
+        info = sesame.search(ID=ID,fix=True)
+        HDnumber = [name for name in info['alias'] if name[:2]=='HD']
+        if HDnumber:
+            kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['HD=%s'%(HDnumber[0][3:])],sources=['II/83/catalog','V/33/phot'],sort=None,**kwargs)
+        #-- then query normal catalogs
         kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'gcpd' in searchables:
         kwargs['master'] = gcpd.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)

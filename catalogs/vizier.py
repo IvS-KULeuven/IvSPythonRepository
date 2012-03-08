@@ -499,8 +499,8 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     #-- retrieve all measurements
     for source in sources:
         results,units,comms = search(source,**kwargs)
-        if results is not None:
-            master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
+        if results is None: continue
+        master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
     
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
@@ -737,7 +737,10 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     names = list(results.dtype.names)
     if extra_fields is not None:
         for e_dtype in extra_fields:
-            dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
+            if e_dtype in names:
+                dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
+            else:
+                dtypes.append((e_dtype,'f8'))
     
     #-- create empty master if not given
     newmaster = False
@@ -896,7 +899,7 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
 def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
                      oc='deg',oc_eq='J2000',
                      out_all=True,out_max=1000000,
-                     filetype='tsv',**kwargs):
+                     filetype='tsv',sort='_r',constraints=None,**kwargs):
     """
     Build Vizier URI from available options.
     
@@ -923,7 +926,12 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     @return: url
     @rtype: str
     """
-    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s&-sort=_r'%(filetype,oc,oc_eq)
+    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
+    if sort:
+        base_url += '&-sort=%s'%(sort)
+    if constraints is not None:
+        for constr in constraints:
+            base_url += '&%s'%(constr)
     
     if ID is not None:
         #-- if the ID is given in the form 'J??????+??????', derive the
@@ -942,9 +950,8 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     if radius:  base_url += '&-c.rs=%s'%(radius)
     if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.quote(ID))
     if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
-    
     logger.debug(base_url)
-    
+    #print base_url
     return base_url
 
 def _breakup_colours(master):

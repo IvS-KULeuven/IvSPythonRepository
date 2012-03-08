@@ -25,7 +25,8 @@ systems = {'JOHNSON':1,
            'VILNIUS':21,
            'WOOD':22,
            'WBVR':78,
-           'STRAIZYS':80}
+           'STRAIZYS':80,
+           'DDO':12}
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler)
