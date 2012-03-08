@@ -58,7 +58,22 @@ def get_gridnames():
     return ['kurucz']
 
 
-
+def get_grid_dimensions(**kwargs):
+    """
+    Retrieve possible effective temperatures and gravities from a grid.
+    
+    @rtype: (ndarray,ndarray)
+    @return: effective temperatures, gravities
+    """
+    gridfile = get_file(**kwargs)
+    ff = pyfits.open(gridfile)
+    teffs = []
+    loggs = []
+    for mod in ff[1:]:
+        teffs.append(float(mod.header['TEFF']))
+        loggs.append(float(mod.header['LOGG']))
+    ff.close()
+    return np.array(teffs),np.array(loggs)
 
 
 def get_file(integrated=False,**kwargs):
@@ -171,11 +186,11 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     ff.close()
     
     #-- velocity shift if necessary
-    if vrad is not None and vrad!=0:
+    if vrad is not None and vrad>0:
         cc = constants.cc/1000. #speed of light in cc
         for i in range(len(mu)):
-            flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
-            table[:,i] = flux_shift - 5.*vrad/cc*flux_shift
+            wave_shift,flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
+            table[:,i] = flux_shift - 5.*vrad/cc*table[:,i]
     
     #-- redden if necessary
     if ebv is not None and ebv>0:
