@@ -7,6 +7,8 @@ We use the MESA naming conventions for the physical quantities as the defaults.
 import logging
 import struct
 import os
+import glob
+import pyfits
 import numpy as np
 import pylab as pl
 #import pycles
@@ -106,21 +108,21 @@ def mesalog2fits(directory,filename=None,order='star_age'):
     """
     #-- collect all the files
     files = np.sort(glob.glob('*.data'))
-    sa = np.argsort([read_mesa_log(ff,only_first=True)[0][order][0] for ff in files])
+    sa = np.argsort([read_mesa(ff,only_first=True)[0][order][0] for ff in files])
     files = files[sa]
     if filename is None:
         filename = os.path.abspath(directory).split(os.sep)[-1]+'.fits'
     #-- first write summary, then all the models
     files = ['star.log']+list(files)
     for i,ff in enumerate(files):
-        starg,starl = read_mesa_log(ff)
+        starg,starl = read_mesa(ff)
         header_dict = {}
         for name in starg.dtype.names:
             header_dict['HIERARCH '+name] = starg[name][0]
         if i==0:
             header_dict['EXTNAME'] = 'track'
         else:
-            header_dict['EXTNAME'] = '%d'%(starg['model_number']))
+            header_dict['EXTNAME'] = '%d'%(starg['model_number'])
         filename = fits.write_recarray(starl,filename,header_dict=header_dict,
                                          ext=header_dict['EXTNAME'],close=False)
     filename.close()
@@ -425,7 +427,10 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     @rtype: dict, rec array
     """
     old_settings = np.seterr(invalid='ignore',divide='ignore')
-    basename,ext = os.path.splitext(filename)
+    if isinstance(filename,str):
+        basename,ext = os.path.splitext(filename)
+    elif isinstance(filename,pyfits.HDUList):
+        ext = '.fits'
     #-- MESA
     if ext in ['.log','.data']:
         starg,starl = read_mesa(filename)
@@ -448,21 +453,22 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
         #-- now just add some other parameters for which we need both the
         #   global and local parameters:
         available = starl.dtype.names
-        if not 'q' in available:
+        if not 'q' in available and 'mass' in available and 'star_mass' in starg.keys():
             q = starl['mass']/starg['star_mass']
             starl = pl.mlab.rec_append_fields(starl,['q'],[q])
-        if not 'x' in available:
+            logger.info('Added q')
+        if not 'x' in available and 'radius' in available and 'photosphere_r' in starg.keys():
             x = starl['radius']/starg['photosphere_r']
             starl = pl.mlab.rec_append_fields(starl,['x'],[x])
-        if not 'q_x3' in available:
+            logger.info('Added x')
+        if not 'q_x3' in available and 'mass' in available and 'star_mass' in starg.keys():
             q_x3 = starl['q']/starl['x']**3
             q_x3[0] = starl['Rho'][0]/starg['star_mass']*starg['photosphere_r']**3*4./3.*np.pi
             starl = pl.mlab.rec_append_fields(starl,['q_x3'],[q_x3])
-        logger.info('Added x, q and/or q/x3 when needed')
         #-- add some quantities that are useful for adipls
-        if not 'P_c' in starg.keys():
+        if not 'P_c' in starg.keys() and 'pressure' in starg.keys():
             starg['P_c'] = starl['pressure'][0]
-        if not 'rho_c' in starg.keys():
+        if not 'rho_c' in starg.keys() and 'Rho' in starg.keys():
             starg['rho_c'] = starl['Rho'][0]
         if (not 'D5' in starg.keys() or starg['D5']==0) and 'gamma1' in available:
             dp_dx = ne.deriv(x,starl['pressure'])
@@ -475,10 +481,12 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
             logger.info('Set global parameter D5=%.6g for ADIPLS'%(starg['D5']))
             logger.info('Set global parameter D6=%.6g for ADIPLS'%(starg['D6']))
             logger.info('Set global parameter mu=%.6g for ADIPLS'%(starg['mu']))            
-        logger.info("Standardized model %s"%(filename))
+        logger.info("Standardized model")
     
-    #-- reset convention to what it was before
-    conversions.set_convention(old[0],old[1])
+        #-- reset convention to what it was before
+        if values=='auto':
+            conversions.set_convention(old[0],old[1])
+    
     np.seterr(**old_settings)
     return starg,starl,_from
 
@@ -550,7 +558,7 @@ def standardize(star,_from,info='local',units='cgs'):
         try:
             index = onames.index(key)
         except ValueError:
-            logger.debug('Cannot convert %s to mesa name (skipping)'%(key))
+            logger.debug('Cannot convert %s from (%s,%s) to mesa name (skipping)'%(key,_from,info))
             continue
         #-- maybe information is not in 'standard' list. If it is, convert to
         #   standard units and standard name. Otherwise, just change the name
@@ -588,21 +596,22 @@ def standardize(star,_from,info='local',units='cgs'):
     #   information for pulsation analysis, profile studies etc...
     #-- (surface) gravity
     if not 'g' in keys:
-        if info=='local':
+        if info=='local' and 'mass' in keys and 'radius' in keys:
             g = constants.GG*new_star['mass']/new_star['radius']**2
             g[0] = 0.
             new_star = pl.mlab.rec_append_fields(new_star,['g'],[g])
-        else:
+        elif info=='global' and 'star_mass' in keys and 'photosphere_r' in keys:
             new_star['g'] = constants.GG*new_star['star_mass']/new_star['photosphere_r']**2
         logger.info('Derived g from model info (%s, %s)'%(_from,info))
     #-- dP/dr
-    if info=='local' and not 'dP_dr' in keys:
+    if info=='local' and not 'dP_dr' in keys and 'Rho' in keys and 'mass' in keys and 'radius' in keys:
         dP_dr = -new_star['Rho']*constants.GG*new_star['mass']/new_star['radius']**2 #dP/dr=-rho g
         dP_dr[0] = 0
         new_star = pl.mlab.rec_append_fields(new_star,['dP_dr'],[dP_dr])
         logger.info('Derived dP_dr from model info (%s, %s)'%(_from,info))
     #-- Brunt A
-    if info=='local' and not 'brunt_A' in keys:
+    if info=='local' and not 'brunt_A' in keys and 'radius' in keys and 'Rho' in keys \
+        and 'gamma1' in keys and 'pressure' in keys and 'dP_dr' in keys:
         r,rho,G1,P = new_star['radius'],new_star['Rho'],new_star['gamma1'],new_star['pressure']
         dP_dr = new_star['dP_dr']
         x = new_star['mass']/new_star['mass'][-1]
@@ -614,7 +623,8 @@ def standardize(star,_from,info='local',units='cgs'):
         logger.warning('Brunt A/N via explicit derivatives')
         logger.info('Extrapolated inner two points of Brunt A')
     #-- override brunt_N2_dimensionless:
-    if info=='local' and 'grad_density' in keys:
+    if info=='local' and 'grad_density' in keys and 'radius' in keys and 'Rho' in keys \
+        and 'gamma1' in keys and 'pressure' in keys and 'mass' in keys:
         g,rho,P,G1 = new_star['g'],new_star['Rho'],new_star['pressure'],new_star['gamma1']
         dlnrho_dlnP = new_star['grad_density']
         N2 = rho*g**2/P*(-1./G1 + dlnrho_dlnP)
@@ -631,7 +641,8 @@ def standardize(star,_from,info='local',units='cgs'):
         logger.info('Brunt A via precomputed partial derivatives (%s,%s)'%(_from,info))
         logger.info('Extrapolated inner two points of Brunt A')
     #-- ADIPLS quantity Vg
-    if info=='local' and not 'Vg' in keys and 'gamma1' in keys:
+    if info=='local' and not 'Vg' in keys and 'gamma1' in keys and 'radius' in keys and 'Rho' in keys \
+        and 'gamma1' in keys and 'pressure' in keys and 'mass' in keys:
         m,rho = new_star['mass'],new_star['Rho']
         G1,P,r = new_star['gamma1'],new_star['pressure'],new_star['radius']
         Vg = constants.GG*m*rho/(G1*P*r)
@@ -640,19 +651,21 @@ def standardize(star,_from,info='local',units='cgs'):
     elif info=='local' and not 'Vg' in keys and not 'gamma1' in keys:
         logger.warning('Cannot compute Vg because gamma1 is not available')
     #-- ADIPLS quantitiy U
-    if info=='local' and not 'U' in keys:
+    if info=='local' and not 'U' in keys and 'gamma1' in keys and 'radius' in keys and 'Rho' in keys \
+        and 'gamma1' in keys and 'pressure' in keys and 'mass' in keys:
         rho,m,r = new_star['Rho'],new_star['mass'],new_star['radius']
         U = 4*np.pi*rho*r**3/m
         x = new_star['mass']/new_star['mass'][-1]
         U[0] = np.polyval(np.polyfit(x[1:4],U[1:4],2),x[0])
         new_star = pl.mlab.rec_append_fields(new_star,['U'],[U])
     #-- dynamical time scale
-    if info=='global' and not 'dynamic_time' in keys:
+    if info=='global' and not 'dynamic_time' in keys and 'photosphere_r' in keys and 'star_mass' in keys:
         R = new_star['photosphere_r']
         M = new_star['star_mass']
         new_star['dynamic_time'] = np.sqrt(R**3/(constants.GG*M))
         logger.info('Derived dynamic_time from model info (%s, %s)'%(_from,info))
-    if info=='local' and not 'csound' in keys:
+    if info=='local' and not 'csound' in keys and 'gamma1' in keys and 'radius' in keys and 'Rho' in keys \
+        and 'gamma1' in keys and 'pressure' in keys and 'mass' in keys:
         csound = np.sqrt(new_star['gamma1']*new_star['pressure']/new_star['Rho'])
         new_star = pl.mlab.rec_append_fields(new_star,['csound'],[csound])
     #-- some profiles don't have a center value

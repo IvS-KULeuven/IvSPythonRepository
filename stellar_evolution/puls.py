@@ -39,6 +39,7 @@ class StellarModel:
     that you need to be careful with the order in which you call the OSCLIB
     routines.
     """
+    #{ Built-in functions
     def __init__(self,star_model,unit='d-1',codes=('losc','adipls'),**kwargs):
         """
         Read in the stellar model.
@@ -55,10 +56,14 @@ class StellarModel:
         model = 'model'
         self.master = codes[0]
         self.codes = codes
-        logger.info('Received file %s'%(star_model))
+        if isinstance(star_model,str):
+            logger.info('Received file %s'%(star_model))
+        else:
+            logger.info('Received ext %s from FITS HDUList'%(kwargs['ext']))
         
-        starg,starl,mtype = fileio.read_starmodel(star_model,**kwargs)
-        self.constants = conversions.get_constants(units='cgs',values=mtype)
+        starg,starl,mtype = fileio.read_starmodel(star_model,do_standardize=True,**kwargs)
+                
+        self.constants = conversions.get_constants(units='cgs',values='standard')
         
         self.starg = starg
         self.starl = starl
@@ -71,6 +76,179 @@ class StellarModel:
     
     def __getitem__(self,key):
         return self.starl[key]   
+    
+    def _init_losc(self):
+        """
+        Convert the stellar profiles to input that LOSC understands.
+        
+        This effectively initiates LOSC, except for calling the meshing
+        """
+        #r,m,P,rho,G1 = self.starl['radius'],self.starl['mass'],self.starl['pressure'],\
+        #               self.starl['Rho'],self.starl['gamma1']
+        #for arr in [r,m,P,rho,G1]:
+        #    if np.any(np.isnan(arr)): raise ValueError
+        #    if np.any(np.isinf(arr)): raise ValueError
+        #output,R,M = physical2osc(r,m,P,rho,G1,G=self.constants['GG'])
+        output,R,M = star2losc(self.starg,self.starl,G=self.constants['GG'])
+        #if np.isnan(output[1][0]):
+        #    output[1][0] = 0
+        shapenow = output.shape[1]
+        if shapenow>=np0max:
+            raise ValueError,'Mesh is too fine... now what?'
+        else:
+            logger.info('Initiated LOSC model with %d meshpoints'%(shapenow))
+            #bla = self._get_current_losc_model()
+            #print bla.shape
+        shapeadd = np0max-shapenow
+        output = np.hstack([output,np.zeros((6,shapeadd))])
+        output = np.array(output,float)
+        #print 'output',output.shape,shapenow
+        #pyosclib.readmodpyg(np.zeros_like(output),0,6001,R,M,'model',self.constants['GG'],
+                                                            #self.constants['Msol'])
+        #pyosclib.mesh(0,6001,0)
+        pyosclib.readmodpyg(output,0,shapenow+1,R,M,'model',self.constants['GG'],
+                                                            self.constants['Msol'])
+        pyosclib.mesh(0,shapenow+1,0)
+        bla = self._get_current_losc_model()
+        mass,radius,taudyn,npts,rc = pyosclib.modinfo()
+        if rc!=0:
+            raise IOError('Error in reading stellar model for estimating frequencies (%s)'%(rc))
+        pyosclib.setboundary(2,rc)
+        return rc
+    
+    def _get_current_losc_model(self):
+        """
+        Return model currently stored in LOSC.
+        
+        S1 = x
+        S2 = q/x**3
+        S3 = R*P_r/(G*M*rho_r)
+        S4 = 4*pi*R**3*rho_r/M
+        S5 = G1
+        S6 = np.zeros(len(r))
+        """
+        star = np.zeros((6,6001))
+        star = pyosclib.getmodel(star)
+        keep = star[0]!=0
+        if np.any(keep):
+            keep[0] = True
+            return star[:,keep]
+        else:
+            return star
+    
+    def _init_adipls(self):
+        """
+        Convert the stellar profiles to input that ADIPLS understands
+        """
+        names = ['x','q_x3','Vg','gamma1','brunt_A','U']
+        starl = np.rec.fromarrays([self.starl[name] for name in names],
+                                  names=names)
+        names = ['star_mass','photosphere_r','P_c','rho_c','D5','D6','mu']
+        starg = {}
+        for name in names:
+            starg[name] = self.starg[name]
+        return starg,starl
+    #}
+    
+    #{ Code-independent interface
+    
+    def compute_eigenfreqs(self,degrees,codes=None,
+                           f0=(1.,'d-1'),fn=(12.,'d-1'),nscan=1000,
+                           fspacing='p',boundary=0):
+        """
+        Compute eigenfrequencies for all available methods.
+        
+        Remember the values of the keyword arguments, they will be duplicated
+        when computing eigenfunctions.
+        """
+        if codes is None:
+            codes = self.codes
+        self.kwargs_losc = {}
+        self.kwargs_adip = {}
+        self.kwargs_losc['ires'] = [None,'p','g'].index(fspacing)
+        self.kwargs_losc['n'] = nscan
+        self.kwargs_adip['fspacing'] = fspacing
+        self.kwargs_adip['nf'] = nscan
+        #self.kwargs_adip['mdintg'] = 1
+        
+        #-- translate boundary condition for LOSC to 1, 2 or raise ValueError
+        # translate boundary condition for ADIPLS to istbc
+        if boundary==0:
+            pyosclib.setboundary(2,0) # vanishing pressure at surface
+            self.kwargs_adip['istsbc'] = 0
+        else:
+            pyosclib.setboundary(1,0) # nonvanishing pressure at surface
+            self.kwargs_adip['istsbc'] = 1
+       
+        if 'losc' in codes:
+            self.compute_eigenfreqs_losc(degrees,f0=f0,fn=fn,**self.kwargs_losc)
+        if 'adipls' in codes:
+            self.compute_eigenfreqs_adipls(degrees,f0=f0,fn=fn,**self.kwargs_adip)
+    
+    def compute_eigenfuncs(self,degrees,modes=None,codes=None):
+        """
+        Compute eigenfunctions for all available methods.
+        
+        Remember the values of the keyword arguments, they will be duplicated
+        when computing eigenfunctions.
+        """
+        if codes is None:
+            codes = self.codes
+        if not hasattr(self,'kwargs_losc') or not hasattr(self,'kwargs_adip'):
+            raise ValueError,'please compute eigenfunctions with specialised funcs'
+        for degree in degrees:
+            if 'losc' in codes:
+                self.compute_eigenfuncs_losc(degree,modes=modes,ires=self.kwargs_losc['ires'])
+            if 'adipls' in codes:
+                self.compute_eigenfuncs_adipls(degree,modes=modes,**self.kwargs_adip)
+    def match(self,template='losc',tol=1.):
+        """
+        Match frequencies.
+        
+        Tolerance in percentage (unitless).
+        """
+        #-- now do the match for frequencies and eigenfunctions
+        for code in self.eigenfreqs.keys():
+            if code==template: continue
+            for degree in self.eigenfreqs[code].keys():
+                #-- we will match all frequencies against these ones:
+                ftemplate = self.eigenfreqs[template][degree]['frequency']
+                #-- match
+                indices = ne.match_arrays(self.eigenfreqs[code][degree]['frequency'],ftemplate)
+                mismatch = np.abs(self.eigenfreqs[code][degree]['frequency'][indices]-ftemplate)/ftemplate>=(tol/100.)
+                #-- sort eigenfreqs
+                self.eigenfreqs[code][degree] = self.eigenfreqs[code][degree][indices]
+                self.eigenfreqs[code][degree]['frequency'][mismatch] = np.nan
+                #-- sort eigenfuncs (optional)
+                if code in self.eigenfuncs and degree in self.eigenfuncs[code]:
+                    self.eigenfuncs[code][degree] = [self.eigenfuncs[code][degree][i] for i in indices]
+    
+    def get_photometry(self,photbands,distance=(10.,'pc'),**kwargs):
+        """
+        Retrieve colors for this stellar model.
+        
+        To retrieve absolute bolometric magnitude, set distance to 10 pc.
+        
+        @return: fluxes and bolometric magnitude at 10 pc
+        """
+        teff = self.starg['Teff']
+        logg = conversions.convert('cm/s2','[cm/s2]',self.starg['g'])
+        R = conversions.convert('cgs','Rsol',self.starg['photosphere_r'])
+        distance = conversions.convert(distance[1],'Rsol',distance[0])
+        scale = (R/distance)**2
+        logger.info('Retrieving photometry for model teff=%.0fK logg=%.3f, R=%.3fRsol in bands %s'%(teff,logg,R,', '.join(photbands)))
+        try:
+            fluxes,Lbol = model.get_itable(teff=teff,logg=logg,photbands=photbands,**kwargs)
+            Lbol = Lbol*scale
+        except IOError:
+            wave,flux = model.get_table(teff=teff,logg=logg,**kwargs)
+            fluxes = model.synthetic_flux(wave,flux,photbands=photbands)
+            Lbol = model.luminosity(wave,flux*scale)
+        Lbol = -2.5*np.log10(Lbol)-38.406612779
+        return fluxes,Lbol   
+    #}
+    
+    #{ Resampling
     
     def resample(self,increase=2,method='simple',mode_type=None,n_new=5000,int_method='spline'):
         """
@@ -127,9 +305,9 @@ class StellarModel:
             subprocess.call('redistrb.c.d %s'%(control_file),stdout=open('/dev/null','r'),shell=True)
             adig_,adil_ = fileio.read_amdl(model+'.amdlr')
             #os.unlink(model+'.amdlr')
-            os.unlink(model+'.amdl')
-            os.unlink(model+'.gong')
-            os.unlink(control_file)
+            #os.unlink(model+'.amdl')
+            #os.unlink(model+'.gong')
+            #os.unlink(control_file)
             #   now reinterpolate all the quantities onto this mesh. Remark
             #   that we loose the interpolation made by ADIPLS and only retain
             #   its mesh structure.
@@ -246,6 +424,8 @@ class StellarModel:
             os.unlink(control_file)
         return adig_,adil_
     
+    #}
+    #{ Plotting routines
     
     def plot_model(self):
         r,m,P,rho,G1,dPdr = self.starl['radius'],self.starl['mass'],self.starl['pressure'],\
@@ -337,490 +517,7 @@ class StellarModel:
         pl.xlabel('r/R')
         pl.plot(star[0],range(len(star[0])),'-',lw=2,color=c1)
         pl.plot(self.starl[x],range(len(starl['x'])),'--',lw=2,color=c2)    
-        
     
-    def _init_losc(self):
-        """
-        Convert the stellar profiles to input that LOSC understands.
-        
-        This effectively initiates LOSC, except for calling the meshing
-        """
-        #r,m,P,rho,G1 = self.starl['radius'],self.starl['mass'],self.starl['pressure'],\
-        #               self.starl['Rho'],self.starl['gamma1']
-        #for arr in [r,m,P,rho,G1]:
-        #    if np.any(np.isnan(arr)): raise ValueError
-        #    if np.any(np.isinf(arr)): raise ValueError
-        #output,R,M = physical2osc(r,m,P,rho,G1,G=self.constants['GG'])
-        output,R,M = star2losc(self.starg,self.starl,G=self.constants['GG'])
-        #if np.isnan(output[1][0]):
-        #    output[1][0] = 0
-        shapenow = output.shape[1]
-        if shapenow>=np0max:
-            raise ValueError,'Mesh is too fine... now what?'
-        else:
-            logger.info('Initiated LOSC model with %d meshpoints'%(shapenow))
-            #bla = self._get_current_losc_model()
-            #print bla.shape
-        shapeadd = np0max-shapenow
-        output = np.hstack([output,np.zeros((6,shapeadd))])
-        output = np.array(output,float)
-        #print 'output',output.shape,shapenow
-        #pyosclib.readmodpyg(np.zeros_like(output),0,6001,R,M,'model',self.constants['GG'],
-                                                            #self.constants['Msol'])
-        #pyosclib.mesh(0,6001,0)
-        pyosclib.readmodpyg(output,0,shapenow+1,R,M,'model',self.constants['GG'],
-                                                            self.constants['Msol'])
-        pyosclib.mesh(0,shapenow+1,0)
-        bla = self._get_current_losc_model()
-        mass,radius,taudyn,npts,rc = pyosclib.modinfo()
-        if rc!=0:
-            raise IOError('Error in reading stellar model for estimating frequencies (%s)'%(rc))
-        pyosclib.setboundary(2,rc)
-        return rc
-    
-    def _get_current_losc_model(self):
-        """
-        Return model currently stored in LOSC.
-        
-        S1 = x
-        S2 = q/x**3
-        S3 = R*P_r/(G*M*rho_r)
-        S4 = 4*pi*R**3*rho_r/M
-        S5 = G1
-        S6 = np.zeros(len(r))
-        """
-        star = np.zeros((6,6001))
-        star = pyosclib.getmodel(star)
-        keep = star[0]!=0
-        if np.any(keep):
-            keep[0] = True
-            return star[:,keep]
-        else:
-            return star
-    
-    def _init_adipls(self):
-        """
-        Convert the stellar profiles to input that ADIPLS understands
-        """
-        names = ['x','q_x3','Vg','gamma1','brunt_A','U']
-        starl = np.rec.fromarrays([self.starl[name] for name in names],
-                                  names=names)
-        names = ['star_mass','photosphere_r','P_c','rho_c','D5','D6','mu']
-        starg = {}
-        for name in names:
-            starg[name] = self.starg[name]
-        return starg,starl
-    
-    def compute_eigenfreqs(self,degrees,codes=None,
-                           f0=(1.,'d-1'),fn=(12.,'d-1'),nscan=1000,
-                           fspacing='p',boundary=0):
-        """
-        Compute eigenfrequencies for all available methods.
-        
-        Remember the values of the keyword arguments, they will be duplicated
-        when computing eigenfunctions.
-        """
-        if codes is None:
-            codes = self.codes
-        self.kwargs_losc = {}
-        self.kwargs_adip = {}
-        self.kwargs_losc['ires'] = [None,'p','g'].index(fspacing)
-        self.kwargs_losc['n'] = nscan
-        self.kwargs_adip['fspacing'] = fspacing
-        self.kwargs_adip['nf'] = nscan
-        #self.kwargs_adip['mdintg'] = 1
-        
-        #-- translate boundary condition for LOSC to 1, 2 or raise ValueError
-        # translate boundary condition for ADIPLS to istbc
-        if boundary==0:
-            pyosclib.setboundary(2,0) # vanishing pressure at surface
-            self.kwargs_adip['istsbc'] = 0
-        else:
-            pyosclib.setboundary(1,0) # nonvanishing pressure at surface
-            self.kwargs_adip['istsbc'] = 1
-       
-        if 'losc' in codes:
-            self.compute_eigenfreqs_losc(degrees,f0=f0,fn=fn,**self.kwargs_losc)
-        if 'adipls' in codes:
-            self.compute_eigenfreqs_adipls(degrees,f0=f0,fn=fn,**self.kwargs_adip)
-    
-    def compute_eigenfuncs(self,degrees,modes=None,codes=None):
-        """
-        Compute eigenfunctions for all available methods.
-        
-        Remember the values of the keyword arguments, they will be duplicated
-        when computing eigenfunctions.
-        """
-        if codes is None:
-            codes = self.codes
-        if not hasattr(self,'kwargs_losc') or not hasattr(self,'kwargs_adip'):
-            raise ValueError,'please compute eigenfunctions with specialised funcs'
-        for degree in degrees:
-            if 'losc' in codes:
-                self.compute_eigenfuncs_losc(degree,modes=modes,ires=self.kwargs_losc['ires'])
-            if 'adipls' in codes:
-                self.compute_eigenfuncs_adipls(degree,modes=modes,**self.kwargs_adip)
-       
-    
-    def compute_eigenfreqs_losc(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
-                                     ires=0,n=500,ind=1,mmax=50,
-                                     typecomp=1):
-        """
-        Compute eigenfrequencies with the LOSC code.
-        
-        @parameter f0: approximate start frequency
-        @parameter fn: approximate end frequency
-        @parameter ires: type of mesh for computation of the eigenfrequencies,
-        1 to optimize for p modes, 2 for g modes and 3 for p and g modes
-        @parameter n: number of subintervals in scanomaga
-        @parameter ind: type of grid: 1 is equidistant in frequency space (for
-        p modes), 2 is equidistant in period space (for g modes)
-        @parameter mmax: maximum number of approximate eigenfrequencies to compute.
-        @parameter typecomp: type of computations, 1 for normal computation, which is
-        recommended, and type=2 if convergence is difficult to obtain.
-        @parameter unit: units to put in the 'frequency' output column
-        """
-        old_settings = np.seterr(invalid='ignore')
-        modekeys = ['l','nz','mode','modeLee','parity','sigma','beta','ev','xm',
-                'delta','boundary','frequency','freqinit']
-        dtypes = [int,int,int,int,int,float,float,float,float,float,float,float,float]
-        #-- convert frequency to dimensionless angular frequencies for OSCL
-        f0 = conversions.convert(f0[1],'rad/s',f0[0])
-        fn = conversions.convert(fn[1],'rad/s',fn[0])
-        R = self.starg['photosphere_r']
-        M = self.starg['star_mass']
-        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
-        f0 = f0*t_dynamic
-        fn = fn*t_dynamic
-        
-        rc = 0
-        if not 'losc' in self.eigenfreqs:
-            self.eigenfreqs['losc'] = {}
-        if not 'losc' in self.eigenfuncs:
-            self.eigenfuncs['losc'] = {}
-        #-- run over all the degrees
-        for l in degrees:
-            #-- estimate the frequencies
-            pyosclib.setdegree(l)
-            omegas = np.zeros(100)
-            mm = len(omegas)
-            omegas,mm = pyosclib.scanomega(f0,fn,n,ind,mmax,omegas,mm,rc)
-            if rc!=0:
-                raise ValueError('Error in scanning for frequencies')
-            omegas = omegas[:mm]
-            if 4*mm>n:
-                raise ValueError('Frequency spectrum is dense, increase "n"')
-            #logger.info("Estimated %d frequencies (l=%d) between %.3fd-1 and %.3fd-1"%(mm,l,omegas.min(),omegas.max()))
-            #-- refine the frequencies and compute mode information
-            freqinfo = np.zeros((len(omegas),len(modekeys)))
-            for i,omega in enumerate(omegas):
-                pyosclib.computemode(typecomp,omega,rc)
-                freqinfo[i][:11] = pyosclib.oscinfo(omega,rc)
-                freqinfo[i][12]  = omega
-            #-- make the array into a convenient record array
-            freqinfo = [np.array(i,dtype) for i,dtype in zip(freqinfo.T,dtypes)]
-            freqinfo = np.rec.fromarrays(freqinfo,names=modekeys)
-            #-- put the frequencies in cy/d in the array
-            freqcd = conversions.convert('rad/s',self.unit,freqinfo['sigma'])
-            freqinfo['frequency'] = freqcd
-            self.eigenfreqs['losc']['l%d'%(l)] = freqinfo
-            #-- make room for eigenfunctions
-            self.eigenfuncs['losc']['l%d'%(l)] = [None for i in range(len(self.eigenfreqs['losc']['l%d'%(l)]))]
-            
-            logger.info('LOSC: found %d frequencies (l=%d) between %.3g%s and %.3g%s'%(len(freqcd),l,freqcd.min(),self.unit,freqcd.max(),self.unit))
-        np.seterr(**old_settings)
-    
-    def compute_eigenfuncs_losc(self,degree,modes=None,ires=0,typecomp=1):
-        """
-        Compute eigenfunctions with the LOSC code.
-        
-        Also compute horizontal and vertical displacements. In the book of
-        Aerts et al., these are known as $\tilde{\ksi}_r$ and $\tilde{\ksi}_h$.
-            
-        WARNING: the OSC manual notes that this is valid 'near the centre', but is
-        actually a pretty fuzzy sentence...
-        
-        @parameter ires: type of mesh for computation of the eigenfrequencies,
-        1 to optimize for p modes, 2 for g modes and 3 for p and g modes
-        @parameter nres: the number of added points increases with n. This parameter
-        should be increased as the complexity of the model increases
-        @parameter typecomp: type of computations, 1 for normal computation, which is
-        recommended, and type=2 if convergence is difficult to obtain.
-        """
-        old_settings = np.seterr(invalid='ignore',divide='ignore')
-        if modes is None:
-            modes = range(len(self.eigenfreqs['losc']['l%d'%(degree)]))
-        rc = 0
-        R = self.starg['photosphere_r']
-        M = self.starg['star_mass']
-        #-- below, we will need the dynamical time scale, the radial position
-        #   in the star, the mass position and the density
-        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
-        x_ = self.starl['radius']/R
-        q_ = self.starl['mass']/M
-        rho_ = self.starl['Rho']
-        P_ = self.starl['pressure']
-        G1_= self.starl['gamma1']
-        dP_dr_ = self.starl['dP_dr']
-        l = degree
-        
-        #-- run over all the degrees
-        for mode in modes:
-            #-- compute the eigenfrequency
-            mymode = self.eigenfreqs['losc']['l%d'%(l)][mode]
-            pyosclib.setdegree(l)
-            omega = mymode['freqinit']
-            if np.isnan(omega):
-                logger.info('Mode %d is not matched (nan)'%(mode))
-                continue
-            pyosclib.computemode(typecomp,omega,rc)
-            #-- maybe we should cal oscinfo here and check if results match
-            #   the previous calculations, just as a sanity test
-            info = np.array(pyosclib.oscinfo(omega,rc))
-            if not np.allclose(list(mymode)[:11],info):
-                print zip(mymode.dtype.names[:11],list(mymode)[:11],info)
-                raise ValueError,'sanity check in eigenfunc computation failed' 
-            #-- retrieve the eigenfunctions and the stellar (dimensionless)
-            #   quantities from LOSC and remove zeros
-            star,oscl = pyosclib.osc08py()
-            clip = [oscl[0]!=0]
-            star = [col[clip] for col in star]
-            oscl = [col[clip] for col in oscl]
-            Y,Z,U,V = oscl
-            #-- get the physical quantities
-            x = star[0]                              # normalised radius
-            r = x*R                                  # radius
-            rho = star[3]/(4*np.pi*R**3)*M           # density
-            q = star[1]*x**3                         # normalised mass
-            m = q*M                                  # mass
-            P = star[2]/R*self.constants['GG']*M*rho # pressure
-            g = self.constants['GG']*m/r**2          # gravity
-            G1 = star[4]                             # Adiabatic exponent
-            N2 = -g*star[5]*x/R                      # Brunt-Vaisalla frequency
-            dP_dr = -rho*g                           # Pressure gradient using hydrostatic equilibrium
-            U_ = r/m*4*pi*r**2*rho                   # r/m*dm/dr = dlnm/dlnr and dm/dr = 4*pi*r^2*rho using conservation of mass
-            #-- compute the horizontal and vertical components
-            #   first, we need the angular dimensionless frequency
-            omega = mymode['sigma']*t_dynamic
-            sigma = mymode['sigma']
-            if l==0:#   in the case of a radial mode
-                a_r = R*x*Y
-                b_r = np.zeros(len(a_r))
-            else:#   in the case of a nonradial mode
-                a_r = R*x**(l-1)*Y
-                b_r = R*x**(l-1)/(omega**2) * (U + R*P/(self.constants['GG']*M*rho)*Z + q/x**3*Y)
-            #-- now compute the lagrangian pressure perturbation
-            if l==0:#   in the case of a radial mode:
-                dP_P = Z
-            else:#   in the case of nonradial mode:
-                dP_P = x**l*Z
-            #  and convert it to Eulerian
-            Pprime = dP_P*P - a_r*dP_dr
-            #-- compute the Eulerian gravity potential perturbation and its
-            #   derivative
-            Phiprime = self.constants['GG']*M/R*x**l*U
-            dPhiprime_dr = self.constants['GG']*M/R**2*x**(l-1)*(V-4*np.pi*R**3*rho/M*Y)
-            #-- Dziembowski variables
-            dr = a_r
-            #dr = np.sqrt(a_r**2 + b_r**2)
-            y1 = dr/r
-            y2 = 1./(g*r) * (Pprime/rho + Phiprime)
-            y3 = 1./(g*r) * Phiprime
-            y4 = 1./g * dPhiprime_dr
-            #-- weight functions
-            Sl2 = G1*P/(r**2*rho)   # remove the l*(l+1) thing, it is cancelled in C anyway
-            #-- compute the weight functions
-            T = dr**2 + l*(l+1)/(r**2*sigma**2)*(Pprime/rho+Phiprime) # proportional to kinetic energy density
-            C = g**2/Sl2*(y2-y3)**2                              # acoustic energy
-            N = N2*dr**2                                        # buoyancy energy
-            G = -1/(4*np.pi*rho*self.constants['GG'])*(dPhiprime_dr + l*(l+1)*Phiprime/r) # gravitational energy
-            T[0] = 0
-            C[0] = 0
-            N[0] = 0
-            G[0] = 0
-            total = (C+N+G)*rho*r**2
-            charpinet = (a_r**2*N2 + Pprime**2/(G1*P*rho) + (Pprime/(G1*P) + a_r*N2/g))*rho*r**2
-            varsig = np.sqrt(integrate.simps(total,x=r)/integrate.simps((T*rho*r**2),x=r))
-            logger.info("Difference between freq2 and varfreq2: %.3g%%"%(np.abs(varsig**2-sigma**2)/sigma**2*100))
-            
-            #-- we check here explicitly Masao's (Takata) dipolar condition
-            if l==1:
-                zero = Pprime + g/(4*np.pi*self.constants['GG'])*(dPhiprime_dr+2/r*Phiprime) - omega**2*r*(rho*dr + 1/(4*np.pi*self.constants['GG'])*(dPhiprime_dr-Phiprime/r))
-                logger.info("Masao's check: %.3g"%(np.sqrt((zero**2).sum())))
-            
-            self.eigenfuncs['losc']['l%d'%(l)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime,Phiprime,dPhiprime_dr,
-                 T*rho*r**2,C*rho*r**2,N*rho*r**2,G*rho*r**2,total,charpinet],
-                 names=['x','ar','br','Pprime','Phiprime','dPhiprime_dr','T','C','N','G','weight','charpinet'])
-        np.seterr(**old_settings)
-        logger.info('LOSC: computed eigenfunctions for l=%d modes %s'%(degree,modes))
-                
-    
-    def compute_eigenfreqs_adipls(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
-                                  nf=1000,verbose=False,**kwargs):
-        """
-        Compute eigenfrequencies with ADIPLS.
-        
-        Possible keyword arguments are described in ADIPLS documentation.
-        """
-        #-- in ADIPLS, we work with files, so we need to keep track of the names
-        #   of these files
-        model = 'tempmodel_frq'
-        #-- initialize ADIPLS
-        if 'n_new' in kwargs:
-            adig,adil = resample_adipls(n_new=kwargs['n_new'],mode_type=kwargs.get('mode_type',None))
-        else:
-            adig,adil = self._init_adipls()        
-        kwargs.setdefault('cgrav',self.constants['GG'])
-        kwargs.setdefault('fspacing','p')
-        #-- write adipls variables to file
-        #ascii.write_array(adil,'tempmodel_frq.ascii',header=True,auto_width=True,use_float='%.15e',comments=['#'+json.dumps(adig)])
-        #special.write_amdl(adig,adil,model+'.amdl')
-        fileio.write_gong(adig,adil,model+'.gong')
-        subprocess.call('form-amdl.d 2 %s %s'%(model+'.gong',model+'.amdl'),stdout=open('/dev/null','w'),shell=True)
-        
-        
-        if not 'adipls' in self.eigenfreqs:
-            self.eigenfreqs['adipls'] = {}
-        if not 'adipls' in self.eigenfuncs:
-            self.eigenfuncs['adipls'] = {}
-        
-        #-- run over all the degrees
-        for degree in degrees:
-            ckwargs = kwargs.copy()
-            #-- use Takata ordering scheme for dipolar modes
-            if degree==1:
-                ckwargs.setdefault('irsord',20)
-            #-- use Lee ordering scheme for other modes
-            else:
-                ckwargs.setdefault('irsord',11)
-            #-- construct adipls control file
-            control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
-                                               f0=f0,fn=fn,**ckwargs)
-            #-- call adipls, perhaps with throwing away the output
-            if not verbose:
-                stdout = open('/dev/null', 'w')
-            else:
-                stdout = None
-            subprocess.call('adipls.c.d %s'%(control_file),stdout=stdout,shell=True)
-            #-- read small summary file and add contents to output
-            starg,starl = fileio.read_assm(model+'.ssm')
-            #os.unlink(model+'.ssm')
-            #os.unlink(model+'.gsm')
-            #-- convert frequencies into whatever unit
-            starl['frequency'] = conversions.convert('mHz',self.unit,starl['frequency'])
-            self.eigenfreqs['adipls']['l%d'%(degree)] = starl
-            #-- make room for eigenfunctions
-            self.eigenfuncs['adipls']['l%d'%(degree)] = [None for i in range(len(self.eigenfreqs['adipls']['l%d'%(degree)]))]
-            logger.info('ADIPLS: found %d frequencies (l=%d) between %.3g%s and %.3g%s'%(len(starl),degree,starl['frequency'].min(),self.unit,starl['frequency'].max(),self.unit))
-        #os.unlink(model+'.amdl')
-        os.unlink(model+'.gong')
-        #mymod = self._get_current_losc_model()
-        #ascii.write_array(mymod,model+'.tosc')
-        #raise SystemExit
-        
-    def compute_eigenfuncs_adipls(self,degree,modes=None,verbose=False,**kwargs):
-        """
-        Compute eigenfunctions with adipls.
-        """
-        if modes is None:
-            modes = range(len(self.eigenfreqs['adipls']['l%d'%(degree)]))
-        #-- in ADIPLS, we work with files, so we need to keep track of the names
-        #   of these files
-        model = 'tempmodel_eig'
-        #-- initialize ADIPLS
-        adig,adil = self._init_adipls()        
-        kwargs.setdefault('cgrav',self.constants['GG'])
-        kwargs.setdefault('nfmode',2)
-        #-- write adipls variables to file
-        fileio.write_gong(adig,adil,model+'.gong')
-        subprocess.call('form-amdl.d 2 %s %s'%(model+'.gong',model+'.amdl'),stdout=open('/dev/null','w'),shell=True)
-        #special.write_amdl(adig,adil,model+'.amdl')
-        #print adig
-        #ascii.write_array(adil,'tempmodel_eig.ascii',header=True,auto_width=True,use_float='%.15e')
-        l = degree        
-        
-        #-- run over all the degrees
-        for mode in modes:
-            mymode = self.eigenfreqs['adipls']['l%d'%(l)][mode]
-            if np.isnan(mymode['frequency']):
-                logger.info('Mode %d is not matched (nan)'%(mode))
-                continue
-            #-- use Takata ordering scheme for dipolar modes
-            if degree==1:
-                kwargs.setdefault('irsord',20)
-            #-- use Lee ordering scheme for other modes
-            else:
-                kwargs.setdefault('irsord',11)
-            #-- construct adipls control file
-            df = mymode['frequency']/100.
-            control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
-                                               f0=(mymode['frequency']-df,self.unit),
-                                               fn=(mymode['frequency']+df,self.unit),**kwargs)
-            #-- call adipls
-            if not verbose:
-                stdout = open('/dev/null', 'w')
-            else:
-                stdout = None
-            subprocess.call('adipls.c.d %s'%(control_file),shell=True,stdout=stdout)
-            #-- read eigenfunction file and add contents to output
-            try:
-                x,a_r,b_r = fileio.read_aeig(model+'.aeig')
-            except:
-                x,a_r,b_r = [np.linspace(0,1,2000),np.zeros(2000),np.zeros(2000)]
-            #os.remove(model+'.aeig')
-            os.remove(model+'.gsm')
-            os.remove(model+'.ssm')
-            #os.remove(control_file)
-            Pprime = np.zeros_like(x)
-            self.eigenfuncs['adipls']['l%d'%(degree)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime],names=['x','ar','br','Pprime'])
-        os.unlink(model+'.amdl')
-        os.unlink(model+'.gong')
-        
-        #raise SystemExit
-        logger.info('ADIPLS: computed eigenfunctions for l=%d modes %s'%(degree,modes))
-        
-    def match(self,template='losc',tol=1.):
-        """
-        Match frequencies.
-        
-        Tolerance in percentage (unitless).
-        """
-        #-- now do the match for frequencies and eigenfunctions
-        for code in self.eigenfreqs.keys():
-            if code==template: continue
-            for degree in self.eigenfreqs[code].keys():
-                #-- we will match all frequencies against these ones:
-                ftemplate = self.eigenfreqs[template][degree]['frequency']
-                #-- match
-                indices = ne.match_arrays(self.eigenfreqs[code][degree]['frequency'],ftemplate)
-                mismatch = np.abs(self.eigenfreqs[code][degree]['frequency'][indices]-ftemplate)/ftemplate>=(tol/100.)
-                #-- sort eigenfreqs
-                self.eigenfreqs[code][degree] = self.eigenfreqs[code][degree][indices]
-                self.eigenfreqs[code][degree]['frequency'][mismatch] = np.nan
-                #-- sort eigenfuncs (optional)
-                if code in self.eigenfuncs and degree in self.eigenfuncs[code]:
-                    self.eigenfuncs[code][degree] = [self.eigenfuncs[code][degree][i] for i in indices]
-    
-    def photometry(self,photbands,distance=(10.,'pc'),**kwargs):
-        """
-        Retrieve colors for this stellar model.
-        """
-        teff = self.starg['Teff']
-        logg = conversions.convert('cm/s2','[cm/s2]',self.starg['g'])
-        R = conversions.convert('cgs','Rsol',self.starg['photosphere_r'])
-        distance = conversions.convert(distance[1],'Rsol',distance[0])
-        scale = (R/distance)**2
-        logger.info('Retrieving photometry for model teff=%.0fK logg=%.3f, R=%.3fRsol in bands %s'%(teff,logg,R,', '.join(photbands)))
-        try:
-            fluxes,Lbol = model.get_itable(teff=teff,logg=logg,photbands=photbands,**kwargs)
-            Lbol = Lbol*scale
-        except IOError:
-            wave,flux = model.get_table(teff=teff,logg=logg,**kwargs)
-            fluxes = model.synthetic_flux(wave,flux,photbands=photbands)
-            Lbol = model.luminosity(wave,flux*scale)
-        Lbol = -2.5*np.log10(Lbol)-38.406612779
-        return fluxes,Lbol
-
     def plot_frequency_matching(self,master='losc'):
     
         rows,cols = 2,2
@@ -1018,7 +715,338 @@ class StellarModel:
                 leg.get_frame().set_alpha(0.5)
                 pl.savefig(prefix+'weight_function_%sn%+03d'%(degree,order))
                 pl.close()
+  
+    def plot_density_temperature_profile(self):
+        return None
+    #}
+    
+    
+    
+    #{ Code-dependent interface
+    def compute_eigenfreqs_losc(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
+                                     ires=0,n=500,ind=1,mmax=50,
+                                     typecomp=1):
+        """
+        Compute eigenfrequencies with the LOSC code.
+        
+        @parameter f0: approximate start frequency
+        @parameter fn: approximate end frequency
+        @parameter ires: type of mesh for computation of the eigenfrequencies,
+        1 to optimize for p modes, 2 for g modes and 3 for p and g modes
+        @parameter n: number of subintervals in scanomaga
+        @parameter ind: type of grid: 1 is equidistant in frequency space (for
+        p modes), 2 is equidistant in period space (for g modes)
+        @parameter mmax: maximum number of approximate eigenfrequencies to compute.
+        @parameter typecomp: type of computations, 1 for normal computation, which is
+        recommended, and type=2 if convergence is difficult to obtain.
+        @parameter unit: units to put in the 'frequency' output column
+        """
+        old_settings = np.seterr(invalid='ignore')
+        modekeys = ['l','nz','mode','modeLee','parity','sigma','beta','ev','xm',
+                'delta','boundary','frequency','freqinit']
+        dtypes = [int,int,int,int,int,float,float,float,float,float,float,float,float]
+        #-- convert frequency to dimensionless angular frequencies for OSCL
+        f0 = conversions.convert(f0[1],'rad/s',f0[0])
+        fn = conversions.convert(fn[1],'rad/s',fn[0])
+        R = self.starg['photosphere_r']
+        M = self.starg['star_mass']
+        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
+        f0 = f0*t_dynamic
+        fn = fn*t_dynamic
+        
+        rc = 0
+        if not 'losc' in self.eigenfreqs:
+            self.eigenfreqs['losc'] = {}
+        if not 'losc' in self.eigenfuncs:
+            self.eigenfuncs['losc'] = {}
+        #-- run over all the degrees
+        for l in degrees:
+            #-- estimate the frequencies
+            pyosclib.setdegree(l)
+            omegas = np.zeros(100)
+            mm = len(omegas)
+            omegas,mm = pyosclib.scanomega(f0,fn,n,ind,mmax,omegas,mm,rc)
+            if rc!=0:
+                raise ValueError('Error in scanning for frequencies')
+            omegas = omegas[:mm]
+            if 4*mm>n:
+                raise ValueError('Frequency spectrum is dense, increase "n"')
+            #logger.info("Estimated %d frequencies (l=%d) between %.3fd-1 and %.3fd-1"%(mm,l,omegas.min(),omegas.max()))
+            #-- refine the frequencies and compute mode information
+            freqinfo = np.zeros((len(omegas),len(modekeys)))
+            for i,omega in enumerate(omegas):
+                pyosclib.computemode(typecomp,omega,rc)
+                freqinfo[i][:11] = pyosclib.oscinfo(omega,rc)
+                freqinfo[i][12]  = omega
+            #-- make the array into a convenient record array
+            freqinfo = [np.array(i,dtype) for i,dtype in zip(freqinfo.T,dtypes)]
+            freqinfo = np.rec.fromarrays(freqinfo,names=modekeys)
+            #-- put the frequencies in cy/d in the array
+            freqcd = conversions.convert('rad/s',self.unit,freqinfo['sigma'])
+            freqinfo['frequency'] = freqcd
+            self.eigenfreqs['losc']['l%d'%(l)] = freqinfo
+            #-- make room for eigenfunctions
+            self.eigenfuncs['losc']['l%d'%(l)] = [None for i in range(len(self.eigenfreqs['losc']['l%d'%(l)]))]
             
+            logger.info('LOSC: found %d frequencies (l=%d) between %.3g%s and %.3g%s'%(len(freqcd),l,freqcd.min(),self.unit,freqcd.max(),self.unit))
+        np.seterr(**old_settings)
+    
+    def compute_eigenfuncs_losc(self,degree,modes=None,ires=0,typecomp=1):
+        """
+        Compute eigenfunctions with the LOSC code.
+        
+        Also compute horizontal and vertical displacements. In the book of
+        Aerts et al., these are known as $\tilde{\ksi}_r$ and $\tilde{\ksi}_h$.
+            
+        WARNING: the OSC manual notes that this is valid 'near the centre', but is
+        actually a pretty fuzzy sentence...
+        
+        @parameter ires: type of mesh for computation of the eigenfrequencies,
+        1 to optimize for p modes, 2 for g modes and 3 for p and g modes
+        @parameter nres: the number of added points increases with n. This parameter
+        should be increased as the complexity of the model increases
+        @parameter typecomp: type of computations, 1 for normal computation, which is
+        recommended, and type=2 if convergence is difficult to obtain.
+        """
+        old_settings = np.seterr(invalid='ignore',divide='ignore')
+        if modes is None:
+            modes = range(len(self.eigenfreqs['losc']['l%d'%(degree)]))
+        rc = 0
+        R = self.starg['photosphere_r']
+        M = self.starg['star_mass']
+        #-- below, we will need the dynamical time scale, the radial position
+        #   in the star, the mass position and the density
+        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
+        x_ = self.starl['radius']/R
+        q_ = self.starl['mass']/M
+        rho_ = self.starl['Rho']
+        P_ = self.starl['pressure']
+        G1_= self.starl['gamma1']
+        dP_dr_ = self.starl['dP_dr']
+        l = degree
+        
+        #-- run over all the degrees
+        for mode in modes:
+            #-- compute the eigenfrequency
+            mymode = self.eigenfreqs['losc']['l%d'%(l)][mode]
+            pyosclib.setdegree(l)
+            omega = mymode['freqinit']
+            if np.isnan(omega):
+                logger.info('Mode %d is not matched (nan)'%(mode))
+                continue
+            pyosclib.computemode(typecomp,omega,rc)
+            #-- maybe we should cal oscinfo here and check if results match
+            #   the previous calculations, just as a sanity test
+            info = np.array(pyosclib.oscinfo(omega,rc))
+            if not np.allclose(list(mymode)[:11],info):
+                print zip(mymode.dtype.names[:11],list(mymode)[:11],info)
+                raise ValueError,'sanity check in eigenfunc computation failed' 
+            #-- retrieve the eigenfunctions and the stellar (dimensionless)
+            #   quantities from LOSC and remove zeros
+            star,oscl = pyosclib.osc08py()
+            clip = [oscl[0]!=0]
+            star = [col[clip] for col in star]
+            oscl = [col[clip] for col in oscl]
+            Y,Z,U,V = oscl
+            #-- get the physical quantities
+            x = star[0]                              # normalised radius
+            r = x*R                                  # radius
+            rho = star[3]/(4*np.pi*R**3)*M           # density
+            q = star[1]*x**3                         # normalised mass
+            m = q*M                                  # mass
+            P = star[2]/R*self.constants['GG']*M*rho # pressure
+            g = self.constants['GG']*m/r**2          # gravity
+            G1 = star[4]                             # Adiabatic exponent
+            N2 = -g*star[5]*x/R                      # Brunt-Vaisalla frequency
+            dP_dr = -rho*g                           # Pressure gradient using hydrostatic equilibrium
+            U_ = r/m*4*pi*r**2*rho                   # r/m*dm/dr = dlnm/dlnr and dm/dr = 4*pi*r^2*rho using conservation of mass
+            #-- compute the horizontal and vertical components
+            #   first, we need the angular dimensionless frequency
+            omega = mymode['sigma']*t_dynamic
+            sigma = mymode['sigma']
+            if l==0:#   in the case of a radial mode
+                a_r = R*x*Y
+                b_r = np.zeros(len(a_r))
+            else:#   in the case of a nonradial mode
+                a_r = R*x**(l-1)*Y
+                b_r = R*x**(l-1)/(omega**2) * (U + R*P/(self.constants['GG']*M*rho)*Z + q/x**3*Y)
+            #-- now compute the lagrangian pressure perturbation
+            if l==0:#   in the case of a radial mode:
+                dP_P = Z
+            else:#   in the case of nonradial mode:
+                dP_P = x**l*Z
+            #  and convert it to Eulerian
+            Pprime = dP_P*P - a_r*dP_dr
+            #-- compute the Eulerian gravity potential perturbation and its
+            #   derivative
+            Phiprime = self.constants['GG']*M/R*x**l*U
+            dPhiprime_dr = self.constants['GG']*M/R**2*x**(l-1)*(V-4*np.pi*R**3*rho/M*Y)
+            #-- compute density perturbation ()
+            #Rhoprime = see page 52 of JCD lecture notes
+            #-- compute temperature perturbation ()
+            #Tprime = see page 208 of JCD lecture notes
+            #-- Dziembowski variables
+            dr = a_r
+            #dr = np.sqrt(a_r**2 + b_r**2)
+            y1 = dr/r
+            y2 = 1./(g*r) * (Pprime/rho + Phiprime)
+            y3 = 1./(g*r) * Phiprime
+            y4 = 1./g * dPhiprime_dr
+            #-- weight functions
+            Sl2 = G1*P/(r**2*rho)   # remove the l*(l+1) thing, it is cancelled in C anyway
+            #-- compute the weight functions
+            T = dr**2 + l*(l+1)/(r**2*sigma**2)*(Pprime/rho+Phiprime) # proportional to kinetic energy density
+            C = g**2/Sl2*(y2-y3)**2                              # acoustic energy
+            N = N2*dr**2                                        # buoyancy energy
+            G = -1/(4*np.pi*rho*self.constants['GG'])*(dPhiprime_dr + l*(l+1)*Phiprime/r) # gravitational energy
+            T[0] = 0
+            C[0] = 0
+            N[0] = 0
+            G[0] = 0
+            total = (C+N+G)*rho*r**2
+            charpinet = (a_r**2*N2 + Pprime**2/(G1*P*rho) + (Pprime/(G1*P) + a_r*N2/g))*rho*r**2
+            varsig = np.sqrt(integrate.simps(total,x=r)/integrate.simps((T*rho*r**2),x=r))
+            logger.info("Difference between freq2 and varfreq2: %.3g%%"%(np.abs(varsig**2-sigma**2)/sigma**2*100))
+            
+            #-- we check here explicitly Masao's (Takata) dipolar condition
+            if l==1:
+                zero = Pprime + g/(4*np.pi*self.constants['GG'])*(dPhiprime_dr+2/r*Phiprime) - omega**2*r*(rho*dr + 1/(4*np.pi*self.constants['GG'])*(dPhiprime_dr-Phiprime/r))
+                logger.info("Masao's check: %.3g"%(np.sqrt((zero**2).sum())))
+            
+            self.eigenfuncs['losc']['l%d'%(l)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime,Phiprime,dPhiprime_dr,
+                 T*rho*r**2,C*rho*r**2,N*rho*r**2,G*rho*r**2,total,charpinet],
+                 names=['x','ar','br','Pprime','Phiprime','dPhiprime_dr','T','C','N','G','weight','charpinet'])
+        np.seterr(**old_settings)
+        logger.info('LOSC: computed eigenfunctions for l=%d modes %s'%(degree,modes))
+                
+    
+    def compute_eigenfreqs_adipls(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
+                                  nf=1000,verbose=False,**kwargs):
+        """
+        Compute eigenfrequencies with ADIPLS.
+        
+        Possible keyword arguments are described in ADIPLS documentation.
+        """
+        #-- in ADIPLS, we work with files, so we need to keep track of the names
+        #   of these files
+        model = 'tempmodel_frq'
+        #-- initialize ADIPLS
+        if 'n_new' in kwargs:
+            adig,adil = resample_adipls(n_new=kwargs['n_new'],mode_type=kwargs.get('mode_type',None))
+        else:
+            adig,adil = self._init_adipls()        
+        kwargs.setdefault('cgrav',self.constants['GG'])
+        kwargs.setdefault('fspacing','p')
+        #-- write adipls variables to file
+        #ascii.write_array(adil,'tempmodel_frq.ascii',header=True,auto_width=True,use_float='%.15e',comments=['#'+json.dumps(adig)])
+        #special.write_amdl(adig,adil,model+'.amdl')
+        fileio.write_gong(adig,adil,model+'.gong')
+        subprocess.call('form-amdl.d 2 %s %s'%(model+'.gong',model+'.amdl'),stdout=open('/dev/null','w'),shell=True)
+        
+        
+        if not 'adipls' in self.eigenfreqs:
+            self.eigenfreqs['adipls'] = {}
+        if not 'adipls' in self.eigenfuncs:
+            self.eigenfuncs['adipls'] = {}
+        
+        #-- run over all the degrees
+        for degree in degrees:
+            ckwargs = kwargs.copy()
+            #-- use Takata ordering scheme for dipolar modes
+            if degree==1:
+                ckwargs.setdefault('irsord',20)
+            #-- use Lee ordering scheme for other modes
+            else:
+                ckwargs.setdefault('irsord',11)
+            #-- construct adipls control file
+            control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
+                                               f0=f0,fn=fn,**ckwargs)
+            #-- call adipls, perhaps with throwing away the output
+            if not verbose:
+                stdout = open('/dev/null', 'w')
+            else:
+                stdout = None
+            subprocess.call('adipls.c.d %s'%(control_file),stdout=stdout,shell=True)
+            #-- read small summary file and add contents to output
+            starg,starl = fileio.read_assm(model+'.ssm')
+            #os.unlink(model+'.ssm')
+            #os.unlink(model+'.gsm')
+            #-- convert frequencies into whatever unit
+            starl['frequency'] = conversions.convert('mHz',self.unit,starl['frequency'])
+            self.eigenfreqs['adipls']['l%d'%(degree)] = starl
+            #-- make room for eigenfunctions
+            self.eigenfuncs['adipls']['l%d'%(degree)] = [None for i in range(len(self.eigenfreqs['adipls']['l%d'%(degree)]))]
+            logger.info('ADIPLS: found %d frequencies (l=%d) between %.3g%s and %.3g%s'%(len(starl),degree,starl['frequency'].min(),self.unit,starl['frequency'].max(),self.unit))
+        #os.unlink(model+'.amdl')
+        #os.unlink(model+'.gong')
+        #mymod = self._get_current_losc_model()
+        #ascii.write_array(mymod,model+'.tosc')
+        #raise SystemExit
+        
+    def compute_eigenfuncs_adipls(self,degree,modes=None,verbose=False,**kwargs):
+        """
+        Compute eigenfunctions with adipls.
+        """
+        if modes is None:
+            modes = range(len(self.eigenfreqs['adipls']['l%d'%(degree)]))
+        #-- in ADIPLS, we work with files, so we need to keep track of the names
+        #   of these files
+        model = 'tempmodel_eig'
+        #-- initialize ADIPLS
+        adig,adil = self._init_adipls()        
+        kwargs.setdefault('cgrav',self.constants['GG'])
+        kwargs.setdefault('nfmode',2)
+        #-- write adipls variables to file
+        fileio.write_gong(adig,adil,model+'.gong')
+        subprocess.call('form-amdl.d 2 %s %s'%(model+'.gong',model+'.amdl'),stdout=open('/dev/null','w'),shell=True)
+        #special.write_amdl(adig,adil,model+'.amdl')
+        #print adig
+        #ascii.write_array(adil,'tempmodel_eig.ascii',header=True,auto_width=True,use_float='%.15e')
+        l = degree        
+        
+        #-- run over all the degrees
+        for mode in modes:
+            mymode = self.eigenfreqs['adipls']['l%d'%(l)][mode]
+            if np.isnan(mymode['frequency']):
+                logger.info('Mode %d is not matched (nan)'%(mode))
+                continue
+            #-- use Takata ordering scheme for dipolar modes
+            if degree==1:
+                kwargs.setdefault('irsord',20)
+            #-- use Lee ordering scheme for other modes
+            else:
+                kwargs.setdefault('irsord',11)
+            #-- construct adipls control file
+            df = mymode['frequency']/100.
+            control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
+                                               f0=(mymode['frequency']-df,self.unit),
+                                               fn=(mymode['frequency']+df,self.unit),**kwargs)
+            #-- call adipls
+            if not verbose:
+                stdout = open('/dev/null', 'w')
+            else:
+                stdout = None
+            subprocess.call('adipls.c.d %s'%(control_file),shell=True,stdout=stdout)
+            #-- read eigenfunction file and add contents to output
+            try:
+                x,a_r,b_r = fileio.read_aeig(model+'.aeig')
+            except:
+                x,a_r,b_r = [np.linspace(0,1,2000),np.zeros(2000),np.zeros(2000)]
+            #os.remove(model+'.aeig')
+            os.remove(model+'.gsm')
+            os.remove(model+'.ssm')
+            #os.remove(control_file)
+            Pprime = np.zeros_like(x)
+            self.eigenfuncs['adipls']['l%d'%(degree)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime],names=['x','ar','br','Pprime'])
+        #os.unlink(model+'.amdl')
+        #os.unlink(model+'.gong')
+        
+        #raise SystemExit
+        logger.info('ADIPLS: computed eigenfunctions for l=%d modes %s'%(degree,modes))
+        
+    #}
+
+              
 #{ General
 
 
@@ -1119,39 +1147,6 @@ def osc2physical(columns,R,M,G=None):
     
     return r,m,P_r,rho_r,G1,A
 
-def mesa2cles(starg,starl,Rsol=None,Msol=None,G=None):
-    """
-    Convert MESA log file naming convenctions to CLES dat files naming conventions.
-    
-    Also invert direction of model
-    """
-    if Rsol is None: Rsol = constants.Rsol_cgs
-    if Msol is None: Msol = constants.Msol_cgs
-    if G is None: G = constants.GG_cgs
-    starl = starl[::-1]
-    #-- add center point
-    
-    
-    #-- convert into dictionary
-    mesa_entries = {name:starl[name] for name in starl.dtype.names}
-    #-- add entries
-    mesa_entries['radius'] = 10**mesa_entries['logR']*Rsol
-    mesa_entries['pressure'] = 10**mesa_entries['logP']
-    Rsol = conversions.get_constant('Rsol',units='cgs',value='mesa')
-    r = mesa_entries['radius']/(starg['photosphere_r'][0]*Rsol)
-    #x_,mesa_entries['pressure'],pnts = filtering.filter_signal(r,mesa_entries['pressure'],'gauss',sigma=0.001)
-    mesa_entries['Rho'] = 10**mesa_entries['logRho']
-    #x_,mesa_entries['Rho'],pnts = filtering.filter_signal(r,mesa_entries['Rho'],'gauss',sigma=0.001)
-    mesa_entries['mass'] = mesa_entries.pop('mass')*Msol
-    mesa_entries['gamma1'] = mesa_entries.pop('gamma1')
-    #x_,mesa_entries['gamma1'],pnts = filtering.filter_signal(r,mesa_entries['gamma1'],'gauss',sigma=0.001)
-    mesa_entries['dP_dr'] = -mesa_entries['Rho']*G*mesa_entries['mass']/mesa_entries['radius']**2 #dP/dr=-rho g
-    #-- convert into record array
-    mesa_names = mesa_entries.keys()
-    starl = np.rec.fromarrays([mesa_entries[name] for name in mesa_names],names=mesa_names)
-    #-- set global dictionary
-    starg = dict(M=starg['star_mass'][0]*Msol,R=starg['photosphere_r'][0]*Rsol)
-    return starg,starl
 
 def fgong2cles(starg,starl,G=None):
     """
