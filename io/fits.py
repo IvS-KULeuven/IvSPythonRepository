@@ -308,7 +308,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         hdulist = pyfits.open(filename,mode='update')
     else:
         hdulist = filename
-        
+          
     
     #-- create the table HDU
     cols = []

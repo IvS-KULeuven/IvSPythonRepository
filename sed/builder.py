@@ -166,6 +166,9 @@ in the milky way), you can call
 Section 3. SED fitting using a grid based approach
 ==================================================
 
+Subsection 3.1 Single star
+--------------------------
+
 We make an SED of HD180642 by simply B{exploring a whole grid of Kurucz models}
 (constructed via L{fit.generate_grid}, iterated over via L{fit.igrid_search} and
 evaluated with L{fit.stat_chi2}). The model with the best parameters is picked
@@ -255,7 +258,56 @@ between systems (i.e., B{all} errors are blown up). If the errorbars are
 underestimated, it could be that the rescaling factor is also wrong, which means
 that the true probability region can be larger or smaller!
 
-Subsection 3.1 Saving SED fits
+Subsection 3.2 Binary star 
+--------------------------
+
+The SED class can create SEDs for multiple stars as well. There are 2 options 
+available, the multiple SED fit which in theory can handle any number of stars,
+and the binary SED fit which is for binaries only, and uses the mass of both 
+components to restrict the radii when combining two model SEDs.
+
+As an example we take the system PG1104+243, which consists of a subdwarf B star,
+and a G2 type mainsequence star. The photometry from the standard catalogues that
+are build in this class, is of to low quality, so we use photometry obtained from 
+U{the subdwarf database<http://catserver.ing.iac.es/sddb/>}.
+
+>>> mysed = SED('PG1104+243')
+
+>>> meas, e_meas, units, photbands, source = ascii.read2array('pg1104+243_sddb.phot', dtype=str)
+>>> meas = np.array(meas, dtype=float)
+>>> e_meas = np.array(e_meas, dtype=float)
+>>> mysed.add_photometry_fromarrays(meas, e_meas, units, photbands, source)
+
+We use only the absolute fluxes
+
+>>> mysed.set_photometry_scheme('abs')
+
+For the main sequence component we use kurucz models with solar metalicity, and
+for the sdB component tmap models:
+
+>>> grid1 = dict(grid='kurucz',z=+0.0)
+>>> grid2 = dict(grid='tmap')
+>>> model.set_defaults_multiple(grid1,grid2)
+
+The actual fitting. The second fit starts from the 95% probability intervals of
+the first fit.
+
+>>> teff_ms = (5000,7000)
+>>> teff_sdb = (25000,45000)
+>>> logg_ms = (4.00,4.50)
+>>> logg_sdb = (5.00,6.50)
+>>> mysed.igrid_search(masses=(0.47,0.71) ,teffrange=(teff_ms,teff_fix),loggrange=(logg_ms,logg_sdb),
+                        ebvrange=(0.00,0.02), zrange=(0,0), points=2000000, type='binary')
+>>> mysed.igrid_search(masses=(0.47,0.71) ,points=2000000, type='binary')
+
+Plot the results
+
+>>> p = pl.figure()
+>>> p = pl.subplot(131); mysed.plot_sed(plot_deredded=False)
+>>> p = pl.subplot(132); mysed.plot_grid(x='teff', y='logg', limit=0.95)
+>>> p = pl.subplot(133); mysed.plot_grid(x='teff-2', y='logg-2', limit=0.95)
+
+Subsection 3.3 Saving SED fits
 ------------------------------
 
 You can save all the data to a multi-extension FITS file via
@@ -350,7 +402,7 @@ the following information (we print part of each header)::
     TTYPE10 = 'CI_red  '                                                            
 
 
-Subsection 3.2 Loading SED fits
+Subsection 3.4 Loading SED fits
 -------------------------------
 
 Once saved, you can load the contents of the FITS file again into an SED object
@@ -1145,7 +1197,9 @@ class SED(object):
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
         #-- exclude failures
+        print grid_results
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
+        print grid_results
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1592,16 +1646,14 @@ class SED(object):
                 pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system,color=color)
         pl.legend(loc='upper right',prop=dict(size='x-small'))
         pl.grid()
-        k = 5.
-        pl.annotate('Exp. val. = %d'%(k),(0.69,0.12),xycoords='axes fraction',color='b')
-        pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.065),xycoords='axes fraction',color='r')
-        pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.03),xycoords='axes fraction',color='k')
+        pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.120),xycoords='axes fraction',color='r')
+        pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.065),xycoords='axes fraction',color='r')
+        pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.030),xycoords='axes fraction',color='k')
         xlims = pl.xlim()
-        pl.plot(xlims,[k,k],'b-',lw=2)
         pl.plot(xlims,[self.results[mtype]['grid']['chisq'][-1],self.results[mtype]['grid']['chisq'][-1]],'r-',lw=2)
         pl.xlim(xlims)
         pl.xlabel('wavelength [$\AA$]')
-        pl.ylabel(r'Statistic ($\chi^2$)')
+        pl.ylabel(r'Reduced ($\chi^2$)')
         logger.info('Plotted CHI2 of %s'%(colors and 'colors' or 'absolute fluxes'))
         
         
