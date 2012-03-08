@@ -124,8 +124,8 @@ def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     cc = conversions.convert('m/s',vrad_units,cc)
     wave_out = wave * (1+vrad/cc)
     if flux is not None:
-        flux = np.interp(wave_out,wave,flux)
-        return wave_out,flux
+        flux = np.interp(wave,wave_out,flux)
+        return flux
     else:
         return wave_out
 
