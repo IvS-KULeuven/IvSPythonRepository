@@ -41,6 +41,29 @@ instructs = {'black':"\033[30m",
           'bold':'\033[1m',
           'reset':'\033[m'}
 
+def line_at_a_time(fileobj):
+    """
+    Return one line at a time from a file-like object.
+    
+    >>> #p1 = subprocess.Popen('ls',shell=True,stdout=subprocess.PIPE)
+    >>> #for line in line_at_a_time(p1.stdout):
+    ... #    print 'next line:',line.strip()
+    >>> #retcode = p1.wait()
+    
+    use C{os.kill(p1.pid,SIGKILL)} to with C{SIGKILL} from C{signal} standard
+    module to kill the process.
+    
+    return model_number
+    Works around the iter behavior of pipe files in
+    Python 2.x, e.g., instead of "for line in file" you can
+    write "for line in line_at_a_time(file)"
+    """
+    while True:
+        line = fileobj.readline()
+        if not line:
+            return
+        yield line    
+
 class CallInstruct:
     """
     Generate a callable function on-the-fly.
