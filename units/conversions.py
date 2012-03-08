@@ -376,6 +376,8 @@ import sys
 import logging
 import urllib
 import numpy as np
+import pytz
+import datetime
 
 #-- optional libraries: WARNING: when these modules are not installed, the
 #   module's use is restricted
@@ -2651,6 +2653,7 @@ _aliases = [('micron','mum'),('au','AU'),
             ('galactic','gal'),('equatorial','equ'),('ecliptic','ecl'),
             ('Vegamag','vegamag'),('mile','mi'),
             ('oz','ounce'),('sun','sol'),
+            ('solMass','Msol'),('solLum','Lsol'),
             ('pk','hp'),('mph','mi/h')
             ]
  

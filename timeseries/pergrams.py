@@ -119,6 +119,7 @@ Phase folding techniques: L{box} and L{pdm}
 """
 import numpy as np
 from numpy import cos,sin,pi
+from scipy.special import jn
 from ivs.aux.decorators import make_parallel
 from ivs.aux import loggers
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram,getNyquist
@@ -747,7 +748,8 @@ def weightedpower(time, signal, weight, freq):
 @defaults_pergram
 @parallel_pergram
 @make_parallel
-def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
+def pdm(times, signal,f0=None,fn=None,df=None,Nbin=5,Ncover=2,
+         D=0,forbit=None,asini=None,e=None,omega=None,nmax=10):
     """
     Phase Dispersion Minimization of Jurkevich-Stellingwerf (1978)
     
@@ -755,6 +757,12 @@ def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
     Conny Aerts.
     
     Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 1986)
+    
+    Inclusion of binary orbital motion by Pieter Degrotoe (see Shibahashi &
+    Kurtz 2012). When orbits are added, times must be in days, then asini is
+    in AU.
+    
+    For circular orbits, give only forbit and asini.
     
     @param times: time points
     @type times: numpy array
@@ -786,10 +794,26 @@ def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
     s1 = np.zeros(nf,'d')
     
     #-- use Fortran subroutine
-    if D is None:
+    #-- Normal PDM
+    if D is None and asini is None:
         f1, s1 = pyscargle.justel(signal,times,f0,df,Nbin,Ncover,xvar,xx,f1,s1,n,nf)
-    else:
+    #-- PDM with linear frequency shift
+    elif asini is None:
         f1, s1 = pyscargle.justel2(signal,times,f0,df,Nbin,Ncover,xvar,xx,D,f1,s1,n,nf)
+    #-- PDM with circular binary orbit
+    elif asini is not None and (e is None or e==0):
+        f1, s1 = pyscargle.justel3(signal,times,f0,df,Nbin,Ncover,xvar,xx,asini,
+                  forbit,f1,s1,n,nf)
+    #-- PDM with eccentric binary orbit
+    elif e>0:
+        forbit = 2*pi*forbit
+        ans,bns = np.array([[__ane__(n,e),__bne__(n,e)] for n in range(1,nmax+1)]).T
+        ksins = np.sqrt(ans**2*np.cos(omega)**2+bns**2*np.sin(omega)**2)
+        thns = np.arctan(bns/ans*np.tan(omega))
+        tau = -np.sum(bns*np.sin(omega))
+        f1, s1 = pyscargle.justel4(signal,times,f0,df,Nbin,Ncover,xvar,xx,asini,
+        forbit,e,omega,ksins,thns,tau,f1,s1,n,nf,nmax)
+        
     
     #-- it is possible that the first computed value is a none-variable
     if not s1[0]: s1[0] = 1. 
@@ -1311,7 +1335,13 @@ def __spread__(y, yy, n, x, m):
         for j in range(ihi-1,ilo-1,-1):
             nden=(nden/(j+1-ilo))*(j-ihi)
             yy[j] = yy[j] + y*fac/(nden*(x-j))    
+
+def __ane__(n,e):
+    return 2.*np.sqrt(1-e**2)/e/n*jn(n,n*e)
     
+def __bne__(n,e):
+    return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
+
     
 def getSignificance(wk1, wk2, nout, ofac):
     """
