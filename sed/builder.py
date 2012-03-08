@@ -34,7 +34,7 @@ Catch IndexErrors and TypeErrors in case no photometry is found.
 
 You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
 The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
-arcseconds for brighter stars. The best value of course de-ssh -X pends on the density
+arcseconds for brighter stars. The best value of course depends on the density
 of the field.
 
 >>> mysed.get_photometry(radius=5.)
@@ -126,12 +126,12 @@ but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
 delete the .phot file.
 
-The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarry}
+The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
 
-Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make picture of where
+Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
 your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
 you can check the location of your photometry, and also see if proper motions
 etc are available.
@@ -166,6 +166,9 @@ in the milky way), you can call
 Section 3. SED fitting using a grid based approach
 ==================================================
 
+Subsection 3.1 Single star
+--------------------------
+
 We make an SED of HD180642 by simply B{exploring a whole grid of Kurucz models}
 (constructed via L{fit.generate_grid}, iterated over via L{fit.igrid_search} and
 evaluated with L{fit.stat_chi2}). The model with the best parameters is picked
@@ -189,10 +192,11 @@ Currently, four standard schemes are implemented, which you can set via L{SED.se
     1. C{absolute}: use only absolute values
     2. C{colors}: use only colors (no angular diameter values calculated)
     3. C{combo}: use all colors and one absolute value per photometric system
-    4. C{irfm}: use colors for wavelengths shorter than infrared wavelengths,
-    and absolute values for systems in the infrared. The infrared is defined
-    as wavelength longer than 1 micron, but this can be customized with the
-    keyword C{infrared=(value,unit)} in L{SED.set_photometry_scheme}.
+    4. C{irfm}: (infrared flux method) use colors for wavelengths shorter than
+    infrared wavelengths, and absolute values for systems in the infrared. The
+    infrared is defined as wavelength longer than 1 micron, but this can be
+    customized with the keyword C{infrared=(value,unit)} in
+    L{SED.set_photometry_scheme}.
 
 Here, we chose to use colors and one absolute flux per system, but exclude IR
 photometry (wavelength range above 2.5 micron), and some systems and colors which
@@ -226,7 +230,7 @@ the results:
 and repeat the plot
 
 >>> p = pl.figure()
->>> p = pl.subplot(131);mysed.plot_sed()
+>>> p = pl.subplot(131);mysed.plot_sed(plot_deredded=True)
 >>> p = pl.subplot(132);mysed.plot_grid(limit=None)
 >>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
 
@@ -254,7 +258,56 @@ between systems (i.e., B{all} errors are blown up). If the errorbars are
 underestimated, it could be that the rescaling factor is also wrong, which means
 that the true probability region can be larger or smaller!
 
-Subsection 3.1 Saving SED fits
+Subsection 3.2 Binary star 
+--------------------------
+
+The SED class can create SEDs for multiple stars as well. There are 2 options 
+available, the multiple SED fit which in theory can handle any number of stars,
+and the binary SED fit which is for binaries only, and uses the mass of both 
+components to restrict the radii when combining two model SEDs.
+
+As an example we take the system PG1104+243, which consists of a subdwarf B star,
+and a G2 type mainsequence star. The photometry from the standard catalogues that
+are build in this class, is of to low quality, so we use photometry obtained from 
+U{the subdwarf database<http://catserver.ing.iac.es/sddb/>}.
+
+>>> mysed = SED('PG1104+243')
+
+>>> meas, e_meas, units, photbands, source = ascii.read2array('pg1104+243_sddb.phot', dtype=str)
+>>> meas = np.array(meas, dtype=float)
+>>> e_meas = np.array(e_meas, dtype=float)
+>>> mysed.add_photometry_fromarrays(meas, e_meas, units, photbands, source)
+
+We use only the absolute fluxes
+
+>>> mysed.set_photometry_scheme('abs')
+
+For the main sequence component we use kurucz models with solar metalicity, and
+for the sdB component tmap models:
+
+>>> grid1 = dict(grid='kurucz',z=+0.0)
+>>> grid2 = dict(grid='tmap')
+>>> model.set_defaults_multiple(grid1,grid2)
+
+The actual fitting. The second fit starts from the 95% probability intervals of
+the first fit.
+
+>>> teff_ms = (5000,7000)
+>>> teff_sdb = (25000,45000)
+>>> logg_ms = (4.00,4.50)
+>>> logg_sdb = (5.00,6.50)
+>>> mysed.igrid_search(masses=(0.47,0.71) ,teffrange=(teff_ms,teff_fix),loggrange=(logg_ms,logg_sdb),
+                        ebvrange=(0.00,0.02), zrange=(0,0), points=2000000, type='binary')
+>>> mysed.igrid_search(masses=(0.47,0.71) ,points=2000000, type='binary')
+
+Plot the results
+
+>>> p = pl.figure()
+>>> p = pl.subplot(131); mysed.plot_sed(plot_deredded=False)
+>>> p = pl.subplot(132); mysed.plot_grid(x='teff', y='logg', limit=0.95)
+>>> p = pl.subplot(133); mysed.plot_grid(x='teff-2', y='logg-2', limit=0.95)
+
+Subsection 3.3 Saving SED fits
 ------------------------------
 
 You can save all the data to a multi-extension FITS file via
@@ -349,7 +402,7 @@ the following information (we print part of each header)::
     TTYPE10 = 'CI_red  '                                                            
 
 
-Subsection 3.2 Loading SED fits
+Subsection 3.4 Loading SED fits
 -------------------------------
 
 Once saved, you can load the contents of the FITS file again into an SED object
@@ -687,8 +740,8 @@ def photometry2str(master,comment=''):
     master = master[np.argsort(master['photband'])]
     txt = comment+'%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= comment+'==========================================================================================================================\n'
-    for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s\n'%(i,j,k,l,m,n,o,p)
+    for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
+        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %12s %s\n'%(i,j,k,l,m,n,o,p,q)
     return txt
 
 @memoized
@@ -818,11 +871,11 @@ class SED(object):
                 self.info = sesame.search(ID,fix=True)
             except KeyError:
                 logger.warning('Star %s not recognised by SIMBAD'%(ID))
-            try:
-                self.info = sesame.search(ID,db='N',fix=True)
-                logger.info('Star %s recognised by NED'%(ID))
-            except KeyError:
-                logger.warning('Star %s not recognised by NED'%(ID))
+                try:
+                    self.info = sesame.search(ID,db='N',fix=True)
+                    logger.info('Star %s recognised by NED'%(ID))
+                except KeyError:
+                    logger.warning('Star %s not recognised by NED'%(ID))
             if plx is not None:
                 if not 'plx' in self.info:
                     self.info['plx'] = {}
@@ -840,7 +893,9 @@ class SED(object):
         
     
     #{ Handling photometric data
-    def get_photometry(self,radius=None,ra=None,dec=None,include=None,exclude=None):
+    def get_photometry(self,radius=None,ra=None,dec=None,
+                       include=None,exclude=None,
+                       units='erg/s/cm2/A'):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -859,11 +914,11 @@ class SED(object):
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
                 master = crossmatch.get_photometry(ID=self.ID,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
                 master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
-                                       include=include,exclude=exclude,
+                                       include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             if 'jradeg' in self.info:
                 master['_RAJ2000'] -= self.info['jradeg']
@@ -872,6 +927,7 @@ class SED(object):
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
+            print self.master.dtype.names
             logger.info('\n'+photometry2str(master))
             
             #-- write to file
@@ -1141,7 +1197,9 @@ class SED(object):
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
         #-- exclude failures
+        print grid_results
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
+        print grid_results
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1182,7 +1240,7 @@ class SED(object):
             self.results['igrid_search']['CI'][name+'L'] = grid_results[name][start_CI:].min()
             self.results['igrid_search']['CI'][name] = grid_results[name][-1]
             self.results['igrid_search']['CI'][name+'U'] = grid_results[name][start_CI:].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit,name,self.results['igrid_search']['CI'][name+'L'],
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'L'],
                                                            self.results['igrid_search']['CI'][name],
                                                            self.results['igrid_search']['CI'][name+'U']))
         
@@ -1383,7 +1441,8 @@ class SED(object):
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
-            pl.ylabel(r'$F_\lambda$ [erg/s/cm$^2/A$]')
+            if keep.sum():
+                pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
             pl.xlabel('wavelength [$\AA$]')
         else:
             names = []
@@ -1587,16 +1646,14 @@ class SED(object):
                 pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system,color=color)
         pl.legend(loc='upper right',prop=dict(size='x-small'))
         pl.grid()
-        k = 5.
-        pl.annotate('Exp. val. = %d'%(k),(0.69,0.12),xycoords='axes fraction',color='b')
-        pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.065),xycoords='axes fraction',color='r')
-        pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.03),xycoords='axes fraction',color='k')
+        pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.120),xycoords='axes fraction',color='r')
+        pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.065),xycoords='axes fraction',color='r')
+        pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.030),xycoords='axes fraction',color='k')
         xlims = pl.xlim()
-        pl.plot(xlims,[k,k],'b-',lw=2)
         pl.plot(xlims,[self.results[mtype]['grid']['chisq'][-1],self.results[mtype]['grid']['chisq'][-1]],'r-',lw=2)
         pl.xlim(xlims)
         pl.xlabel('wavelength [$\AA$]')
-        pl.ylabel(r'Statistic ($\chi^2$)')
+        pl.ylabel(r'Reduced ($\chi^2$)')
         logger.info('Plotted CHI2 of %s'%(colors and 'colors' or 'absolute fluxes'))
         
         
@@ -1987,9 +2044,33 @@ class SED(object):
 
 
 if __name__ == "__main__":
+    import sys
     import doctest
-    doctest.testmod()
-    pl.show()
+    import pprint
+    from ivs.aux import loggers
+    
+    if not sys.argv[1:]:
+        doctest.testmod()
+        pl.show()
+    else:
+        name = " ".join([string for string in sys.argv[1:] if not '=' in string])
+        units = [string.split('=')[1] for string in sys.argv[1:] if 'units=' in string]
+        if not units:
+            units = 'erg/s/cm2/A'
+        else:
+            units = units[0]
+        logger = loggers.get_basic_logger("")
+        mysed = SED(name)
+        pprint.PrettyPrinter(indent=4).pprint(mysed.info)
+        mysed.get_photometry(units=units)
+        mysed.plot_data()
+        pl.show()
+        answer = raw_input('Keep photometry file %s (y/N)'%(mysed.photfile))
+        if not 'y' in answer.lower():
+            os.unlink(mysed.photfile)
+            logger.info('Removed %s'%(mysed.photfile))
+    raise SystemExit
+    
     #-- clean up
     if os.path.isfile('HD180642.fits'):
         os.remove('HD180642.fits')
