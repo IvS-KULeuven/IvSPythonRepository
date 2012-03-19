@@ -307,6 +307,8 @@ Plot the results
 >>> p = pl.subplot(132); mysed.plot_grid(x='teff', y='logg', limit=0.95)
 >>> p = pl.subplot(133); mysed.plot_grid(x='teff-2', y='logg-2', limit=0.95)
 
+]]include figure]]ivs_sed_builder_example_fittingPG1104+243.png]
+
 Subsection 3.3 Saving SED fits
 ------------------------------
 
@@ -1197,9 +1199,7 @@ class SED(object):
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
         #-- exclude failures
-        print grid_results
         grid_results = grid_results[-np.isnan(grid_results['chisq'])]
-        print grid_results
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
