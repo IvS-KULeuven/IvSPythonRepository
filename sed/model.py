@@ -239,6 +239,7 @@ And make a nice plot
 
 """
 import os
+import sys
 import logging
 import copy
 import pyfits
@@ -1605,10 +1606,12 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
         hdulist.append(table)
         hdulist.writeto(outfile)
+        print "Written output to %s"%(outfile)
     else:
         hdulist[1] = table
         hdulist.flush()
         hdulist.close()
+        print "Appended output to %s"%(outfile)
     
     print 'Encountered %s exceptions!'%(exceptions)
 

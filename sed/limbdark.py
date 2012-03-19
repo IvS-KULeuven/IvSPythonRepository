@@ -8,6 +8,10 @@ import pyfits
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
 from ivs.aux import loggers
+from ivs.sed import reddening
+from ivs.sed import model
+from ivs.spectra import tools
+from ivs.units import constants
 from ivs.aux.decorators import memoized,clear_memoization
 from ivs import config
 
@@ -30,7 +34,7 @@ def set_defaults(**kwargs):
     """
     clear_memoization(keys=['ivs.sed.ld'])
     if not kwargs:
-        kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
+        kwargs = dict(grid='kurucz',odfnew=False,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
@@ -54,7 +58,22 @@ def get_gridnames():
     return ['kurucz']
 
 
-
+def get_grid_dimensions(**kwargs):
+    """
+    Retrieve the possible effective temperatures and gravities from a grid.
+    
+    @rtype: (ndarray,ndarray)
+    @return: effective temperatures, gravities
+    """
+    gridfile = get_file(**kwargs)
+    ff = pyfits.open(gridfile)
+    teffs = []
+    loggs = []
+    for mod in ff[1:]:
+        teffs.append(float(mod.header['TEFF']))
+        loggs.append(float(mod.header['LOGG']))
+    ff.close()
+    return np.array(teffs),np.array(loggs)
 
 
 def get_file(integrated=False,**kwargs):
@@ -87,8 +106,6 @@ def get_file(integrated=False,**kwargs):
     if os.path.isfile(grid):
         return grid
     
-    grid = grid.lower()
-    
     #-- general
     z = kwargs.get('z',defaults['z'])
     #-- only for Kurucz
@@ -109,6 +126,8 @@ def get_file(integrated=False,**kwargs):
             basename = 'kurucz93_z%s_k%sodfnew_ld.fits'%(z,vturb)
         elif nover:
             basename = 'kurucz93_z%s_k%snover_ld.fits'%(z,vturb)
+    else:
+        basename = grid
     
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
@@ -129,10 +148,17 @@ def get_file(integrated=False,**kwargs):
 
 
 
-def get_table(teff=None,logg=None,ebv=None,star=None,
+def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
               wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
     """
     Retrieve the specific intensity of a model atmosphere.
+    
+    ebv is reddening
+    vrad is radial velocity: positive is redshift, negative is blueshift (km/s!)
+    
+    extra kwargs are for reddening
+    
+    wave and flux units cannot be specificed
     """
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
@@ -144,7 +170,8 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     logg = float(logg)
     
     #-- if we have a grid model, no need for interpolation
-    try:
+    #try:
+    if True:
         #-- extenstion name as in fits files prepared by Steven
         mod_name = "T%05d_logg%01.02f" %(teff,logg)
         mod = ff[mod_name]
@@ -153,10 +180,22 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
         wave = mod.data.field('wavelength')
         logger.debug('Model LD taken directly from file (%s)'%(os.path.basename(gridfile)))
     
-    except KeyError:
-        raise NotImplementedError
+    #except KeyError:
+    #    raise NotImplementedError
     
     ff.close()
+    
+    #-- velocity shift if necessary
+    if vrad is not None and vrad>0:
+        cc = constants.cc/1000. #speed of light in cc
+        for i in range(len(mu)):
+            wave_shift,flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
+            table[:,i] = flux_shift - 5.*vrad/cc*table[:,i]
+    
+    #-- redden if necessary
+    if ebv is not None and ebv>0:
+        for i in range(len(mu)):
+            table[:,i] = reddening.redden(table[:,i],wave=wave,ebv=ebv,rtype='flux',**kwargs)
     
     
     return mu,wave,table
@@ -186,6 +225,54 @@ def get_itable(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False
         return Imu*I_x1
     else:
         return Imu
+
+
+def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,photbands=None,**kwargs):
+    """
+    Retrieve a limb darkening law for a specific star and specific bandpass.
+    
+    Possibility to include reddening via EB-V parameter. If not given, 
+    reddening will not be performed...
+    
+    You choose your own reddening function.
+    
+    See e.g. Heyrovsky et al., 2007
+    
+    If you specify one angle (mu in radians), it will take the closest match
+    from the grid.
+    
+    Mu = cos(theta) where theta is the angle between the surface and the line
+    of sight. mu=1 means theta=0 means center of the star.
+    
+    Example usage:
+        >>> teff,logg = 5000,4.5
+        >>> mu,intensities = get_limbdarkening(teff=teff,logg=logg,system='JOHNSON',band='V')
+
+    @keyword teff: effective temperature
+    @type teff: float
+    @keyword logg: logarithmic gravity (cgs)
+    @type logg: float
+    @keyword system: bandpass system
+    @type system: string
+    @keyword photbands: bandpass filters
+    @type photbands: list of strings
+    @keyword ebv: reddening coefficient
+    @type ebv: float
+    @keyword vrad: radial velocity (+ is redshift, - is blueshift)
+    @type vrad: float
+    @keyword mu: specificy specific angle
+    @type mu: float
+    """
+    #-- retrieve model atmosphere for a given teff and logg
+    mus,wave,table = get_table(teff=teff,logg=logg,ebv=ebv,vrad=vrad,**kwargs)
+    #-- compute intensity over the stellar disk, and normalise
+    intensities = np.zeros((len(mus),len(photbands)))
+    for i in range(len(mus)):
+        intensities[i] = model.synthetic_flux(wave,table[:,i],photbands)
+    #-- or compute the intensity only for one angle:
+    logger.info('Calculated LD')
+    return mus,intensities
+
 
 
 def get_ld_grid_dimensions(**kwargs):

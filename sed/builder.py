@@ -901,7 +901,7 @@ class SED(object):
         """
         Search photometry on the net or from the phot file if it exists.
         
-        For bright stars, you can set radius a bit higher...
+        For bright stars, you can set the radius a bit higher...
         
         @param radius: search radius (arcseconds)
         @type radius: float.

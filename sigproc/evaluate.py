@@ -15,9 +15,9 @@ import logging
 import functools
 
 import numpy as np
-from numpy import pi,cos,sin,sqrt
+from numpy import pi,cos,sin,sqrt,tan,arctan
 from scipy.interpolate import splev
-from scipy.special import erf
+from scipy.special import erf,jn
 from ivs.timeseries import keplerorbit
 
 logger = logging.getLogger('SIGPROC.EVAL')
@@ -225,7 +225,58 @@ def sine_freqshift(times,parameters,t0=None):
     return signal
     
     
-
+def sine_orbit(times,parameters,t0=None,nmax=10):
+    """
+    Creates a sine function with a sinusoidal frequency shift.
+    
+    Parameter fields: C{const, ampl, freq, phase, asini, omega}.
+    
+    Similar to C{sine}, but with extra column 'asini' and 'forb', which are the
+    orbital parameters. forb in cycles/day or something similar, asini in au.
+    
+    For eccentric orbits, add longitude of periastron 'omega' (radians) and
+    'ecc' (eccentricity).
+    
+    Only accepts record arrays as parameters (for the moment).
+    
+    @param times: observation times
+    @type times: numpy array
+    @param parameters: record array containing amplitudes ('ampl'), frequencies ('freq'),
+    phases ('phase'), frequency shifts ('D') and optionally constants ('const')
+    @type parameters: record array
+    @return: sine signal with frequency shift (same shape as C{times})
+    @rtype: array
+    """
+    #-- take epoch into account
+    if t0 is None: t0 = times[0]
+    
+    def ane(n,e): return 2.*np.sqrt(1-e**2)/e/n*jn(n,n*e)    
+    def bne(n,e): return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
+    
+    #-- fit the signal
+    signal = np.zeros(len(times))
+    names = parameters.dtype.names
+    if 'const' in names:
+        signal += np.sum(parameters['const'])
+        
+    cc = 173.144632674 # speed of light in AU/d
+    for par in parameters:
+        alpha = par['freq']*par['asini']/cc
+        if not 'ecc' in names:# or par['ecc']==0:
+            frequency = par['freq']*(times-t0) + \
+              alpha*(sin(2*pi*par['forb']*times) - sin(2*pi*par['forb']*t0))
+        else:
+            e,omega = par['ecc'],par['omega']
+            ns = np.arange(1,nmax+1,1)
+            ans,bns = np.array([[ane(n,e),bne(n,e)] for n in ns]).T
+            ksins = sqrt(ans**2*cos(omega)**2+bns**2*sin(omega)**2)
+            thns = arctan(bns/ans*tan(omega))
+            tau = -np.sum(bns*sin(omega))
+            frequency = par['freq']*(times-t0) + \
+               alpha*(np.sum(np.array([ksins[i]*sin(2*pi*ns[i]*par['forb']*(times-t0)+thns[i]) for i in range(nmax)]),axis=0)+tau)
+        signal += par['ampl'] * sin(2*pi*(frequency + par['phase']))
+    
+    return signal
 
 
 

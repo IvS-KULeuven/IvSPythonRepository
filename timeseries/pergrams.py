@@ -34,7 +34,7 @@ The timeseries is generated for N=500,1000,2000,5000,10000,20000,50000
 >>> techniques = ['scargle','deeming','gls','fasper',
 ...               'schwarzenberg_czerny','pdm','box']
 >>> Ns = [1000,2000,5000,10000,20000,30000]
->>> for tech in techniques:
+>>> for tech in techniques[:0]:
 ...     freqs = []
 ...     clock = []
 ...     for N in Ns:
@@ -46,15 +46,80 @@ The timeseries is generated for N=500,1000,2000,5000,10000,20000,50000
 ...         freqs.append(len(freq))
 ...     p = pl.plot(freqs,clock,'o-',label=tech)
 ...     print tech,np.polyfit(np.log10(np.array(freqs)),np.log10(np.array(clock)),1)
->>> p = pl.legend(loc='best',fancybox=True)
->>> p = p.get_frame().set_alpha(0.5)
->>> p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')
+>>> #p = pl.legend(loc='best',fancybox=True)
+>>> #q = p.get_frame().set_alpha(0.5)
+>>> #p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')
 
 ]]include figure]]ivs_timeseries_pergram_speeds.png]
+
+Section 2. Periodogram comparison
+=================================
+
+We generate a sinusoidal signal, add some noise and compute the periodogram with
+the different methods.
+
+>>> times = np.sort(np.random.uniform(size=500,low=0,high=100))
+>>> signal = np.sin(2*np.pi/10.*times)
+>>> signal += np.random.normal(size=500)
+
+Fourier based periodgrams suited for unequidistant data: L{scargle}, L{deeming},
+L{fasper} and L{schwarzenberg_czerny}.
+
+>>> f1,a1 = scargle(times,signal,fn=0.35)
+>>> f2,a2 = fasper(times,signal,fn=0.35)
+>>> f3,a3 = deeming(times,signal,fn=0.35)
+>>> f4,a4 = scargle(times,signal,norm='power',fn=0.35)
+>>> f5,a5 = schwarzenberg_czerny(times,signal,fn=0.35,nh=1,mode=2)
+
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.plot(f1,a1,'k-',lw=4,label='scargle')
+>>> p = pl.plot(f2,a2,'r--',lw=4,label='fasper')
+>>> p = pl.plot(f3,a3,'b-',lw=2,label='deeming')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+>>> p = pl.subplot(122)
+>>> p = pl.plot(f4,a4,'k-',lw=2,label='scargle')
+>>> p = pl.plot(f5,a5/2.,'r--',lw=2,label='schwarzenberg-czerny')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_fourier.png]
+
+Least-square fitting: L{gls} and L{kepler}.
+
+>>> f1,a1 = gls(times,signal,fn=0.35)
+>>> f2,a2 = kepler(times,signal,fn=0.35)
+
+>>> p = pl.figure()
+>>> p = pl.plot(f1,a1,'k-',lw=2,label='gls')
+>>> p = pl.plot(f2,a2,'r--',lw=2,label='kepler')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_lsq.png]
+
+Phase folding techniques: L{box} and L{pdm}
+
+>>> f1,a1 = box(times,signal,fn=0.35)
+>>> f2,a2 = pdm(times,signal,fn=0.35)
+
+>>> p = pl.figure()
+>>> p = pl.plot(f1,a1,'k-',lw=2,label='box')
+>>> p = pl.plot(f2,a2,'r--',lw=2,label='pdm')
+>>> p = pl.xlim(f1[0],f1[-1])
+>>> leg = pl.legend(fancybox=True,loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]]include figure]]ivs_timeseries_pergrams_phase.png]
 
 """
 import numpy as np
 from numpy import cos,sin,pi
+from scipy.special import jn
 from ivs.aux.decorators import make_parallel
 from ivs.aux import loggers
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram,getNyquist
@@ -98,7 +163,8 @@ def scargle(times, signal, f0=None, fn=None, df=None, norm='amplitude',
     
     Through the option "norm", it's possible to norm the periodogram as to get a
     periodogram that has a known statistical distribution. Usually, this norm is
-    the variance of the data (NOT of the noise or residuals!).
+    the variance of the data (NOT of the noise or residuals, see Schwarzenberg-
+    Czerny 1998!).
     
     Also, it is possible to retrieve the power density spectrum in units of
     [ampl**2/frequency]. In this routine, the normalisation constant is taken
@@ -159,6 +225,57 @@ def scargle(times, signal, f0=None, fn=None, df=None, norm='amplitude',
 
 
 
+@defaults_pergram
+@parallel_pergram
+@make_parallel
+def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude'):
+    """
+    Fasper periodogram from Numerical Recipes.
+    
+    @param times: time points
+    @type times: numpy array
+    @param signal: observations
+    @type signal: numpy array
+    @param f0: start frequency
+    @type f0: float
+    @param fn: stop frequency
+    @type fn: float
+    @param df: step frequency
+    @type df: float
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
+    """
+    #-- average nyquist frequency and oversampling rate
+    nyq = 1./(2*np.diff(times).mean())
+    mynyq = 1./(2*np.diff(times).min())
+    T = times.ptp()
+    ofac = 1./(df*T)
+    hifac = min(1.,fn/mynyq)*mynyq/nyq
+    #-- prepare input for fasper
+    n = len(times)
+    nout = int(4*ofac*hifac*n*4.)
+    wk1 = np.zeros(nout)
+    wk2 = np.zeros(nout)
+    jmax,prob = 0,0.
+    #import pyfasper2
+    if not single:
+        wk1,wk2,nwk,nout,jmax,prob = pyfasper.fasper(times,signal,ofac,hifac,wk1,wk2,nout,jmax,prob)
+    else:
+        wk1,wk2,nwk,nout,jmax,prob = pyfasper_single.fasper(times,signal,ofac,hifac,wk1,wk2,nout,jmax,prob)
+    #wk1,wk2,nout,jmax,prob = fasper_py(times,signal,ofac,hifac)
+    wk1,wk2 = wk1[:nout],wk2[:nout]*1.5
+    fact  = np.sqrt(4./n)
+    if norm =='distribution': # statistical distribution
+        wk2 /= np.var(signal)
+    elif norm == "amplitude": # amplitude spectrum
+        wk2 = fact * np.sqrt(wk2)
+    elif norm == "density": # power density
+        wk2 = fact**2 * wk2 * T     
+    if f0 is not None:
+        keep = f0<wk1
+        wk1,wk2 = wk1[keep],wk2[keep]
+    return wk1,wk2
+
 
 
 
@@ -172,7 +289,7 @@ def scargle(times, signal, f0=None, fn=None, df=None, norm='amplitude',
 @make_parallel
 def deeming(times,signal, f0=None, fn=None, df=None, norm='amplitude'):
     """
-    Deeming periodogram of Deeming et al. (1975).
+    Deeming periodogram of Deeming et al (1975).
     
     Thanks to Jan Cuypers
     
@@ -208,7 +325,169 @@ def deeming(times,signal, f0=None, fn=None, df=None, norm='amplitude'):
     
     return f1,s1
     
+
+@defaults_pergram
+@parallel_pergram
+@make_parallel
+def gls(times,signal, f0=None, fn=None, df=None, errors=None, wexp=2):
+    """
+    Generalised Least Squares periodogram of Zucher et al (2010).
     
+    @param times: time points
+    @type times: numpy array
+    @param signal: observations
+    @type signal: numpy array
+    @param f0: start frequency
+    @type f0: float
+    @param fn: stop frequency
+    @type fn: float
+    @param df: step frequency
+    @type df: float
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
+    """
+    T = times.ptp()
+    n = len(times)
+    if errors is None:
+        errors = np.ones(n)
+    maxstep = int((fn-f0)/df+1)
+    
+    #-- initialize parameters
+    f1 = np.zeros(maxstep) #-- frequency
+    s1 = np.zeros(maxstep) #-- power
+    p1 = np.zeros(maxstep) #-- window
+    l1 = np.zeros(maxstep) #-- power LS
+    
+    #-- calculate generalized least squares
+    pyGLS.gls(times+0.,signal+0.,errors,f0,fn,df,wexp,f1,s1,p1,l1)
+    return f1,s1
+
+
+
+
+
+@defaults_pergram
+@parallel_pergram
+@make_parallel
+def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
+          gain=1.0):
+    """
+    Cleaned Fourier periodogram of Roberts et al (1987)
+        
+    Parallization probably isn't such a good idea here because of the frequency
+    bins.
+    
+    Fortran module probably from John Telting.
+    
+    Should always start from zero, so f0 is not an option
+    
+    Generate some signal with heavy window side lobes:
+    
+    >>> times_ = np.linspace(0,150,1000)
+    >>> times = np.array([times_[i] for i in xrange(len(times_)) if (i%10)>7])
+    >>> signal = np.sin(2*pi/10*times) + np.random.normal(size=len(times))
+    
+    Compute the scargle periodogram as a reference, and compare with the
+    the CLEAN periodogram with different gains.
+    
+    >>> niter,freqbins = 10,[0,1.2]
+    >>> p1 = scargle(times,signal,fn=1.2,norm='amplitude',threads=2)
+    >>> p2 = clean(times,signal,fn=1.2,gain=1.0,niter=niter,freqbins=freqbins)
+    >>> p3 = clean(times,signal,fn=1.2,gain=0.1,niter=niter,freqbins=freqbins)
+    
+    Make a figure of the result:
+    
+    >>> p=pl.figure()
+    >>> p=pl.plot(p1[0],p1[1],'k-',label="Scargle")
+    >>> p=pl.plot(p2[0],p2[1],'r-',label="Clean (g=1.0)")
+    >>> p=pl.plot(p3[0],p3[1],'b-',label="Clean (g=0.1)")
+    >>> p=pl.legend()
+    
+    ]]include figure]]ivs_timeseries_pergrams_clean.png]
+    
+    @keyword freqbins: frequency bins for clean computation
+    @type freqbins: list or array
+    @keyword niter: number of iterations
+    @type niter: integer
+    @keyword gain: gain for clean computation
+    @type gain: float between 0 (no cleaning) and 1 (full cleaning)
+    @return: frequencies, amplitude spectrum
+    @rtype: array,array
+    """
+    T = times.ptp()
+    n = len(times)
+    if freqbins is None:
+        freqbins = [f0,fn]
+    
+    startfreqs = np.array(freqbins[0::2])
+    endfreqs = np.array(freqbins[1::2])
+    nbins = len(freqbins)-1
+    
+    nf = int(fn/df)
+    
+    #-- do clean computation, seems not so straightforward to thread cleaning
+    f,wpow,wpha = pyclean.main_clean(times,signal,fn,nf,gain,niter,nbins,\
+                    startfreqs,endfreqs)
+    
+    return f,wpow
+
+
+
+
+
+
+
+
+
+@defaults_pergram
+@parallel_pergram
+@make_parallel
+def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1):
+    """
+    Multi harmonic periodogram of Schwarzenberg-Czerny (1996).
+    
+    This periodogram follows an F-distribution, so it is possible to perform
+    hypothesis testing.
+    
+    If the number of the number of harmonics is 1, then this peridogram reduces
+    to the Lomb-Scargle periodogram except for its better statistic behaviour.
+    This script uses a Fortran procedure written by Schwarzenberg-Czerny.
+    
+    Modes:
+        - mode=1: AoV Fisher-Snedecor F(df1,df2) statistic
+        - mode=2: total power fitted in all harmonics for mode=2
+    
+    @param times: list of observations times
+    @type times: numpy 1d array
+    @param signal: list of observations
+    @type signal: numpy 1d array
+    @keyword f0: start frequency (cycles per day) (default: 0.)
+    @type f0: float
+    @keyword fn: stop frequency (cycles per day) (default: 10.)
+    @type fn: float
+    @keyword df: step frequency (cycles per day) (default: 0.001)
+    @type df: float
+    @keyword nh: number of harmonics to take into account
+    @type nh: integer
+    @return: frequencies, f-statistic
+    @rtype: array,array
+    """
+    T = times.ptp()
+    n = len(times)
+    frequencies = np.arange(f0, fn+df, df)
+    ll   = len(frequencies)
+    th   = np.zeros(len(frequencies))
+    #-- use Fortran subroutine
+    th  = multih.sfou(n,times,signal,ll,f0,df,nh,mode,th)
+    
+    # th *= 0.5 seemed necessary to fit the F-distribution
+        
+    return frequencies,th
+
+
+
+
+
     
 def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
 
@@ -230,7 +509,7 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
     @param df: see startfreq
     @type df: float
     @return: power spectrum of the signal
-    @rtype: ndarray 
+    @rtype: array 
     """
     freqs = np.arange(f0,fn,df)
     Ntime = len(time)
@@ -334,7 +613,7 @@ def FFTpower(signal, timestep):
     @param timestep: time step fo the equidistant time series
     @type timestep: float
     @return: frequencies and the power spectrum
-    @rtype: ndarray,ndarray
+    @rtype: array,array
     
     """
   
@@ -380,7 +659,7 @@ def FFTpowerdensity(signal, timestep):
     @param timestep: time step fo the equidistant time series
     @type timestep: float
     @return: frequencies and the power density spectrum
-    @rtype: ndarray,ndarray
+    @rtype: array,array
 
     """
   
@@ -432,7 +711,7 @@ def weightedpower(time, signal, weight, freq):
                  needs to be computed
     @type freq: ndarray
     @return: weighted power [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     
     """
 
@@ -460,94 +739,6 @@ def weightedpower(time, signal, weight, freq):
     
     
     
-@defaults_pergram
-@parallel_pergram
-@make_parallel
-def gls(times,signal, f0=None, fn=None, df=None, errors=None, wexp=2):
-    """
-    Generalised Least Squares periodogram of Zucher et al. (2010).
-    
-    @param times: time points
-    @type times: numpy array
-    @param signal: observations
-    @type signal: numpy array
-    @param f0: start frequency
-    @type f0: float
-    @param fn: stop frequency
-    @type fn: float
-    @param df: step frequency
-    @type df: float
-    @return: frequencies, amplitude spectrum
-    @rtype: array,array
-    """
-    T = times.ptp()
-    n = len(times)
-    if errors is None:
-        errors = np.ones(n)
-    maxstep = int((fn-f0)/df+1)
-    
-    #-- initialize parameters
-    f1 = np.zeros(maxstep) #-- frequency
-    s1 = np.zeros(maxstep) #-- power
-    p1 = np.zeros(maxstep) #-- window
-    l1 = np.zeros(maxstep) #-- power LS
-    
-    #-- calculate generalized least squares
-    pyGLS.gls(times+0.,signal+0.,errors,f0,fn,df,wexp,f1,s1,p1,l1)
-    return f1,s1
-
-
-
-@defaults_pergram
-@parallel_pergram
-@make_parallel
-def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude'):
-    """
-    Fasper periodogram.
-    
-    @param times: time points
-    @type times: numpy array
-    @param signal: observations
-    @type signal: numpy array
-    @param f0: start frequency
-    @type f0: float
-    @param fn: stop frequency
-    @type fn: float
-    @param df: step frequency
-    @type df: float
-    @return: frequencies, amplitude spectrum
-    @rtype: array,array
-    """
-    #-- average nyquist frequency and oversampling rate
-    nyq = 1./(2*np.diff(times).mean())
-    T = times.ptp()
-    ofac = 1./(df*T)
-    hifac = min(1.,fn/nyq)
-    #-- prepare input for fasper
-    n = len(times)
-    nout = int(4*ofac*hifac*n*4.)
-    wk1 = np.zeros(nout)
-    wk2 = np.zeros(nout)
-    jmax,prob = 0,0.
-    #import pyfasper2
-    if not single:
-        wk1,wk2,nwk,nout,jmax,prob = pyfasper.fasper(times,signal,ofac,hifac,wk1,wk2,nout,jmax,prob)
-    else:
-        wk1,wk2,nwk,nout,jmax,prob = pyfasper_single.fasper(times,signal,ofac,hifac,wk1,wk2,nout,jmax,prob)
-    #wk1,wk2,nout,jmax,prob = fasper_py(times,signal,ofac,hifac)
-    wk1,wk2 = wk1[:nout],wk2[:nout]*1.5
-    fact  = np.sqrt(4./n)
-    if norm =='distribution': # statistical distribution
-        wk2 /= np.var(signal)
-    elif norm == "amplitude": # amplitude spectrum
-        wk2 = fact * np.sqrt(wk2)
-    elif norm == "density": # power density
-        wk2 = fact**2 * wk2 * T     
-    if f0 is not None:
-        keep = f0<wk1
-        wk1,wk2 = wk1[keep],wk2[keep]
-    return wk1,wk2
-
 
 
 
@@ -557,127 +748,8 @@ def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude
 @defaults_pergram
 @parallel_pergram
 @make_parallel
-def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
-          gain=1.0):
-    """
-    Cleaned Fourier periodogram of Roberts et al. (1987)
-        
-    Parallization probably isn't such a good idea here because of the frequency
-    bins.
-    
-    Fortran module probably from John Telting.
-    
-    Should always start from zero, so f0 is not an option
-    
-    Generate some signal with heavy window side lobes:
-    
-    >>> times_ = np.linspace(0,150,1000)
-    >>> times = np.array([times_[i] for i in xrange(len(times_)) if (i%10)>7])
-    >>> signal = np.sin(2*pi/10*times) + np.random.normal(size=len(times))
-    
-    Compute the scargle periodogram as a reference, and compare with the
-    the CLEAN periodogram with different gains.
-    
-    >>> niter,freqbins = 10,[0,1.2]
-    >>> p1 = scargle(times,signal,fn=1.2,norm='amplitude',threads=2)
-    >>> p2 = clean(times,signal,fn=1.2,gain=1.0,niter=niter,freqbins=freqbins)
-    >>> p3 = clean(times,signal,fn=1.2,gain=0.1,niter=niter,freqbins=freqbins)
-    
-    Make a figure of the result:
-    
-    >>> p=pl.figure()
-    >>> p=pl.plot(p1[0],p1[1],'k-',label="Scargle")
-    >>> p=pl.plot(p2[0],p2[1],'r-',label="Clean (g=1.0)")
-    >>> p=pl.plot(p3[0],p3[1],'b-',label="Clean (g=0.1)")
-    >>> p=pl.legend()
-    
-    @keyword freqbins: frequency bins for clean computation
-    @type freqbins: list or array
-    @keyword niter: number of iterations
-    @type niter: integer
-    @keyword gain: gain for clean computation
-    @type gain: float between 0 (no cleaning) and 1 (full cleaning)
-    @return: frequencies, amplitude spectrum
-    @rtype: array,array
-    """
-    T = times.ptp()
-    n = len(times)
-    if freqbins is None:
-        freqbins = [f0,fn]
-    
-    startfreqs = np.array(freqbins[0::2])
-    endfreqs = np.array(freqbins[1::2])
-    nbins = len(freqbins)-1
-    
-    nf = int(fn/df)
-    
-    #-- do clean computation, seems not so straightforward to thread cleaning
-    f,wpow,wpha = pyclean.main_clean(times,signal,fn,nf,gain,niter,nbins,\
-                    startfreqs,endfreqs)
-    
-    return f,wpow
-
-
-
-
-
-
-
-
-
-@defaults_pergram
-@parallel_pergram
-@make_parallel
-def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1):
-    """
-    Multi harmonic periodogram of Schwarzenberg-Czerny (1996).
-    
-    This periodogram follows an F-distribution, so it is possible to perform
-    hypothesis testing.
-    
-    If the number of the number of harmonics is 1, then this peridogram reduces
-    to the Lomb-Scargle periodogram except for its better statistic behaviour.
-    This script uses a Fortran procedure written by Schwarzenberg-Czerny.
-    
-    @param times: list of observations times
-    @type times: numpy 1d array
-    @param signal: list of observations
-    @type signal: numpy 1d array
-    @keyword f0: start frequency (cycles per day) (default: 0.)
-    @type f0: float
-    @keyword fn: stop frequency (cycles per day) (default: 10.)
-    @type fn: float
-    @keyword df: step frequency (cycles per day) (default: 0.001)
-    @type df: float
-    @keyword nh: number of harmonics to take into account
-    @type nh: integer
-    @return: frequencies, f-statistic
-    @rtype: array,array
-    """
-    T = times.ptp()
-    n = len(times)
-    frequencies = np.arange(f0, fn+df, df)
-    ll   = len(frequencies)
-    th   = np.zeros(len(frequencies))
-    #-- use Fortran subroutine
-    th  = multih.sfou(n,times,signal,ll,f0,df,nh,mode,th)
-    
-    # th *= 0.5 seemed necessary to fit the F-distribution
-        
-    return frequencies,th
-
-
-
-
-
-
-
-
-
-@defaults_pergram
-@parallel_pergram
-@make_parallel
-def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
+def pdm(times, signal,f0=None,fn=None,df=None,Nbin=5,Ncover=2,
+         D=0,forbit=None,asini=None,e=None,omega=None,nmax=10):
     """
     Phase Dispersion Minimization of Jurkevich-Stellingwerf (1978)
     
@@ -685,6 +757,12 @@ def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
     Conny Aerts.
     
     Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 1986)
+    
+    Inclusion of binary orbital motion by Pieter Degrotoe (see Shibahashi &
+    Kurtz 2012). When orbits are added, times must be in days, then asini is
+    in AU.
+    
+    For circular orbits, give only forbit and asini.
     
     @param times: time points
     @type times: numpy array
@@ -716,10 +794,26 @@ def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
     s1 = np.zeros(nf,'d')
     
     #-- use Fortran subroutine
-    if D is None:
+    #-- Normal PDM
+    if D is None and asini is None:
         f1, s1 = pyscargle.justel(signal,times,f0,df,Nbin,Ncover,xvar,xx,f1,s1,n,nf)
-    else:
+    #-- PDM with linear frequency shift
+    elif asini is None:
         f1, s1 = pyscargle.justel2(signal,times,f0,df,Nbin,Ncover,xvar,xx,D,f1,s1,n,nf)
+    #-- PDM with circular binary orbit
+    elif asini is not None and (e is None or e==0):
+        f1, s1 = pyscargle.justel3(signal,times,f0,df,Nbin,Ncover,xvar,xx,asini,
+                  forbit,f1,s1,n,nf)
+    #-- PDM with eccentric binary orbit
+    elif e>0:
+        forbit = 2*pi*forbit
+        ans,bns = np.array([[__ane__(n,e),__bne__(n,e)] for n in range(1,nmax+1)]).T
+        ksins = np.sqrt(ans**2*np.cos(omega)**2+bns**2*np.sin(omega)**2)
+        thns = np.arctan(bns/ans*np.tan(omega))
+        tau = -np.sum(bns*np.sin(omega))
+        f1, s1 = pyscargle.justel4(signal,times,f0,df,Nbin,Ncover,xvar,xx,asini,
+        forbit,e,omega,ksins,thns,tau,f1,s1,n,nf,nmax)
+        
     
     #-- it is possible that the first computed value is a none-variable
     if not s1[0]: s1[0] = 1. 
@@ -744,7 +838,7 @@ def pdm(times, signal, f0=None, fn=None, df=None, Nbin=5, Ncover=2, D=0):
 @make_parallel
 def box(times, signal, f0=None, fn=None, df=None, Nbin=10, qmi=0.005, qma=0.75 ):
     """
-    Box-Least-Squares spectrum of Kovacs et al. (2002).
+    Box-Least-Squares spectrum of Kovacs et al (2002).
 
     [ see Kovacs, Zucker & Mazeh 2002, A&A, Vol. 391, 369 ]
 
@@ -812,7 +906,7 @@ def box(times, signal, f0=None, fn=None, df=None, Nbin=10, qmi=0.005, qma=0.75 )
 def kepler(times,signal, f0=None, fn=None, df=None, e0=0., en=0.91, de=0.1,
            errors=None, wexp=2, x00=0.,x0n=359.9):
     """
-    Keplerian periodogram of Zucker et al. (2010).
+    Keplerian periodogram of Zucker et al (2010).
     
     @param times: observation times
     @type times: numpy 1D array
@@ -863,6 +957,8 @@ def kepler(times,signal, f0=None, fn=None, df=None, e0=0., en=0.91, de=0.1,
 def Zwavelet(time, signal, freq, position, sigma=10.0):
 
     """
+    Weighted Wavelet Z-transform of Foster (1996)
+    
     Computes "Weighted Wavelet Z-Transform"
     which is a type of time-frequency diagram more suitable
     for non-equidistant time series.
@@ -885,7 +981,7 @@ def Zwavelet(time, signal, freq, position, sigma=10.0):
     @param sigma: smoothing parameter in time domain: sigma in Foster's paper
     @type sigma: float
     @return: Z[0..Npos-1, 0..Nfreq-1]: the Z-transform: time-freq diagram
-    @rtype: ndarray
+    @rtype: array
     
     """
   
@@ -986,7 +1082,7 @@ def pdm_py(time, signal, f0=None, fn=None, df=None, Nbin=10, Ncover=5, D=0.):
     @param D: linear frequency shift parameter
     @type D: float
     @return: theta-statistic for each given frequency [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     """
     freq = np.arange(f0,fn+df,df)
     
@@ -1189,7 +1285,7 @@ def windowfunction(time, freq):
     @param freq: frequency points. Units: inverse unit of 'time' [0..Nfreq-1]
     @type freq: ndarray       
     @return: |W(freq)|^2      [0..Nfreq-1]
-    @rtype: ndarray
+    @rtype: array
     
     """
   
@@ -1239,7 +1335,13 @@ def __spread__(y, yy, n, x, m):
         for j in range(ihi-1,ilo-1,-1):
             nden=(nden/(j+1-ilo))*(j-ihi)
             yy[j] = yy[j] + y*fac/(nden*(x-j))    
+
+def __ane__(n,e):
+    return 2.*np.sqrt(1-e**2)/e/n*jn(n,n*e)
     
+def __bne__(n,e):
+    return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
+
     
 def getSignificance(wk1, wk2, nout, ofac):
     """
@@ -1291,6 +1393,9 @@ def scargle_probability(peak_value,times,freqs,correct_for_frange=False,**kwargs
     >>> p = pl.plot([1e-6,100],[1e-6,100],'r-',lw=2)
     >>> p = pl.xlabel('Should observe this many points below threshold')
     >>> p = pl.ylabel('Observed this many points below threshold')
+    
+    ]]include figure]]ivs_timeseries_pergrams_prob.png]
+    
     """
     #-- independent frequencies
     nr_obs = len(times)
@@ -1313,7 +1418,7 @@ if __name__=="__main__":
     logger = loggers.get_basic_logger()
     
     #-- run tests
-    if '--test' or '-t' in sys.argv[1]:
+    if '--test' in sys.argv[1] or '-t' in sys.argv[1]:
         import doctest
         doctest.testmod()
         pl.show()

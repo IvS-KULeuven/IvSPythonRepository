@@ -40,6 +40,7 @@ Msol   = 1.988547e30       # solar mass                  kg            Harmanec 
 Rsol   = 6.95508e8         # solar radius                m             Harmanec & Prsa 2011
 Lsol   = 3.846e26          # solar luminosity            W             Harmanec & Prsa 2011
 Tsol   = 5779.5747         # solar effective temperature K             Harmanec & Prsa 2011
+agesol = 1.44221e+17       # solar age                   s             Bahcall 2005
 Mearth = 5.9742e24         # earth mass                  kg            google
 Rearth = 6371.e3            # earth radius                m             wikipedia
 Mjup   = 1.8986e27         # Jupiter mass                kg            wikipedia
@@ -61,6 +62,7 @@ a0     = 52.9177e-12       # Bohr radius of hydrogen     m
 ke     = 8.9875517873681764e9 # Coulomb constant         Nm2/C2        Wikipedia
 eps0   = 8.854187817620e-12   # Electric constant           F/m           Wikipedia
 mu0    = 1.2566370614e-6   # Magnetic constant           N/A2          Wikipedia
+alpha  = 137.036           # Fine structure constant     none           http://pntpm3.ulb.ac.be/private/divers.htm#constants
 
 cc_units     = 'm s-1'
 cc_air_units = 'm s-1'
@@ -68,6 +70,7 @@ Msol_units   = 'kg'
 Rsol_units   = 'm'
 Lsol_units   = 'kg m2 s-3'
 Tsol_units   = 'K'
+agesol_units = 's'
 Mearth_units = 'kg'
 Rearth_units = 'm'
 Mjup_units   = 'kg'
@@ -89,6 +92,7 @@ a0_units     = 'm'
 ke_units     = 'N m2 C-2'
 eps0_units   = 'F m-1'
 mu0_units    = 'T m Am-1'
+alpha_units  = ''
 
 
 

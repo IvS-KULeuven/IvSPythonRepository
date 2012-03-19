@@ -231,25 +231,30 @@ def read2recarray(fits_file,ext=1,return_header=False):
     Should add a test that the strings were not chopped of...
     """
     dtype_translator = dict(L=np.bool,D=np.float64)
-    with pyfits.open(fits_file) as ff:
-        data = ff[ext].data
-        names = ff[ext].columns.names
-        formats = ff[ext].columns.formats
-        dtypes = []
-        for name,dtype in zip(names,formats):
-            if 'A' in dtype:
-                dtypes.append((name,'S60'))
-            else:
-                dtypes.append((name,dtype_translator[dtype]))
-        dtypes = np.dtype(dtypes)
-        data = [np.cast[dtypes[i]](data.field(name)) for i,name in enumerate(names)]
-        data = np.rec.array(data,dtype=dtypes)
-        header = {}
-        for key in ff[ext].header.keys():
-            if 'TTYPE' in key: continue
-            if 'TUNIT' in key: continue
-            if 'TFORM' in key: continue
-            header[key] = ff[ext].header[key]
+    if isinstance(fits_file,str):
+        ff = pyfits.open(fits_file)
+    elif isinstance(fits_file,pyfits.HDUList):
+        ff = fits_file
+    data = ff[ext].data
+    names = ff[ext].columns.names
+    formats = ff[ext].columns.formats
+    dtypes = []
+    for name,dtype in zip(names,formats):
+        if 'A' in dtype:
+            dtypes.append((name,'S60'))
+        else:
+            dtypes.append((name,dtype_translator[dtype]))
+    dtypes = np.dtype(dtypes)
+    data = [np.cast[dtypes[i]](data.field(name)) for i,name in enumerate(names)]
+    data = np.rec.array(data,dtype=dtypes)
+    header = {}
+    for key in ff[ext].header.keys():
+        if 'TTYPE' in key: continue
+        if 'TUNIT' in key: continue
+        if 'TFORM' in key: continue
+        header[key] = ff[ext].header[key]
+    if isinstance(fits_file,str):
+        ff.close()
     if not return_header:
         return data
     else:
@@ -314,17 +319,28 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
         cols.append(pyfits.Column(name=name,format=format,array=recarr[name],unit=unit))
     tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
     
-    #   put it in the right place
-    if ext=='new':
-        hdulist.append(tbhdu)
-        ext = -1
-    else:
-        hdulist[ext] = tbhdu
-    
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            hdulist[ext].header.update(key,header_dict[key])
+            #if (len(key)>8) and (not key in tbhdu.header.keys()) and (not key[:9]=='HIERARCH'):
+            #    key_ = 'HIERARCH '+key
+            #else:
+            key_ = key
+            tbhdu.header.update(key_,header_dict[key])
+        if ext!='new':
+            tbhdu.header.update('EXTNAME',ext)
+    
+    
+    #   put it in the right place
+    extnames = [iext.header['EXTNAME'] for iext in hdulist if ('extname' in iext.header.keys()) or ('EXTNAME' in iext.header.keys())]
+    if ext=='new' or not ext in extnames:
+        logger.info('Creating new extension %s'%(ext))
+        hdulist.append(tbhdu)
+        ext = -1
+    else:
+        logger.info('Overwriting existing extension %s'%(ext))
+        hdulist[ext] = tbhdu
+        
     if close:
         hdulist.close()
         return filename

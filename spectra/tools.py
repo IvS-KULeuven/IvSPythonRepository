@@ -88,7 +88,7 @@ from ivs.aux import loggers
 
 logger = loggers.get_basic_logger()
 
-def doppler_shift(wave,vrad,vrad_units='km/s'):
+def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     """
     Shift a spectrum with towards the red or blue side with some radial velocity.
     
@@ -123,7 +123,11 @@ def doppler_shift(wave,vrad,vrad_units='km/s'):
     cc = constants.cc
     cc = conversions.convert('m/s',vrad_units,cc)
     wave_out = wave * (1+vrad/cc)
-    return wave_out
+    if flux is not None:
+        flux = np.interp(wave,wave_out,flux)
+        return flux
+    else:
+        return wave_out
 
 def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     """
