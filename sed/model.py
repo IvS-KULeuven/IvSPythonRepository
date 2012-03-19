@@ -13,16 +13,6 @@ B{reddening}. All these things can be specified though (see below).
 Section 1. Available model grids
 ================================
 
-    - Kurucs:
-        Kurucs atmosphere models. 1993yCat.6039....0K
-        Available parameters: Metalicity z and Micro turbulance vturb.
-        
-    - TMAP:
-        Tubingen NLTE Model Atmosphere Package, models that can be used for sdB
-        or sdO stars. Original wavelength range is 250-1500 nm, but they are 
-        exteded to 2400 nm using a black body. The models use a mixture of 97% H
-        and 3% He. No further parameters are available
-
 We make a plot of the domains of all spectral grids. Therefore, we first collect
 all the grid names
 
@@ -1652,7 +1642,7 @@ def _get_itable_markers(photbands,
         keep = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
         
         #-- for some reason, the Kurucz grid has a lonely point at Teff=14000,logg=2
-        #   which messes up the interpolation
+        #   which messes up our interpolation
         #correct = (teffs==14000) & (loggs==2.0)
         #teffs[correct] = 12000
         
