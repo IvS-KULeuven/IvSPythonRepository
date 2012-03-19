@@ -20,7 +20,7 @@ defaults = dict(grid='kurucz',odfnew=False,z=+0.0,vturb=2,
 #-- relative location of the grids
 basedir = 'ldtables'
 
-#{ Interface to library
+#{ Interface to the library
 
 def set_defaults(**kwargs):
     """
