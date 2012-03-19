@@ -60,7 +60,7 @@ def get_gridnames():
 
 def get_grid_dimensions(**kwargs):
     """
-    Retrieve possible effective temperatures and gravities from a grid.
+    Retrieve the possible effective temperatures and gravities from a grid.
     
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
