@@ -432,28 +432,105 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
                   zrange=((-inf,inf),(-inf,inf)),
                   radiusrange=((1,1),(0.1,10.)),grids=None,
                   points=None,res=None,clear_memory=False,
-                  type='single', **kwargs):
+                  type='single', **kwargs):                    
     """
-    Generate grid points at which to fit an interpolated grid of multiple SEDs.
+    Generate grid points at which to fit an interpolated grid of SEDs.
     
-    By default, a binary SED is assumed, but any multiple system can possibly
-    be defined.
+    If C{points=None}, the points are chosen on the predefined grid points.
+    Otherwise, C{points} grid points will be generated, uniformly distributed
+    between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange}. If
+    you set the resolution to C{2}, one out of every two points will be selected.
     
-    Remark that you can give different grid specifications via the keyword 
-    C{grids}. It has to be a tuple of dictionaries (or 'None's).
+    Extra keyword arguments can be used to give more details on the atmosphere
+    models to use.
+    
+    Colors are automatically detected.
+    
+    You can fix one parameter e.g. via setting teffrange=(10000,10000).
     
     >>> photbands = ['GENEVA.G','GENEVA.B-V']
-    >>> teffs,loggs,ebvs,zs,rads = generate_grid_multiple(photbands,
-    ...          teffrange=((3000,10000),(15000,45000)),
-    ...          loggrange=((0.0,3.5),(3.0,4.5)),
-    ...          zrange=(0,np.inf),ebvrange=(1.,2),
-    ...          radiusrange=((1,1),(0.1,10)),points=10000)
+    
+    Start a figure:
+    
     >>> p = pl.figure()
-    >>> p = pl.scatter(teffs[:,0],loggs[:,0],c=rads[:,0],edgecolors='none')
-    >>> p = pl.scatter(teffs[:,1],loggs[:,1],c=rads[:,1],edgecolors='none')
-    >>> p = pl.xlim(pl.xlim()[::-1])
-    >>> p = pl.ylim(pl.ylim()[::-1])
-    """
+    >>> rows,cols = 2,4
+    
+    On the grid points, but only one in every 100 points (otherwise we have over
+    a million points):
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,res=100)
+    
+    >>> p = pl.subplot(rows,cols,1)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    >>> p = pl.subplot(rows,cols,1+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    Randomly distributed over the grid's ranges:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,points=10000)
+    
+    >>> p = pl.subplot(rows,cols,2)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    >>> p = pl.subplot(rows,cols,2+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    Confined to a small area in the grid's range:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8000,10000),loggrange=(4.1,4.2),zrange=(0,inf),ebvrange=(1.,2),points=10000)
+    
+    >>> p = pl.subplot(rows,cols,3)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    >>> p = pl.subplot(rows,cols,3+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    Confined to a small area in the grid's range with some parameters fixed:
+    
+    >>> teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8765,8765),loggrange=(4.1,4.2),zrange=(0,0),ebvrange=(1,2),points=10000)
+    
+    >>> p = pl.subplot(rows,cols,4)
+    >>> p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Teff');p = pl.ylabel('Logg')
+    
+    >>> p = pl.subplot(rows,cols,4+cols)
+    >>> p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.xlabel('E(B-V)');p = pl.ylabel('Z')
+    
+    ]include figure]]ivs_sed_fit_grids.png]
+    
+    @param photbands: a list of photometric passbands, corresponding each
+    measurement
+    @type photbands: list of strings
+    @param teffrange: range of temperatures to use
+    @type teffrange: 2-tuple
+    @param loggrange: range of surface gravities to use
+    @type loggrange: 2-tuple
+    @param ebvrange: range of reddenings to use
+    @type ebvrange: 2-tuple
+    @param points: points to sample (when None, predefined grid points are used)
+    @type points: int
+    @param res: resolution of the original grid (the higher, the coarser)
+    @type res: int
+    @keyword clear_memory: flag to clear memory from previously loaded SED tables.
+    If you set it to False, you can easily get an overloaded memory!
+    @type clear_memory: boolean
+    @return: record array containing the searched grid, chi-squares and scale
+    factors
+    @rtype: record array
+    """                  
+    
     #-- Select the grid
     #   but remove metallicity, as it will be fitted!
     if type=='single':
@@ -518,8 +595,10 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         radii = np.array([np.ones(len(radii)),radii]).T
     elif type=='multiple':
         #-- We have random different radii for the stars
-        radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
-                              high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
+        radii = np.array([10**np.random.uniform(low=radiusrange[0][0], high=radiusrange[0][1], size=(len(teffs))), 
+                    10**np.random.uniform(low=radiusrange[1][0], high=radiusrange[1][1], size=(len(teffs)))]).T
+        #radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
+                              #high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
     
     return teffs,loggs,ebvs,zs,radii                     
     
