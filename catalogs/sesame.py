@@ -177,11 +177,12 @@ def search(ID,db='S',fix=False):
         data,units,comms = vizier.search('B/mk/mktypes',ID=ID)
         if data is not None and len(data):
             database['spType'] = data['SpType'][0]
-        #-- add galactic coordinates (in degrees)
-        ra,dec = database['jpos'].split()
-        gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
-        gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
-        database['galpos'] = gal
+        if 'jpos' in database:
+            #-- add galactic coordinates (in degrees)
+            ra,dec = database['jpos'].split()
+            gal = conversions.convert('equ','gal',(str(ra),str(dec)),epoch='2000')
+            gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
+            database['galpos'] = gal
         #-- fix the proper motions
         data,units,comms = vizier.search('I/317/sample',ID=ID)
         if data is not None and len(data):
