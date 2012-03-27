@@ -112,7 +112,6 @@ def get_file(**kwargs):
     """
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid']).lower()
-    print grid
     if os.path.isfile(grid):
         return grid
     
