@@ -112,6 +112,7 @@ def get_file(**kwargs):
     """
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid']).lower()
+    print grid
     if os.path.isfile(grid):
         return grid
     
@@ -192,7 +193,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         meshkwargs['wave'] = kwargs.get('wave',None)
         meshkwargs['teffrange'] = kwargs.get('teffrange',None)
         meshkwargs['loggrange'] = kwargs.get('loggrange',None)
-        wave,teffs,loggs,flux,flux_grid,cont_grid = get_grid_mesh(wave=template_wave)
+        wave,teffs,loggs,flux,flux_grid,cont_grid = get_grid_mesh(wave=template_wave,**kwargs)
         logger.debug('Model spectrum interpolated from grid %s (%s)'%(os.path.basename(gridfile),meshkwargs))
         wave = wave + 0.
         try:
@@ -342,7 +343,14 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 #}
 
 if __name__=="__main__":
-    import doctest
+    from ivs.aux import loggers
+    logger = loggers.get_basic_logger()
+    logger.setLevel(10)
+    #import doctest
     import pylab as pl
-    doctest.testmod()
+    #doctest.testmod()
+    
+    wave,flux,cont = get_table(teff=5000,logg=4.5,grid='marcs',t=1.0,c=0.0)
+    pl.plot(wave,flux)
+    
     pl.show()
