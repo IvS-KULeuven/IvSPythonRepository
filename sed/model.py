@@ -948,7 +948,7 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs)
     if flux_units!='erg/s/cm2/A/sr':
-        fluxes = np.array([conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+        fluxes = np.array([conversions.convert('erg/s/cm2/A',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))]) #'erg/s/cm2/A/sr'
         
     if wave_units is not None:
         model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)

@@ -71,7 +71,7 @@ def read2list(filename,**kwargs):
     ff.close()
     
     #-- report that the file has been read
-    logger.debug('Data file %s read'%(filename))
+    #logger.debug('Data file %s read'%(filename))
     
     #-- and return the contents
     return data,comm
