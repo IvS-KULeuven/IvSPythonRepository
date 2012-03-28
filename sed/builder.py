@@ -1576,9 +1576,10 @@ class SED(object):
         
         pl.grid()
         if colors:
-            pl.legend(loc='best',prop=dict(size='x-small'))
+            leg = pl.legend(loc='best',prop=dict(size='x-small'))
         else:
-            pl.legend(loc='upper right',prop=dict(size='x-small'))
+            leg = pl.legend(loc='upper right',prop=dict(size='x-small'))
+            leg.get_frame().set_alpha(0.5)
         loc = (0.05,0.05)
         if mtype in self.results:
             teff = self.results[mtype]['grid']['teff'][-1]
@@ -1836,6 +1837,10 @@ class SED(object):
                 (d,dprob) = self.results['igrid_search']['d']
                 max_distance = d[np.argmax(dprob)]
                 e_max_distance = abs(max_distance - d[np.argmin(np.abs(dprob-0.5*max(dprob)))])
+            elif 'plx' in self.info and 'v' in self.info['plx'] and 'e' in self.info['plx']:
+                plx,eplx = self.info['plx']['v'],self.info['plx']['e']
+                dist = 1000./ufloat((plx,eplx))
+                max_distance,e_max_distance = dist.nominal_value,dist.std_dev()
             else:
                 max_distance = 1000.
                 e_max_distance = 100.
