@@ -294,7 +294,6 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     #-- get the dimensions of the grid
     teffs,loggs = get_grid_dimensions(**kwargs)
-    print teffs, loggs
     #-- build flux grid, assuming a perfectly sampled grid (needs not to be
     #   equidistant)
     if teffrange is not None:
