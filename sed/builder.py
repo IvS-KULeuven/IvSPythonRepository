@@ -901,7 +901,7 @@ class SED(object):
         """
         Search photometry on the net or from the phot file if it exists.
         
-        For bright stars, you can set the radius a bit higher...
+        For bright stars, you can set radius a bit higher...
         
         @param radius: search radius (arcseconds)
         @type radius: float.
@@ -1124,7 +1124,7 @@ class SED(object):
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
         """
-        if CI_limit is None:
+        if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
         #-- set defaults limits
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
@@ -1648,7 +1648,7 @@ class SED(object):
         pl.legend(loc='upper right',prop=dict(size='x-small'))
         pl.grid()
         pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.120),xycoords='axes fraction',color='r')
-        pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.065),xycoords='axes fraction',color='r')
+        pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.075),xycoords='axes fraction',color='r')
         pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.030),xycoords='axes fraction',color='k')
         xlims = pl.xlim()
         pl.plot(xlims,[self.results[mtype]['grid']['chisq'][-1],self.results[mtype]['grid']['chisq'][-1]],'r-',lw=2)

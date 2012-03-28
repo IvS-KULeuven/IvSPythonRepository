@@ -81,7 +81,7 @@ def get_gridnames():
     @return: list of grid names
     @rtype: list of str
     """
-    return ['cmfgen','ostar2002','bstar2006','atlas','marcs']
+    return ['cmfgen','ostar2002','bstar2006','atlas','marcs', 'heberh909']
 
 
 
@@ -96,6 +96,9 @@ def get_file(**kwargs):
                     increased to He/H=0.2, the nitrogen abundance is increased
                     by a factor of 5, and the carbon abundance is halved (CNO cycle processed
                     material brought to the stellar surface)
+                    
+    Details for grid 'heberh909':
+        Grid computed for sdB stars by Uli Heber, reff: Heber et al. 2000
     
     Available grids and example keywords:
         - grid='fastwind': no options
@@ -107,11 +110,13 @@ def get_file(**kwargs):
         - grid='bstar2006: options z,v,a
                           
         - grid='atlas': options z
+        - grid='heberh909': no options 
     
     @keyword grid: gridname
     """
     #-- possibly you give a filename
-    grid = kwargs.get('grid',defaults['grid']).lower()
+    grid = kwargs.get('grid',defaults['grid'])#.lower()
+    print grid
     if os.path.isfile(grid):
         return grid
     
@@ -138,6 +143,8 @@ def get_file(**kwargs):
         basename = 'BSTAR2006_z%.3fv%d_%s_spectra.fits'%(z,vturb,band)
     elif grid=='atlas':
         basename = 'ATLASp_z%.1ft%.1f_a%.2f_spectra.fits'%(z,t,a)
+    elif grid=='heberh909':
+        basename = 'Heber2000_h909.fits'
     else:
         raise ValueError, "grid %s does not exist"%(grid)
 
@@ -257,7 +264,7 @@ def get_grid_dimensions(**kwargs):
 
 
 
-@memoized
+#@memoized
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of spectrum models.
@@ -287,6 +294,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     #-- get the dimensions of the grid
     teffs,loggs = get_grid_dimensions(**kwargs)
+    print teffs, loggs
     #-- build flux grid, assuming a perfectly sampled grid (needs not to be
     #   equidistant)
     if teffrange is not None:
