@@ -96,7 +96,7 @@ def get_file(**kwargs):
         - grid='ostar2002': options z,v
         - grid='bstar2006a': options z,v
         - grid='bstar2006b': options z,v
-        - grid='bstar2006: options z,v,a                          
+        - grid='bstar2006': options z,v,a                          
         - grid='atlas': options z
         - grid='heberb': no options 
         - grid='hebersdb': no options 
@@ -105,17 +105,15 @@ def get_file(**kwargs):
         - metallicity in Z/Z0 with Z0 solar. z=0,0.001,0.01,0.033,0.1,0.2,0.5,1.,2
         - microturbulent velocity: v=2 or v=10 km/s
         - abundance: a='' or a='CN'. In the latter, the Helium abundance is
-                    increased to He/H=0.2, the nitrogen abundance is increased
-                    by a factor of 5, and the carbon abundance is halved (CNO cycle processed
-                    material brought to the stellar surface)
+        increased to He/H=0.2, the nitrogen abundance is increased
+        by a factor of 5, and the carbon abundance is halved (CNO cycle processed
+        material brought to the stellar surface)
                     
-    Details for grid 'heberb':
-        LTE Grid computed for B-type stars by Uli Heber, reff: Heber et al. 2000
+    Details for grid 'heberb': LTE Grid computed for B-type stars by Uli Heber,
+    reff: Heber et al. 2000
         
-    Details for grid 'hebersdb':
-        LTE Grid computed for sdB stars by Uli Heber, reff: Heber et al. 2000
-    
-
+    Details for grid 'hebersdb': LTE Grid computed for sdB stars by Uli Heber,
+    reff: Heber et al. 2000
     
     @param grid: gridname, or path to grid.
     @type grid: string
