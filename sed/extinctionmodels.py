@@ -93,7 +93,14 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
         >>> av = findext(lng, lat, distance=distance)
         >>> print("Av at lng = %.2f, lat = %.2f is %.2f magnitude" %(lng, lat, av))
         Av at lng = 58.20, lat = 24.00 is 0.12 magnitude
-        
+  
+  REMARKS:
+  a) Schlegel actually returns E(B-V), this value is then converted to Av (the desired value for Rv can be set as a keyword; standard sets Rv=3.1)
+  b) Schlegel is very dubious for latitudes between -5 and 5 degrees
+  c) Marschall actually returns Ak, this value is then converted to Av (the reddening law and Rv can be set as keyword; standard sets Rv=3.1, redlaw='cardelli1989')
+  d) Marschall is only available for certain longitudes and latitudes:
+  0 < lng < 100 or 260 < lng < 360 and -10 < lat < 10
+  
   @param lng: Galactic Longitude (in degrees)
   @type lng: float
   @param lat: Galactic Lattitude (in degrees)
@@ -104,13 +111,6 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
   @type distance: float
   @return: The extinction in Johnson V-band
   @rtype: float
-  
-  REMARKS:
-  a) Schlegel actually returns E(B-V), this value is then converted to Av (the desired value for Rv can be set as a keyword; standard sets Rv=3.1)
-  b) Schlegel is very dubious for latitudes between -5 and 5 degrees
-  c) Marschall actually returns Ak, this value is then converted to Av (the reddening law and Rv can be set as keyword; standard sets Rv=3.1, redlaw='cardelli1989')
-  d) Marschall is only available for certain longitudes and latitudes:
-  0 < lng < 100 or 260 < lng < 360 and -10 < lat < 10
   """
   
   if model.lower() == 'drimmel':
