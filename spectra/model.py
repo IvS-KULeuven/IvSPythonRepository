@@ -81,13 +81,25 @@ def get_gridnames():
     @return: list of grid names
     @rtype: list of str
     """
-    return ['cmfgen','ostar2002','bstar2006','atlas','marcs', 'heberh909']
+    return ['cmfgen','ostar2002','bstar2006','atlas','marcs', 'heberb', 'hebersdb']
 
 
 
 def get_file(**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
+    
+    Available grids and example keywords:
+        - grid='fastwind': no options
+        - grid='cmfgen': no options
+        - grid='marcs': options c, atm (p or s)
+        - grid='ostar2002': options z,v
+        - grid='bstar2006a': options z,v
+        - grid='bstar2006b': options z,v
+        - grid='bstar2006: options z,v,a                          
+        - grid='atlas': options z
+        - grid='heberb': no options 
+        - grid='hebersdb': no options 
     
     Details for grid 'bstar2006':
         - metallicity in Z/Z0 with Z0 solar. z=0,0.001,0.01,0.033,0.1,0.2,0.5,1.,2
@@ -97,22 +109,16 @@ def get_file(**kwargs):
                     by a factor of 5, and the carbon abundance is halved (CNO cycle processed
                     material brought to the stellar surface)
                     
-    Details for grid 'heberh909':
-        Grid computed for sdB stars by Uli Heber, reff: Heber et al. 2000
+    Details for grid 'heberb':
+        LTE Grid computed for B-type stars by Uli Heber, reff: Heber et al. 2000
+        
+    Details for grid 'hebersdb':
+        LTE Grid computed for sdB stars by Uli Heber, reff: Heber et al. 2000
     
-    Available grids and example keywords:
-        - grid='fastwind': no options
-        - grid='cmfgen': no options
-        - grid='marcs': options c, atm (p or s)
-        - grid='ostar2002': options z,v
-        - grid='bstar2006a': options z,v
-        - grid='bstar2006b': options z,v
-        - grid='bstar2006: options z,v,a
-                          
-        - grid='atlas': options z
-        - grid='heberh909': no options 
+
     
-    @keyword grid: gridname
+    @param grid: gridname, or path to grid.
+    @type grid: string
     """
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])#.lower()
@@ -143,8 +149,10 @@ def get_file(**kwargs):
         basename = 'BSTAR2006_z%.3fv%d_%s_spectra.fits'%(z,vturb,band)
     elif grid=='atlas':
         basename = 'ATLASp_z%.1ft%.1f_a%.2f_spectra.fits'%(z,t,a)
-    elif grid=='heberh909':
-        basename = 'Heber2000_h909.fits'
+    elif grid=='heberb':
+        basename = 'Heber2000_B_h909.fits'
+    elif grid=='hebersdb':
+        basename = 'Heber2000_sdB_h909.fits'
     else:
         raise ValueError, "grid %s does not exist"%(grid)
 
@@ -154,24 +162,18 @@ def get_file(**kwargs):
     return grid
 
 
-
-
-
-
-
 def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     """
     Retrieve synthetic spectrum.
         
-    Wavelengths in angstrom.
+    Wavelengths in angstrom, fluxes in eddington flux: erg/s/cm2/A.
     
-    Possibility to rotationally broaden the spectrum: supply at least 'vrot' and
-    optionally also other keyword arguments for the rotation.rotin function.
+    It is possible to rotationally broaden the spectrum by supplying at least
+    'vrot' and optionally also other arguments for the rotation.rotin function.
+    Supply vrot in km/s
     
-    Possibility to include radial velocity shift (+vrad means redshift)
-    
-    vrot and vrad in km/s
-    
+    It is possibility to include a radial velocity shift in the spectrum. Supply
+    'vrad' in km/s. (+vrad means redshift). Uses spectra.tools.doppler_shift
     """
     gridfile = get_file(**kwargs)
     template_wave = kwargs.pop('wave',None)
@@ -354,9 +356,29 @@ if __name__=="__main__":
     logger.setLevel(10)
     #import doctest
     import pylab as pl
+    import numpy as np
     #doctest.testmod()
     
-    wave,flux,cont = get_table(teff=5000,logg=4.5,grid='marcs',t=1.0,c=0.0)
-    pl.plot(wave,flux)
+    grids = get_gridnames()
+
+    p = pl.figure()
+    color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+    p = pl.gca().set_color_cycle(color_cycle)
+
+    for grid in grids:
+        vturb = 'ostar' in grid and 10 or 2
+        t = 0.
+        if 'marcs' in grid: t = 1.
+        teffs,loggs = get_grid_dimensions(grid=grid,vturb=vturb,t=t)
+        p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
+
+    p = pl.xlim(pl.xlim()[::-1])
+    p = pl.ylim(pl.ylim()[::-1])
+    p = pl.xlabel('Effective temperature [K]')
+    p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
+    xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+    p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
+    p = pl.legend(loc='upper left',prop=dict(size='small'))
+    p = pl.grid()
     
     pl.show()
