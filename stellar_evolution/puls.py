@@ -52,12 +52,20 @@ class StellarModel:
         
         Global parameters should be:
             - boundary condition
+            
+        Preferably, star_model is a filename of a recognised stellar evolution
+        code. Otherwise, it must be a tuple containing global parameters and
+        local parameters, in the right (cgs) units.
+        
+        
         """
         model = 'model'
         self.master = codes[0]
         self.codes = codes
         if isinstance(star_model,str):
             logger.info('Received file %s'%(star_model))
+        elif isinstance(star_model,tuple):
+            logger.info('Received array')
         else:
             logger.info('Received ext %s from FITS HDUList'%(kwargs['ext']))
         
@@ -94,7 +102,7 @@ class StellarModel:
         #    output[1][0] = 0
         shapenow = output.shape[1]
         if shapenow>=np0max:
-            raise ValueError,'Mesh is too fine... now what?'
+            raise ValueError,'Mesh is too fine... now what? (%d>%d)'%(shapenow,np0max)
         else:
             logger.info('Initiated LOSC model with %d meshpoints'%(shapenow))
             #bla = self._get_current_losc_model()
@@ -102,6 +110,7 @@ class StellarModel:
         shapeadd = np0max-shapenow
         output = np.hstack([output,np.zeros((6,shapeadd))])
         output = np.array(output,float)
+        
         #print 'output',output.shape,shapenow
         #pyosclib.readmodpyg(np.zeros_like(output),0,6001,R,M,'model',self.constants['GG'],
                                                             #self.constants['Msol'])
@@ -201,6 +210,55 @@ class StellarModel:
                 self.compute_eigenfuncs_losc(degree,modes=modes,ires=self.kwargs_losc['ires'])
             if 'adipls' in codes:
                 self.compute_eigenfuncs_adipls(degree,modes=modes,**self.kwargs_adip)
+                
+    def asymptotic_gmode_period_spacing(self,x_core=0.3,x_upper_limit=True,ell=1):
+        """
+        Compute the asymptotic gmode period spacing (see e.g. Brassard 1992).
+        
+        Brassard et al., 1992, eq. 40::
+        
+            Pi_{H,l} = 2pi**2/L/int( |N|/x dx,x=d..1)
+        
+        with C{L = sqrt(l*(l+1))} and C{|N|} the absolute value of the Brunt
+        Vaisalaa frequency.
+        
+        This holds for a star with a a convective core and a radiative envelope.
+        
+        @parameter x_core: location of the boundary of the convective core. 
+        @type x_core: float between 0 and 1
+        @parameter x_upper_limit: if C{True}, C{x_core} is interpreted as an
+        upper limit on the convective core, and the exact value will be chosen
+        equal to the maximum value of the relative radius where there is
+        convection
+        @type x_upper_limit: boolean
+        @parameter ell: degree of the mode (ell>=1)
+        @type ell: integer
+        @return: value of the asymptotic period spacing, value of the boundary
+        of the convective core, bouyancy radius
+        @rtype: float, float, float
+        """
+        starl = self.starl
+        Nabs = np.abs(starl['brunt_N']) # Brunt-N in rad/s
+        #-- look for the value of the boundary of the core
+        if x_upper_limit:
+            core = starl['q']<x_core
+            x0 = starl['q'][core][starl['stability_type'][core]>0].max()
+        else:
+            x0 = x_core    
+        #-- we  need to integrate the Brunt N in the envelope
+        envelope = starl['q']>=x0
+        #-- and then we can readily compute the asymptotic period spacing
+        x = starl['x'][envelope]
+        Nabs = Nabs[envelope]
+        Pi_0 = np.trapz(Nabs/x,x=x)
+        #-- the spacing has a simple dependency on the degree of the mode
+        L = np.sqrt(ell*(ell+1.))
+        DeltaP = 2*np.pi**2/L/Pi_0
+        #-- that's it!
+        return DeltaP,x0,Pi_0
+                
+                
+                
     def match(self,template='losc',tol=1.):
         """
         Match frequencies.
@@ -250,7 +308,7 @@ class StellarModel:
     
     #{ Resampling
     
-    def resample(self,increase=2,method='simple',mode_type=None,n_new=5000,int_method='spline'):
+    def resample(self,increase=2,method='simple',mode_type=None,n_new=5000,int_method='spline',**kwargs):
         """
         Resample the current mesh.
         
@@ -269,12 +327,18 @@ class StellarModel:
         
         n_init = len(r)
         #-- my own simple method
-        if method.lower()=='simple':
-            newr = r.copy()
-            while increase>1:
-                increase-=1
+        if 'simple' in method.lower():
+            if method.lower()=='simple':
+                newr = r.copy()
+                new_starl = self.starl.copy()
                 newr = sorted(np.hstack([newr[:-1],newr[:-1]+np.diff(newr)/2,[newr[-1]]]))
-            new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
+                new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
+            elif method.lower()=='still_simple':
+                new_starl = self.starl.copy()
+                limit = 0.15
+                old = r>limit*r.max()
+                newr = np.hstack([np.linspace(r.min(),r[-old].max(),n_new),r[old]])
+                new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
             for name in new_starl.dtype.names:
                 if name=='radius':
                     new_starl['radius'] = newr
@@ -287,8 +351,9 @@ class StellarModel:
                     ius = interpolate.InterpolatedUnivariateSpline(r,self.starl[name])
                     new_starl[name] = ius(newr)
                     new_starl[name][0] = self.starl[name][0]
-        
             
+        elif 'optimized' in method.lower():
+            newr,new_starl = improve_sampling(self.starl,increase=increase,**kwargs)
         #-- ADIPLS method
         elif method.lower()=='adipls':
             #   initialize ADIPLS
@@ -344,6 +409,7 @@ class StellarModel:
             nres = n_new#max(len(self.starl),n_new)
             pyosclib.mesh(ires,nres,0)
             newr = self._get_current_losc_model()[0]*self.starg['photosphere_r']
+            print len(newr)
             new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
             #-- interpolate *all* quantities on the grid. This might introduce
             #   some artifacts!
@@ -363,7 +429,7 @@ class StellarModel:
                     new_starl[name] = f(newr)
                     
                 
-            if len(new_starl)>=np0max:
+            if len(new_starl)>np0max:# was equal to!!!
                 raise ValueError,'LOSC: too many points (%d>=%d)'%(len(new_starl),np0max)
         else:
             raise ValueError,'cannot interpret interpolation method %s'%(method)
@@ -387,8 +453,8 @@ class StellarModel:
             pl.plot(newr,'o-')
             pl.show()
             raise ValueError,'interpolation non-increasing'
-        if not myC==new_starl['radius'].min():
-            raise ValueError,'new center mesh point'
+        if not np.allclose(myC,new_starl['radius'].min()): # was exact!!!!
+            raise ValueError,'new center mesh point: %s!=%s'%(myC,new_starl['radius'].min())
         #if not myR==new_starl['radius'].max():
         #    raise ValueError,'new boundary %s-->%s'%(myR/constants.Rsol_cgs,
         #                              new_starl['radius'].max()/constants.Rsol_cgs)
@@ -517,6 +583,21 @@ class StellarModel:
         pl.xlabel('r/R')
         pl.plot(star[0],range(len(star[0])),'-',lw=2,color=c1)
         pl.plot(self.starl[x],range(len(starl['x'])),'--',lw=2,color=c2)    
+    
+    def plot_frequencies(self,master='losc',degree=0,graph_type='frequency',**kwargs):
+        """
+        Plot of computed frequencies.
+        
+        graph_type: 'frequency', 'period', 'period spacing'
+        """
+        if graph_type=='period spacing':
+            freqs = conversions.Unit(self.eigenfreqs[master]['l%d'%(degree)]['frequency'],self.unit)
+            period = freqs**-1
+            dperiod = conversions.Unit(period[0][:-1]-period[0][1:],period[1])
+            spacing = dperiod.convert('s')[0]
+            period = period.convert('d')
+            pl.plot(period[0][:-1],spacing,'o-',**kwargs)
+            pl.plot(pl.xlim(),[spacing.mean(),spacing.mean()],'--',**kwargs)
     
     def plot_frequency_matching(self,master='losc'):
     
@@ -860,6 +941,15 @@ class StellarModel:
             N2 = -g*star[5]*x/R                      # Brunt-Vaisalla frequency
             dP_dr = -rho*g                           # Pressure gradient using hydrostatic equilibrium
             U_ = r/m*4*pi*r**2*rho                   # r/m*dm/dr = dlnm/dlnr and dm/dr = 4*pi*r^2*rho using conservation of mass
+            drho_dr = ne.deriv(r,rho)                # density gradient
+            T = np.interp(m,self.starl['mass'],
+                          self.starl['temperature']) # temperature
+            dT_dr = np.interp(m,self.starl['mass'],
+                                self.starl['dT_dr']) # temperature gradient
+            if 'gamma3' in self.starl.dtype.names:   # gamma3-1
+                G3_1 = np.interp(q,self.starl['q'],self.starl['gamma3'])-1.
+            elif 'gamma3_1' in self.starl.dtype.names:
+                G3_1 = np.interp(q,self.starl['q'],self.starl['gamma3_1'])
             #-- compute the horizontal and vertical components
             #   first, we need the angular dimensionless frequency
             omega = mymode['sigma']*t_dynamic
@@ -881,10 +971,20 @@ class StellarModel:
             #   derivative
             Phiprime = self.constants['GG']*M/R*x**l*U
             dPhiprime_dr = self.constants['GG']*M/R**2*x**(l-1)*(V-4*np.pi*R**3*rho/M*Y)
-            #-- compute density perturbation ()
-            #Rhoprime = see page 52 of JCD lecture notes
-            #-- compute temperature perturbation ()
-            #Tprime = see page 208 of JCD lecture notes
+            #-- compute density perturbation: according to Eq. (3.50) in Aerts
+            #   et al 2009 (Asteroseismology), we can use the adiabatic relation
+            #   between pressure and density: deltap/p0 = Gamma1 deltaRho/Rho.
+            #   See also Eq.8 in http://www.s.u-tokyo.ac.jp/en/utrip/archive/2011/pdf/15Anna.pdf
+            #   (Basics of helio- and asteroseismology, Ogorzalek and Shibahashi,2011)
+            #   For still more information, see 52 of JCD lecture notes or for
+            #   conversion to Eulerian see Eq. (3.287) in Aerts et al.
+            #   Lagrangian:
+            dRho_rho = dP_P/G1
+            Rhoprime = dRho_rho*rho-a_r*drho_dr
+            #-- compute temperature perturbation (e.g. p. 244 of Aerts et al.,
+            #   p 208 JCD)
+            dT_T = (G3_1)*dRho_rho
+            Tprime = dT_T*T - a_r*dT_dr
             #-- Dziembowski variables
             dr = a_r
             #dr = np.sqrt(a_r**2 + b_r**2)
@@ -914,8 +1014,11 @@ class StellarModel:
                 logger.info("Masao's check: %.3g"%(np.sqrt((zero**2).sum())))
             
             self.eigenfuncs['losc']['l%d'%(l)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime,Phiprime,dPhiprime_dr,
+                 dRho_rho,Rhoprime,dT_T,Tprime,
                  T*rho*r**2,C*rho*r**2,N*rho*r**2,G*rho*r**2,total,charpinet],
-                 names=['x','ar','br','Pprime','Phiprime','dPhiprime_dr','T','C','N','G','weight','charpinet'])
+                 names=['x','ar','br','Pprime','Phiprime','dPhiprime_dr',
+                        'dRho_rho','Rhoprime','dT_T','Tprime',
+                         'T','C','N','G','weight','charpinet'])
         np.seterr(**old_settings)
         logger.info('LOSC: computed eigenfunctions for l=%d modes %s'%(degree,modes))
                 
@@ -1048,7 +1151,78 @@ class StellarModel:
 
               
 #{ General
+def generate_newx(xx,bruntA,type_mode='g',increase=1.0,debug=False):
+    """
+    Construct a new mesh that is optimized to compute p or g modes (or both)
+    
+    We need the Brunt_A
+    """
+    #-- the step size should be dependent on derivative of brunt_A for g modes,
+    #   with decreasing weight for increase radius coordinate (put more weight
+    #   on core)
+    if 'g' in type_mode:
+        pos = bruntA>0
+        minweight = np.log10(bruntA[pos].min())
+        weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
+        weight = weight/xx**2*increase
+        weight[xx<0.01] = 0
+    else:
+        weight = 5.
+    #-- for p modes, the step size should increase with increase radius
+    #   coordinate (put more weight on envelope)
+    if 'p' in type_mode:
+        weight = 2*weight*xx*increase
+    
+    xind = np.arange(len(xx))
+    minim = np.ones_like(weight)
+    step_new = np.array(np.max(np.vstack([minim,weight]),axis=0),int)
+    x_new = []
+    for i,step in enumerate(step_new[:-1]):
+        x_new.append(np.arange(xx[i],xx[i+1],(xx[i+1]-xx[i])/(step+1)))
+        if len(x_new)>1 and (np.allclose(x_new[-1][0],x_new[-2][-1])):
+            x_new[-1] = x_new[-1][1:]
+    x_new.append([1.])
+    x_new = np.hstack(x_new)
+    
+    if debug:
+        pl.figure()
+        pl.subplot(121)
+        pl.title(type_mode)
+        pl.plot(xx,range(len(xx)))
+        pl.plot(x_new,range(len(x_new)))
+        pl.subplot(122)
+        pl.title('Weight function for mesh increase')
+        pl.plot(xx,weight)
+    return x_new
 
+def improve_sampling(starl,x='x',type_mode='g',increase=1.0,k=5,smoothing=0):
+    """
+    Improve sampling of a record array.
+    """
+    newx = generate_newx(starl[x],starl['brunt_A'],type_mode=type_mode,increase=increase)
+    newstarl = np.zeros(len(newx),dtype=starl.dtype)
+    newstarl[x] = newx
+    for name in starl.dtype.names:
+        if name==x: continue
+        if smoothing>0:
+            #pl.figure()
+            #pl.title(name)
+            #pl.plot(starl[x],starl[name],'-')
+            sigma = 0.002*np.exp(- (0.18-starl[x])**2/(2*0.05**2))
+            #pl.plot(starl[x],sigma_sigma)
+            newx_,newy,pnts = filtering.filter_signal(starl[x],starl[name],'gauss',sigma=sigma)
+            #pl.plot(starl[x],newy,'-')
+            #pl.show()
+            #newstarl[name][0] = starl[name][0]
+            #newstarl[name][-1] = starl[name][-1]
+        else:
+            newy = starl[name]
+        newstarl[name] = interpolate.UnivariateSpline(starl[x],newy,k=k,s=0)(newx)
+        #-- we demand that the start and end of the mesh cannot be different
+        #   than from the beginning
+        newstarl[name][0] = starl[name][0]
+        newstarl[name][-1] = starl[name][-1]
+    return newx,newstarl
 
 def match_losc_adipls(losc,adip):
     """

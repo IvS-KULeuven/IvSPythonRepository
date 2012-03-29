@@ -38,6 +38,55 @@ Get the curves seperately:
 >>> wave4,mag4 = fitzpatrick1999()
 >>> wave5,mag5 = fitzpatrick2004()
 
+
+Section 3. Normalisations
+=========================
+
+>>> wave = np.logspace(3,6,1000)
+>>> photbands = ['JOHNSON.V','JOHNSON.K']
+
+Retrieve two interstellar reddening laws, normalise them to Av and see what
+the ratio between Ak and Av is. Since the L{chiar2006} law is not defined
+in the optical, this procedure actually doesn't make sense for that law. In the
+case of L{cardelli1989}, compute the ratio C{Ak/Av}. Note that you cannot
+ask for the L{chiar2006} to be normalised in the visual, since the curve is
+not defined their! If you really want to do that anyway, you need to derive
+a Ak/Av factor from another curve (e.g. the L{cardelli1989}).
+
+>>> p = pl.figure()
+>>> for name,norm in zip(['chiar2006','cardelli1989'],['Ak','Av']):
+...   wave_,mag_ = get_law(name,wave=wave,norm=norm)
+...   photwave,photflux = get_law(name,wave=wave,norm=norm,photbands=photbands)
+...   p = pl.plot(wave_/1e4,mag_,label=name)
+...   p = pl.plot(photwave/1e4,photflux,'s')
+...   if name=='cardelli1989': print 'Ak/Av = %.3g'%(photflux[1]/photflux[0])
+Ak/Av = 0.114
+>>> p = pl.gca().set_xscale('log')
+>>> p = pl.gca().set_yscale('log')
+>>> p = pl.xlabel('Wavelength [micron]')
+>>> p = pl.ylabel('Extinction A($\lambda$)/Av [mag]')
+
+]include figure]]ivs_sed_reddening_02]
+
+Compute the Cardelli law normalised to Ak and Av.
+
+>>> p = pl.figure()
+>>> wave_av1,mag_av1 = get_law('cardelli1989',wave=wave,norm='Av')
+>>> wave_av2,mag_av2 = get_law('cardelli1989',wave=wave,norm='Av',photbands=['JOHNSON.V'])
+>>> p = pl.plot(wave_av1,mag_av1,'k-',lw=2,label='Av')
+>>> p = pl.plot(wave_av2,mag_av2,'ks')
+
+>>> wave_ak1,mag_ak1 = get_law('cardelli1989',wave=wave,norm='Ak')
+>>> wave_ak2,mag_ak2 = get_law('cardelli1989',wave=wave,norm='Ak',photbands=['JOHNSON.K'])
+>>> p = pl.plot(wave_ak1,mag_ak1,'r-',lw=2,label='Ak')
+>>> p = pl.plot(wave_ak2,mag_ak2,'rs')
+
+>>> p = pl.gca().set_xscale('log')
+>>> p = pl.gca().set_yscale('log')
+>>> p = pl.xlabel('Wavelength [micron]')
+>>> p = pl.ylabel('Extinction A($\lambda$)/A($\mu$) [mag]')
+
+]include figure]]ivs_sed_reddening_03]
 """
 
 import os
@@ -48,7 +97,8 @@ from ivs.io import ascii
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 from ivs.units import conversions
-from ivs.sed import filters
+import filters
+import model
 
 logger = logging.getLogger("SED.RED")
 logger.addHandler(loggers.NullHandler)
@@ -57,7 +107,7 @@ basename = os.path.join(os.path.dirname(__file__),'redlaws')
 
 #{ Main interface
 
-def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
+def get_law(name,norm='E(B-V)',wave_units='A',photbands=None,**kwargs):
     """
     Retrieve an interstellar reddening law.
     
@@ -70,7 +120,7 @@ def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
     ouf the returned wavelength array via C{wave_units}.
     
     By default, the curve is normalised with respect to E(B-V) (you get
-    A(l)/E(B-V)). You can set the C{norm} keyword to Av if you want A(l)/E(B-V).
+    A(l)/E(B-V)). You can set the C{norm} keyword to Av if you want A(l)/Av.
     Remember that
     
     A(V) = Rv * E(B-V)
@@ -91,13 +141,15 @@ def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
     @type norm: str (one of E(B-V), Av)
     @param wave_units: wavelength units
     @type wave_units: str (interpretable for units.conversions.convert)
+    @param photbands: list of photometric passbands
+    @type photbands: list of strings
     @keyword wave: wavelength array to interpolate the law on
     @type wave: ndarray
     @return: wavelength, reddening magnitude
     @rtype: (ndarray,ndarray)
     """
-    wave_ = kwargs.pop('wave',None)
     #-- get the inputs
+    wave_ = kwargs.pop('wave',None)
     Rv = kwargs.setdefault('Rv',3.1)
     
     #-- get the curve
@@ -109,15 +161,29 @@ def get_law(name,norm='E(B-V)',wave_units='A',**kwargs):
             wave_ = conversions.convert(wave_units,'A',wave_)
         mag = np.interp(wave_,wave,mag,right=0)
         wave = wave_
-    
-    #-- convert to A(lambda)/Av if needed
+           
+    #-- pick right normalisation: convert to A(lambda)/Av if needed
     if norm.lower()=='e(b-v)':
         mag *= Rv
-    elif norm.lower()!='av':
-        raise ValueError, "do not understand normalization %s for reddening"%(norm)
+    else:
+        #-- we allow ak and av as shortcuts for normalisation in JOHNSON K and
+        #   V bands
+        if norm.lower()=='ak':
+            norm = 'JOHNSON.K'
+        elif norm.lower()=='av':
+            norm = 'JOHNSON.V'
+        norm_reddening = model.synthetic_flux(wave,mag,[norm])[0]
+        logger.info('Normalisation via %s: Av/%s = %.6g'%(norm,norm,1./norm_reddening))
+        mag /= norm_reddening
+    
+    #-- maybe we want the curve in photometric filters
+    if photbands is not None:
+        mag = model.synthetic_flux(wave,mag,photbands)
+        wave = filters.get_info(photbands)['eff_wave']
+    
     
     #-- set the units of the wavelengths
-    if wave_units != 'A':
+    if wave_units != 'A' and photbands is not None:
         wave = conversions.convert('A',wave_units,wave)
     
     return wave,mag

@@ -17,6 +17,8 @@ from ivs.io import fits
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import numpy_ext as ne
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 logger = logging.getLogger("IVS.STAR.FILEIO")
 
@@ -79,6 +81,15 @@ def read_mesa(filename='star.log',only_first=False):
         logger.info('MESA log %s read'%(filename))
     
     return models
+
+def list_mesa_data(filename='profiles.index'):
+    """
+    Return a chronological list of *.data files in a MESA LOG directory
+    """
+    number,priority,lognr = ascii.read2array(filename,skip_lines=1).T
+    logfiles = [os.path.join(os.path.dirname(filename),'log%d.data'%(nr)) for nr in lognr]
+    return number,logfiles
+            
 
 def read_mesa_fits(filename,ext=2):
     """
@@ -211,6 +222,45 @@ def read_cles_dat(filename,do_standardize=False):
     
     return starg,star
 
+
+def read_cles_sum(sumfile):
+    """
+    Read the input from a CLES '.sum' file.
+    
+    Possible only MS.
+    """
+    c = {'summary':{'logTeff':7,'logg':11,'M':2,'R':10,'logL':8,'age':6},
+         'sum':    {'logTeff':2,'logg': 8,'M':6,'R': 7,'logL':3,'age':1,'num':0,'Xc':4}}
+    
+    data = ascii.read2array(sumfile)
+    
+    if 'summary' in sumfile:
+        t = 'summary'
+    else:
+        t = 'sum'
+        #-- not all info readily available, build it
+        data_ = np.zeros((len(data[:,0]),3))
+        mass = float(os.path.basename(sumfile).split('_')[0][1:])
+        data_[:,0] = mass
+        radi = conversions.derive_radius((data[:,c[t]['logL']],'[Lsol]'),\
+                                         (data[:,c[t]['logTeff']],'[K]'),unit='Rsol')
+        data_[:,1] = radi
+        logg_ = conversions.derive_logg((float(mass),'Msol'),(data_[:,1],'Rsol'))
+        data_[:,2] = logg_
+        data = np.hstack([data,data_])
+    
+    keys = np.array(c[t].keys())
+    cols = np.array([c[t][key] for key in keys])
+    sa = np.argsort(cols)
+    keys = keys[sa]
+    cols = cols[sa]
+    print c
+    print zip(keys,cols)
+    mydata = np.rec.fromarrays([data[:,col] for col in cols],names=list(keys))
+    
+    logger.debug('CLES summary %s read'%(sumfile))
+    
+    return mydata
 #}
 #{ ADIPLS
 
@@ -412,7 +462,7 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     Automatically detect the format of the stellar evolution file.
     
     This function also adds additional information that can be derived from the
-    given information, but is sometimes handy for plotting reasons or to
+    given information, which is sometimes handy for plotting reasons or to
     compute frequencies.
     
     @param filename: name of the file
@@ -431,6 +481,10 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
         basename,ext = os.path.splitext(filename)
     elif isinstance(filename,pyfits.HDUList):
         ext = '.fits'
+    else:
+        starg,starl = filename
+        ext = None
+        _from = None
     #-- MESA
     if ext in ['.log','.data']:
         starg,starl = read_mesa(filename)
@@ -441,15 +495,18 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     elif ext in ['.dat']:
         starg,starl = read_cles_dat(filename)
         _from = 'cles'
+        
     
     if do_standardize:
         #-- if values is set to automatic, set the values for the fundamental
         #   constants to the set defined in the pulsation/stellar evolution code
-        if values=='auto':
+        if values=='auto' and _from is not None:
             values=_from
             old = conversions.set_convention(units,values)
         starg = standardize(starg,_from,'global',units=units)
         starl = standardize(starl,_from,'local',units=units)
+        if ext in ['.log']:
+            starl = starl[::-1]
         #-- now just add some other parameters for which we need both the
         #   global and local parameters:
         available = starl.dtype.names
@@ -484,7 +541,7 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
         logger.info("Standardized model")
     
         #-- reset convention to what it was before
-        if values=='auto':
+        if values=='auto' and _from is not None:
             conversions.set_convention(old[0],old[1])
     
     np.seterr(**old_settings)
@@ -543,49 +600,60 @@ def standardize(star,_from,info='local',units='cgs'):
         for name in star.dtype.names:
             star_[name] = star[name][0]
         star = star_
-
-    mesa_onames,mesa_names,mesa_units = read_cols(os.path.join(basedir,'mesa_{0}.cols'.format(info)))
-    mnames,onames,ounits = read_cols(os.path.join(basedir,_from+'_{0}.cols'.format(info)))
     
     if hasattr(star,'keys'):
         keys = star.keys()
     else:
         keys = star.dtype.names
-        
-    new_star = {}
-    for key in keys:
-        #-- maybe we cannot convert the column (yet):
-        try:
-            index = onames.index(key)
-        except ValueError:
-            logger.debug('Cannot convert %s from (%s,%s) to mesa name (skipping)'%(key,_from,info))
-            continue
-        #-- maybe information is not in 'standard' list. If it is, convert to
-        #   standard units and standard name. Otherwise, just change the name
-        try:
-            if ounits[index]=='ignore':
-                continue
-            mindex = mesa_names.index(mnames[index])
-            if ounits[index]=='n' and mesa_units[mindex]=='n kg':
-                value = star[key]*getattr(constants,mnames[index].title())
-            elif mesa_units[mindex] or ounits[index]:
-                value = conversions.convert(ounits[index],units,star[key])
-            else:
-                value = star[key]
-        except ValueError:
-            #logger.warning('Cannot convert %s to mesa units (keeping original units)'%(key))
-            value = star[key]
-            
-        new_star[mnames[index]] = value
     
-    #-- if input was not a dictionary, convert it to a record array
-    if not hasattr(star,'keys'):
-        names = new_star.keys()
-        data = [new_star[name] for name in names]
-        new_star = np.rec.fromarrays(data,names=names)
-        keys = names
+    if _from is not None:
+        mesa_onames,mesa_names,mesa_units = read_cols(os.path.join(basedir,'mesa_{0}.cols'.format(info)))
+        mnames,onames,ounits = read_cols(os.path.join(basedir,_from+'_{0}.cols'.format(info)))        
+        
+        new_star = {}
+        for key in keys:
+            #-- maybe we cannot convert the column (yet):
+            try:
+                index = onames.index(key)
+            except ValueError:
+                logger.debug('Cannot convert %s from (%s,%s) to mesa name (skipping)'%(key,_from,info))
+                continue
+            #-- maybe information is not in 'standard' list. If it is, convert to
+            #   standard units and standard name. Otherwise, just change the name
+            try:
+                if ounits[index]=='ignore':
+                    continue
+                mindex = mesa_names.index(mnames[index])
+                if ounits[index]=='n' and mesa_units[mindex]=='n kg':
+                    value = star[key]*getattr(constants,mnames[index].title())
+                elif mesa_units[mindex] or ounits[index]:
+                    value = conversions.convert(ounits[index],units,star[key])
+                else:
+                    value = star[key]
+            except ValueError:
+                #logger.warning('Cannot convert %s to mesa units (keeping original units)'%(key))
+                value = star[key]
+            
+            new_star[mnames[index]] = value
+        #-- if input was not a dictionary, convert it to a record array
+        if not hasattr(star,'keys'):
+            names = new_star.keys()
+            data = [new_star[name] for name in names]
+            new_star = np.rec.fromarrays(data,names=names)
+            keys = names
+        else:
+            keys = star.keys()
     else:
-        keys = star.keys()
+        if not hasattr(star,'keys'):
+            names = star.dtype.names
+            data = [star[name] for name in names]
+            new_star = np.rec.fromarrays(data,names=names)
+            keys = list(names)
+        else:
+            new_star = star
+            keys = star.keys()
+    
+    
     
     #-- some profiles start at the surface...
     if info=='local' and _from in ['mesa']:
@@ -609,7 +677,13 @@ def standardize(star,_from,info='local',units='cgs'):
         dP_dr[0] = 0
         new_star = pl.mlab.rec_append_fields(new_star,['dP_dr'],[dP_dr])
         logger.info('Derived dP_dr from model info (%s, %s)'%(_from,info))
+        keys.append('dP_dr')
     #-- Brunt A
+    if info=='local' and not 'brunt_A' in keys and 'brunt_N2' in keys:
+        A = new_star['brunt_N2']*new_star['radius']/new_star['g']
+        new_star = pl.mlab.rec_append_fields(new_star,['brunt_A'],[A])
+        logger.warning('Brunt A via brunt N2')
+        keys.append('brunt_A')
     if info=='local' and not 'brunt_A' in keys and 'radius' in keys and 'Rho' in keys \
         and 'gamma1' in keys and 'pressure' in keys and 'dP_dr' in keys:
         r,rho,G1,P = new_star['radius'],new_star['Rho'],new_star['gamma1'],new_star['pressure']
@@ -675,4 +749,173 @@ def standardize(star,_from,info='local',units='cgs'):
     #-- that's it!
     return new_star
         
+#}
+
+
+#{ General plotting routines
+
+def plot_logRho_logT(starl):
+    """
+    Plot Density -Temperature diagram for one given profile.
+    """
+    #-- list all burning regions
+    pl.xlabel('log (Density [g cm$^{-1}$]) [dex]')
+    pl.ylabel('log (Temperature [K]) [dex]')
+    for species in ['hydrogen','helium','carbon','oxygen']:
+        logRho,logT = ascii.read2array(os.path.join(os.path.dirname(__file__),'plot_info','%s_burn.data'%(species))).T
+        pl.plot(logRho,logT,'k--',lw=2)
+        pl.annotate(species,(logRho[-1],logT[-1]),ha='right')
+    
+    bounds = ['elect','gamma_4_thirds','kap_rad_cond_eq','opal_clip','psi4','scvh_clip']
+    bounds = ['gamma_4_thirds','opal_clip','scvh_clip']
+    names = ['$\Gamma$<4/3','OPAL','SCVH']
+    for limits,name in zip(bounds,names):
+        logRho,logT = ascii.read2array(os.path.join(os.path.dirname(__file__),'plot_info','%s.data'%(limits))).T
+        pl.plot(logRho,logT,'--',lw=2,color='0.5')
+        xann,yann = logRho.mean(),logT.mean()
+        pl.annotate(name,(xann,yann),color='0.5')
+    #-- plot stellar profile
+    color_radiative = 'g'
+    color_convective = (0.33,0.33,1.00)
+
+    x = np.log10(starl['Rho'])
+    y = np.log10(starl['temperature'])
+    
+    # first convective regions and radiative regions
+    stab_type = starl['stability_type']
+    # Create a colormap for convective and radiative regions
+    cmap = ListedColormap([color_radiative,color_convective])
+    norm = BoundaryNorm([0, 1, 5], cmap.N)
+    # Create a set of line segments so that we can color them individually
+    # This creates the points as a N x 1 x 2 array so that we can stack points
+    # together easily to get the segments. The segments array for line collection
+    # needs to be numlines x points per line x 2 (x and y)
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    # Create the line collection object, setting the colormapping parameters.
+    # Have to set the actual values used for colormapping separately.
+    lc = LineCollection(segments, cmap=cmap, norm=norm)
+    lc.set_array(stab_type)
+    lc.set_linewidth(10)
+    pl.gca().add_collection(lc)
+    
+    # burning regions
+    limits = [0,1,1e3,1e7,np.inf]
+    burn = starl['eps_nuc'][:-1]
+    colors = np.zeros((len(segments),4))
+    colors[:,0] = 1
+    colors[:,-1] = 1
+    colors[(burn<=1e0),-1] = 0
+    colors[(1e0<burn)&(burn<=1e3),1] = 1
+    colors[(1e3<burn)&(burn<=1e7),1] = 0.5
+    
+    # Create the line collection object, setting the colormapping parameters.
+    # Have to set the actual values used for colormapping separately.
+    lc = LineCollection(segments,colors=colors)
+    lc.set_linewidth(4)
+    pl.gca().add_collection(lc)
+    
+    p1 = pl.Line2D([0,0],[1,1], color=(1,1.0,0),lw=3)
+    p2 = pl.Line2D([0,0],[1,1], color=(1,0.5,0),lw=3)
+    p3 = pl.Line2D([0,0],[1,1], color=(1,0,0),lw=3)
+    p4 = pl.Line2D([0,0],[1,1], color='g',lw=3)
+    p5 = pl.Line2D([0,0],[1,1], color=(0.33,0.33,1.0),lw=3)
+    leg = pl.legend([p1,p2,p3,p4,p5], [">1 erg/s/g",">10$^3$ erg/s/g",">10$^7$ erg/s/g",'Radiative','Convective'],loc='best',fancybox=True)
+    leg.get_frame().set_alpha(0.5)
+    
+    
+    pl.xlim(-10,11)
+    pl.ylim(4.0,9.4)
+
+def plot_Kiel_diagram(starl):
+    """
+    Plot Kiel diagram.
+    """
+    x = starl['temperature']
+    y = starl['g']
+    age = starl['age']/1e6
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    
+    cmap = pl.cm.spectral
+    norm = pl.Normalize(age.min(), age.max())
+    lc = LineCollection(segments, cmap=cmap,norm=norm)
+    lc.set_array(age)
+    lc.set_linewidth(3)
+    pl.gca().add_collection(lc)
+    pl.xlim(x.max(), x.min())
+    pl.ylim(y.max(), y.min())
+    pl.xlabel('Effective temperature [K]')
+    pl.ylabel('log(surface gravity [cm s$^{-2}$]) [dex]')
+    
+    ax0 = pl.gca()
+    ax1 = pl.mpl.colorbar.make_axes(ax0)[0]
+    norm = pl.mpl.colors.Normalize(age.min(), age.max())
+    cb1 = pl.mpl.colorbar.ColorbarBase(ax1, cmap=cmap,
+                                   norm=norm,orientation='vertical')
+    cb1.set_label('Age [Myr]')
+    pl.axes(ax0)
+    
+def plot_abundances(starl,x='q',species=('h1','he4','c12','o16','n14')):
+    """
+    Plot abundance profile
+    """
+    colors = dict(h1='b',he4='g',c12='k',o16='r',n14=(0.58,0.,0.83))
+    for spec in species:
+        pl.plot(starl[x],starl[spec],color=colors[spec],lw=2,label=spec)
+    leg = pl.legend(loc='best',fancybox=True)
+    leg.get_frame().set_alpha(0.5)
+    pl.xlabel(x)
+    pl.ylabel('Element mass fraction')
+
+
+
+def plot_add_convection(starl,x='q'):
+    stabtype = starl['stability_type']
+    x = starl[x]
+    #-- search for the limits of convection types
+    limits = [[stabtype[0],x[0]]]
+    for i in range(1,len(x)):
+        if stabtype[i]!=limits[-1][0]:
+            limits[-1].append(x[i])
+            limits.append([stabtype[i],x[i]])
+    limits[-1].append(x[-1])
+    alphas = [0.1,0.25,0.1,0.5,0.5]
+    colors = ['k','y','k','g','r'] # no conv / conv /  / only ledou / only sch
+    alphas = [1.0,0.5,0.5,0.5,0.5]
+    colors = ['k',(0.33,0.33,1.0),(0.33,0.33,1.0),(0.33,0.33,1.0),(0.33,0.33,1.0)]
+    for limit in limits:
+        if limit[0]==0: continue
+        index = int(limit[0])
+        logger.info('Convection region between %g-%g (%s,color=%s)'%(limit[1],limit[2],
+                     ['Stable','Unstable','nan','Ledoux stable','Schwarzschild stable'][index],
+                     colors[index]))
+        out = pl.axvspan(limit[1],limit[2],color=colors[index],alpha=alphas[index])
+
+
+def plot_add_burn(starl,x='q'):
+    burn = starl['eps_nuc']
+    burntype = np.zeros(len(burn))
+    burntype[(burn<=1e0)] = 0
+    burntype[(1e0<burn)&(burn<=1e3)] = 1
+    burntype[(1e3<burn)&(burn<=1e7)] = 2
+    burntype[(1e7<burn)] = 3
+    x = starl[x]
+    #-- search for the limits of convection types
+    limits = [[burntype[0],x[0]]]
+    for i in range(1,len(x)):
+        if burntype[i]!=limits[-1][0]:
+            limits[-1].append(x[i])
+            limits.append([burntype[i],x[i]])
+    limits[-1].append(x[-1])
+    alphas = [1.0,0.5,0.5,0.5,0.5]
+    colors = ['k',(1.00,1.00,0.0),(1.00,0.50,0.0),(1.00,0.00,0.0)]
+    for limit in limits:
+        if limit[0]==0: continue
+        index = int(limit[0])
+        logger.info('Burning between %g-%g (%s,color=%s)'%(limit[1],limit[2],
+                     ['Low','Mid','High'][index],
+                     colors[index]))
+        out = pl.axvspan(limit[1],limit[2],color=colors[index],alpha=alphas[index])
+
 #}
