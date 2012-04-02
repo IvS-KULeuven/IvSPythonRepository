@@ -5,8 +5,6 @@ Interfaces to LOSC and ADIPLS pulsation codes.
 import os
 import logging
 import subprocess
-import functools
-import json
 import itertools
 
 import pyosclib
@@ -16,6 +14,7 @@ from ivs.stellar_evolution import adipls
 from ivs.units import constants
 from ivs.units import conversions
 from ivs.sigproc import filtering
+from ivs.sigproc import interpol
 from ivs.aux import numpy_ext as ne
 from ivs.sed import model
 
@@ -56,23 +55,22 @@ class StellarModel:
         Preferably, star_model is a filename of a recognised stellar evolution
         code. Otherwise, it must be a tuple containing global parameters and
         local parameters, in the right (cgs) units.
-        
-        
         """
-        model = 'model'
-        self.master = codes[0]
-        self.codes = codes
+        #-- we can receive files, arrays or opened FITS files.
         if isinstance(star_model,str):
             logger.info('Received file %s'%(star_model))
         elif isinstance(star_model,tuple):
             logger.info('Received array')
         else:
             logger.info('Received ext %s from FITS HDUList'%(kwargs['ext']))
-        
+        #-- read the stellar model and keep a proper list of fundamental
+        #   constants
         starg,starl,mtype = fileio.read_starmodel(star_model,do_standardize=True,**kwargs)
-                
         self.constants = conversions.get_constants(units='cgs',values='standard')
-        
+        #-- global properties
+        model = 'model'
+        self.master = codes[0]
+        self.codes = codes
         self.starg = starg
         self.starl = starl
         self.eigenfreqs = {}
@@ -91,30 +89,15 @@ class StellarModel:
         
         This effectively initiates LOSC, except for calling the meshing
         """
-        #r,m,P,rho,G1 = self.starl['radius'],self.starl['mass'],self.starl['pressure'],\
-        #               self.starl['Rho'],self.starl['gamma1']
-        #for arr in [r,m,P,rho,G1]:
-        #    if np.any(np.isnan(arr)): raise ValueError
-        #    if np.any(np.isinf(arr)): raise ValueError
-        #output,R,M = physical2osc(r,m,P,rho,G1,G=self.constants['GG'])
         output,R,M = star2losc(self.starg,self.starl,G=self.constants['GG'])
-        #if np.isnan(output[1][0]):
-        #    output[1][0] = 0
         shapenow = output.shape[1]
         if shapenow>=np0max:
             raise ValueError,'Mesh is too fine... now what? (%d>%d)'%(shapenow,np0max)
         else:
             logger.info('Initiated LOSC model with %d meshpoints'%(shapenow))
-            #bla = self._get_current_losc_model()
-            #print bla.shape
         shapeadd = np0max-shapenow
         output = np.hstack([output,np.zeros((6,shapeadd))])
         output = np.array(output,float)
-        
-        #print 'output',output.shape,shapenow
-        #pyosclib.readmodpyg(np.zeros_like(output),0,6001,R,M,'model',self.constants['GG'],
-                                                            #self.constants['Msol'])
-        #pyosclib.mesh(0,6001,0)
         pyosclib.readmodpyg(output,0,shapenow+1,R,M,'model',self.constants['GG'],
                                                             self.constants['Msol'])
         pyosclib.mesh(0,shapenow+1,0)
@@ -308,15 +291,26 @@ class StellarModel:
     
     #{ Resampling
     
-    def resample(self,increase=2,method='simple',mode_type=None,n_new=5000,int_method='spline',**kwargs):
+    def resample(self,increase=2,method='simple',mode_type=None,n_new=5000,
+                 int_method='poly',x='radius',**kwargs):
         """
         Resample the current mesh.
         
+        Methods:
+            - C{method='simple'}: simple smoothed repartition of x vector.
+            Possible interpolation schemes are C{int_method='linear'} and
+            C{int_method='poly'}.
+            - C{method='g'}: repartition of x vector is weighted with Brunt-
+            Vaisalaa frequency and distance to the core. Possible interpolation
+            schemes are C{linear} and C{poly}.
+            - C{method='p'}:
+        
         @parameter increase: increase the resolution of the mesh with this factor.
         """
-        r = self.starl['radius']
-        myR = self.starl['radius'].max()
-        myC = self.starl['radius'].min()
+        xx = self.starl[x]
+        myR = self.starl[x].max()
+        myC = self.starl[x].min()
+        
         R = self.starg['photosphere_r']
         
         #-- check if our input model is OK
@@ -325,32 +319,24 @@ class StellarModel:
             if np.any(weird):
                 logger.warning('NaN or inf encountered in %s (before resampling), setting to zero'%(name))            
         
-        n_init = len(r)
+        n_init = len(xx)
         #-- my own simple method
         if 'simple' in method.lower():
-            if method.lower()=='simple':
-                newr = r.copy()
-                new_starl = self.starl.copy()
-                newr = sorted(np.hstack([newr[:-1],newr[:-1]+np.diff(newr)/2,[newr[-1]]]))
-                new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
-            elif method.lower()=='still_simple':
-                new_starl = self.starl.copy()
-                limit = 0.15
-                old = r>limit*r.max()
-                newr = np.hstack([np.linspace(r.min(),r[-old].max(),n_new),r[old]])
-                new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
+            #-- repartition
+            newxx = repartition(xx,n_new=n_new,**kwargs)
+            new_starl = np.zeros(len(newxx),dtype=self.starl.dtype)
+            #-- interpolate
             for name in new_starl.dtype.names:
-                if name=='radius':
-                    new_starl['radius'] = newr
+                #-- don't interpolate radius
+                if name==x:
+                    new_starl[x] = newxx
                     continue
+                #-- linear interpolation
                 if int_method=='linear':
-                    f = interpolate.interp1d(r,self.starl[name])
-                    new_starl[name] = f(newr)
-                elif int_method=='spline':
-                    #new_starl[name] = interpolate.barycentric_interpolate(r,self.starl[name],newr)
-                    ius = interpolate.InterpolatedUnivariateSpline(r,self.starl[name])
-                    new_starl[name] = ius(newr)
-                    new_starl[name][0] = self.starl[name][0]
+                    new_starl[name] = np.interp(newxx,xx,self.starl[name])
+                #-- local polynomial interpolation
+                elif int_method=='poly':
+                    new_starl[name] = interpol.local_interpolation(newxx,xx,self.starl[name])
             
         elif 'optimized' in method.lower():
             newr,new_starl = improve_sampling(self.starl,increase=increase,**kwargs)
@@ -509,24 +495,18 @@ class StellarModel:
         pl.subplot(236,sharex=ax1);pl.title('dP_dr')
         pl.plot(r,dPdr)
     
-    def plot_pulsation_model(self,x='x',color_cycle=None):
+    def plot_pulsation_model(self,x='x',color_cycle=None,codes=['losc','adipls']):
+        """
+        Plot the profiles that are used to calculate pulsations.
+        """
         star = self._get_current_losc_model()
         starg,starl = self.starg,self.starl
-        #['Vg','gamma1','A']
         
         if color_cycle is None:
             color_cycle = itertools.cycle(['k','r'])
         
         c1 = color_cycle.next()
         c2 = color_cycle.next()
-        
-        
-        #pl.figure()
-        #pl.plot(self.starl[x],(star[1]-star[1][0])/self.starl[x]**2,'k-')
-        #pl.show()
-        
-        
-        
             
         if len(self.codes)>1 and not np.all(star[0]==0):
             if not star.shape[1]==starl.shape[0]:
@@ -584,7 +564,8 @@ class StellarModel:
         pl.plot(star[0],range(len(star[0])),'-',lw=2,color=c1)
         pl.plot(self.starl[x],range(len(starl['x'])),'--',lw=2,color=c2)    
     
-    def plot_frequencies(self,master='losc',degree=0,graph_type='frequency',**kwargs):
+    def plot_frequencies(self,master='losc',degree=0,graph_type='frequency',
+              x=None,**kwargs):
         """
         Plot of computed frequencies.
         
@@ -596,8 +577,35 @@ class StellarModel:
             dperiod = conversions.Unit(period[0][:-1]-period[0][1:],period[1])
             spacing = dperiod.convert('s')[0]
             period = period.convert('d')
-            pl.plot(period[0][:-1],spacing,'o-',**kwargs)
-            pl.plot(pl.xlim(),[spacing.mean(),spacing.mean()],'--',**kwargs)
+            if x is not None:
+                x_ = self.eigenfreqs[master]['l%d'%(degree)][x][:-1]
+                xlabel = x
+            else:
+                x_ = period[0][:-1]
+                xlabel = 'Period [d]'
+            pl.plot(x_,spacing,**kwargs)
+            pl.xlabel(xlabel)
+            pl.ylabel('Period spacing [s]')
+            print "Mean period spacing:",spacing.mean()
+            return spacing.mean()
+        elif graph_type=='frequency spacing':
+            freqs  = self.eigenfreqs[master]['l%d'%(degree)]['frequency']
+            dfreqs = np.diff(freqs)
+            if x is not None:
+                x_ = self.eigenfreqs[master]['l%d'%(degree)][x][:-1]
+                xlabel = x
+            else:
+                x_ = freqs[:-1]
+                xlabel = 'Frequency [%s]'%(self.unit)
+            pl.plot(x_,dfreqs,**kwargs)
+            pl.xlabel(xlabel)
+            pl.ylabel('Frequency spacing [%s]'%(self.unit))
+            print "Mean frequency spacing:",dfreqs.mean()
+            return dfreqs.mean()
+        elif graph_type=='frequency':
+            freqs = self.eigenfreqs[master]['l%d'%(degree)]['frequency']
+            pl.vlines(freqs,0,1,**kwargs)
+            pl.xlabel('Frequency [%s]'%(self.unit))
     
     def plot_frequency_matching(self,master='losc'):
     
@@ -1151,73 +1159,145 @@ class StellarModel:
 
               
 #{ General
-def generate_newx(xx,bruntA,type_mode='g',increase=1.0,debug=False):
+def repartition(xx,n_new=None,smooth=9,sigma=None,full_output=False):
+    """
+    Repartition and increase length of a vector.
+    
+    The new partition of the vector is more smoothed.
+    
+    Keyword C{smooth} sets the smoothness (the higher, the smoother). The
+    keyword C{sigma} can be used to give additional weights to regions in the
+    star.
+    
+    The start and end of the new C{xx} will be exactly the same as the original.
+    
+    @parameter xx: original x vector
+    @type xx: ndarray
+    @parameter n_new: length of the new repartitioned vector (defaults to length
+    of original vector)
+    @type n_new: None/int
+    @parameter smooth: smoothness parameter
+    @type smooth: int
+    @parameter sigma: weights for repartitioning
+    @type sigma: ndarray
+    @parameter full_output: if True, function returns new x and weights
+    @type full_output: bool
+    @return: repartitioned vector
+    @rtype: ndarray
+    """
+    if n_new is None:
+        n_new = len(xx)
+    #-- compute the weights for smoothing
+    W1,W2 = smooth//2,smooth-smooth//2
+    sigma_i = [smooth/(xx[i+W2]-xx[i-W1]) for i in range(W1,len(xx)-W2)]
+    sigma_i = [smooth/(xx[i+smooth]-xx[i]) for i in range(W1)] + sigma_i
+    sigma_i = sigma_i + [smooth/(xx[i]-xx[i-smooth]) for i in range(len(xx)-W2,len(xx))]
+    sigma_i = np.array(sigma_i)
+    logger.info('Repartitioning with smoothness %d'%(smooth))
+    #-- if needed, compute locally adapted weights
+    if sigma is not None:
+        sigma_i = sigma_i*sqrt(sigma)
+        logger.info('Repartitioning with locally adapted weights')
+    #-- normalise the weights
+    k = n_new/sum(sigma_i[:-1]*np.diff(xx))
+    sigma_i = k*sigma_i    
+    #-- repartition until points are exhausted
+    xx_new = np.zeros(n_new)
+    xx_new[0] = xx[0]
+    i = 1
+    for j,jsigma in enumerate(sigma_i[:-1]):
+        if i==n_new:
+            break
+        while (xx_new[i-1]+1./jsigma)<=xx[j+1]:
+            xx_new[i] = xx_new[i-1]+1./jsigma
+            i+=1
+            if i==n_new:
+                break
+    #-- replace last point with original last point
+    xx_new[-1] = xx[-1]
+    if full_output:
+        return xx_new,sigma_i
+    else:
+        return xx_new
+        
+
+def generate_newx(xx,bruntA,n_new=None,type_mode='g',
+               smooth_bruntA=0.005,smooth_mesh=9,
+               full_output=False):
     """
     Construct a new mesh that is optimized to compute p or g modes (or both)
     
+    If you give C{type_mode==None}, the mesh is only smoothed, not locally
+    enhanced.
+    
     We need the Brunt_A
+    
+    @parameter smooth_mesh: smoothness parameter for mesh
+    @type smooth_mesh: int
     """
-    #-- the step size should be dependent on derivative of brunt_A for g modes,
-    #   with decreasing weight for increase radius coordinate (put more weight
-    #   on core)
+    #-- the step size should be dependent on brunt_A for g modes, with
+    #   decreasing weight for increase radius coordinate (put more weight on the
+    #   core). If needed, the bruntA can be smoothed first
+    if smooth_bruntA>0:
+        x_,bruntA,points = filtering.filter_signal(xx,bruntA,'gauss',sigma=smooth_bruntA*xx.max())
+        logger.info('Brunt A smoothed for computation of weights')
+    #-- step size is dependent on logarithm of brunt A (with a minimum where
+    #   brunt A is zero), with extra weight on core
     if 'g' in type_mode:
         pos = bruntA>0
         minweight = np.log10(bruntA[pos].min())
         weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
-        weight = weight/xx**2*increase
-        weight[xx<0.01] = 0
+        weight = weight/xx**2
     else:
         weight = 5.
     #-- for p modes, the step size should increase with increase radius
     #   coordinate (put more weight on envelope)
     if 'p' in type_mode:
-        weight = 2*weight*xx*increase
-    
-    xind = np.arange(len(xx))
-    minim = np.ones_like(weight)
-    step_new = np.array(np.max(np.vstack([minim,weight]),axis=0),int)
-    x_new = []
-    for i,step in enumerate(step_new[:-1]):
-        x_new.append(np.arange(xx[i],xx[i+1],(xx[i+1]-xx[i])/(step+1)))
-        if len(x_new)>1 and (np.allclose(x_new[-1][0],x_new[-2][-1])):
-            x_new[-1] = x_new[-1][1:]
-    x_new.append([1.])
-    x_new = np.hstack(x_new)
-    
-    if debug:
-        pl.figure()
-        pl.subplot(121)
-        pl.title(type_mode)
-        pl.plot(xx,range(len(xx)))
-        pl.plot(x_new,range(len(x_new)))
-        pl.subplot(122)
-        pl.title('Weight function for mesh increase')
-        pl.plot(xx,weight)
-    return x_new
+        weight = 2*weight*xx
+    #-- weights cannot be zero
+    weight[weight==0] = weight[weight>0].min()
+    x_new,weight = repartition(xx,n_new=n_new,sigma=weight,smooth=smooth_mesh,
+                               full_output=True)
 
-def improve_sampling(starl,x='x',type_mode='g',increase=1.0,k=5,smoothing=0):
+    if full_output:
+        return x_new,weight
+    else:
+        return x_new
+
+def remesh(starl,x='x',n_new=None,type_mode='g',smoothing=0,
+            smooth_mesh=9,smooth_weights=0.005,smooth_profile=0.002):
     """
-    Improve sampling of a record array.
+    Improve sampling of a local star record array.
+    
+    The are the actions that are taken:
+        1. A new x-axis is generated, locally smoothed (C{smooth_mesh}, see 
+        L{repartition} and possibly locally adapted for the type of modes
+        (C{type_mode}, see L{generate_newx}). The latter uses the Brunt-A, which
+        can be smoothed with C{smooth_weights} (see C{smooth_bruntA} in
+        L{generate_newx}).
+        2. All quantities defined in the local star record array are
+        interpolated on the new mesh, with the possibility to locally smoothen
+        the profiles, with a smoothing factor that is proportional to the
+        logarithm of the brunt A but inverse propertional to the distance
+        within the star (C{smooth_profile=0.002}). The interpolation method is
+        the local polynomial interpolation of Marc-Antoine Dupret.
+        
     """
-    newx = generate_newx(starl[x],starl['brunt_A'],type_mode=type_mode,increase=increase)
+    #-- STEP 1
+    #-- make a new x array
+    newx = generate_newx(starl[x],starl['brunt_A'],n_new=n_new,type_mode=type_mode,
+           smooth_mesh=smooth_mesh,smooth_bruntA=smooth_weights)
+    #-- STEP 2
     newstarl = np.zeros(len(newx),dtype=starl.dtype)
     newstarl[x] = newx
     for name in starl.dtype.names:
         if name==x: continue
-        if smoothing>0:
-            #pl.figure()
-            #pl.title(name)
-            #pl.plot(starl[x],starl[name],'-')
-            sigma = 0.002*np.exp(- (0.18-starl[x])**2/(2*0.05**2))
-            #pl.plot(starl[x],sigma_sigma)
+        if smooth_profile>0:
+            sigma = smooth_profile*np.exp(- (0.18-starl[x])**2/(2*0.05**2))
             newx_,newy,pnts = filtering.filter_signal(starl[x],starl[name],'gauss',sigma=sigma)
-            #pl.plot(starl[x],newy,'-')
-            #pl.show()
-            #newstarl[name][0] = starl[name][0]
-            #newstarl[name][-1] = starl[name][-1]
         else:
             newy = starl[name]
-        newstarl[name] = interpolate.UnivariateSpline(starl[x],newy,k=k,s=0)(newx)
+        newstarl[name] = interpol.local_interpolation(newx,starl[x],newy)
         #-- we demand that the start and end of the mesh cannot be different
         #   than from the beginning
         newstarl[name][0] = starl[name][0]
