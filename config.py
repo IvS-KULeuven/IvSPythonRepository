@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 """
 Global configuration of the IvS package.
+
+Usage: $ python config.py
 """
+
 import os
 import sys
 import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
-data_dirs = [os.getenv('ivsdata'),'/STER/100/pieterd/IVSDATA/', '/STER/kristofs/IVSdata']
+data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata']
+
+data_dirs = [os.getenv('ivsdata'),
+             '/STER/100/pieterd/IVSDATA/', 
+             '/STER/kristofs/IVSdata']
+             
 ivs_dirs = dict(coralie='/STER/coralie/',
                 hermes='/STER/mercator/hermes/')
          
@@ -42,6 +50,9 @@ def get_datafile(relative_path,basename):
         raise IOError, "File %s not found in any of the specified data directories %s"%(relative_file,str_data_dirs)
     
     return filename
+
+
+
 
 def glob(relative_path,arg='*'):
     """

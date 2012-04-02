@@ -131,7 +131,7 @@ def findext(lng, lat, model='drimmel', distance=None, **kwargs):
 # Astrophysics (ISSN 0004-6361), vol. 258, no. 1, p. 104-111.)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def findext_arenou(ll, bb, distance=None):
+def findext_arenou(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1, norm='Av'):
   """
   Find the predicted V-band extinction (Av) according to the
   3D model for galactic extinction of Arenou et al, "Modelling
@@ -194,7 +194,11 @@ def findext_arenou(ll, bb, distance=None):
       av = alpha*distance + beta*distance**2.
     else:
       av = alpha*rr0 + beta*rr0**2. + (distance-rr0)*gamma
-  return av
+  
+  #-- Marshall is standard in Ak, but you can change this:
+  redwave, redflux = get_law(redlaw,Rv=Rv,norm=norm,photbands=['JOHNSON.V'])
+  
+  return av/redflux[0]
 
 def _getarenouparams(ll,bb):
   """
@@ -658,11 +662,18 @@ def get_marshall_data():
   data_ma, units_ma, comments_ma = vizier.tsv2recarray(filen)
   return data_ma, units_ma, comments_ma
 
-def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kwargs):
+def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1, norm='Av',**kwargs):
   """
   Find the V-band extinction according to the reddening model of
   Marshall et al. (2006) published in Astronomy and Astrophysics,
   Volume 453, Issue 2, July II 2006, pp.635-651
+  
+  The band in which the extinction is calculated is actually optional, and given
+  with the keyword C{norm}. If you set C{norm='Av'}, you get visual extinction
+  (in JOHNSON.V) band, if you set C{norm='Ak'}, you get infrared extinction
+  (in JOHNSON.K). If you want the extinction in different passbands, you can
+  set them via C{norm='GENEVA.V'}. So, C{norm='Av'} is equivalent to setting
+  C{norm='JOHNSON.V'}.
   
   Example usage:
     
@@ -673,7 +684,7 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
        
         >>> lng = 10.2
         >>> lat = 9.0
-        >>> ak = findext_marshall(lng, lat)
+        >>> ak = findext_marshall(lng, lat, norm='Ak')
         >>> print("Ak at lng = %.2f, lat = %.2f is %.2f magnitude" %(lng, lat, ak))
         Ak at lng = 10.20, lat = 9.00 is 0.15 magnitude
     
@@ -683,7 +694,7 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
         >>> lng = 271.05
         >>> lat = -4.93
         >>> dd  = 144.65
-        >>> ak = findext_marshall(lng, lat, distance = dd)
+        >>> ak = findext_marshall(lng, lat, distance = dd, norm='Ak')
         >>> print("Ak at lng = %.2f, lat = %.2f and distance = %.2f parsecs is %.2f magnitude" %(lng, lat, dd, ak))
         Ak at lng = 271.05, lat = -4.93 and distance = 144.65 parsecs is 0.02 magnitude
         
@@ -693,8 +704,8 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
        
         >>> lng = 10.2
         >>> lat = 59.0
-        >>> ak = findext_marshall(lng, lat)
-        >>> print(av)
+        >>> ak = findext_marshall(lng, lat, norm='Ak')
+        >>> print(ak)
         None
         
 
@@ -762,8 +773,10 @@ def findext_marshall(ll, bb, distance=None, redlaw='cardelli1989', Rv=3.1,  **kw
     logger.info("Interpolating linearly")
     ak = sc.interp(dd, rr, ext)
   
-  redwave, redflux = get_law(redlaw,Rv=Rv,wave_units='micron',norm='Av', wave=array([0.54,2.22]))
-  return ak*redflux[0]/redflux[1]
+  #-- Marshall is standard in Ak, but you can change this:
+  #redwave, redflux = get_law(redlaw,Rv=Rv,wave_units='micron',norm='Av', wave=array([0.54,2.22]))
+  redwave, redflux = get_law(redlaw,Rv=Rv,norm=norm,photbands=['JOHNSON.K'])
+  return ak/redflux[0]
 
 #}
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -805,9 +818,10 @@ rfac        = rf_allsky.rfac
 
 g2e         = array([[-0.054882486, -0.993821033, -0.096476249], [0.494116468, -0.110993846,  0.862281440], [-0.867661702, -0.000346354,  0.497154957]])
 
-def findext_drimmel(lng, lat, distance=None, rescaling=True,**kwargs):
+def findext_drimmel(lng, lat, distance=None, rescaling=True,
+                redlaw='cardelli1989', Rv=3.1, norm='Av',**kwargs):
   """
-  procedure to retrieve the absorption in V from three-dimensional 
+  Procedure to retrieve the absorption in V from three-dimensional 
   grids, based on the Galactic dust distribution of Drimmel & Spergel.
   
   Example usage:
@@ -1024,7 +1038,10 @@ def findext_drimmel(lng, lat, distance=None, rescaling=True,**kwargs):
   else:
     out = (absdisk + abspir + avloc).flatten()
   
-  return(out)
+  #-- Marshall is standard in Ak, but you can change this:
+  redwave, redflux = get_law(redlaw,Rv=Rv,norm=norm,photbands=['JOHNSON.V'])
+  
+  return(out/redflux[0])
 
 def _pix2xy(pixel, resolution, sixpack=0):
   """
@@ -1373,7 +1390,7 @@ def _lb2xy_schlegel(ll, bb):
   
   return xx, yy
 
-def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
+def findext_schlegel(ll, bb, distance = None, redlaw='cardelli1989', Rv=3.1, norm='Av',**kwargs):
   """
   Get the "Schlegel" extinction at certain longitude and latitude
   
@@ -1444,5 +1461,14 @@ def findext_schlegel(ll, bb, distance = None, Rv=3.1,**kwargs):
   # if Rv is given, by definition we find Av = Ebv*Rv
   av = ebv*Rv
   
-  return av
+  #-- Marshall is standard in Ak, but you can change this:
+  redwave, redflux = get_law(redlaw,Rv=Rv,norm=norm,photbands=['JOHNSON.V'])
+  
+  return av/redflux[0]
+  
 #}
+
+if __name__ == "__main__":
+    print findext_marshall(10.2,9.)
+    print findext_marshall(10.2,9.,norm='Ak')
+    
