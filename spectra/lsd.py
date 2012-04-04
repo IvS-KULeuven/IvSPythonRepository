@@ -1,3 +1,6 @@
+"""
+Compute Least-Square-Deconvolutions of spectra
+"""
 import pylab as pl
 import numpy as np
 import numpy.linalg as la
