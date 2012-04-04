@@ -13,38 +13,57 @@ B{reddening}. All these things can be specified though (see below).
 Section 1. Available model grids
 ================================
 
-We make a plot of the domains of all spectral grids. Therefore, we first collect
-all the grid names
+    Section 1.1 Available grids
+    ---------------------------
+    
+    - kurucz: The Kurucz model grids, (default setting)  reference: Kurucz 1993, yCat, 6039, 0
+        - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+        - metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+        - alpha enhancement (alpha): True means alpha enhanced (+0.4)
+        - turbulent velocity (vturb): vturb in km/s
+        - nover= True means no overshoot
+        - odfnew=True means no overshoot but with better opacities and abundances
+    
+    - tmap: NLTE grids computed for sdB stars with the Tubingen NLTE Model
+      Atmosphere package. No further parameters are available. Reference:
+      Werner et al. 2003, 
+    
+    
+    Section 1.2 Plotting the domains of all spectral grids
+    ------------------------------------------------------
 
->>> grids = get_gridnames()
+    We make a plot of the domains of all spectral grids. Therefore, we first collect
+    all the grid names
 
-Preparation of the plot: set the color cycle of the current axes to the spectral
-color cycle.
+    >>> grids = get_gridnames()
 
->>> p = pl.figure(figsize=(10,8))
->>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
->>> p = pl.gca().set_color_cycle(color_cycle)
+    Preparation of the plot: set the color cycle of the current axes to the spectral
+    color cycle.
 
-To plot all the grid points, we run over all grid names (which are strings), and
-retrieve their dimensions. The dimensions are just two arrays giving the teff-
-and logg-coordinate of each SED in the grid. They can thus be easily plot:
+    >>> p = pl.figure(figsize=(10,8))
+    >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+    >>> p = pl.gca().set_color_cycle(color_cycle)
 
->>> for grid in grids:
-...    teffs,loggs = get_grid_dimensions(grid=grid)
-...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
+    To plot all the grid points, we run over all grid names (which are strings), and
+    retrieve their dimensions. The dimensions are just two arrays giving the teff-
+    and logg-coordinate of each SED in the grid. They can thus be easily plot:
 
-And we need to set some of the plotting details to make it look nicer.
+    >>> for grid in grids:
+    ...    teffs,loggs = get_grid_dimensions(grid=grid)
+    ...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
 
->>> p = pl.xlim(pl.xlim()[::-1])
->>> p = pl.ylim(pl.ylim()[::-1])
->>> p = pl.xlabel('Effective temperature [K]')
->>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
->>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
->>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
->>> p = pl.legend(loc='upper left',prop=dict(size='small'))
->>> p = pl.grid()
+    And we need to set some of the plotting details to make it look nicer.
 
-]include figure]]ivs_sed_model_grid.png]
+    >>> p = pl.xlim(pl.xlim()[::-1])
+    >>> p = pl.ylim(pl.ylim()[::-1])
+    >>> p = pl.xlabel('Effective temperature [K]')
+    >>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
+    >>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+    >>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
+    >>> p = pl.legend(loc='upper left',prop=dict(size='small'))
+    >>> p = pl.grid()
+
+    ]include figure]]ivs_sed_model_grid.png]
 
 Section 2. Retrieval of model SEDs
 ==================================
@@ -243,7 +262,7 @@ except ImportError:
     from Scientific.Functions.Interpolation import InterpolatingFunction
     new_scipy = False
 from scipy.interpolate import interp1d
-from multiprocessing import Process,Manager
+from multiprocessing import Process,Manager,cpu_count
 
 from ivs import config
 from ivs.units import conversions
@@ -333,7 +352,8 @@ def get_gridnames(grid=None):
     """
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap']
+                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap',
+                'heberb','hebersdb']
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -354,14 +374,14 @@ def get_file(integrated=False,**kwargs):
     
     Available grids and example keywords:
         - grid='kurucz93':
-                    * metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-                    * metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-                    * alpha enhancement (alpha): True means alpha enhanced (+0.4)
-                    * turbulent velocity (vturb): vturb in km/s
-                    * nover= True means no overshoot
-                    * odfnew=True means no overshoot but with better opacities and abundances
+                    - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+                    - metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+                    - alpha enhancement (alpha): True means alpha enhanced (+0.4)
+                    - turbulent velocity (vturb): vturb in km/s
+                    - nover= True means no overshoot
+                    - odfnew=True means no overshoot but with better opacities and abundances
         - grid='tlusty':
-                    * z: log10(Z/Z0)
+                    - z: log10(Z/Z0)
         - grid='sdb_uli': metallicity and helium fraction (z, he=98)
         - grid='fastwind': no options
         - grid='wd_boris': no options
@@ -469,6 +489,10 @@ def get_file(integrated=False,**kwargs):
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
         basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
+    elif grid=='heberb':
+         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
+    elif grid=='hebersdb':
+         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
         if integrated:
@@ -1485,7 +1509,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     Extra keywords can be used to specify the grid.
     
     @param threads: number of threads
-    @type threads; integer
+    @type threads; integer, 'max', 'half' or 'safe' 
     @param ebvs: reddening parameters to include
     @type ebvs: numpy array
     @param law: interstellar reddening law to use
@@ -1496,11 +1520,25 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     @type units: str, one of 'Flambda','Fnu'
     @param responses: respons curves to add (if None, add all)
     @type responses: list of strings
-    @param update: append to existing FITS file
+    @param update: if true append to existing FITS file, otherwise overwrite
+    possible existing file.
     @type update: boolean
-    """
+    """    
     if ebvs is None:
         ebvs = np.r_[0:4.01:0.01]
+        
+    #-- select number of threads
+    if threads=='max':
+        threads = cpu_count()
+    elif threads=='half':
+        threads = cpu_count()/2
+    elif threads=='safe':
+        threads = cpu_count()-1
+    threads = int(threads)
+    
+    if threads > len(ebvs):
+        threads = len(ebvs)
+    logger.info('Threads: %s'%(threads))
     
     #-- set the parameters for the SED grid
     set_defaults(**kwargs)
@@ -1529,7 +1567,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     c0 = time.time()
     output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
     start = 0
-    print '# teff: ' + str(len(teffs))
+    logger.info('Total number of tables: %i'%(len(teffs)))
     exceptions = 0
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
@@ -1559,7 +1597,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             output[start:start+arr.shape[0],3:] = arr
             start += arr.shape[0]
         except:
-            print sys.exc_info()[1]
+            logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
+            logger.info('Exception: %s'%(sys.exc_info()[1]))
             exceptions = exceptions + 1
     
     #-- make FITS columns
@@ -1592,18 +1631,21 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     
     #-- make/update complete FITS file
     if not update:
+        if os.path.isfile(outfile):
+            os.remove(outfile)
+            logger.warning('Removed existing file: %s'%(outfile))
         hdulist = pyfits.HDUList([])
         hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
         hdulist.append(table)
         hdulist.writeto(outfile)
-        print "Written output to %s"%(outfile)
+        logger.info("Written output to %s"%(outfile))
     else:
         hdulist[1] = table
         hdulist.flush()
         hdulist.close()
-        print "Appended output to %s"%(outfile)
+        logger.info("Appended output to %s"%(outfile))
     
-    print 'Encountered %s exceptions!'%(exceptions)
+    logger.warning('Encountered %s exceptions!'%(exceptions))
 
 #}
 
