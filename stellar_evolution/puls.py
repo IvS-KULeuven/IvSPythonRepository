@@ -161,7 +161,13 @@ class StellarModel:
         self.kwargs_losc['n'] = nscan
         self.kwargs_adip['fspacing'] = fspacing
         self.kwargs_adip['nf'] = nscan
-        #self.kwargs_adip['mdintg'] = 1
+        self.kwargs_adip['iper'] = 1
+        self.kwargs_adip['ivarf'] = [None,'p','g'].index(fspacing)
+        self.kwargs_adip['iriche'] = 1 # richardson extrapolation to improve freq
+        self.kwargs_adip['xfit'] = 0.99
+        self.kwargs_adip['eps'] = 1e-9
+        self.kwargs_adip['itmax'] = 15
+        self.kwargs_adip['mdintg'] = 1
         
         #-- translate boundary condition for LOSC to 1, 2 or raise ValueError
         # translate boundary condition for ADIPLS to istbc
@@ -323,23 +329,31 @@ class StellarModel:
         #-- my own simple method
         if 'simple' in method.lower():
             #-- repartition
-            newxx = repartition(xx,n_new=n_new,**kwargs)
-            new_starl = np.zeros(len(newxx),dtype=self.starl.dtype)
+            newr = repartition(xx,n_new=n_new,**kwargs)
+            new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
             #-- interpolate
             for name in new_starl.dtype.names:
                 #-- don't interpolate radius
                 if name==x:
-                    new_starl[x] = newxx
+                    new_starl[x] = newr
                     continue
                 #-- linear interpolation
                 if int_method=='linear':
-                    new_starl[name] = np.interp(newxx,xx,self.starl[name])
+                    new_starl[name] = np.interp(newr,xx,self.starl[name])
                 #-- local polynomial interpolation
                 elif int_method=='poly':
-                    new_starl[name] = interpol.local_interpolation(newxx,xx,self.starl[name])
+                    new_starl[name] = interpol.local_interpolation(newr,xx,self.starl[name])
             
         elif 'optimized' in method.lower():
-            newr,new_starl = improve_sampling(self.starl,increase=increase,**kwargs)
+            newr,new_starl = remesh(self.starl,n_new=n_new,type_mode=mode_type,**kwargs)
+            #-- recompute D5 and D6
+            
+            logger.info('Recomputing D5=%.3g, D6=%.3g'%(self.starg['D5'],self.starg['D6']))
+            p1 = np.polyfit(new_starl['x'][:5]**2,new_starl['Vg'][:5],1)
+            p2 = np.polyfit(new_starl['x'][:5]**2,new_starl['brunt_A'][:5],1)
+            self.starg['D5'] = p1[0]
+            self.starg['D6'] = p2[0]+p1[0]
+            logger.info('Recomputed  D5=%.3g, D6=%.3g'%(self.starg['D5'],self.starg['D6']))
         #-- ADIPLS method
         elif method.lower()=='adipls':
             #   initialize ADIPLS
@@ -395,7 +409,6 @@ class StellarModel:
             nres = n_new#max(len(self.starl),n_new)
             pyosclib.mesh(ires,nres,0)
             newr = self._get_current_losc_model()[0]*self.starg['photosphere_r']
-            print len(newr)
             new_starl = np.zeros(len(newr),dtype=self.starl.dtype)
             #-- interpolate *all* quantities on the grid. This might introduce
             #   some artifacts!
@@ -410,8 +423,10 @@ class StellarModel:
                     ius = interpolate.InterpolatedUnivariateSpline(r,self.starl[name])
                     new_starl[name] = ius(newr)
                     new_starl[name][0] = self.starl[name][0]
+                elif int_method=='poly':
+                    new_starl[name] = interpol.local_interpolation(newr,self.starl['radius'],self.starl[name])
                 else:
-                    f = interpolate.interp1d(r,self.starl[name],kind=int_method)
+                    f = interpolate.interp1d(self.starl['radius'],self.starl[name],kind=int_method)
                     new_starl[name] = f(newr)
                     
                 
@@ -447,11 +462,11 @@ class StellarModel:
         self.starl = new_starl
         
         #-- if the method was not LOSC, we have to initiate it anyway
-        if method.lower()!='losc':
+        #if method.lower()!='losc':
             #-- we need to initiate the mesh in LOSC one way or
             #   the other.
-            self._init_losc()
-            pyosclib.mesh(0,len(self.starl),0)
+        #    self._init_losc()
+        #    pyosclib.mesh(0,len(self.starl),0)
     
     
     def resample_adipls(self,n_new=5000.,mode_type=None,cleanup=True):
@@ -499,16 +514,16 @@ class StellarModel:
         """
         Plot the profiles that are used to calculate pulsations.
         """
-        star = self._get_current_losc_model()
-        starg,starl = self.starg,self.starl
-        
         if color_cycle is None:
             color_cycle = itertools.cycle(['k','r'])
+        line_cycle = itertools.cycle(['-','--'])
+        if 'losc' in codes:
+            star = self._get_current_losc_model()
+        if 'adipls' in codes:
+            starg,starl = self.starg,self.starl
         
-        c1 = color_cycle.next()
-        c2 = color_cycle.next()
             
-        if len(self.codes)>1 and not np.all(star[0]==0):
+        if 'losc' in codes and not np.all(star[0]==0):
             if not star.shape[1]==starl.shape[0]:
                 pl.figure()
                 pl.plot(star[0],star[1],'+-')
@@ -518,51 +533,74 @@ class StellarModel:
             if not np.allclose(star[0],starl['x']):
                 #wrong = np.abs(star[0]-starl['x'])>=1e-3
                 print zip(star[0],starl['x'])
-                raise ValueError,'sanity check failed (difference in LOSC and ADIPLS model)'
-                
+                raise ValueError,'sanity check failed (difference in LOSC and ADIPLS model)'        
         elif not 'losc' in self.codes:
             star = np.zeros((6,len(starl)))
         
         ax1 = pl.subplot(231)
-        pl.plot(star[0],star[1],'-',lw=2,label='LOSC',color=c1)
-        pl.plot(self.starl[x],starl['q_x3'],'--',lw=2,label='ADIPLS',color=c2)
+        ax2 = pl.subplot(232,sharex=ax1)
+        ax3 = pl.subplot(233,sharex=ax1)
+        ax4 = pl.subplot(234,sharex=ax1)
+        ax5 = pl.subplot(235,sharex=ax1)
+        ax6 = pl.subplot(236,sharex=ax1)
+        
+        if 'losc' in codes:
+            color = color_cycle.next()
+            lstyle = line_cycle.next()
+            pl.axes(ax1)
+            pl.plot(star[0],star[1],linestyle=lstyle,lw=2,label='LOSC',color=color)
+            pl.axes(ax2)
+            pl.plot(star[0],star[2],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax3)
+            pl.plot(star[0],star[3]/star[1],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax4)
+            pl.plot(star[0],star[4],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax5)
+            pl.plot(star[0],-star[5]*star[0]**2,linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax6)
+            pl.plot(star[0],range(len(star[0])),linestyle=lstyle,lw=2,color=color)
+        
+        if 'adipls' in codes:
+            color = color_cycle.next()
+            lstyle = line_cycle.next()
+            pl.axes(ax1)
+            pl.plot(self.starl[x],starl['q_x3'],marker='+',linestyle=lstyle,lw=2,label='ADIPLS',color=color)
+            pl.twinx(ax2)
+            pl.plot(self.starl[x],starl['Vg'],linestyle=lstyle,lw=2,color=color)
+            pl.ylabel('Vg')
+            pl.axes(ax3)
+            pl.plot(self.starl[x],starl['U'],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax4)
+            pl.plot(self.starl[x],starl['gamma1'],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax5)
+            pl.plot(self.starl[x],starl['brunt_A'],linestyle=lstyle,lw=2,color=color)
+            pl.axes(ax6)
+            pl.plot(self.starl[x],range(len(starl['x'])),linestyle=lstyle,lw=2,color=color)
+        
+        
+        pl.axes(ax1)
         if not ax1.get_ylabel()=='q_x3':
             leg = pl.legend(fancybox=True)
             leg.get_frame().set_alpha(0.5)
+        pl.xlabel('r/R')
         pl.ylabel(r'q/x$^3$')
+        pl.axes(ax2)
         pl.xlabel('r/R')
-        
-        pl.subplot(232,sharex=ax1)
         pl.ylabel(r'RP/(GM$\rho$)')
-        pl.plot(star[0],star[2],'-',lw=2,color=c1)
-        pl.twinx(pl.gca())
-        pl.ylabel('Vg')
+        pl.axes(ax3)
         pl.xlabel('r/R')
-        pl.plot(self.starl[x],starl['Vg'],'--',lw=2,color=c2)
-        
-        pl.subplot(233,sharex=ax1)
         pl.ylabel(r'4$\pi$r$^3\rho$/m')
-        pl.xlabel('r/R')
-        pl.plot(star[0],star[3]/star[1],'-',lw=2,color=c1)
-        pl.plot(self.starl[x],starl['U'],'--',lw=2,color=c2)
-        
-        pl.subplot(234,sharex=ax1)
+        pl.axes(ax4)
         pl.ylabel('gamma1')
         pl.xlabel('r/R')
-        pl.plot(star[0],star[4],'-',lw=2,color=c1)
-        pl.plot(self.starl[x],starl['gamma1'],'--',lw=2,color=c2)
-        
-        pl.subplot(235,sharex=ax1)
-        pl.ylabel('Brunt A')
+        pl.axes(ax5)
         pl.xlabel('r/R')
-        pl.plot(star[0],-star[5]*star[0]**2,'-',lw=2,color=c1)
-        pl.plot(self.starl[x],starl['brunt_A'],'--',lw=2,color=c2)
-        
-        pl.subplot(236,sharex=ax1)
+        pl.ylabel('Brunt A')
+        pl.axes(ax6)
         pl.ylabel('Mesh point')
         pl.xlabel('r/R')
-        pl.plot(star[0],range(len(star[0])),'-',lw=2,color=c1)
-        pl.plot(self.starl[x],range(len(starl['x'])),'--',lw=2,color=c2)    
+        
+        
     
     def plot_frequencies(self,master='losc',degree=0,graph_type='frequency',
               x=None,**kwargs):
@@ -584,6 +622,9 @@ class StellarModel:
                 x_ = period[0][:-1]
                 xlabel = 'Period [d]'
             pl.plot(x_,spacing,**kwargs)
+            nkwargs = kwargs.copy()
+            thrash = nkwargs.pop('label')
+            pl.plot([x_.min(),x_.max()],[spacing.mean(),spacing.mean()],lw=2,**nkwargs)
             pl.xlabel(xlabel)
             pl.ylabel('Period spacing [s]')
             print "Mean period spacing:",spacing.mean()
@@ -664,40 +705,6 @@ class StellarModel:
             for fr in freq_master:
                 pl.plot([1/fr,1/fr],[0,1],'-',color=color)
             
-            ##-- plot eigenfunctions
-            #ax3 = pl.subplot(rows,cols,3+d)
-            #for i in range(len(freq_master)):
-                #color_n = color_cycle.next()
-                ##-- plot master eigenfunctions
-                #if self.eigenfuncs[master][degree][i] is None:
-                    #continue
-                #x1,ar1,br1 = self.eigenfuncs[master][degree][i]['x'],\
-                             #self.eigenfuncs[master][degree][i]['ar'],\
-                             #self.eigenfuncs[master][degree][i]['br']
-                #p, =pl.plot(x1,np.abs(ar1),'x-',color=color_n)
-                #norm = np.abs(ar1).max()
-                ##-- plot the other eigenfunctions, but only if they have been
-                ##   matched
-                #matched = False
-                #if not comp_keys: #-- if no other comparison, plot them anyway
-                    #matched = True
-                #for comp in comp_keys:
-                    #if not degree in self.eigenfuncs[comp]: continue
-                    #out = self.eigenfuncs[comp][degree][i]
-                    #if out is not None:
-                        #matched = True
-                        #x2,ar2,br2 = out['x'],out['ar'],out['br']
-                        #pl.plot(x2,np.abs(ar2)/np.abs(ar2).max()*norm,'+--',color=color_n)
-                ##-- don't clutter the plot with eigenfunction that are not
-                ##   matched
-                #if not matched:
-                    #p.remove()
-            
-            #pl.axes(ax3)
-            #pl.xlabel('Position in star [r/R]')
-            #pl.ylabel('Eigenfunction amplitude [arbitrary units]')
-            #pl.gca().set_yscale('log')
-                    
         
         pl.axes(ax1)
         pl.xlabel('Frequency [muHz]')
@@ -718,6 +725,41 @@ class StellarModel:
         pl.axes(ax4)
         pl.xlabel('Period [1/muHz]')
         pl.legend(loc='best')
+    
+    def plot_eigenfuncs(self,master='losc',degree=None):
+        #-- plot eigenfunctions
+        
+        
+        if degree is None:
+            degrees = self.eigenfuncs[master].keys()
+            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0,1,len(degrees))])
+            degrees
+        else:
+            N = len([1 for i in range(len(self.eigenfuncs[master][degree])) if self.eigenfuncs[master][degree][i] is not None])
+            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0,1,N)])
+            degrees = [degree]
+
+        
+        for degree in degrees:
+            freq_master = self.eigenfreqs[master][degree]['frequency']
+            
+            for i in range(len(freq_master)):
+                #-- plot master eigenfunctions
+                if self.eigenfuncs[master][degree][i] is None:
+                    continue
+                color = color_cycle.next()
+                x1,ar1,br1 = self.eigenfuncs[master][degree][i]['x'],\
+                            self.eigenfuncs[master][degree][i]['ar'],\
+                            self.eigenfuncs[master][degree][i]['br']
+                norm = 1.#np.abs(ar1)[-1]
+                p, =pl.plot(x1,np.abs(ar1)/norm,'x-',color=color)
+                
+        
+        pl.xlabel('Position in star [r/R]')
+        pl.ylabel('Eigenfunction amplitude [arbitrary units]')
+        pl.gca().set_yscale('log')
+                    
+
     
     def plot_weight_functions(self,prefix=''):
         #-- compute weight functions
@@ -1046,7 +1088,7 @@ class StellarModel:
             adig,adil = resample_adipls(n_new=kwargs['n_new'],mode_type=kwargs.get('mode_type',None))
         else:
             adig,adil = self._init_adipls()        
-        kwargs.setdefault('cgrav',self.constants['GG'])
+        kwargs.setdefault('cgrav',6.67232e-8)#self.constants['GG'])
         kwargs.setdefault('fspacing','p')
         #-- write adipls variables to file
         #ascii.write_array(adil,'tempmodel_frq.ascii',header=True,auto_width=True,use_float='%.15e',comments=['#'+json.dumps(adig)])
@@ -1061,13 +1103,16 @@ class StellarModel:
             self.eigenfuncs['adipls'] = {}
         
         #-- run over all the degrees
+        R = self.starg['photosphere_r']
+        M = self.starg['star_mass']
+        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
         for degree in degrees:
             ckwargs = kwargs.copy()
             #-- use Takata ordering scheme for dipolar modes
-            if degree==1:
-                ckwargs.setdefault('irsord',20)
+            #if degree==1:
+            #    ckwargs.setdefault('irsord',20)
             #-- use Lee ordering scheme for other modes
-            else:
+            if True:
                 ckwargs.setdefault('irsord',11)
             #-- construct adipls control file
             control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
@@ -1079,11 +1124,17 @@ class StellarModel:
                 stdout = None
             subprocess.call('adipls.c.d %s'%(control_file),stdout=stdout,shell=True)
             #-- read small summary file and add contents to output
-            starg,starl = fileio.read_assm(model+'.ssm')
+            #starg,starl = fileio.read_assm(model+'.ssm')
+            starl = fileio.read_agsm(model+'.gsm')
             #os.unlink(model+'.ssm')
             #os.unlink(model+'.gsm')
             #-- convert frequencies into whatever unit
-            starl['frequency'] = conversions.convert('mHz',self.unit,starl['frequency'])
+            starl['freqR'] = conversions.convert('mHz',self.unit,starl['freqR'])
+            starl['varfreq'] = conversions.convert('mHz',self.unit,starl['varfreq'])
+            frequency = np.sqrt(starl['sigma2'])/t_dynamic
+            frequency = conversions.convert('rad/s',self.unit,frequency)
+            frequency = np.rec.fromarrays([frequency],names=['frequency'])
+            starl = ne.recarr_join(starl,frequency)
             self.eigenfreqs['adipls']['l%d'%(degree)] = starl
             #-- make room for eigenfunctions
             self.eigenfuncs['adipls']['l%d'%(degree)] = [None for i in range(len(self.eigenfreqs['adipls']['l%d'%(degree)]))]
@@ -1106,7 +1157,7 @@ class StellarModel:
         #-- initialize ADIPLS
         adig,adil = self._init_adipls()        
         kwargs.setdefault('cgrav',self.constants['GG'])
-        kwargs.setdefault('nfmode',2)
+        kwargs.setdefault('nfmode',1) # was 2
         #-- write adipls variables to file
         fileio.write_gong(adig,adil,model+'.gong')
         subprocess.call('form-amdl.d 2 %s %s'%(model+'.gong',model+'.amdl'),stdout=open('/dev/null','w'),shell=True)
@@ -1122,10 +1173,10 @@ class StellarModel:
                 logger.info('Mode %d is not matched (nan)'%(mode))
                 continue
             #-- use Takata ordering scheme for dipolar modes
-            if degree==1:
-                kwargs.setdefault('irsord',20)
+            #if degree==1:
+            #    kwargs.setdefault('irsord',20)
             #-- use Lee ordering scheme for other modes
-            else:
+            if True:
                 kwargs.setdefault('irsord',11)
             #-- construct adipls control file
             df = mymode['frequency']/100.
@@ -1139,16 +1190,59 @@ class StellarModel:
                 stdout = None
             subprocess.call('adipls.c.d %s'%(control_file),shell=True,stdout=stdout)
             #-- read eigenfunction file and add contents to output
-            try:
-                x,a_r,b_r = fileio.read_aeig(model+'.aeig')
-            except:
-                x,a_r,b_r = [np.linspace(0,1,2000),np.zeros(2000),np.zeros(2000)]
+            output = fileio.read_aeig(model+'.aeig',nfmode=kwargs['nfmode'])
             #os.remove(model+'.aeig')
             os.remove(model+'.gsm')
             os.remove(model+'.ssm')
             #os.remove(control_file)
-            Pprime = np.zeros_like(x)
-            self.eigenfuncs['adipls']['l%d'%(degree)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime],names=['x','ar','br','Pprime'])
+            
+            #-- global parameters
+            R = self.starg['photosphere_r']
+            M = self.starg['star_mass']
+            #-- below, we will need the dynamical time scale, the radial position
+            #   in the star, the mass position and the density
+            t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
+            q = self.starl['mass']/M
+            rho = self.starl['Rho']
+            P = self.starl['pressure']
+            G1= self.starl['gamma1']
+            dP_dr = self.starl['dP_dr']
+            g = self.starl['g']
+            r = self.starl['radius']
+            l = degree
+            print mymode.dtype.names
+            omega = np.sqrt(mymode['sigma2'])*t_dynamic
+            sigma = np.sqrt(mymode['sigma2'])
+            
+            if kwargs['nfmode']==2:
+                x,a_r,b_r = output
+                Pprime = np.zeros_like(x)
+                self.eigenfuncs['adipls']['l%d'%(degree)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime],names=['x','ar','br','Pprime'])
+            elif kwargs['nfmode']==1:
+                if l==0: # in the case of a radial mode
+                    raise NotImplementedError
+                else: # in the case of a nonradial mode
+                    x,y1,y2,y3,y4,z1,z2 = output
+                    #-- radial and horizontal component
+                    a_r = y1*R
+                    b_r = y2*R/(l*(l+1.))
+                    #-- Eulerian gravity potential perturbation
+                    Phiprime = g*r/x*y3
+                    #-- Eulerian pressure perturbation
+                    Pprime = np.zeros_like(x)
+                    dPhiprime_dr = np.zeros_like(x)
+                    dRho_rho = np.zeros_like(x)
+                    Rhoprime = np.zeros_like(x)
+                    dT_T = np.zeros_like(x)
+                    Tprime = np.zeros_like(x)
+                    T = C = N = G = total = charpinet = Tprime
+                self.eigenfuncs['adipls']['l%d'%(l)][mode] = np.rec.fromarrays([x,a_r,b_r,Pprime,Phiprime,dPhiprime_dr,
+                    dRho_rho,Rhoprime,dT_T,Tprime,
+                    T*rho*r**2,C*rho*r**2,N*rho*r**2,G*rho*r**2,total,charpinet],
+                    names=['x','ar','br','Pprime','Phiprime','dPhiprime_dr',
+                            'dRho_rho','Rhoprime','dT_T','Tprime',
+                            'T','C','N','G','weight','charpinet'])
+                
         #os.unlink(model+'.amdl')
         #os.unlink(model+'.gong')
         
@@ -1248,6 +1342,7 @@ def generate_newx(xx,bruntA,n_new=None,type_mode='g',
         minweight = np.log10(bruntA[pos].min())
         weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
         weight = weight/xx**2
+        weight[0] = 0
     else:
         weight = 5.
     #-- for p modes, the step size should increase with increase radius
@@ -1258,13 +1353,14 @@ def generate_newx(xx,bruntA,n_new=None,type_mode='g',
     weight[weight==0] = weight[weight>0].min()
     x_new,weight = repartition(xx,n_new=n_new,sigma=weight,smooth=smooth_mesh,
                                full_output=True)
+    logger.info('Repartitioned: %d ---> %d mesh points'%(len(xx),len(x_new)))
 
     if full_output:
         return x_new,weight
     else:
         return x_new
 
-def remesh(starl,x='x',n_new=None,type_mode='g',smoothing=0,
+def remesh(starl,x='x',n_new=None,type_mode='g',
             smooth_mesh=9,smooth_weights=0.005,smooth_profile=0.002):
     """
     Improve sampling of a local star record array.
@@ -1290,18 +1386,37 @@ def remesh(starl,x='x',n_new=None,type_mode='g',smoothing=0,
     #-- STEP 2
     newstarl = np.zeros(len(newx),dtype=starl.dtype)
     newstarl[x] = newx
+    quadr = ['U','Vg','brunt_A']
     for name in starl.dtype.names:
+        #if name in ['pressure','Rho']:
+        #    pl.figure()
+        #    pl.title(name)
+        #    pl.plot(starl[x],starl[name],'k-',lw=4)
         if name==x: continue
         if smooth_profile>0:
-            sigma = smooth_profile*np.exp(- (0.18-starl[x])**2/(2*0.05**2))
+            #logger.info('Smoothing profile before interpolation')
+            sigma = smooth_profile#*np.exp(- (0.18-starl[x])**2/(2*0.05**2))
             newx_,newy,pnts = filtering.filter_signal(starl[x],starl[name],'gauss',sigma=sigma)
         else:
+            #logger.info('No profile smoothing before interpolation')
             newy = starl[name]
-        newstarl[name] = interpol.local_interpolation(newx,starl[x],newy)
+        if name in quadr:
+            newstarl[name] = interpol.local_interpolation(newx**2,starl[x]**2,newy)
+        else:
+            newstarl[name] = interpol.local_interpolation(newx,starl[x],newy)
         #-- we demand that the start and end of the mesh cannot be different
         #   than from the beginning
         newstarl[name][0] = starl[name][0]
         newstarl[name][-1] = starl[name][-1]
+        #if name in ['pressure','Rho']:
+            #ascii.write_array([starl[x],newy],'qx3.prof',axis0='col')
+            #pl.plot(newstarl[x],newstarl[name],'r-',lw=2)
+    newstarl['brunt_A'][0] = 0
+    #pl.figure()
+    #pl.plot(newstarl[x],newstarl['pressure']/newstarl['Rho'],'bx-',lw=2,ms=7)
+    #pl.show()
+    
+    
     return newx,newstarl
 
 def match_losc_adipls(losc,adip):

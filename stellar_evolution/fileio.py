@@ -296,7 +296,64 @@ def read_assm(ssm_file):
     starl = np.rec.fromarrays(starl,names=['l','nz','sigma2','E','frequency'])
     return starg,starl
     
-def read_aeig(aeig_file):
+def read_agsm(ssm_file):
+    """
+    Read in a grand summary file from ADIPLS.
+    
+    @param ssm_file: name of the grand summary file
+    @type ssm_file: str
+    @return: global parameters, local parameters
+    @rtype: dict, rec array
+    """
+    with open(ssm_file,'rb') as ff:
+        contents = ff.read()
+    
+    fmt = '<i'
+    size = struct.calcsize(fmt)
+    out = struct.unpack(fmt,contents[:size])
+    contents = contents[size:]
+    
+    pars = []
+    while 1:
+        #-- global parameters
+        fmt = '<' + 38*'d'
+        size = struct.calcsize(fmt)
+        out = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        
+        mode = list(out)
+        
+        fmt = '<'+8*'i'
+        size = struct.calcsize(fmt)
+        out = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        mode += list(out)[:-1]
+        pars.append(mode)
+        
+        if len(contents)<72:
+            break
+        fmt = '<'+18*'i'
+        size = struct.calcsize(fmt)
+        out = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+    
+    columns = np.array(['xmod','M','R','P_c','Rho_c','D5','D6','mu','D8',
+               'A2_xs','A5_xs','x1','sigma_Omega','xf','fctsbc','fcttbc',
+               'lambda','l','n','sigma2','sigmac2','y1max','xmax',
+               'E','Pe','PV','varfreq','ddsig','ddsol','y1_xs','y2_xs','y3_xs','y4_xs',
+               'z1max','xhatmax','beta_nl','freqR','m','in','nn','rich','ivarf',
+               'icase','iorign','iekinr'])
+    keep = np.array([17,18,19,23,26,35,36,37])
+    data = np.rec.fromarrays(np.array(pars).T[keep],names=list(columns[keep]))
+    
+    fmt = '<'+17*'i'
+    size = struct.calcsize(fmt)
+    out = struct.unpack(fmt,contents[:size])
+    contents = contents[size:]
+    
+    return data
+    
+def read_aeig(aeig_file,nfmode=2):
     """
     Read in a simple eigenfunction file written by ADIPLS.
     
@@ -308,50 +365,83 @@ def read_aeig(aeig_file):
     with open(aeig_file,'rb') as ff:
         contents = ff.read()
     
-    #-- read in the size of the arrays in the file
-    fmt = '<'+2*'i'
-    size = struct.calcsize(fmt)
-    N1,N2 = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
+    if nfmode==2:
+        #-- read in the size of the arrays in the file
+        fmt = '<'+2*'i'
+        size = struct.calcsize(fmt)
+        N1,N2 = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        #-- read in the 'x' axis
+        fmt = '<'+N2*'d'
+        size = struct.calcsize(fmt)
+        x = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        x = np.array(x)
+        #-- read in the size of the following arrays in the file
+        fmt = '<'+2*'i'
+        size = struct.calcsize(fmt)
+        out = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        #-- some weird intermezzo that I don't understand: global parameters?
+        fmt = '<'+50*'d'
+        size = struct.calcsize(fmt)
+        y = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        #-- the actual eigenfunctions
+        N = 2
+        fmt = '<'+N*N2*'d'
+        size = struct.calcsize(fmt)
+        z = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        z = np.array(z)
+        y1 = z[0::N]
+        y2 = z[1::N]
+        #-- and an end integer
+        fmt = '<'+'i'
+        size = struct.calcsize(fmt)
+        y = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        output = x,y1,y2
     
-    #-- read in the 'x' axis
-    fmt = '<'+N2*'d'
-    size = struct.calcsize(fmt)
-    x = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
-    x = np.array(x)
+    elif nfmode==1:
+        fmt = '<'+1*'i'
+        size = struct.calcsize(fmt)
+        N1 = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        fmt = '<'+50*'d'
+        size = struct.calcsize(fmt)
+        y = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        #-- read in the size of the following arrays in the file
+        fmt = '<'+1*'i'
+        size = struct.calcsize(fmt)
+        out = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        N2, = out
+        #-- the actual eigenfunctions
+        N = 7
+        fmt = '<'+N*N2*'d'
+        size = struct.calcsize(fmt)
+        z = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        z = np.array(z)
+        x = z[0::N]
+        y1 = z[1::N]
+        y2 = z[2::N]
+        y3 = z[3::N]
+        y4 = z[4::N]
+        z1 = z[5::N]
+        z2 = z[6::N]
+        #-- and an end integer
+        fmt = '<'+'i'
+        size = struct.calcsize(fmt)
+        y = struct.unpack(fmt,contents[:size])
+        contents = contents[size:]
+        output = x,y1,y2,y3,y4,z1,z2
     
-    #-- read in the size of the following arrays in the file
-    fmt = '<'+2*'i'
-    size = struct.calcsize(fmt)
-    out = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
-    
-    #-- some weird intermezzo that I don't understand
-    fmt = '<'+50*'d'
-    size = struct.calcsize(fmt)
-    y = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
-    
-    #-- the actual eigenfunctions
-    fmt = '<'+2*N2*'d'
-    size = struct.calcsize(fmt)
-    z = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
-    z = np.array(z)
-    y1 = z[0::2]
-    y2 = z[1::2]
-    
-    
-    
-    #-- and an end integer
-    fmt = '<'+'i'
-    size = struct.calcsize(fmt)
-    y = struct.unpack(fmt,contents[:size])
-    contents = contents[size:]
     if len(contents):
         raise IOError,"Error reading ADIPLS eigenfrequency file: uninterpreted bytes remaining"
-    return x,y1,y2
+    return output
 
 def read_amdl(filename):
     """
@@ -513,27 +603,47 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
         if not 'q' in available and 'mass' in available and 'star_mass' in starg.keys():
             q = starl['mass']/starg['star_mass']
             starl = pl.mlab.rec_append_fields(starl,['q'],[q])
-            logger.info('Added q')
+            logger.info('Added local q')
         if not 'x' in available and 'radius' in available and 'photosphere_r' in starg.keys():
             x = starl['radius']/starg['photosphere_r']
             starl = pl.mlab.rec_append_fields(starl,['x'],[x])
-            logger.info('Added x')
+            logger.info('Added local x')
         if not 'q_x3' in available and 'mass' in available and 'star_mass' in starg.keys():
             q_x3 = starl['q']/starl['x']**3
-            q_x3[0] = starl['Rho'][0]/starg['star_mass']*starg['photosphere_r']**3*4./3.*np.pi
+            #-- some models contain the center values, others do not
+            if ext not in ['.data']:
+                q_x3[0] = starl['Rho'][0]/starg['star_mass']*starg['photosphere_r']**3*4./3.*np.pi
+            else:
+                q_x3[0] = np.polyval(np.polyfit(starl['x'][1:5]**2,q_x3[1:5],2),0)
+                #starl['Rho'][0] = q_x3[0]*starg['star_mass']/starg['photosphere_r']**3/4.*3./np.pi
+                U = starl['Rho']/q_x3
+                starl['Rho'][0] = np.polyval(np.polyfit(starl['x'][1:5]**2,U[1:5],1),0)*q_x3[0]
+                
             starl = pl.mlab.rec_append_fields(starl,['q_x3'],[q_x3])
+            logger.info('Added local q/x3')
         #-- add some quantities that are useful for adipls
-        if not 'P_c' in starg.keys() and 'pressure' in starg.keys():
+        if not 'P_c' in starg.keys() and 'pressure' in available:
+            if ext in ['.data']:
+                starl['pressure'][0] = starl['pressure'][1] + starl['Rho'][1]*starl['g'][1]*starl['radius'][1]
             starg['P_c'] = starl['pressure'][0]
-        if not 'rho_c' in starg.keys() and 'Rho' in starg.keys():
+            logger.info('Added global P_c')
+        if not 'rho_c' in starg.keys() and 'Rho' in available:
             starg['rho_c'] = starl['Rho'][0]
+            logger.info('Added global rho_c')
         if (not 'D5' in starg.keys() or starg['D5']==0) and 'gamma1' in available:
-            dp_dx = ne.deriv(x,starl['pressure'])
-            d2p_dx2 = ne.deriv(x,dp_dx)
-            drho_dx = ne.deriv(x,starl['Rho'])
-            d2rho_dx2 = ne.deriv(x,drho_dx)
-            starg['D5'] = (-1./(starl['gamma1']*starl['pressure'])*d2p_dx2)[0]
-            starg['D6'] = (-1./starl['Rho']*d2rho_dx2)[0]
+            
+            #dp_dx = ne.deriv(x,starl['pressure'])
+            #d2p_dx2 = ne.deriv(x,dp_dx)
+            #drho_dx = ne.deriv(x,starl['Rho'])
+            #d2rho_dx2 = ne.deriv(x,drho_dx)
+            #starg['D5'] = (-1./(starl['gamma1']*starl['pressure'])*d2p_dx2)[0]
+            #starg['D6'] = (-1./starl['Rho']*d2rho_dx2)[0]
+            
+            p1 = np.polyfit(starl['x'][:5]**2,starl['Vg'][:5],1)
+            p2 = np.polyfit(starl['x'][:5]**2,starl['brunt_A'][:5],1)
+            starg['D5'] = p1[0]
+            starg['D6'] = p2[0]+p1[0]
+            
             starg['mu'] = -1
             logger.info('Set global parameter D5=%.6g for ADIPLS'%(starg['D5']))
             logger.info('Set global parameter D6=%.6g for ADIPLS'%(starg['D6']))
@@ -658,7 +768,11 @@ def standardize(star,_from,info='local',units='cgs'):
     #-- some profiles start at the surface...
     if info=='local' and _from in ['mesa']:
         new_star = new_star[::-1]
-    
+        new_star = np.hstack([new_star[:1],new_star])
+        #-- fill-in some initial values
+        for key in ['mass','q','radius']:
+            if key in keys:
+                new_star[key][0] = 0.
     #-- sometimes it is easy to precompute additional information that can be
     #   derived from the other information available. We might need this
     #   information for pulsation analysis, profile studies etc...
@@ -919,3 +1033,6 @@ def plot_add_burn(starl,x='q'):
         out = pl.axvspan(limit[1],limit[2],color=colors[index],alpha=alphas[index])
 
 #}
+if __name__=="__main__":
+    data = read_agsm('tempmodel_frq.gsm')
+    ascii.write_array(data,'test.dat',header=True,auto_width=True)
