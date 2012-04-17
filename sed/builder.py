@@ -1285,8 +1285,6 @@ class SED(object):
             #radii = np.zeros_like()
             #for di,dprobi in zip(d,dprob):
             #    self.results['igrid_search']['grid']['scale']*d_min
-            
-   
         
     #}
     
