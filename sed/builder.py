@@ -710,6 +710,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
     """ 
     #-- exclude/include passbands based on their names
     if names is not None:
+        logger.info('%s photometry based on photband containining one of %s'%((include and 'Include' or "Exclude"),names))
         for index,photband in enumerate(master['photband']):
             for name in names:
                 if name in photband:
@@ -718,6 +719,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
                         break
     #-- exclude/include colors based on their wavelength
     if wrange is not None:
+        logger.info('%s photometry based on photband wavelength between %s'%((include and 'Include' or "Exclude"),wrange))
         for index,photband in enumerate(master['photband']):
             system,color = photband.split('.')
             if not '-' in color or ptype=='abs':
@@ -732,6 +734,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
             master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
     #-- exclude/include passbands based on their source
     if sources is not None:
+        logger.info('%s photometry based on source catalog in %s'%((include and 'Include' or "Exclude"),sources))
         for index,msource in enumerate(master['source']):
             for source in sources:
                 if source==msource:
@@ -948,7 +951,7 @@ class SED(object):
         
         If called without arguments, all photometry will be excluded.
         """
-        if names is None and wrange is None:
+        if names is None and wrange is None and sources is not None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
     
@@ -971,7 +974,7 @@ class SED(object):
         """
         Include (any) photometry in fitting process.
         """
-        if names is None and wrange is None:
+        if names is None and wrange is None and sources is not None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='all')
     
