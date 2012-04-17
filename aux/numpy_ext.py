@@ -266,6 +266,52 @@ def recarr_join(arr1,arr2):
 
 #}
 
+#{ Line intersections
+
+def find_intersections(A, B):
+    """
+    Find intersection of two 2D lines.
+    
+    Example usage:
+    
+    >>> pcoeff1 = [1,2,-2.]
+    >>> pcoeff2 = [-2.12,2.45,3.7321]
+    >>> A = np.column_stack([x,polyval(pcoeff1,x)])
+    >>> B = np.column_stack([x,polyval(pcoeff2,x)])
+
+    We find two intersections:
+    
+    >>> xs,ys = ne.find_intersections(A,B)
+    >>> print xs,ys
+    [-1.22039755  1.34367003] [-2.77960245  2.71835017]
+
+    """
+    # min, max and all for arrays
+    amin = lambda x1, x2: np.where(x1<x2, x1, x2)
+    amax = lambda x1, x2: np.where(x1>x2, x1, x2)
+    aall = lambda abools: np.dstack(abools).all(axis=2)
+    slope = lambda line: (lambda d: d[:,1]/d[:,0])(np.diff(line, axis=0))
+
+    x11, x21 = np.meshgrid(A[:-1, 0], B[:-1, 0])
+    x12, x22 = np.meshgrid(A[1:, 0], B[1:, 0])
+    y11, y21 = np.meshgrid(A[:-1, 1], B[:-1, 1])
+    y12, y22 = np.meshgrid(A[1:, 1], B[1:, 1])
+
+    m1, m2 = np.meshgrid(slope(A), slope(B))
+    m1inv, m2inv = 1/m1, 1/m2
+
+    yi = (m1*(x21-x11-m2inv*y21) + y11)/(1 - m1*m2inv)
+    xi = (yi - y21)*m2inv + x21
+
+    xconds = (amin(x11, x12) < xi, xi <= amax(x11, x12), 
+              amin(x21, x22) < xi, xi <= amax(x21, x22) )
+    yconds = (amin(y11, y12) < yi, yi <= amax(y11, y12),
+              amin(y21, y22) < yi, yi <= amax(y21, y22) )
+
+    return xi[aall(xconds)], yi[aall(yconds)]
+
+#}
+
 if __name__=="__main__":
     import doctest
     doctest.testmod()
