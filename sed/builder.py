@@ -653,7 +653,7 @@ def fix_master(master,e_default=None):
     return master
 
 
-def decide_phot(master,names=None,wrange=None,ptype='all',include=False):
+def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=False):
     """
     Exclude/include photometric passbands containing one of the strings listed in
     photbands.
@@ -730,7 +730,14 @@ def decide_phot(master,names=None,wrange=None,ptype='all',include=False):
         #-- exclude/include passbands based on their wavelength
         if not ptype=='col':
             master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
-
+    #-- exclude/include passbands based on their source
+    if sources is not None:
+        for index,msource in enumerate(master['source']):
+            for source in sources:
+                if source==msource:
+                    if ptype=='all' or (ptype=='abs' and -master['color'][index]) or (ptype=='col' and master['color'][index]):
+                        master['include'][index] = include
+                        break
 
 def photometry2str(master,comment=''):
     """
@@ -935,7 +942,7 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def exclude(self,names=None,wrange=None):
+    def exclude(self,names=None,wrange=None,sources=None):
         """
         Exclude (any) photometry from fitting process.
         
@@ -943,42 +950,42 @@ class SED(object):
         """
         if names is None and wrange is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
     
-    def exclude_colors(self,names=None,wrange=None):
+    def exclude_colors(self,names=None,wrange=None,sources=None):
         """
         Exclude (color) photometry from fitting process.
         """
         if names is None and wrange is None:
             wrange = (-np.inf,0)
-        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='col')
     
-    def exclude_abs(self,names=None,wrange=None):
+    def exclude_abs(self,names=None,wrange=None,sources=None):
         """
         Exclude (absolute) photometry from fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,include=False,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='abs')
     
     
-    def include(self,names=None,wrange=None):
+    def include(self,names=None,wrange=None,sources=None):
         """
         Include (any) photometry in fitting process.
         """
         if names is None and wrange is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='all')
     
-    def include_colors(self,names=None,wrange=None):
+    def include_colors(self,names=None,wrange=None,sources=None):
         """
         Include (color) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='col')
     
-    def include_abs(self,names=None,wrange=None):
+    def include_abs(self,names=None,wrange=None,sources=None):
         """
         Include (absolute) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,include=True,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='abs')
     
     def set_photometry_scheme(self,scheme,infrared=(1,'micron')):
         """
