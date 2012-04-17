@@ -186,11 +186,11 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     ff.close()
     
     #-- velocity shift if necessary
-    if vrad is not None and vrad>0:
+    if vrad is not None and vrad!=0:
         cc = constants.cc/1000. #speed of light in cc
         for i in range(len(mu)):
-            wave_shift,flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
-            table[:,i] = flux_shift - 5.*vrad/cc*table[:,i]
+            flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
+            table[:,i] = flux_shift - 5.*vrad/cc*flux_shift
     
     #-- redden if necessary
     if ebv is not None and ebv>0:

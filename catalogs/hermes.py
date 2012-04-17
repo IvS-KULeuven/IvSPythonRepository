@@ -81,7 +81,24 @@ they took, you can do the following:
 >>> print [(i,list(data['observer']).count(i)) for i in set(data['observer'])]
 [('Robin Lombaert', 4), ('Steven Bloemen', 6), ('Pieter Degroote', 25), ('Michel Hillen', 3)]
 
+Section 3. Radial velocity computation with the HERMES DRS
+==========================================================
 
+Make sure you have sourced the Hermes DRS (C{source ~mercator/HermesDRS.rc}) and
+that you make a backup of your config file before proceeding.
+
+In this example, we first make a mask file:
+
+>>> from ivs.spectra import linelists
+>>> teff = 12500
+>>> logg = 4.0
+>>> ll = linelists.get_lines(teff,logg)
+>>> mask_file = '%.0f_%.2f.fits'%(teff,logg)
+>>> make_mask_file(ll['wavelength'],ll['depth'],filename=mask_file)
+
+And run the DRS:
+
+>>> CCFList('HD170200',mask_file=mask_file)
 
 """
 import re
@@ -317,11 +334,24 @@ def make_mask_file(wavelength,depth,filename='mymask.fits'):
     @type depth: 1D numpy array
     """
     data = np.array([wavelength,depth]).T
-    hdulist = pyfits.PrimaryHDU(data1)
+    hdulist = pyfits.PrimaryHDU(data)
     hdulist.writeto(filename)
-    hdulist.close()
 
 
+def calibrate(wave,flux,header=None):
+    """
+    Rough calibration of Hermes spectrum.
+    
+    Thanks to Roy Ostensen for computing the response function via detailed
+    modeling of Feige 66.
+    """
+    #-- read instrument response function
+    instrument = config.get_datafile('catalogs/hermes','hermes_20110319.resp')
+    iwave,iflux = ascii.read2array(instrument).T
+    keep = (iwave.min()<=wave) & (wave<=iwave.max())
+    #-- interpolate on observed wavelength array
+    iflux = np.interp(wave[keep],iwave,iflux)
+    return wave[keep],flux[keep]/iflux,iflux
 #}
 
 #{ Hermes DRS wrappers
@@ -331,6 +361,7 @@ def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,
     Calculate radial velocities for Hermes stars.
     
     WARNING: you have to have the DRS installed locally!
+    
     WARNING: this function changes your hermesConfig.xml file, you'd better
     backup it before use
     """
