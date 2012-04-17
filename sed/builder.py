@@ -951,7 +951,7 @@ class SED(object):
         
         If called without arguments, all photometry will be excluded.
         """
-        if names is None and wrange is None and sources is not None:
+        if names is None and wrange is None and sources is None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
     
@@ -959,7 +959,7 @@ class SED(object):
         """
         Exclude (color) photometry from fitting process.
         """
-        if names is None and wrange is None:
+        if names is None and wrange is None and sources is None:
             wrange = (-np.inf,0)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='col')
     
@@ -974,7 +974,7 @@ class SED(object):
         """
         Include (any) photometry in fitting process.
         """
-        if names is None and wrange is None and sources is not None:
+        if names is None and wrange is None and sources is None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='all')
     
