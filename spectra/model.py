@@ -47,11 +47,13 @@ from ivs.units import constants
 from ivs.units import conversions
 from ivs.aux.decorators import memoized
 from ivs.spectra import tools
+from ivs.aux import loggers
 
 import numpy as np
 from Scientific.Functions.Interpolation import InterpolatingFunction
 
 logger = logging.getLogger("SPEC.MODEL")
+logger.addHandler(loggers.NullHandler)
 
 defaults = dict(grid='atlas',z=+0.0,vturb=2,band='vis',
                 t=0.0,a=0.0,c=0.5,atm='p')          # MARCS and COMARCS
@@ -81,7 +83,7 @@ def get_gridnames():
     @return: list of grid names
     @rtype: list of str
     """
-    return ['cmfgen','ostar2002','bstar2006','atlas','marcs', 'heberb', 'hebersdb']
+    return ['cmfgen','ostar2002','bstar2006','atlas','marcs', 'heberb', 'hebersdb','tmapsdb']
 
 
 
@@ -100,6 +102,7 @@ def get_file(**kwargs):
         - grid='atlas': options z
         - grid='heberb': no options 
         - grid='hebersdb': no options 
+        - grid='tmapsdb': no options
     
     Details for grid 'bstar2006':
         - metallicity in Z/Z0 with Z0 solar. z=0,0.001,0.01,0.033,0.1,0.2,0.5,1.,2
@@ -115,12 +118,15 @@ def get_file(**kwargs):
     Details for grid 'hebersdb': LTE Grid computed for sdB stars by Uli Heber,
     reff: Heber et al. 2000
     
+    Details for grid 'tmapsdb': NLTE Grid computed for sdB stars using the TMAP
+    (TUEBINGEN NLTE MODEL ATMOSPHERE PACKAGE) code. reff: Werner K., et al. 2003
+    and Rauch T., Deetjen J.L. 2003
+    
     @param grid: gridname, or path to grid.
     @type grid: string
     """
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])#.lower()
-    print grid
     if os.path.isfile(grid):
         return grid
     
@@ -151,6 +157,8 @@ def get_file(**kwargs):
         basename = 'Heber2000_B_h909.fits'
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909.fits'
+    elif grid=='tmapsdb':
+        basename = 'TMAP2011_sdB.fits'
     else:
         raise ValueError, "grid %s does not exist"%(grid)
 
@@ -341,7 +349,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
                 cont[i,j,:] = np.interp(wave,wave_,cont_)
     flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
     cont_grid = InterpolatingFunction([np.log10(teffs),loggs],cont)
-    logger.info('Constructed spectrum interpolation grid')
+    #logger.info('Constructed spectrum interpolation grid')
     return wave,teffs,loggs,flux,flux_grid,cont_grid
 
 

@@ -249,6 +249,7 @@ And make a nice plot
 """
 import os
 import sys
+import glob
 import logging
 import copy
 import pyfits
@@ -274,6 +275,8 @@ from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.io import ascii
 import reddening
+import getpass
+import shutil
 
 logger = logging.getLogger("SED.MODEL")
 logger.addHandler(loggers.NullHandler)
@@ -285,10 +288,12 @@ defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 ct='mlt',                                 # NEMO (convection theory)
-                t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
+                t=1.0,a=0.0,c=0.5,m=1.0,co=1.05,          # MARCS and COMARCS
+                use_scratch=False)
 defaults_multiple = [defaults.copy(),defaults.copy()]
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
+scratchdir = None
 
 #{ Interface to library
 
@@ -311,6 +316,12 @@ def set_defaults(*args,**kwargs):
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
     
+    #-- Check if the user wants to use the scratch disk
+    #   Has to be done after all other keywords are set
+    if 'use_scratch' in kwargs and kwargs['use_scratch']:
+        copy2scratch()
+        
+                
 
 def set_defaults_multiple(*args):
     """
@@ -322,8 +333,68 @@ def set_defaults_multiple(*args):
         for key in arg:
             if key in defaults_multiple[i]:
                 defaults_multiple[i][key] = arg[key]
-                logger.info('Set %s to %s (star %d)'%(key,arg[key],i))
-        
+                logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
+
+def copy2scratch():
+    """
+    Copy the grids to the scratch directory to speed up the fitting process.
+    Files are placed in the directory: /scratch/uname/ where uname is your username.
+    
+    This function checks the grids that are set with the functions set_defaults()
+    and set_defaults_multiple(). Every time a grid setting is changed, this
+    function needs to be called again.
+    
+    Don`t forget to remove the files from the scratch directory after the fitting
+    process is completed with clean_scratch()
+    """
+    global scratchdir
+    uname = getpass.getuser()
+    if not os.path.isdir('/scratch/%s/'%(uname)):
+        os.makedirs('/scratch/%s/'%(uname))
+    scratchdir = '/scratch/%s/'%(uname)
+    
+    defaults_ = []
+    defaults_.append(defaults)
+    defaults_.extend(defaults_multiple)
+    
+    for default in defaults_:
+        default['use_scratch'] = False
+        #grid
+        fname = get_file(integrated=False,**default)
+        if not os.path.isfile(scratchdir + os.path.basename(fname)):
+            shutil.copy(fname,scratchdir)
+            logger.info('Copied grid: %s to scratch'%(fname))
+        else:
+            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        #integrated grid
+        fname = get_file(integrated=True,**default)
+        if not os.path.isfile(scratchdir + os.path.basename(fname)):
+            shutil.copy(fname,scratchdir)
+            logger.info('Copied grid: %s to scratch'%(fname))
+        else:
+            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        default['use_scratch'] = True
+
+def clean_scratch():
+    """
+    Remove the grids that were copied to the scratch directory by using the
+    function copy2scratch().
+    """
+    defaults_ = []
+    defaults_.append(defaults)
+    defaults_.extend(defaults_multiple)
+    
+    for default in defaults_:
+        if default['use_scratch']:
+            fname = get_file(integrated=False,**default)
+            if os.path.isfile(fname):
+                logger.info('Removed file: %s'%(fname))
+                os.remove(fname)
+            fname = get_file(integrated=True,**default)
+            if os.path.isfile(fname):
+                logger.info('Removed file: %s'%(fname))
+                os.remove(fname)    
+            default['use_scratch'] = False
 
 def defaults2str():
     """
@@ -401,12 +472,15 @@ def get_file(integrated=False,**kwargs):
     @return: gridfile
     @rtype: str
     """
+    
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])
+    use_scratch = kwargs.get('use_scratch',defaults['use_scratch'])
     if os.path.isfile(grid):
         logger.debug('Selected %s'%(grid))
         if integrated:
             return os.path.join(os.path.dirname(grid),'i'+os.path.basename(grid))
+        logging.debug('Returning grid path: '+grid)
         return grid
     
     grid = grid.lower()
@@ -495,25 +569,32 @@ def get_file(integrated=False,**kwargs):
          basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
-        if integrated:
-            grid = config.get_datafile(basedir,'i'+basename)
+        if use_scratch:
+            if integrated:
+                grid = scratchdir+'i'+basename
+            else:
+                grid = scratchdir+basename
         else:
-            grid = config.get_datafile(basedir,basename)
+            if integrated:
+                grid = config.get_datafile(basedir,'i'+basename)
+            else:
+                grid = config.get_datafile(basedir,basename)
     #-- we could also ask for a list of files, when wildcards are given:
     else:
         grid = config.glob(basedir,'i'+basename)
-        if integrated:
-            grid = config.glob(basedir,'i'+basename)
+        if use_scratch:
+            if integrated:
+                grid = glob.glob(scratchdir+'i'+basename)
+            else:
+                grid = glob.glob(scratchdir+basename) 
         else:
-            grid = config.glob(basedir,basename)    
-    logger.debug('Selected %s'%(grid))
-    
+            if integrated:
+                grid = config.glob(basedir,'i'+basename)
+            else:
+                grid = config.glob(basedir,basename)   
+                
+    logger.debug('Returning grid path(s): %s'%(grid))
     return grid
-
-
-
-
-
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
@@ -1555,13 +1636,13 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
     
     def do_ebv_process(ebvs,arr,responses):
-        logger.info('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
+        logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
         for ebv in ebvs:
             flux_ = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',law=law,Rv=Rv)
             #-- calculate synthetic fluxes
             synflux = synthetic_flux(wave,flux_,responses,units=units)
             arr.append([np.concatenate(([ebv],synflux))])
-        logger.info("Finished EBV process (len(arr)=%d)"%(len(arr)))
+        logger.debug("Finished EBV process (len(arr)=%d)"%(len(arr)))
     
     #-- do the calculations
     c0 = time.time()
@@ -1598,7 +1679,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             start += arr.shape[0]
         except:
             logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
-            logger.info('Exception: %s'%(sys.exc_info()[1]))
+            logger.debug('Exception: %s'%(sys.exc_info()[1]))
             exceptions = exceptions + 1
     
     #-- make FITS columns

@@ -353,7 +353,6 @@ c
 c  initial kernel function (rotation);
 c  or the general kernel function (for instrumental)
 c     
-      write(*,*) 'bla',EPS
       CALL KERNEL(MODE,NR,VROT,SLAM,FWHM,XLMAX,G,EPS)
       DLAM=XLMAX/NR
 c
