@@ -12,7 +12,7 @@ from ivs.aux import loggers
 from ivs.units import conversions
 
 logger = logging.getLogger("IO.FITS")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 #{ Input
 
@@ -230,7 +230,7 @@ def read2recarray(fits_file,ext=1,return_header=False):
     
     Should add a test that the strings were not chopped of...
     """
-    dtype_translator = dict(L=np.bool,D=np.float64)
+    dtype_translator = dict(L=np.bool,D=np.float64,E=np.float32,J=np.int)
     if isinstance(fits_file,str):
         ff = pyfits.open(fits_file)
     elif isinstance(fits_file,pyfits.HDUList):
