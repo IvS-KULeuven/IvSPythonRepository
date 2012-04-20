@@ -32,15 +32,18 @@ def check_input(fctn):
         args = list(args)
         parameters = np.asarray(args[1])
         if not parameters.dtype.names:
-            parameters = globals()[fctn.__name__+'_preppars'](parameters)
+            name = fctn.__name__
+            for rem in ['_diffcorr']:
+                name = name.replace(rem,'')
+            parameters = globals()[name+'_preppars'](parameters)
         args[1] = parameters
         return fctn(*args,**kwargs)
     return check
 
 #{ Timeseries
 
-def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
-                 chronological=False):
+def phasediagram(time,signal,nu0,D=0,t0=None,forb=None,asini=None,
+                 return_indices=False,chronological=False):
     """
     Construct a phasediagram, using frequency nu0.
     
@@ -79,8 +82,16 @@ def phasediagram(time, signal, nu0, D=0, t0=None, return_indices=False,
     @return: phase points (sorted), corresponding observations
     @rtype: ndarray,ndarray(, ndarray)
     """
+    cc = 173.144632674 # AU per day
     if (t0 is None): t0 = 0.
-    phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
+    if forb is None:
+        print 'linear frequency shift'
+        phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
+    else:
+        alpha = nu0*asini/cc
+        phase = np.fmod(nu0 * (time-t0) + alpha*(sin(2*pi*forb*time) - sin(2*pi*forb*t0)),1.0)
+        print 'circular orbit'
+        #phase = np.fmod(nu0 * (time-t0) - asini/cc/(2*np.pi*forb)*np.cos(2*np.pi*forb*(time-t0)),1.0)
     phase = np.where(phase<0,phase+1,phase)
     
     #-- keep track of the phase number, and prepare lists to add the points
@@ -339,6 +350,64 @@ def kepler(times,parameters,itermax=8):
         p = [pars['P'],pars['T0'],pars['e'],pars['omega'],pars['K'],0]
         RVfit += keplerorbit.radial_velocity(p,times=times,itermax=itermax)
     return RVfit
+
+@check_input
+def kepler_diffcorr(times,parameters,itermax=8):
+    """
+    Compute coefficients for differential correction method.
+    
+    See page 97-98 of Hilditch's book "An introduction to close binary stars".
+    """
+    N = len(times)
+    if 'gamma' in parameters.dtype.names:
+        RV0 = parameters['gamma'].sum()
+    else:
+        RV0 = 0.
+    P,T0,e,omega,K = parameters['P'],parameters['T0'],parameters['e'],\
+                     parameters['omega'],parameters['K']
+    freq = 1./P
+    x0 = T0*2*np.pi*freq
+    omega = omega*np.ones(N)
+    #-- calculate true anomaly
+    E,theta = keplerorbit.true_anomaly(times*2*np.pi*freq-x0,e,itermax=itermax)
+    #-- calculate coefficients:
+    th_om = theta + omega
+    sin_th_om = np.sin(th_om)
+    cos_th_om = np.cos(th_om)
+    cos_om = np.cos(omega)
+    sin_om = np.sin(omega)
+    cos_th = np.cos(theta)
+    sin_th = np.sin(theta)
+    c_deltaK = cos_th_om + e*cos_om
+    c_deltae =  K*(cos_om - (sin_th_om * sin_th * (2+e*cos_th))/(1-e**2))
+    c_deltao = -K*(sin_th_om + e*sin_om)
+    c_deltaT = sin_th_om*(1+e*cos_th)**2*2*np.pi*K/P/(1-e**2)**1.5
+    c_deltaP = sin_th_om*(1+e*cos_th)**2*2*np.pi*K*(times-T0)/P**2/(1-e**2)**1.5
+    c_deltag = np.ones(N)
+    A = np.vstack([c_deltag,c_deltaP,c_deltaT,c_deltae,c_deltao,c_deltaK]).T
+    return A
+
+
+@check_input
+def binary(times,parameters,n1=None,itermax=8):
+    """
+    Simultaneous evaluation of two binary components.
+    
+    parameter fields must be C{'P','T0','e','omega','K1', 'K2'}.
+    """
+    if n1 is None:
+        n1 = len(times)/2
+    if 'gamma' in parameters.dtype.names:
+        RVfit = parameters['gamma'].sum()
+    else:
+        RVfit = 0
+    RVfit = RVfit*np.ones(len(times))
+    p1 = [parameters['P'],parameters['T0'],parameters['e'],parameters['omega'],parameters['K1'],0]
+    p2 = [parameters['P'],parameters['T0'],parameters['e'],parameters['omega'],parameters['K2'],0]
+    RVfit[:n1] += keplerorbit.radial_velocity(p1,times=times[:n1],itermax=itermax)
+    RVfit[n1:] += keplerorbit.radial_velocity(p2,times=times[n1:],itermax=itermax)
+    return RVfit
+    
 
 
 @check_input
@@ -723,6 +792,70 @@ def kepler_preppars(pars):
             names = ['P','T0','e','omega','K']
         converted_pars = np.rec.fromarrays(converted_pars,names=names)
     return converted_pars
+
+
+def binary_preppars(pars):
+    """
+    Prepare Kepler orbit parameters in correct form for evaluating/fitting.
+    
+    If you input a record array, this function will output a 1D numpy array
+    containing only the independent parameters for use in nonlinear fitting
+    algorithms.
+    
+    If you input a 1D numpy array, it will output a record array.
+    
+    @param pars: input parameters in record array or normal array form
+    @type pars: record array or normal numpy array
+    @return: input parameters in normal array form or record array
+    @rtype: normal numpy array or record array
+    """
+    #-- from record array to flat
+    if pars.dtype.names:
+        # with systemic velocity
+        if 'gamma' in pars.dtype.names:
+            converted_pars = np.zeros(6*len(pars)+1)
+            converted_pars[0] = pars['gamma'].sum()
+            converted_pars[1::6] = pars['P']
+            converted_pars[2::6] = pars['T0']
+            converted_pars[3::6] = pars['e']
+            converted_pars[4::6] = pars['omega']
+            converted_pars[5::6] = pars['K1']
+            converted_pars[6::6] = pars['K2']
+        else:
+            converted_pars = np.zeros(6*len(pars))
+            converted_pars[0::6] = pars['P']
+            converted_pars[1::6] = pars['T0']
+            converted_pars[2::6] = pars['e']
+            converted_pars[3::6] = pars['omega']
+            converted_pars[4::6] = pars['K1']
+            converted_pars[5::6] = pars['K2']
+    #-- from flat to record array
+    else:
+        # with constant
+        if len(pars)%6==1:
+            converted_pars = np.zeros((7,(len(pars)-1)/6))
+            converted_pars[0,0] = pars[0]
+            converted_pars[1] = pars[1::6]
+            converted_pars[2] = pars[2::6]
+            converted_pars[3] = pars[3::6]
+            converted_pars[4] = pars[4::6]
+            converted_pars[5] = pars[5::6]
+            converted_pars[6] = pars[6::6]
+            names = ['gamma','P','T0','e','omega','K1','K2']
+        # without constant
+        else:
+            converted_pars = np.zeros((6,len(pars)/6))
+            converted_pars[0] = pars[0::6]
+            converted_pars[1] = pars[1::6]
+            converted_pars[2] = pars[2::6]
+            converted_pars[3] = pars[3::6]
+            converted_pars[4] = pars[4::6]
+            converted_pars[5] = pars[5::6]
+            names = ['P','T0','e','omega','K1','K2']
+        converted_pars = np.rec.fromarrays(converted_pars,names=names)
+    return converted_pars
+
+
     
 def box_preppars(pars):
     """

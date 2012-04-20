@@ -179,6 +179,7 @@ import logging
 
 import numpy as np
 from numpy import pi,cos,sin
+import numpy.linalg as la
 from scipy.interpolate import splrep
 import scipy.optimize
 
@@ -528,7 +529,8 @@ def box(times,signal,freq,b0=0,bn=1,order=50,t0=None):
                     best_fit = chisquare2
     return parameters
 
-def gauss(x,y,threshold=0.1,constant=False,full_output=False,init_guess_method='analytical'):
+def gauss(x,y,threshold=0.1,constant=False,full_output=False,
+          init_guess_method='analytical',window=None):
     """
     Fit a Gaussian profile to data using a polynomial fit.
     
@@ -584,6 +586,10 @@ def gauss(x,y,threshold=0.1,constant=False,full_output=False,init_guess_method='
     else:
         C = 0.
         
+    if window is not None:
+        win = (window[0]<=x) & (x<=window[1])
+        x,y = x[win],y[win]
+    
     #-- transform to a polynomial function and perform a fit
     #   first clip where y==0
     threshold *= max(y-C)
@@ -735,19 +741,60 @@ def e_sine(times,signal,parameters,correlation_correction=True,limit=10000):
     return e_parameters
 
 
+#{ Linear improvements
+
+def diffcorr(times, signal, parameters, func_name, \
+                  max_iter=100, tol=1e-6,full_output=False):
+    """
+    Differential corrections.
+    """
+    
+    #-- ensure we have a flat array, and look for the functions to evaluate the
+    #   fits and the coefficients
+    prep_func = getattr(evaluate,func_name+'_preppars')
+    diff_func = getattr(evaluate,func_name+'_diffcorr')
+    eval_func = getattr(evaluate,func_name)
+    if parameters.dtype.names:
+        parameters = prep_func(parameters)
+    
+    #-- prepare arrays for coefficients and new parameters
+    Deltas = np.zeros((max_iter,len(parameters)))
+    params = np.zeros_like(Deltas)
+    params[0] = parameters
+    counter = 1
+    while (counter==1) or (counter>0 and counter<max_iter and np.any(np.abs(Deltas[counter-1])>tol)):
+        params[counter] = params[counter-1] + Deltas[counter-1]
+        myfit = eval_func(times,params[counter])
+        coeff = diff_func(times,params[counter])
+        Delta,res,rank,s = la.lstsq(coeff,myfit-signal)
+        Deltas[counter] = -Delta
+        counter += 1
+    
+    #-- transform the parameters to record arrays, as well as the steps
+    parameters = prep_func(params[counter-1])
+    e_parameters = prep_func(Deltas[counter-1])
+    e_parameters.dtype.names = ['e_'+name for name in e_parameters.dtype.names]
+    
+    if full_output:
+        return parameters,e_parameters,0,params[:counter],Deltas[:counter]
+    else:
+        return parameters,e_parameters,0
+    
+
+#}
 
 
 #{ Non-linear improvements
 
-def residuals(parameters,domain,data,evalfunc):
-    fit = evalfunc(domain,parameters)
+def residuals(parameters,domain,data,evalfunc,*args):
+    fit = evalfunc(domain,parameters,*args)
     return data-fit
 
 def residuals_single(parameters,domain,data,evalfunc):
     fit = evalfunc(domain,parameters)
     return sum((data-fit)**2)
 
-def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
+def optimize(times, signal, parameters, func_name, minimizer='leastsq', args=()):
     #-- we need these function to evaluate the fit and to (un)pack the fitting
     #   parameters from and to flat arrays
     prepfunc = getattr(evaluate,func_name+'_preppars')
@@ -759,7 +806,6 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
     if parameters.dtype.names:
         parameters = prepfunc(parameters)
     init_guess = parameters.copy()
-    
     #-- keep track of the initial chi square value, to check if there is an
     #   improvement
     dof = (len(times)-len(init_guess))
@@ -769,7 +815,7 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq'):
     #-- optimize
     if minimizer=='leastsq':
         popt, cov, info, mesg, flag = optifunc(residuals,init_guess,
-                                     args=(times,signal,evalfunc),full_output=1)#,diag=[1.,10,1000,1.,100000000.])
+                                     args=(times,signal,evalfunc)+args,full_output=1)#,diag=[1.,10,1000,1.,100000000.])
         #-- calculate new chisquare, and check if we have improved it
         chisq = np.sum(info['fvec']*info['fvec'])
         if chisq>chisq_init or flag!=1:
