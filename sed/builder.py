@@ -1447,16 +1447,21 @@ class SED(object):
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             
+            mf = []
             for system in systems:
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
+                    mf.append(flux[keep])
             if keep.sum():
                 pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
             pl.xlabel('wavelength [$\AA$]')
             #-- scale y-axis (sometimes necessary for data with huge errorbars)
-            mf = np.log10(flux[keep])
-            pl.ylim(np.nanmin(mf)-0.1*np.nanmin(mf),np.nanmin(mf)+0.1*np.nanmin(mf))
+            mf = np.log10(np.hstack(mf))
+            lmin,lmax = np.nanmin(mf),np.nanmax(mf)
+            lrange = np.abs(lmin-lmax)
+            
+            pl.ylim(10**(lmin-0.1*lrange),10**(lmax+0.1*lrange))
         else:
             names = []
             start_index = 1
