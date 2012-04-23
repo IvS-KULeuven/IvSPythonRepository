@@ -106,6 +106,10 @@ def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     change). When the keyword C{flux} is not set, the wavelength array will be
     changed (but the fluxes not, obviously).
     
+    When C{flux} is set, fluxes will be returned.
+    
+    When C{flux} is not set, wavelengths will be returned.
+    
     Example usage: shift a spectrum to the blue ('left') with 20 km/s.
     
     >>> wave = np.linspace(3000,8000,1000)
@@ -122,7 +126,7 @@ def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     @type vrad: float (units: km/s) or tuple (float,'units')
     @param vrad_units: units of radial velocity (default: km/s)
     @type vrad_units: str (interpretable for C{units.conversions.convert})
-    @return: shifted wavelength array
+    @return: shifted wavelength array/shifted flux
     @rtype: ndarray
     """ 
     cc = constants.cc
