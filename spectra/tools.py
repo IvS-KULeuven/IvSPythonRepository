@@ -98,8 +98,13 @@ def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     
     If units are not supplied, the radial velocity is assumed to be in km/s.
     
-    If you want to apply a barycentric correction, you'd probably want to
-    reverse the sign!
+    If you want to apply a barycentric (or orbital) correction, you'd probabl
+    want to reverse the sign of the radial velocity!
+    
+    When the keyword C{flux} is set, the spectrum will be interpolated onto
+    the original wavelength grid (so the original wavelength grid will not
+    change). When the keyword C{flux} is not set, the wavelength array will be
+    changed (but the fluxes not, obviously).
     
     Example usage: shift a spectrum to the blue ('left') with 20 km/s.
     
