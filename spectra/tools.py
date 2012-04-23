@@ -81,7 +81,7 @@ Set the xticks to vsini values for clarity:
 import pyrotin4
 import numpy as np
 from numpy import pi,sin,cos,sqrt
-#from ivs.timeseries import pergrams
+from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import loggers
