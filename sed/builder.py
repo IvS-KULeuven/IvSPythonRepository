@@ -205,10 +205,18 @@ we know are not so trustworthy:
 >>> mysed.set_photometry_scheme('combo')
 >>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
 
+Speed up the fitting process by copying the model grids to the scratch disk
+
+>>> model.copy2scratch()
+
 Start the grid based fitting process and show some plots. We use 100000 randomly
 distributed points over the grid:
 
 >>> mysed.igrid_search(points=100000)
+
+Delete the model grids from the scratch disk
+
+>>> model.clean_scratch()
 
 and make the plot
 
@@ -283,11 +291,13 @@ We use only the absolute fluxes
 >>> mysed.set_photometry_scheme('abs')
 
 For the main sequence component we use kurucz models with solar metalicity, and
-for the sdB component tmap models:
+for the sdB component tmap models. And we copy the model grids to the scratch disk
+to speed up the process:
 
 >>> grid1 = dict(grid='kurucz',z=+0.0)
 >>> grid2 = dict(grid='tmap')
 >>> model.set_defaults_multiple(grid1,grid2)
+>>> model.copy2scratch()
 
 The actual fitting. The second fit starts from the 95% probability intervals of
 the first fit.
@@ -296,9 +306,12 @@ the first fit.
 >>> teff_sdb = (25000,45000)
 >>> logg_ms = (4.00,4.50)
 >>> logg_sdb = (5.00,6.50)
->>> mysed.igrid_search(masses=(0.47,0.71) ,teffrange=(teff_ms,teff_fix),loggrange=(logg_ms,logg_sdb),
-                        ebvrange=(0.00,0.02), zrange=(0,0), points=2000000, type='binary')
+>>> mysed.igrid_search(masses=(0.47,0.71) ,teffrange=(teff_ms,teff_fix),loggrange=(logg_ms,logg_sdb), ebvrange=(0.00,0.02), zrange=(0,0), points=2000000, type='binary')
 >>> mysed.igrid_search(masses=(0.47,0.71) ,points=2000000, type='binary')
+
+Delete the used models from the scratch disk
+
+>>> model.clean_scratch()
 
 Plot the results
 
@@ -1295,7 +1308,17 @@ class SED(object):
             #radii = np.zeros_like()
             #for di,dprobi in zip(d,dprob):
             #    self.results['igrid_search']['grid']['scale']*d_min
+    
+    def iminimize(self,teff=None,logg=None,ebv=None,z=None,radius=None,masses=None,
+                          df=5,CI_limit=None,type='single', **kwargs):
+                              
+        include_grid = self.master['include']
+        meas = self.master['cmeas'][include_grid]
+        e_meas = self.master['e_cmeas'][include_grid]
+        photbands = self.master['photband'][include_grid]
         
+        return fit.iminimize(meas,e_meas,photbands,teff=teff,logg=logg,ebv=ebv,z=z, rad=radius, masses=masses, type=type)#, engine='lbfgsb')
+    
     #}
     
     #{ Interfaces

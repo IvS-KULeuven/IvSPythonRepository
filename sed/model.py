@@ -96,7 +96,31 @@ And reset the 'default' default values by calling L{set_defaults} without argume
 >>> print defaults
 {'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
-Subsection 2.2 Model SEDs
+Subsection 2.2 Speeding up
+--------------------------
+
+When fitting an sed using the builder class, or repeatedly reading model seds,
+or integrated photometry, the main bottleneck on the speed will be the disk access
+This can be circumvented by using the scratch disk. To do this, call the function
+copy2scratch() after setting the default settings as explained above. f.x.:
+
+>>> set_defaults(grid='kurucz', z=0.5)
+>>> copy2scratch()
+
+You have to do this every time you change a grid setting. This function creates a
+directory named 'your_username' on the scratch disk and works from there. So you 
+won`t disturbed other users.
+
+After the fitting process use the function clean_scratch() to remove the models
+that you used from the scratch disk. Be carefull with this, because it will remove
+the models without checking if there is another process using them. So if you have
+multiple scripts running that are using the same models, only clean the scratch
+disk after the last process is finnished.
+
+The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
+and multiple sed fitting.
+
+Subsection 2.3 Model SEDs
 -------------------------
 
 Be careful when you supply parameters: e.g., not all grids are calculated for
@@ -314,13 +338,7 @@ def set_defaults(*args,**kwargs):
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
-            logger.info('Set %s to %s'%(key,kwargs[key]))
-    
-    #-- Check if the user wants to use the scratch disk
-    #   Has to be done after all other keywords are set
-    if 'use_scratch' in kwargs and kwargs['use_scratch']:
-        copy2scratch()
-        
+            logger.info('Set %s to %s'%(key,kwargs[key]))        
                 
 
 def set_defaults_multiple(*args):
@@ -378,7 +396,10 @@ def copy2scratch():
 def clean_scratch():
     """
     Remove the grids that were copied to the scratch directory by using the
-    function copy2scratch().
+    function copy2scratch(). Be carefull with this function, as it doesn't check
+    if the models are still in use. If you are running multiple scripts that
+    use the same models, only clean the scratch disk after the last script is
+    finnished.
     """
     defaults_ = []
     defaults_.append(defaults)
