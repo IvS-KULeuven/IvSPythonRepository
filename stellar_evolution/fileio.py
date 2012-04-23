@@ -225,9 +225,14 @@ def read_cles_dat(filename,do_standardize=False):
 
 def read_cles_sum(sumfile):
     """
-    Read the input from a CLES '.sum' file.
+    Read the input from a CLES '-sum.txt' file.
     
-    Possible only MS.
+    Keys: C{logTeff}, C{logg}, C{M}, C{R}, C{logL}, C{age}(, C{num}, C{Xc})
+    
+    @param sumfile: filename of the '-sum.txt' file.
+    @type param:str
+    @return: model track
+    @rtype: recarray
     """
     c = {'summary':{'logTeff':7,'logg':11,'M':2,'R':10,'logL':8,'age':6},
          'sum':    {'logTeff':2,'logg': 8,'M':6,'R': 7,'logL':3,'age':1,'num':0,'Xc':4}}
@@ -254,8 +259,6 @@ def read_cles_sum(sumfile):
     sa = np.argsort(cols)
     keys = keys[sa]
     cols = cols[sa]
-    print c
-    print zip(keys,cols)
     mydata = np.rec.fromarrays([data[:,col] for col in cols],names=list(keys))
     
     logger.debug('CLES summary %s read'%(sumfile))
@@ -566,6 +569,7 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     @return: global parameters, local parameters
     @rtype: dict, rec array
     """
+    add_center_point = kwargs.get('add_center_point',False)
     old_settings = np.seterr(invalid='ignore',divide='ignore')
     if isinstance(filename,str):
         basename,ext = os.path.splitext(filename)
@@ -585,16 +589,15 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     elif ext in ['.dat']:
         starg,starl = read_cles_dat(filename)
         _from = 'cles'
-        
     
     if do_standardize:
         #-- if values is set to automatic, set the values for the fundamental
         #   constants to the set defined in the pulsation/stellar evolution code
         if values=='auto' and _from is not None:
             values=_from
-            old = conversions.set_convention(units,values)
+        old = conversions.set_convention(units,values)
         starg = standardize(starg,_from,'global',units=units)
-        starl = standardize(starl,_from,'local',units=units)
+        starl = standardize(starl,_from,'local',units=units,add_center_point=add_center_point)
         if ext in ['.log']:
             starl = starl[::-1]
         #-- now just add some other parameters for which we need both the
@@ -688,7 +691,7 @@ def read_cols(filename):
 
 
 
-def standardize(star,_from,info='local',units='cgs'):
+def standardize(star,_from,info='local',units='cgs',add_center_point=False):
     """
     Standardize units and naming of a stellar model.
     
@@ -700,6 +703,8 @@ def standardize(star,_from,info='local',units='cgs'):
     @type info: str
     @param units: units to work with
     @type units: str
+    @param add_center_point: if True, a center point will be added
+    @type add_center_point: bool
     @return: standardized star
     @rtype: dict or recarray
     """
@@ -768,11 +773,18 @@ def standardize(star,_from,info='local',units='cgs'):
     #-- some profiles start at the surface...
     if info=='local' and _from in ['mesa']:
         new_star = new_star[::-1]
+        add_center_point = True
+        logger.info('Reversed profile (first point is now center)')
+    #-- some profiles have no inner point
+    if add_center_point:
+        if info=='global':
+            raise ValueError,'cannot add center point in global variables'
         new_star = np.hstack([new_star[:1],new_star])
         #-- fill-in some initial values
         for key in ['mass','q','radius']:
             if key in keys:
                 new_star[key][0] = 0.
+        logger.info('Added center point')
     #-- sometimes it is easy to precompute additional information that can be
     #   derived from the other information available. We might need this
     #   information for pulsation analysis, profile studies etc...
