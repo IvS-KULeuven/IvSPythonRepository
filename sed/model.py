@@ -13,57 +13,38 @@ B{reddening}. All these things can be specified though (see below).
 Section 1. Available model grids
 ================================
 
-    Section 1.1 Available grids
-    ---------------------------
-    
-    - kurucz: The Kurucz model grids, (default setting)  reference: Kurucz 1993, yCat, 6039, 0
-        - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-        - metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-        - alpha enhancement (alpha): True means alpha enhanced (+0.4)
-        - turbulent velocity (vturb): vturb in km/s
-        - nover= True means no overshoot
-        - odfnew=True means no overshoot but with better opacities and abundances
-    
-    - tmap: NLTE grids computed for sdB stars with the Tubingen NLTE Model
-      Atmosphere package. No further parameters are available. Reference:
-      Werner et al. 2003, 
-    
-    
-    Section 1.2 Plotting the domains of all spectral grids
-    ------------------------------------------------------
+We make a plot of the domains of all spectral grids. Therefore, we first collect
+all the grid names
 
-    We make a plot of the domains of all spectral grids. Therefore, we first collect
-    all the grid names
+>>> grids = get_gridnames()
 
-    >>> grids = get_gridnames()
+Preparation of the plot: set the color cycle of the current axes to the spectral
+color cycle.
 
-    Preparation of the plot: set the color cycle of the current axes to the spectral
-    color cycle.
+>>> p = pl.figure(figsize=(10,8))
+>>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+>>> p = pl.gca().set_color_cycle(color_cycle)
 
-    >>> p = pl.figure(figsize=(10,8))
-    >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
-    >>> p = pl.gca().set_color_cycle(color_cycle)
+To plot all the grid points, we run over all grid names (which are strings), and
+retrieve their dimensions. The dimensions are just two arrays giving the teff-
+and logg-coordinate of each SED in the grid. They can thus be easily plot:
 
-    To plot all the grid points, we run over all grid names (which are strings), and
-    retrieve their dimensions. The dimensions are just two arrays giving the teff-
-    and logg-coordinate of each SED in the grid. They can thus be easily plot:
+>>> for grid in grids:
+...    teffs,loggs = get_grid_dimensions(grid=grid)
+...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
 
-    >>> for grid in grids:
-    ...    teffs,loggs = get_grid_dimensions(grid=grid)
-    ...    p = pl.plot(np.log10(teffs),loggs,'o',ms=7,label=grid)
+And we need to set some of the plotting details to make it look nicer.
 
-    And we need to set some of the plotting details to make it look nicer.
+>>> p = pl.xlim(pl.xlim()[::-1])
+>>> p = pl.ylim(pl.ylim()[::-1])
+>>> p = pl.xlabel('Effective temperature [K]')
+>>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
+>>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+>>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
+>>> p = pl.legend(loc='upper left',prop=dict(size='small'))
+>>> p = pl.grid()
 
-    >>> p = pl.xlim(pl.xlim()[::-1])
-    >>> p = pl.ylim(pl.ylim()[::-1])
-    >>> p = pl.xlabel('Effective temperature [K]')
-    >>> p = pl.ylabel('log( Surface gravity [cm s$^{-1}$]) [dex]')
-    >>> xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
-    >>> p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
-    >>> p = pl.legend(loc='upper left',prop=dict(size='small'))
-    >>> p = pl.grid()
-
-    ]include figure]]ivs_sed_model_grid.png]
+]include figure]]ivs_sed_model_grid.png]
 
 Section 2. Retrieval of model SEDs
 ==================================
@@ -249,7 +230,6 @@ And make a nice plot
 """
 import os
 import sys
-import glob
 import logging
 import copy
 import pyfits
@@ -263,7 +243,7 @@ except ImportError:
     from Scientific.Functions.Interpolation import InterpolatingFunction
     new_scipy = False
 from scipy.interpolate import interp1d
-from multiprocessing import Process,Manager,cpu_count
+from multiprocessing import Process,Manager
 
 from ivs import config
 from ivs.units import conversions
@@ -275,11 +255,9 @@ from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.io import ascii
 import reddening
-import getpass
-import shutil
 
 logger = logging.getLogger("SED.MODEL")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 caldir = os.sep.join(['sedtables','calibrators'])
 
@@ -288,12 +266,10 @@ defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 ct='mlt',                                 # NEMO (convection theory)
-                t=1.0,a=0.0,c=0.5,m=1.0,co=1.05,          # MARCS and COMARCS
-                use_scratch=False)
+                t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
 defaults_multiple = [defaults.copy(),defaults.copy()]
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
-scratchdir = None
 
 #{ Interface to library
 
@@ -316,12 +292,6 @@ def set_defaults(*args,**kwargs):
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
     
-    #-- Check if the user wants to use the scratch disk
-    #   Has to be done after all other keywords are set
-    if 'use_scratch' in kwargs and kwargs['use_scratch']:
-        copy2scratch()
-        
-                
 
 def set_defaults_multiple(*args):
     """
@@ -333,68 +303,8 @@ def set_defaults_multiple(*args):
         for key in arg:
             if key in defaults_multiple[i]:
                 defaults_multiple[i][key] = arg[key]
-                logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
-
-def copy2scratch():
-    """
-    Copy the grids to the scratch directory to speed up the fitting process.
-    Files are placed in the directory: /scratch/uname/ where uname is your username.
-    
-    This function checks the grids that are set with the functions set_defaults()
-    and set_defaults_multiple(). Every time a grid setting is changed, this
-    function needs to be called again.
-    
-    Don`t forget to remove the files from the scratch directory after the fitting
-    process is completed with clean_scratch()
-    """
-    global scratchdir
-    uname = getpass.getuser()
-    if not os.path.isdir('/scratch/%s/'%(uname)):
-        os.makedirs('/scratch/%s/'%(uname))
-    scratchdir = '/scratch/%s/'%(uname)
-    
-    defaults_ = []
-    defaults_.append(defaults)
-    defaults_.extend(defaults_multiple)
-    
-    for default in defaults_:
-        default['use_scratch'] = False
-        #grid
-        fname = get_file(integrated=False,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
-        #integrated grid
-        fname = get_file(integrated=True,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
-        default['use_scratch'] = True
-
-def clean_scratch():
-    """
-    Remove the grids that were copied to the scratch directory by using the
-    function copy2scratch().
-    """
-    defaults_ = []
-    defaults_.append(defaults)
-    defaults_.extend(defaults_multiple)
-    
-    for default in defaults_:
-        if default['use_scratch']:
-            fname = get_file(integrated=False,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)
-            fname = get_file(integrated=True,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)    
-            default['use_scratch'] = False
+                logger.info('Set %s to %s (star %d)'%(key,arg[key],i))
+        
 
 def defaults2str():
     """
@@ -423,8 +333,7 @@ def get_gridnames(grid=None):
     """
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
-                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap',
-                'heberb','hebersdb']
+                'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap']
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -445,14 +354,14 @@ def get_file(integrated=False,**kwargs):
     
     Available grids and example keywords:
         - grid='kurucz93':
-                    - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-                    - metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
-                    - alpha enhancement (alpha): True means alpha enhanced (+0.4)
-                    - turbulent velocity (vturb): vturb in km/s
-                    - nover= True means no overshoot
-                    - odfnew=True means no overshoot but with better opacities and abundances
+                    * metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+                    * metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
+                    * alpha enhancement (alpha): True means alpha enhanced (+0.4)
+                    * turbulent velocity (vturb): vturb in km/s
+                    * nover= True means no overshoot
+                    * odfnew=True means no overshoot but with better opacities and abundances
         - grid='tlusty':
-                    - z: log10(Z/Z0)
+                    * z: log10(Z/Z0)
         - grid='sdb_uli': metallicity and helium fraction (z, he=98)
         - grid='fastwind': no options
         - grid='wd_boris': no options
@@ -472,15 +381,12 @@ def get_file(integrated=False,**kwargs):
     @return: gridfile
     @rtype: str
     """
-    
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])
-    use_scratch = kwargs.get('use_scratch',defaults['use_scratch'])
     if os.path.isfile(grid):
         logger.debug('Selected %s'%(grid))
         if integrated:
             return os.path.join(os.path.dirname(grid),'i'+os.path.basename(grid))
-        logging.debug('Returning grid path: '+grid)
         return grid
     
     grid = grid.lower()
@@ -563,38 +469,27 @@ def get_file(integrated=False,**kwargs):
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
         basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
-    elif grid=='heberb':
-         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
-    elif grid=='hebersdb':
-         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
-        if use_scratch:
-            if integrated:
-                grid = scratchdir+'i'+basename
-            else:
-                grid = scratchdir+basename
+        if integrated:
+            grid = config.get_datafile(basedir,'i'+basename)
         else:
-            if integrated:
-                grid = config.get_datafile(basedir,'i'+basename)
-            else:
-                grid = config.get_datafile(basedir,basename)
+            grid = config.get_datafile(basedir,basename)
     #-- we could also ask for a list of files, when wildcards are given:
     else:
         grid = config.glob(basedir,'i'+basename)
-        if use_scratch:
-            if integrated:
-                grid = glob.glob(scratchdir+'i'+basename)
-            else:
-                grid = glob.glob(scratchdir+basename) 
+        if integrated:
+            grid = config.glob(basedir,'i'+basename)
         else:
-            if integrated:
-                grid = config.glob(basedir,'i'+basename)
-            else:
-                grid = config.glob(basedir,basename)   
-                
-    logger.debug('Returning grid path(s): %s'%(grid))
+            grid = config.glob(basedir,basename)    
+    logger.debug('Selected %s'%(grid))
+    
     return grid
+
+
+
+
+
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
@@ -1590,7 +1485,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     Extra keywords can be used to specify the grid.
     
     @param threads: number of threads
-    @type threads; integer, 'max', 'half' or 'safe' 
+    @type threads; integer
     @param ebvs: reddening parameters to include
     @type ebvs: numpy array
     @param law: interstellar reddening law to use
@@ -1601,25 +1496,11 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     @type units: str, one of 'Flambda','Fnu'
     @param responses: respons curves to add (if None, add all)
     @type responses: list of strings
-    @param update: if true append to existing FITS file, otherwise overwrite
-    possible existing file.
+    @param update: append to existing FITS file
     @type update: boolean
-    """    
+    """
     if ebvs is None:
         ebvs = np.r_[0:4.01:0.01]
-        
-    #-- select number of threads
-    if threads=='max':
-        threads = cpu_count()
-    elif threads=='half':
-        threads = cpu_count()/2
-    elif threads=='safe':
-        threads = cpu_count()-1
-    threads = int(threads)
-    
-    if threads > len(ebvs):
-        threads = len(ebvs)
-    logger.info('Threads: %s'%(threads))
     
     #-- set the parameters for the SED grid
     set_defaults(**kwargs)
@@ -1636,19 +1517,19 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
     
     def do_ebv_process(ebvs,arr,responses):
-        logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
+        logger.info('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
         for ebv in ebvs:
             flux_ = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',law=law,Rv=Rv)
             #-- calculate synthetic fluxes
             synflux = synthetic_flux(wave,flux_,responses,units=units)
             arr.append([np.concatenate(([ebv],synflux))])
-        logger.debug("Finished EBV process (len(arr)=%d)"%(len(arr)))
+        logger.info("Finished EBV process (len(arr)=%d)"%(len(arr)))
     
     #-- do the calculations
     c0 = time.time()
     output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
     start = 0
-    logger.info('Total number of tables: %i'%(len(teffs)))
+    print '# teff: ' + str(len(teffs))
     exceptions = 0
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
@@ -1678,8 +1559,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             output[start:start+arr.shape[0],3:] = arr
             start += arr.shape[0]
         except:
-            logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
-            logger.debug('Exception: %s'%(sys.exc_info()[1]))
+            print sys.exc_info()[1]
             exceptions = exceptions + 1
     
     #-- make FITS columns
@@ -1712,21 +1592,18 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     
     #-- make/update complete FITS file
     if not update:
-        if os.path.isfile(outfile):
-            os.remove(outfile)
-            logger.warning('Removed existing file: %s'%(outfile))
         hdulist = pyfits.HDUList([])
         hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
         hdulist.append(table)
         hdulist.writeto(outfile)
-        logger.info("Written output to %s"%(outfile))
+        print "Written output to %s"%(outfile)
     else:
         hdulist[1] = table
         hdulist.flush()
         hdulist.close()
-        logger.info("Appended output to %s"%(outfile))
+        print "Appended output to %s"%(outfile)
     
-    logger.warning('Encountered %s exceptions!'%(exceptions))
+    print 'Encountered %s exceptions!'%(exceptions)
 
 #}
 
