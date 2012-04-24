@@ -77,7 +77,31 @@ And reset the 'default' default values by calling L{set_defaults} without argume
 >>> print defaults
 {'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
-Subsection 2.2 Model SEDs
+Subsection 2.2 Speeding up
+--------------------------
+
+When fitting an sed using the builder class, or repeatedly reading model seds,
+or integrated photometry, the main bottleneck on the speed will be the disk access
+This can be circumvented by using the scratch disk. To do this, call the function
+copy2scratch() after setting the default settings as explained above. f.x.:
+
+>>> set_defaults(grid='kurucz', z=0.5)
+>>> copy2scratch()
+
+You have to do this every time you change a grid setting. This function creates a
+directory named 'your_username' on the scratch disk and works from there. So you 
+won`t disturbed other users.
+
+After the fitting process use the function clean_scratch() to remove the models
+that you used from the scratch disk. Be carefull with this, because it will remove
+the models without checking if there is another process using them. So if you have
+multiple scripts running that are using the same models, only clean the scratch
+disk after the last process is finnished.
+
+The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
+and multiple sed fitting.
+
+Subsection 2.3 Model SEDs
 -------------------------
 
 Be careful when you supply parameters: e.g., not all grids are calculated for
@@ -291,7 +315,6 @@ def set_defaults(*args,**kwargs):
         if key in defaults:
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
-    
 
 def set_defaults_multiple(*args):
     """
@@ -304,7 +327,70 @@ def set_defaults_multiple(*args):
             if key in defaults_multiple[i]:
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i))
-        
+
+def copy2scratch():
+    """
+    Copy the grids to the scratch directory to speed up the fitting process.
+    Files are placed in the directory: /scratch/uname/ where uname is your username.
+    
+    This function checks the grids that are set with the functions set_defaults()
+    and set_defaults_multiple(). Every time a grid setting is changed, this
+    function needs to be called again.
+    
+    Don`t forget to remove the files from the scratch directory after the fitting
+    process is completed with clean_scratch()
+    """
+    global scratchdir
+    uname = getpass.getuser()
+    if not os.path.isdir('/scratch/%s/'%(uname)):
+        os.makedirs('/scratch/%s/'%(uname))
+    scratchdir = '/scratch/%s/'%(uname)
+    
+    defaults_ = []
+    defaults_.append(defaults)
+    defaults_.extend(defaults_multiple)
+    
+    for default in defaults_:
+        default['use_scratch'] = False
+        #grid
+        fname = get_file(integrated=False,**default)
+        if not os.path.isfile(scratchdir + os.path.basename(fname)):
+            shutil.copy(fname,scratchdir)
+            logger.info('Copied grid: %s to scratch'%(fname))
+        else:
+            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        #integrated grid
+        fname = get_file(integrated=True,**default)
+        if not os.path.isfile(scratchdir + os.path.basename(fname)):
+            shutil.copy(fname,scratchdir)
+            logger.info('Copied grid: %s to scratch'%(fname))
+        else:
+            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        default['use_scratch'] = True
+
+def clean_scratch():
+    """
+    Remove the grids that were copied to the scratch directory by using the
+    function copy2scratch(). Be carefull with this function, as it doesn't check
+    if the models are still in use. If you are running multiple scripts that
+    use the same models, only clean the scratch disk after the last script is
+    finnished.
+    """
+    defaults_ = []
+    defaults_.append(defaults)
+    defaults_.extend(defaults_multiple)
+    
+    for default in defaults_:
+        if default['use_scratch']:
+            fname = get_file(integrated=False,**default)
+            if os.path.isfile(fname):
+                logger.info('Removed file: %s'%(fname))
+                os.remove(fname)
+            fname = get_file(integrated=True,**default)
+            if os.path.isfile(fname):
+                logger.info('Removed file: %s'%(fname))
+                os.remove(fname)    
+            default['use_scratch'] = False
 
 def defaults2str():
     """
