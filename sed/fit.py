@@ -20,7 +20,6 @@ from ivs.aux import progressMeter
 from ivs.aux.decorators import make_parallel
 from ivs.units import constants
 
-
 logger = logging.getLogger("SED.FIT")
 
 #{ PCA functions
@@ -588,11 +587,13 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         masses = 'masses' in kwargs and  kwargs['masses'] or (1,1)
         G = constants.GG_cgs
         Msol = constants.Msol_cgs
-        radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])
-        radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])
-        radii = radius2/radius1
+        Rsol = constants.Rsol_cgs
+        radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])/Rsol
+        radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])/Rsol
+        #radii = radius2/radius1
         
-        radii = np.array([np.ones(len(radii)),radii]).T
+        #radii = np.array([np.ones(len(radii)),radii]).T
+        radii = np.array([radius1,radius2]).T
     elif type=='multiple':
         #-- We have random different radii for the stars
         radii = np.array([10**np.random.uniform(low=radiusrange[0][0], high=radiusrange[0][1], size=(len(teffs))), 
@@ -668,6 +669,120 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
             return chisqs,scales,e_scales,lumis,index
         else:
             return chisqs,scales,e_scales,lumis
+
+def residual_single(params, meas, photbands, kwargs):
+    teff = params['teff'].value
+    logg = params['logg'].value
+    ebv = params['ebv'].value
+    z = params['z'].value
+
+    iflux, Labs = model.get_itable(teff=teff, logg=logg, ebv=ebv, z=z, photbands=photbands, **kwargs)
+    scale = np.average( meas / iflux )
+    
+    print np.array(meas-iflux*scale).shape
+    return (meas-iflux*scale)#**2 / e_meas**2
+        
+def residual_multiple(params, meas, e_meas, photbands, kwargs):
+    teff = params['teff'].value
+    logg = params['logg'].value
+    rad = params['rad'].value
+    teff2 = params['teff2'].value
+    logg2 = params['logg2'].value
+    rad2 = params['rad2'].value
+    ebv = params['ebv'].value
+    z = params['z'].value
+    
+    print teff,logg,rad,teff2,logg2,rad2
+    
+    if logg > 5.00: logg=5.00
+    if logg2 > 6.00: logg2=6.00
+    if logg2 < 5.00: logg2=5.00
+
+    iflux, Labs = model.get_itable_multiple(teff=(teff,teff2), logg=(logg,logg2), ebv=(ebv,ebv),
+                                      z=(z,z), radius=(rad,rad2), photbands=photbands, **kwargs)
+    scale = np.average( meas / iflux )
+    
+    return (meas-iflux*scale)**2 / e_meas**2
+
+def residual_binary(params, meas, e_meas, photbands, kwargs):
+    teff = params['teff'].value
+    logg = params['logg'].value
+    rad = params['rad'].value
+    teff2 = params['teff2'].value
+    logg2 = params['logg2'].value
+    rad2 = params['rad2'].value
+    ebv = params['ebv'].value
+    z = params['z'].value
+
+    iflux, Labs = model.get_itable_multiple(teff=(teff,teff2), logg=(logg,logg2), ebv=(ebv,ebv),
+                                      z=(z,z), radius=(rad,rad2), photbands=photbands, **kwargs)
+    scale = np.average( meas / iflux )
+    
+    return (meas-iflux*scale)**2 / e_meas**2
+
+def dfun(params, meas, photbands, kwargs):
+    dt = (model.get_itable(teff=5200, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] - 
+            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (5200-5000)
+            
+    dg = (model.get_itable(teff=5000, logg=4.50, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] - 
+            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (4.50-4.25)
+            
+    de = (model.get_itable(teff=5000, logg=4.25, ebv=0.1, z=0.0, photbands=photbands, **kwargs)[0] - 
+            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (0.1-0.0)
+            
+    dz = np.ones(len(meas))
+    
+    print np.array([dt,dg,de,dz]).shape
+    
+    return [dt,dg,de,dz]
+
+def iminimize(meas,e_meas,photbands,**kwargs):
+    """
+    Using http://newville.github.com/lmfit-py/
+    """
+    from ivs.lmfit import minimize, Parameters
+    model_func = kwargs.pop('model_func',model.get_itable)
+    engine = kwargs.pop('engine','leastsq')
+    type = kwargs.pop('type','single')
+    
+    if type == 'single':
+        residual = residual_single
+        
+        params = Parameters()
+        params.add('teff', value=kwargs.pop('teff'), min=15000, max=25000)
+        params.add('logg', value=kwargs.pop('logg'), min=4.0, max=4.99)
+        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.2, vary=False)
+        params.add('z', value=kwargs.pop('z'), vary=False)
+    
+    if type == 'multiple':
+        residual = residual_multiple
+        params = Parameters()
+        params.add('teff', value=kwargs['teff'][0], min=5000, max=7000)
+        params.add('logg', value=kwargs['logg'][0], min=4.0, max=4.99)
+        params.add('rad', value=kwargs['rad'][0], min=0.5, max=2.0, vary=False)
+        params.add('teff2', value=kwargs.pop('teff')[1], min=20000, max=40000)
+        params.add('logg2', value=kwargs.pop('logg')[1], min=5.0, max=6.0)
+        params.add('rad2', value=kwargs.pop('rad')[1], min=0.05, max=0.5, vary=False)
+        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.01, vary=False)
+        params.add('z', value=kwargs.pop('z'), vary=False)
+        
+    if type == 'binary':
+        residual = residual_binary
+        params = Parameters()
+        params.add('mass', value=kwargs['masses'][0], vary=False)
+        params.add('mass2', value=kwargs.pop('masses')[1], vary=False)
+        params.add('teff', value=kwargs['teff'][0], min=5000, max=7000)
+        params.add('logg', value=kwargs['logg'][0], min=4.0, max=4.99)
+        params.add('rad', expr='sqrt(mass / 10**logg)')
+        params.add('teff2', value=kwargs.pop('teff')[1], min=20000, max=40000)
+        params.add('logg2', value=kwargs.pop('logg')[1], min=5.0, max=6.0)
+        params.add('rad2', expr='sqrt(mass2 / 10**logg2)')
+        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.01, vary=True)
+        params.add('z', value=kwargs.pop('z'), vary=False)
+    
+    out = minimize(residual, params, args=(meas, photbands, kwargs), engine=engine, Dfun=dfun, col_deriv=1)#, ftol=0.0005)#, diag=(500,0.5,0.01,0.01), factor=1/5.0)
+    
+    return out, params
 
 #}
 
