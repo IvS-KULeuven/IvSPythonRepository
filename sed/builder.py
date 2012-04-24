@@ -869,12 +869,21 @@ class SED(object):
         5. C{sed.results}: results and summary of the fitting process (dict)
         
     """
-    def __init__(self,ID,photfile=None,plx=None,load_fits=True,label=''):
+    def __init__(self,ID,photfile=None,plx=None,load_fits=True,load_photometry=True,label=''):
         """
         Initialize SED class.
         
+        @param ID: Identifier for your target (is also used to search catalogues)
+        @type ID: string
+        @param photfile: file with photometric data for your target
+        @type photfile: string
         @param plx: parallax (and error) of the object
         @type plx: tuple (plx,e_plx)
+        @param load_fits: True if you want to load an existing .fits file with fits results
+        @type load_fits: Boolean
+        @param load_photometry: True if you want to load an existing .phot file or search 
+        catalogues for photometry
+        @type load_photometry: boolean
         """
         self.ID = ID
         self.label = label
@@ -891,9 +900,10 @@ class SED(object):
             self.photfile = photfile
         
         #-- load information from the photometry file if it exists
-        if not os.path.isfile(self.photfile):
+        if not os.path.isfile(self.photfile) and load_photometry:
             try:
                 self.info = sesame.search(ID,fix=True)
+                logger.info('Star %s recognised by SIMBAD'%(ID))
             except KeyError:
                 logger.warning('Star %s not recognised by SIMBAD'%(ID))
                 try:
@@ -906,8 +916,13 @@ class SED(object):
                     self.info['plx'] = {}
                 self.info['plx']['v'] = plx[0]
                 self.info['plx']['e'] = plx[1]
-        else:
+        elif load_photometry:
             self.load_photometry()
+        else:
+            #-- create an empty reccord array.
+            dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),
+                      ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
+            self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
         #--load information from the FITS file if it exists
         self.results = {}
         if load_fits:
@@ -1104,7 +1119,10 @@ class SED(object):
                 to_unit = 'flux_ratio'
                 color = True
             else:
-                to_unit = self.master['cunit'][0]
+                try:
+                    to_unit = self.master['cunit'][0]
+                except:
+                    to_unit = 'erg/s/cm2/A' #in case that there is no photometry loaded yet
                 color = False
             if e_m>0:
                 cm,e_cm = conversions.convert(u,to_unit,m,e_m,photband=p)
@@ -1121,12 +1139,14 @@ class SED(object):
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
         extra_array_ = np.rec.fromarrays(extra_cols,names=['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag'])
         #-- in right order:
-        print self.master.dtype.names
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
         for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
             extra_array[name] = extra_array_[name]
-        logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
+        try:
+            logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
+        except:
+            logger.info('No original measurements present.')
         logger.info('Appending:\n%s'%(photometry2str(extra_array)))
         self.master = fix_master(np.hstack([self.master,extra_array]))
         #self.master = np.hstack([self.master,extra_array])
@@ -1238,7 +1258,8 @@ class SED(object):
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
         #   rescale if needed and compute confidence intervals
-        factor = max(grid_results['chisq'][-1]/k,1)
+        #factor = max(grid_results['chisq'][-1]/k,1)
+        factor = grid_results['chisq'][-1]/k
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
         CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
         CI_red = scipy.stats.distributions.chi2.cdf(grid_results['chisq']/factor,k)
@@ -1468,21 +1489,13 @@ class SED(object):
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             
-            mf = []
             for system in systems:
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
-                    mf.append(flux[keep])
             if keep.sum():
                 pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
             pl.xlabel('wavelength [$\AA$]')
-            #-- scale y-axis (sometimes necessary for data with huge errorbars)
-            mf = np.log10(np.hstack(mf))
-            lmin,lmax = np.nanmin(mf),np.nanmax(mf)
-            lrange = np.abs(lmin-lmax)
-            
-            pl.ylim(10**(lmin-0.1*lrange),10**(lmax+0.1*lrange))
         else:
             names = []
             start_index = 1
@@ -1502,7 +1515,7 @@ class SED(object):
             
     
     @standalone_figure
-    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,**kwargs):
+    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False, plot_unselected=False,**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1579,7 +1592,7 @@ class SED(object):
             #-- exclude:
             label = np.any(keep) and '_nolegend_' or system
             keep = (systems==system) & (self.master['color']==colors) & -self.master['include']
-            if sum(keep):
+            if sum(keep) and plot_unselected:
                 if colors:
                     x,y,e_y,color_dict = plot_sed_getcolors(self.master[keep],color_dict)
                 else:
