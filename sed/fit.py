@@ -431,7 +431,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
                   zrange=((-inf,inf),(-inf,inf)),
                   radiusrange=((1,1),(0.1,10.)),grids=None,
                   points=None,res=None,clear_memory=False,
-                  type='single', **kwargs):                    
+                  type='single',primary_hottest=False, **kwargs):                    
     """
     Generate grid points at which to fit an interpolated grid of SEDs.
     
@@ -439,6 +439,9 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     Otherwise, C{points} grid points will be generated, uniformly distributed
     between the ranges defined by C{teffrange}, C{loggrange} and C{ebvrange}. If
     you set the resolution to C{2}, one out of every two points will be selected.
+    
+    Setting C{primary_hottest} makes sure that, when doing a binary fit, that
+    the the effective temperature of the first star is hotter than the second.
     
     Extra keyword arguments can be used to give more details on the atmosphere
     models to use.
@@ -537,7 +540,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         teffs,loggs,ebvs,zs = generate_grid_single(photbands,teffrange=teffrange,
                       loggrange=loggrange,ebvrange=ebvrange,
                       zrange=zrange,points=points)
-        radii = [1 for i in teffs]
+        radii = np.ones(len(teffs))#[1 for i in teffs]
         return teffs,loggs,ebvs,zs,radii
     
     #-- first collect the effetive temperatures, loggs, ebvs, zs for the
@@ -574,7 +577,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     
     #-- keep in mind that we probably want all the members in the system to have
     #   the same value for the interstellar reddening and metallicity, though
-    #   this is not prerequisitatory
+    #   this is not obligatory
     if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
     if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
     #if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
@@ -594,6 +597,16 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         
         #radii = np.array([np.ones(len(radii)),radii]).T
         radii = np.array([radius1,radius2]).T
+        
+        #-- maybe we need to lower the temperatures of the secondary, so that
+        #   it is not hotter than the primary effective temperature
+        if primary_hottest:
+            wrong = teffs[:,1]>teffs[:,0]
+            teffs[wrong,1] = np.random.uniform(low=teffs[:,1].min()*np.ones(sum(wrong)),\
+                                               high=teffs[wrong,0])
+            logger.info('Ensured primary is the hottest (%d/%d corrections)'%(sum(wrong),len(wrong)))
+                                               
+        
     elif type=='multiple':
         #-- We have random different radii for the stars
         radii = np.array([10**np.random.uniform(low=radiusrange[0][0], high=radiusrange[0][1], size=(len(teffs))), 
