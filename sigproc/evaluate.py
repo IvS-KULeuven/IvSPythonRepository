@@ -85,12 +85,10 @@ def phasediagram(time,signal,nu0,D=0,t0=None,forb=None,asini=None,
     cc = 173.144632674 # AU per day
     if (t0 is None): t0 = 0.
     if forb is None:
-        print 'linear frequency shift'
         phase = np.fmod(nu0 * (time-t0) + D/2. * (time-t0)**2,1.0)
     else:
         alpha = nu0*asini/cc
         phase = np.fmod(nu0 * (time-t0) + alpha*(sin(2*pi*forb*time) - sin(2*pi*forb*t0)),1.0)
-        print 'circular orbit'
         #phase = np.fmod(nu0 * (time-t0) - asini/cc/(2*np.pi*forb)*np.cos(2*np.pi*forb*(time-t0)),1.0)
     phase = np.where(phase<0,phase+1,phase)
     
