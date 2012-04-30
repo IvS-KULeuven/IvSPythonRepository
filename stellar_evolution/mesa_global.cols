@@ -1,0 +1,13 @@
+!  mesa             !   mesa             !unit        !description
+   Teff             !   Teff             ! K          ! Photosphere effective temperature
+   photosphere_L    !   photosphere_L    ! Lsol       ! Photosphere luminosity
+   photosphere_r    !   photosphere_r    ! Rsol       ! Photosphere radius
+   star_age         !   star_age         ! yr         ! stellar age
+   time_step        !   time_step        ! yr         ! time step
+   star_mass        !   star_mass        ! Msol       ! stellar mass
+   initial_z        !   initial_z        ! n kg       ! initial Z mass fraction
+   initial_mass     !   initial_mass     ! Msol       ! initial mass
+   model_number     !   model_number     !            ! model number
+   num_zones        !   num_zones        !            ! number of zones
+   dynamic_time     !   dynamic_time     ! s          ! dynamical time scale
+   star_mdot        !   star_mdot        ! Msol/yr    ! mass-loss rate
