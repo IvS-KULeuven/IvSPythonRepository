@@ -7,7 +7,10 @@ import logging
 import subprocess
 import itertools
 
-import pyosclib
+try:
+    import pyosclib
+except:
+    print "LOSC is not available"
 from ivs.io import ascii
 from ivs.stellar_evolution import fileio
 from ivs.stellar_evolution import adipls
@@ -163,7 +166,7 @@ class StellarModel:
         self.kwargs_adip['nf'] = nscan
         self.kwargs_adip['iper'] = 1
         self.kwargs_adip['ivarf'] = [None,'p','g'].index(fspacing)
-        self.kwargs_adip['iriche'] = 1 # richardson extrapolation to improve freq
+        self.kwargs_adip['iriche'] = 0#1 # richardson extrapolation to improve freq
         self.kwargs_adip['xfit'] = 0.99
         self.kwargs_adip['eps'] = 1e-9
         self.kwargs_adip['itmax'] = 15
@@ -227,7 +230,10 @@ class StellarModel:
         @rtype: float, float, float
         """
         starl = self.starl
-        Nabs = np.abs(starl['brunt_N']) # Brunt-N in rad/s
+        if 'brunt_N' in starl.dtype.names:
+            Nabs = np.abs(starl['brunt_N']) # Brunt-N in rad/s
+        elif 'brunt_N2' in starl.dtype.names:
+            Nabs = np.sqrt(np.abs(starl['brunt_N2'])) # Brunt-N in rad/s
         #-- look for the value of the boundary of the core
         if x_upper_limit:
             core = starl['q']<x_core
@@ -351,6 +357,8 @@ class StellarModel:
             logger.info('Recomputing D5=%.3g, D6=%.3g'%(self.starg['D5'],self.starg['D6']))
             p1 = np.polyfit(new_starl['x'][:5]**2,new_starl['Vg'][:5],1)
             p2 = np.polyfit(new_starl['x'][:5]**2,new_starl['brunt_A'][:5],1)
+            if np.isnan(p2[0]):
+                p2[0] = 0.
             self.starg['D5'] = p1[0]
             self.starg['D6'] = p2[0]+p1[0]
             logger.info('Recomputed  D5=%.3g, D6=%.3g'%(self.starg['D5'],self.starg['D6']))
@@ -1084,10 +1092,10 @@ class StellarModel:
         #   of these files
         model = 'tempmodel_frq'
         #-- initialize ADIPLS
-        if 'n_new' in kwargs:
-            adig,adil = resample_adipls(n_new=kwargs['n_new'],mode_type=kwargs.get('mode_type',None))
-        else:
-            adig,adil = self._init_adipls()        
+        #if 'n_new' in kwargs:
+        #    adig,adil = resample_adipls(n_new=kwargs['n_new'],mode_type=kwargs.get('mode_type',None))
+        #else:
+        adig,adil = self._init_adipls()        
         kwargs.setdefault('cgrav',6.67232e-8)#self.constants['GG'])
         kwargs.setdefault('fspacing','p')
         #-- write adipls variables to file
@@ -1116,7 +1124,7 @@ class StellarModel:
                 ckwargs.setdefault('irsord',11)
             #-- construct adipls control file
             control_file = adipls.make_adipls_inputfile(model_name=model,degree=degree,
-                                               f0=f0,fn=fn,**ckwargs)
+                                               f0=f0,fn=fn,nf=nf,**ckwargs)
             #-- call adipls, perhaps with throwing away the output
             if not verbose:
                 stdout = open('/dev/null', 'w')
@@ -1133,7 +1141,7 @@ class StellarModel:
             starl['varfreq'] = conversions.convert('mHz',self.unit,starl['varfreq'])
             frequency = np.sqrt(starl['sigma2'])/t_dynamic
             frequency = conversions.convert('rad/s',self.unit,frequency)
-            frequency = np.rec.fromarrays([frequency],names=['frequency'])
+            frequency = np.rec.fromarrays([frequency,starl['n']],names=['frequency','mode'])
             starl = ne.recarr_join(starl,frequency)
             self.eigenfreqs['adipls']['l%d'%(degree)] = starl
             #-- make room for eigenfunctions
@@ -1337,17 +1345,17 @@ def generate_newx(xx,bruntA,n_new=None,type_mode='g',
         logger.info('Brunt A smoothed for computation of weights')
     #-- step size is dependent on logarithm of brunt A (with a minimum where
     #   brunt A is zero), with extra weight on core
-    if 'g' in type_mode:
+    if type_mode is not None and 'g' in type_mode:
         pos = bruntA>0
         minweight = np.log10(bruntA[pos].min())
         weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
         weight = weight/xx**2
         weight[0] = 0
     else:
-        weight = 5.
+        weight = np.ones(len(xx))*5.
     #-- for p modes, the step size should increase with increase radius
     #   coordinate (put more weight on envelope)
-    if 'p' in type_mode:
+    if type_mode is not None and 'p' in type_mode:
         weight = 2*weight*xx
     #-- weights cannot be zero
     weight[weight==0] = weight[weight>0].min()
