@@ -6,6 +6,8 @@ import logging
 import os
 import pyfits
 import numpy as np
+from scipy.optimize import leastsq,fmin
+from scipy.interpolate import splrep, splev
 from Scientific.Functions.Interpolation import InterpolatingFunction
 from ivs.aux import loggers
 from ivs.sed import reddening
@@ -16,7 +18,7 @@ from ivs.aux.decorators import memoized,clear_memoization
 from ivs import config
 
 logger = logging.getLogger("SED.LIMBDARK")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 #-- default values for grids
 defaults = dict(grid='kurucz',odfnew=False,z=+0.0,vturb=2,
@@ -44,8 +46,6 @@ def set_defaults(**kwargs):
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
         
-
-
 
 
 def get_gridnames():
@@ -186,11 +186,11 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     ff.close()
     
     #-- velocity shift if necessary
-    if vrad is not None and vrad!=0:
+    if vrad is not None and vrad>0:
         cc = constants.cc/1000. #speed of light in cc
         for i in range(len(mu)):
-            flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
-            table[:,i] = flux_shift - 5.*vrad/cc*flux_shift
+            wave_shift,flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
+            table[:,i] = flux_shift - 5.*vrad/cc*table[:,i]
     
     #-- redden if necessary
     if ebv is not None and ebv>0:
@@ -207,7 +207,7 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
 
 
 
-def get_itable(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False,**kwargs):
+def get_itable2(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False,**kwargs):
     """
     mu=1 is center of disk
     """
@@ -225,6 +225,49 @@ def get_itable(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False
         return Imu*I_x1
     else:
         return Imu
+
+@memoized
+def _get_itable_markers(photband,gridfile,
+                    teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf)):
+    """
+    Get a list of markers to more easily retrieve integrated fluxes.
+    """
+    clear_memoization()
+    
+    ff = pyfits.open(gridfile)
+    ext = ff[photband]
+    columns = ext.columns.names
+    names = ['teff','logg']
+    grid = [ext.data.field('teff'),
+            ext.data.field('logg')]
+    if 'ebv' in columns:
+        names.append('ebv')
+        grid.append(ext.data.field('ebv'))
+    if 'vrad' in columns:
+        names.append('vrad')
+        grid.append(ext.data.field('vrad'))
+    
+    grid_axes = [np.sort(list(set(i))) for i in grid]
+    
+    #-- we construct an array representing the teff-logg-ebv content, but
+    #   in one number: 50000400 means: 
+    #   T=50000,logg=4.0
+    N = len(grid[0])
+    markers = np.zeros(N,float)
+    gridpnts = np.zeros((N,len(grid)))
+    pars = np.zeros((N,5))
+    
+    for i,entries in enumerate(zip(*grid)):
+        markers[i] = encode(**{key:entry for key,entry in zip(names,entries)})
+        gridpnts[i]= entries
+        pars[i] = list(ext.data[i][-5:])
+    ff.close()
+    sa = np.argsort(markers)
+    print 'read in gridfile',gridfile
+    pars[:,-1] = np.log10(pars[:,-1])
+    return markers[sa],grid_axes,gridpnts[sa],pars[sa]
+        
+
 
 
 def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,photbands=None,**kwargs):
@@ -288,31 +331,242 @@ def get_ld_grid_dimensions(**kwargs):
     ff.close()
     return teff_,logg_
 
+def intensity_moment(coeffs,ll=0,**kwargs):
+    """
+    Calculate the intensity moment (see Townsend 2003, eq. 39).
+    
+    Test analytical versus numerical implementation:
+    
+    >>> photband = 'JOHNSON.V'
+    >>> l,logg = 2.,4.0
+    >>> gridfile = 'tables/ikurucz93_z0.0_k2_ld.fits'
+    >>> mu = np.linspace(0,1,100000)
+    >>> P_l = legendre(l)(mu)
+    >>> check = []
+    >>> for teff in np.linspace(9000,12000,19):
+    ...    a1x,a2x,a3x,a4x,I_x1 = get_itable(gridfile,teff=teff,logg=logg,mu=1,photband=photband,evaluate=False)
+    ...    coeffs = [a1x,a2x,a3x,a4x,I_x1]
+    ...    Ix_mu = ld_claret(mu,coeffs)
+    ...    Ilx1 = I_x1*np.trapz(P_l*mu*Ix_mu,x=mu)
+    ...    a0x = 1 - a1x - a2x - a3x - a4x
+    ...    limb_coeffs = [a0x,a1x,a2x,a3x,a4x]
+    ...    Ilx2 = 0
+    ...    for r,ar in enumerate(limb_coeffs):
+    ...        s = 1 + r/2.
+    ...        myIls = _I_ls(l,s)
+    ...        Ilx2 += ar*myIls
+    ...    Ilx2 = I_x1*Ilx2
+    ...    Ilx3 = intensity_moment(teff,logg,photband,coeffs)
+    ...    check.append(abs(Ilx1-Ilx2)<0.1)
+    ...    check.append(abs(Ilx1-Ilx3)<0.1)
+    >>> np.all(np.array(check))
+    True
+    
+    
+    @parameter teff: effecitve temperature (K)
+    @type teff: float
+    @parameter logg: log of surface gravity (cgs)
+    @type logg: float
+    @parameter ll: degree of the mode
+    @type ll: float
+    @parameter photband: photometric passbands
+    @type photband: list of strings ( or iterable container)
+    @keyword full_output: if True, returns intensity, coefficients and integrals
+                         separately
+    @type full_output: boolean
+    @return: intensity moment
+    """
+    full_output = kwargs.get('full_output',False)
+    #-- notation of Townsend 2002: coeffs in code are hat coeffs in the paper
+    #   (for i=1..4 they are the same)
+    #-- get the LD coefficients at the given temperature and logg
+    a1x_,a2x_,a3x_,a4x_, I_x1 = coeffs
+    a0x_ = 1 - a1x_ - a2x_ - a3x_ - a4x_
+    limb_coeffs = np.array([a0x_,a1x_,a2x_,a3x_,a4x_])
+    
+    #-- compute intensity moment via helper coefficients
+    int_moms = np.array([_I_ls(ll,1 + r/2.) for r in range(0,5,1)])
+    #int_moms = np.outer(int_moms,np.ones(1))
+    I_lx = I_x1 * (limb_coeffs * int_moms).sum(axis=0)
+    #-- return value depends on keyword
+    if full_output:
+        return I_x1,limb_coeffs,int_moms
+    else:    
+        return I_lx
+
+
+
 #}
-#{ Laws
+#{ Limbdarkening laws
 
 def ld_eval(mu,coeffs):
     """
     Evaluate Claret's limb darkening law.
     """
+    return ld_claret(mu,coeffs)
+    
+def ld_claret(mu,coeffs):
+    """
+    Claret's limb darkening law.
+    """
     a1,a2,a3,a4 = coeffs
     Imu = 1-a1*(1-mu**0.5)-a2*(1-mu)-a3*(1-mu**1.5)-a4*(1-mu**2.)    
     return Imu
     
-def ld_claret(mu,coeffs):
-    return ld_eval(mu,coeffs)
+def ld_linear(mu,coeffs):
+    """
+    Linear or linear cosine law
+    """
+    return 1-coeffs[0]*(1-mu)
     
 def ld_nonlinear(mu,coeffs):
+    """
+    Nonlinear or logarithmic law
+    """
     return 1-coeffs[0]*(1-mu)-coeffs[1]*mu*np.log(mu)
 
+def ld_logarithmic(mu,coeffs):
+    """
+    Nonlinear or logarithmic law
+    """
+    return ld_nonlinear(mu,coeffs)
+
 def ld_quadratic(mu,coeffs):
+    """
+    Quadratic law
+    """
     return 1-coeffs[0]*(1-mu)-coeffs[1]*(1-mu)**2.0
 
 def ld_uniform(mu,coeffs):
+    """
+    Uniform law.
+    """
     return 1. 
+
+def ld_power(mu,coeffs):
+    """
+    Power law.
+    """
+    return mu**coeffs[0]
     
 #}
 
+#{ Fitting routines (thanks to Steven Bloemen)
+
+def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
+    """
+    Fit an LD law to a sampled set of limb angles/intensities.
+    
+    Make sure the intensities are normalised!
+    """
+    #-- prepare array for coefficients and set the initial guess
+    Ncoeffs = dict(claret=4,linear=1,nonlinear=2,logarithmic=2,quadratic=2,
+                   power=1)
+    c0 = np.zeros(Ncoeffs[law])
+    c0[0] = 0.6
+    #-- do the fitting
+    if fitmethod=='leastsq':
+        (csol, ierr)  = leastsq(ldres_leastsq, c0, args=(mu,Imu,law))
+    elif fitmethod=='fmin':
+        csol  = fmin(ldres_fmin, c0, maxiter=1000, maxfun=2000,args=(mu,Imu,law))
+    elif fitmethod=='equidist_mu_leastsq':
+        mu_order = np.argsort(mu)
+        tck = splrep(mu[mu_order],Imu[mu_order],s=0.0, k=2)
+        mu_spl = np.linspace(mu[mu_order][0],1,5000)
+        Imu_spl = splev(mu_spl,tck,der=0)    
+        (csol, ierr)  = leastsq(ldres_leastsq, c0, args=(mu_spl,Imu_spl,law))
+    elif fitmethod=='equidist_r_leastsq':
+        mu_order = np.argsort(mu)
+        tck = splrep(mu[mu_order],Imu[mu_order],s=0., k=2)
+        r_spl = np.linspace(mu[mu_order][0],1,5000)
+        mu_spl = np.sqrt(1-r_spl**2)
+        Imu_spl = splev(mu_spl,tck,der=0)    
+        (csol,ierr)  = leastsq(ldres_leastsq, c0, args=(mu_spl,Imu_spl,law))
+    elif fitmethod=='equidist_mu_fmin':
+        mu_order = np.argsort(mu)
+        tck = splrep(mu[mu_order],Imu[mu_order],k=2, s=0.0)
+        mu_spl = np.linspace(mu[mu_order][0],1,5000)
+        Imu_spl = splev(mu_spl,tck,der=0)
+        csol  = fmin(ldres_fmin, c0, maxiter=1000, maxfun=2000,args=(mu_spl,Imu_spl,law))
+    elif fitmethod=='equidist_r_fmin':
+        mu_order = np.argsort(mu)
+        tck = splrep(mu[mu_order],Imu[mu_order],k=2, s=0.0)
+        r_spl = np.linspace(mu[mu_order][0],1,5000)
+        mu_spl = np.sqrt(1-r_spl**2)
+        Imu_spl = splev(mu_spl,tck,der=0)
+        csol  = fmin(ldres_fmin, c0, maxiter=1000, maxfun=2000,args=(mu_spl,Imu_spl,law))
+    return csol
+    
+    
+def fit_law_to_grid(**kwargs):
+    """
+    Gets the grid and fits LD law to all the models.
+    
+    Does not use mu=0 point in the fitting process.
+    """
+    teffs, loggs = get_grid_dimensions(**kwargs)
+    teffs=teffs[0:3]
+    loggs=loggs[0:3]
+    grid_coeffs = []
+    Imu1s = []
+    for teff_, logg_ in zip(teffs, loggs):
+        print teff_, logg_
+        mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, **kwargs)
+        mu1, Imu1 = get_limbdarkening(teff=teff_, logg=logg_, mu=1., **kwargs)
+        print Imu1
+        Imu1s.append(Imu1)
+        coeffs = fit_claret4(mu[mu>0], Imu[mu>0], teff=teff_, logg=logg_, **kwargs)
+        grid_coeffs.append(coeffs)
+        mu_grid=np.linspace(0,1,200)
+    return teffs, loggs, np.array(grid_coeffs), np.array(Imu1s)
+#}
+
+
+#{ Internal functions
+
+def _r(mu):
+    """
+    Convert mu to r coordinates
+    """
+    return np.sqrt(1.-mu**2.)
+    
+def _mu(r_):
+    """
+    Convert r to mu coordinates
+    """
+    return np.sqrt(1.-r_**2.)
+    
+def ldres_fmin(coeffs, mu, Imu, law):
+    """
+    Residual function for Nelder-Mead optimizer.
+    """
+    return sum((Imu - globals()['ld_%s'%(law)](mu,coeffs))**2)
+    
+def ldres_leastsq(coeffs, mu, Imu, law):
+    """
+    Residual function for Levenberg-Marquardt optimizer.
+    """
+    return Imu - globals()['ld_%s'%(law)](mu,coeffs)
+
+def _I_ls(ll,ss):
+    """
+    Limb darkening moments (Dziembowski 1977, Townsend 2002)
+    
+    Recursive implementation.
+    
+    >>> _I_ls(0,0.5)
+    0.6666666666666666
+    >>> _I_ls(1,0.5)
+    0.4
+    >>> _I_ls(2,0.5)
+    0.09523809523809523
+    """
+    if ll==0:
+        return 1./(1.+ss)
+    elif ll==1:
+        return 1./(2.+ss)
+    else:
+        return (ss-ll+2)/(ss+ll-2+3.)*_I_ls(ll-2,ss)    
 
 @memoized
 def get_ld_grid(photband,**kwargs):
@@ -374,6 +628,51 @@ def get_ld_grid(photband,**kwargs):
     #-- make an interpolating function
     f_ld_grid = InterpolatingFunction([teffs_grid,loggs_grid],coeff_grid)
     return f_ld_grid
+    
+
+@memoized
+def _get_itable_markers(photband,gridfile,
+                    teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf)):
+    """
+    Get a list of markers to more easily retrieve integrated fluxes.
+    """
+    clear_memoization()
+    
+    ff = pyfits.open(gridfile)
+    ext = ff[photband]
+    columns = ext.columns.names
+    names = ['teff','logg']
+    grid = [ext.data.field('teff'),
+            ext.data.field('logg')]
+    if 'ebv' in columns:
+        names.append('ebv')
+        grid.append(ext.data.field('ebv'))
+    if 'vrad' in columns:
+        names.append('vrad')
+        grid.append(ext.data.field('vrad'))
+    
+    grid_axes = [np.sort(list(set(i))) for i in grid]
+    
+    #-- we construct an array representing the teff-logg-ebv content, but
+    #   in one number: 50000400 means: 
+    #   T=50000,logg=4.0
+    N = len(grid[0])
+    markers = np.zeros(N,float)
+    gridpnts = np.zeros((N,len(grid)))
+    pars = np.zeros((N,5))
+    
+    for i,entries in enumerate(zip(*grid)):
+        markers[i] = encode(**{key:entry for key,entry in zip(names,entries)})
+        gridpnts[i]= entries
+        pars[i] = list(ext.data[i][-5:])
+    ff.close()
+    sa = np.argsort(markers)
+    print 'read in gridfile',gridfile
+    pars[:,-1] = np.log10(pars[:,-1])
+    return markers[sa],grid_axes,gridpnts[sa],pars[sa]
+
+#}    
+    
 
 if __name__=="__main__":
     import doctest
