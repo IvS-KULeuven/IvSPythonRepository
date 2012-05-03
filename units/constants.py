@@ -63,6 +63,10 @@ ke     = 8.9875517873681764e9 # Coulomb constant         Nm2/C2        Wikipedia
 eps0   = 8.854187817620e-12   # Electric constant           F/m           Wikipedia
 mu0    = 1.2566370614e-6   # Magnetic constant           N/A2          Wikipedia
 alpha  = 137.036           # Fine structure constant     none           http://pntpm3.ulb.ac.be/private/divers.htm#constants
+me     = 9.1093829140e-31  # Electron mass               kg            Wikipedia
+qe     =-1.60217656535e-19 # Electron charge            C             Wikipedia
+mp     = 1.67262177774e-27 # Proton mass                 kg            Wikipedia
+qp     = 1.60217656535e-19 # Proton charge               C             Wikipedia
 
 cc_units     = 'm s-1'
 cc_air_units = 'm s-1'
@@ -93,6 +97,11 @@ ke_units     = 'N m2 C-2'
 eps0_units   = 'F m-1'
 mu0_units    = 'T m Am-1'
 alpha_units  = ''
+me_units     = 'kg'
+qe_units     = 'C'
+mp_units     = 'kg'
+qp_units     = 'C'
+
 
 
 
