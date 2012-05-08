@@ -744,7 +744,7 @@ def e_sine(times,signal,parameters,correlation_correction=True,limit=10000):
 #{ Linear improvements
 
 def diffcorr(times, signal, parameters, func_name, \
-                  max_iter=100, tol=1e-6,full_output=False):
+                  max_iter=100, tol=1e-6, args=(), full_output=False):
     """
     Differential corrections.
     """
@@ -764,8 +764,8 @@ def diffcorr(times, signal, parameters, func_name, \
     counter = 1
     while (counter==1) or (counter>0 and counter<max_iter and np.any(np.abs(Deltas[counter-1])>tol)):
         params[counter] = params[counter-1] + Deltas[counter-1]
-        myfit = eval_func(times,params[counter])
-        coeff = diff_func(times,params[counter])
+        myfit = eval_func(times,params[counter],*args)
+        coeff = diff_func(times,params[counter],*args)
         Delta,res,rank,s = la.lstsq(coeff,myfit-signal)
         Deltas[counter] = -Delta
         counter += 1
@@ -786,24 +786,42 @@ def diffcorr(times, signal, parameters, func_name, \
 
 #{ Non-linear improvements
 
-def residuals(parameters,domain,data,evalfunc,*args):
+def residuals(parameters,domain,data,evalfunc,weights,*args):
     fit = evalfunc(domain,parameters,*args)
-    return data-fit
+    if weights is None:
+        weights = np.ones_like(data)
+    return weights*(data-fit)
 
-def residuals_single(parameters,domain,data,evalfunc):
-    fit = evalfunc(domain,parameters)
-    return sum((data-fit)**2)
+def residuals_single(parameters,domain,data,evalfunc,weights,*args):
+    fit = evalfunc(domain,parameters,*args)
+    if weights is None:
+        weights = np.ones_like(data)
+    return sum(weights*(data-fit)**2)
 
-def optimize(times, signal, parameters, func_name, minimizer='leastsq', args=()):
+def optimize(times, signal, parameters, func_name, prep_func=None, 
+                        minimizer='leastsq', weights=None, args=()):
+    """
+    Fit a function to data.
+    """
     #-- we need these function to evaluate the fit and to (un)pack the fitting
     #   parameters from and to flat arrays
-    prepfunc = getattr(evaluate,func_name+'_preppars')
-    evalfunc = getattr(evaluate,func_name)
+    if prep_func is None and isinstance(func_name,str):
+        prepfunc = getattr(evaluate,func_name+'_preppars')
+    else:
+        prepfunc = None
+    if isinstance(func_name,str):
+        evalfunc = getattr(evaluate,func_name)
+    else:
+        evalfunc = func_name
     optifunc = getattr(scipy.optimize,minimizer)
+    
+    #-- if no weights, everything has the same weight
+    if weights is None:
+        weights = np.ones_like(times)
     
     #-- if the initial guess of the fitting parameters aren't flat, flatten them
     #   here:
-    if parameters.dtype.names:
+    if prepfunc is not None and parameters.dtype.names:
         parameters = prepfunc(parameters)
     init_guess = parameters.copy()
     #-- keep track of the initial chi square value, to check if there is an
@@ -815,7 +833,7 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq', args=())
     #-- optimize
     if minimizer=='leastsq':
         popt, cov, info, mesg, flag = optifunc(residuals,init_guess,
-                                     args=(times,signal,evalfunc)+args,full_output=1)#,diag=[1.,10,1000,1.,100000000.])
+                                     args=(times,signal,evalfunc,weights)+args,full_output=1)#,diag=[1.,10,1000,1.,100000000.])
         #-- calculate new chisquare, and check if we have improved it
         chisq = np.sum(info['fvec']*info['fvec'])
         if chisq>chisq_init or flag!=1:
@@ -830,7 +848,7 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq', args=())
             errors = np.zeros(len(popt))
     else:
         out = optifunc(residuals_single,init_guess,
-                                     args=(times,signal,evalfunc),full_output=1,disp=False)
+                                     args=(times,signal,evalfunc,weights),full_output=1,disp=False)
         popt = out[0]
         #-- calculate new chisquare, and check if we have improved it
         signalf_update = evalfunc(times,popt)
@@ -843,10 +861,13 @@ def optimize(times, signal, parameters, func_name, minimizer='leastsq', args=())
     gain = (chisq_init-chisq)/chisq_init*100.
     
     #-- transform the parameters to record arrays, as well as the errors
-    parameters = prepfunc(popt)
-    
-    e_parameters = prepfunc(errors)
-    e_parameters.dtype.names = ['e_'+name for name in e_parameters.dtype.names]
+    if prepfunc is not None:
+        parameters = prepfunc(popt)   
+        e_parameters = prepfunc(errors)
+        e_parameters.dtype.names = ['e_'+name for name in e_parameters.dtype.names]
+    else:
+        parameters = popt
+        e_parameters = errors
     
     return parameters,e_parameters, gain
 
