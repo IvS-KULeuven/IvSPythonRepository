@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ["errors", "evaluate", "filtering", "fit"]
+__all__ = ["errors", "evaluate", "filtering", "fit","lmfit"]
