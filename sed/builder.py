@@ -1093,7 +1093,7 @@ class SED(object):
                        ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
         names = [i[0] for i in dtypes]
         #-- if master record array does not exist, make a new one
-        if self.master is None:
+        if not hasattr(self,'master') or self.master is None:
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
             _to_unit = 'erg/s/cm2/A'
         else:
