@@ -1136,6 +1136,7 @@ class SED(object):
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
         print extra_cols.dtype.names
         print names
+        print zip(extra_cols.dtype.names,names)
         extra_array_ = np.rec.fromarrays(extra_cols,names=names)
         #-- in right order:
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
