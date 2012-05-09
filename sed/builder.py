@@ -1089,18 +1089,13 @@ class SED(object):
         @param source: source of original measurements
         @type source: array of strings
         """
-        dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),\
-                  ('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
-                  ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),\
-                  ('cunit','S50'),('color',bool),('include',bool)]
-        names = [i[0] for i in dtypes]
-        print names
         #-- if master record array does not exist, make a new one
         if not hasattr(self,'master') or self.master is None:
+            dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
+                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
             print 'initialised master'
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
             _to_unit = 'erg/s/cm2/A'
-            logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
         else:
             _to_unit = self.master['cunit'][0]
 
@@ -1138,8 +1133,7 @@ class SED(object):
         #-- in right order:
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
-        for name in names:
-            print name,extra_array[name],extra_array_[name]
+        for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
             extra_array[name] = extra_array_[name]
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_array)))
