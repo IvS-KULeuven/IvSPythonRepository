@@ -1139,6 +1139,7 @@ class SED(object):
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
         for name in names:
+            print name,extra_array[name],extra_array_[name]
             extra_array[name] = extra_array_[name]
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_array)))
