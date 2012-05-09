@@ -1589,7 +1589,6 @@ class SED(object):
                     x = self.results['synflux'][0][keep]
                     y = x*self.master['cmeas'][keep]
                     e_y = x*self.master['e_cmeas'][keep]
-                    
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
         
@@ -1949,7 +1948,10 @@ class SED(object):
         if photfile is not None:
             self.photfile = photfile
         logger.info('Save photometry to file %s'%(self.photfile))
-        ascii.write_array(self.master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
+        #-- add some comments
+        if self.ID:
+            master = vizier.quality_check(master,self.ID)
+        ascii.write_array(master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
     
     def load_photometry(self,photfile=None):
         """
