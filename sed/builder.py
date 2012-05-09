@@ -1089,9 +1089,12 @@ class SED(object):
         @param source: source of original measurements
         @type source: array of strings
         """
-        dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
-                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
+        dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),\
+                  ('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
+                  ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),\
+                  ('cunit','S50'),('color',bool),('include',bool)]
         names = [i[0] for i in dtypes]
+        print names
         #-- if master record array does not exist, make a new one
         if not hasattr(self,'master') or self.master is None:
             print 'initialised master'
