@@ -1094,8 +1094,10 @@ class SED(object):
         names = [i[0] for i in dtypes]
         #-- if master record array does not exist, make a new one
         if not hasattr(self,'master') or self.master is None:
+            print 'initialised master'
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
             _to_unit = 'erg/s/cm2/A'
+            logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
         else:
             _to_unit = self.master['cunit'][0]
 
