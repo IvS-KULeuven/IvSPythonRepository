@@ -104,7 +104,7 @@ from ivs.aux import numpy_ext
 from ivs.sed import filters
 
 logger = logging.getLogger("CAT.VIZIER")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -461,7 +461,7 @@ def get_IUE_spectrum(**kwargs):
         
     return output
     
-def get_UVSST_spectrum(**kwargs):
+def get_UVSST_spectrum(units='erg/s/cm2/A',**kwargs):
     """
     Get a spectrum from the UVSST spectrograph onboard TD1.
     
@@ -469,17 +469,24 @@ def get_UVSST_spectrum(**kwargs):
     
     Also have a look at II/86/suppl.
     """
-    data,units,comments = search('III/39A/catalog',**kwargs)
+    kwargs.setdefault('out_max',10)
+    kwargs.setdefault('radius',60.)
+    data,units_o,comments = search('III/39A/catalog',**kwargs)
     if data is None: return None,None
     fields = sorted([field for field in data.dtype.names if (field[0]=='F' and len(field)==5)])
     spectrum = np.zeros((len(fields),3))
     units_ = []
     for i,field in enumerate(fields):
-        spectrum[i][0] = int(field[1:])
-        spectrum[i][1] = data[field][0]
-        spectrum[i][2] = data['e_'+field][0]/100.*data[field][0]
-        units_.append(units[field])
-    return spectrum,units_
+        wave,flux = float(field[1:]),data[field][0]
+        if flux==0: continue
+        #-- there is an error in the units ***in vizier***!
+        flux = conversions.convert(units_o[field],units,100*flux,wave=(wave,'A'),unpack=True)
+        e_flux = data['e_'+field][0]/100.*flux
+        spectrum[i][0] = wave
+        spectrum[i][1] = flux
+        spectrum[i][2] = e_flux
+        units_.append(units_o[field])
+    return spectrum[spectrum[:,0]>0]
 #}
 
 
@@ -549,6 +556,143 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     return master
 
 
+def quality_check(master,ID=None,return_master=True,**kwargs):
+    """
+    Perform quality checks on downloaded data.
+    
+    This function translates flags in to words, and looks up additional
+    information in selected catalogs.
+    """
+    messages = ['' for i in range(len(master))]
+    #-- for some, we can do a quality check given the information that is
+    #   already available in the master record
+    #-- IRAS
+    logger.info('Checking flags')
+    for i,entry in enumerate(master):
+        flag = float(entry['flag'])
+        if np.isnan(flag): continue
+        if entry['source'].strip() in ['II/125/main','II/275/fsr']:
+            flag = int(flag)
+            if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
+            if flag==2: messages[i] = '; '.join([messages[i],'moderate quality'])
+            if flag==1: messages[i] = '; '.join([messages[i],'upper limit'])
+        if entry['source'].strip() in ['II/298/fis','II/297/irc']:
+            flag = int(flag)
+            if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
+            if flag==2: messages[i] = '; '.join([messages[i],'source is confirmed but the flux is not reliable'])
+            if flag==1: messages[i] = '; '.join([messages[i],'the source is not confirmed'])
+            if flag==0: messages[i] = '; '.join([messages[i],'not observed'])
+        if entry['source'].strip() in ['J/ApJS/154/673/DIRBE']:
+            flag = '{0:03d}'.format(int(flag))
+            if flag[0]==1: messages[i] = '; '.join([messages[i],'IRAS/2MASS companion greater than DIRBE noise level'])
+            if flag[1]==1: messages[i] = '; '.join([messages[i],'possibly extended emission or highly variable source']) # discrepancy between DIRBE and IRAS/2MASS flux density
+            if flag[2]==1: messages[i] = '; '.join([messages[i],'possibly affected by nearby companion'])
+        if 'USNO' in entry['photband']:
+            messages[i] = '; '.join([messages[i],'unreliable zeropoint and transmission profile'])
+        if 'COUSINS' in entry['photband']:
+            messages[i] = '; '.join([messages[i],'unreliable zeropoint'])
+            
+    
+    #-- for other targets, we need to query additional information
+    sources_with_quality_check = ['B/denis/denis','II/311/wise','II/246/out']
+    sources = set(list(master['source'])) & set(sources_with_quality_check)
+    
+    denis_image_flags = {'01':'clouds during observation',
+                         '02':'electronic Read-out problem',
+                         '04':'internal temperature problem',
+                         '08':'very bright star',
+                         '10':'bright star',
+                         '20':'stray light',
+                         '40':'unknown problem'}
+    denis_source_flags = {'01':'source might be a dust on mirror',
+                          '02':'source is a ghost detection of a bright star',
+                          '04':'source is saturated',
+                          '08':'source is multiple detect',
+                          '10':'reserved'}
+    wise_conf_flag = {'d':'diffraction spike',
+                      'p':'contaminated by latent image left by bright star',
+                      'h':'halo of nearby bright source',
+                      'o':'optical ghost'}
+    wise_var_flag = {'n':'too few measurements to decide if variable',
+                     '0':'most likely not variable (0, 0=certainly not-5=probably not)',
+                     '1':'most likely not variable (1, 0=certainly not-5=probably not)',
+                     '2':'most likely not variable (2, 0=certainly not-5=probably not)',
+                     '3':'most likely not variable (3, 0=certainly not-5=probably not)',
+                     '4':'most likely not variable (4, 0=certainly not-5=probably not)',
+                     '5':'most likely not variable (5, 0=certainly not-5=probably not)',
+                     '6':'likely variable (6, 6=likely-7=more likely)',
+                     '6':'likely variable (7, 6=likely-7=more likely)',
+                     '8':'most likely variable (8, 8=most likely-9=almost certain)',
+                     '9':'most likely variable (9, 8=most likely-9=almost certain)'}
+    twomass_qual_flag = {'X':'detection, but no valid brightness estimate',
+                         'U':'upper limit',
+                         'F':'error estimate not reliable',
+                         'E':'poor PSF fit',
+                         'A':'high quality (A)',
+                         'B':'high quality (B)',
+                         'C':'high quality (C)',
+                         'D':'high quality (D)'}
+    
+    indices = np.arange(len(master))
+    logger.info('Checking source catalogs for additional information')
+    for source in sorted(sources):
+        results,units,comms = search(source,ID=ID,**kwargs)
+        if results is None: continue
+        #-- the DENIS database
+        if source=='B/denis/denis':
+            for iflag,photband in zip(['Iflg','Jflg','Kflg'],['DENIS.I','DENIS.J','DENIS.KS']):
+                index = indices[(master['source']==source) & (master['photband']==photband)]
+                if not len(index):
+                    continue
+                flag = float(results[0][iflag])
+                if np.isnan(flag):
+                    messages[index] = '; '.join([messages[index],'high quality'])
+                    continue
+                flag = '{0:04d}'.format(int(flag))
+                image_flag = flag[:2]
+                source_flag = flag[2:]
+                #-- keep track for output
+                if image_flag in denis_image_flags:
+                    messages[index] = '; '.join([messages[index],denis_image_flags[image_flag]])
+                if source_flag in denis_source_flags:
+                    messages[index] = '; '.join([messages[index],denis_source_flags[source_flag]]) 
+        if source=='II/311/wise':
+            conf = results[0]['ccf']
+            var = results[0]['var']
+            ex = int(results[0]['ex'])
+            for i,photband in enumerate(['WISE.W1','WISE.W2','WISE.W3','WISE.W4']):
+                index = indices[(master['source']==source) & (master['photband']==photband)]
+                if conf[i]!=' ' and conf[i] in wise_conf_flag:
+                    messages[index] = '; '.join([messages[index],wise_conf_flag[conf[i].lower()]])
+                if var[i]!=' ':
+                    messages[index] = '; '.join([messages[index],wise_var_flag[var[i].lower()]])
+                messages[index] = '; '.join([messages[index],(ex==0 and 'point source' or 'extended source')])
+        if source=='II/246/out':
+            flag = results[0]['Qflg'].strip()
+            for i,photband in enumerate(['2MASS.J','2MASS.H','2MASS.KS']):
+                if flag[i] in twomass_qual_flag:
+                    index = indices[(master['source']==source) & (master['photband']==photband)]
+                    messages[index] = '; '.join([messages[index],twomass_qual_flag[flag[i]]])
+    
+    #-- strip first '; ':
+    for i in range(len(messages)):
+        if messages[i]:
+            messages[i] = messages[i][2:]
+        else:
+            messages[i] = '-'
+        messages[i] = messages[i].replace(' ','_')
+    
+    #-- perhaps we want to return the master record array with an extra column
+    messages = np.rec.fromarrays([messages],names=['comments'])
+    if return_master:
+        messages = numpy_ext.recarr_join(master,messages)
+    return messages
+                
+                
+        
+
+
+
 
 def tsv2recarray(filename):
     """
@@ -581,6 +725,9 @@ def tsv2recarray(filename):
                     elif 'f' in formats[i]: formats[i] = 'f8' # floating point
                     elif 'i' in formats[i]: formats[i] = 'f8' # integer, but make it float to contain nans
                     elif 'e' in formats[i]: formats[i] = 'f8' # exponential
+                    #-- see remark about the nans a few lines down
+                    if formats[i][0]=='a':
+                        formats[i] = 'a'+str(int(formats[i][1:])+3)
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
@@ -735,6 +882,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     
     #-- extra can be added:
     names = list(results.dtype.names)
+
     if extra_fields is not None:
         for e_dtype in extra_fields:
             if e_dtype in names:
@@ -754,6 +902,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         if key in ['e_flag','q_flag','mag']:
             continue
         photband = cat_info.get(source,key)
+        key = key.replace('_[','[').replace(']_',']')
         #-- contains measurement, error, quality, units, photometric band and
         #   source
         cols = [results[key][:1],
@@ -775,7 +924,6 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             rows.append(tuple([col[i] for col in cols]))
         master = np.core.records.fromrecords(master.tolist()+rows,dtype=dtypes)
         cols_added += 1
-    
     #-- fix colours: we have to run through it two times to be sure to have
     #   all the colours
     N = len(master)-cols_added
