@@ -1089,6 +1089,16 @@ class SED(object):
         @param source: source of original measurements
         @type source: array of strings
         """
+        dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
+                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
+        names = [i[0] for i in dtypes]
+        #-- if master record array does not exist, make a new one
+        if self.master is None:
+            self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
+            _to_unit = 'erg/s/cm2/A'
+        else:
+            _to_unit = self.master['cunit'][0]
+
         extra_cols = [np.zeros(len(meas))]
         extra_cols.append(np.zeros(len(meas)))
         extra_cols.append(np.zeros(len(meas)))
@@ -1104,7 +1114,7 @@ class SED(object):
                 to_unit = 'flux_ratio'
                 color = True
             else:
-                to_unit = self.master['cunit'][0]
+                to_unit = _to_unit
                 color = False
             if e_m>0:
                 cm,e_cm = conversions.convert(u,to_unit,m,e_m,photband=p)
@@ -1119,9 +1129,8 @@ class SED(object):
             extra_cols[8][i] = True
             
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
-        extra_array_ = np.rec.fromarrays(extra_cols,names=['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag'])
+        extra_array_ = np.rec.fromarrays(extra_cols,names=names)
         #-- in right order:
-        print self.master.dtype.names
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
         for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
@@ -1414,8 +1423,6 @@ class SED(object):
             region = self.results[mtype]['grid']['CI_red']<limit
         else:
             region = self.results[mtype]['grid']['CI_red']<np.inf
-        print self.results[mtype]['grid'][y].min(),\
-              self.results[mtype]['grid'][y].max()
         #-- get the colors and the color scale
         colors = self.results[mtype]['grid'][ptype][region]
         vmin,vmax = colors.min(),colors.max()
@@ -1505,7 +1512,7 @@ class SED(object):
             
     
     @standalone_figure
-    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,**kwargs):
+    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False, plot_unselected=True,**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1582,7 +1589,7 @@ class SED(object):
             #-- exclude:
             label = np.any(keep) and '_nolegend_' or system
             keep = (systems==system) & (self.master['color']==colors) & -self.master['include']
-            if sum(keep):
+            if sum(keep) and plot_unselected:
                 if colors:
                     x,y,e_y,color_dict = plot_sed_getcolors(self.master[keep],color_dict)
                 else:
