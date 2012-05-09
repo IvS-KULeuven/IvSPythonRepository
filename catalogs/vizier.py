@@ -684,9 +684,13 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
     
     #-- perhaps we want to return the master record array with an extra column
     messages = np.rec.fromarrays([messages],names=['comments'])
-    if return_master:
-        messages = numpy_ext.recarr_join(master,messages)
-    return messages
+    if return_master and not 'comments' in master.dtype.names:
+        return numpy_ext.recarr_join(master,messages)
+    elif return_master:
+        master['comments'] = messages
+        return master
+    else:
+        return messages
                 
                 
         

@@ -1098,16 +1098,8 @@ class SED(object):
             _to_unit = 'erg/s/cm2/A'
         else:
             _to_unit = self.master['cunit'][0]
+        extra_master = np.zeros(len(meas),dtype=self.master.dtype)
 
-        extra_cols = [np.zeros(len(meas))]
-        extra_cols.append(np.zeros(len(meas)))
-        extra_cols.append(np.zeros(len(meas)))
-        extra_cols.append(np.zeros(len(meas),dtype='|S50'))
-        extra_cols.append(np.zeros(len(meas)))
-        extra_cols.append(np.zeros(len(meas)))
-        extra_cols.append(np.zeros(len(meas)))
-        extra_cols.append(np.zeros(len(meas),dtype=bool))
-        extra_cols.append(np.zeros(len(meas),dtype=bool))
         for i,(m,e_m,u,p,s) in enumerate(zip(meas,e_meas,units,photbands,source)):
             photsys,photband = p.split('.')
             if filters.is_color(p):
@@ -1121,25 +1113,22 @@ class SED(object):
             else:
                 cm,e_cm = conversions.convert(u,to_unit,m,photband=p),np.nan
             eff_wave = filters.eff_wave(p)
-            extra_cols[0][i] = cm
-            extra_cols[1][i] = e_cm
-            extra_cols[2][i] = eff_wave
-            extra_cols[3][i] = to_unit
-            extra_cols[7][i] = color
-            extra_cols[8][i] = True
-            
-            
-        names = ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']    
-        extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
-        extra_array_ = np.rec.fromarrays(extra_cols,names=names)
-        #-- in right order:
-        extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
-        extra_array = np.zeros(len(meas),dtype=self.master.dtype)
-        for name in names:
-            extra_array[name] = extra_array_[name]
+            extra_master['cmeas'][i] = cm
+            extra_master['e_cmeas'][i] = e_cm
+            extra_master['cwave'][i] = eff_wave
+            extra_master['cunit'][i] = to_unit
+            extra_master['color'][i] = color
+            extra_master['include'][i] = True
+            extra_master['meas'][i] = meas[i]
+            extra_master['e_meas'][i] = e_meas[i]
+            extra_master['unit'][i] = units[i]
+            extra_master['photband'][i] = photbands[i]
+            extra_master['source'][i] = source[i]
+            extra_master['flag'][i] = np.nan            
+        
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
-        logger.info('Appending:\n%s'%(photometry2str(extra_array)))
-        self.master = fix_master(np.hstack([self.master,extra_array]))
+        logger.info('Appending:\n%s'%(photometry2str(extra_master)))
+        self.master = fix_master(np.hstack([self.master,extra_master]))
         #self.master = np.hstack([self.master,extra_array])
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
@@ -1959,7 +1948,7 @@ class SED(object):
         logger.info('Save photometry to file %s'%(self.photfile))
         #-- add some comments
         if self.ID:
-            master = vizier.quality_check(master,self.ID)
+            master = vizier.quality_check(self.master,self.ID)
         ascii.write_array(master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
     
     def load_photometry(self,photfile=None):
