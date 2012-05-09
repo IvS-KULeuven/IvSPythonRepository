@@ -1134,14 +1134,11 @@ class SED(object):
             extra_cols[8][i] = True
             
         extra_cols += [meas,e_meas,units,photbands,source,np.nan*np.zeros(len(meas))]
-        print len(extra_cols)
-        print len(names)
-        print zip(extra_cols,names)
         extra_array_ = np.rec.fromarrays(extra_cols,names=names)
         #-- in right order:
         extra_array_ = np.rec.fromarrays([extra_array_[name] for name in self.master.dtype.names],names=self.master.dtype.names)
         extra_array = np.zeros(len(meas),dtype=self.master.dtype)
-        for name in ['cmeas','e_cmeas','cwave','cunit','_r','_RAJ2000','_DEJ2000','color','include','meas','e_meas','unit','photband','source','flag']:
+        for name in names:
             extra_array[name] = extra_array_[name]
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_array)))
