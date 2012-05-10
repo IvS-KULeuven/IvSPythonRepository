@@ -569,21 +569,25 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
     #-- IRAS
     logger.info('Checking flags')
     for i,entry in enumerate(master):
-        flag = float(entry['flag'])
+        flag = entry['flag']
+        try:
+            flag = float(flag)
+        except:
+            continue
         if np.isnan(flag): continue
         if entry['source'].strip() in ['II/125/main','II/275/fsr']:
-            flag = int(flag)
+            flag = float(int(flag))
             if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
             if flag==2: messages[i] = '; '.join([messages[i],'moderate quality'])
             if flag==1: messages[i] = '; '.join([messages[i],'upper limit'])
         if entry['source'].strip() in ['II/298/fis','II/297/irc']:
-            flag = int(flag)
+            flag = float(int(flag))
             if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
             if flag==2: messages[i] = '; '.join([messages[i],'source is confirmed but the flux is not reliable'])
             if flag==1: messages[i] = '; '.join([messages[i],'the source is not confirmed'])
             if flag==0: messages[i] = '; '.join([messages[i],'not observed'])
         if entry['source'].strip() in ['J/ApJS/154/673/DIRBE']:
-            flag = '{0:03d}'.format(int(flag))
+            flag = '{0:03d}'.format(int(float(flag)))
             if flag[0]==1: messages[i] = '; '.join([messages[i],'IRAS/2MASS companion greater than DIRBE noise level'])
             if flag[1]==1: messages[i] = '; '.join([messages[i],'possibly extended emission or highly variable source']) # discrepancy between DIRBE and IRAS/2MASS flux density
             if flag[2]==1: messages[i] = '; '.join([messages[i],'possibly affected by nearby companion'])
@@ -1044,6 +1048,68 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     #-- skip first line from building 
     if newmaster: master = master[1:]
     return master
+
+
+def catalog2bibcode(catalog):
+    """
+    Retrieve the ADS bibcode of a ViZieR catalog.
+    
+    @param catalog: name of the catalog (e.g. II/306/sdss8)
+    @type catalog: str
+    @return: bibtex code
+    @rtype: str
+    """
+    catalog = "/".join(catalog.split("/")[:2])
+    base_url = "http://cdsarc.u-strasbg.fr/viz-bin/Cat?{0}".format(catalog)
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url)
+
+    code = None
+    ff = open(filen,'r')
+    for line in ff.readlines():
+        if 'Keywords' in line: break
+        if '=<A HREF' in line:
+            code = line.split('>')[1].split('<')[0]
+    ff.close()
+    url.close()
+    return code
+
+def bibcode2bibtex(bibcode):
+    """
+    Retrieve the bibtex entry of an ADS bibcode.
+    
+    @param bibcode: bibcode (e.g. C{2011yCat.2306....0A})
+    @type bibcode: str
+    @return: bibtex entry
+    @rtype: str
+    """
+    base_url = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode={0}&data_type=BIBTEX&db_key=AST&nocookieset=1".format(bibcode)
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url)
+
+    bibtex = []
+    ff = open(filen,'r')
+    for line in ff.readlines():
+        if (not bibtex and '@' in line) or bibtex:
+            bibtex.append(line)
+    ff.close()
+    url.close()
+    return "".join(bibtex)
+
+def catalog2bibtex(catalog):
+    """
+    Retrieve the bibtex entry of a catalog.
+    
+    @param catalog: name of the catalog (e.g. II/306/sdss8)
+    @type catalog: str
+    @return: bibtex entry
+    @rtype: str
+    """
+    bibcode = catalog2bibcode(catalog)
+    bibtex = bibcode2bibtex(bibcode)
+    return bibtex
+    
+
 #}
 
 #{ Internal helper functions
