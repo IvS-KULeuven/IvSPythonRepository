@@ -1142,9 +1142,14 @@ class Minimizer(lmfit.Minimizer):
         else:
             self.leastsq()
     
-    def get_confidence_interval(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200, prob_func=None):
+    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
         """
         Returns the confidence intervalls of the given parameters. 
+        
+        @param method: Method to use, F-test or mc (monte carlo simulation)
+        @param output: Output type, error or ci (confidence intervall)
+        
+        kwargs: maxiter=200, prob_func=None
         """
         
         # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
@@ -1153,7 +1158,10 @@ class Minimizer(lmfit.Minimizer):
         if type(sigmas)==float: sigmas = [sigmas]
         
         #Use the adjusted conf_interval() function of the lmfit package.
-        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
+        if method == 'F-test':
+            out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, **kwargs)
+        elif method == 'MC':
+            out = lmfit.montecarlo(self, p_names=p_names, sigmas=sigmas, **kwargs)
         
         if short_output:
             out = out[p_names[0]][sigmas[0]]
