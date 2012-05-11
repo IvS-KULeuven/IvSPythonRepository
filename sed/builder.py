@@ -2073,6 +2073,15 @@ class SED(object):
         
         logger.info('Loaded previous results from FITS')
     
+    def save_bibtex(self):
+        """
+        Convert the bibcodes in a phot file to a bibtex file.
+        
+        The first line in the bibtex file contains a \citet command citing
+        all photometry.
+        """
+        crossmatch.make_bibtex(self.master,ID)
+    
     def save_summary(self,filename=None,CI_limit=None,method='igrid_search'):
         """
         Save a summary of the results to an ASCII file.
