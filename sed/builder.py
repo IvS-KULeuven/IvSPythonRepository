@@ -952,7 +952,6 @@ class SED(object):
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
-            print self.master.dtype.names
             logger.info('\n'+photometry2str(master))
             
             #-- write to file
@@ -1453,13 +1452,35 @@ class SED(object):
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
     
     @standalone_figure
-    def plot_data(self,colors=False,**kwargs):
+    def plot_data(self,colors=False, plot_unselected=True,
+                  unit_wavelength='angstrom',unit_flux=None,**kwargs):
         """
         Plot only the SED data.
+        
+        Extra kwargs are passed to plotting functions.
+        
+        The decorator provides an keyword C{savefig}. When set to C{True}, an
+        image name is generated automatically (very long!), and the figure is
+        closed. When set to a string, the image is saved with that name, and
+        the figure is closed. When C{savefig} is not given, the image will
+        stay open so that the user can still access all plot elements and do
+        further enhancements.
+        
+        @param colors: if False, plot absolute values, otherwise plot colors
+        (flux ratios)
+        @type colors: boolean
+        @param plot_unselected: if True, all photometry is plotted, otherwise
+        only those that are selected
         """
-        wave,flux,e_flux = self.master['cwave'],self.master['cmeas'],self.master['e_cmeas']
-        iscolor = np.array(self.master['color'],bool)
-        photbands = self.master['photband']
+        if not plot_unselected:
+            master = self.master[self.master['include']]
+        else:
+            master = self.master
+        if unit_flux is None:
+            unit_flux = master['cunit'][0]
+        wave,flux,e_flux = master['cwave'],master['cmeas'],master['e_cmeas']
+        iscolor = np.array(master['color'],bool)
+        photbands = master['photband']
         
         allsystems = np.array([i.split('.')[0] for i in photbands])
         systems = sorted(set(allsystems))
@@ -1468,7 +1489,8 @@ class SED(object):
         if not colors:
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
-            
+            wave = conversions.convert('angstrom',unit_wavelength,wave)
+            flux,e_flux = conversions.convert(master['cunit'][0],unit_flux,flux,e_flux,wave=(wave,unit_wavelength))
             mf = []
             for system in systems:
                 keep = (allsystems==system) & -iscolor
@@ -1476,8 +1498,9 @@ class SED(object):
                     pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
                     mf.append(flux[keep])
             if keep.sum():
-                pl.ylabel(r'$F_\lambda$ [%s]'%(self.master[keep]['cunit'][0]))
-            pl.xlabel('wavelength [$\AA$]')
+                label = conversions.unit2texlabel(unit_flux)
+                pl.ylabel(label)
+            pl.xlabel('Wavelength [{0}]'.format(conversions.unit2texlabel(unit_wavelength)))
             #-- scale y-axis (sometimes necessary for data with huge errorbars)
             mf = np.log10(np.hstack(mf))
             lmin,lmax = np.nanmin(mf),np.nanmax(mf)
@@ -1948,8 +1971,11 @@ class SED(object):
         logger.info('Save photometry to file %s'%(self.photfile))
         #-- add some comments
         if self.ID:
-            master = vizier.quality_check(self.master,self.ID)
-        ascii.write_array(master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
+            if not 'bibcode' in self.master.dtype.names:
+                self.master = crossmatch.add_bibcodes(self.master)
+            if not 'comments' in self.master.dtype.names:
+                self.master = vizier.quality_check(self.master,self.ID)
+        ascii.write_array(self.master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
     
     def load_photometry(self,photfile=None):
         """
