@@ -115,9 +115,10 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
     if 'vizier' in searchables:
         #-- first query catalogs that can only be queried via HD number
         info = sesame.search(ID=ID,fix=True)
-        HDnumber = [name for name in info['alias'] if name[:2]=='HD']
-        if HDnumber:
-            kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['HD=%s'%(HDnumber[0][3:])],sources=['II/83/catalog','V/33/phot'],sort=None,**kwargs)
+        if 'alias' in info:
+            HDnumber = [name for name in info['alias'] if name[:2]=='HD']
+            if HDnumber:
+                kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['HD=%s'%(HDnumber[0][3:])],sources=['II/83/catalog','V/33/phot'],sort=None,**kwargs)
         #-- then query normal catalogs
         kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'gcpd' in searchables:
@@ -130,6 +131,52 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
     for phot in contents:
         logger.info('%10s: found %d measurements'%phot)
     return master
+
+def add_bibcodes(master):
+    """
+    Add bibcodes to a master record.
+    
+    @param master: master record of photometry
+    @type master: numpy record array
+    @return: master record of photometry with additional column
+    @rtype: numpy record array
+    """
+    bibcodes = []
+    for source in master['source']:
+        bibcodes.append('None')
+        #-- check if it's a ViZieR catalog
+        if source.count('/')>=2:
+            #-- some catalogs have no ADS links but do have a bibcode, or the
+            #   bibcode is manually put in the *cats_phot.cfg file
+            if 'bibcode' in vizier.cat_info.options(source):
+                bibcodes[-1] = vizier.cat_info.get(source,'bibcode')
+            #-- others may be retrieved immediately from the ViZieR site
+            else:
+                bibcodes[-1] = vizier.catalog2bibcode(source)
+        elif source=='GCPD':
+            bibcodes[-1] = '1997A&AS..124..349M'
+        elif source in gator.cat_info.sections():
+            if 'bibcode' in gator.cat_info.options(source):
+                bibcodes[-1] = gator.cat_info.get(source,'bibcode')
+        if bibcodes[-1]=='None' or bibcodes[-1] is None:
+            logger.info('Bibcode of source {0:25s} not found'.format(source))
+    bibcodes = np.array(bibcodes,str)
+    bibcodes = np.rec.fromarrays([bibcodes],names=['bibcode'])
+    return numpy_ext.recarr_join(master,bibcodes)
+
+
+def make_bibtex(master,ID):
+    """
+    Make a bib file from a master record
+    """
+    bibcodes = sorted(set(list(master['bibcode'])))
+    with open('{0}.bib'.format(ID),'w') as ff:
+        ff.write('% \citep{{{0}}}\n\n\n'.format(','.join(bibcodes)))
+        for bibcode in bibcodes:
+            ff.write(vizier.bibcode2bibtex(bibcode)+'\n')
+        
+    
+
 
 def xmatch(coords1,coords2):
     """

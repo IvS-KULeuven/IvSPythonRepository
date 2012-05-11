@@ -29,7 +29,7 @@ systems = {'JOHNSON':1,
            'DDO':12}
 
 logger = logging.getLogger("CAT.VIZIER")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -164,7 +164,7 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
-        if key[:2] == 'e_':
+        if key[:2] =='e_' or key=='bibcode':
             continue
         photband = cat_info.get(source,key)
         #-- contains measurement, error, quality, units, photometric band and

@@ -16,7 +16,7 @@ from ivs.units import conversions
 
 
 logger = logging.getLogger("CAT.GATOR")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -333,7 +333,7 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
-        if key[:2] in [e_flag,q_flag]:
+        if key[:2] in [e_flag,q_flag] or key =='bibcode':
             continue
         photband = cat_info.get(source,key)
         #-- contains measurement, error, quality, units, photometric band and
