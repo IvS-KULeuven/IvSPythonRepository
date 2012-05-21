@@ -617,6 +617,37 @@ def get_file(integrated=False,**kwargs):
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
+def blackbody(x,T,units='erg/s/cm2/A',disc_integrated=True):
+    """
+    Definition of black body curve.
+    
+    To get them into the same units as the Kurucz disc-integrated SEDs, they are
+    multiplied by sqrt(2*pi).
+    
+    @param: wavelength, unit
+    @type: tuple (ndarray,str)
+    @param T: temperature, unit
+    @type: tuple (float,str)
+    """
+    #-- what kind of units did we receive?
+    unit_type = conversions.change_convention('SI',x[1])
+    x = conversions.convert(x[1],'SI',x[0])
+    if isinstance(T,tuple):
+        T = conversions.convert(T[1],'K',T[0])
+    #-- now make the appropriate black body
+    if unit_type in ['s-1','cy1 s-1']: # frequency units
+        factor = 2.0 * constants.hh / constants.cc**2
+        expont = constants.hh / (constants.kB*T)
+        I = factor * x**3 * 1. / (np.exp(expont*x) - 1.)
+    elif unit_type=='m1': # wavelength units
+        factor = 2.0 * constants.hh * constants.cc**2
+        expont = constants.hh*constants.cc / (constants.kB*T)
+        I = factor / x**5. * 1. / (np.exp(expont/x) - 1.)
+    #-- do disc integration
+    if disc_integrated:
+        I *= np.sqrt(2*np.pi)
+    return conversions.convert('SI',units,I)
+
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
               wave_units='A',flux_units='erg/s/cm2/A/sr',**kwargs):
@@ -1426,11 +1457,11 @@ def synthetic_flux(wave,flux,photbands,units=None):
     The fluxes below 4micron are calculated assuming PHOTON-counting detectors
     (e.g. CCDs).
     
-    F = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
+    Flam = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
     
     When otherwise specified, we assume ENERGY-counting detectors (e.g. bolometers)
     
-    F = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
+    Flam = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
     
     Where P_lam is the total system dimensionless sensitivity function, which
     is normalised so that the maximum equals 1. Also, f_lam is the SED of the
@@ -1446,11 +1477,15 @@ def synthetic_flux(wave,flux,photbands,units=None):
     should contain the strings 'flambda' and 'fnu' corresponding to each filter.
     In that case, the above formulas reduce to
     
-    F = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)
+    Fnu = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)
     
     and 
     
-    F = int(P_nu * f_nu, dnu) / int(P_nu, dnu)
+    Fnu = int(P_nu * f_nu, dnu) / int(P_nu, dnu)
+    
+    Small note of caution: P_nu is not equal to P_lam according to
+    Maiz-Apellaniz, he states that P_lam = P_nu/lambda. But in the definition
+    we use above here, it *is* the same!
     
     The model fluxes should B{always} be given in Flambda (erg/s/cm2/A). The
     program will convert them to Fnu where needed.
@@ -1671,6 +1706,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     start = 0
     logger.info('Total number of tables: %i'%(len(teffs)))
     exceptions = 0
+    exceptions_logs = []
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
@@ -1702,10 +1738,17 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
             logger.debug('Exception: %s'%(sys.exc_info()[1]))
             exceptions = exceptions + 1
+            exceptions_logs.append(sys.exc_info()[1])
     
     #-- make FITS columns
     gridfile = get_file()
-    outfile = 'i%s'%(os.path.basename(gridfile))
+    if os.path.isfile(os.path.basename(gridfile)):
+        outfile = os.path.basename(gridfile)
+    else:
+        outfile = os.path.join(os.path.dirname(gridfile),'i{0}'.format(os.path.basename(gridfile)))
+    logger.info('Precaution: making original grid backup at {0}.backup'.format(outfile))
+    if os.path.isfile(outfile):
+        shutil.copy(outfile,outfile+'.backup')
     output = output.T
     if not update:
         cols = [pyfits.Column(name='teff',format='E',array=output[0]),
@@ -1726,9 +1769,11 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     table = pyfits.new_table(pyfits.ColDefs(cols))
     table.header.update('gridfile',os.path.basename(gridfile))
     for key in sorted(defaults.keys()):
-        table.header.update(key,defaults[key])
+        key_ = (len(key)>8) and 'HIERARCH '+key or key
+        table.header.update(key_,defaults[key])
     for key in sorted(kwargs.keys()):
-        table.header.update(key,kwargs[key])
+        key_ = (len(key)>8) and 'HIERARCH '+key or key
+        table.header.update(key_,kwargs[key])
     table.header.update('FLUXTYPE',units)
     
     #-- make/update complete FITS file
@@ -1748,6 +1793,9 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         logger.info("Appended output to %s"%(outfile))
     
     logger.warning('Encountered %s exceptions!'%(exceptions))
+    for i in exceptions_logs:
+        print 'ERROR'
+        print i
 
 #}
 
