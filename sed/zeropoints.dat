@@ -12,7 +12,7 @@
 # GAIA Calibrations are pre-launch and thus only for simulation purposes
 # MIPS from Rieke et al, 2006 or Engelbrach (ssc.spitzer.caltech.edu/mips/calib)
 #      Be careful, IRAC and MIPS calibrations are not for the 'weighted average'
-#      flux, but com readily from the calibration tables.
+#      flux, but come readily from the calibration tables.
 #      Here, the lambda_eff is calculated as the weighted average of the
 #      response curve
 # BESSEL response curves from CHORIZOS, zeropoints from Bessel, 1990
@@ -171,7 +171,7 @@
  JOHNSON.J         12487.8 CCD        0.02           1   nan         0   nan         0 3.11763e-10 erg/s/cm2/A         0 1.60682e-20 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
  JOHNSON.K         21951.2 CCD        0.02           1   nan         0   nan         0 4.16588e-11 erg/s/cm2/A         0 6.65137e-21 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
  JOHNSON.L         35395.5 CCD       -0.02           1   nan         0   nan         0 6.91788e-12 erg/s/cm2/A         0 2.87024e-21 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
- JOHNSON.M         50311.2 CCD       -0.04           1   nan         0   nan         0 1.78812e-12 erg/s/cm2/A         0 1.49867e-21 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
+ JOHNSON.M         50311.2 CCD       -0.04           1   nan         0   nan         0 1.78777e-12 erg/s/cm2/A         0   1.498e-21 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
  JOHNSON.N          103566 CCD       -0.01           1   nan         0   nan         0 1.20556e-13 erg/s/cm2/A         0 4.18344e-22 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
  JOHNSON.R         6939.52 CCD        0.07           1   nan         0   nan         0 1.81615e-09 erg/s/cm2/A         0 2.88912e-20 erg/s/cm2/Hz        0 Morel_etal.1978                                                      
  JOHNSON.U         3641.75 CCD       0.055           1   nan         0   nan         0  3.9779e-09 erg/s/cm2/A         0 1.81564e-20 erg/s/cm2/Hz        0 Maiz-Appellaniz2007                                                  
@@ -206,7 +206,7 @@
  PACS.R        1.60218e+06 BOL         nan           0   nan         0   nan         0 1.81605e-18 erg/s/cm2/A         0 1.58757e-24 erg/s/cm2/Hz        0 nan                                                                  
  SAAO.H            16824.6 CCD       0.054           1   nan         0   nan         0 1.15125e-10 erg/s/cm2/A         0 1.03864e-20 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
  SAAO.J            12344.1 CCD       0.054           1   nan         0   nan         0 3.17476e-10 erg/s/cm2/A         0  1.6101e-20 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
- SAAO.K            21968.5 CCD       0.014           1   nan         0   nan         0  3.9814e-11 erg/s/cm2/A         0 6.47633e-21 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
+ SAAO.K            21968.5 CCD       0.014           1   nan         0   nan         0  3.9143e-11 erg/s/cm2/A         0 6.42907e-21 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
  SAAO.L            34308.7 CCD       0.032           1   nan         0   nan         0 7.45373e-12 erg/s/cm2/A         0 2.95196e-21 erg/s/cm2/Hz        0 VerhoelstPHD                                                         
  SCUBA.350NB   3.45424e+06 BOL         nan           0   nan         0   nan         0 1.41979e-19 erg/s/cm2/A         0 4.20985e-25 erg/s/cm2/Hz        0 nan                                                                  
  SCUBA.450NB   4.45476e+06 BOL         nan           0   nan         0   nan         0         nan erg/s/cm2/A         0         nan erg/s/cm2/Hz        0 nan                                                                  
@@ -263,6 +263,11 @@
  WALRAVEN.U        3633.35 CCD         nan           0   nan         0   nan         0    1.61e-11 erg/s/cm2/A         1 7.08955e-23 erg/s/cm2/Hz        0 GCPD                                                                 
  WALRAVEN.V        5450.85 CCD         nan           0   nan         0   nan         0    6.73e-12 erg/s/cm2/A         1 6.66997e-23 erg/s/cm2/Hz        0 GCPD                                                                 
  WALRAVEN.W        3254.61 CCD         nan           0   nan         0   nan         0    2.12e-11 erg/s/cm2/A         1 7.49053e-23 erg/s/cm2/Hz        0 GCPD                                                                 
+ WFCAM.H             16313 CCD           0           1   nan         0   nan         0    1.14e-09 W/m2/mum            1        1019 Jy                  1 Hewett2011                                                           
+ WFCAM.J             12483 CCD           0           1   nan         0   nan         0    2.94e-09 W/m2/mum            1        1530 Jy                  1 Hewett2011                                                           
+ WFCAM.K             22010 CCD           0           1   nan         0   nan         0    3.89e-10 W/m2/mum            1         631 Jy                  1 Hewett2011                                                           
+ WFCAM.Y             10305 CCD           0           1   nan         0   nan         0    5.71e-09 W/m2/mum            1        2026 Jy                  1 Hewett2011                                                           
+ WFCAM.Z              8817 CCD           0           1   nan         0   nan         0    8.59e-09 W/m2/mum            1        2232 Jy                  1 Hewett2011                                                           
  WISE.W1           33791.9 BOL           0           1   nan         0   nan         0  8.1787e-15 W/cm2/mum           1      309.54 Jy                  1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html
  WISE.W2             46293 BOL           0           1   nan         0   nan         0   2.415e-15 W/cm2/mum           1     171.787 Jy                  1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html
  WISE.W3            123337 BOL           0           1   nan         0   nan         0  6.5151e-17 W/cm2/mum           1      31.674 Jy                  1 http://wise2.ipac.caltech.edu/docs/release/prelim/expsup/sec4_3g.html
