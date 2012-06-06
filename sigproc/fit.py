@@ -1477,7 +1477,10 @@ class Minimizer(lmfit.Minimizer):
         if type(sigmas)==float: sigmas = [sigmas]
         
         #Use the adjusted conf_interval() function of the lmfit package.
-        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
+        if method == 'F-test':
+            out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, **kwargs)
+        elif method == 'MC':
+            out = lmfit.montecarlo(self, p_names=p_names, sigmas=sigmas, **kwargs)
         
         if short_output:
             out = out[p_names[0]][sigmas[0]]
@@ -1602,6 +1605,8 @@ def minimize(x, y, model, err=None, weights=None,
 
 def grid_minimize(x, y, model, err=None, weights=None,
              engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, **fit_kws):
+    
+    raise NotImplementedError
     
     oldpar = model.parameters.copy()
     results = []
