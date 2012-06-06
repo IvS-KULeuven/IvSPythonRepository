@@ -1149,7 +1149,7 @@ class SED(object):
                           zrange=None,radiusrange=None,masses=None,
                           threads='safe',iterations=3,increase=1,speed=1,res=1,
                           points=None,compare=True,df=5,CI_limit=None,type='single',
-                          primary_hottest=False,**kwargs):
+                          primary_hottest=False, gr_diff=None,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -1211,7 +1211,7 @@ class SED(object):
         #-- build the grid, run over the grid and calculate the CHI2
         teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
                         loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
-                        points=points,res=res, type=type,primary_hottest=primary_hottest) 
+                        points=points,res=res, type=type,primary_hottest=primary_hottest, gr_diff=gr_diff) 
         if type=='single':
             chisqs,scales,e_scales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
                                  self.master['e_cmeas'][include_grid],
