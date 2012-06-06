@@ -791,20 +791,26 @@ def diffcorr(times, signal, parameters, func_name, \
 
 #{ Non-linear improvements
 
-def residuals(parameters,domain,data,evalfunc,weights,*args):
+def residuals(parameters,domain,data,evalfunc,weights,logar,*args):
     fit = evalfunc(domain,parameters,*args)
     if weights is None:
         weights = np.ones_like(data)
-    return weights*(data-fit)
+    if logar:
+        return weights*(np.log10(data)-np.log10(fit))
+    else:
+        return weights*(data-fit)
 
-def residuals_single(parameters,domain,data,evalfunc,weights,*args):
+def residuals_single(parameters,domain,data,evalfunc,weights,logar,*args):
     fit = evalfunc(domain,parameters,*args)
     if weights is None:
         weights = np.ones_like(data)
-    return sum(weights*(data-fit)**2)
+    if logar:
+        return sum(weights*(np.log10(data)-np.log10(fit))**2)
+    else:
+        return sum(weights*(data-fit)**2)
 
 def optimize(times, signal, parameters, func_name, prep_func=None, 
-                        minimizer='leastsq', weights=None, args=()):
+                        minimizer='leastsq', weights=None, logar=False, args=()):
     """
     Fit a function to data.
     """
@@ -833,12 +839,15 @@ def optimize(times, signal, parameters, func_name, prep_func=None,
     #   improvement
     dof = (len(times)-len(init_guess))
     signalf_init = evalfunc(times,init_guess)
-    chisq_init = np.sum((signalf_init-signal)**2)
+    if logar:
+        chisq_init = np.sum((np.log10(signalf_init)-np.log10(signal))**2)
+    else:
+        chisq_init = np.sum((signalf_init-signal)**2)
     
     #-- optimize
     if minimizer=='leastsq':
         popt, cov, info, mesg, flag = optifunc(residuals,init_guess,
-                                     args=(times,signal,evalfunc,weights)+args,full_output=1)#,diag=[1.,10,1000,1.,100000000.])
+                                     args=(times,signal,evalfunc,weights,logar)+args,full_output=1)#,diag=[1.,10,1000,1.,100000000.])
         #-- calculate new chisquare, and check if we have improved it
         chisq = np.sum(info['fvec']*info['fvec'])
         if chisq>chisq_init or flag!=1:
@@ -1142,14 +1151,9 @@ class Minimizer(lmfit.Minimizer):
         else:
             self.leastsq()
     
-    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
+    def get_confidence_interval(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200, prob_func=None):
         """
         Returns the confidence intervalls of the given parameters. 
-        
-        @param method: Method to use, F-test or mc (monte carlo simulation)
-        @param output: Output type, error or ci (confidence intervall)
-        
-        kwargs: maxiter=200, prob_func=None
         """
         
         # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
@@ -1158,10 +1162,7 @@ class Minimizer(lmfit.Minimizer):
         if type(sigmas)==float: sigmas = [sigmas]
         
         #Use the adjusted conf_interval() function of the lmfit package.
-        if method == 'F-test':
-            out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, **kwargs)
-        elif method == 'MC':
-            out = lmfit.montecarlo(self, p_names=p_names, sigmas=sigmas, **kwargs)
+        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
         
         if short_output:
             out = out[p_names[0]][sigmas[0]]
