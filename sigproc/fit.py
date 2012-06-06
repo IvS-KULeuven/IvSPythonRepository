@@ -876,103 +876,26 @@ def optimize(times, signal, parameters, func_name, prep_func=None,
     
     return parameters,e_parameters, gain
 
-class Model(object):
-    
-    def __init__(self, functions=None):
-        self.functions = functions
-        #-- Combine the parameters
-        self.pull_parameters(functions)
-    
-    #{ Internal
-    def pull_parameters(self, functions):
-        """
-        Pulls the parameter objects from the underlying functions, and combines it to 1 parameter object.
-        """
-        parameters = []
-        for func in functions:
-            parameters.append(func.parameters)
-        
-        #-- Create new parameter object
-        new_params = lmfit.Parameters()
-        pnames = []
-        for i, params in enumerate(parameters):
-            pname = []
-            for n,par in params.items():
-                pname.append(n+'_%i'%(i))
-                new_params.add(n+'_%i'%(i), value=par.value, vary=par.vary, min=par.min, max=par.max, expr=par.expr)
-            pnames.append(pname)
-                
-        self.par_names = pnames
-        self.parameters = new_params
-        
-    def push_parameters(self, parameters=None):
-        """
-        Pushes the parameters in the combined parameter object to the parameter objects of the underlying 
-        models or functions.
-        """
-        if parameters == None:
-            parameters = self.parameters
-        
-        for pnames,function in zip(self.par_names, self.functions):
-            old_parameters = function.parameters
-            for name in pnames:
-                old_name = re.sub('_[0123456789]*$','',name)
-                old_parameters[old_name] = parameters[name]
-    
-    #}
-    
-    #{ Interaction
-    
-    def evaluate(self, *args):
-        """
-        Evaluate the model for a given values and optional a given parameter object.
-        If no parameter object is given then the parameter object belonging to the model
-        is used.
-        
-        >>> evaluate(parameters, x)
-        >>> evaluate(x)
-        """
-        if len(args) == 1:
-            #-- Use the parameters belonging to this object
-            parameters = self.parameters
-            x = args[0]
-        elif len(args) == 2:
-            #-- Use the provided parameters
-            parameters = args[0]
-            x = args[1]
-        
-        #-- Update the parameters of the individual functions before calling them
-        self.push_parameters(parameters=parameters)
-        
-        #-- For each function, read the arguments and calculate the result
-        result = np.zeros(len(x))
-        for function in self.functions:
-            result += function.evaluate(x)
-               
-        return result
-        
-    def setup_parameters():
-        raise NotImplementedError
-        
-    #}    
-    
-    #{ Getters and setters
-    
-    def get_model_function(self):
-        """
-        Returns the model function that can be evaluated using function(parameters, x)
-        """
-        return self.model
-        
-    def get_parameters_object(self):
-        """
-        Return the parameter object belonging to the model
-        """
-        return self.parameters
-    
-    #}
+#===================================================================================================
+#LMFIT functions
 
 class Function(object):
+    """
+    Class to define a function with associated parameters. The function can be evaluated using the
+    L{evaluate} method. Parameters can be added/updated, together with boundaries and expressions,
+    and can be hold fixed and released by adjusting the vary keyword in L{setup_parameters}.
+    
+    Functions can be combined using the L{Model} class, or can be fitted directly to data using the
+    L{Minimizer} class.
+    
+    The internal representation of the parameters uses a parameter object of the U{lmfit 
+    <http://cars9.uchicago.edu/software/python/lmfit/index.html>} package. No knowledge of this
+    repersentation is required as methods for direct interaction with the parameter values and
+    other settings are provided. If wanted, the parameters object itself can be obtained with
+    L{get_parameters_object}.
+    
+    At the moment the use of a jacobian is not supported.
+    """
     
     def __init__(self, function=None, par_names=None, jacobian=None):
         self.function = function
@@ -985,35 +908,50 @@ class Function(object):
     
     #{ Interaction
     
-    def evaluate(self,*args):
+    def evaluate(self,x, *args):
         """
         Evaluate the function for the given values and optional the given parameter object.
         If no parameter object is given then the parameter object belonging to the function
         is used.
         
-        >>> evaluate(parameters, x)
+        >>> evaluate(x, parameters)
         >>> evaluate(x)
+        
+        @param x: the independant data for which to evaluate the function
+        @type x: numpy array
+        
+        @return: Function(x), same size as x
+        @rtype: numpy array
         """
-        if len(args) == 1:
+        if len(args) == 0:
             #-- Use the parameters belonging to this object
             pars = []
             for name in self.par_names:
                 pars.append(self.parameters[name].value)
                 
-            return self.function(pars,args[0])
+            return self.function(pars,x)
             
-        if len(args) == 2:
+        if len(args) == 1:
             #-- Use the provided parameters
             pars = []
             for name in self.par_names:
                 pars.append(args[0][name].value)
                 
-            return self.function(pars,args[1])
+            return self.function(pars,x)
             
     def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
         Create or adjust a parameter object based on the parameter names and if provided
         the values, bounds, vary and expressions.
+        
+        @param values: The values of the parameters
+        @type values: array
+        @param bounds: min and max boundaries on the parameters [(min,max),...]
+        @type bounds: array of tuples
+        @param vary: Boolean array, true to vary a parameter, false to keep it fixed in the fitting process
+        @type vary: array
+        @param exprs: array of expressions that the paramters have to follow
+        @type exprs: array
         """
         nrpars = len(self.par_names)
         if values == None:
@@ -1061,17 +999,22 @@ class Function(object):
         @param full_output: When True, also vary, the boundaries and expr are returned
         @type full_output: bool
         
-        @return: the parameter values and there errors [(value, err, vary, min, max, expr),...]
-        @rtype: array of tupples
+        @return: the parameter values and there errors value, err, [vary, min, max, expr]
+        @rtype: numpy arrays
         """
-        out = []
+        val,err,vary,min,max,expr = [],[],[],[],[],[]
         for name, par in self.parameters.items():
-            if full_output:
-                out.append((par.value, par.stderr, par.vary, par.min, par.max, par.expr))
-            else:
-                out.append((par.value, par.stderr))
-        return out
-        
+            val.append(par.value)
+            err.append(par.stderr)
+            vary.append(par.vary)
+            min.append(par.min)
+            max.append(par.max)
+            expr.append(par.expr)
+            
+        if full_output:
+            return val,err,vary,min,max,expr
+        else:
+            return np.array(val),np.array(err)        
     
     def param2str(self, full_output=False, accuracy=2):
         """
@@ -1102,12 +1045,213 @@ class Function(object):
         return self.par_names
     
     def get_jacobian(self):
+        """
+        returns the names of the different parameters
+        """
         return self.jacobian
     
+    #}
+
+class Model(object):
+    """
+    Class to create a model using different L{Function}s each with theire associated parameters.
+    This Model can then be used to fit data using the L{Minimizer} class.  The Model can be 
+    evaluated using the L{evaluate} method. Parameters can be added/updated, together with
+    boundaries and expressions, and can be hold fixed or adjusted by changing the vary keyword
+    in L{setup_parameters}.
+    
+    Parameters for the different Functions are combined. To keep track of which parameter is
+    which, they get a number added to the end indicating the function they belong to: 
+    paramters of the first function are renamed to 'parname_0', parameters of the second function
+    are renamed to 'parname_1' ect.
+    
+    The functions themselfs can be combined using a mathematical expression in the constructor. 
+    If no expression is provided, they are summed together::
+    
+        Model(x) = Function1(x) + Function2(x) + ...
+        
+    The provided expression needs to be a function taking the an array with the results of the
+    Functions in the model as arguments, and having an numpy array as result. This can be done
+    with simple I{lambda} expression or more complicated functions::
+    
+        Model(x) = Expr( [Function1(x),Function2(x),...] ) 
+    
+    The internal representation of the parameters uses a parameter object of the U{lmfit 
+    <http://cars9.uchicago.edu/software/python/lmfit/index.html>} package. No knowledge of this
+    repersentation is required as methods for direct interaction with the parameter values and
+    other settings are provided. If wanted, the parameters object itself can be obtained with
+    L{get_parameters_object}.
+    
+    At the moment the use of a jacobian is not supported. 
+    """
+    
+    def __init__(self, functions=None, expr=None):
+        """
+        Create a new Model by providing the functions of which it consists. You can provid an expression
+        describing how the Functions have to be combined as well. This expression needs to take the out
+        put of the Fuctions in an array as argument, and provide a new numpy array as result.
+        
+        @param functions: A list of L{Function}s
+        @type functions: list
+        @param expr: An expression to combine the given functions.
+        @type expr: function
+        """
+        self.functions = functions
+        self.expr = expr
+        #-- Combine the parameters
+        self.pull_parameters(functions)
+    
+    #{ Interaction
+    
+    def evaluate(self, x, *args):
+        """
+        Evaluate the model for the given values and optional a given parameter object.
+        If no parameter object is given then the parameter object belonging to the model
+        is used.
+        
+        >>> evaluate(x, parameters)
+        >>> evaluate(x)
+        
+        @param x: the independant values for which to evaluate the model.
+        @type x: array
+        
+        @return: Model(x)
+        @rtype: numpy array
+        """
+        if len(args) == 0:
+            #-- Use the parameters belonging to this object
+            parameters = self.parameters
+        elif len(args) == 1:
+            #-- Use the provided parameters
+            parameters = args[0]
+        
+        #-- Update the parameters of the individual functions before calling them
+        self.push_parameters(parameters=parameters)
+        
+        #-- For each function, read the arguments and calculate the result
+        if self.expr == None:
+            result = np.zeros(len(x))
+            for function in self.functions:
+                result += function.evaluate(x)
+        else:
+            result = []
+            for function in self.functions:
+                result.append(function.evaluate(x))
+            results = self.expr(result)
+               
+        return result
+        
+    def setup_parameters():
+        """
+        Not implemented yet, use the setup_parameters method of the Functions themselfs.
+        """
+        raise NotImplementedError
+    
+    def get_parameters(self, full_output=False):
+        """
+        Returns the parameter values together with the errors if they exist. If No fitting
+        has been done, or the errors could not be calculated, None is returned for the error.
+        
+        @param full_output: When True, also vary, the boundaries and expr are returned
+        @type full_output: bool
+        
+        @return: the parameter values and there errors [(value, err, vary, min, max, expr),...]
+        @rtype: array of tupples
+        """
+        out = []
+        for name, par in self.parameters.items():
+            out.append([par.value,par.stderr, par.vary,  par.min, par.max, par.expr])
+        out = np.array(out)
+            
+        if full_output:
+            return out.T
+        else:
+            return out[:,0], out[:,1]  
+    #}    
+    
+    #{ Internal
+    def pull_parameters(self, functions):
+        """
+        Pulls the parameter objects from the underlying functions, and combines it to 1 parameter object.
+        """
+        parameters = []
+        for func in functions:
+            parameters.append(func.parameters)
+        
+        #-- Create new parameter object
+        new_params = lmfit.Parameters()
+        pnames = []
+        for i, params in enumerate(parameters):
+            pname = []
+            for n,par in params.items():
+                pname.append(n+'_%i'%(i))
+                new_params.add(n+'_%i'%(i), value=par.value, vary=par.vary, min=par.min, max=par.max, expr=par.expr)
+            pnames.append(pname)
+                
+        self.par_names = pnames
+        self.parameters = new_params
+        
+    def push_parameters(self, parameters=None):
+        """
+        Pushes the parameters in the combined parameter object to the parameter objects of the underlying 
+        models or functions.
+        """
+        if parameters == None:
+            parameters = self.parameters
+        
+        for pnames,function in zip(self.par_names, self.functions):
+            old_parameters = function.parameters
+            for name in pnames:
+                old_name = re.sub('_[0123456789]*$','',name)
+                old_parameters[old_name] = parameters[name]
+    
+    def get_parameters_object(self):
+        """
+        Return the parameter object belonging to the model
+        """
+        return self.parameters
     #}
     
     
 class Minimizer(lmfit.Minimizer): 
+    """
+    A minimizer class on the U{lmfit <http://cars9.uchicago.edu/software/python/lmfit/index.html>}
+    Python package, which provides a simple, flexible interface to non-linear least-squares 
+    optimization, or curve fitting. The package is build around the Levenberg-Marquardt algorithm of 
+    scipy, but 2 other minimizers: limited memory Broyden-Fletcher-Goldfarb-Shanno and simulated
+    annealing are partly supported as well. For the Levenberg-Marquardt algorithm, the estimated 
+    uncertainties and correlation between fitted variables are calculated as well.
+    
+    This minimizer finds the best parameters to fit a given L{Model} or L{Function} to a set of
+    data. You only need to provide the Model and data, not the residuals function. Weighted fitting
+    is supported.
+    
+    Functions
+    =========
+    
+    A L{Function} is basicaly a function together with a list of the parameters that is needs. In
+    the internal representation the parameters are represented as a Parameters object. However, 
+    the user does not need to now how to handle this, and can just provided or retrieve the parameter
+    values using arrays. Every fitting parameter are extensions of simple numerical variables with
+    the following properties:
+
+        - Parameters can be fixed or floated in the fit.
+        - Parameters can be bounded with a minimum and/or maximum value.
+        - Parameters can be written as simple mathematical expressions of other Parameters, using the
+        U{asteval module <http://newville.github.com/asteval/>}. These values will be re-evaluated at
+        each step in the fit, so that the expression is satisfied. This gives a simple but flexible
+        approach to constraining fit variables. 
+    
+    Models
+    ======
+    
+    A L{Model} is a combination of Functions with its own parameter set. The Functions are provided 
+    as a list, and a gamma function can be given to describe how the functions are combined. Methods
+    to handle the parameters in a model are provided, but the user is recommended handle the parameters
+    at Function level as the naming of the parameters changes at Model level. 
+
+
+    """
 
     def __init__(self, x, y, model, err=None, weights=None,
              engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, **kwargs):
@@ -1121,16 +1265,9 @@ class Minimizer(lmfit.Minimizer):
         params = model.get_parameters_object()
         
         #-- Setup the residual function and the lmfit.minimizer object
-        if weights == None:
-            def residuals(params, x, y):
-                return (y - model.evaluate(params,x))
-            fcn_args = (x,y)
-                             
-        else:
-            def residuals(params, x, y, weights):
-                return (y - model.evaluate(params,x))*weights
-            fcn_args = (x,y,weights)
+        residuals, fcn_args = self.setup_residual_function(args=args)
         
+        #-- Setup the Minimizer object
         lmfit.Minimizer.__init__(self,residuals, params, fcn_args=fcn_args, fcn_kws=kws,
                              iter_cb=iter_cb, scale_covar=scale_covar, **kwargs)
         
@@ -1142,14 +1279,54 @@ class Minimizer(lmfit.Minimizer):
         else:
             self.leastsq()
     
+    def setup_residual_function(self, args=None):
+        #Internal function to setup the residual function for the minimizer.
+        if self.y.shape > 1:
+            if self.weights == None:
+                def residuals(params, x, y, **kwargs):
+                    return np.ravel(y - self.model.evaluate(x, params, **kwargs))
+                fcn_args = (self.x,self.y)
+                                
+            else:
+                def residuals(params, x, y, weights, **kwargs):
+                    return np.ravel((y - self.model.evaluate(x, params, **kwargs))*weights)
+                fcn_args = (self.x,self.y,self.weights)
+        else:
+            if self.weights == None:
+                def residuals(params, x, y, **kwargs):
+                    return (y - self.model.evaluate(x, params, **kwargs))
+                fcn_args = (self.x,self.y)
+                                
+            else:
+                def residuals(params, x, y, weights, **kwargs):
+                    return (y - self.model.evaluate(x, params, **kwargs))*weights
+                fcn_args = (self.x,self.y,self.weights)
+                
+        return residuals, fcn_args
+    
+    #{ Error determination
+    
     def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
         """
         Returns the confidence intervalls of the given parameters. 
+        Two different methods can be used, Monte Carlo simulation and F-test method. 
         
-        @param method: Method to use, F-test or mc (monte carlo simulation)
+        Monte Carlo
+        ===========
+        Not yet implemented
+        
+        F-test
+        ======
+        The F-test is used to compare the null model, which is the best fit found by the minimizer, with an alternate model, where on of the parameters is fixed to a specific value. The value is changed util the differnce between chi2_0 and chi2_f can't be explained by the loss of a degree of freedom with a certain confidence.
+        
+        M{F = (chi2_f / chi2_0 - 1) * (N-P)/P_fix}
+        
+        N is the number of data-points, P the number of parameter of the null model. P_fix is the number of fixed parameters (or to be more clear, the difference of number of parameters betweeen the null model and the alternate model).
+        
+        @param p_names: Names of the parameters to calculate the CIs from (if None, all parameters are used)
+        @param sigmas: the different probability levels you want the conficence intervalls from
+        @param method: Method to use, 'F-test' or 'MC' (monte carlo simulation)
         @param output: Output type, error or ci (confidence intervall)
-        
-        kwargs: maxiter=200, prob_func=None
         """
         
         # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
@@ -1166,9 +1343,38 @@ class Minimizer(lmfit.Minimizer):
         if short_output:
             out = out[p_names[0]][sigmas[0]]
         return out
+        
+    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None):
+        """
+        Plot the confidence interval for 2 given parameters. The confidence interval is calculated
+        using the F-test method from the I{estimate_error} method.
+        
+        @param xname: The parameter on the x axis
+        @param yname: The parameter on the y axis
+        @param res: The resolution of the grid over which the confidence intervall is calculated
+        @param filled: True for filled contour plot, False for normal contour plot
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
+        """
+        
+        xn = hasattr(res,'__iter__') and res[0] or res
+        yn = hasattr(res,'__iter__') and res[1] or res
+        
+        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
+        grid *= 100.
+        
+        pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
+        if filled:
+            pl.contourf(x,y,grid,np.linspace(0,100,25),cmap=pl.cm.jet)
+            pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
+        else:
+            cs = pl.contour(x,y,grid,np.linspace(0,100,11),cmap=pl.cm.jet)
+            cs = pl.contour(x,y,grid,[20,40,60,80,95],cmap=pl.cm.jet)
+            pl.clabel(cs, inline=1, fontsize=10)
+        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
+        pl.xlabel(xname)
+        pl.ylabel(yname)
     
-    def MC_simulation():
-        raise NotImplementedError
+    #}
     
     #{ Plotting Functions
     
@@ -1208,45 +1414,70 @@ class Minimizer(lmfit.Minimizer):
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
     
-    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None):
-        """
-        Plot the confidence interval for 2 given parameters. 
-        
-        @param xname: The parameter on the x axis
-        @param yname: The parameter on the y axis
-        @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param filled: True for filled contour plot, False for normal contour plot
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
-        """
-        
-        xn = hasattr(res,'__iter__') and res[0] or res
-        yn = hasattr(res,'__iter__') and res[1] or res
-        
-        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
-        grid *= 100.
-        
-        pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
-        if filled:
-            pl.contourf(x,y,grid,np.linspace(0,100,25),cmap=pl.cm.jet)
-            pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
-        else:
-            cs = pl.contour(x,y,grid,np.linspace(0,100,11),cmap=pl.cm.jet)
-            cs = pl.contour(x,y,grid,[20,40,60,80,95],cmap=pl.cm.jet)
-            pl.clabel(cs, inline=1, fontsize=10)
-        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
-        pl.xlabel(xname)
-        pl.ylabel(yname)
+    #}
 
 def minimize(x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, **fit_kws):
+             engine='leastsq', args=None, kwargs=None, scale_covar=True, iter_cb=None, **fit_kws):
     """
-    Basic minimizer function, returns a Parameters and Minimizer object
+    Basic minimizer function using the L{Minimizer} class, find values for the parameters so that the
+    sum-of-squares of M{(y-model(x))} is minimized. When the fitting process is completed, the 
+    parameters of the L{Model} are updated with the results. If the I{leastsq} engine is used, estimated
+    uncertainties and correlations will be saved to the L{Model} as well. Returns a I{Minimizer} object.
+    
+    Fitting engines
+    ===============
+    By default, the Levenberg-Marquardt algorithm is used for fitting. While often criticized, including
+    the fact it finds a local minima, this approach has some distinct advantages. These include being 
+    fast, and well-behaved for most curve-fitting needs, and making it easy to estimate uncertainties
+    for and correlations between pairs of fit variables. 
+    Alternative fitting algoritms are at least partially implemented, but not all functions will work
+    with them.
+    
+        - leastsq: U{Levenberg-Marquardt <http://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm>}, 
+        U{scipy.optimize.leastsq <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html>}
+        - anneal: U{Simulated Annealing <http://en.wikipedia.org/wiki/Simulated_annealing.>},
+        U{scipy.optimize.anneal < http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.anneal.html>}
+        - lbfgsb: U{quasi-Newton optimization  <http://en.wikipedia.org/wiki/Limited-memory_BFGS>}, 
+        U{scipy.optimize.fmin_l_bfgs_b <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html>}
+    
+    
+    @param x: the independent data array (x data)
+    @type x: numpy array
+    @param y: the dependent data array (y data)
+    @type y: numpy array
+    @param model: The I{Model} to fit to the data
+    @param err: The errors on the y data, same dimentions as y
+    @param weights: The weights given to the different y data
+    @param engine: Which fitting engine to use: 'leastsq', 'anneal', 'lbfgsb'
+    @param kwargs: Extra keyword arguments to be passed to the model
+    @param fit_kws: Extra keyword arguments to be passed to the fitter function
+    
+    @return: (I{Parameter} object, I{Minimizer} object)
+    
     """
     
     fitter = Minimizer(x, y, model, err=err, weights=weights,
-             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+             engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
     
     return fitter
+
+def grid_minimize(x, y, model, err=None, weights=None,
+             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, **fit_kws):
+    
+    oldpar = model.parameters.copy()
+    results = []
+    chi2s = []
+    for i in range(grid):
+        model.parameters.kick()
+        fitter = Minimizer(x, y, model, err=err, weights=weights,
+             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+        results.append(fitter)
+        chi2s.append(fitter.chisqr)
+    
+    print chi2s
+        
+        
+    
 
 #}
 
@@ -1293,13 +1524,18 @@ def parameters2string(parameters, accuracy=2, full_output=False):
     #Converts a parameter object to string
     out = ""
     for name, par in parameters.items():
+        if par.stderr == None:
+            stderr = np.nan
+        else:
+            stderr = par.stderr
+            
         if not full_output:
-            out +=  '%10s = %.2f +/- %.2f \n' % (name, par.value, par.stderr)
+            out +=  '%10s = %.2f +/- %.2f \n' % (name, par.value, stderr)
         else:
             if par.vary:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s \n' % (name, par.value, par.stderr, par.min, par.max)
+                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s \n' % (name, par.value, stderr, par.min, par.max)
             else:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s (fixed) \n' % (name, par.value, par.stderr, par.min, par.max)
+                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s (fixed) \n' % (name, par.value, stderr, par.min, par.max)
     return out
 
 def confidence2string(ci, accuracy=2):

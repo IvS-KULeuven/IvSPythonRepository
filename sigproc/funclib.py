@@ -1,10 +1,9 @@
 """
-Database with model functions
+Database with model functions to be used with the sigproc.fit.minimizer function. 
 """
 import numpy as np
 from ivs.sigproc.fit import Model, Function
 import ivs.timeseries.keplerorbit as kepler
-#from ivs.sigproc import evaluate
 
 #{ Function Library
 
