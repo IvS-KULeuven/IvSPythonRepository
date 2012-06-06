@@ -150,13 +150,10 @@ Setup the two gaussian functions for the fitting process:
 >>> vary = [True, True, True, False]
 >>> gauss2.setup_parameters(values=pars, vary=vary)
 
-Create the model by summing up the gaussians. We want to sum the two gaussians, so we need to define
-a function that takes the output of the two gaussians, and sums it. This function is provided to the
-Model. In this case we do not really need to specify the function as the Model will automatically 
-sum the Functions if no expression is provided:
+Create the model by summing up the gaussians. As we just want to sum the two gaussian, we do not need
+to specify an expression for combining the two functions:
 
->>> expr = lambda x: x[0] + x[1]
->>> mymodel = fit.Model(functions=[gauss1, gauss2], expr=expr)
+>>> mymodel = fit.Model(functions=[gauss1, gauss2])
 
 Create some data with noise on it  
 
@@ -1285,11 +1282,17 @@ class Model(object):
                
         return result
         
-    def setup_parameters():
+    def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
         Not implemented yet, use the setup_parameters method of the Functions themselfs.
         """
-        raise NotImplementedError
+        if values is None: values = [None for i in self.function]
+        if bounds is None: bounds = [None for i in self.function]
+        if vary is None: vary = [None for i in self.function]
+        if exprs is None: exprs = [None for i in self.function]
+        
+        for i,func in enumerate(self.functions):
+            func.setup_parameters(values=values[i],bounds=bounds[i],vary=vary[i],exprs=exprs[i])
     
     def get_parameters(self, full_output=False):
         """
@@ -1480,10 +1483,7 @@ class Minimizer(lmfit.Minimizer):
         if type(sigmas)==float: sigmas = [sigmas]
         
         #Use the adjusted conf_interval() function of the lmfit package.
-        if method == 'F-test':
-            out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, **kwargs)
-        elif method == 'MC':
-            out = lmfit.montecarlo(self, p_names=p_names, sigmas=sigmas, **kwargs)
+        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
         
         if short_output:
             out = out[p_names[0]][sigmas[0]]
@@ -1608,8 +1608,6 @@ def minimize(x, y, model, err=None, weights=None,
 
 def grid_minimize(x, y, model, err=None, weights=None,
              engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, **fit_kws):
-    
-    raise NotImplementedError
     
     oldpar = model.parameters.copy()
     results = []
