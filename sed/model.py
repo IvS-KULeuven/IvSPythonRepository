@@ -77,7 +77,7 @@ convection theory parameter C{ct} has no influence when the Kurucz grid is
 chosen.
 
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
 or
 
@@ -88,13 +88,13 @@ You can change the defaults with the function L{set_defaults}:
 
 >>> set_defaults(z=0.5)
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
 
 And reset the 'default' default values by calling L{set_defaults} without arguments
 
 >>> set_defaults()
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
 Subsection 2.2 Speeding up
 --------------------------
@@ -111,11 +111,14 @@ You have to do this every time you change a grid setting. This function creates 
 directory named 'your_username' on the scratch disk and works from there. So you 
 won`t disturbed other users.
 
-After the fitting process use the function clean_scratch() to remove the models
-that you used from the scratch disk. Be carefull with this, because it will remove
-the models without checking if there is another process using them. So if you have
-multiple scripts running that are using the same models, only clean the scratch
-disk after the last process is finnished.
+After the fitting process use the function
+
+>>> clean_scratch()
+
+to remove the models that you used from the scratch disk. Be carefull with this,
+because it will remove the models without checking if there is another process
+using them. So if you have multiple scripts running that are using the same models,
+only clean the scratch disk after the last process is finished.
 
 The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
 and multiple sed fitting.
@@ -445,7 +448,7 @@ def get_gridnames(grid=None):
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
                 'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap',
-                'heberb','hebersdb']
+                ]
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -899,10 +902,10 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 #-- prepare fluxes matrix for interpolation, and x,y an z axis
                 myflux = np.zeros((16,4+len(photbands)+1))
                 mygrid = itertools.product(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
-                for i,(t,g,z) in enumerate(mygrid):
-                    myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
-                    myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
-                    input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
+                for i,(t,g,zz) in enumerate(mygrid):
+                    myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],zz
+                    myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],zz
+                    input_code = float('%3d%05d%03d%03d'%(int(round((zz+5)*100)),\
                                                         int(round(t)),int(round(g*100)),\
                                                         int(round(g_ebv[i_ebv]*100))))
                     index = markers.searchsorted(input_code)
@@ -1527,6 +1530,19 @@ def synthetic_flux(wave,flux,photbands,units=None):
     You are responsible yourself for having a response curve covering the
     model fluxes!
     
+    Now. let's put this all in practice in a more elaborate example: we want
+    to check if the effective wavelength is well defined. To do that we will:
+        
+        1. construct a model (black body)
+        2. make our own weird, double-shaped filter (CCD-type and BOL-type detector)
+        3. compute fluxes in Flambda, and convert to Fnu via the effective wavelength
+        4. compute fluxes in Fnu, and compare with step 3.
+        
+    In an ideal world, the outcome of step (3) and (4) must be equal:
+    
+    Step (1): We construct a black body model.
+    
+    
     WARNING: OPEN.BOL only works in Flambda for now.
     
     See e.g. Maiz-Apellaniz, 2006.
@@ -1775,6 +1791,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         key_ = (len(key)>8) and 'HIERARCH '+key or key
         table.header.update(key_,kwargs[key])
     table.header.update('FLUXTYPE',units)
+    table.header.update('REDLAW',law,'interstellar reddening law')
+    table.header.update('RV',Rv,'interstellar reddening parameter')
     
     #-- make/update complete FITS file
     if not update:
