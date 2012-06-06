@@ -4,6 +4,78 @@ Fit various functions to timeseries.
 Section 1. Radial velocity data
 ===============================
 
+1.1 BD+29.3070
+--------------
+Fit the orbit of the main sequence companion of the sdB+MS system BD+29.3070. 
+The radial velocities are obtained from HERMES spectra using the cross correlation
+tool of the pipeline.
+
+Necessary imports:
+
+>>> from ivs.io.ascii import read2array
+>>> from ivs.sigproc import funclib
+>>> import numpy as np
+
+Read in the data:
+
+>>> data = read2array('/home/jorisv/IVS_python/test_fit/BD+29.3070.dat')
+>>> dates, rv, err = data[:,0], data[:,1], data[:,2]
+
+Import the function we want to fit to the data from the function library:
+
+>>> mymodel = funclib.kepler_orbit(type='single')
+
+Setup the starting values of the parameters and the boundaries:
+
+>>> pars = [1000, dates[0], 0.0, 0.0, (max(rv)-min(rv))/2, np.average(rv)]
+>>> bounds = [(pars[0]/2, pars[0]*1.5), (data[0][0]-pars[0]/2,data[0][0]+pars[0]/2), (0.0,0.5), (0,2*np.pi), (pars[4]/4,pars[4]*2), (min(rv),max(rv))]
+>>> vary = [True, True, True, True, True, True]
+>>> mymodel.setup_parameters(values=pars, bounds=bounds, vary=vary)
+
+Fit the model to the data:
+
+>>> result = minimize(dates, rv, mymodel, weights=1/err)
+
+Print the results:
+
+>>> print mymodel.param2str()
+         p = 1009.43 +/- 15.36 
+        t0 = 2455416.86 +/- 12.11 
+         e = 0.16 +/- 0.01 
+     omega = 1.68 +/- 0.09 
+         k = 6.03 +/- 0.04 
+        v0 = 32.20 +/- 0.09 
+
+The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
+
+>>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
+>>> print fit.confidence2string(ci, accuracy=4)
+p 
+              25.0 %         65.0 %          95.0 % 
+        - 1004.5324       995.3298         979.921 
+        + 1014.5141      1025.1068       1046.7599 
+e 
+              25.0 %         65.0 %          95.0 % 
+        -    0.1549         0.1488          0.1382 
+        +    0.1613         0.1678          0.1804 
+
+Now plot the resulting rv curve over the original curve:
+
+>>> p = pl.figure(1)
+>>> result.plot_results()
+
+]include figure]]ivs_sigproc_lmfit_BD+29.3070_1.png]
+
+We can use the L{Minimizer.plot_confidence_interval} method to plot the confidence intervals of two 
+parameters, and show the correlation between them, fx between the period and T0:
+
+>>> p = pl.figure(2)
+>>> result.plot_confidence_interval(xname='p',yname='t0', res=30, filled=True)
+
+]include figure]]ivs_sigproc_lmfit_BD+29.3070_2.png]
+
+1.2 LSI+65010
+-------------
 Fit orbit of massive X-ray binary LSI+65010, after Grundstrom 2007:
 
 Necessary imports:
@@ -62,7 +134,67 @@ Now plot everything:
 
 ]include figure]]ivs_sigproc_fit_01.png]
 
-Section 2. Pulsation frequency analysis
+Section 2. Fitting an absorption line
+=====================================
+
+Here we show how to use 2 gaussians to fit an absorption line with an emission feature in its core:
+
+Setup the two gaussian functions for the fitting process:
+
+>>> gauss1 = funclib.gauss()
+>>> pars = [-0.75,1.0,0.1,1]
+>>> gauss1.setup_parameters(values=pars)
+
+>>> gauss2 = funclib.gauss()
+>>> pars = [0.22,1.0,0.01,0.0]
+>>> vary = [True, True, True, False]
+>>> gauss2.setup_parameters(values=pars, vary=vary)
+
+Create the model by summing up the gaussians. As we just want to sum the two gaussian, we do not need
+to specify an expression for combining the two functions:
+
+>>> mymodel = fit.Model(functions=[gauss1, gauss2])
+
+Create some data with noise on it  
+
+>>> x = np.linspace(0.5,1.5, num=1000)
+>>> y = mymodel.evaluate(x)
+>>> noise = np.random.normal(0.0, 0.015, size=len(x))
+>>> y = y+noise
+
+Change the starting values for the fit parameters:
+
+>>> pars = [-0.70,1.0,0.11,0.95]
+>>> gauss1.setup_parameters(values=pars)
+>>> pars = [0.27,1.0,0.005,0.0]
+>>> vary = [True, True, True, False]
+>>> gauss2.setup_parameters(values=pars, vary=vary)
+
+Fit the model to the data
+>>> result = fit.minimize(x,y, mymodel)
+
+Print the resulting values for the parameters. The errors are very small as the data only has some 
+small normal distributed noise added to it:
+
+>>> print gauss1.param2str()
+         a = -0.75 +/- 0.00 
+        mu = 1.00 +/- 0.00 
+     sigma = 0.10 +/- 0.00 
+         c = 1.00 +/- 0.00 
+>>> print gauss2.param2str()
+         a = 0.22 +/- 0.00 
+        mu = 1.00 +/- 0.00 
+     sigma = 0.01 +/- 0.00 
+         c = 0.00 +/- 0.00 
+         
+Now plot the results:
+
+>>> p = pl.figure(1)
+>>> result.plot_results()
+
+]include figure]]ivs_sigproc_lmfit_gaussian.png]
+
+Section 3. Pulsation frequency analysis
 =======================================
 
 Do a frequency analysis of the star HD129929, after Aerts 2004:
@@ -115,7 +247,7 @@ Now plot everything:
 ]include figure]]ivs_sigproc_fit_02.png]
 
 
-Section 3. Exoplanet transit analysis
+Section 4. Exoplanet transit analysis
 =====================================
 
 Find the transits of CoRoT 8b, after Borde 2010.
@@ -162,7 +294,7 @@ Now plot everything and print the results to the screen:
 
 ]include figure]]ivs_sigproc_fit_03.png]
 
-Section 4. Eclipsing binary fit
+Section 5. Eclipsing binary fit
 ===============================
 
 Splines are not a good way to fit eclipsing binaries, but just for the sake of
