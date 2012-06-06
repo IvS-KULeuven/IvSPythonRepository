@@ -54,4 +54,44 @@ def sine():
 #def generic(func_name):
     ##func = model.FUNCTION(function=getattr(evaluate,func_name), par_names)
     #raise NotImplementedError
+
+def power_law():
+    """
+    Power law.
+    
+    Function:
+    
+    P(f) = A / (1+ Bf)**C + const
+    """
+    pnames = ['a','b','c','const']
+    function = lambda p, x: p[0] / (1 + (par[1]*x)**par[2]) + par[3]
+    return Function(function=function, par_names=pnames)
+
+
+
 #}
+
+
+def evaluate(funcname, domain, parameters, **kwargs):
+    """
+    Evaluate a function on specified interval with specified parameters.
+    
+    Extra keywords are passed to the funcname.
+    
+    Example:
+    
+    >>> x = np.linspace(-5,5,1000)
+    >>> y = evaluate('gauss',x,[1.,0.,2.,0.])
+    
+    @parameter funcname: name of the function
+    @type funcname: str
+    @parameter domain: domain to evaluate onto
+    @type domain: array
+    @parameter parameters: parameter of the function
+    @type parameters: array
+    """
+    function = globals()[funcname](**kwargs)
+    function.setup_parameters(parameters)
+    return function.evaluate(domain)
+    
+    
