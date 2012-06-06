@@ -1,13 +1,22 @@
 """
 Database with model functions.
 
-To be used with the Lsigproc.fit.minimizer function or with the L{evaluate}
+To be used with the L{ivs.sigproc.fit.minimizer} function or with the L{evaluate}
 function in this module.
 
+>>> p = plt.figure()
 >>> x = np.linspace(-10,10,1000)
 >>> p = plt.plot(x,evaluate('gauss',x,[5,1.,2.,0.5]),label='gauss')
 >>> p = plt.plot(x,evaluate('voigt',x,[20.,1.,1.5,3.,0.5]),label='voigt')
 >>> p = plt.plot(x,evaluate('lorentz',x,[5,1.,2.,0.5]),label='lorentz')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> p = plt.figure()
+>>> x = np.linspace(0,10,1000)[1:]
+>>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0.5]),label='power_law')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
 """
 import numpy as np
 from numpy import pi,cos,sin,sqrt,tan,arctan
@@ -19,6 +28,8 @@ import ivs.timeseries.keplerorbit as kepler
 
 def kepler_orbit(type='single'):
     """
+    Kepler orbits ((p,t0,e,omega,K,v0) or (p,t0,e,omega,K1,v01,K2,v02))
+    
     A single kepler orbit
     parameters are: [P, T0, e, omega, K, v0]
     
@@ -41,9 +52,9 @@ def kepler_orbit(type='single'):
 
 def gauss():
     """
-    Your standard gaussian
-    parameters are: [A, mu, sigma, cte]
-    f(x) = Amp * exp( - (x - mu)**2 / (2 * sigma**2) ) + cte
+    Gaussian (a,mu,sigma,c)
+    
+    f(x) = a * exp( - (x - mu)**2 / (2 * sigma**2) ) + c
     """
     pnames = ['a', 'mu', 'sigma', 'c']
     function = lambda p, x: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2)) + p[3]
@@ -52,35 +63,91 @@ def gauss():
     
 def sine():
     """
-    Your standard sine function
-    parameters are: [Amp, omega, phi, cte]
-    f(x) = Amp * sin(omega*x + phi) + cte
+    Sine (ampl,freq,phase,const)
+    
+    f(x) = ampl * sin(2pi*freq*x + 2pi*phase) + const
     """
-    pnames = ['a', 'omega', 'phi', 'c']
-    function = lambda p, x: p[0] * np.sin(p[1]*x + p[2]) + p[3]
+    pnames = ['ampl', 'freq', 'phase', 'const']
+    function = lambda p, x: p[0] * sin(2*pi*(p[1]*x + p[2])) + p[3]
     
     return Function(function=function, par_names=pnames)
+
+
+def sine_freqshift(t0=0.):
+    """
+    Sine with linear frequency shift (ampl,freq,phase,const,D).
+        
+    Similar to C{sine}, but with extra parameter 'D', which is the linear
+    frequency shift parameter.
     
+    @param t0: reference time (defaults to 0)
+    @type t0: float
+    """
+    pnames = ['ampl', 'freq', 'phase', 'const','D']
+    def function(p,x):
+        freq = (p[1] + p[4]/2.*(x-t0))*(x-t0)
+        return p[0] * sin(2*pi*(freq + p[2])) + p[3]
+    return Function(function=function, par_names=pnames)
+
+    
+def sine_orbit(t0=0.,nmax=10):
+    """
+    Sine with a sinusoidal frequency shift (ampl,freq,phase,const,forb,asini,omega,(,ecc))
+    
+    Similar to C{sine}, but with extra parameter 'asini' and 'forb', which are
+    the orbital parameters. forb in cycles/day or something similar, asini in au.
+    
+    For eccentric orbits, add longitude of periastron 'omega' (radians) and
+    'ecc' (eccentricity).
+        
+    @param t0: reference time (defaults to 0)
+    @type t0: float
+    @param nmax: number of terms to include in series for eccentric orbit
+    @type nmax: int
+    """
+    def ane(n,e): return 2.*sqrt(1-e**2)/e/n*jn(n,n*e)    
+    def bne(n,e): return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
+    
+    
+    def function(p,x):
+        ampl,freq,phase,const,forb,asini,omega = p[:6]
+        ecc = None
+        if len(p)==7:
+            ecc = p[6]
+        cc = 173.144632674 # speed of light in AU/d
+        alpha = freq*asini/cc
+        if ecc is None:
+            frequency = freq*(times-t0) + alpha*(sin(2*pi*forb*x) - sin(2*pi*forb*t0))
+        else:
+            ns = np.arange(1,nmax+1,1)
+            ans,bns = np.array([[ane(n,ecc),bne(n,ecc)] for n in ns]).T
+            ksins = sqrt(ans**2*cos(omega)**2+bns**2*sin(omega)**2)
+            thns = arctan(bns/ans*tan(omega))
+            tau = -np.sum(bns*sin(omega))
+            frequency = freq*(times-t0) + \
+               alpha*(np.sum(np.array([ksins[i]*sin(2*pi*ns[i]*forb*(times-t0)+thns[i]) for i in range(nmax)]),axis=0)+tau)
+        return ampl * sin(2*pi*(frequency + phase))
+
 #def generic(func_name):
     ##func = model.FUNCTION(function=getattr(evaluate,func_name), par_names)
     #raise NotImplementedError
 
 def power_law():
     """
-    Power law
+    Power law (A,B,C,const)
     
     P(f) = A / (1+ Bf)**C + const
     """
     pnames = ['ampl','b','c','const']
-    function = lambda p, x: p[0] / (1 + (par[1]*x)**par[2]) + par[3]
+    function = lambda p, x: p[0] / (1 + (p[1]*x)**p[2]) + p[3]
     return Function(function=function, par_names=pnames)
 
 
 def lorentz():
     """
-    Lorentz profile
+    Lorentz profile (ampl,mu,gamma,const)
     
-    P(f) = A / ( (x-mu)**2 + gamma**2)
+    P(f) = A / ( (x-mu)**2 + gamma**2) + const
     """
     pnames = ['ampl','mu','gamma','const']
     function = lambda p,x: p[0] / ((x-p[1])**2 + p[2]**2) + p[3]
@@ -88,7 +155,7 @@ def lorentz():
 
 def voigt():
     """
-    Voigt profile
+    Voigt profile (ampl,mu,sigma,gamma,const)
     
     z = (x + gamma*i) / (sigma*sqrt(2))
     V = A * Real[cerf(z)] / (sigma*sqrt(2*pi))
@@ -99,6 +166,16 @@ def voigt():
         z = (x+1j*p[3])/(p[2]*sqrt(2))
         return p[0]*_complex_error_function(z).real/(p[2]*sqrt(2*pi))+p[4]
     return Function(function=function, par_names=pnames)
+
+#}
+
+#{ Combination functions
+
+def multi_sine(n=10):
+    """
+    Multiple sines.
+    """
+    return Model(functions=[sine() for i in range(n)])
 
 #}
 
