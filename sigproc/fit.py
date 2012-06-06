@@ -150,10 +150,13 @@ Setup the two gaussian functions for the fitting process:
 >>> vary = [True, True, True, False]
 >>> gauss2.setup_parameters(values=pars, vary=vary)
 
-Create the model by summing up the gaussians. As we just want to sum the two gaussian, we do not need
-to specify an expression for combining the two functions:
+Create the model by summing up the gaussians. We want to sum the two gaussians, so we need to define
+a function that takes the output of the two gaussians, and sums it. This function is provided to the
+Model. In this case we do not really need to specify the function as the Model will automatically 
+sum the Functions if no expression is provided:
 
->>> mymodel = fit.Model(functions=[gauss1, gauss2])
+>>> expr = lambda x: x[0] + x[1]
+>>> mymodel = fit.Model(functions=[gauss1, gauss2], expr=expr)
 
 Create some data with noise on it  
 
