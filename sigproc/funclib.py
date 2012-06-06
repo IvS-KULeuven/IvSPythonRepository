@@ -1,7 +1,17 @@
 """
-Database with model functions to be used with the sigproc.fit.minimizer function. 
+Database with model functions.
+
+To be used with the Lsigproc.fit.minimizer function or with the L{evaluate}
+function in this module.
+
+>>> x = np.linspace(-10,10,1000)
+>>> p = plt.plot(x,evaluate('gauss',x,[5,1.,2.,0.5]),label='gauss')
+>>> p = plt.plot(x,evaluate('voigt',x,[20.,1.,1.5,3.,0.5]),label='voigt')
+>>> p = plt.plot(x,evaluate('lorentz',x,[5,1.,2.,0.5]),label='lorentz')
 """
 import numpy as np
+from numpy import pi,cos,sin,sqrt,tan,arctan
+from scipy.special import erf,jn
 from ivs.sigproc.fit import Model, Function
 import ivs.timeseries.keplerorbit as kepler
 
@@ -57,17 +67,59 @@ def sine():
 
 def power_law():
     """
-    Power law.
-    
-    Function:
+    Power law
     
     P(f) = A / (1+ Bf)**C + const
     """
-    pnames = ['a','b','c','const']
+    pnames = ['ampl','b','c','const']
     function = lambda p, x: p[0] / (1 + (par[1]*x)**par[2]) + par[3]
     return Function(function=function, par_names=pnames)
 
 
+def lorentz():
+    """
+    Lorentz profile
+    
+    P(f) = A / ( (x-mu)**2 + gamma**2)
+    """
+    pnames = ['ampl','mu','gamma','const']
+    function = lambda p,x: p[0] / ((x-p[1])**2 + p[2]**2) + p[3]
+    return Function(function=function, par_names=pnames)
+
+def voigt():
+    """
+    Voigt profile
+    
+    z = (x + gamma*i) / (sigma*sqrt(2))
+    V = A * Real[cerf(z)] / (sigma*sqrt(2*pi))
+    """
+    pnames = ['ampl','mu','sigma','gamma','const']
+    def function(p,x):
+        x = x-p[1]
+        z = (x+1j*p[3])/(p[2]*sqrt(2))
+        return p[0]*_complex_error_function(z).real/(p[2]*sqrt(2*pi))+p[4]
+    return Function(function=function, par_names=pnames)
+
+#}
+
+#{ Internal Helper functions
+
+def _complex_error_function(x):
+    """
+    Complex error function
+    """
+    cef_value = np.exp(-x**2)*(1-erf(-1j*x))
+    if sum(np.isnan(cef_value))>0:
+        logger.warning("Complex Error function: NAN encountered, results are biased")
+        noisnans = np.compress(1-np.isnan(cef_value),cef_value)
+        try:
+            last_value = noisnans[-1]
+        except:
+            last_value = 0
+            logger.warning("Complex Error function: all values are NAN, results are wrong")
+        cef_value = np.where(np.isnan(cef_value),last_value,cef_value)
+
+    return cef_value
 
 #}
 
@@ -94,4 +146,8 @@ def evaluate(funcname, domain, parameters, **kwargs):
     function.setup_parameters(parameters)
     return function.evaluate(domain)
     
-    
+if  __name__=="__main__":
+    import doctest
+    from matplotlib import pyplot as plt
+    doctest.testmod()
+    plt.show()
