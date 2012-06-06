@@ -779,20 +779,16 @@ def get_schaller_grid():
     @rtype: Rbf interpolation function
     """
     #-- translation between table names and masses
-    masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
-    tables = ['table20','table18','table17','table16','table15','table14',
-              'table13','table12','table11','table10','table9','table8',
-              'table7','table6','table5','table4','table3'][:-1]
+    #masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
+    #tables = ['table20','table18','table17','table16','table15','table14',
+    #          'table13','table12','table11','table10','table9','table8',
+    #          'table7','table6','table5','table4','table3'][:-1]
     #-- read in all the tables and compute radii and luminosities.
-    all_teffs,all_loggs,all_radii = [],[],[]
-    for mass,table in zip(masses,tables):
-        data,comms,units = vizier.search('J/A+AS/96/269/%s'%(table))
-        all_teffs.append(10**data['logTe'])
-        all_radii.append(np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs)))
-        all_loggs.append(np.log10(constants.GG_cgs*mass*constants.Msol_cgs/(all_radii[-1]**2)))
-    all_teffs = np.hstack(all_teffs)
-    all_radii = np.hstack(all_radii)/constants.Rsol_cgs
-    all_loggs = np.hstack(all_loggs)
+    data,comms,units = vizier.search('J/A+AS/96/269/models')
+    all_teffs = 10**data['logTe']
+    all_radii = np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs))
+    all_loggs = np.log10(constants.GG_cgs*data['Mass']*constants.Msol_cgs/(all_radii**2))
+    all_radii /= constants.Rsol_cgs
     #-- remove low temperature models, the evolutionary tracks are hard to
     #   interpolate there.
     keep = all_teffs>5000
@@ -1132,6 +1128,22 @@ class SED(object):
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
     #}
+    #{ Request additional information
+    
+    def get_interstellar_reddening(self,distance=None, Rv=3.1):
+        gal = self.info['galpos']
+        if distance is None:
+            d = self.get_distance()
+            if isinstance(d,tuple):
+                d = d[0][np.argmax(d[1])]
+        output = {}
+        for model in ['arenou','schlegel','drimmel','marshall']:
+            EBV = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)/Rv
+            output[model] = EBV
+        return output
+    
+    #}
+    
     #{ Fitting routines
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=None,radiusrange=None,masses=None,
@@ -1362,30 +1374,66 @@ class SED(object):
         self.results['synflux'] = eff_waves,synflux,self.master['photband']
         self.results['chi2'] = chi2
     
-    def set_distance(self):
-        #-- calculate the distance
-        cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
-        gal = self.info['galpos']
-        if 'plx' in self.info:
+    def get_distance_from_plx(self,plx=None):
+        """
+        Get the probability density function for the distance, given a parallax.
+        
+        If no parallax is given, the catalogue value will be used. If that one
+        is also not available, a ValueError will be raised.
+        
+        Parallax must be given in mas.
+        
+        If the parallax is a float without uncertainty, a float will be returned.
+        Otherwise, a probability density function will be given.
+        
+        Distance is returned in parsec (pc).
+        """
+        #-- we need parallax and galactic position
+        if plx is None and 'plx' in self.info:
             plx = self.info['plx']['v'],self.info['plx']['e']
+        elif plx is None:
+            raise ValueError,'distance cannot be computed from parallax (no parallax)'
+        if not 'galpos' in self.info:
+            raise ValueError,'distance cannot be computed from parallax (no position)'
+        gal = self.info['galpos']
+        #-- if the parallax has an uncertainty, compute probability density function
+        if hasattr(plx,'__iter__'):
+            d = np.logspace(np.log10(0.1),np.log10(25000),100000)
+            dprob = distance.distprob(d,gal[1],plx)
+            dprob = dprob / dprob.max()
+            return d,dprob
+        #-- just invert
         else:
-            plx = None
-        (d_models,dprob_models,radii),(d,dprob)\
-                   = calculate_distance(plx,self.info['galpos'],self.results['igrid_search']['grid']['teff'][cutlogg],\
-                                                   self.results['igrid_search']['grid']['logg'][cutlogg],\
-                                                   self.results['igrid_search']['grid']['scale'][cutlogg])
-        #-- calculate model extinction
-        res = 100
-        self.results['igrid_search']['drimmel'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='drimmel', distance=myd) for myd in d[::res]]))
-        self.results['igrid_search']['marshall'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='marshall', distance=myd) for myd in d[::res]]))
-        self.results['igrid_search']['d_mod'] = (d_models,dprob_models,radii)
-        self.results['igrid_search']['d'] = (d,dprob)
+            return 1000./plx
+        
+    
+    #def set_distance(self):
+        #"""
+        #Deprecated!
+        #"""
+        ##-- calculate the distance
+        #cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['CI_red']<=0.95)
+        #gal = self.info['galpos']
+        #if 'plx' in self.info:
+            #plx = self.info['plx']['v'],self.info['plx']['e']
+        #else:
+            #plx = None
+        #(d_models,dprob_models,radii),(d,dprob)\
+                   #= calculate_distance(plx,self.info['galpos'],self.results['igrid_search']['grid']['teff'][cutlogg],\
+                                                   #self.results['igrid_search']['grid']['logg'][cutlogg],\
+                                                   #self.results['igrid_search']['grid']['scale'][cutlogg])
+        ##-- calculate model extinction
+        #res = 100
+        #self.results['igrid_search']['drimmel'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='drimmel', distance=myd) for myd in d[::res]]))
+        #self.results['igrid_search']['marshall'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='marshall', distance=myd) for myd in d[::res]]))
+        #self.results['igrid_search']['d_mod'] = (d_models,dprob_models,radii)
+        #self.results['igrid_search']['d'] = (d,dprob)
     
     #}
     
     #{ Plotting routines
     @standalone_figure
-    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95):
+    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95,d=None):
         """
         Plot grid as scatter plot
         
@@ -1409,45 +1457,74 @@ class SED(object):
         ]]include figure]]ivs_sed_builder_plot_grid_01.png]
         
         """
+        #-- if no distance is set, derive the most likely distance from the plx:
+        if d is None:
+            try:
+                d = self.get_distance_from_plx()
+            except ValueError:
+                d = None
+                logger.info('Distance to {0} unknown'.format(self.ID))
+            if isinstance(d,tuple):
+                d = d[0][np.argmax(d[1])]
+        #-- it's possible that we still don't have a distance
+        if d is not None:
+            logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
+            rad = d*np.sqrt(self.results[mtype]['grid']['scale'])
+            rad = conversions.convert('pc','Rsol',rad) # in Rsol
+            Labs= np.log10(self.results[mtype]['grid']['Labs']*rad**2) # in [Lsol]
+            mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
+                                           (rad,'Rsol'),unit='Msol')
+        #-- compute angular diameter
+        theta = conversions.convert('sr','mas',4*np.pi*np.sqrt(self.results[mtype]['grid']['scale']))
+        
         if limit is not None:
             region = self.results[mtype]['grid']['CI_red']<limit
         else:
             region = self.results[mtype]['grid']['CI_red']<np.inf
         #-- get the colors and the color scale
-        colors = self.results[mtype]['grid'][ptype][region]
+        if ptype in self.results[mtype]['grid'].dtype.names:
+            colors = self.results[mtype]['grid'][ptype][region]
+        else:
+            colors = locals()[ptype][region]
         vmin,vmax = colors.min(),colors.max()
         if 'CI' in ptype:
             colors *= 100.
             vmax = 95.
             vmin = colors.min()
+        #-- define abbrevation for plotting
+        if x in self.results[mtype]['grid'].dtype.names:
+            X = self.results[mtype]['grid'][x]
+        else:
+            X = locals()[x]
+            
+        if y in self.results[mtype]['grid'].dtype.names:
+            Y = self.results[mtype]['grid'][y]
+        else:
+            Y = locals()[y]
         #-- grid scatter plot
-        pl.scatter(self.results[mtype]['grid'][x][region],
-                   self.results[mtype]['grid'][y][region],
+        pl.scatter(X[region],Y[region],
              c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
         #-- mark best value
-        pl.plot(self.results[mtype]['grid'][x][-1],
-                self.results[mtype]['grid'][y][-1],'r+',ms=40,mew=3)
+        pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
         #-- set the limits to only include the 95 interval
-        pl.xlim(self.results[mtype]['grid'][x][region].max(),
-                self.results[mtype]['grid'][x][region].min())
-        pl.ylim(self.results[mtype]['grid'][y][region].max(),
-                self.results[mtype]['grid'][y][region].min())
+        pl.xlim(X[region].max(),X[region].min())
+        pl.ylim(Y[region].max(),Y[region].min())
         cbar = pl.colorbar()
         
-        #-- set the x/y labels
-        if   x=='teff': pl.xlabel('Effective temperature [K]')
-        elif x=='z'   : pl.xlabel('log (Metallicity Z [$Z_\odot$]) [dex]')
-        elif x=='logg': pl.xlabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-        elif x=='ebv' : pl.xlabel('E(B-V) [mag]')
-        if   y=='teff': pl.ylabel('Effective temperature [K]')
-        elif y=='z'   : pl.ylabel('log (Metallicity Z [$Z_\odot$]) [dex]')
-        elif y=='logg': pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-        elif y=='ebv' : pl.ylabel('E(B-V) [mag]')
+        #-- set the x/y/color labels
+        label_dict = dict(teff='Effective temperature [K]',\
+                          z='log (Metallicity Z [$Z_\odot$]) [dex]',\
+                          logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
+                          ebv='E(B-V) [mag]',\
+                          CI_raw='Raw probability [%]',\
+                          CI_red='Reduced probability [%]',\
+                          Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          rad=r'Radius [$R_\odot$]',\
+                          mass=r'Mass [$M_\odot$]')
         
-        #-- set the colorbar label
-        if 'CI'in ptype:   cbar.set_label('Probability [%]')
-        elif ptype=='z':   cbar.set_label('Metallicity Z ($Z_\odot$)')
-        elif ptype=='ebv': cbar.set_label('E(B-V) [mag]')
+        pl.xlabel(label_dict[x])
+        pl.ylabel(label_dict[y])
+        cbar.set_label(label_dict[ptype])
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
     
