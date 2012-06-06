@@ -77,7 +77,7 @@ convection theory parameter C{ct} has no influence when the Kurucz grid is
 chosen.
 
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
 or
 
@@ -88,13 +88,13 @@ You can change the defaults with the function L{set_defaults}:
 
 >>> set_defaults(z=0.5)
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
 
 And reset the 'default' default values by calling L{set_defaults} without arguments
 
 >>> set_defaults()
 >>> print defaults
-{'a': 0.0, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
 
 Subsection 2.2 Speeding up
 --------------------------
@@ -111,11 +111,14 @@ You have to do this every time you change a grid setting. This function creates 
 directory named 'your_username' on the scratch disk and works from there. So you 
 won`t disturbed other users.
 
-After the fitting process use the function clean_scratch() to remove the models
-that you used from the scratch disk. Be carefull with this, because it will remove
-the models without checking if there is another process using them. So if you have
-multiple scripts running that are using the same models, only clean the scratch
-disk after the last process is finnished.
+After the fitting process use the function
+
+>>> clean_scratch()
+
+to remove the models that you used from the scratch disk. Be carefull with this,
+because it will remove the models without checking if there is another process
+using them. So if you have multiple scripts running that are using the same models,
+only clean the scratch disk after the last process is finished.
 
 The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
 and multiple sed fitting.
@@ -445,7 +448,7 @@ def get_gridnames(grid=None):
     if grid is None:
         return ['kurucz','fastwind','cmfgen','sdb_uli','wd_boris','wd_da','wd_db',
                 'tlusty','uvblue','atlas12','nemo','tkachenko','marcs','marcs2','tmap',
-                'heberb','hebersdb']
+                ]
                 #'marcs','marcs2','comarcs','tlusty','uvblue','atlas12']
     else:
         files = config.glob(basedir,'*%s*.fits'%(grid))
@@ -616,6 +619,37 @@ def get_file(integrated=False,**kwargs):
                 
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
+
+def blackbody(x,T,units='erg/s/cm2/A',disc_integrated=True):
+    """
+    Definition of black body curve.
+    
+    To get them into the same units as the Kurucz disc-integrated SEDs, they are
+    multiplied by sqrt(2*pi).
+    
+    @param: wavelength, unit
+    @type: tuple (ndarray,str)
+    @param T: temperature, unit
+    @type: tuple (float,str)
+    """
+    #-- what kind of units did we receive?
+    unit_type = conversions.change_convention('SI',x[1])
+    x = conversions.convert(x[1],'SI',x[0])
+    if isinstance(T,tuple):
+        T = conversions.convert(T[1],'K',T[0])
+    #-- now make the appropriate black body
+    if unit_type in ['s-1','cy1 s-1']: # frequency units
+        factor = 2.0 * constants.hh / constants.cc**2
+        expont = constants.hh / (constants.kB*T)
+        I = factor * x**3 * 1. / (np.exp(expont*x) - 1.)
+    elif unit_type=='m1': # wavelength units
+        factor = 2.0 * constants.hh * constants.cc**2
+        expont = constants.hh*constants.cc / (constants.kB*T)
+        I = factor / x**5. * 1. / (np.exp(expont/x) - 1.)
+    #-- do disc integration
+    if disc_integrated:
+        I *= np.sqrt(2*np.pi)
+    return conversions.convert('SI',units,I)
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
@@ -868,10 +902,10 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 #-- prepare fluxes matrix for interpolation, and x,y an z axis
                 myflux = np.zeros((16,4+len(photbands)+1))
                 mygrid = itertools.product(g_teff[i_teff-1:i_teff+1],g_logg[i_logg-1:i_logg+1],g_z[i_z-1:i_z+1])
-                for i,(t,g,z) in enumerate(mygrid):
-                    myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],z
-                    myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],z
-                    input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
+                for i,(t,g,zz) in enumerate(mygrid):
+                    myflux[2*i,:4] = t,g,g_ebv[i_ebv-1],zz
+                    myflux[2*i+1,:4] = t,g,g_ebv[i_ebv],zz
+                    input_code = float('%3d%05d%03d%03d'%(int(round((zz+5)*100)),\
                                                         int(round(t)),int(round(g*100)),\
                                                         int(round(g_ebv[i_ebv]*100))))
                     index = markers.searchsorted(input_code)
@@ -1426,11 +1460,11 @@ def synthetic_flux(wave,flux,photbands,units=None):
     The fluxes below 4micron are calculated assuming PHOTON-counting detectors
     (e.g. CCDs).
     
-    F = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
+    Flam = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
     
     When otherwise specified, we assume ENERGY-counting detectors (e.g. bolometers)
     
-    F = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
+    Flam = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
     
     Where P_lam is the total system dimensionless sensitivity function, which
     is normalised so that the maximum equals 1. Also, f_lam is the SED of the
@@ -1446,11 +1480,15 @@ def synthetic_flux(wave,flux,photbands,units=None):
     should contain the strings 'flambda' and 'fnu' corresponding to each filter.
     In that case, the above formulas reduce to
     
-    F = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)
+    Fnu = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)
     
     and 
     
-    F = int(P_nu * f_nu, dnu) / int(P_nu, dnu)
+    Fnu = int(P_nu * f_nu, dnu) / int(P_nu, dnu)
+    
+    Small note of caution: P_nu is not equal to P_lam according to
+    Maiz-Apellaniz, he states that P_lam = P_nu/lambda. But in the definition
+    we use above here, it *is* the same!
     
     The model fluxes should B{always} be given in Flambda (erg/s/cm2/A). The
     program will convert them to Fnu where needed.
@@ -1491,6 +1529,19 @@ def synthetic_flux(wave,flux,photbands,units=None):
     
     You are responsible yourself for having a response curve covering the
     model fluxes!
+    
+    Now. let's put this all in practice in a more elaborate example: we want
+    to check if the effective wavelength is well defined. To do that we will:
+        
+        1. construct a model (black body)
+        2. make our own weird, double-shaped filter (CCD-type and BOL-type detector)
+        3. compute fluxes in Flambda, and convert to Fnu via the effective wavelength
+        4. compute fluxes in Fnu, and compare with step 3.
+        
+    In an ideal world, the outcome of step (3) and (4) must be equal:
+    
+    Step (1): We construct a black body model.
+    
     
     WARNING: OPEN.BOL only works in Flambda for now.
     
@@ -1671,6 +1722,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     start = 0
     logger.info('Total number of tables: %i'%(len(teffs)))
     exceptions = 0
+    exceptions_logs = []
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
@@ -1702,10 +1754,17 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
             logger.debug('Exception: %s'%(sys.exc_info()[1]))
             exceptions = exceptions + 1
+            exceptions_logs.append(sys.exc_info()[1])
     
     #-- make FITS columns
     gridfile = get_file()
-    outfile = 'i%s'%(os.path.basename(gridfile))
+    if os.path.isfile(os.path.basename(gridfile)):
+        outfile = os.path.basename(gridfile)
+    else:
+        outfile = os.path.join(os.path.dirname(gridfile),'i{0}'.format(os.path.basename(gridfile)))
+    logger.info('Precaution: making original grid backup at {0}.backup'.format(outfile))
+    if os.path.isfile(outfile):
+        shutil.copy(outfile,outfile+'.backup')
     output = output.T
     if not update:
         cols = [pyfits.Column(name='teff',format='E',array=output[0]),
@@ -1726,10 +1785,14 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     table = pyfits.new_table(pyfits.ColDefs(cols))
     table.header.update('gridfile',os.path.basename(gridfile))
     for key in sorted(defaults.keys()):
-        table.header.update(key,defaults[key])
+        key_ = (len(key)>8) and 'HIERARCH '+key or key
+        table.header.update(key_,defaults[key])
     for key in sorted(kwargs.keys()):
-        table.header.update(key,kwargs[key])
+        key_ = (len(key)>8) and 'HIERARCH '+key or key
+        table.header.update(key_,kwargs[key])
     table.header.update('FLUXTYPE',units)
+    table.header.update('REDLAW',law,'interstellar reddening law')
+    table.header.update('RV',Rv,'interstellar reddening parameter')
     
     #-- make/update complete FITS file
     if not update:
@@ -1748,6 +1811,9 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         logger.info("Appended output to %s"%(outfile))
     
     logger.warning('Encountered %s exceptions!'%(exceptions))
+    for i in exceptions_logs:
+        print 'ERROR'
+        print i
 
 #}
 

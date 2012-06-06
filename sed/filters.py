@@ -18,13 +18,16 @@ Short list of available systems:
     ACSWFC ( 12 filters)
      AKARI ( 13 filters)
        ANS (  6 filters)
+      APEX (  1 filters)
      ARGUE (  3 filters)
     BESSEL (  6 filters)
    BESSELL (  6 filters)
      COROT (  2 filters)
    COUSINS (  2 filters)
+       DDO (  7 filters)
      DENIS (  3 filters)
      DIRBE ( 10 filters)
+   EEV4280 (  1 filters)
      ESOIR ( 10 filters)
       GAIA (  4 filters)
      GALEX (  2 filters)
@@ -34,8 +37,8 @@ Short list of available systems:
       IRAC (  4 filters)
       IRAS (  4 filters)
     ISOCAM ( 21 filters)
-   JOHNSON ( 11 filters)
-    KEPLER (  1 filters)
+   JOHNSON ( 25 filters)
+    KEPLER ( 43 filters)
       KRON (  2 filters)
    LANDOLT (  6 filters)
       MIPS (  3 filters)
@@ -43,12 +46,14 @@ Short list of available systems:
        MSX (  6 filters)
     NARROW (  1 filters)
     NICMOS (  6 filters)
+      OAO2 ( 12 filters)
       PACS (  3 filters)
-      SAAO (  4 filters)
+      SAAO ( 13 filters)
      SCUBA (  6 filters)
       SDSS ( 10 filters)
      SLOAN (  2 filters)
      SPIRE (  3 filters)
+  STEBBINS (  6 filters)
    STISCCD (  2 filters)
    STISFUV (  4 filters)
    STISNUV (  7 filters)
@@ -58,6 +63,7 @@ Short list of available systems:
     TYCHO2 (  2 filters)
   ULTRACAM (  5 filters)
     USNOB1 (  2 filters)
+      UVEX (  5 filters)
    VILNIUS (  7 filters)
      VISIR ( 13 filters)
   WALRAVEN (  5 filters)
@@ -79,6 +85,8 @@ Plots of all passbands of all systems:
 
 ]include figure]]ivs_sed_filters_ANS.png]
 
+]include figure]]ivs_sed_filters_APEX.png]
+
 ]include figure]]ivs_sed_filters_ARGUE.png]
 
 ]include figure]]ivs_sed_filters_BESSEL.png]
@@ -96,6 +104,8 @@ Plots of all passbands of all systems:
 ]include figure]]ivs_sed_filters_DIRBE.png]
 
 ]include figure]]ivs_sed_filters_ESOIR.png]
+
+]include figure]]ivs_sed_filters_EEV4280.png]
 
 ]include figure]]ivs_sed_filters_GAIA.png]
 
@@ -145,6 +155,8 @@ Plots of all passbands of all systems:
 
 ]include figure]]ivs_sed_filters_SPIRE.png]
 
+]include figure]]ivs_sed_filters_STEBBINS.png]
+
 ]include figure]]ivs_sed_filters_STISCCD.png]
 
 ]include figure]]ivs_sed_filters_STISFUV.png]
@@ -162,6 +174,8 @@ Plots of all passbands of all systems:
 ]include figure]]ivs_sed_filters_ULTRACAM.png]
 
 ]include figure]]ivs_sed_filters_USNOB1.png]
+
+]include figure]]ivs_sed_filters_UVEX.png]
 
 ]include figure]]ivs_sed_filters_VILNIUS.png]
 
@@ -185,13 +199,16 @@ import numpy as np
 
 from ivs import config
 from ivs.aux.decorators import memoized
+from ivs.aux import decorators
 from ivs.aux import loggers
 from ivs.io import ascii
 
 basedir = os.path.dirname(__file__)
 
 logger = logging.getLogger("CAT.VIZIER")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
+
+custom_filters = {}
 
 #{ response curves
 @memoized
@@ -215,15 +232,63 @@ def get_response(photband):
     """
     photband = photband.upper()
     if photband=='OPEN.BOL':
-        return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])
-        
+        return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])    
+    #-- either get from file or get from dictionary
     photfile = os.path.join(basedir,'filters',photband)
-    wave, response = ascii.read2array(photfile).T[:2]
+    if os.path.isfile(photfile):
+        wave, response = ascii.read2array(photfile).T[:2]
+    elif photband in custom_filters:
+        wave, response = custom_filters[photband]['response']
+    else:
+        raise IOError
     sa = np.argsort(wave)
     return wave[sa],response[sa]
 
 
-
+def add_custom_filter(wave,response,**kwargs):
+    """
+    Add a custom filter to the set of predefined filters.
+    
+    Extra keywords are:
+        'eff_wave', 'type',
+        'vegamag', 'vegamag_lit',
+        'ABmag', 'ABmag_lit',
+        'STmag', 'STmag_lit',
+        'Flam0', 'Flam0_units', 'Flam0_lit',
+        'Fnu0', 'Fnu0_units', 'Fnu0_lit',
+        'source'
+        
+    default C{type} is 'CCD'.
+    default C{photband} is 'CUSTOM.FILTER'
+    
+    @param wave: wavelength (angstrom)
+    @type wave: ndarray
+    @param response: response
+    @type response: ndarray
+    @param photband: photometric passband
+    @type photband: str ('SYSTEM.FILTER')
+    """
+    kwargs.setdefault('photband','CUSTOM.FILTER')
+    photband = kwargs['photband']
+    #-- check if the filter already exists:
+    photfile = os.path.join(basedir,'filters',photband)
+    if os.path.isfile(photfile):
+        raise ValueError,'bandpass {0} already exists'.format(photfile)
+    custom_filters[photband] = dict(response=(wave,response))
+    #-- set effective wavelength
+    kwargs.setdefault('eff_wave',eff_wave(photband))
+    #-- add info for zeropoints.dat file: make sure wherever "lit" is part of
+    #   the name, we replace it with "0". Then, we overwrite any existing
+    #   information with info given
+    myrow = get_info(['JOHNSON.V'])
+    for name in myrow.dtype.names:
+        if 'lit' in name:
+            myrow[name] = 0
+        myrow[name] = kwargs.pop(name,myrow[name])
+    del decorators.memory['ivs.sed.filters']
+    #-- add info:
+    custom_filters[photband]['zp'] = myrow
+    logger.info('Added photband {0} to the predefined set'.format(photband))
 
 
 def list_response(name='*',wave_range=(-np.inf,+np.inf)):
@@ -327,14 +392,20 @@ def eff_wave(photband,model=None):
         try:
             wave,response = get_response(iphotband)
             if model is None:
-                this_eff_wave = np.average(wave,weights=response)
+                #this_eff_wave = np.average(wave,weights=response)
+                this_eff_wave = np.sqrt(np.trapz(wave*response,x=wave)/np.trapz(response/wave,x=wave))
             else:
                 #-- interpolate response curve onto higher resolution model and
                 #   take weighted average
                 is_response = response>1e-10
                 start_response,end_response = wave[is_response].min(),wave[is_response].max()
-                fluxm = 10**np.interp(np.log10(wave),np.log10(model[0]),np.log10(model[1]))
-                this_eff_wave = np.trapz(wave*fluxm*response,x=wave) / np.trapz(fluxm*response,x=wave)
+                fluxm = np.sqrt(10**np.interp(np.log10(wave),np.log10(model[0]),np.log10(model[1])))
+                #-- bolometric or ccd?
+                det_type = get_info([iphotband])['type'][0]
+                if det_type=='CCD':
+                    this_eff_wave = np.sqrt(np.trapz(wave*fluxm*response,x=wave) / np.trapz(fluxm*response/wave,x=wave))
+                elif det_type=='BOL':
+                    this_eff_wave = np.sqrt(np.trapz(fluxm*response,x=wave) / np.trapz(fluxm*response/wave**2,x=wave))     
         #-- if the photband is not defined:
         except IOError:
             this_eff_wave = np.nan
@@ -371,6 +442,9 @@ def get_info(photbands=None):
     """
     zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
     zp = ascii.read2recarray(zp_file)
+    for iph in custom_filters:       
+        if 'zp' in custom_filters[iph]:
+            zp = np.hstack([zp,custom_filters[iph]['zp']])
     zp = zp[np.argsort(zp['photband'])]
     
     #-- list photbands in order given, and remove those that do not have

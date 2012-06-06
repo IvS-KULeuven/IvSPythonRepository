@@ -569,29 +569,40 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
     #-- IRAS
     logger.info('Checking flags')
     for i,entry in enumerate(master):
-        flag = float(entry['flag'])
+        if 'USNO' in str(entry['photband']):
+            messages[i] = '; '.join([messages[i],'unreliable zeropoint and transmission profile'])
+            continue
+        if 'COUSINS' in str(entry['photband']):
+            messages[i] = '; '.join([messages[i],'unreliable zeropoint'])
+            continue
+        flag = entry['flag']
+        try:
+            flag = float(flag)
+        except:
+            continue
         if np.isnan(flag): continue
         if entry['source'].strip() in ['II/125/main','II/275/fsr']:
-            flag = int(flag)
+            flag = float(int(flag))
             if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
             if flag==2: messages[i] = '; '.join([messages[i],'moderate quality'])
             if flag==1: messages[i] = '; '.join([messages[i],'upper limit'])
         if entry['source'].strip() in ['II/298/fis','II/297/irc']:
-            flag = int(flag)
+            flag = float(int(flag))
             if flag==3: messages[i] = '; '.join([messages[i],'high quality'])
             if flag==2: messages[i] = '; '.join([messages[i],'source is confirmed but the flux is not reliable'])
             if flag==1: messages[i] = '; '.join([messages[i],'the source is not confirmed'])
             if flag==0: messages[i] = '; '.join([messages[i],'not observed'])
         if entry['source'].strip() in ['J/ApJS/154/673/DIRBE']:
-            flag = '{0:03d}'.format(int(flag))
+            flag = '{0:03d}'.format(int(float(flag)))
             if flag[0]==1: messages[i] = '; '.join([messages[i],'IRAS/2MASS companion greater than DIRBE noise level'])
             if flag[1]==1: messages[i] = '; '.join([messages[i],'possibly extended emission or highly variable source']) # discrepancy between DIRBE and IRAS/2MASS flux density
             if flag[2]==1: messages[i] = '; '.join([messages[i],'possibly affected by nearby companion'])
-        if 'USNO' in entry['photband']:
-            messages[i] = '; '.join([messages[i],'unreliable zeropoint and transmission profile'])
-        if 'COUSINS' in entry['photband']:
-            messages[i] = '; '.join([messages[i],'unreliable zeropoint'])
-            
+        if entry['source'].strip() in ['V/114/msx6_main']:
+            if flag==4: messages[i] = '; '.join([messages[i],'excellent'])
+            if flag==3: messages[i] = '; '.join([messages[i],'good'])
+            if flag==2: messages[i] = '; '.join([messages[i],'fair'])
+            if flag==1: messages[i] = '; '.join([messages[i],'on limit'])
+            if flag==0: messages[i] = '; '.join([messages[i],'not detected'])
     
     #-- for other targets, we need to query additional information
     sources_with_quality_check = ['B/denis/denis','II/311/wise','II/246/out']
@@ -633,6 +644,7 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                          'C':'high quality (C)',
                          'D':'high quality (D)'}
     
+    
     indices = np.arange(len(master))
     logger.info('Checking source catalogs for additional information')
     for source in sorted(sources):
@@ -673,6 +685,7 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                 if flag[i] in twomass_qual_flag:
                     index = indices[(master['source']==source) & (master['photband']==photband)]
                     messages[index] = '; '.join([messages[index],twomass_qual_flag[flag[i]]])
+            
     
     #-- strip first '; ':
     for i in range(len(messages)):
@@ -691,9 +704,9 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
         return master
     else:
         return messages
-                
-                
-        
+                            
+            
+    
 
 
 
@@ -903,7 +916,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
-        if key in ['e_flag','q_flag','mag']:
+        if key in ['e_flag','q_flag','mag','bibcode']:
             continue
         photband = cat_info.get(source,key)
         key = key.replace('_[','[').replace(']_',']')
@@ -1044,6 +1057,70 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     #-- skip first line from building 
     if newmaster: master = master[1:]
     return master
+
+
+def catalog2bibcode(catalog):
+    """
+    Retrieve the ADS bibcode of a ViZieR catalog.
+    
+    @param catalog: name of the catalog (e.g. II/306/sdss8)
+    @type catalog: str
+    @return: bibtex code
+    @rtype: str
+    """
+    catalog = catalog.split("/")
+    N = max(2,len(catalog)-1)
+    catalog = "/".join(catalog[:N])
+    base_url = "http://cdsarc.u-strasbg.fr/viz-bin/Cat?{0}".format(catalog)
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url)
+
+    code = None
+    ff = open(filen,'r')
+    for line in ff.readlines():
+        if 'Keywords' in line: break
+        if '=<A HREF' in line:
+            code = line.split('>')[1].split('<')[0]
+    ff.close()
+    url.close()
+    return code
+
+def bibcode2bibtex(bibcode):
+    """
+    Retrieve the bibtex entry of an ADS bibcode.
+    
+    @param bibcode: bibcode (e.g. C{2011yCat.2306....0A})
+    @type bibcode: str
+    @return: bibtex entry
+    @rtype: str
+    """
+    base_url = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode={0}&data_type=BIBTEX&db_key=AST&nocookieset=1".format(bibcode)
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url)
+
+    bibtex = []
+    ff = open(filen,'r')
+    for line in ff.readlines():
+        if (not bibtex and '@' in line) or bibtex:
+            bibtex.append(line)
+    ff.close()
+    url.close()
+    return "".join(bibtex)
+
+def catalog2bibtex(catalog):
+    """
+    Retrieve the bibtex entry of a catalog.
+    
+    @param catalog: name of the catalog (e.g. II/306/sdss8)
+    @type catalog: str
+    @return: bibtex entry
+    @rtype: str
+    """
+    bibcode = catalog2bibcode(catalog)
+    bibtex = bibcode2bibtex(bibcode)
+    return bibtex
+    
+
 #}
 
 #{ Internal helper functions
