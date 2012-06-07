@@ -521,7 +521,7 @@ def periodic_spline(times, signal, freq, t0=None, order=20, k=3):
 
     return parameters
 
-def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01):
+def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01, output_type='old'):
     """
     Fit a Kepler orbit to a time series.
     
@@ -588,8 +588,10 @@ def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01):
          f1,s1,p1,l1,s2,k2)
     
     freq,x0,e,w,K,RV0 = k2
-    pars = tuple([1/freq,x0/(2*pi*freq) + times[0], e, w, K, RV0])
-    pars = np.rec.array([tuple(pars)],dtype=[('P','f8'),('T0','f8'),('e','f8'),('omega','f8'),('K','f8'),('gamma','f8')])
+    pars = [1/freq,x0/(2*pi*freq) + times[0], e, w, K, RV0]
+    if output_type=='old':
+        pars = np.rec.array([tuple(pars)],dtype=[('P','f8'),('T0','f8'),('e','f8'),('omega','f8'),('K','f8'),('gamma','f8')])
+        
     return pars
 
 
@@ -1240,7 +1242,7 @@ class Model(object):
         self.functions = functions
         self.expr = expr
         #-- Combine the parameters
-        self.pull_parameters(functions)
+        self.pull_parameters()
     
     #{ Interaction
     
@@ -1286,13 +1288,14 @@ class Model(object):
         """
         Not implemented yet, use the setup_parameters method of the Functions themselfs.
         """
-        if values is None: values = [None for i in self.function]
-        if bounds is None: bounds = [None for i in self.function]
-        if vary is None: vary = [None for i in self.function]
-        if exprs is None: exprs = [None for i in self.function]
+        if values is None: values = [None for i in self.functions]
+        if bounds is None: bounds = [None for i in self.functions]
+        if vary is None: vary = [None for i in self.functions]
+        if exprs is None: exprs = [None for i in self.functions]
         
         for i,func in enumerate(self.functions):
             func.setup_parameters(values=values[i],bounds=bounds[i],vary=vary[i],exprs=exprs[i])
+        self.pull_parameters()
     
     def get_parameters(self, full_output=False):
         """
@@ -1317,10 +1320,11 @@ class Model(object):
     #}    
     
     #{ Internal
-    def pull_parameters(self, functions):
+    def pull_parameters(self):
         """
         Pulls the parameter objects from the underlying functions, and combines it to 1 parameter object.
         """
+        functions = self.functions
         parameters = []
         for func in functions:
             parameters.append(func.parameters)
@@ -1668,6 +1672,7 @@ def get_correlation_factor(residus, full_output=False):
 def parameters2string(parameters, accuracy=2, full_output=False):
     #Converts a parameter object to string
     out = ""
+    fmt = '{{:.{0}f}}'.format(accuracy)
     for name, par in parameters.items():
         if par.stderr == None:
             stderr = np.nan
@@ -1675,12 +1680,12 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             stderr = par.stderr
             
         if not full_output:
-            out +=  '%10s = %.2f +/- %.2f \n' % (name, par.value, stderr)
+            template = '{name:>10s} = {fmt} +/- {fmt} \n'.format(name=name,fmt=fmt)
         else:
-            if par.vary:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s \n' % (name, par.value, stderr, par.min, par.max)
-            else:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s (fixed) \n' % (name, par.value, stderr, par.min, par.max)
+            template = '{name:>10s} = {fmt} +/- {fmt} \t bounds = {bmin} <-> {bmax} {vary} \n'
+            template = template.format(name=name,fmt=fmt,bmin=par.min,bmax=par.max,\
+                                       vary=(par.vary and '(fit)' or '(fixed)'))
+        out += template.format(par.value, stderr)
     return out
 
 def confidence2string(ci, accuracy=2):
