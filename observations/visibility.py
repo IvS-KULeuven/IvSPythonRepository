@@ -487,7 +487,7 @@ class Ephemeris(object):
         self._sun_nextset = np.array([date2num(ephem.Date(h).datetime()) for h in sun_nextset])
         self._sun_nextrise = np.array([date2num(ephem.Date(h).datetime()) for h in sun_nextrise])
         dates = np.array([str(ephem.Date(h).datetime()) for h in rawdates])
-        MJDs = rawdates+15019.499585                                                             # the zeropoint of ephem is 1899/12/31 12:00:00.0      15019.499585
+        MJDs = rawdates+15019.499999                                                             # the zeropoint of ephem is 1899/12/31 12:00:00.0      15019.499585
         
         #-- the output dictionary
         self.vis = dict(MJDs=MJDs,dates=dates,alts=alts,airmass=airmass,during_night=during_night,moon_alts=moon_alts,moon_airmass=moon_airmass,moon_separation=moon_separation)
