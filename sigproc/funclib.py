@@ -12,11 +12,41 @@ function in this module.
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
 
+]include figure]]ivs_sigproc_fit_funclib01.png]
+
 >>> p = plt.figure()
 >>> x = np.linspace(0,10,1000)[1:]
 >>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0.5]),label='power_law')
+>>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0.5])+evaluate('gauss',x,[1.,5.,0.5,0]),label='power_law + gauss')
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib02.png]
+
+>>> p = plt.figure()
+>>> x = np.linspace(0,10,1000)
+>>> p = plt.plot(x,evaluate('sine',x,[1.,2.,0,0]),label='sine')
+>>> p = plt.plot(x,evaluate('sine_freqshift',x,[1.,0.5,0,0,.5]),label='sine_freqshift')
+>>> p = plt.plot(x,evaluate('sine_orbit',x,[1.,2.,0,0,0.1,10.,0.1]),label='sine_orbit')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib03.png]
+
+>>> p = plt.figure()
+>>> x_single = np.linspace(0,10,1000)
+>>> x_double = np.vstack([x_single,x_single])
+>>> p = plt.plot(x_single,evaluate('kepler_orbit',x_single,[2.5,0.,0.5,0,3,1.]),label='kepler_orbit (single)')
+>>> y_double = evaluate('kepler_orbit',x_double,[2.5,0.,0.5,0,3,2.,-4,2.],type='double')
+>>> p = plt.plot(x_double[0],y_double[0],label='kepler_orbit (double 1)')
+>>> p = plt.plot(x_double[1],y_double[1],label='kepler_orbit (double 2)')
+>>> p = plt.plot(x,evaluate('box_transit',x,[2.,0.4,0.1,0.3,0.5]),label='box_transit')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib04.png]
+
+
 """
 import numpy as np
 from numpy import pi,cos,sin,sqrt,tan,arctan
@@ -49,6 +79,22 @@ def kepler_orbit(type='single'):
         pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
     
         return Function(function=function, par_names=pnames)
+
+def box_transit(t0=0.):
+    """
+    Box transit model (cont,freq,ingress,egress,depth)
+    """
+    pnames = 'cont','freq','ingress','egress','depth'
+    def function(p,x):
+        cont,freq,ingress,egress,depth = p
+        model = np.ones(len(x))*cont
+        phase = np.fmod((x - t0) * freq, 1.0)
+        phase = np.where(phase<0,phase+1,phase)
+        transit_place = (ingress<=phase) & (phase<=egress)
+        model = np.where(transit_place,model-depth,model)
+        return model
+    return Function(function=function, par_names=pnames)
+
 
 def gauss():
     """
@@ -105,28 +151,28 @@ def sine_orbit(t0=0.,nmax=10):
     @param nmax: number of terms to include in series for eccentric orbit
     @type nmax: int
     """
+    pnames = ['ampl', 'freq', 'phase', 'const','forb','asini','omega']
     def ane(n,e): return 2.*sqrt(1-e**2)/e/n*jn(n,n*e)    
     def bne(n,e): return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
-    
-    
     def function(p,x):
-        ampl,freq,phase,const,forb,asini,omega = p[:6]
+        ampl,freq,phase,const,forb,asini,omega = p[:7]
         ecc = None
-        if len(p)==7:
-            ecc = p[6]
+        if len(p)==8:
+            ecc = p[7]
         cc = 173.144632674 # speed of light in AU/d
         alpha = freq*asini/cc
         if ecc is None:
-            frequency = freq*(times-t0) + alpha*(sin(2*pi*forb*x) - sin(2*pi*forb*t0))
+            frequency = freq*(x-t0) + alpha*(sin(2*pi*forb*x) - sin(2*pi*forb*t0))
         else:
             ns = np.arange(1,nmax+1,1)
             ans,bns = np.array([[ane(n,ecc),bne(n,ecc)] for n in ns]).T
             ksins = sqrt(ans**2*cos(omega)**2+bns**2*sin(omega)**2)
             thns = arctan(bns/ans*tan(omega))
             tau = -np.sum(bns*sin(omega))
-            frequency = freq*(times-t0) + \
-               alpha*(np.sum(np.array([ksins[i]*sin(2*pi*ns[i]*forb*(times-t0)+thns[i]) for i in range(nmax)]),axis=0)+tau)
-        return ampl * sin(2*pi*(frequency + phase))
+            frequency = freq*(x-t0) + \
+               alpha*(np.sum(np.array([ksins[i]*sin(2*pi*ns[i]*forb*(x-t0)+thns[i]) for i in range(nmax)]),axis=0)+tau)
+        return ampl * sin(2*pi*(frequency + phase)) + const
+    return Function(function=function, par_names=pnames)
 
 #def generic(func_name):
     ##func = model.FUNCTION(function=getattr(evaluate,func_name), par_names)
