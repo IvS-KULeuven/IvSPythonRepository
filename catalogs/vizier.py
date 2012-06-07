@@ -371,29 +371,36 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
 
 #{ Interface to specific catalogs
 
-def get_IUE_spectrum(**kwargs):
+def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,**kwargs):
     """
     Download IUE spectra.
     
-    If you just want to download all the spectral files, set C{directory='/home/user/'}
-    If you don't want to unzip them, set unzip=False
-    Otherwise, the function will return a list of all extracted spectra.
+    If you want to download all the spectral files, set C{directory='/home/user/'}
+    or whatever. All the tarfiles will be downloaded to this directory, they
+    will be untarred, science data extracted and all unnecessary files and
+    directories will be deleted. If you don't set a directory, it will default
+    to the CWD.
+    
+    If you don't wish to unzip them, set unzip=False
+    
+    DEPRECATED: If you don't give a directory, the function will return a list
+    of all extracted spectra (no data files are kept).
     
     You can retrieve the contents of the vizier catalog via {cat_info=True}. The
-    files will not be retrieved then.
+    files will not be downloaded in this case.
     """
-    directory = kwargs.get('directory',None)
-    unzip = kwargs.get('unzip',True)
-    cat_info = kwargs.get('cat_info',False)
     if directory is None:
         direc = os.getcwd()
+        directory = os.getcwd()
         filename = None
     else:
         direc = directory
+        if not os.path.isdir(direc):
+            os.mkdir(direc)
         
     output = []
     #-- construct the download link form the camera and image data
-    data,units,comments = search('VI/110/inescat/',**kwargs)
+    data,units,comments = search('VI/110/inescat/',ID=ID,**kwargs)
     
     if cat_info:
         return data,units,comments
@@ -402,23 +409,23 @@ def get_IUE_spectrum(**kwargs):
         return output
     
     for spectrum in data:
-        download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%s&mission=iue&action=Download_MX"%(spectrum['Camera'],spectrum['Image'])
+        download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%s&mission=iue&action=Download_MX"%(spectrum['Camera'].strip(),spectrum['Image'])
         logger.info('IUE spectrum %s/%s: %s'%(spectrum['Camera'],spectrum['Image'],download_link))
     
         #-- prepare to download the spectra to a temparorary file
         if directory is not None:
             filename = download_link.split('iue_mark=')[1].split('&')[0]
             filename = os.path.join(direc,filename)
+        #-- download file and retrieve the path to the downloaded file
         mytarfile = http.download(download_link,filename=filename)
         if filename is None:
             mytarfile,url = mytarfile
-        
         #-- perhaps unzipping is not necessary
         if directory is not None and not unzip:
             output.append(mytarfile)
             url.close()
             continue
-        #-- then unpack tar files and copy spectra to directory
+        #-- else unpack tar files and copy spectra to the directory,
         #   remember the location of the files:
         if not tarfile.is_tarfile(mytarfile):
             logger.info("Not a tarfile: %s"%(mytarfile))
@@ -426,6 +433,7 @@ def get_IUE_spectrum(**kwargs):
         tarf = tarfile.open(mytarfile)
         files = tarf.getmembers(),tarf.getnames()
         deldirs = []
+        outfile = None
         for mem,name in zip(*files):
             #-- first check if it is a spectrum.
             myname = name.lower()
@@ -438,21 +446,23 @@ def get_IUE_spectrum(**kwargs):
                 shutil.move(os.path.join(direc,name),outfile)
                 logger.info("Extracted %s to %s"%(name,outfile))
                 #-- remove any left over empty directory
-                deldirs.append(dirname)
+                deldirs.append(os.path.join(direc,dirname))
             else:
                 logger.debug("Did not extract %s (probably not a spectrum)"%(name))
-        for dirname in deldirs:
-            if dirname and os.path.isdir(dirname) and os.listdir(dirname)==[]:
-                os.rmdir(dirname)
-                logger.warning("Deleted left over (empty) directory %s"%(dirname))
+        #-- remove the tar file:
         tarf.close()
+        os.unlink(mytarfile)
+        for dirname in deldirs:
+            if dirname and os.path.isdir(dirname) and not os.listdir(dirname):
+                os.rmdir(dirname)
+                logger.debug("Deleted left over (empty) directory %s"%(dirname))
         if filename is None: url.close()
         
         #-- only read in the data if they need to be extracted
-        if directory is not None:
+        if directory is not None and outfile:
             output.append(outfile)
             continue
-        if os.path.isfile(outfile):
+        if outfile and os.path.isfile(outfile):
             wavelength,flux,error,header = fits.read_iue(outfile,return_header=True)
             os.unlink(outfile)
             output.append([wavelength,flux,error,header])
@@ -592,11 +602,11 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
             if flag==2: messages[i] = '; '.join([messages[i],'source is confirmed but the flux is not reliable'])
             if flag==1: messages[i] = '; '.join([messages[i],'the source is not confirmed'])
             if flag==0: messages[i] = '; '.join([messages[i],'not observed'])
-        if entry['source'].strip() in ['J/ApJS/154/673/DIRBE']:
+        if 'DIRBE' in entry['source'].strip():
             flag = '{0:03d}'.format(int(float(flag)))
-            if flag[0]==1: messages[i] = '; '.join([messages[i],'IRAS/2MASS companion greater than DIRBE noise level'])
-            if flag[1]==1: messages[i] = '; '.join([messages[i],'possibly extended emission or highly variable source']) # discrepancy between DIRBE and IRAS/2MASS flux density
-            if flag[2]==1: messages[i] = '; '.join([messages[i],'possibly affected by nearby companion'])
+            if flag[0]=='1': messages[i] = '; '.join([messages[i],'IRAS/2MASS companion greater than DIRBE noise level'])
+            if flag[1]=='1': messages[i] = '; '.join([messages[i],'possibly extended emission or highly variable source']) # discrepancy between DIRBE and IRAS/2MASS flux density
+            if flag[2]=='1': messages[i] = '; '.join([messages[i],'possibly affected by nearby companion'])
         if entry['source'].strip() in ['V/114/msx6_main']:
             if flag==4: messages[i] = '; '.join([messages[i],'excellent'])
             if flag==3: messages[i] = '; '.join([messages[i],'good'])
@@ -684,6 +694,8 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
             for i,photband in enumerate(['2MASS.J','2MASS.H','2MASS.KS']):
                 if flag[i] in twomass_qual_flag:
                     index = indices[(master['source']==source) & (master['photband']==photband)]
+                    if not len(index):
+                        continue
                     messages[index] = '; '.join([messages[index],twomass_qual_flag[flag[i]]])
             
     
