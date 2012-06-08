@@ -1149,9 +1149,9 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in parameter.keys():
+        for key in vars(parameter).keys():
             if key in kwargs:
-                parameter[key] = kwargs[key]
+                vars(parameter)[key] = kwargs[key]
     
     def get_parameters(self, full_output=False):
         """
@@ -1501,7 +1501,7 @@ class Minimizer(lmfit.Minimizer):
         @param output: Output type, error or ci (confidence intervall)
         """
         
-        # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
+        # if only 1 confidence interval is asked, the output can be tupple instead of dict.
         short_output = (type(p_names)==str and type(sigmas)==float) and True or False
         if type(p_names)==str: p_names = [p_names]
         if type(sigmas)==float: sigmas = [sigmas]
