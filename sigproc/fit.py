@@ -49,7 +49,7 @@ Print the results:
 The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
 
 >>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
->>> print fit.confidence2string(ci, accuracy=4)
+>>> print confidence2string(ci, accuracy=4)
 p 
               25.0 %         65.0 %          95.0 % 
         - 1004.5324       995.3298         979.921 
@@ -1076,9 +1076,13 @@ class Function(object):
             
         if len(args) == 1:
             #-- Use the provided parameters
-            pars = []
-            for name in self.par_names:
-                pars.append(args[0][name].value)
+            #-- if provided as a ParameterObject
+            if isinstance(args[0],dict):
+                pars = []
+                for name in self.par_names:
+                    pars.append(args[0][name].value)
+            else:
+                pars = args[0]
                 
             return self.function(pars,x)
             
@@ -1458,7 +1462,8 @@ class Minimizer(lmfit.Minimizer):
     
     #{ Error determination
     
-    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
+    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200,\
+             prob_func=None, method='F-test', output='error', **kwargs):
         """
         Returns the confidence intervalls of the given parameters. 
         Two different methods can be used, Monte Carlo simulation and F-test method. 
@@ -1686,7 +1691,7 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             template = template.format(name=name,fmt=fmt,bmin=par.min,bmax=par.max,\
                                        vary=(par.vary and '(fit)' or '(fixed)'))
         out += template.format(par.value, stderr)
-    return out
+    return out.strip()
 
 def confidence2string(ci, accuracy=2):
     #Converts confidence intervall dictionary to string
@@ -1704,7 +1709,7 @@ def confidence2string(ci, accuracy=2):
         for sigma in sigmas:
             out += "%10s \t"%(np.round(ci[par][sigma][1], decimals=accuracy))   
         out += '\n'
-    return out        
+    return out.strip()        
 
 #}
 
