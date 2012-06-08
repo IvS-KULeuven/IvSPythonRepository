@@ -1518,6 +1518,8 @@ class Minimizer(lmfit.Minimizer):
         Plot the confidence interval for 2 given parameters. The confidence interval is calculated
         using the F-test method from the I{estimate_error} method.
         
+        Extra kwargs are passed to C{confourf} or C{contour}.
+        
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
         @param res: The resolution of the grid over which the confidence intervall is calculated
@@ -1626,7 +1628,8 @@ def minimize(x, y, model, err=None, weights=None,
     
     fitter = Minimizer(x, y, model, err=err, weights=weights,
              engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-    
+    if fitter.message:
+        logger.warning(fitter.message)
     return fitter
 
 def grid_minimize(x, y, model, err=None, weights=None,
@@ -1718,10 +1721,20 @@ def confidence2string(ci, accuracy=2):
             out += '{0:20.2f} %'.format(np.round(sigma*100, decimals=1))
         out += '\n -'
         for sigma in sigmas:
-            out += "{0:20}  ".format(np.round(ci[par][sigma][0], decimals=accuracy))
+            #-- when something went wrong in the fitting process, we have a None:
+            if ci[par][sigma][0] is None:
+                val = ci[par][sigma][0]
+            else:
+                val = np.round(ci[par][sigma][0], decimals=accuracy)
+            out += "{0:20}  ".format(val)
         out += '\n +'
         for sigma in sigmas:
-            out += "{0:20}  ".format(np.round(ci[par][sigma][1], decimals=accuracy))
+            #-- when something went wrong in the fitting process, we have a None:
+            if ci[par][sigma][1] is None:
+                val = ci[par][sigma][1]
+            else:
+                val = np.round(ci[par][sigma][1], decimals=accuracy)
+            out += "{0:20}  ".format(val)
         out += '\n'
     return out.rstrip()        
 
