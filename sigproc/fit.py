@@ -1531,7 +1531,6 @@ class Minimizer(lmfit.Minimizer):
         x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
         grid *= 100.
         
-        pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
         if filled:
             pl.contourf(x,y,grid,np.linspace(0,100,25),cmap=pl.cm.jet)
             pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
