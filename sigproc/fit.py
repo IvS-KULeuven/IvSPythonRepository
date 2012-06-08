@@ -1131,9 +1131,9 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in parameter.keys():
+        for key in vars(parameter).keys():
             if key in kwargs:
-                parameter[key] = kwargs[key]
+                vars(parameter)[key] = kwargs[key]
     
     def get_parameters(self, full_output=False):
         """
