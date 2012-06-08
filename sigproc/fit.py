@@ -49,7 +49,7 @@ Print the results:
 The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
 
 >>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
->>> print fit.confidence2string(ci, accuracy=4)
+>>> print confidence2string(ci, accuracy=4)
 p 
               25.0 %         65.0 %          95.0 % 
         - 1004.5324       995.3298         979.921 
@@ -150,13 +150,10 @@ Setup the two gaussian functions for the fitting process:
 >>> vary = [True, True, True, False]
 >>> gauss2.setup_parameters(values=pars, vary=vary)
 
-Create the model by summing up the gaussians. We want to sum the two gaussians, so we need to define
-a function that takes the output of the two gaussians, and sums it. This function is provided to the
-Model. In this case we do not really need to specify the function as the Model will automatically 
-sum the Functions if no expression is provided:
+Create the model by summing up the gaussians. As we just want to sum the two gaussian, we do not need
+to specify an expression for combining the two functions:
 
->>> expr = lambda x: x[0] + x[1]
->>> mymodel = fit.Model(functions=[gauss1, gauss2], expr=expr)
+>>> mymodel = fit.Model(functions=[gauss1, gauss2])
 
 Create some data with noise on it  
 
@@ -524,7 +521,7 @@ def periodic_spline(times, signal, freq, t0=None, order=20, k=3):
 
     return parameters
 
-def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01):
+def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01, output_type='old'):
     """
     Fit a Kepler orbit to a time series.
     
@@ -591,8 +588,10 @@ def kepler(times, signal, freq, sigma=None, wexp=2., e0=0, en=0.99, de=0.01):
          f1,s1,p1,l1,s2,k2)
     
     freq,x0,e,w,K,RV0 = k2
-    pars = tuple([1/freq,x0/(2*pi*freq) + times[0], e, w, K, RV0])
-    pars = np.rec.array([tuple(pars)],dtype=[('P','f8'),('T0','f8'),('e','f8'),('omega','f8'),('K','f8'),('gamma','f8')])
+    pars = [1/freq,x0/(2*pi*freq) + times[0], e, w, K, RV0]
+    if output_type=='old':
+        pars = np.rec.array([tuple(pars)],dtype=[('P','f8'),('T0','f8'),('e','f8'),('omega','f8'),('K','f8'),('gamma','f8')])
+        
     return pars
 
 
@@ -1077,9 +1076,13 @@ class Function(object):
             
         if len(args) == 1:
             #-- Use the provided parameters
-            pars = []
-            for name in self.par_names:
-                pars.append(args[0][name].value)
+            #-- if provided as a ParameterObject
+            if isinstance(args[0],dict):
+                pars = []
+                for name in self.par_names:
+                    pars.append(args[0][name].value)
+            else:
+                pars = args[0]
                 
             return self.function(pars,x)
             
@@ -1243,7 +1246,7 @@ class Model(object):
         self.functions = functions
         self.expr = expr
         #-- Combine the parameters
-        self.pull_parameters(functions)
+        self.pull_parameters()
     
     #{ Interaction
     
@@ -1285,11 +1288,18 @@ class Model(object):
                
         return result
         
-    def setup_parameters():
+    def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
         Not implemented yet, use the setup_parameters method of the Functions themselfs.
         """
-        raise NotImplementedError
+        if values is None: values = [None for i in self.functions]
+        if bounds is None: bounds = [None for i in self.functions]
+        if vary is None: vary = [None for i in self.functions]
+        if exprs is None: exprs = [None for i in self.functions]
+        
+        for i,func in enumerate(self.functions):
+            func.setup_parameters(values=values[i],bounds=bounds[i],vary=vary[i],exprs=exprs[i])
+        self.pull_parameters()
     
     def get_parameters(self, full_output=False):
         """
@@ -1314,10 +1324,11 @@ class Model(object):
     #}    
     
     #{ Internal
-    def pull_parameters(self, functions):
+    def pull_parameters(self):
         """
         Pulls the parameter objects from the underlying functions, and combines it to 1 parameter object.
         """
+        functions = self.functions
         parameters = []
         for func in functions:
             parameters.append(func.parameters)
@@ -1451,7 +1462,8 @@ class Minimizer(lmfit.Minimizer):
     
     #{ Error determination
     
-    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
+    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200,\
+             prob_func=None, method='F-test', output='error', **kwargs):
         """
         Returns the confidence intervalls of the given parameters. 
         Two different methods can be used, Monte Carlo simulation and F-test method. 
@@ -1480,10 +1492,7 @@ class Minimizer(lmfit.Minimizer):
         if type(sigmas)==float: sigmas = [sigmas]
         
         #Use the adjusted conf_interval() function of the lmfit package.
-        if method == 'F-test':
-            out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, **kwargs)
-        elif method == 'MC':
-            out = lmfit.montecarlo(self, p_names=p_names, sigmas=sigmas, **kwargs)
+        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
         
         if short_output:
             out = out[p_names[0]][sigmas[0]]
@@ -1609,8 +1618,6 @@ def minimize(x, y, model, err=None, weights=None,
 def grid_minimize(x, y, model, err=None, weights=None,
              engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, **fit_kws):
     
-    raise NotImplementedError
-    
     oldpar = model.parameters.copy()
     results = []
     chi2s = []
@@ -1670,6 +1677,7 @@ def get_correlation_factor(residus, full_output=False):
 def parameters2string(parameters, accuracy=2, full_output=False):
     #Converts a parameter object to string
     out = ""
+    fmt = '{{:.{0}f}}'.format(accuracy)
     for name, par in parameters.items():
         if par.stderr == None:
             stderr = np.nan
@@ -1677,13 +1685,13 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             stderr = par.stderr
             
         if not full_output:
-            out +=  '%10s = %.2f +/- %.2f \n' % (name, par.value, stderr)
+            template = '{name:>10s} = {fmt} +/- {fmt} \n'.format(name=name,fmt=fmt)
         else:
-            if par.vary:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s \n' % (name, par.value, stderr, par.min, par.max)
-            else:
-                out +=  '%10s = %.2f +/- %.2f \t bounds = %s <-> %s (fixed) \n' % (name, par.value, stderr, par.min, par.max)
-    return out
+            template = '{name:>10s} = {fmt} +/- {fmt} \t bounds = {bmin} <-> {bmax} {vary} \n'
+            template = template.format(name=name,fmt=fmt,bmin=par.min,bmax=par.max,\
+                                       vary=(par.vary and '(fit)' or '(fixed)'))
+        out += template.format(par.value, stderr)
+    return out.strip()
 
 def confidence2string(ci, accuracy=2):
     #Converts confidence intervall dictionary to string
@@ -1701,7 +1709,7 @@ def confidence2string(ci, accuracy=2):
         for sigma in sigmas:
             out += "%10s \t"%(np.round(ci[par][sigma][1], decimals=accuracy))   
         out += '\n'
-    return out        
+    return out.strip()        
 
 #}
 
