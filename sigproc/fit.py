@@ -1513,7 +1513,7 @@ class Minimizer(lmfit.Minimizer):
             out = out[p_names[0]][sigmas[0]]
         return out
         
-    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None):
+    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. The confidence interval is calculated
         using the F-test method from the I{estimate_error} method.
@@ -1532,11 +1532,11 @@ class Minimizer(lmfit.Minimizer):
         grid *= 100.
         
         if filled:
-            pl.contourf(x,y,grid,np.linspace(0,100,25),cmap=pl.cm.jet)
+            pl.contourf(x,y,grid,np.linspace(0,100,25),**kwargs)
             pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
         else:
-            cs = pl.contour(x,y,grid,np.linspace(0,100,11),cmap=pl.cm.jet)
-            cs = pl.contour(x,y,grid,[20,40,60,80,95],cmap=pl.cm.jet)
+            cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
+            cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
         pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
         pl.xlabel(xname)
