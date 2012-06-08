@@ -39,25 +39,25 @@ Fit the model to the data:
 Print the results:
 
 >>> print mymodel.param2str()
-         p = 1009.43 +/- 15.36 
-        t0 = 2455416.86 +/- 12.11 
+         p = 1012.26 +/- 16.57 
+        t0 = 2455423.65 +/- 11.27 
          e = 0.16 +/- 0.01 
-     omega = 1.68 +/- 0.09 
-         k = 6.03 +/- 0.04 
-        v0 = 32.20 +/- 0.09 
+     omega = 1.72 +/- 0.08 
+         k = 6.06 +/- 0.04 
+        v0 = 32.23 +/- 0.09
 
 The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
 
 >>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
 >>> print confidence2string(ci, accuracy=4)
-p 
-              25.0 %         65.0 %          95.0 % 
-        - 1004.5324       995.3298         979.921 
-        + 1014.5141      1025.1068       1046.7599 
-e 
-              25.0 %         65.0 %          95.0 % 
-        -    0.1549         0.1488          0.1382 
-        +    0.1613         0.1678          0.1804 
+p                   
+                 25.00 %               65.00 %               95.00 %
+ -           1006.9878              997.1355              980.7742  
+ +           1017.7479             1029.2554             1053.0851  
+e                   
+                 25.00 %               65.00 %               95.00 %
+ -              0.1603                0.1542                0.1433  
+ +              0.1667                0.1731                0.1852
 
 Now plot the resulting rv curve over the original curve:
 
@@ -102,12 +102,11 @@ frequency using the linear fitting routine.
 [11.581314028141733, 2451060.7517886101, 0.19000000000000003, 1.0069244281466982, 11.915330492005735, -59.178393186003241]
 
 Now we want to improve this fit using the nonlinear optimizers, deriving errors
-on the parameters on the fly (B{warning: these errors are not necessarily realistic!).
+on the parameters on the fly (B{warning: these errors are not necessarily realistic!}).
 First, we setup the model:
 
 >>> mymodel = funclib.kepler_orbit(type='single')
 >>> mymodel.setup_parameters(pars1)
-
 >>> result = minimize(times,RV,mymodel)
 >>> pars2,e_pars2 = result.model.get_parameters()
 >>> print pars2
@@ -1713,17 +1712,17 @@ def confidence2string(ci, accuracy=2):
     #Converts confidence intervall dictionary to string
     out=""
     for par in ci.keys():
-        out += "%s \n\t "%(par)
+        out += "{0:20s}\n  ".format(par)
         sigmas = ci[par].keys()
         sigmas.sort()
         for sigma in sigmas:
-            out += "%9s %% \t"%(np.round(sigma*100, decimals=1))
-        out += '\n\t-'
+            out += '{0:20.2f} %'.format(np.round(sigma*100, decimals=1))
+        out += '\n -'
         for sigma in sigmas:
-            out += "%10s \t"%(np.round(ci[par][sigma][0], decimals=accuracy))
-        out += '\n\t+'
+            out += "{0:20}  ".format(np.round(ci[par][sigma][0], decimals=accuracy))
+        out += '\n +'
         for sigma in sigmas:
-            out += "%10s \t"%(np.round(ci[par][sigma][1], decimals=accuracy))   
+            out += "{0:20}  ".format(np.round(ci[par][sigma][1], decimals=accuracy))
         out += '\n'
     return out.rstrip()        
 
