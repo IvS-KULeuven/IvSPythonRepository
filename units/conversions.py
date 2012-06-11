@@ -1929,6 +1929,8 @@ def derive_radius(luminosity,temperature, units='m'):
     
     >>> print(derive_radius((3.9,'[Lsol]'),(3.72,'[K]'),units='Rsol'))
     108.091293736 Rsol
+    >>> print(derive_radius(3.8e26,5777.,units='Rjup'))
+    9.89759670363 Rjup
     
     @param luminosity: (Luminosity(, error), units)
     @type luminosity: 2 or 3 tuple
@@ -2911,6 +2913,7 @@ _factors = collections.OrderedDict([
            ('bs',    ( 5e-9,         'm','length','beard second')),
            ('Rsol',  (constants.Rsol,  constants.Rsol_units,'length','Solar radius')), # Solar radius
            ('Rearth',(constants.Rearth,constants.Rearth_units,'length','Earth radius')), # Earth radius
+           ('Rjup',  (constants.Rjup,constants.Rjup_units,'length','Jupiter radius')), # Jupiter radius
            ('ft',    (0.3048,        'm','length','foot (international)')), # foot (international)
            ('in',    (0.0254,        'm','length','inch (international)')), # inch (international)
            ('mi',    (1609.344,      'm','length','mile (international)')), # mile (international)
