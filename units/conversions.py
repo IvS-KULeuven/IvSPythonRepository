@@ -56,6 +56,11 @@ in italic):
     - C{min}: I{minute} vs milli-inch
     - C{yd}: I{yard} vs yoctoday
 
+Sometimes the case-sensitivity of the conversions come in handy. There is no
+ambiguity between:
+
+    - C{foe} (fifty-one-ergs) and C{fOe} (femto Oersted)
+
 B{Warning 3:} the unit name of angstrom is A, ampere is Am.
     
 Section 1. The Python module
@@ -3088,7 +3093,7 @@ _aliases = [('micron','mum'),('au','AU'),
             ('celcius','C'),('fahrenheit','F'),('hr','h'),
             ('galactic','gal'),('equatorial','equ'),('ecliptic','ecl'),
             ('Vegamag','vegamag'),('mile','mi'),
-            ('oz','ounce'),('sun','sol'),
+            ('oz','ounce'),('sun','sol'),('_sun','sol'),('_sol','sol'),
             ('solMass','Msol'),('solLum','Lsol'),
             ('pk','hp'),('mph','mi/h')
             ]
