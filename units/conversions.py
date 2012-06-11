@@ -2718,11 +2718,7 @@ class Unit(object):
                     if self.unit==_factors[fac][2]:
                         self.unit = _factors[fac][1]
                         break
-            #-- solve logarithmic issues
-            if self.unit and (self.unit[0]=='[' and self.unit[-1]==']'):
-                self.value = 10**self.value
-                self.unit = self.unit[1:-1]
-            self._SI_value = convert(self.unit,constants._current_convention,self.value,**kwargs)
+            self._SI_value = convert(self.unit,'SI',self.value,**kwargs)
         else:
             self._SI_value = self.value
         self._basic_unit = breakdown(self.unit)[1]
@@ -2767,21 +2763,30 @@ class Unit(object):
             return self.unit
     
     def __lt__(self,other):
+        """
+        Compare SI-values of Units with eacht other.
+        """
         return self._SI_value<other._SI_value
     
     def __add__(self,other):
+        """
+        Add a Unit to a Unit.
+        """
         if self._basic_unit!=other._basic_unit:
             raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
         return Unit(self._SI_value+other._SI_value,self._basic_unit)
         
     def __sub__(self,other):
+        """
+        Subtract a Unit from a Unit.
+        """
         if self._basic_unit!=other._basic_unit:
             raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
         return Unit(self._SI_value-other._SI_value,self._basic_unit)
     
     def __mul__(self,other):
         """
-        Multiply something with a Unit.
+        Multiply a Unit with something.
         
         If `something' is a Unit, simply join the two Unit strings and call
         L{breakdown} to collect.
