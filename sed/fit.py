@@ -10,8 +10,7 @@ import itertools
 import numpy as np
 from numpy import inf
 from scipy.interpolate import Rbf
-from scipy.optimize import fmin,fmin_powell,leastsq,anneal
-
+from scipy.optimize import fmin,fmin_powell
 from ivs.statistics import pca
 from ivs.sed import model
 from ivs.sed import filters
@@ -798,6 +797,42 @@ def iminimize(meas,e_meas,photbands,**kwargs):
     
     return out, params
 
+
+def iminimize2(meas,e_meas,photbands,*args,**kwargs):
+    model_func = kwargs.pop('model_func',model.get_itable)
+    #res_func = kwargs.pop('res_func',residual_single) # not yet defined!
+    method = kwargs.pop('fitmethod','fmin')
+    stat_func = kwargs.pop('stat_func',stat_chi2)
+            
+    colors = np.array([filters.is_color(photband) for photband in photbands],bool)
+    
+    # the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
+    def residual_single(parameters):
+        syn_flux,Labs = model_func(*parameters,photbands=photbands,**kwargs)
+        # in case any of the parameters goes out of its bounds
+        #if isnan(syn_flux).any():    
+        chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
+        return chisq
+    res_func = residual_single
+    # calling the fitting function NOTE: the initial metallicity is returned in the output!
+    
+    if method=='fmin': # fmin
+        optpars,fopt,niter,funcalls,warnflag = fmin(res_func,np.array(args),xtol=0.0001,disp=0,full_output=True)
+    elif method=='fmin_powell': #fmin_powell
+        optpars = fmin_powell(res_func,np.array(args))
+    else:
+        raise NotImplementedError
+    logger.debug("Optimization finished")
+    syn_flux,Labs = model_func(*optpars,photbands=photbands,**kwargs)
+     
+    # when any of the parameters goes out of the bounds of the grid, syn_flux contains NaN
+    if np.isnan(syn_flux).any():
+        warnflag = 3
+    
+    stats = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
+    optpars = np.hstack([optpars,stats])
+    # stats: chisq, scale, e_scale
+    return optpars,warnflag
 #}
 
 #{ Monte Carlo

@@ -25,7 +25,7 @@ examples):
     4. Conversions of magnitude to flux amplitudes via 'Amag' and 'ppt' or 'ampl'
     5. Conversions of magnitude colors to flux ratios via 'mag_color' and 'flux_ratio'
     6. Coordinate transformations (equatorial to galactic etc.)
-    7. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and [K]
+    7. Logarithmic conversions, e.g. from logTeff to Teff via '[K]' and 'K'
     8. Inclusion of uncertainties, both in input values and/or reference values
     when converting between unequal-type units, automatically recognised when
     giving two positional argument (value, error) instead of one (value).
@@ -37,7 +37,13 @@ examples):
 
 B{Warning 1:} frequency units are technically given in cycles per time (cy).
 This means that if you want to convert e.g. muHz to d-1 (or 1/d), you need to
-ask for cy/d.
+ask for cy/d. There is a general ambiguity concerning the unit 'cycles': it is
+not an official SI unit, but is needed to make the distinction between e.g. rad/s
+and Hz. In true SI-style, the official "unit" of rad/s is actually just s-1, since
+radians are not really a unit. This gives room for confusion but should be handled
+adequately internally. If you have any doubts, set the logger to display debug
+messages (e.g. C{logger.setLevel(10)}). It will tell you when certain assumptions
+are made.
 
 B{Warning 2:} there is some ambiguity between units. For example, C{as} can be
 interpreted as 'arcsecond', but also as 'attosecond'. In case of ambiguity,
@@ -50,12 +56,12 @@ in italic):
     - C{min}: I{minute} vs milli-inch
     - C{yd}: I{yard} vs yoctoday
 
-B{Warning 3:} the unit name of angstrom is A, ampere is Am.
-    
-This module can be used as:
+Sometimes the case-sensitivity of the conversions come in handy. There is no
+ambiguity between:
 
-    - a Python module
-    - a standalone terminal tool
+    - C{foe} (fifty-one-ergs) and C{fOe} (femto Oersted)
+
+B{Warning 3:} the unit name of angstrom is A, ampere is Am.
     
 Section 1. The Python module
 ============================
@@ -72,7 +78,7 @@ or when the error is known
 Be B{careful} when mixing nonlinear conversions (e.g. magnitude to flux) with
 linear conversions (e.g. Jy to W/m2/m).
 
-Note: when your favorite conversion is not implemented, there are five places
+When your favorite conversion is not implemented, there are five places
 where you can add information:
 
     1. C{_scalings}: if your favorite prefix (e.g. Tera, nano...) is not
@@ -83,11 +89,11 @@ where you can add information:
     4. C{_switch}: if your units are available, but conversions from one to
     another is not straightforward and extra infromation is needed (e.g. to go
     from angstrom to km/s in a spectrum, a reference wavelength is needed).
-    5. C{_convention}: if your favorite base unit system is not defined.
+    5. C{_convention}: if your favorite base unit system is not defined (SI,cgs...).
 
 If you need to add a linear factor, just give the factor in SI units, and the
-SI base units it consists of. If you need to add a nonlinear factor, you have
-to give a class definition (see the examples).
+SI base units it consists of (see C{_factors} for examples). If you need to add
+a nonlinear factor, you need to give a class definition (see the examples).
 
 Section 2. The Terminal tool
 ============================
@@ -95,124 +101,119 @@ Section 2. The Terminal tool
 For help and a list of all defined units and abbreviations, do::
 
     $:> python conversions.py --help
-    Usage: List of available units:
     =====================================           | =====================================           
     =   Units of angle                  =           | =   Units of area                   =           
     =====================================           | =====================================           
     am              = arcminute                     | a               = are                           
     as              = arcsecond                     | ac              = acre (international)          
-    cy              = cycle                         | =====================================           
-    deg             = degree                        | =   Units of currency               =           
-    rad             = radian                        | =====================================           
-    rpm             = revolutions per minute        | AUD             = Australian dollar             
-    sr              = sterradian                    | BGN             = Bulgarian lev                 
-    =====================================           | BRL             = Brasilian real                
-    =   Units of coordinate             =           | CAD             = Canadian dollar               
-    =====================================           | CHF             = Swiss franc                   
-    complex_coord   = <own unit>                    | CNY             = Chinese yuan renminbi         
-    deg_coord       = degrees                       | CZK             = Czech koruna                  
-    ecl             = ecliptic                      | DKK             = Danish krone                  
-    equ             = equatorial                    | EUR             = EURO                          
-    gal             = galactic                      | GBP             = Pound sterling                
-    rad_coord       = radians                       | HKD             = Hong Kong dollar              
-    =====================================           | HRK             = Croatian kuna                 
-    =   Units of distance               =           | HUF             = Hungarian forint              
-    =====================================           | IDR             = Indonesian rupiah             
-    A               = angstrom                      | ILS             = Israeli shekel                
-    AU              = astronomical unit             | INR             = Indian rupee                  
-    Rearth          = Earth radius                  | JPY             = Japanese yen                  
-    Rsol            = Solar radius                  | KRW             = South Korean won              
-    a0              = Bohr radius                   | LTL             = Lithuanian litas              
-    ell             = ell                           | LVL             = Latvian lats                  
-    ft              = foot (international)          | MXN             = Mexican peso                  
-    in              = inch (international)          | MYR             = Malaysian ringgit             
-    ly              = light year                    | NOK             = Norwegian krone               
-    m               = meter                         | NZD             = New Zealand dollar            
-    mi              = mile (international)          | PHP             = Philippine peso               
-    pc              = parsec                        | PLN             = Polish zloty                  
-    yd              = yard (international)          | RON             = New Romanian leu              
-    =====================================           | RUB             = Russian rouble                
-    =   Units of electric charge        =           | SEK             = Swedish krona                 
-    =====================================           | SGD             = Singapore dollar              
-    C               = Coulomb                       | THB             = Thai baht                     
-    =====================================           | TRY             = Turkish lira                  
-    =   Units of electric current       =           | USD             = US dollar                     
-    =====================================           | ZAR             = South African rand            
-    Am              = Ampere                        | =====================================           
-    =====================================           | =   Units of electric capacitance   =           
-    =   Units of electric resistance    =           | =====================================           
-    =====================================           | F               = Farad                         
-    O               = Ohm                           | =====================================           
-    =====================================           | =   Units of electric conductance   =           
-    =   Units of flux                   =           | =====================================           
-    =====================================           | S               = Siemens                       
-    ABmag           = AB magnitude                  | =====================================           
-    Amag            = amplitude in magnitude        | =   Units of electric potential difference   =  
-    Jy              = Jansky                        | =====================================           
-    STmag           = ST magnitude                  | V               = Volt                          
-    ampl            = fractional amplitude          | =====================================           
-    flux_ratio      = flux ratio                    | =   Units of energy/power           =           
-    mag             = magnitude                     | =====================================           
-    mag_color       = color                         | J               = Joule                         
-    pph             = amplitude in parts per hundred| Lsol            = Solar luminosity              
-    ppm             = amplitude in parts per million| W               = Watt                          
-    ppt             = amplitude in parts per thousand| cal             = calorie (international table) 
-    vegamag         = Vega magnitude                | eV              = electron volt                 
-    =====================================           | erg             = ergon                         
-    =   Units of illuminance            =           | hp              = Horsepower                    
+    cy              = cycle                         | b               = barn                          
+    deg             = degree                        | =====================================           
+    rad             = radian                        | =   Units of currency               =           
+    rpm             = revolutions per minute        | =====================================           
+    sr              = sterradian                    | EUR             = EURO                          
     =====================================           | =====================================           
-    lx              = lux                           | =   Units of force                  =           
+    =   Units of coordinate             =           | =   Units of electric capacitance   =           
     =====================================           | =====================================           
-    =   Units of luminous flux          =           | N               = Newton                        
+    complex_coord   = <own unit>                    | F               = Farad                         
+    deg_coord       = degrees                       | =====================================           
+    ecl             = ecliptic                      | =   Units of electric conductance   =           
+    equ             = equatorial                    | =====================================           
+    gal             = galactic                      | S               = Siemens                       
+    rad_coord       = radians                       | =====================================           
+    =====================================           | =   Units of electric potential difference   =  
+    =   Units of distance               =           | =====================================           
+    =====================================           | V               = Volt                          
+    A               = angstrom                      | =====================================           
+    AU              = astronomical unit             | =   Units of energy/power           =           
+    Rearth          = Earth radius                  | =====================================           
+    Rsol            = Solar radius                  | Cal             = large calorie (international table)
+    a0              = Bohr radius                   | J               = Joule                         
+    bs              = beard second                  | Lsol            = Solar luminosity              
+    ell             = ell                           | W               = Watt                          
+    ft              = foot (international)          | cal             = small calorie (international table)
+    furlong         = furlong                       | dp              = Donkeypower                   
+    in              = inch (international)          | eV              = electron volt                 
+    ly              = light year                    | erg             = ergon                         
+    m               = meter                         | foe             = (ten to the) fifty one ergs   
+    mi              = mile (international)          | hp              = Horsepower                    
+    pc              = parsec                        | =====================================           
+    potrzebie       = potrzebie                     | =   Units of force                  =           
+    smoot           = smooth                        | =====================================           
+    yd              = yard (international)          | N               = Newton                        
     =====================================           | dyn             = dyne                          
-    lm              = lumen                         | =====================================           
+    =   Units of electric charge        =           | =====================================           
     =====================================           | =   Units of inductance             =           
-    =   Units of magnetic flux          =           | =====================================           
+    C               = Coulomb                       | =====================================           
     =====================================           | H               = Henry                         
-    Wb              = Weber                         | =====================================           
-    =====================================           | =   Units of magnetic field strength   =        
-    =   Units of mass                   =           | =====================================           
-    =====================================           | G               = Gauss                         
-    Mearth          = Earth mass                    | T               = Tesla                         
-    Mjup            = Jupiter mass                  | =====================================           
-    Mlun            = Lunar mass                    | =   Units of magnetizing field      =           
-    Msol            = Solar mass                    | =====================================           
-    amu             = atomic mass                   | Oe              = Oersted                       
-    g               = gram                          | =====================================           
-    lbs             = pound                         | =   Units of pressure               =           
-    mol             = molar mass                    | =====================================           
-    ounce           = ounce                         | Pa              = Pascal                        
-    st              = stone                         | at              = atmosphere (technical)        
-    =====================================           | atm             = atmosphere (standard)         
-    =   Units of temperature            =           | ba              = barye                         
-    =====================================           | bar             = baros                         
-    Cel             = Celcius                       | psi             = pound per square inch         
-    Far             = Fahrenheit                    | torr            = Torricelli                    
-    K               = Kelvin                        | =====================================           
-    Tsol            = Solar temperature             | =   Units of time                   =           
+    =   Units of electric current       =           | =====================================           
+    =====================================           | =   Units of m/s                    =           
+    Am              = Ampere                        | =====================================           
+    =====================================           | cc              = Speed of light                
+    =   Units of electric resistance    =           | =====================================           
+    =====================================           | =   Units of magnetic flux          =           
+    O               = Ohm                           | =====================================           
+    =====================================           | Wb              = Weber                         
+    =   Units of flux                   =           | =====================================           
+    =====================================           | =   Units of mass                   =           
+    ABmag           = AB magnitude                  | =====================================           
+    Amag            = amplitude in magnitude        | Mearth          = Earth mass                    
+    Jy              = Jansky                        | Mjup            = Jupiter mass                  
+    STmag           = ST magnitude                  | Mlun            = Lunar mass                    
+    ampl            = fractional amplitude          | Msol            = Solar mass                    
+    flux_ratio      = flux ratio                    | amu             = atomic mass                   
+    mag             = magnitude                     | firkin          = firkin                        
+    mag_color       = color                         | g               = gram                          
+    pph             = amplitude in parts per hundred| lbs             = pound                         
+    ppm             = amplitude in parts per million| mol             = molar mass                    
+    ppt             = amplitude in parts per thousand| ounce           = ounce                         
+    vegamag         = Vega magnitude                | st              = stone                         
     =====================================           | =====================================           
-    =   Units of volume                 =           | CD              = calender day                  
+    =   Units of illuminance            =           | =   Units of second                 =           
+    =====================================           | =====================================           
+    lx              = lux                           | fortnight       = fortnight                     
+    =====================================           | =====================================           
+    =   Units of luminous flux          =           | =   Units of time                   =           
+    =====================================           | =====================================           
+    lm              = lumen                         | CD              = calender day                  
     =====================================           | JD              = Julian day                    
-    l               = liter                         | MJD             = modified Julian day           
-                                                    | cr              = century                       
-                                                    | d               = day                           
-                                                    | h               = hour                          
-                                                    | hz              = Hertz                         
-                                                    | j               = jiffy                         
-                                                    | min             = minute                        
-                                                    | mo              = month                         
-                                                    | s               = second                        
-                                                    | sidereal        = sidereal day                  
-                                                    | wk              = week                          
-                                                    | yr              = year                          
+    =   Units of magnetic field strength   =        | MJD             = modified Julian day           
+    =====================================           | cr              = century                       
+    G               = Gauss                         | d               = day                           
+    T               = Tesla                         | h               = hour                          
+    =====================================           | hz              = Hertz                         
+    =   Units of magnetizing field      =           | j               = jiffy                         
+    =====================================           | min             = minute                        
+    Oe              = Oersted                       | mo              = month                         
+    =====================================           | s               = second                        
+    =   Units of pressure               =           | sidereal        = sidereal day                  
+    =====================================           | wk              = week                          
+    Pa              = Pascal                        | yr              = year                          
+    at              = atmosphere (technical)        | 
+    atm             = atmosphere (standard)         | 
+    ba              = barye                         | 
+    bar             = baros                         | 
+    psi             = pound per square inch         | 
+    torr            = Torricelli                    | 
+    =====================================           | 
+    =   Units of temperature            =           | 
+    =====================================           | 
+    Cel             = Celcius                       | 
+    Far             = Fahrenheit                    | 
+    K               = Kelvin                        | 
+    Tsol            = Solar temperature             | 
+    =====================================           | 
+    =   Units of volume                 =           | 
+    =====================================           | 
+    l               = liter                         | 
+    ngogn           = 1000 cubic potrzebies         | 
 
     Usage: conversions.py --from=<unit> --to=<unit> [options] value [error]
-    
+
     Options:
-        -h, --help            show this help message and exit
-        --from=_FROM          units to convert from
-        --to=_TO              units to convert to
-    
+    -h, --help            show this help message and exit
+    --from=_FROM          units to convert from
+    --to=_TO              units to convert to
+
     Extra quantities when changing base units (e.g. Flambda to Fnu):
         -w WAVE, --wave=WAVE
                             wavelength with units (e.g. used to convert Flambda to
@@ -260,11 +261,12 @@ Section 3.1. Changing base unit system
 
 A solution to the first option might be to define all constants in SI, and define
 them again in cgs, adding a postfix C{_cgs} to the constants' name. This is done
-in the module L{ivs.units.constants}, but it doesn't offer any flexibility, and
-one has to redefine all the values manually for any given convention. Also, you
+in the module L{ivs.units.constants} to give the user access to values of constants
+in common-used systems. However, this way of working does not offer any flexibility,
+and one has to redefine all the values manually for any given convention. Also, you
 may want to work in cgs by default, which means that typing the postfix every
 time is cumbersome. For this purpose, you can redefine all constants in a
-different base system with the simple command
+different base system with a simple command:
 
 >>> print constants.Msol,constants.GG
 1.988547e+30 6.67384e-11
@@ -291,6 +293,13 @@ arguments, or simply
 >>> set_convention(units='SI')
 ('imperial', 'standard')
 
+The function L{set_convention} returns the current settings, so you can 
+remember the old settings and make a temporary switch:
+
+>>> old_settings = set_convention(units='cgs')
+>>> set_convention(*old_settings)
+('cgs', 'standard')
+
 B{Warning:} Changing the value of the constants affects B{all} modules, where
 an import statement C{from ivs.units import constants} is made. It will B{not}
 change the values in modules where the import is done via
@@ -310,6 +319,11 @@ the stellar evolution code B{MESA}, simply do
 >>> set_convention(units='cgs',values='mesa')
 ('SI', 'standard')
 
+You can query for info on the current convention without changing it:
+
+>>> get_convention()
+('cgs', 'mesa')
+
 But for the sake of the examples, we'll switch back to the default SI...
 
 >>> set_convention()
@@ -320,7 +334,28 @@ Section 4. Calculating with units
 =================================
 
 There exists a class L{Unit}, which allows you to calculate with values with
-units (optionally including uncertainties). 
+units (optionally including uncertainties). The class L{Unit} offers high
+flexibility when it comes to initialization, so that a user can create a L{Unit}
+according to his/her own preferences. See L{Unit.__init__} for all the options.
+
+The purpose of existence of the class L{Unit} is calculation: you can simply
+create a couple of units, and multiply, add, divide etc.. with Python's standard
+operators ('*','+','/',...). The standard rules apply: you can multiply and divide
+basically any combination of parameters, but adding and subtracting requires Units
+to have the same dimensions!
+
+Aside from the basic operators, a L{Unit} also understands the most commonly
+used operations from numpy (C{np.sin, np.cos, np.sqrt}...). If a function is
+not implemented, you can easily add it yourself following the existing examples
+in the code. A L{Unit} does B{not} understand the functions from the C{math}
+module, only the C{numpy} implementation!
+
+Better yet, you can also put L{Unit}s in a numpy array. Just make a list of units
+and make it an array as you would do with normal floats (no need to specify the
+C{dtype}). You can safely mix units with and without uncertainties, and mix units
+with different dimensions. You have access to most of numpy functions such as
+C{mean}, C{sum} etc. Of course, when you mix different dimensions, calling C{sum}
+will result in an error!
 
 B{Example 1:} Calculate the inclination of star, given a measured
 C{vsini=150+/-11} km/s, a rotation period of C{2+/-1} days and a radius of
@@ -386,7 +421,6 @@ except ImportError: print("Unable to load pyephem, stellar coordinate transforma
 
 #-- from IVS repository
 from ivs.units import constants
-#from ivs.units.constants import *
 from ivs.units.uncertainties import unumpy,AffineScalarFunc,ufloat
 from ivs.units.uncertainties.unumpy import log10,log,exp,sqrt
 from ivs.units.uncertainties.unumpy import sin,cos,tan
@@ -397,7 +431,7 @@ from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 
 logger = logging.getLogger("UNITS.CONV")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 #{ Main functions
 
@@ -547,9 +581,9 @@ def convert(_from,_to,*args,**kwargs):
     >>> print(convert('Jy','erg cm-2 s-1 A-1',3630.7805477,wave=(1.,'micron')))
     1.08848062485e-09
     >>> print(convert('ABmag','erg cm-2 s-1 A-1',0.,wave=(1.,'micron'),photband='SDSS.G'))
-    4.93934836475e-09
+    4.97510278172e-09
     >>> print(convert('erg cm-2 s-1 A-1','ABmag',1e-8,wave=(1.,'micron'),photband='SDSS.G'))
-    -0.765825856568
+    -0.757994856607
     >>> print(convert('ppm','muAmag',1.))
     1.0857356618
     >>> print(convert('mAmag','ppt',1.,0.1))
@@ -706,7 +740,7 @@ def convert(_from,_to,*args,**kwargs):
             kwargs_SI[key] = kwargs[key]
     
     #-- add some default values if necessary
-    if uni_from!=uni_to and is_type(uni_from,'length') and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
+    if uni_from!=uni_to and is_basic_unit(uni_from,'length') and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
         kwargs_SI['wave'] = fac_from*start_value
         logger.warning('Assumed input value to serve also for "wave" key')
     elif uni_from!=uni_to and uni_from=='cy1 s-1' and not ('wave' in kwargs_SI):# or 'freq' in kwargs_SI or 'photband' in kwargs_SI):
@@ -813,6 +847,8 @@ def nconvert(_froms,_tos,*args,**kwargs):
     Convert a list/array/tuple of values with different units to other units.
     
     This silently catches some exceptions and replaces the value with nan!
+    
+    @rtype: array
     """
     if len(args)==1:
         ret_value = np.zeros((len(args[0])))
@@ -973,22 +1009,18 @@ def set_convention(units='SI',values='standard'):
         logger.warning('Reloading of constants')
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
-
-def is_type(unit,type):
-    """
-    Change if a unit is a basic unit, i.e. of type mass, length...
     
-    @parameter unit: unit to check
-    @type unit: str
-    @parameter type: type to check
-    @type type: str
+def get_convention():
     """
-    for conv in _conventions:
-        if unit==_conventions[conv][type] or (unit[:-1]==_conventions[conv][type] and unit[-1]=='1'):
-            return True
-    else:
-        return False
-            
+    Returns convention and name of set of values.
+    
+    >>> get_convention()
+    ('SI', 'standard')
+    
+    @rtype: str,str
+    @return: convention, values
+    """
+    return constants._current_convention,constants._current_values
             
 
 def get_constant(constant_name,units='SI',value='standard'):
@@ -1030,6 +1062,8 @@ def get_constants(units='SI',values='standard'):
     
     Yes, I know, there's a lot that can go wrong with values that are supposed
     to be CONSTANT!
+    
+    @rtype: dict
     """
     cvars = dir(constants)
     cvars = [i for i in cvars if i+'_units' in cvars]
@@ -1041,28 +1075,11 @@ def get_constants(units='SI',values='standard'):
     
     
     
-def round_arbitrary(x, base=5):
-    """
-    Round to an arbitrary base.
-    
-    Example usage:
-    
-    >>> round_arbitrary(1.24,0.25)
-    1.25
-    >>> round_arbitrary(1.37,0.75)
-    1.5
-    
-    
-    @param x: number to round
-    @type x: float
-    @param base: base to round to
-    @type base: integer or float
-    @return: rounded number
-    @rtype: float
-    """
-    return base * round(float(x)/base)
+
 #}
-#{ Conversions basics
+#{ Conversions basics and helper functions
+
+
 def solve_aliases(unit):
     """
     Resolve simple aliases in a unit's name.
@@ -1105,7 +1122,9 @@ def solve_aliases(unit):
 
 def components(unit):
     """
-    Decompose a unit into: a factor, SI base unit, power.
+    Decompose a unit into: factor, SI base units, power.
+    
+    You probably want to call L{solve_aliases} first.
     
     Examples:
     
@@ -1239,9 +1258,231 @@ def breakdown(unit):
     total_units = sorted(['%s%s'%(i,j) for i,j in zip(total_units,total_power) if j!=0])
     return total_factor," ".join(total_units)
 
+def compress(unit,ignore_factor=False):
+    """
+    Compress basic units to more human-readable type.
+    
+    If you are only interested in a shorter form of the units, regardless
+    of the values, you need to set C{ignore_factor=True}.
+    
+    For example: erg/s/cm2/A can be written shorter as W1 m-3, but 1 erg/s/cm2/A
+    is not equal to 1 W1 m-3. Thus:
+    
+    >>> print(compress('erg/s/cm2/A',ignore_factor=True))
+    W1 m-3
+    >>> print(compress('erg/s/cm2/A',ignore_factor=False))
+    erg/s/cm2/A
+    
+    You cannot write the latter shorter without converting the units!
+    
+    For the same reasoning, compressing non-basic units will not work out:
+    
+    >>> print(compress('Lsol'))
+    Lsol
+    >>> print(compress('Lsol',ignore_factor=True))
+    W1 
+    
+    So actually, this function is really designed to compress a combination
+    of basic units:
+    
+    >>> print(compress('kg1 m-1 s-3'))
+    W1 m-3
+        
+    @param unit: combination of units to compress
+    @type unit: str
+    @param ignore_factor: if True, then a `sloppy compress' will be performed,
+    that is, it is not guaranteed that the multiplication factor equals 1 (see
+    examples)
+    @type ignore_factor: bool
+    @rtype: str
+    @return: shorter version of original units
+    
+    """
+    #-- if input is not a basic unit (or is not trivially expandable as
+    #   a basic unit, do nothing)
+    breakdown_units = breakdown(unit)
+    if not ignore_factor and breakdown_units[0]!=1.:
+        return unit
+    #-- else, look for ways to simplify it
+    orig_units = Unit(1.,breakdown_units[1])
+    for fac in _factors:
+        try:
+            if not np.allclose(_factors[fac][0],1.): continue
+            y = Unit(1.,fac+'1')
+            left_over = (orig_units/y)
+            value,left_over = left_over[0],left_over[1]
+        except:
+            continue
+        new_unit = ' '.join([y[1],left_over])
+        if len(new_unit)<len(orig_units[1]):
+            orig_units = Unit(1.,new_unit)
+    
+    return orig_units[1]
+
+def split_units_powers(unit):
+    """
+    Split unit in a list of units and a list of powers.
+    
+    >>> y = 'A Am kg-2 F-11 Wb-1'
+    >>> split_units_powers(y)
+    (['A', 'Am', 'kg', 'F', 'Wb'], ['1', '1', '-2', '-11', '-1'])
+    >>> y = 'angstrom Am1/kg2 F-11/Wb'
+    >>> split_units_powers(y)
+    (['A', 'Am', 'kg', 'F', 'Wb'], ['1', '1', '-2', '-11', '-1'])
+    >>> y = '10angstrom Am1/kg2 F-11/Wb'
+    >>> split_units_powers(y)
+    (['10A', 'Am', 'kg', 'F', 'Wb'], ['1', '1', '-2', '-11', '-1'])
+    >>> y = '10angstrom Am1/kg2 5F-11/Wb'
+    >>> split_units_powers(y)
+    (['10A', 'Am', 'kg', '5F', 'Wb'], ['1', '1', '-2', '-11', '-1'])
+    >>> y = '10angstrom Am0.5/kg2 5F-11/100Wb2.5'
+    >>> split_units_powers(y)
+    (['10A', 'Am', 'kg', '5F', '100Wb'], ['1', '0.5', '-2', '-11', '-2.5'])
+    
+    @param unit: unit
+    @type unit: str
+    @rtype: list,list
+    @return: list of unit names, list of powers
+    """
+    #-- compile regular expressions
+    units  = re.compile('\A[\d].[a-z]+|[a-z]+|\s\d+[a-z]+',re.IGNORECASE)
+    powers = re.compile('[-\.\d]+[\s]|[-\.\d]+\Z')
+    #-- solve aliases
+    unit = solve_aliases(unit)
+    #-- and make sure every unit has at least one power:
+    unit = ' '.join([comp[-1].isdigit() and comp or comp+'1' for comp in unit.split()])
+    #-- now split and remove spaces
+    units  = [i.strip() for i in units.findall(unit)]
+    powers = [i.strip() for i in powers.findall(unit)] 
+    return units,powers
+    
+
+def is_basic_unit(unit,type):
+    """
+    Check if a unit is represents one of the basic quantities (length, mass...)
+    
+    >>> is_basic_unit('K','temperature')
+    True
+    >>> is_basic_unit('m','length')
+    True
+    >>> is_basic_unit('cm','length')
+    True
+    >>> is_basic_unit('km','length') # not a basic unit in any type of convention
+    False
+    
+    @parameter unit: unit to check
+    @type unit: str
+    @parameter type: type to check
+    @type type: str
+    @rtype: bool
+    """
+    for conv in _conventions:
+        if unit==_conventions[conv][type] or (unit[:-1]==_conventions[conv][type] and unit[-1]=='1'):
+            return True
+    else:
+        return False
+
+def is_type(unit,type):
+    """
+    Check if a unit is of a certain type (mass, length, force...)
+    
+    >>> is_type('K','temperature')
+    True
+    >>> is_type('m','length')
+    True
+    >>> is_type('cm','length')
+    True
+    >>> is_type('ly','length')
+    True
+    >>> is_type('ly','time')
+    False
+    >>> is_type('W','power')
+    True
+    >>> is_type('kg m2/s3','power')
+    True
+    >>> is_type('kg/s2/m','pressure')
+    True
+    >>> is_type('W','force')
+    False
+    
+    @parameter unit: unit to check
+    @type unit: str
+    @parameter type: type to check
+    @type type: str
+    @rtype: bool
+    """
+    #-- solve aliases and breakdown in basic SI units
+    unit = solve_aliases(unit)
+    comps = breakdown(unit)[1]
+    for fac in _factors:
+        this_unit = change_convention(constants._current_convention,_factors[fac][1])
+        if comps==this_unit and type in _factors[fac][2].split('/'):
+            return True
+    return False
+
+
+def round_arbitrary(x, base=5):
+    """
+    Round to an arbitrary base.
+    
+    Example usage:
+    
+    >>> round_arbitrary(1.24,0.25)
+    1.25
+    >>> round_arbitrary(1.37,0.75)
+    1.5
+    
+    
+    @param x: number to round
+    @type x: float
+    @param base: base to round to
+    @type base: integer or float
+    @return: rounded number
+    @rtype: float
+    """
+    return base * round(float(x)/base)
+
+def unit2texlabel(unit):
+    """
+    Convert a unit string to a nicely formatted TeX label.
+    
+    For fluxes, also the Flambda, lambda Flambda, or Fnu, or nuFnu is returned.
+    
+    @rtype: str
+    """
+    
+    unit = solve_aliases(unit)
+    fac,base = breakdown(unit)
+    names,powers = split_units_powers(unit)
+    powers = [(power!='1' and power or ' ') for power in powers]
+    powers = [(power[0]!=' ' and '$^{{{0}}}$'.format(power) or power) for power in powers]
+    unit = ' '.join([(name+power) for name,power in zip(names,powers)])
+    
+    translate = {'kg1 m-1 s-3' :r'$F_\lambda$ [{0}]'.format(unit),
+                 'cy-1 kg1 s-2':r'$F_\nu$ [{0}]'.format(unit),
+                 'kg1 s-3':r'$\lambda F_\lambda$ [{0}]'.format(unit),
+                }
+    
+    #-- translate
+    if base in translate:
+        label = translate[base]
+    else:
+        label = unit
+    #-- make TeX
+    label = label.replace('A','$\AA$')
+    label = label.replace('mu','$\mu$')
+    label = label.replace('sol','$_\odot$')
+    return label        
+    
+
+
+
+
 def get_help():
     """
-    Return a string with a list and explanation of all defined units
+    Return a string with a list and explanation of all defined units.
+    
+    @rtype: str
     """
     #try:
     #    set_exchange_rates()
@@ -1595,12 +1836,27 @@ def times_sr(arg,**kwargs):
     return Q
 
 def per_cy(arg,**kwargs):
+    """
+    Switch from radians/s to cycle/s
+    
+    @rtype: float
+    """
     return arg / (2*np.pi)
 
 def times_cy(arg,**kwargs):
+    """
+    Switch from cycle/s to radians/s
+    
+    @rtype: float
+    """
     return 2*np.pi*arg
 
 def period2freq(arg,**kwargs):
+    """
+    Convert period to frequency and back.
+    
+    @rtype: float
+    """
     return 1./arg
 
     
@@ -1610,41 +1866,99 @@ def do_nothing(arg,**kwargs):
     return arg
 
 
+def Hz2_to_ss(change,frequency):
+    """
+    Convert Frequency shift in Hz2 to period change in seconds per second.
+    
+    Frequency in Hz!
+    """
+    #-- to second per second
+    second_per_second = abs(1/frequency - 1/(frequency-change))
+    return second_per_second
+
 #}
 
 
 #{ Stellar calibrations
 
-def derive_luminosity(radius,temperature, unit='Lsol'):
+def derive_luminosity(radius,temperature,units=None):
     """
     Convert radius and effective temperature to stellar luminosity.
     
-    Units given to radius and temperature must be understandable by C{convert}.
+    Units given to radius and temperature must be understandable by C{Unit}.
     
-    Stellar luminosity is returned in solar units.
+    Stellar luminosity is returned, by default in Solar units.
     
+    I recommend to give the input as follows, since this is most clear also
+    from a programmatical point of view:
+    
+    >>> print(derive_luminosity((1.,'Rsol'),(5777,'K'),units='erg/s'))
+    3.83916979644e+33 erg/s
+    
+    The function is pretty smart, however: it knows what the output units
+    should be, so you could ask to put them in the 'standard' units of some
+    convention:
+    
+    >>> print(derive_luminosity((1.,'Rsol'),(5777,'K'),units='cgs'))
+    3.83916979644e+33 g1 cm2 s-3
+    
+    If you give nothing, everything will be interpreted in the current
+    convention's units:
+    
+    >>> print(derive_luminosity(7e8,5777.))
+    3.88892117726e+26 W1 
+    
+    You are also free to give units (you can do this in a number of ways), and
+    if you index the return value, you can get the value ([0], float or
+    uncertainty) or unit ([1],string):
+    
+    >>> derive_luminosity((1.,'Rsol'),(1.,0.1,'Tsol'),units='Lsol')[0]
+    1.0000048246799305+/-0.4000019298719723
+    
+    >>> derive_luminosity((1.,'Rsol'),((1.,0.1),'Tsol'),units='Lsol')[0]
+    1.0000048246799305+/-0.4000019298719723
+    
+    Finally, you can simply work with Units:
+    
+    >>> radius = Unit(1.,'Rsol')
+    >>> temperature = Unit(5777.,'K')
+    >>> print(derive_luminosity(radius,temperature,units='foe/s'))
+    3.83916979644e-18 foe/s
+    
+    Everything should be independent of the current convention, unless it
+    needs to be:
+    
+    >>> old = set_convention('cgs')
+    >>> derive_luminosity((1.,'Rsol'),(1.,0.1,'Tsol'),units='Lsol')[0]
+    1.0000048246799305+/-0.4000019298719722
+    >>> print(derive_luminosity(7e10,5777.))
+    3.88892117726e+33 erg1 s-1
+    >>> sol = set_convention('sol')
+    >>> print(derive_luminosity(1.,1.))
+    3.9982620567e-22 Msol1 Rsol2 s-3
+    >>> print(derive_luminosity(1.,1.,units='Lsol'))
+    1.00000482468 Lsol
+    >>> old = set_convention(*old)
     
     @param radius: (radius(, error), units)
-    @type radius: 2 or 3 tuple
+    @type radius: 2 or 3 tuple, Unit or float (current convention)
     @param temperature: (effective temperature(, error), units)
-    @type temperature: 2 or 3 tuple
-    @return: radius (and error) in SI units
-    @rtype: 1- or 2-tuple
+    @type temperature: 2 or 3 tuple, Unit or float (current convention)
+    @return: luminosity
+    @rtype: Unit
     """
-    #-- take care of luminosity
-    if len(radius)==3:
-        radius = unumpy.uarray([radius[0],radius[1]]),radius[2]
-    radius = convert(radius[-1],'SI',*radius[:-1],unpack=False)
-    #-- take care of effective temperature
-    if len(temperature)==3:
-        temperature = unumpy.uarray([temperature[0],temperature[1]]),temperature[2]
-    teff = convert(temperature[-1],'SI',*temperature[:-1],unpack=False)
-    #-- calculate radius in SI units
-    lumi = 4*np.pi*constants.sigma*radius**2*teff**4
-    lumi = convert('W',unit,lumi)
-    return lumi
+    if units is None:
+        units = constants._current_convention
+    radius = Unit(radius,unit='length')
+    temperature = Unit(temperature,unit='temperature')
+    sigma = Unit('sigma')
+    
+    lumi = 4*np.pi*sigma*radius**2*temperature**4
+    
+    return lumi.convert(units)
+    
 
-def derive_radius(luminosity,temperature, unit='m'):
+def derive_radius(luminosity,temperature, units='m'):
     """
     Convert luminosity and effective temperature to stellar radius.
     
@@ -1654,28 +1968,28 @@ def derive_radius(luminosity,temperature, unit='m'):
     
     Example usage:
     
-    #>>> calculate_radius((3.9,'[Lsol]'),(3.72,'[K]'))/Rsol
-    107.994124114
+    >>> print(derive_radius((3.9,'[Lsol]'),(3.72,'[K]'),units='Rsol'))
+    108.091293736 Rsol
+    >>> print(derive_radius(3.8e26,5777.,units='Rjup'))
+    9.89759670363 Rjup
     
     @param luminosity: (Luminosity(, error), units)
     @type luminosity: 2 or 3 tuple
+    @type radius: 2 or 3 tuple, Unit or float (current convention)
     @param temperature: (effective temperature(, error), units)
-    @type temperature: 2 or 3 tuple
-    @return: radius (and error) in SI units
-    @rtype: 1- or 2-tuple
+    @type temperature: 2 or 3 tuple, Unit or float (current convention)
+    @return: radius
+    @rtype: Unit
     """
-    #-- take care of luminosity
-    if len(luminosity)==3:
-        luminosity = unumpy.uarray([luminosity[0],luminosity[1]])
-    lumi = convert(luminosity[-1],'SI',*luminosity[:-1],unpack=False)
-    #-- take care of effective temperature
-    if len(temperature)==3:
-        temperature = unumpy.uarray([temperature[0],temperature[1]])
-    teff = convert(temperature[-1],'SI',*temperature[:-1],unpack=False)
-    #-- calculate radius in SI units
-    R = sqrt(lumi / (teff**4)/(4*np.pi*constants.sigma))
-    R = convert('m',unit,R)
-    return R    
+    if units is None:
+        units = constants._current_convention
+    luminosity = Unit(luminosity,unit='power')
+    temperature = Unit(temperature,unit='temperature')
+    sigma = Unit('sigma')
+    
+    R = np.sqrt(luminosity / (temperature**4)/(4*np.pi*sigma))
+    
+    return R.convert(units)    
 
 def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     """
@@ -1882,6 +2196,30 @@ def derive_ampllum(luminosity,mass,temperature,wavelength,unit='ppm'):
         wavelength = unumpy.uarray([wavelength[0],wavelength[1]])
     wave = convert(wavelength[-1],'550nm',*wavelength[:-1])
     ampllum = lumi / wave / teff**2 / M * ufloat((4.7,0.3))
+    return convert('ppm',unit,ampllum)
+
+def derive_ampllum_from_velo(velo,temperature,wavelength,unit='ppm'):
+    """
+    Derive the luminosity amplitude around nu_max of solar-like oscillations.
+    
+    See Kjeldsen and Bedding (1995).
+    
+    >>> print derive_ampllum_from_velo((1.,'m/s'),(5777.,'K'),(550,'nm'))
+    (20.1, 0.05)
+    """
+    #-- take care of velocity
+    if len(velo)==3:
+        velo = (unumpy.uarray([velo[0],velo[1]]),velo[2])
+    velo = convert(velo[-1],'m/s',*velo[:-1])
+    #-- take care of effective temperature
+    if len(temperature)==3:
+        temperature = unumpy.uarray([temperature[0],temperature[1]])
+    teff = convert(temperature[-1],'5777K',*temperature[:-1])
+    #-- take care of wavelength
+    if len(wavelength)==3:
+        wavelength = unumpy.uarray([wavelength[0],wavelength[1]])
+    wave = convert(wavelength[-1],'550nm',*wavelength[:-1])
+    ampllum = velo / wave / teff**2 * ufloat((20.1,0.05)) #not sure about error
     return convert('ppm',unit,ampllum)
 
 def derive_amplvel(luminosity,mass,unit='cm/s'):
@@ -2114,7 +2452,8 @@ class ModJulianDay(NonLinearConverter):
     """
     ZP = {'COROT':2451545.,
             'HIP':2440000.,
-            'MJD':2400000.5}
+            'MJD':2400000.5,
+        'PYEPHEM':2415020.0}
     def __call__(self,meas,inv=False,jtype='MJD'):
         if inv:
             return meas-self.ZP[jtype.upper()]
@@ -2235,10 +2574,14 @@ def set_exchange_rates():
 #{ Computations with units
 class Unit(object):
     """
-    Trial class to calculate with numbers containing units. Not yet possible
-    to supply an error.
+    Class to calculate with numbers (and uncertainties) containing units.
     
-    Initalisation is done via:
+    You can put Units in an array and calculate with them. It is then allowed
+    to mix Units with and without uncertainties. It is also allowed to mix
+    Units with different units in one array, though some operations (e.g. sum)
+    will not be possible.
+    
+    Initalisation is done via (see L{__init__} for more options):
     
     >>> a = Unit(2.,'m')
     >>> b = Unit(4.,'km')
@@ -2273,16 +2616,16 @@ class Unit(object):
     
     B{Example 2}: The surface gravity of the Sun:
     
-    >>> G = Unit(constants.GG,constants.GG_units)
-    >>> M = Unit(constants.Msol,constants.Msol_units)
-    >>> R = Unit(constants.Rsol,constants.Rsol_units)
+    >>> G = Unit('GG')
+    >>> M = Unit('Msol')
+    >>> R = Unit('Rsol')
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
     >>> print logg
     4.43830739117 
     
     or 
     
-    >>> G = Unit(constants.GG,constants.GG_units)
+    >>> G = Unit('GG')
     >>> M = Unit(1.,'Msol')
     >>> R = Unit(1.,'Rsol')
     >>> logg = np.log10((G*M/R**2).convert('cgs'))
@@ -2320,56 +2663,171 @@ class Unit(object):
     1.00000000001 
     
     """
+    def __new__(cls,*args,**kwargs):
+        """
+        Create a new Unit instance.
+        
+        Overriding the default __new__ method makes sure that it is
+        possible to initialize a Unit with an existing Unit instance. In
+        that case, the original instance will simply be returned, and the
+        __init__ functions is smart enough that it will not re-initialize
+        the class instance.
+        """
+        if not isinstance(args[0],Unit):
+            return super(Unit, cls).__new__(cls)
+        else:
+            return args[0]
+            
     def __init__(self,value,unit=None,**kwargs):
+        """
+        Different ways to initialize a Unit.
+        
+        Without uncertainties:
+        
+        >>> x1 = Unit(5.,'m')
+        >>> x4 = Unit((5.,'m'))
+        >>> x5 = Unit(5.,'length')
+        
+        The latter only works with the basic names ('length', 'time', 'temperature',
+        etc..., and assures that the value is interpreted correctly in the
+        current convention (SI,cgs...)
+        
+        With uncertainties:
+        
+        >>> x2 = Unit((5.,1.),'m')
+        >>> x3 = Unit((5.,1.,'m'))
+        
+        Initiating with an existing instance will not do anything (not even
+        making a copy! Only a new reference to the original object is made):
+        
+        >>> x6 = Unit(x3)
+        
+        This is the output from printing the examples above:
+        
+        >>> print x1
+        5.0 m
+        >>> print x2
+        5.0+/-1.0 m
+        >>> print x3
+        5.0+/-1.0 m
+        >>> print x4
+        5.0 m
+        >>> print x5
+        5.0 m
+        >>> print x6
+        5.0+/-1.0 m
+        """
+        if isinstance(value,Unit):
+            return None
         #-- input values
         kwargs.setdefault('unpack',False)
+        #-- handle different input types -- tuples etc..
+        if isinstance(value,tuple) and isinstance(value[-1],str):
+            unit = value[-1]
+            value = value[:-1]
+            if len(value)==1:
+                value = value[0]
+        #-- set the input values        
         self.value = value
         self.unit = unit
         self.kwargs = kwargs
-        
-        
+        #-- make sure we can calculate with:
         if isinstance(self.value,tuple):
-            self.value = ufloat(self.value)
+            try:
+                self.value = ufloat(self.value)
+            except:
+                self.value = unumpy.uarray(self.value)
+        #-- we can calculate with defined constants        
         if isinstance(self.value,str):
             self.unit = getattr(constants,self.value+'_units')
             self.value = getattr(constants,self.value)
-            
-        
         #-- values and units to work with
         if self.unit is not None:
-            self._SI_value = convert(self.unit,constants._current_convention,self.value,**kwargs)
+            #-- perhaps someone says the unit is of "type" length. If so,
+            #   take the current conventions' unit of the type
+            if not self.unit in _factors and self.unit in _conventions[constants._current_convention]:
+                self.unit = _conventions[constants._current_convention][self.unit]
+            #-- OK, maybe people are making it really difficult and give their
+            #   unit as 'pressure' or so... then we can still try to do
+            #   something
+            elif not self.unit in _factors:
+                for fac in _factors:
+                    if self.unit==_factors[fac][2]:
+                        self.unit = _factors[fac][1]
+                        break
+            self._SI_value = convert(self.unit,'SI',self.value,**kwargs)
         else:
             self._SI_value = self.value
         self._basic_unit = breakdown(self.unit)[1]
     
-    def convert(self,unit):
+    def convert(self,unit,compress=True):
+        """
+        Convert this Unit to different units.
+        
+        By default, the converted unit will be compressed (i.e. it will
+        probably not consist of only basic units, but be more readable).
+        """
         if unit in _conventions:
             unit_ = change_convention(unit,self.unit)
         else:
             unit_ = unit
         new_value = convert(self.unit,unit_,self.value,**self.kwargs)
-        return Unit(new_value,unit_)
+        new_unit = Unit(new_value,unit_)
+        if compress:
+            new_unit.compress()
+        return new_unit
+    
+    def compress(self):
+        """
+        Compress current unit to a more readable version.
+        """
+        self.unit = compress(self.unit)
+        return self
+    
+    def get_value(self):
+        """
+        Returns (value,error) in case of uncertainties.
+        """
+        return unumpy.nominal_values(self.value),unumpy.std_devs(self.value)
     
     def __getitem__(self,key):
+        """
+        Implements indexing, [0] returns value, [1] return unit.
+        """
         if key==0:
             return self.value
         elif key==1:
             return self.unit
     
     def __lt__(self,other):
+        """
+        Compare SI-values of Units with eacht other.
+        """
         return self._SI_value<other._SI_value
     
     def __add__(self,other):
+        """
+        Add a Unit to a Unit.
+        """
         if self._basic_unit!=other._basic_unit:
             raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
         return Unit(self._SI_value+other._SI_value,self._basic_unit)
         
     def __sub__(self,other):
+        """
+        Subtract a Unit from a Unit.
+        """
         if self._basic_unit!=other._basic_unit:
             raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
         return Unit(self._SI_value-other._SI_value,self._basic_unit)
     
     def __mul__(self,other):
+        """
+        Multiply a Unit with something.
+        
+        If `something' is a Unit, simply join the two Unit strings and call
+        L{breakdown} to collect.
+        """
         if hasattr(other,'_basic_unit'):
             new_unit = ' '.join([self._basic_unit,other._basic_unit])
             fac,new_unit = breakdown(new_unit)
@@ -2383,6 +2841,14 @@ class Unit(object):
         return self.__mul__(other)
     
     def __div__(self,other):
+        """
+        Divide two units.
+        
+        >>> x = Unit(5.,'m15')
+        >>> y = Unit(2.5,'m6.5')
+        >>> print(x/y)
+        2.0 m8.5
+        """
         if hasattr(other,'_basic_unit'):
             #-- reverse signs in second units
             uni_b_ = ''
@@ -2437,6 +2903,21 @@ class Unit(object):
         return Unit(outcome,new_unit)
     
     def __pow__(self,power):
+        """
+        Raise a unit to a power:
+        
+        >>> x = Unit(5.,'m')
+        >>> print(x**0.5)
+        2.2360679775 m0.5
+        >>> print(x**-1)
+        0.2 m-1
+        >>> print(x**3)
+        125.0 m3
+        
+        >>> x = Unit(9.,'m11')
+        >>> print(x**0.5)
+        3.0 m5.5
+        """
         mycomps = [components(u) for u in self._basic_unit.split()]
         mycomps = [(u[0]**power,u[1],u[2]*power) for u in mycomps]
         factor = np.product([u[0] for u in mycomps])
@@ -2457,10 +2938,9 @@ class Unit(object):
     def log(self): return Unit(log(self.value),'')
     def exp(self): return Unit(exp(self.value),'')
     def sqrt(self): return self**0.5
-        
-    
+            
     def __str__(self):
-        return '%s %s'%(self.value,self.unit)
+        return '{0} {1}'.format(self.value,self.unit)
         
         
 
@@ -2472,23 +2952,26 @@ _fluxcalib = os.path.join(os.path.abspath(os.path.dirname(__file__)),'fluxcalib.
 #-- basic units which the converter should know about
 _factors = collections.OrderedDict([
 # DISTANCE
-           ('m',     (  1e+00,       'm','distance','meter')), # meter
-           ('A',     (  1e-10,       'm','distance','angstrom')), # Angstrom
-           ('AU',    (constants.au,    constants.au_units,'distance','astronomical unit')), # astronomical unit
-           ('pc',    (constants.pc,    constants.pc_units,'distance','parsec')), # parsec
-           ('ly',    (constants.ly,    constants.ly_units,'distance','light year')), # light year
-           ('bs',    ( 5e-9,         'm','distance','beard second')),
-           ('Rsol',  (constants.Rsol,  constants.Rsol_units,'distance','Solar radius')), # Solar radius
-           ('Rearth',(constants.Rearth,constants.Rearth_units,'distance','Earth radius')), # Earth radius
-           ('ft',    (0.3048,        'm','distance','foot (international)')), # foot (international)
-           ('in',    (0.0254,        'm','distance','inch (international)')), # inch (international)
-           ('mi',    (1609.344,      'm','distance','mile (international)')), # mile (international)
-           ('a0',    (constants.a0,  constants.a0_units,'distance','Bohr radius')), # Bohr radius
-           ('ell',   (1.143,         'm','distance','ell')), # ell
-           ('yd',    (0.9144,        'm','distance','yard (international)')), # yard (international)
-           ('potrzebie',(0.002263348517438173216473,'m','distance','potrzebie')),
-           ('smoot', (1.7018,        'm','distance','smooth')),
-           ('furlong',(201.168,      'm','distance','furlong')),
+           ('m',     (  1e+00,       'm','length','meter')), # meter
+           ('A',     (  1e-10,       'm','length','angstrom')), # Angstrom
+           ('AU',    (constants.au,    constants.au_units,'length','astronomical unit')), # astronomical unit
+           ('pc',    (constants.pc,    constants.pc_units,'length','parsec')), # parsec
+           ('ly',    (constants.ly,    constants.ly_units,'length','light year')), # light year
+           ('bs',    ( 5e-9,         'm','length','beard second')),
+           ('Rsol',  (constants.Rsol,  constants.Rsol_units,'length','Solar radius')), # Solar radius
+           ('Rearth',(constants.Rearth,constants.Rearth_units,'length','Earth radius')), # Earth radius
+           ('Rjup',  (constants.Rjup,constants.Rjup_units,'length','Jupiter radius')), # Jupiter radius
+           ('ft',    (0.3048,        'm','length','foot (international)')), # foot (international)
+           ('in',    (0.0254,        'm','length','inch (international)')), # inch (international)
+           ('mi',    (1609.344,      'm','length','mile (international)')), # mile (international)
+           ('a0',    (constants.a0,  constants.a0_units,'length','Bohr radius')), # Bohr radius
+           ('ell',   (1.143,         'm','length','ell')), # ell
+           ('yd',    (0.9144,        'm','length','yard (international)')), # yard (international)
+           ('potrzebie',(0.002263348517438173216473,'m','length','potrzebie')),
+           ('smoot', (1.7018,        'm','length','smooth')),
+           ('furlong',(201.168,      'm','length','furlong')),
+# VELOCITY
+           ('mph',   (0.44704,       'm s-1','velocity','miles per hour')),
 # MASS
            ('g',     (  1e-03,       'kg','mass','gram')), # gram
            ('amu',   (1.66053892173e-27,'kg','mass','atomic mass')), # atomic mass unit (wikipedia)
@@ -2541,16 +3024,16 @@ _factors = collections.OrderedDict([
            ('Cel',    (Celcius,      'K','temperature','Celcius')), # Celcius
            ('Tsol',   (constants.Tsol,constants.Tsol_units,'temperature','Solar temperature')), # solar temperature
 # ENERGY & POWER
-           ('J',     (  1e+00,       'kg m2 s-2','energy/power','Joule')), # Joule
-           ('W',     (  1e+00,       'kg m2 s-3','energy/power','Watt')), # Watt
-           ('erg',   (  1e-07,       'kg m2 s-2','energy/power','ergon')), # ergon
-           ('foe',   (  1e44,        'kg m2 s-2','energy/power','(ten to the) fifty one ergs')),
-           ('eV',    (1.60217646e-19,'kg m2 s-2','energy/power','electron volt')), # electron volt
-           ('cal',   (4.1868,        'kg m2 s-2','energy/power','small calorie (international table)')),# calorie (International table)
-           ('Cal',   (4186.8,        'kg m2 s-2','energy/power','large calorie (international table)')),# calorie (International table)
+           ('J',     (  1e+00,       'kg m2 s-2','energy','Joule')), # Joule
+           ('W',     (  1e+00,       'kg m2 s-3','power','Watt')), # Watt
+           ('erg',   (  1e-07,       'kg m2 s-2','energy','ergon')), # ergon
+           ('foe',   (  1e44,        'kg m2 s-2','energy','(ten to the) fifty one ergs')),
+           ('eV',    (1.60217646e-19,'kg m2 s-2','energy','electron volt')), # electron volt
+           ('cal',   (4.1868,        'kg m2 s-2','energy','small calorie (international table)')),# calorie (International table)
+           ('Cal',   (4186.8,        'kg m2 s-2','energy','large calorie (international table)')),# calorie (International table)
            ('Lsol',  (constants.Lsol, constants.Lsol_units,'energy/power','Solar luminosity')), # solar luminosity
-           ('hp',    (745.699872,    'kg m2 s-3','energy/power','Horsepower')), # horsepower
-           ('dp',    (250.,          'kg m2 s-3','energy/power','Donkeypower')),
+           ('hp',    (745.699872,    'kg m2 s-3','power','Horsepower')), # horsepower
+           ('dp',    (250.,          'kg m2 s-3','power','Donkeypower')),
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # PRESSURE
@@ -2652,7 +3135,7 @@ _aliases = [('micron','mum'),('au','AU'),
             ('celcius','C'),('fahrenheit','F'),('hr','h'),
             ('galactic','gal'),('equatorial','equ'),('ecliptic','ecl'),
             ('Vegamag','vegamag'),('mile','mi'),
-            ('oz','ounce'),('sun','sol'),
+            ('oz','ounce'),('sun','sol'),('_sun','sol'),('_sol','sol'),
             ('solMass','Msol'),('solLum','Lsol'),
             ('pk','hp'),('mph','mi/h')
             ]

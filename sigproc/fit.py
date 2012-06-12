@@ -39,25 +39,25 @@ Fit the model to the data:
 Print the results:
 
 >>> print mymodel.param2str()
-         p = 1009.43 +/- 15.36 
-        t0 = 2455416.86 +/- 12.11 
+         p = 1012.26 +/- 16.57 
+        t0 = 2455423.65 +/- 11.27 
          e = 0.16 +/- 0.01 
-     omega = 1.68 +/- 0.09 
-         k = 6.03 +/- 0.04 
-        v0 = 32.20 +/- 0.09 
+     omega = 1.72 +/- 0.08 
+         k = 6.06 +/- 0.04 
+        v0 = 32.23 +/- 0.09
 
 The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
 
 >>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
->>> print fit.confidence2string(ci, accuracy=4)
-p 
-              25.0 %         65.0 %          95.0 % 
-        - 1004.5324       995.3298         979.921 
-        + 1014.5141      1025.1068       1046.7599 
-e 
-              25.0 %         65.0 %          95.0 % 
-        -    0.1549         0.1488          0.1382 
-        +    0.1613         0.1678          0.1804 
+>>> print confidence2string(ci, accuracy=4)
+p                   
+                 25.00 %               65.00 %               95.00 %
+ -           1006.9878              997.1355              980.7742  
+ +           1017.7479             1029.2554             1053.0851  
+e                   
+                 25.00 %               65.00 %               95.00 %
+ -              0.1603                0.1542                0.1433  
+ +              0.1667                0.1731                0.1852
 
 Now plot the resulting rv curve over the original curve:
 
@@ -92,28 +92,42 @@ Read in the data, and remove the outliers:
 >>> keep = RV<-30.
 >>> times,RV = times[keep],RV[keep]
 
-Find the best frequency using the Kepler periodogram, fit an orbit with that
-frequency and optimize. In the latter step, we also retrieve the errors on the
-parameters, and print the results to the screen:
+Find the best frequency using the Kepler periodogram, and fit an orbit with that
+frequency using the linear fitting routine.
 
 >>> freqs,ampls = pergrams.kepler(times,RV,fn=0.2)
 >>> freq = freqs[np.argmax(ampls)]
->>> pars1 = kepler(times, RV, freq)
->>> pars2,e_pars2,gain = optimize(times,RV,pars1,'kepler')
->>> print pl.mlab.rec2txt(pars1,precision=6)
-           P               T0          e      omega           K        gamma
-   11.581314   2451060.751789   0.190000   1.006924   11.915330   -59.178393
->>> print pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
-        gamma           P               T0          e      omega           K    e_gamma        e_P       e_T0        e_e    e_omega        e_K
-   -59.181942   11.581472   2451060.760523   0.194192   1.015276   11.925424   0.503331   0.004101   0.573320   0.060920   0.314982   0.788034
+>>> pars1 = kepler(times, RV, freq, output_type='new')
+>>> print pars1 
+[11.581314028141733, 2451060.7517886101, 0.19000000000000003, 1.0069244281466982, 11.915330492005735, -59.178393186003241]
+
+Now we want to improve this fit using the nonlinear optimizers, deriving errors
+on the parameters on the fly (B{warning: these errors are not necessarily realistic!}).
+First, we setup the model:
+
+>>> mymodel = funclib.kepler_orbit(type='single')
+>>> mymodel.setup_parameters(pars1)
+>>> result = minimize(times,RV,mymodel)
+>>> pars2,e_pars2 = result.model.get_parameters()
+>>> print pars2
+[  1.15815058e+01   2.45106077e+06   1.94720600e-01   1.02204827e+00
+   1.19264204e+01  -5.91827773e+01]
+>>> print mymodel.param2str(accuracy=6)
+         p = 11.581506 +/- 0.004104 
+        t0 = 2451060.771681 +/- 0.583864 
+         e = 0.194721 +/- 0.060980 
+     omega = 1.022048 +/- 0.320605 
+         k = 11.926420 +/- 0.786787 
+        v0 = -59.182777 +/- 0.503345
 
 Evaluate the orbital fits, and make phasediagrams of the fits and the data
 
->>> myorbit1 = evaluate.kepler(times,pars1)
->>> myorbit2 = evaluate.kepler(times,pars2)
->>> phases,phased = evaluate.phasediagram(times,RV,1/pars1['P'])
->>> phases1,phased1 = evaluate.phasediagram(times,myorbit1,1/pars1['P'])
->>> phases2,phased2 = evaluate.phasediagram(times,myorbit2,1/pars1['P'])
+>>> myorbit1 = mymodel.evaluate(times,pars1)
+>>> myorbit2 = mymodel.evaluate(times,pars2)
+>>> period = result.model.parameters['p'].value
+>>> phases,phased = evaluate.phasediagram(times,RV,1/period)
+>>> phases1,phased1 = evaluate.phasediagram(times,myorbit1,1/period)
+>>> phases2,phased2 = evaluate.phasediagram(times,myorbit2,1/period)
 
 Now plot everything:
 
@@ -153,10 +167,11 @@ Setup the two gaussian functions for the fitting process:
 Create the model by summing up the gaussians. As we just want to sum the two gaussian, we do not need
 to specify an expression for combining the two functions:
 
->>> mymodel = fit.Model(functions=[gauss1, gauss2])
+>>> mymodel = Model(functions=[gauss1, gauss2])
 
 Create some data with noise on it  
 
+>>> np.random.seed(1111)
 >>> x = np.linspace(0.5,1.5, num=1000)
 >>> y = mymodel.evaluate(x)
 >>> noise = np.random.normal(0.0, 0.015, size=len(x))
@@ -171,21 +186,21 @@ Change the starting values for the fit parameters:
 >>> gauss2.setup_parameters(values=pars, vary=vary)
 
 Fit the model to the data
->>> result = fit.minimize(x,y, mymodel)
+>>> result = minimize(x,y, mymodel)
 
 Print the resulting values for the parameters. The errors are very small as the data only has some 
 small normal distributed noise added to it:
 
->>> print gauss1.param2str()
-         a = -0.75 +/- 0.00 
-        mu = 1.00 +/- 0.00 
-     sigma = 0.10 +/- 0.00 
-         c = 1.00 +/- 0.00 
->>> print gauss2.param2str()
-         a = 0.22 +/- 0.00 
-        mu = 1.00 +/- 0.00 
-     sigma = 0.01 +/- 0.00 
-         c = 0.00 +/- 0.00 
+>>> print gauss1.param2str(accuracy=6)
+         a = -0.750354 +/- 0.001802 
+        mu = 0.999949 +/- 0.000207 
+     sigma = 0.099597 +/- 0.000267 
+         c = 0.999990 +/- 0.000677
+>>> print gauss2.param2str(accuracy=6)
+         a = 0.216054 +/- 0.004485 
+        mu = 1.000047 +/- 0.000226 
+     sigma = 0.009815 +/- 0.000250 
+         c = 0.000000 +/- 0.000000
          
 Now plot the results:
 
@@ -1057,8 +1072,8 @@ class Function(object):
         If no parameter object is given then the parameter object belonging to the function
         is used.
         
-        >>> evaluate(x, parameters)
-        >>> evaluate(x)
+        >>> #func.evaluate(x, parameters)
+        >>> #func.evaluate(x)
         
         @param x: the independant data for which to evaluate the function
         @type x: numpy array
@@ -1076,9 +1091,13 @@ class Function(object):
             
         if len(args) == 1:
             #-- Use the provided parameters
-            pars = []
-            for name in self.par_names:
-                pars.append(args[0][name].value)
+            #-- if provided as a ParameterObject
+            if isinstance(args[0],dict):
+                pars = []
+                for name in self.par_names:
+                    pars.append(args[0][name].value)
+            else:
+                pars = args[0]
                 
             return self.function(pars,x)
             
@@ -1130,9 +1149,9 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in parameter.keys():
+        for key in vars(parameter).keys():
             if key in kwargs:
-                parameter[key] = kwargs[key]
+                vars(parameter)[key] = kwargs[key]
     
     def get_parameters(self, full_output=False):
         """
@@ -1252,8 +1271,8 @@ class Model(object):
         If no parameter object is given then the parameter object belonging to the model
         is used.
         
-        >>> evaluate(x, parameters)
-        >>> evaluate(x)
+        >>> #evaluate(x, parameters)
+        >>> #evaluate(x)
         
         @param x: the independant values for which to evaluate the model.
         @type x: array
@@ -1458,7 +1477,8 @@ class Minimizer(lmfit.Minimizer):
     
     #{ Error determination
     
-    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], method='F-test', output='error', **kwargs):
+    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200,\
+             prob_func=None, method='F-test', output='error', **kwargs):
         """
         Returns the confidence intervalls of the given parameters. 
         Two different methods can be used, Monte Carlo simulation and F-test method. 
@@ -1481,7 +1501,7 @@ class Minimizer(lmfit.Minimizer):
         @param output: Output type, error or ci (confidence intervall)
         """
         
-        # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
+        # if only 1 confidence interval is asked, the output can be tupple instead of dict.
         short_output = (type(p_names)==str and type(sigmas)==float) and True or False
         if type(p_names)==str: p_names = [p_names]
         if type(sigmas)==float: sigmas = [sigmas]
@@ -1493,10 +1513,12 @@ class Minimizer(lmfit.Minimizer):
             out = out[p_names[0]][sigmas[0]]
         return out
         
-    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None):
+    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. The confidence interval is calculated
         using the F-test method from the I{estimate_error} method.
+        
+        Extra kwargs are passed to C{confourf} or C{contour}.
         
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
@@ -1511,13 +1533,12 @@ class Minimizer(lmfit.Minimizer):
         x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
         grid *= 100.
         
-        pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
         if filled:
-            pl.contourf(x,y,grid,np.linspace(0,100,25),cmap=pl.cm.jet)
+            pl.contourf(x,y,grid,np.linspace(0,100,25),**kwargs)
             pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
         else:
-            cs = pl.contour(x,y,grid,np.linspace(0,100,11),cmap=pl.cm.jet)
-            cs = pl.contour(x,y,grid,[20,40,60,80,95],cmap=pl.cm.jet)
+            cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
+            cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
         pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
         pl.xlabel(xname)
@@ -1607,7 +1628,8 @@ def minimize(x, y, model, err=None, weights=None,
     
     fitter = Minimizer(x, y, model, err=err, weights=weights,
              engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-    
+    if fitter.message:
+        logger.warning(fitter.message)
     return fitter
 
 def grid_minimize(x, y, model, err=None, weights=None,
@@ -1686,25 +1708,35 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             template = template.format(name=name,fmt=fmt,bmin=par.min,bmax=par.max,\
                                        vary=(par.vary and '(fit)' or '(fixed)'))
         out += template.format(par.value, stderr)
-    return out
+    return out.rstrip()
 
 def confidence2string(ci, accuracy=2):
     #Converts confidence intervall dictionary to string
     out=""
     for par in ci.keys():
-        out += "%s \n\t "%(par)
+        out += "{0:20s}\n  ".format(par)
         sigmas = ci[par].keys()
         sigmas.sort()
         for sigma in sigmas:
-            out += "%9s %% \t"%(np.round(sigma*100, decimals=1))
-        out += '\n\t-'
+            out += '{0:20.2f} %'.format(np.round(sigma*100, decimals=1))
+        out += '\n -'
         for sigma in sigmas:
-            out += "%10s \t"%(np.round(ci[par][sigma][0], decimals=accuracy))
-        out += '\n\t+'
+            #-- when something went wrong in the fitting process, we have a None:
+            if ci[par][sigma][0] is None:
+                val = ci[par][sigma][0]
+            else:
+                val = np.round(ci[par][sigma][0], decimals=accuracy)
+            out += "{0:20}  ".format(val)
+        out += '\n +'
         for sigma in sigmas:
-            out += "%10s \t"%(np.round(ci[par][sigma][1], decimals=accuracy))   
+            #-- when something went wrong in the fitting process, we have a None:
+            if ci[par][sigma][1] is None:
+                val = ci[par][sigma][1]
+            else:
+                val = np.round(ci[par][sigma][1], decimals=accuracy)
+            out += "{0:20}  ".format(val)
         out += '\n'
-    return out        
+    return out.rstrip()        
 
 #}
 

@@ -808,6 +808,8 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @return: (wave,) flux, absolute luminosity
     @rtype: (ndarray,)ndarray,float
     """
+    if photbands is None:
+        raise ValueError('no photometric passbands given')
     ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
     zrange = kwargs.pop('zrange',(-np.inf,np.inf))
     clear_memory = kwargs.pop('clear_memory',True)
