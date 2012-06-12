@@ -1,8 +1,14 @@
 """
-Fit various functions to timeseries.
+Fit various functions to timeseries. Remember to import the nessessary functions
+from ivs.sigproc.fit, fx: minimize().
 
 Section 1. Radial velocity data
 ===============================
+Take into account that the minimize function is an optimizer that finds local minima.
+If your starting values are to far off, it might find a local minima, and not the 
+global minima that you intended to find. Especially the period is very sensitive to
+this. An example to fit a radial velocitie curve when no initial parameters are known
+is given in section 1.2. 
 
 1.1 BD+29.3070
 --------------
@@ -15,6 +21,7 @@ Necessary imports:
 >>> from ivs.io.ascii import read2array
 >>> from ivs.sigproc import funclib
 >>> import numpy as np
+>>> import pylab as pl
 
 Read in the data:
 
@@ -25,14 +32,21 @@ Import the function we want to fit to the data from the function library:
 
 >>> mymodel = funclib.kepler_orbit(type='single')
 
-Setup the starting values of the parameters and the boundaries:
+This function will fit a standard Kepler orbit to the data with as parameters
+the orbital period, the time of periastron passage, the eccentricity, the angle
+of periastron, the amplitude, and the sytemic velocity. 
+
+Setup the starting values of the parameters and the boundaries (same order as 
+metioned above). And select which parameters we want to vary in this fit (all).
+The boundaries are given in pairs (min, max) for each parameter. If you don't 
+want to imply a boundary, just provide None:
 
 >>> pars = [1000, dates[0], 0.0, 0.0, (max(rv)-min(rv))/2, np.average(rv)]
 >>> bounds = [(pars[0]/2, pars[0]*1.5), (data[0][0]-pars[0]/2,data[0][0]+pars[0]/2), (0.0,0.5), (0,2*np.pi), (pars[4]/4,pars[4]*2), (min(rv),max(rv))]
 >>> vary = [True, True, True, True, True, True]
 >>> mymodel.setup_parameters(values=pars, bounds=bounds, vary=vary)
 
-Fit the model to the data:
+Fit the model to the data using the minimizer:
 
 >>> result = minimize(dates, rv, mymodel, weights=1/err)
 
@@ -46,7 +60,22 @@ Print the results:
          k = 6.06 +/- 0.04 
         v0 = 32.23 +/- 0.09
 
-The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity of the orbit:
+To get the parameters back from the model in a more workable format, the L{Function.get_parameters}
+and L{ Model.get_parameters} functions are provided. They return the parameter values and the errors
+(if applicable based on the fitting engine) as numpy arrays:
+
+>>> pars, err = mymodel.get_parameters()
+>>> print pars
+[  1.01226158e+03   2.45542365e+06   1.63513487e-01   1.72158919e+00
+   6.05858701e+00   3.22263512e+01]
+>>> print err
+[  1.65673920e+01   1.12683539e+01   9.70346979e-03   8.49954168e-02
+   4.31840121e-02   8.50301687e-02]
+
+The minimizer already returned errors on the parameters, based on the Levenberg-Marquardt algorithm
+of scipy. But we can get more robust errors by using the L{Minimizer.estimate_error} method of the
+minimizer wich uses an F-test to calculate confidence intervals, fx on the period and eccentricity 
+of the orbit:
 
 >>> ci = result.estimate_error(p_names=['p', 'e'], sigmas=[0.25,0.65,0.95])
 >>> print confidence2string(ci, accuracy=4)
@@ -65,6 +94,9 @@ Now plot the resulting rv curve over the original curve:
 >>> result.plot_results()
 
 ]include figure]]ivs_sigproc_lmfit_BD+29.3070_1.png]
+
+To produce your own plot, you can use the L{Function.evaluate} or L{Model.evaluate} functions,
+they evaluate the model for the given data.
 
 We can use the L{Minimizer.plot_confidence_interval} method to plot the confidence intervals of two 
 parameters, and show the correlation between them, fx between the period and T0:
@@ -725,8 +757,6 @@ def gauss(x,y,threshold=0.1,constant=False,full_output=False,
     @type x: numpy array
     @param y: y axis data
     @type y: numpy array
-    @param nl: flag for performing a non linear least squares fit
-    @type nl: boolean
     @param constant: fit also a constant
     @type constant: boolean
     @rtype: tuple
@@ -1153,19 +1183,27 @@ class Function(object):
             if key in kwargs:
                 parameter[key] = kwargs[key]
     
-    def get_parameters(self, full_output=False):
+    def get_parameters(self, parameters=None, full_output=False):
         """
-        Returns the parameter values together with the errors if they exist. If No fitting
+        Returns the parameter values together with the errors if they exist. If no fitting
         has been done, or the errors could not be calculated, None is returned for the error.
         
-        @param full_output: When True, also vary, the boundaries and expr are returned
+        @param parameters: A list of which parameters the values should be returned. If None,
+        the values of all parameters are returned
+        @type parameters: array
+        @param full_output: When True, also vary, the boundaries and expression are returned
         @type full_output: bool
         
         @return: the parameter values and there errors value, err, [vary, min, max, expr]
         @rtype: numpy arrays
         """
+        
+        if parameters == None:
+            parameters  = self.par_names
+        
         val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name, par in self.parameters.items():
+        for name in parameters:
+            par = self.parameters[name]
             val.append(par.value)
             err.append(par.stderr)
             vary.append(par.vary)
@@ -1750,16 +1788,6 @@ def confidence2string(ci, accuracy=2):
     return out.rstrip()        
 
 #}
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__=="__main__":
