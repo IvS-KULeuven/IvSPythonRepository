@@ -847,6 +847,8 @@ def nconvert(_froms,_tos,*args,**kwargs):
     Convert a list/array/tuple of values with different units to other units.
     
     This silently catches some exceptions and replaces the value with nan!
+    
+    @rtype: array
     """
     if len(args)==1:
         ret_value = np.zeros((len(args[0])))
@@ -1014,71 +1016,11 @@ def get_convention():
     
     >>> get_convention()
     ('SI', 'standard')
+    
+    @rtype: str,str
+    @return: convention, values
     """
     return constants._current_convention,constants._current_values
-
-def is_basic_unit(unit,type):
-    """
-    Check if a unit is a basic unit, i.e. of type mass, length...
-    
-    >>> is_basic_unit('K','temperature')
-    True
-    >>> is_basic_unit('m','length')
-    True
-    >>> is_basic_unit('cm','length')
-    True
-    >>> is_basic_unit('km','length') # not a basic unit in any type of convention
-    False
-    
-    @parameter unit: unit to check
-    @type unit: str
-    @parameter type: type to check
-    @type type: str
-    @rtype: bool
-    """
-    for conv in _conventions:
-        if unit==_conventions[conv][type] or (unit[:-1]==_conventions[conv][type] and unit[-1]=='1'):
-            return True
-    else:
-        return False
-
-def is_type(unit,type):
-    """
-    Check if a unit is of a certain type, i.e. mass, length...
-    
-    >>> is_type('K','temperature')
-    True
-    >>> is_type('m','length')
-    True
-    >>> is_type('cm','length')
-    True
-    >>> is_type('ly','length')
-    True
-    >>> is_type('ly','time')
-    False
-    >>> is_type('W','power')
-    True
-    >>> is_type('kg m2/s3','power')
-    True
-    >>> is_type('kg/s2/m','pressure')
-    True
-    >>> is_type('W','force')
-    False
-    
-    @parameter unit: unit to check
-    @type unit: str
-    @parameter type: type to check
-    @type type: str
-    @rtype: bool
-    """
-    #-- solve aliases and breakdown in basic SI units
-    unit = solve_aliases(unit)
-    comps = breakdown(unit)[1]
-    for fac in _factors:
-        this_unit = change_convention(constants._current_convention,_factors[fac][1])
-        if comps==this_unit and type in _factors[fac][2].split('/'):
-            return True
-    return False
             
 
 def get_constant(constant_name,units='SI',value='standard'):
@@ -1133,56 +1075,11 @@ def get_constants(units='SI',values='standard'):
     
     
     
-def round_arbitrary(x, base=5):
-    """
-    Round to an arbitrary base.
-    
-    Example usage:
-    
-    >>> round_arbitrary(1.24,0.25)
-    1.25
-    >>> round_arbitrary(1.37,0.75)
-    1.5
-    
-    
-    @param x: number to round
-    @type x: float
-    @param base: base to round to
-    @type base: integer or float
-    @return: rounded number
-    @rtype: float
-    """
-    return base * round(float(x)/base)
-
-def unit2texlabel(unit):
-    """
-    Convert a unit to a nicely formatted TeX label.
-    
-    For fluxes, also the Flambda, lambda Flambda, or Fnu, or nuFnu is returned.
-    
-    @rtype: str
-    """
-    translate = {'kg1 m-1 s-3' :r'$F_\lambda$ [{0}]'.format(unit),
-                 'cy-1 kg1 s-2':r'$F_\nu$ [{0}]'.format(unit),
-                 'kg1 s-3':r'$\lambda F_\lambda$ [{0}]'.format(unit),
-                }
-    
-    unit = solve_aliases(unit)
-    fac,base = breakdown(unit)
-    
-    #-- translate
-    if base in translate:
-        label = translate[base]
-    else:
-        label = unit
-    #-- make TeX
-    label = label.replace('A','$\AA$')
-    label = label.replace('mu','$\mu$')
-    return label        
-    
 
 #}
-#{ Conversions basics
+#{ Conversions basics and helper functions
+
+
 def solve_aliases(unit):
     """
     Resolve simple aliases in a unit's name.
@@ -1225,7 +1122,7 @@ def solve_aliases(unit):
 
 def components(unit):
     """
-    Decompose a unit into: a factor, SI base unit, power.
+    Decompose a unit into: factor, SI base units, power.
     
     You probably want to call L{solve_aliases} first.
     
@@ -1363,7 +1260,7 @@ def breakdown(unit):
 
 def compress(unit,ignore_factor=False):
     """
-    Compress basic units to more human-readable types.
+    Compress basic units to more human-readable type.
     
     If you are only interested in a shorter form of the units, regardless
     of the values, you need to set C{ignore_factor=True}.
@@ -1460,10 +1357,132 @@ def split_units_powers(unit):
     return units,powers
     
 
+def is_basic_unit(unit,type):
+    """
+    Check if a unit is represents one of the basic quantities (length, mass...)
+    
+    >>> is_basic_unit('K','temperature')
+    True
+    >>> is_basic_unit('m','length')
+    True
+    >>> is_basic_unit('cm','length')
+    True
+    >>> is_basic_unit('km','length') # not a basic unit in any type of convention
+    False
+    
+    @parameter unit: unit to check
+    @type unit: str
+    @parameter type: type to check
+    @type type: str
+    @rtype: bool
+    """
+    for conv in _conventions:
+        if unit==_conventions[conv][type] or (unit[:-1]==_conventions[conv][type] and unit[-1]=='1'):
+            return True
+    else:
+        return False
+
+def is_type(unit,type):
+    """
+    Check if a unit is of a certain type (mass, length, force...)
+    
+    >>> is_type('K','temperature')
+    True
+    >>> is_type('m','length')
+    True
+    >>> is_type('cm','length')
+    True
+    >>> is_type('ly','length')
+    True
+    >>> is_type('ly','time')
+    False
+    >>> is_type('W','power')
+    True
+    >>> is_type('kg m2/s3','power')
+    True
+    >>> is_type('kg/s2/m','pressure')
+    True
+    >>> is_type('W','force')
+    False
+    
+    @parameter unit: unit to check
+    @type unit: str
+    @parameter type: type to check
+    @type type: str
+    @rtype: bool
+    """
+    #-- solve aliases and breakdown in basic SI units
+    unit = solve_aliases(unit)
+    comps = breakdown(unit)[1]
+    for fac in _factors:
+        this_unit = change_convention(constants._current_convention,_factors[fac][1])
+        if comps==this_unit and type in _factors[fac][2].split('/'):
+            return True
+    return False
+
+
+def round_arbitrary(x, base=5):
+    """
+    Round to an arbitrary base.
+    
+    Example usage:
+    
+    >>> round_arbitrary(1.24,0.25)
+    1.25
+    >>> round_arbitrary(1.37,0.75)
+    1.5
+    
+    
+    @param x: number to round
+    @type x: float
+    @param base: base to round to
+    @type base: integer or float
+    @return: rounded number
+    @rtype: float
+    """
+    return base * round(float(x)/base)
+
+def unit2texlabel(unit):
+    """
+    Convert a unit string to a nicely formatted TeX label.
+    
+    For fluxes, also the Flambda, lambda Flambda, or Fnu, or nuFnu is returned.
+    
+    @rtype: str
+    """
+    
+    unit = solve_aliases(unit)
+    fac,base = breakdown(unit)
+    names,powers = split_units_powers(unit)
+    powers = [(power!='1' and power or ' ') for power in powers]
+    powers = [(power[0]!=' ' and '$^{{{0}}}$'.format(power) or power) for power in powers]
+    unit = ' '.join([(name+power) for name,power in zip(names,powers)])
+    
+    translate = {'kg1 m-1 s-3' :r'$F_\lambda$ [{0}]'.format(unit),
+                 'cy-1 kg1 s-2':r'$F_\nu$ [{0}]'.format(unit),
+                 'kg1 s-3':r'$\lambda F_\lambda$ [{0}]'.format(unit),
+                }
+    
+    #-- translate
+    if base in translate:
+        label = translate[base]
+    else:
+        label = unit
+    #-- make TeX
+    label = label.replace('A','$\AA$')
+    label = label.replace('mu','$\mu$')
+    label = label.replace('sol','$_\odot$')
+    return label        
+    
+
+
+
 
 def get_help():
     """
-    Return a string with a list and explanation of all defined units
+    Return a string with a list and explanation of all defined units.
+    
+    @rtype: str
     """
     #try:
     #    set_exchange_rates()
@@ -1817,12 +1836,27 @@ def times_sr(arg,**kwargs):
     return Q
 
 def per_cy(arg,**kwargs):
+    """
+    Switch from radians/s to cycle/s
+    
+    @rtype: float
+    """
     return arg / (2*np.pi)
 
 def times_cy(arg,**kwargs):
+    """
+    Switch from cycle/s to radians/s
+    
+    @rtype: float
+    """
     return 2*np.pi*arg
 
 def period2freq(arg,**kwargs):
+    """
+    Convert period to frequency and back.
+    
+    @rtype: float
+    """
     return 1./arg
 
     
@@ -1918,7 +1952,9 @@ def derive_luminosity(radius,temperature,units=None):
     radius = Unit(radius,unit='length')
     temperature = Unit(temperature,unit='temperature')
     sigma = Unit('sigma')
+    
     lumi = 4*np.pi*sigma*radius**2*temperature**4
+    
     return lumi.convert(units)
     
 
@@ -1950,8 +1986,9 @@ def derive_radius(luminosity,temperature, units='m'):
     luminosity = Unit(luminosity,unit='power')
     temperature = Unit(temperature,unit='temperature')
     sigma = Unit('sigma')
-    #-- calculate radius in SI units
+    
     R = np.sqrt(luminosity / (temperature**4)/(4*np.pi*sigma))
+    
     return R.convert(units)    
 
 def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
