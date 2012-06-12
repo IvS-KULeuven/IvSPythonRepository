@@ -102,6 +102,7 @@ from ivs.units import conversions
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
 from ivs.sed import filters
+from ivs import config
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler())
@@ -371,7 +372,7 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
 
 #{ Interface to specific catalogs
 
-def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,**kwargs):
+def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low',**kwargs):
     """
     Download IUE spectra.
     
@@ -435,9 +436,14 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,**kwargs):
         deldirs = []
         outfile = None
         for mem,name in zip(*files):
-            #-- first check if it is a spectrum.
+            #-- first check if it is a spectrum, but skip low or high res if needed.
             myname = name.lower()
-            if 'lwp' in name or 'swp' in name or 'lwr' in name:
+            skip = False
+            if 'lo' in select and not 'lo' in os.path.basename(myname):
+                skip = True
+            if 'hi' in select and not 'hi' in os.path.basename(myname):
+                skip = true
+            if ('lwp' in name or 'swp' in name or 'lwr' in name) and not skip:
                 #-- first unpack this file
                 tarf.extract(mem,path=direc)
                 #-- move it to the direc directory
@@ -518,7 +524,6 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
         results,units,comms = search(source,**kwargs)
         if results is None: continue
         master = vizier2phot(source,results,units,master,extra_fields=extra_fields)
-    
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
