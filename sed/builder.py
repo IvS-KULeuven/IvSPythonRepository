@@ -1147,7 +1147,7 @@ class SED(object):
     #{ Fitting routines
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=None,radiusrange=None,masses=None,
-                          threads='safe',iterations=3,increase=1,speed=1,res=1,
+                          threads='safe',increase=1,speed=1,res=1,
                           points=None,compare=True,df=5,CI_limit=None,type='single',
                           primary_hottest=False, gr_diff=None,**kwargs):
         """
@@ -1300,6 +1300,147 @@ class SED(object):
             #for di,dprobi in zip(d,dprob):
             #    self.results['igrid_search']['grid']['scale']*d_min
     
+            
+    def _generate_ranges(self,teffrange=(None,None),loggrange=(None,None),ebvrange=(None,None),zrange=(None,None),distribution='uniform'):
+        #-- check whether a grid search has been done already
+        exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
+        #-- if any of the initial values is None and no grid search has been done previously, then do one now
+        if (not exist_previous) and (None in teffrange or None in loggrange or None in ebvrange or None in zrange):
+            self.igrid_search(points=100000)
+        #-- set the parameters that will be used to generate initial values when making use of the uniform distribution
+        parnames = ['teff','logg','ebv','z']
+        limits = {}
+        for parname in parnames:
+            par_range = locals()['{0}range'.format(parname)]
+            if distribution=='uniform':
+                value0 = (par_range[0] is None) and self.results['igrid_search']['CI'][parname+'L'] or par_range[0]
+                value1 = (par_range[1] is None) and self.results['igrid_search']['CI'][parname+'U'] or par_range[1]
+            elif distribution=='normal':
+                value0 = (par_range[0] is None) and self.results['igrid_search']['CI'][parname] or par_range[0]
+                value1 = (par_range[1] is None) and (self.results['igrid_search']['CI'][parname+'U'] - self.results['igrid_search']['CI'][parname+'L'])/6. or abs(par_range[1])
+            else:
+                raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
+            limits[parname+'range'] = [value0,value1]
+        return limits
+            
+  
+
+    def imc(self,teffrange=(None,None),loggrange=(None,None),ebvrange=(None,None),zrange=(None,None),distribution='uniform',mc_iter=100,fitmethod='fmin'):
+        output = zeros((mc_iter,6))
+        
+        limits = self._generate_ranges(teff_initrange,logg_initrange,ebv_initrange,z_initrange,distribution=distribution)
+        
+        #-- grid search on all include data: extract the best CHI2
+        include_grid = self.master['include']
+        meas = self.master['cmeas'][include_grid]
+        emeas = self.master['e_cmeas'][include_grid]
+        photbands = self.master['photband'][include_grid]
+        logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
+        
+        #-- initialize the initial value 'generator' and do a first to the the real data
+        #self._generate_randompars(teff_initrange=teff_initrange,logg_initrange=logg_initrange,ebv_initrange=ebv_initrange,z_initrange=z_initrange,distribution=distribution,reinitialize=True)
+        #teff_init,logg_init,ebv_init,z_init = self._generate_randompars(distribution=distribution)
+        #failed = 0        
+        
+        #====================== START PIETER's PART
+        ranges = self._generate_range(...)
+        include = self.master['include']
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],**ranges) 
+        
+        #====================== END PIETER's PART
+        
+        
+        while True:
+            try:
+                fittedpars = fit.iminimize2(teff_init,logg_init,ebv_init,z_init,fitmethod=fitmethod)
+                output[0,:] = np.array(fittedpars[:6])
+                break
+            except IndexError:
+                failed += 1
+                if failed == 5:
+                    logger.warning('Five failures in fitting original data! Check initial ranges!')
+                    break
+            
+        for i in xrange(1,mc_iter):
+            #p.update(1)
+            logger.debug('MC simulation step %d'%(i))
+            #-- randomly perturb according to oerr
+            newmeas = meas + random.normal(scale=emeas)
+            #-- randomly perturb initial values
+            teff_init,logg_init,ebv_init,z_init = self._generate_randompars(distribution=distribution)
+            #-- and do the fitting process
+            try:
+                fittedpars = fit.iminimize2(teff_init,logg_init,ebv_init,fitmethod=fitmethod)
+                output[i,:] = np.array(fittedpars[:6])
+            except IndexError:
+                failed += 1
+                continue
+        if failed:
+            logger.info("%d/%d MC simulations failed"%(failed,mc_iter))
+        
+        #-- and set model atmosphere to average values
+        if failed<mc_iter:
+            keep = output[:,4]>0
+            output = output[keep]
+        teffs,loggs,ebvs,zs,chisqs,scales = output[:,0],output[:,1],output[:,2],output[:,3],output[:,4],output[:,5]
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        self.mc_parameters['teff'] = teffs
+        self.mc_parameters['logg'] = loggs
+        self.mc_parameters['ebv'] = ebvs
+        self.mc_parameters['scale'] = scales
+        self.mc_parameters['theta'] = conversions.scale2angdiam(scales,0)[1]
+        self.mc_parameters['chisq'] = chisqs
+            
+        if set_pars and set_pars!='minimum':
+            self.parameters['teff'] = teffs[0]
+            self.parameters['logg'] = loggs[0]
+            self.parameters['ebv'] = ebvs[0]
+            self.parameters['scale'] = (scales[0],std(scales))
+            self.parameters['chisq'] = chisqs[0]
+            avteff = median(teffs)
+            avlogg = median(loggs)
+            avebv = median(ebvs)
+            teffrange = avteff-2000,avteff+2000
+            loggrange = avlogg-1.,avlogg+1
+            logger.info("Setting model atmosphere with teff=%d, logg=%.3f and E(B-V)=%.3f"%(avteff,avlogg,avebv))
+            self.set_model_atmosphere_manual(teff=avteff,logg=avlogg,ebv=avebv,teffrange=teffrange,loggrange=loggrange,grid=kwargs['grid'],odfnew=kwargs['odfnew'],metal=kwargs['metal'])
+        #-- and set additional mc parameters if possible
+        if set_pars and self.star.plx[0] is not None:
+            Rsun = constants.R_sun*constants.cm_
+            Lsun = constants.L_sun*constants.ergs_
+            # add random distances drawn from the distance distribution
+            # set the initial value of the distance to the most likely
+            # value.
+            a,b,ci1,ci2 = self.star.calculate_distance(plotit=False)
+            x = random.uniform(size=output.shape[0])
+            indices = searchsorted(a[2],x)
+            ds = a[0][indices]/constants.parsec_*constants.cm_
+            #ds[0] = a[0][searchsorted(a[2],0.5)]/constants.parsec_*constants.cm_
+            ds[0] = a[0][argmax(a[1])]/constants.parsec_*constants.cm_
+            #-- calculate radii
+            R = sqrt(scales)*ds/Rsun
+            #-- calculate absolute luminosity:
+            # ALERT: this does not take into account different teffs/loggs!
+            mwave,mflux = self.model['wave'],self.model['flux']
+            Lint = trapz(mflux,x=mwave)
+            Labs = Lint*4*pi/Lsun*(R*Rsun)**2
+            self.mc_parameters['dist'] = ds
+            self.mc_parameters['R'] = R+0.
+            self.mc_parameters['M'] = conversions.getMass(loggs,R)[0]
+            self.mc_parameters['Labs'] = Labs
+        return teffs,loggs,ebvs,scales,chisqs
+
+    
+    
     def iminimize(self,teff=None,logg=None,ebv=None,z=None,radius=None,masses=None,
                           df=5,CI_limit=None,type='single', **kwargs):
                               
@@ -1309,7 +1450,17 @@ class SED(object):
         photbands = self.master['photband'][include_grid]
         
         return fit.iminimize(meas,e_meas,photbands,teff=teff,logg=logg,ebv=ebv,z=z, rad=radius, masses=masses, type=type)#, engine='lbfgsb')
-    
+
+    def iminimize2(self,teff=None,logg=None,ebv=None,z=None,fitmethod='fmin', **kwargs):
+                              
+        include_grid = self.master['include']
+        meas = self.master['cmeas'][include_grid]
+        e_meas = self.master['e_cmeas'][include_grid]
+        photbands = self.master['photband'][include_grid]
+        
+        return fit.iminimize2(meas,e_meas,photbands,teff=teff,logg=logg,ebv=ebv,z=z,fitmethod=fitmethod,**kwargs)
+
+
     #}
     
     #{ Interfaces
