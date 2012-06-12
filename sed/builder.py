@@ -1144,6 +1144,71 @@ class SED(object):
     
     #}
     
+    def generate_ranges(self,type='single',start_from='igrid_search',distribution='uniform',**kwargs):
+        """
+        Generate sensible search range for each parameter.
+        """
+        limits = {}
+        exist_previous = (start_from in self.results and 'CI' in self.results[start_from])
+        #-- how many stellar components do we have? It has to be given when no
+        #   ranges are given. Otherwise, we can derive it from the ranges.
+        components = 1
+        if type is None:
+            components = max([(isinstance(kwargs[key][0],tuple) and len(kwargs[key]) or 1) for key in kwargs if (kwargs[key] is not None)])
+            type = (components==1) and 'single' or 'multiple-{0:d}'.format(components)
+        elif type=='binary':
+            components = 2
+        elif 'multiple' in type:
+            components = int(type.split('-')[-1])
+        #-- the field names are 'teff', 'logg' etc for the primary component, all
+        #   others have a postfix '-n' with n the number of the component
+        postfixes = [''] + ['-{0:d}'.format(i) for i in range(2,components+1)]
+        #-- run over all parnames, and generate the parameters ranges for each
+        #   component:
+        #   (1) if a previous parameter search is done and the user has not set
+        #       the parameters range, derive a sensible parameter range from the
+        #       previous results. 
+        #   (2) if no previous search is done, use infinite upper and lower bounds
+        #   (3) if ranges are given, use those. Cycle over them, and use the
+        #       strategy from (1) if no parameter ranges are given for a specific
+        #       component.
+        for par_range_name in kwargs:
+            #-- when "teffrange" is given, par_range will be the value of the
+            #   keyword "teffrange", and parname will be "teff".
+            parname = par_range_name.rstrip('range')
+            parrange = kwargs.get(par_range_name,None)
+            #-- the three cases described above:
+            if exist_previous and par_range is None:
+                parrange = [(self.results[start_from]['CI'][parname+postfix+'L'],\
+                              self.results[start_from]['CI'][parname+postfix+'U']) for postfix in postfixes]
+            elif parrange is None:
+                parrange = [(-np.inf,np.inf) for i in range(components)]
+            else:
+                if components>1:
+                    print parrange,postfixes
+                    parrange = [(iparrange is not None) and iparrange or \
+                              (exist_previous and (self.results[start_from]['CI'][parname+postfix+'L'],\
+                                                   self.results[start_from]['CI'][parname+postfix+'U'])\
+                                              or (-np.inf,np.inf))\
+                               for iparrange,postfix in zip(parrange,postfixes)]
+            #-- if there is only one component, make sure the range is a tuple of a tuple
+            if not isinstance(parrange[0],tuple):
+                parrange = (parrange,)
+            #-- now, the ranges are (lower,upper) for the uniform distribution,
+            #   and (mu,scale) for the normal distribution
+            if distribution=='normal':
+                parrange = [((i[1]-i[0])/2.,(i[1]-i[0])/6.) for i in parrange]
+            elif distribution!='uniform':
+                raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
+            #-- now we *don't* want a tuple if there is only one component:
+            if components==1:
+                limits[par_range_name] = parrange[0]
+            else:
+                limits[par_range_name] = parrange
+        #-- this returns the kwargs but with filled in limits, and confirms
+        #   the type if it was given, or gives the type when it needed to be derived
+        return limits,type
+    
     #{ Fitting routines
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=None,radiusrange=None,masses=None,
@@ -1310,6 +1375,59 @@ class SED(object):
         
         return fit.iminimize(meas,e_meas,photbands,teff=teff,logg=logg,ebv=ebv,z=z, rad=radius, masses=masses, type=type)#, engine='lbfgsb')
     
+    def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,\
+             start_from='imc',distribution='uniform',points=None,fitmethod='fmin'):
+        
+        limits,type = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
+                                      ebvrange=ebvrange,zrange=zrange,distribution=distribution,\
+                                      start_from='imc')
+        
+        #-- grid search on all include data: extract the best CHI2
+        include = self.master['include']
+        meas = self.master['cmeas'][include]
+        emeas = self.master['e_cmeas'][include]
+        photbands = self.master['photband'][include]
+        logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include])))
+        
+        #-- generate initial guesses
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],type=type,points=points,**limits)         
+        output = np.zeros((points,8))
+        for i,(teff,logg,ebv,z) in enumerate(zip(teffs,loggs,ebvs,zs)):
+            newmeas = meas# + np.random.normal(scale=emeas)
+            try:
+                fittedpars,warnflag = fit.iminimize2(newmeas,emeas,photbands,teff,logg,ebv,z,fitmethod=fitmethod)
+                output[i,1:] = fittedpars
+                output[i,0] = warnflag
+            except:
+                output[i,0] = 3
+            
+         
+        logger.info("{0}/{1} MC simulations failed (max func call)".format(sum(output[:,0]==1),points))
+        logger.info("{0}/{1} MC simulations failed (max iter)".format(sum(output[:,0]==2),points))
+        logger.info("{0}/{1} MC simulations failed (outside of grid)".format(sum(output[:,0]==3),points))
+        #-- remove nonsense results
+        keep = (output[:,0]==0) & (output[:,1]>0)
+        output = output[keep]
+        output = np.rec.fromarrays(output[:,1:-1].T,names=['teff','logg','ebv','z','chisq','scale'])
+        #-- derive confidence intervals and median values
+        #print np.median(output[:,1:],axis=0)
+        
+        self.results['imc'] = {}
+        self.results['imc']['CI'] = {}
+        self.results['imc']['grid'] = output
+        CI_limit = 0.95
+        for name in output.dtype.names:
+            sortarr = np.sort(output[name])
+            trimarr = scipy.stats.trimboth(sortarr,(1-CI_limit)/2.) # trim 2.5% of top and bottom, to arrive at 95% CI
+            self.results['imc']['CI'][name+'L'] = trimarr.min()
+            self.results['imc']['CI'][name] = np.median(output[name])
+            self.results['imc']['CI'][name+'U'] = trimarr.max()
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['imc']['CI'][name+'L'],
+                                                           self.results['imc']['CI'][name],
+                                                           self.results['imc']['CI'][name+'U']))
+        self.set_best_model(mtype='imc')
+
+    
     #}
     
     #{ Interfaces
@@ -1433,7 +1551,7 @@ class SED(object):
     
     #{ Plotting routines
     @standalone_figure
-    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95,d=None):
+    def plot_grid(self,x='teff',y='logg',ptype='CI_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
         """
         Plot grid as scatter plot
         
@@ -1469,9 +1587,9 @@ class SED(object):
         #-- it's possible that we still don't have a distance
         if d is not None:
             logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
-            rad = d*np.sqrt(self.results[mtype]['grid']['scale'])
-            rad = conversions.convert('pc','Rsol',rad) # in Rsol
-            Labs= np.log10(self.results[mtype]['grid']['Labs']*rad**2) # in [Lsol]
+            rad  = d*np.sqrt(self.results[mtype]['grid']['scale'])
+            rad  = conversions.convert('pc','Rsol',rad) # in Rsol
+            Labs = np.log10(self.results[mtype]['grid']['Labs']*rad**2) # in [Lsol]
             mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
                                            (rad,'Rsol'),unit='Msol')
         #-- compute angular diameter
@@ -1482,15 +1600,21 @@ class SED(object):
         else:
             region = self.results[mtype]['grid']['CI_red']<np.inf
         #-- get the colors and the color scale
-        if ptype in self.results[mtype]['grid'].dtype.names:
+        if d is not None and ptype=='Labs':
+            colors = locals()[ptype][region]
+        elif ptype in self.results[mtype]['grid'].dtype.names:
             colors = self.results[mtype]['grid'][ptype][region]
         else:
             colors = locals()[ptype][region]
-        vmin,vmax = colors.min(),colors.max()
+        
         if 'CI' in ptype:
             colors *= 100.
-            vmax = 95.
             vmin = colors.min()
+            vmax = 95.
+        else:
+            vmin = kwargs.pop('vmin',colors.min())
+            vmax = kwargs.pop('vmax',colors.max())
+        
         #-- define abbrevation for plotting
         if x in self.results[mtype]['grid'].dtype.names:
             X = self.results[mtype]['grid'][x]
@@ -2105,8 +2229,10 @@ class SED(object):
                                 units=('A','erg/s/cm2/A','erg/s/cm2/A'),
                                 header_dict=results_dict)
         
-        results_dict['extname'] = 'igrid_search'
-        fits.write_recarray(self.results['igrid_search']['grid'],filename,header_dict=results_dict)
+        for grid in ['igrid_search','imc']:
+            if grid in self.results:
+                results_dict['extname'] = grid
+                fits.write_recarray(self.results[grid]['grid'],filename,header_dict=results_dict)
         
         results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
         
