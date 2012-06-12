@@ -1727,7 +1727,8 @@ class SED(object):
             
     
     @standalone_figure
-    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False, plot_unselected=True,**kwargs):
+    def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,
+            plot_unselected=True,wave_units='A',flux_units='erg/s/cm2',**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1776,6 +1777,8 @@ class SED(object):
         for system in set_systems:
             color = color_cycle.next()
             keep = (systems==system) & (self.master['color']==colors)
+            if not plot_unselected:
+                keep = keep & self.master['include']
             #-- synthetic:
             if sum(keep) and 'synflux' in self.results:
                 if colors:
@@ -1783,7 +1786,10 @@ class SED(object):
                     y = self.results['synflux'][1][keep]
                 else:
                     x = self.results['synflux'][0][keep]
-                    y = x*self.results['synflux'][1][keep]
+                    y = self.results['synflux'][1][keep]
+                    #-- convert to correct units
+                    y = conversions.convert('erg/s/cm2/A',flux_units,y,wave=(x,'A'))
+                    x = conversions.convert('A',wave_units,x)
                 pl.plot(x,y,'x',ms=10,mew=2,alpha=0.75,color=color,**kwargs)
             #-- include:
             keep = (systems==system) & (self.master['color']==colors) & self.master['include']
@@ -1796,8 +1802,12 @@ class SED(object):
                         x = self.results['synflux'][0][keep]
                     else:
                         x = self.master['cwave'][keep]
-                    y = x*self.master['cmeas'][keep]
-                    e_y = x*self.master['e_cmeas'][keep]
+                    y = self.master['cmeas'][keep]
+                    e_y = self.master['e_cmeas'][keep]
+                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
+                    x = conversions.convert('A',wave_units,x)    
+                    
+                    
                 p = pl.errorbar(x,y,yerr=e_y,fmt='o',label=system,
                                 capsize=10,ms=7,color=color,**kwargs)
             
@@ -1809,8 +1819,10 @@ class SED(object):
                     x,y,e_y,color_dict = plot_sed_getcolors(self.master[keep],color_dict)
                 else:
                     x = self.results['synflux'][0][keep]
-                    y = x*self.master['cmeas'][keep]
-                    e_y = x*self.master['e_cmeas'][keep]
+                    y = self.master['cmeas'][keep]
+                    e_y = self.master['e_cmeas'][keep]
+                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
+                    x = conversions.convert('A',wave_units,x)    
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
         
@@ -1824,11 +1836,16 @@ class SED(object):
             #-- the model
             if 'model' in self.results:
                 wave,flux,flux_ur = self.results['model']
-                pl.plot(wave,wave*flux,'r-',**kwargs)
+                
+                flux = conversions.convert('erg/s/cm2/A',flux_units,flux,wave=(wave,'A'))
+                flux_ur = conversions.convert('erg/s/cm2/A',flux_units,flux_ur,wave=(wave,'A'))
+                wave = conversions.convert('A',wave_units,wave)    
+                
+                pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
-                    pl.plot(wave,wave*flux_ur,'k-',**kwargs)
-            pl.ylabel(r'$\lambda F_\lambda$ [erg/s/cm$^2$]')
-            pl.xlabel('wavelength [$\AA$]')
+                    pl.plot(wave,flux_ur,'k-',**kwargs)
+            pl.ylabel(conversions.unit2texlabel(flux_units))
+            pl.xlabel('wavelength [{0}]'.format(conversions.unit2texlabel(wave_units)))
         else:
             xlabels = color_dict.keys()
             xticks = [color_dict[key] for key in xlabels]
