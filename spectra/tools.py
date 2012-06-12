@@ -80,13 +80,14 @@ Set the xticks to vsini values for clarity:
 """
 import pyrotin4
 import numpy as np
+import logging
 from numpy import pi,sin,cos,sqrt
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import loggers
 
-logger = loggers.get_basic_logger()
+logger = logging.getLogger("SPEC.TOOLS")
 
 def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
     """
@@ -241,6 +242,7 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     #-- take care of the limb darkening
     q1 = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
     #-- do the Fourier transform and normalise
+    #flux = flux / (np.median(np.sort(flux)[-5:]))
     freqs,ampls = pergrams.deeming(wave,(1-flux),**kwargs)
     ampls = ampls/max(ampls)
     #-- get all the peaks
@@ -340,6 +342,56 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     logger.info('ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'%(vrot,epsilon))
     
     return w3[:ind],f3[:ind]
+
+def combine(list_of_spectra):
+    """
+    Combine and average spectra on a common wavelength grid.
+    
+    C{list_of_spectra} should be a list of lists/arrays. Each element in the
+    main list should be (wavelength,flux,error).
+    
+    After Peter Woitke.
+    """
+    #-- STEP 1: define wavelength bins
+    R = 200.
+    Delta = np.log10(1.+1./R)
+    x = np.arange(np.log10(950),np.log10(3350)+Delta,Delta)
+    x = 10**x
+    lamc_j = 0.5*(np.roll(x,1)+x)
+
+    #-- STEP 2: rebinning of data onto newly defined wavelength bins
+    Ns = len(list_of_spectra)
+    Nw = len(lamc_j)-1
+    binned_fluxes = np.zeros((Ns,Nw))
+    binned_errors = np.inf*np.ones((Ns,Nw))
+
+    for snr,(wave,flux,err) in enumerate(list_of_spectra):
+        wave0 = np.roll(wave,1)
+        wave1 = np.roll(wave,-1)
+        lam_i0_dc = 0.5*(wave0+wave)
+        lam_i1_dc = 0.5*(wave1+wave)
+        dlam_i = lam_i1_dc-lam_i0_dc
+        
+        for j in range(Nw):
+            A = np.min(np.vstack([lamc_j[j+1]*np.ones(len(wave)),lam_i1_dc]),axis=0)
+            B = np.max(np.vstack([lamc_j[j]*np.ones(len(wave)),lam_i0_dc]),axis=0)
+            overlaps = scipy.stats.threshold(A-B,threshmin=0)
+            norm = np.sum(overlaps)
+            binned_fluxes[fnr,j] = np.sum(flux*overlaps)/norm
+            binned_errors[fnr,j] = np.sqrt(np.sum((err*overlaps)**2))/norm
+    
+    #-- STEP 3: all available spectra sets are co-added, using the inverse
+    #   square of the bin uncertainty as weight
+    binned_fluxes[np.isnan(binned_fluxes)] = 0
+    binned_errors[np.isnan(binned_errors)] = np.inf
+    weights = 1./binned_errors**2
+    totalflux = np.sum(weights*binned_fluxes,axis=0)/np.sum(weights,axis=0)
+    totalerr = np.sqrt(np.sum((weights*binned_errors)**2,axis=0))/np.sum(weights,axis=0)
+    
+    #-- that's it!
+    return x[:-1],totalflux,totalerr
+
+
 
 if __name__=="__main__":
     import doctest
