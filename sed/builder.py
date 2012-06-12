@@ -512,6 +512,8 @@ import time
 import os
 import logging
 import itertools
+import glob
+import json
 
 import pylab as pl
 from matplotlib import mlab
@@ -520,7 +522,6 @@ import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
 import pyfits
-import json
 
 from ivs import config
 from ivs.aux import numpy_ext
@@ -533,13 +534,13 @@ from ivs.sed import fit
 from ivs.sed import distance
 from ivs.sed import extinctionmodels
 from ivs.sed.decorators import standalone_figure
+from ivs.spectra import tools
 from ivs.catalogs import crossmatch
 from ivs.catalogs import vizier
 from ivs.catalogs import mast
 from ivs.catalogs import sesame
 from ivs.units import conversions
 from ivs.units import constants
-
 from ivs.units.uncertainties import unumpy,ufloat
 from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
@@ -953,6 +954,46 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
+    def get_spectrophotometry(self):
+        """
+        Retrieve and combine spectra.
+        
+        B{WARNING:} this function creates FUSE and DIR directories!
+        """
+        #-- add spectrophotometric filters to the set
+        photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
+        if hasattr(self,'master') and self.master is not None:
+            if any(['BOXCAR' in photband for photband in self.master['photband']]):
+                return None
+        #-- FUSE spectra
+        if not os.path.isdir('FUSE'):
+            out1 = mast.get_FUSE_spectra(ID=self.ID,directory='FUSE',select=['ano'])
+        else:
+            out1 = glob.glob('FUSE/*')
+        #-- IUE spectra    
+        if not os.path.isdir('IUE'):
+            out2 = vizier.get_IUE_spectra(ID=self.ID,directory='IUE',select='lo')
+        else:
+            out2 = glob.glob('IUE/*')
+        #-- read them in to combine    
+        list_of_spectra = [fits.read_fuse(ff)[:3] for ff in out1]
+        list_of_spectra+= [fits.read_iue(ff)[:3] for ff in out2]
+        #-- combine
+        wave,flux,err,nspec = tools.combine(list_of_spectra)
+        #-- add to the master
+        N = len(flux)
+        units = ['erg/s/cm2/A']*N
+        source = ['specphot']*N
+        self.add_photometry_fromarrays(flux,err,units,photbands,source,flags=nspec)
+        
+        #-- write to file
+        self.master = fix_master(self.master,e_default=0.1)
+        logger.info('\n'+photometry2str(self.master))
+        self.save_photometry()
+        
+            
+            
+    
     def exclude(self,names=None,wrange=None,sources=None):
         """
         Exclude (any) photometry from fitting process.
@@ -1066,7 +1107,7 @@ class SED(object):
         
     
     
-    def add_photometry_fromarrays(self,meas,e_meas,units,photbands,source):
+    def add_photometry_fromarrays(self,meas,e_meas,units,photbands,source,flags=None):
         """
         Add photometry from numpy arrays
         
@@ -1084,10 +1125,13 @@ class SED(object):
         @param source: source of original measurements
         @type source: array of strings
         """
+        if flags is None:
+            flags = np.nan*np.ones(len(meas))
         #-- if master record array does not exist, make a new one
         if not hasattr(self,'master') or self.master is None:
             dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
-                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool)]
+                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool),\
+                       ('bibcode','S20'),('comments','S200')]
             logger.info('No previous measurements available, initialising master record')
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
             _to_unit = 'erg/s/cm2/A'
@@ -1095,7 +1139,7 @@ class SED(object):
             _to_unit = self.master['cunit'][0]
         extra_master = np.zeros(len(meas),dtype=self.master.dtype)
 
-        for i,(m,e_m,u,p,s) in enumerate(zip(meas,e_meas,units,photbands,source)):
+        for i,(m,e_m,u,p,s,f) in enumerate(zip(meas,e_meas,units,photbands,source,flags)):
             photsys,photband = p.split('.')
             if filters.is_color(p):
                 to_unit = 'flux_ratio'
@@ -1119,7 +1163,9 @@ class SED(object):
             extra_master['unit'][i] = units[i]
             extra_master['photband'][i] = photbands[i]
             extra_master['source'][i] = source[i]
-            extra_master['flag'][i] = np.nan            
+            extra_master['flag'][i] = flags[i]
+            extra_master['bibcode'][i] = '-'
+            extra_master['comments'][i] = '-'
         
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
@@ -1469,6 +1515,7 @@ class SED(object):
             synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
+                                  z=self.results[mtype]['CI']['z'],
                                   photbands=self.master['photband'][keep])
         elif type=='multiple' or type=='binary':
             synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
