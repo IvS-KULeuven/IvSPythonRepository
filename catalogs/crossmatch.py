@@ -123,8 +123,7 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
         results,units,comms = vizier.search('J/A+A/380/609/table1',ID=ID)
         if results is not None:
             catname = results[0]['Name'].strip()
-            kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['Name={0}'.format(catname)],sources=['J/A+A/380/609/table{0}'.format(tnr) for tnr in range(2,5)],sort=None,**kwargs)
-        kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['HD=%s'%(HDnumber[0][3:])],sources=['II/83/catalog','V/33/phot'],sort=None,**kwargs)
+            kwargs['master'] = vizier.get_photometry(take_mean=True,extra_fields=extra_fields,constraints=['Name={0}'.format(catname)],sources=['J/A+A/380/609/table{0}'.format(tnr) for tnr in range(2,5)],sort=None,**kwargs)
         #-- then query normal catalogs
         kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
         
@@ -188,6 +187,7 @@ def make_bibtex(master,ID):
                 ff.write(vizier.bibcode2bibtex(bibcode)+'\n')
             except IOError:
                 logger.info('Error retrieving bibtex for {0}'.format(bibcode))
+
         
     
 

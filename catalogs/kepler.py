@@ -4,15 +4,15 @@ Retrieve light curves from the Kepler satellite mission.
 import urllib
 import os
 import pyfits
+import logging
 import numpy as np
 from ivs.catalogs import mast
 from ivs.units import conversions
 from ivs.io import ascii
 from ivs.io import fits
 from ivs import config
-from ivs.aux import loggers
 
-logger = loggers.get_basic_logger()
+logger = logging.getLogger("CAT.KEPLER")
 
 def download_light_curve(KIC,directory=''):
     """
@@ -58,8 +58,8 @@ def get_data(KIC):
     
     Fields are 'HJD','flux','e_flux','bkg','quarter'.
     
-    @param KIC: kic number
-    @type KIC: integer
+    @param KIC: kic number or list of filenames
+    @type KIC: integer or list
     @return: data, header
     @rtype: recarray, dict
     """
@@ -68,7 +68,11 @@ def get_data(KIC):
     e_flux = []
     background = []
     quarter = []
-    for filename in download_light_curve(KIC):
+    if isinstance(KIC,str) or isinstance(KIC,int):
+        filenames = download_light_curve(KIC)
+    else:
+        filenames = KIC
+    for filename in filenames:
         header = pyfits.getheader(filename)
         data = fits.read2recarray(filename,ext='LIGHTCURVE')
         times.append(data['TIME']+2454833.)

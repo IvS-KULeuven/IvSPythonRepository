@@ -274,6 +274,8 @@ def add_custom_filter(wave,response,**kwargs):
     photfile = os.path.join(basedir,'filters',photband)
     if os.path.isfile(photfile):
         raise ValueError,'bandpass {0} already exists'.format(photfile)
+    elif photband in custom_filters:
+        logger.warning('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
     #-- set effective wavelength
     kwargs.setdefault('eff_wave',eff_wave(photband))
@@ -289,6 +291,24 @@ def add_custom_filter(wave,response,**kwargs):
     #-- add info:
     custom_filters[photband]['zp'] = myrow
     logger.info('Added photband {0} to the predefined set'.format(photband))
+
+
+def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
+    #-- STEP 1: define wavelength bins
+    Delta = np.log10(1.+1./R)
+    x = np.arange(np.log10(lambda0),np.log10(lambdan)+Delta,Delta)
+    x = 10**x
+    photbands = []
+    for i in range(len(x)-1):
+        wave = np.linspace(x[i],x[i+1],100)
+        resp = np.ones_like(wave)
+        photband = 'BOXCAR_R{0:d}.{1:d}'.format(int(R),int(x[i]))
+        try:
+            add_custom_filter(wave,resp,photband=photband)
+        except ValueError:
+            logger.info('{0} already exists, skipping'.format(photband))
+        photbands.append(photband)
+    return photbands
 
 
 def list_response(name='*',wave_range=(-np.inf,+np.inf)):
@@ -307,8 +327,11 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     """
     #-- collect all curve files but remove human eye responses
     if not '*' in name:
-        name = '*' + name + '*'
-    curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name.upper())))
+        name_ = '*' + name + '*'
+    else:
+        name_ = name
+    curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name_.upper())))
+    curve_files = sorted(curve_files+[key for key in custom_filters.keys() if name in key])
     curve_files = [cf for cf in curve_files if not ('HUMAN' in cf or 'EYE' in cf) ]
     #-- select in correct wavelength range
     curve_files = [os.path.basename(curve_file) for curve_file in curve_files if (wave_range[0]<=eff_wave(os.path.basename(curve_file))<=wave_range[1])]

@@ -954,27 +954,37 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def get_spectrophotometry(self):
+    def get_spectrophotometry(self,directory=None):
         """
         Retrieve and combine spectra.
         
         B{WARNING:} this function creates FUSE and DIR directories!
         """
+        if directory is None:
+            directory = os.getcwd()
+        elif not os.path.isdir(directory):
+            os.mkdir(directory)
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
         if hasattr(self,'master') and self.master is not None:
             if any(['BOXCAR' in photband for photband in self.master['photband']]):
                 return None
         #-- FUSE spectra
-        if not os.path.isdir('FUSE'):
-            out1 = mast.get_FUSE_spectra(ID=self.ID,directory='FUSE',select=['ano'])
+        fuse_direc = os.path.join(directory,'FUSE')
+        iue_direc = os.path.join(directory,'IUE')
+        if not os.path.isdir(fuse_direc):
+            out1 = mast.get_FUSE_spectra(ID=self.ID,directory=fuse_direc,select=['ano'])
+            if out1 is None:
+                out1 = []
         else:
-            out1 = glob.glob('FUSE/*')
+            out1 = glob.glob(fuse_direc+'/*')
         #-- IUE spectra    
-        if not os.path.isdir('IUE'):
-            out2 = vizier.get_IUE_spectra(ID=self.ID,directory='IUE',select='lo')
+        if not os.path.isdir(iue_direc):
+            out2 = vizier.get_IUE_spectra(ID=self.ID,directory=iue_direc,select='lo')
+            if out2 is None:
+                out2 = []
         else:
-            out2 = glob.glob('IUE/*')
+            out2 = glob.glob(iue_direc+'/*')
         #-- read them in to combine    
         list_of_spectra = [fits.read_fuse(ff)[:3] for ff in out1]
         list_of_spectra+= [fits.read_iue(ff)[:3] for ff in out2]
@@ -1345,7 +1355,11 @@ class SED(object):
                                               ('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
         
         #-- exclude failures
-        grid_results = grid_results[-np.isnan(grid_results['chisq'])]
+        failures = np.isnan(grid_results['chisq'])
+        if sum(failures):
+            logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
+        grid_results = grid_results[-failures]
+        
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1361,6 +1375,7 @@ class SED(object):
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
         #   rescale if needed and compute confidence intervals
+        print grid_results.dtype.names,grid_results.shape
         factor = max(grid_results['chisq'][-1]/k,1)
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
         CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
@@ -1691,8 +1706,9 @@ class SED(object):
                           CI_red='Reduced probability [%]',\
                           Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
                           rad=r'Radius [$R_\odot$]',\
-                          mass=r'Mass [$M_\odot$]')
-        
+                          mass=r'Mass [$M_\odot$]',
+                          )
+
         pl.xlabel(label_dict[x])
         pl.ylabel(label_dict[y])
         cbar.set_label(label_dict[ptype])
