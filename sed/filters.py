@@ -193,10 +193,6 @@ Plots of all passbands of all systems:
 Section 2: Adding filters on the fly
 ====================================
 
-Note: this example doesn't quite work from within the doctest, but it runs
-fine as a seperate script. To run the doctest correct, you need to change the
-C{det_type} line inside L{eff_wave}.
-
 You can add custom filters on the fly using L{add_custom_filter}. In this
 example we add a weird-looking filter and check the definition of Flambda and
 Fnu and its relation to the effective wavelength of a passband:
@@ -366,7 +362,8 @@ def add_custom_filter(wave,response,**kwargs):
         logger.warning('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
     #-- set effective wavelength
-    kwargs.setdefault('eff_wave',eff_wave(photband))
+    kwargs.setdefault('type','CCD')
+    kwargs.setdefault('eff_wave',eff_wave(photband,det_type=kwargs['type']))
     #-- add info for zeropoints.dat file: make sure wherever "lit" is part of
     #   the name, we replace it with "0". Then, we overwrite any existing
     #   information with info given
@@ -470,7 +467,7 @@ def get_color_photband(photband):
     return bands
 
 
-def eff_wave(photband,model=None):
+def eff_wave(photband,model=None,det_type=None):
     """
     Return the effective wavelength of a photometric passband.
     
@@ -506,8 +503,10 @@ def eff_wave(photband,model=None):
         try:
             wave,response = get_response(iphotband)
             #-- bolometric or ccd?
-            #det_type = iphotband.split('.')[1] # change to this if you want to run the doctest
-            det_type = get_info([iphotband])['type'][0]
+            if det_type is None and len(get_info([iphotband])):
+                det_type = get_info([iphotband])['type'][0]
+            elif det_type is None:
+                det_type = 'CCD'
             if model is None:
                 #this_eff_wave = np.average(wave,weights=response)
                 if det_type=='BOL':
