@@ -321,8 +321,7 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     factors
     @rtype: record array
     """
-    #test
-    logger.info('Grid search with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
+    logger.info('Generate "single" grid with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
     
     #-- we first get/set the grid. Calling this function means it will be
     #   memoized, so that we can safely thread (and don't have to memoize for
@@ -808,6 +807,7 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     
     # the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
     def residual_single(parameters):
+        print parameters
         syn_flux,Labs = model_func(*parameters,photbands=photbands,**kwargs)
         # in case any of the parameters goes out of its bounds
         #if isnan(syn_flux).any():    
@@ -817,7 +817,9 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     # calling the fitting function NOTE: the initial metallicity is returned in the output!
     
     if method=='fmin': # fmin
+        print args
         optpars,fopt,niter,funcalls,warnflag = fmin(res_func,np.array(args),xtol=0.0001,disp=0,full_output=True)
+        print optpars,fopt,niter,funcalls,warnflag
     elif method=='fmin_powell': #fmin_powell
         optpars = fmin_powell(res_func,np.array(args))
     else:
@@ -837,53 +839,47 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
 
 #{ Monte Carlo
 
-def generate_randompars(distribution=):
-    """
-    Generate a list of random values within the given input ranges.
-    """
-    
-
-def iminimize2(meas,e_meas,photbands,teff_init,logg_init,ebv_init,z_init,**kwargs):
-    model_func = kwargs.pop('model_func',model.get_itable)
-    res_func = kwargs.pop('res_func',residual_single)
-    method = kwargs.pop('fitmethod','fmin')
-    stat_func = kwargs.pop('stat_func',stat_chi2)
+#def iminimize2(meas,e_meas,photbands,teff_init,logg_init,ebv_init,z_init,**kwargs):
+    #model_func = kwargs.pop('model_func',model.get_itable)
+    #res_func = kwargs.pop('res_func',residual_single)
+    #method = kwargs.pop('fitmethod','fmin')
+    #stat_func = kwargs.pop('stat_func',stat_chi2)
             
-    colors = np.array([filters.is_color(photband) for photband in photbands],bool)
+    #colors = np.array([filters.is_color(photband) for photband in photbands],bool)
     
-    # the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
-    def residual_single(parameters):
-        teff,logg,ebv = parameters
-        syn_flux,Labs = model_func(teff=teff,logg=logg,ebv=ebv,z=z_init,photbands=photbands,**kwargs)
-        # in case any of the parameters goes out of its bounds
-        #if isnan(syn_flux).any():
+    ## the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
+    #def residual_single(parameters):
+        #teff,logg,ebv = parameters
+        #syn_flux,Labs = model_func(teff=teff,logg=logg,ebv=ebv,z=z_init,photbands=photbands,**kwargs)
+        ## in case any of the parameters goes out of its bounds
+        ##if isnan(syn_flux).any():
             
-        chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
-        return chisq
+        #chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
+        #return chisq
     
-    # calling the fitting function NOTE: the initial metallicity is returned in the output!
-    if method=='fmin': # fmin
-        teff,logg,ebv = fmin(res_func,array([teff_init,logg_init,ebv_init]),xtol=0.01,disp=0)
-        optpars = [teff,logg,ebv,z_init]
-    elif method=='fmin_powell': #fmin_powell
-        teff,logg,ebv = fmin_powell(res_func,array([teff_init,logg_init,ebv_init]))
-        optpars = [teff,logg,ebv,z_init]
-    else:
-        raise NotImplementedError
-    logger.debug("Optimization finished")
+    ## calling the fitting function NOTE: the initial metallicity is returned in the output!
+    #if method=='fmin': # fmin
+        #teff,logg,ebv = fmin(res_func,array([teff_init,logg_init,ebv_init]),xtol=0.01,disp=0)
+        #optpars = [teff,logg,ebv,z_init]
+    #elif method=='fmin_powell': #fmin_powell
+        #teff,logg,ebv = fmin_powell(res_func,array([teff_init,logg_init,ebv_init]))
+        #optpars = [teff,logg,ebv,z_init]
+    #else:
+        #raise NotImplementedError
+    #logger.debug("Optimization finished")
      
-    syn_flux,Labs = model_func(teff=parsopt['teff'],logg=parsopt['logg'],ebv=parsopt['ebv'],z=z_init,photbands=photbands,**kwargs)
+    #syn_flux,Labs = model_func(teff=parsopt['teff'],logg=parsopt['logg'],ebv=parsopt['ebv'],z=z_init,photbands=photbands,**kwargs)
      
-    # when any of the parameters goes out of the bounds of the grid, syn_flux contains NaN
-    if isnan(syn_flux).any():
-        raise IndexError
+    ## when any of the parameters goes out of the bounds of the grid, syn_flux contains NaN
+    #if isnan(syn_flux).any():
+        #raise IndexError
     
-    chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
-    optpars.append(chisq)
-    optpars.append(scale)
-    optpars.append(e_scale)
+    #chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
+    #optpars.append(chisq)
+    #optpars.append(scale)
+    #optpars.append(e_scale)
 
-    return optpars
+    #return optpars
 
 #}
 
