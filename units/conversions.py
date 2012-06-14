@@ -3089,7 +3089,7 @@ _factors = collections.OrderedDict([
            ('ngogn', (1.1594560721765171e-05,'m3','volume','1000 cubic potrzebies')),
 # FLUX
 # -- absolute magnitudes
-           ('Jy',      (1e-26,         'kg s-2 cy-1','flux','Jansky')), # W/m2/Hz
+           ('Jy',      (1e-26,         'kg s-2 cy-1','flux density','Jansky')), # W/m2/Hz
            ('vegamag', (VegaMag,       'kg m-1 s-3','flux','Vega magnitude')),  # W/m2/m
            ('mag',     (VegaMag,       'kg m-1 s-3','flux','magnitude')),  # W/m2/m
            ('STmag',   (STMag,         'kg m-1 s-3','flux','ST magnitude')),  # W/m2/m
@@ -3116,7 +3116,16 @@ _conventions = {'SI': dict(mass='kg',length='m', time='s',temperature='K',
                'imperial':dict(mass='lbs',length='yd',time='s',temperature='K',
                           electric_current='Am',lum_intens='cd',amount='mol'), # Imperial (UK/US) system
                }           
-           
+
+#-- some names of units
+_names = {'cy-1 kg1 s-2':'flux density', # W/m2/Hz 
+          'kg1 m-1 s-3':'flux density', # W/m3
+          'cy-1 kg1 rad-2 s-2':'specific intensity', # W/m2/Hz/sr
+          'kg1 m-1 rad-2 s-3':'specific intensity', # W/m3/sr
+          'kg1 rad-2 s-3':'total intensity', # W/m2/sr
+          'kg1 m2 s-3':'luminosity', # W
+          }
+
 #-- scaling factors for prefixes            
 _scalings ={'y':       1e-24, # yocto
             'z':       1e-21, # zepto
