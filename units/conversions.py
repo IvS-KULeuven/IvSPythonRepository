@@ -1000,6 +1000,10 @@ def set_convention(units='SI',values='standard'):
             continue
     for fac in _factors:
         _factors[fac] = new_factors[fac]
+    #-- convert the names of combinations of basic units:
+    for name in _names.keys():
+        new_name = change_convention(units,name)
+        _names[new_name] = _names.pop(name)
     #-- convert the switches in this module to the new convention
     #for switch in _switch:
         
@@ -1420,8 +1424,21 @@ def is_type(unit,type):
         this_unit = change_convention(constants._current_convention,_factors[fac][1])
         if comps==this_unit and type in _factors[fac][2].split('/'):
             return True
+    #-- via names
+    if comps in _names and _names[comps]==type:
+        return True
+        
     return False
 
+def get_type(unit):
+    """
+    Return human readable name of the unit
+    
+    @rtype: str
+    """
+    comps = breakdown(unit)[1]
+    if comps in _names:
+        return _names[comps]
 
 def round_arbitrary(x, base=5):
     """
@@ -3117,13 +3134,41 @@ _conventions = {'SI': dict(mass='kg',length='m', time='s',temperature='K',
                           electric_current='Am',lum_intens='cd',amount='mol'), # Imperial (UK/US) system
                }           
 
-#-- some names of units
-_names = {'cy-1 kg1 s-2':'flux density', # W/m2/Hz 
+#-- some names of combinations of units
+_names = {'m1':'length',
+          's1':'time',
+          'kg1':'mass',
+          'rad':'angle',
+          'deg':'angle',
+          'K':'temperature',
+          'm1 s-2':'acceleration',
+          'kg1 s-2':'surface tension',
+          'cy-1 kg1 s-2':'flux density', # W/m2/Hz 
           'kg1 m-1 s-3':'flux density', # W/m3
+          'kg1 s-3':'flux', # W/m2
+          'cy1 s-1':'frequency',
           'cy-1 kg1 rad-2 s-2':'specific intensity', # W/m2/Hz/sr
           'kg1 m-1 rad-2 s-3':'specific intensity', # W/m3/sr
           'kg1 rad-2 s-3':'total intensity', # W/m2/sr
-          'kg1 m2 s-3':'luminosity', # W
+          'kg1 m2 s-3':'luminosity', # W or power
+          'm1 s-1':'velocity',
+          'kg1 m-1 s-2':'pressure',
+          'm2':'area',
+          'm3':'volume',
+          'kg1 m2 s-2':'energy',
+          'kg1 m1 s-2':'force',
+          'Am':'electric current',
+          'Am s':'electric charge',
+          'kg s-2 Am-1':'magnetic field strength',
+          'Am m-1':'magnetizing field',
+          'kg m2 s-3 Am-1':'electric potential difference',
+          'kg-1 m-2 s4 Am2':'electric capacitance',
+          'kg m2 s-3 Am-2':'electric resistance',
+          'kg-1 m-2 s3 Am2':'electric conductance',
+          'kg m2 s-2 Am-1':'magnetic flux',
+          'kg m2 s-2 Am-2':'inductance',
+          'cd':'luminous flux',
+          'm-2 cd':'illuminance',
           }
 
 #-- scaling factors for prefixes            
