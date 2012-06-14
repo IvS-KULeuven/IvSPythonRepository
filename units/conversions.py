@@ -877,7 +877,7 @@ def nconvert(_froms,_tos,*args,**kwargs):
     return ret_value
 
 
-def change_convention(to_,units):
+def change_convention(to_,units,origin=None):
     """
     Change units from one convention to another.
         
@@ -896,6 +896,8 @@ def change_convention(to_,units):
     @return: units in new convention
     @rtype: str
     """
+    if origin is None:
+        origin = constants._current_convention
     #-- break down units in base units, and breakdown that string in
     #   whole units and non-alpha digits (we'll weave them back in after
     #   translation)
@@ -904,8 +906,8 @@ def change_convention(to_,units):
     powers = re.findall(r'[0-9\W]+',units, re.I)
     #-- make the translation dictionary
     translator = {}
-    for key in sorted(_conventions[constants._current_convention].keys()):
-        translator[_conventions[constants._current_convention][key]] = _conventions[to_][key]
+    for key in sorted(_conventions[origin].keys()):
+        translator[_conventions[origin][key]] = _conventions[to_][key]
     #-- translate
     new_units = [unit in translator and translator[unit] or unit for unit in new_units]
     #-- weave them back in
@@ -2337,7 +2339,7 @@ class STMag(NonLinearConverter):
     """
     def __call__(self,meas,photband=None,inv=False,**kwargs):
         zp = filters.get_info()
-        F0 = conversions.convert('erg/s/cm2/A',constants._current_convention,3.6307805477010028e-09)#0.036307805477010027
+        F0 = convert('erg/s/cm2/A',constants._current_convention,3.6307805477010028e-09)#0.036307805477010027
         match = zp['photband']==photband.upper()
         if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
         mag0 = float(zp['STmag'][match][0])
@@ -2594,7 +2596,7 @@ class Unit(object):
     >>> print a/c
     6666.66666667 m-1
     >>> print a+b
-    4002.0 m1
+    4002.0 m
     
     B{Example 1:} You want to calculated the equatorial velocity of the Sun:
     
@@ -2636,7 +2638,7 @@ class Unit(object):
     
     >>> old = set_convention('cgs')
     
-    >>> G = constants.GG
+    >>> G = Unit('GG')
     >>> M = Unit((1.,0.01),'Msol')
     >>> R = Unit((1.,0.01),'Rsol')
     >>> logg = np.log10(G*M/R**2)
@@ -2755,10 +2757,9 @@ class Unit(object):
                     if self.unit==_factors[fac][2]:
                         self.unit = _factors[fac][1]
                         break
-            self._SI_value = convert(self.unit,'SI',self.value,**kwargs)
-        else:
-            self._SI_value = self.value
-        self._basic_unit = breakdown(self.unit)[1]
+        if self.unit and len(self.unit) and self.unit[0]=='[':
+            self.value = 10**self.value
+            self.unit = self.unit[1:-1]
     
     def convert(self,unit,compress=True):
         """
@@ -2803,23 +2804,29 @@ class Unit(object):
         """
         Compare SI-values of Units with eacht other.
         """
-        return self._SI_value<other._SI_value
+        return self.convert('SI')[0]<other.convert('SI')[0]
     
     def __add__(self,other):
         """
         Add a Unit to a Unit.
         """
-        if self._basic_unit!=other._basic_unit:
-            raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
-        return Unit(self._SI_value+other._SI_value,self._basic_unit)
+        unit1 = breakdown(self.unit)[1]
+        unit2 = breakdown(other.unit)[1]
+        if unit1!=unit2:
+            raise ValueError,'unequal units %s and %s'%(unit1,unit2)
+        other_value = convert(other.unit,self.unit,other.value,unpack=False)
+        return Unit(self.value+other_value,self.unit)
         
     def __sub__(self,other):
         """
         Subtract a Unit from a Unit.
         """
-        if self._basic_unit!=other._basic_unit:
-            raise ValueError,'unequal units %s and %s'%(self._basic_unit,other._basic_unit)
-        return Unit(self._SI_value-other._SI_value,self._basic_unit)
+        unit1 = breakdown(self.unit)[1]
+        unit2 = breakdown(other.unit)[1]
+        if unit1!=unit2:
+            raise ValueError,'unequal units %s and %s'%(unit1,unit2)
+        other_value = convert(other.unit,self.unit,other.value,unpack=False)
+        return Unit(self.value-other_value,self.unit)
     
     def __mul__(self,other):
         """
@@ -2828,10 +2835,14 @@ class Unit(object):
         If `something' is a Unit, simply join the two Unit strings and call
         L{breakdown} to collect.
         """
-        if hasattr(other,'_basic_unit'):
-            new_unit = ' '.join([self._basic_unit,other._basic_unit])
+        if hasattr(other,'unit'):
+            unit1 = change_convention(constants._current_convention,self.unit)
+            unit2 = change_convention(constants._current_convention,other.unit)
+            value1 = convert(self.unit,unit1,self.value,unpack=False)
+            value2 = convert(other.unit,unit2,other.value,unpack=False)
+            new_unit = ' '.join([unit1,unit2])
             fac,new_unit = breakdown(new_unit)
-            outcome = self._SI_value*other._SI_value
+            outcome = value1*value2
         else:
             outcome = other*self.value
             new_unit = self.unit
@@ -2849,12 +2860,16 @@ class Unit(object):
         >>> print(x/y)
         2.0 m8.5
         """
-        if hasattr(other,'_basic_unit'):
+        if hasattr(other,'unit'):
+            unit1 = change_convention(constants._current_convention,self.unit)
+            unit2 = change_convention(constants._current_convention,other.unit)
+            value1 = convert(self.unit,unit1,self.value,unpack=False)
+            value2 = convert(other.unit,unit2,other.value,unpack=False)
             #-- reverse signs in second units
             uni_b_ = ''
             isalpha = True
             prev_char_min = False
-            for i,char in enumerate(other._basic_unit):
+            for i,char in enumerate(unit2):
                 if char=='-':
                     prev_char_min = True
                     continue
@@ -2863,33 +2878,39 @@ class Unit(object):
                 prev_char_min = False
                 uni_b_ += char
                 isalpha = char.isalpha()
-            new_unit = ' '.join([self._basic_unit,uni_b_])
+            new_unit = ' '.join([unit1,uni_b_])
             fac,new_unit = breakdown(new_unit)
-            outcome = self._SI_value/other._SI_value
+            outcome = value1/value2
         else:
             outcome = self.value/other
             new_unit = self.unit
         return Unit(outcome,new_unit)
     
     def __rdiv__(self,other):
-        if hasattr(other,'_basic_unit'):
+        if hasattr(other,'unit'):
+            unit1 = change_convention(constants._current_convention,self.unit)
+            unit2 = change_convention(constants._current_convention,other.unit)
+            value1 = convert(self.unit,unit1,self.value,unpack=False)
+            value2 = convert(other.unit,unit2,other.value,unpack=False)
             #-- reverse signs in second units
             uni_b_ = ''
             isalpha = True
-            for i,char in enumerate(other._basic_unit):
+            for i,char in enumerate(unit2):
                 if char=='-': continue
                 if isalpha and not char.isalpha():
                     uni_b_ += '-'
                 uni_b_ += char
                 isalpha = char.isalpha()
-            new_unit = ' '.join([self._basic_unit,uni_b_])
+            new_unit = ' '.join([unit1,uni_b_])
             fac,new_unit = breakdown(new_unit)
-            outcome = other._SI_value/self._SI_value
+            outcome = value2/value1
         else:
+            unit1 = change_convention(constants._current_convention,self.unit)
+            value1 = convert(self.unit,unit1,self.value,unpack=False)
             new_unit = ''
             isalpha = True
             prev_char_min = False
-            for i,char in enumerate(self._basic_unit):
+            for i,char in enumerate(unit1):
                 if char=='-':
                     prev_char_min = True
                     continue
@@ -2899,7 +2920,7 @@ class Unit(object):
                 new_unit += char
                 isalpha = char.isalpha()
             fac,new_unit = breakdown(new_unit)
-            outcome = other/self.value
+            outcome = other/value1
         return Unit(outcome,new_unit)
     
     def __pow__(self,power):
@@ -2918,12 +2939,14 @@ class Unit(object):
         >>> print(x**0.5)
         3.0 m5.5
         """
-        mycomps = [components(u) for u in self._basic_unit.split()]
+        unit1 = change_convention(constants._current_convention,self.unit)
+        value1 = convert(self.unit,unit1,self.value,unpack=False)
+        mycomps = [components(u) for u in unit1.split()]
         mycomps = [(u[0]**power,u[1],u[2]*power) for u in mycomps]
         factor = np.product([u[0] for u in mycomps])
         new_unit = ' '.join(['%s%g'%(u[1],u[2]) for u in mycomps])
         fac,new_unit = breakdown(new_unit)
-        return Unit(self._SI_value**power,new_unit)
+        return Unit(value1**power,new_unit)
         #new_unit = ' '.join(power*[self._basic_unit])
         #fac,new_unit = breakdown(new_unit)
         #return Unit(self._SI_value**power,new_unit)
