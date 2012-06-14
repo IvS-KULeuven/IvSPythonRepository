@@ -311,12 +311,15 @@ logger.addHandler(loggers.NullHandler)
 caldir = os.sep.join(['sedtables','calibrators'])
 
 #-- default values for grids
-defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
+__defaults__ = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 ct='mlt',                                 # NEMO (convection theory)
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05,          # MARCS and COMARCS
+                Rv=3.1,law='fitzpatrick2004',             # reddening info for integrated grids
                 use_scratch=False)
+
+defaults = __defaults__.copy()
 defaults_multiple = [defaults.copy(),defaults.copy()]
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
@@ -333,10 +336,7 @@ def set_defaults(*args,**kwargs):
     clear_memoization(keys=['ivs.sed.model'])
     #-- these are the default defaults
     if not kwargs:
-        kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
-                    alpha=False,nover=False,                  # KURUCZ
-                    He=97,                                    # WD
-                    t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
+        kwargs = __defaults__.copy()
                 
     for key in kwargs:
         if key in defaults:
