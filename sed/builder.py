@@ -954,7 +954,7 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def get_spectrophotometry(self,directory=None):
+    def get_spectrophotometry(self,directory=None,force_download=False):
         """
         Retrieve and combine spectra.
         
@@ -966,20 +966,20 @@ class SED(object):
             os.mkdir(directory)
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
-        if hasattr(self,'master') and self.master is not None:
+        if hasattr(self,'master') and self.master is not None and not force_download:
             if any(['BOXCAR' in photband for photband in self.master['photband']]):
                 return None
         #-- FUSE spectra
         fuse_direc = os.path.join(directory,'FUSE')
         iue_direc = os.path.join(directory,'IUE')
-        if not os.path.isdir(fuse_direc):
+        if not os.path.isdir(fuse_direc) or force_download:
             out1 = mast.get_FUSE_spectra(ID=self.ID,directory=fuse_direc,select=['ano'])
             if out1 is None:
                 out1 = []
         else:
             out1 = glob.glob(fuse_direc+'/*')
         #-- IUE spectra    
-        if not os.path.isdir(iue_direc):
+        if not os.path.isdir(iue_direc) or force_download:
             out2 = vizier.get_IUE_spectra(ID=self.ID,directory=iue_direc,select='lo')
             if out2 is None:
                 out2 = []
