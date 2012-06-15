@@ -82,10 +82,10 @@ import pyrotin4
 import numpy as np
 import logging
 from numpy import pi,sin,cos,sqrt
+import scipy.stats
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
-from ivs.aux import loggers
 
 logger = logging.getLogger("SPEC.TOOLS")
 
@@ -343,19 +343,32 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     
     return w3[:ind],f3[:ind]
 
-def combine(list_of_spectra):
+def combine(list_of_spectra,R=200.,lambda0=(950.,'A'),lambdan=(3350.,'A')):
     """
-    Combine and average spectra on a common wavelength grid.
+    Combine and weight-average spectra on a common wavelength grid.
     
     C{list_of_spectra} should be a list of lists/arrays. Each element in the
     main list should be (wavelength,flux,error).
     
+    If you have FUSE fits files, use L{ivs.fits.read_fuse}.
+    If you have IUE FITS files, use L{ivs.fits.read_iue}.
+    
     After Peter Woitke.
+    
+    @param R: resolution
+    @type R: float
+    @param lambda0: start wavelength, unit
+    @type lambda0: tuple (float,str)
+    @param lambdan: end wavelength, unit
+    @type lambdan: tuple (float,str)
+    @return: binned spectrum (wavelengths,flux, error)
+    @rtype: array, array, array
     """
+    l0 = conversions.convert(lambda0[1],'A',lambda0[0])
+    ln = conversions.convert(lambdan[1],'A',lambdan[0])
     #-- STEP 1: define wavelength bins
-    R = 200.
     Delta = np.log10(1.+1./R)
-    x = np.arange(np.log10(950),np.log10(3350)+Delta,Delta)
+    x = np.arange(np.log10(l0),np.log10(ln)+Delta,Delta)
     x = 10**x
     lamc_j = 0.5*(np.roll(x,1)+x)
 
@@ -377,19 +390,21 @@ def combine(list_of_spectra):
             B = np.max(np.vstack([lamc_j[j]*np.ones(len(wave)),lam_i0_dc]),axis=0)
             overlaps = scipy.stats.threshold(A-B,threshmin=0)
             norm = np.sum(overlaps)
-            binned_fluxes[fnr,j] = np.sum(flux*overlaps)/norm
-            binned_errors[fnr,j] = np.sqrt(np.sum((err*overlaps)**2))/norm
+            binned_fluxes[snr,j] = np.sum(flux*overlaps)/norm
+            binned_errors[snr,j] = np.sqrt(np.sum((err*overlaps)**2))/norm
     
     #-- STEP 3: all available spectra sets are co-added, using the inverse
     #   square of the bin uncertainty as weight
     binned_fluxes[np.isnan(binned_fluxes)] = 0
-    binned_errors[np.isnan(binned_errors)] = np.inf
+    binned_errors[np.isnan(binned_errors)] = 1e300
     weights = 1./binned_errors**2
+    
     totalflux = np.sum(weights*binned_fluxes,axis=0)/np.sum(weights,axis=0)
     totalerr = np.sqrt(np.sum((weights*binned_errors)**2,axis=0))/np.sum(weights,axis=0)
+    totalspec = np.sum(binned_fluxes>0,axis=0)
     
     #-- that's it!
-    return x[:-1],totalflux,totalerr
+    return x[:-1],totalflux,totalerr,totalspec
 
 
 
