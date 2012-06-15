@@ -84,7 +84,7 @@ if __name__=="__main__":
     to_install = ['spectra/pyrotin4',
                   'timeseries/deeming','timeseries/eebls','timeseries/multih',
                   'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
-                  'timeseries/pyGLS','sigproc/pyKEP']
+                  'timeseries/pyGLS','timeseries/pyfasper_single','timeseries/pyfasper']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if len(sys.argv)>=3:
