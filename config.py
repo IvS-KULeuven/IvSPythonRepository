@@ -13,7 +13,8 @@ import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
-data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/']
+data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/',
+             '/home/ben/public_html/opacities']
              
 ivs_dirs = dict(coralie='/STER/coralie/',
                 hermes='/STER/mercator/hermes/')
@@ -101,6 +102,9 @@ if __name__=="__main__":
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
+                    answer = raw_input('Continue? [Y/n] ')
+                    if answer.lwer()=='n':
+                        continue
                     #-- call the compiling command
                     p = subprocess.Popen(cmd,shell=True,stdout=devnull)
                     #-- wait for the file to be written to the disk and move
