@@ -25,8 +25,12 @@ Section 1. Available model grids
         - odfnew=True means no overshoot but with better opacities and abundances
     
     - tmap: NLTE grids computed for sdB stars with the Tubingen NLTE Model
-      Atmosphere package. No further parameters are available. Reference:
-      Werner et al. 2003, 
+      Atmosphere package. Two versions of this grid are available. A high 
+      resolution grid which ranges from 2500-15000 A, and is extended with a
+      black body till 24000 A. And a low resolution grid wich ranges from 
+      1000-25000 A. Standard the low res grid is used. No further parameters 
+      are available. Reference: Werner et al. 2003
+        - res: 'low' or 'high'
     
     
     Section 1.2 Plotting the domains of all spectral grids
@@ -488,6 +492,9 @@ def get_file(integrated=False,**kwargs):
         - grid='tkachenko': metallicity z
         - grid='nemo': convection theory and metallicity (CM=Canuto and Mazzitelli 1991),
         (CGM=Canuto,Goldman,Mazzitelli 1996), (MLT=mixinglengththeory a=0.5)
+        - grid='tmap': res = 'low' or 'high'
+        - grid='heberb'
+        - grid='hebersdb'
     
     @param integrated: choose integrated version of the grid
     @type integrated: boolean
@@ -526,6 +533,8 @@ def get_file(integrated=False,**kwargs):
     co= kwargs.get('co',defaults['co'])
     #-- only for Nemo
     ct = kwargs.get('ct','mlt')
+    #-- only for TMAP
+    res = kwargs.get('res','low')
     
     #-- figure out what grid to use
     if grid=='fastwind':
@@ -586,7 +595,10 @@ def get_file(integrated=False,**kwargs):
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
-        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
+        if res == 'low':
+            basename = 'TMAP2012_lowres.fits' #only available for 1 metalicity
+        elif res == 'high':
+            basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
     elif grid=='heberb':
          basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
@@ -1761,7 +1773,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     #-- make FITS columns
     gridfile = get_file()
     if os.path.isfile(os.path.basename(gridfile)):
-        outfile = os.path.basename(gridfile)
+        outfile = 'i{0}'.format(os.path.basename(gridfile))
     else:
         outfile = os.path.join(os.path.dirname(gridfile),'i{0}'.format(os.path.basename(gridfile)))
     logger.info('Precaution: making original grid backup at {0}.backup'.format(outfile))
