@@ -410,7 +410,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
         return output
     
     for spectrum in data:
-        download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%s&mission=iue&action=Download_MX"%(spectrum['Camera'].strip(),spectrum['Image'])
+        download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%05d&mission=iue&action=Download_MX"%(spectrum['Camera'].strip(),int(spectrum['Image']))
         logger.info('IUE spectrum %s/%s: %s'%(spectrum['Camera'],spectrum['Image'],download_link))
     
         #-- prepare to download the spectra to a temparorary file
@@ -457,7 +457,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
                 logger.debug("Did not extract %s (probably not a spectrum)"%(name))
         #-- remove the tar file:
         tarf.close()
-        os.unlink(mytarfile)
+        #os.unlink(mytarfile)
         for dirname in deldirs:
             if dirname and os.path.isdir(dirname) and not os.listdir(dirname):
                 os.rmdir(dirname)
@@ -470,7 +470,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
             continue
         if outfile and os.path.isfile(outfile):
             wavelength,flux,error,header = fits.read_iue(outfile,return_header=True)
-            os.unlink(outfile)
+            #os.unlink(outfile)
             output.append([wavelength,flux,error,header])
         else:
             logger.info('Unsuccesfull extraction of %s'%(outfile))
