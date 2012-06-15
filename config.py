@@ -85,7 +85,7 @@ if __name__=="__main__":
                   'timeseries/deeming','timeseries/eebls','timeseries/multih',
                   'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
                   'timeseries/pyGLS','timeseries/pyfasper_single','timeseries/pyfasper',
-                  'timeseries/pyscargle_single']
+                  'timeseries/pyscargle_single','timeseries/pydft']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if len(sys.argv)>=3:
