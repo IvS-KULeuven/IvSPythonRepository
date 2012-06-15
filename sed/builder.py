@@ -890,14 +890,14 @@ class SED(object):
         #-- load information from the photometry file if it exists
         if not os.path.isfile(self.photfile):
             try:
-                self.info = sesame.search(ID,fix=True)
+                self.info = sesame.search(os.path.basename(ID),fix=True)
             except KeyError:
-                logger.warning('Star %s not recognised by SIMBAD'%(ID))
+                logger.warning('Star %s not recognised by SIMBAD'%(os.path.basename(ID)))
                 try:
-                    self.info = sesame.search(ID,db='N',fix=True)
-                    logger.info('Star %s recognised by NED'%(ID))
+                    self.info = sesame.search(os.path.basename(ID),db='N',fix=True)
+                    logger.info('Star %s recognised by NED'%(os.path.basename(ID)))
                 except KeyError:
-                    logger.warning('Star %s not recognised by NED'%(ID))
+                    logger.warning('Star %s not recognised by NED'%(os.path.basename(ID)))
             if plx is not None:
                 if not 'plx' in self.info:
                     self.info['plx'] = {}
@@ -935,11 +935,11 @@ class SED(object):
             #-- get and fix photometry. Set default errors to 1%, and set
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
-                master = crossmatch.get_photometry(ID=self.ID,radius=radius,
+                master = crossmatch.get_photometry(ID=os.path.basename(self.ID),radius=radius,
                                        include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
-                master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
+                master = crossmatch.get_photometry(ID=os.path.basename(self.ID),ra=ra,dec=dec,radius=radius,
                                        include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             if 'jradeg' in self.info:
@@ -960,10 +960,14 @@ class SED(object):
         
         B{WARNING:} this function creates FUSE and DIR directories!
         """
-        if directory is None:
+        if directory is None and os.path.dirname(self.ID) == '':
             directory = os.getcwd()
-        elif not os.path.isdir(directory):
+        elif os.path.dirname(self.ID) != '':
+            directory = os.path.dirname(self.ID)
+            
+        if not os.path.isdir(directory):
             os.mkdir(directory)
+            
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
         if hasattr(self,'master') and self.master is not None and not force_download:
@@ -973,14 +977,14 @@ class SED(object):
         fuse_direc = os.path.join(directory,'FUSE')
         iue_direc = os.path.join(directory,'IUE')
         if not os.path.isdir(fuse_direc) or force_download:
-            out1 = mast.get_FUSE_spectra(ID=self.ID,directory=fuse_direc,select=['ano'])
+            out1 = mast.get_FUSE_spectra(ID=os.path.basename(self.ID),directory=fuse_direc,select=['ano'])
             if out1 is None:
                 out1 = []
         else:
             out1 = glob.glob(fuse_direc+'/*')
         #-- IUE spectra    
         if not os.path.isdir(iue_direc) or force_download:
-            out2 = vizier.get_IUE_spectra(ID=self.ID,directory=iue_direc,select='lo')
+            out2 = vizier.get_IUE_spectra(ID=os.path.basename(self.ID),directory=iue_direc,select='lo')
             if out2 is None:
                 out2 = []
         else:
