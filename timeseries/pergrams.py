@@ -117,6 +117,7 @@ Phase folding techniques: L{box} and L{pdm}
 ]]include figure]]ivs_timeseries_pergrams_phase.png]
 
 """
+import logging
 import numpy as np
 from numpy import cos,sin,pi
 from scipy.special import jn
@@ -136,7 +137,7 @@ import multih
 import deeming as fdeeming
 import eebls
 
-logger = loggers.get_basic_logger()
+logger = logging.getLogger("TS.PERGRAMS")
 
 
 #{ Periodograms
@@ -232,6 +233,8 @@ def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude
     """
     Fasper periodogram from Numerical Recipes.
     
+    Normalisation here is not correct!!
+    
     @param times: time points
     @type times: numpy array
     @param signal: observations
@@ -250,7 +253,7 @@ def fasper(times,signal, f0=None, fn=None, df=None, single=True, norm='amplitude
     mynyq = 1./(2*np.diff(times).min())
     T = times.ptp()
     ofac = 1./(df*T)
-    hifac = min(1.,fn/mynyq)*mynyq/nyq
+    hifac = fn/mynyq*mynyq/nyq
     #-- prepare input for fasper
     n = len(times)
     nout = int(4*ofac*hifac*n*4.)
@@ -758,7 +761,7 @@ def pdm(times, signal,f0=None,fn=None,df=None,Nbin=5,Ncover=2,
     
     Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 1986)
     
-    Inclusion of binary orbital motion by Pieter Degrotoe (see Shibahashi &
+    Inclusion of binary orbital motion by Pieter Degroote (see Shibahashi &
     Kurtz 2012). When orbits are added, times must be in days, then asini is
     in AU.
     

@@ -13,7 +13,8 @@ import glob as glob_module
 
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
-data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/']
+data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/',
+             '/home/ben/public_html/opacities']
              
 ivs_dirs = dict(coralie='/STER/coralie/',
                 hermes='/STER/mercator/hermes/')
@@ -83,13 +84,14 @@ if __name__=="__main__":
     to_install = ['spectra/pyrotin4',
                   'timeseries/deeming','timeseries/eebls','timeseries/multih',
                   'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
-                  'timeseries/pyGLS','sigproc/pyKEP']
+                  'timeseries/pyGLS','timeseries/pyfasper_single','timeseries/pyfasper',
+                  'timeseries/pyscargle_single','timeseries/pydft']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if len(sys.argv)>=3:
             compiler = sys.argv[2]
         else:
-            compiler = 'intel'
+            compiler = 'gfortran'
         if sys.argv[1]=='compile':
             #-- catch all output from f2py
             devnull = open(os.devnull,'wb')
@@ -101,6 +103,9 @@ if __name__=="__main__":
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
+                    answer = raw_input('Continue? [Y/n] ')
+                    if answer.lower()=='n':
+                        continue
                     #-- call the compiling command
                     p = subprocess.Popen(cmd,shell=True,stdout=devnull)
                     #-- wait for the file to be written to the disk and move

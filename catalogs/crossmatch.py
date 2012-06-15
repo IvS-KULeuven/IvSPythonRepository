@@ -108,8 +108,8 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
         searchables = list( set(searchables)- set(exclude))
     
     #-- and search photometry
-    #if 'mast' in searchables:
-    #    kwargs['master'] = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+    if 'mast' in searchables:
+        kwargs['master'] = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'gator' in searchables:
         kwargs['master'] = gator.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     if 'vizier' in searchables:
@@ -119,8 +119,15 @@ def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
             HDnumber = [name for name in info['alias'] if name[:2]=='HD']
             if HDnumber:
                 kwargs['master'] = vizier.get_photometry(extra_fields=extra_fields,constraints=['HD=%s'%(HDnumber[0][3:])],sources=['II/83/catalog','V/33/phot'],sort=None,**kwargs)
+        #-- then query catalogs that can only be queried via another catalog
+        results,units,comms = vizier.search('J/A+A/380/609/table1',ID=ID)
+        if results is not None:
+            catname = results[0]['Name'].strip()
+            kwargs['master'] = vizier.get_photometry(take_mean=True,extra_fields=extra_fields,constraints=['Name={0}'.format(catname)],sources=['J/A+A/380/609/table{0}'.format(tnr) for tnr in range(2,5)],sort=None,**kwargs)
         #-- then query normal catalogs
         kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
+        
+        
     if 'gcpd' in searchables:
         kwargs['master'] = gcpd.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     master = kwargs['master']
@@ -158,6 +165,9 @@ def add_bibcodes(master):
         elif source in gator.cat_info.sections():
             if 'bibcode' in gator.cat_info.options(source):
                 bibcodes[-1] = gator.cat_info.get(source,'bibcode')
+        elif source in mast.cat_info.sections():
+            if 'bibcode' in mast.cat_info.options(source):
+                bibcodes[-1] = mast.cat_info.get(source,'bibcode')
         if bibcodes[-1]=='None' or bibcodes[-1] is None:
             logger.info('Bibcode of source {0:25s} not found'.format(source))
     bibcodes = np.array(bibcodes,str)
@@ -171,9 +181,13 @@ def make_bibtex(master,ID):
     """
     bibcodes = sorted(set(list(master['bibcode'])))
     with open('{0}.bib'.format(ID),'w') as ff:
-        ff.write('% \citep{{{0}}}\n\n\n'.format(','.join(bibcodes)))
+        ff.write('% \citet{{{0}}}\n\n\n'.format(','.join(bibcodes)))
         for bibcode in bibcodes:
-            ff.write(vizier.bibcode2bibtex(bibcode)+'\n')
+            try:
+                ff.write(vizier.bibcode2bibtex(bibcode)+'\n')
+            except IOError:
+                logger.info('Error retrieving bibtex for {0}'.format(bibcode))
+
         
     
 

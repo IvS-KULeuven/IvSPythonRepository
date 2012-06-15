@@ -315,12 +315,15 @@ logger.addHandler(loggers.NullHandler)
 caldir = os.sep.join(['sedtables','calibrators'])
 
 #-- default values for grids
-defaults = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
+__defaults__ = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 ct='mlt',                                 # NEMO (convection theory)
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05,          # MARCS and COMARCS
+                Rv=3.1,law='fitzpatrick2004',             # reddening info for integrated grids
                 use_scratch=False)
+
+defaults = __defaults__.copy()
 defaults_multiple = [defaults.copy(),defaults.copy()]
 #-- relative location of the grids
 basedir = 'sedtables/modelgrids/'
@@ -337,10 +340,7 @@ def set_defaults(*args,**kwargs):
     clear_memoization(keys=['ivs.sed.model'])
     #-- these are the default defaults
     if not kwargs:
-        kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
-                    alpha=False,nover=False,                  # KURUCZ
-                    He=97,                                    # WD
-                    t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
+        kwargs = __defaults__.copy()
                 
     for key in kwargs:
         if key in defaults:
@@ -510,7 +510,8 @@ def get_file(integrated=False,**kwargs):
     if os.path.isfile(grid):
         logger.debug('Selected %s'%(grid))
         if integrated:
-            return os.path.join(os.path.dirname(grid),'i'+os.path.basename(grid))
+            basename = os.path.basename(grid)
+            return os.path.join(os.path.dirname(grid),basename[0]=='i' and basename or 'i'+basename)
         logging.debug('Returning grid path: '+grid)
         return grid
     
@@ -944,7 +945,15 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 #-- interpolate in log10 of temperature
                 myflux[:,0] = np.log10(myflux[:,0])
                 flux = 10**griddata(myflux[:,:3],np.log10(myflux[:,3:]),(np.log10(teff),logg,ebv))
-    
+    except IndexError:
+        #-- probably metallicity outside of grid
+        raise ValueError('point outside of grid')
+    except ValueError:
+        #-- you tried to make a code of a negative number
+        raise ValueError('point outside of grid')
+    if np.any(np.isnan(flux)):
+        #-- you tried to make a code of a negative number
+        raise ValueError('point outside of grid')
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
     #return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
@@ -1597,6 +1606,15 @@ def synthetic_flux(wave,flux,photbands,units=None):
         else:
             wave_ = wave[region]
             flux_ = flux[region]
+        if not len(wave_):
+            energys[i] = np.nan
+            continue
+        #-- perhaps the entire response curve falls in between model points (happends with
+        #   narrowband UV filters), or there's very few model points covering it
+        if (np.searchsorted(wave_,waver[-1])-np.searchsorted(wave_,waver[0]))<5:
+            wave__ = np.sort(np.hstack([wave_,waver]))
+            flux_ = np.interp(wave__,wave_,flux_)
+            wave_ = wave__
         #-- interpolate response curve onto model grid
         transr = np.interp(wave_,waver,transr,left=0,right=0)
         
@@ -1664,7 +1682,7 @@ def luminosity(wave,flux,radius=1.):
 
 
 def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
-           units='Flambda',responses=None,update=False,**kwargs):
+           units='Flambda',responses=None,update=False,add_spectrophotometry=False,**kwargs):
     """
     Integrate an entire SED grid over all passbands and save to a FITS file.
     
@@ -1715,11 +1733,22 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     wave,flux = get_table(teff=teffs[0],logg=loggs[0])
     #-- get the response functions covering the wavelength range of the models
     #   also get the information on those filters
+    if add_spectrophotometry:
+        bands = filters.add_spectrophotometric_filters()
     if responses is None:
         responses = filters.list_response(wave_range=(wave[0],wave[-1]))
+    else:
+        responses_ = []
+        if not any(['BOXCAR' in i for i in responses]) and add_spectrophotometry:
+            responses.append('BOXCAR')
+        for resp in responses:
+            responses_ += filters.list_response(resp)
+        responses = responses_
     filter_info = filters.get_info(responses)
     responses = filter_info['photband']
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
+
+    logger.info('Integrating {0} filters'.format(len(responses)))
     
     def do_ebv_process(ebvs,arr,responses):
         logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
@@ -1776,11 +1805,14 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         outfile = 'i{0}'.format(os.path.basename(gridfile))
     else:
         outfile = os.path.join(os.path.dirname(gridfile),'i{0}'.format(os.path.basename(gridfile)))
+    outfile = 'i{0}'.format(os.path.basename(gridfile))
+    outfile = os.path.splitext(outfile)
+    outfile = outfile[0]+'_law{0}_Rv{1:.2f}'.format(law,Rv)+outfile[1]
     logger.info('Precaution: making original grid backup at {0}.backup'.format(outfile))
     if os.path.isfile(outfile):
         shutil.copy(outfile,outfile+'.backup')
     output = output.T
-    if not update:
+    if not update or not os.path.isfile(outfile):
         cols = [pyfits.Column(name='teff',format='E',array=output[0]),
                 pyfits.Column(name='logg',format='E',array=output[1]),
                 pyfits.Column(name='ebv',format='E',array=output[3]),
@@ -1809,7 +1841,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     table.header.update('RV',Rv,'interstellar reddening parameter')
     
     #-- make/update complete FITS file
-    if not update:
+    if not update or not os.path.isfile(outfile):
         if os.path.isfile(outfile):
             os.remove(outfile)
             logger.warning('Removed existing file: %s'%(outfile))

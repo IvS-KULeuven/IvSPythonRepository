@@ -11,6 +11,7 @@ import socket
 import logging
 import os
 import ConfigParser
+import shutil
 
 import numpy as np
 import pyfits
@@ -21,13 +22,14 @@ from ivs.aux import loggers
 from ivs.aux import numpy_ext
 from ivs.aux.decorators import retry_http
 from ivs.io import ascii
+from ivs.io import http
 from ivs.units import conversions
 from ivs.catalogs import vizier
 from ivs.catalogs import sesame
 
 
 logger = logging.getLogger("CAT.MAST")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -91,22 +93,61 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=5.,filetype='CSV',
     elif radius is not None:
         base_url += '&SIZE=%s'%(radius/60.)
     
+    for kwarg in kwargs:
+        base_url += '&%s=%s'%(kwarg,kwargs[kwarg])
+    
     if name not in ['spectra','images']:
         base_url += '&outputformat=%s'%(filetype)
         base_url += '&resolver=%s'%(resolver)
         #base_url += '&max_records=%d'%(out_max)
         base_url += '&coordformat=%s'%(coord)
-    
+    logger.debug('url: %s'%(base_url))
     return base_url
 
 
 
-def galex(ra,dec,radius=5.):
+def galex(**kwargs):
     """
     Cone search for Galex targets.
     """
-    radius = radius/60.
-    url = 'http://galex.stsci.edu/gxws/conesearch/conesearch.asmx/ConeSearchToXml?ra={ra:f}&dec={dec:f}&sr={radius:f}&verb=1'.format(ra,dec,radius)
+    ID = kwargs.pop('ID',None)
+    if ID is None:
+        ra,dec = kwargs.pop('ra'),kwargs.pop('dec')
+    else:
+        info = sesame.search(ID,db='A')
+        ra,dec = info['jradeg'],info['jdedeg']
+    radius = 0.1
+    #radius = radius/60.
+    base_url = 'http://galex.stsci.edu/gxws/conesearch/conesearch.asmx/ConeSearchToXml?ra={0:f}&dec={1:f}&sr={2:f}&verb=1'.format(ra,dec,radius)
+    #base_url = 'http://galex.stsci.edu/GR4/?page=searchresults&RA={ra:f}&DEC={dec:f}&query=no'.format(ra=ra,dec=dec)
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url,filename=None)
+    fuv_flux,e_fuv_flux = None,None
+    columns = ['_r','ra','dec','fuv_flux','fuv_fluxerr','nuv_flux','nuv_fluxerr']
+    values = [np.nan,np.nan,np.nan,np.nan,np.nan,np.nan,np.nan]
+    
+    #flux in microJy
+    units = dict(fuv_flux='muJy',nuv_flux='muJy')
+    
+    got_target = False
+    with open(filen,'r') as ff:
+        for line in ff.readlines():
+            for i,col in enumerate(columns):
+                if col+'>' in line:
+                    values[i] = np.float(line.split('>')[1].split('<')[0])
+                    got_target = (col=='fuv_fluxerr')
+            if got_target: 
+                break
+    
+    values[0] = np.sqrt( (values[1]-ra)**2 + (values[2]-dec)**2)*3600
+    columns[1] = '_RAJ2000'
+    columns[2] = '_DEJ2000'
+    
+    results = np.rec.fromarrays(np.array([values]).T,names=columns)
+    if np.all(np.isnan(np.array(values))):
+        results = None
+    
+    return results,units,None
     
 
 
@@ -236,7 +277,10 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
     #-- extra can be added:
     names = list(results.dtype.names)
     if extra_fields is not None:
-        translation = translations[source]
+        if source in translations:
+            translation = translations[source]
+        else:
+            translation = {'_r':'_r','_RAJ2000':'_RAJ2000','_DEJ2000':'_DEJ2000'}
         for e_dtype in extra_fields:
             try:
                 dtypes.append((e_dtype,results.dtype[names.index(translation[e_dtype])].str))
@@ -254,7 +298,7 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
-        if key[:2] in [e_flag,q_flag] or '_unit' in key:
+        if key[:2] in [e_flag,q_flag] or '_unit' in key or key=='bibcode':
             continue
         photband = cat_info.get(source,key)
         #-- contains measurement, error, quality, units, photometric band and
@@ -312,7 +356,7 @@ def csv2recarray(filename):
         #   the contents as a long string
         formats = np.zeros_like(data[0])
         for i,fmt in enumerate(data[1]):
-            if fmt=='string' or fmt=='datetime': formats[i] = 'a100'
+            if 'string' in fmt or fmt=='datetime': formats[i] = 'a100'
             if fmt=='integer': formats[i] = 'f8'
             if fmt=='ra': formats[i] = 'f8'
             if fmt=='dec': formats[i] = 'f8'
@@ -353,7 +397,11 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     master = None
     #-- retrieve all measurements
     for source in cat_info.sections():
-        results,units,comms = search(source,ID=ID,**kwargs)
+        if source=='galex':
+            results,units,comms = galex(ID=ID,**kwargs)
+        else:
+            results,units,comms = search(source,ID=ID,**kwargs)
+        
         if results is not None:
             master = mast2phot(source,results,units,master,extra_fields=extra_fields)
     
@@ -371,6 +419,8 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
+                value,e_value = np.nan,np.nan
+            except AssertionError: # postive flux and errors!
                 value,e_value = np.nan,np.nan
             try:
                 eff_wave = filters.eff_wave(master['photband'][i])
@@ -421,7 +471,64 @@ def get_dss_image(ID,ra=None,dec=None,width=5,height=5):
 
 
 
+def get_FUSE_spectra(ID=None,directory=None,cat_info=False,select=['ano']):
+    """
+    Get Fuse spectrum.
+    
+    select can be ['ano','all']
+    
+    # what about MDRS aperture?
+    """
+    direc = (directory is None) and os.getcwd() or directory
+    if not os.path.isdir(direc):
+        os.mkdir(direc)
+    data = search('fuse',ID=ID)
+    download_link = 'https://archive.stsci.edu/pub/fuse/data/{folder}/{filename}'
+    #-- maybe no information was found
+    if data[0] is None:
+        return None
+    elif cat_info:
+        return data
+    output = []
+    for spectrum in data[0]:
+        folder = spectrum['Data ID'][:8]
+        aperture = spectrum['Aperture']
+        noexp = int(spectrum['No. Exps'])
+        an = dict(MDWRS=2,LWRS=4)
+        if not aperture in an:
+            continue
+        an = an[aperture]
+        for exp in range(noexp):
+            data_id = folder+'{0:03d}00'.format(exp)
+            for type in select:
+                filename = '{data_id}{type}{an}ttagfcal.fit.gz'.format(data_id=data_id,type=type,an=an)
+                link = download_link.format(folder=folder,filename=filename)
+                link = link.lower()
+                filename = os.path.join(direc,filename)
+                myfile = http.download(link,filename=filename)
+                #-- if the file is too small to be a science file, it is
+                #   actually an HTML file stating that the URL does not exist.
+                if os.path.getsize(myfile)<1000:
+                    os.unlink(myfile)
+                    continue
+                logger.info('FUSE spectrum %s to %s'%(link,direc))
+                output.append(myfile)
+    return output
+    #https://archive.stsci.edu/pub/fuse/data/a0010101/a001010100000all4ttagfcal.fit.gz
+
 if __name__=="__main__":
+    #get_FUSE_spectrum(ID='hd163296')
+    print get_FUSE_spectrum(ID='hd163296').dtype.names
+    
+    raise SystemExit
+    mission = 'fuse'
+    base_url = _get_URI(mission,ID='hd163296')
+    print base_url
+    url = urllib.URLopener()
+    filen,msg = url.retrieve(base_url,filename='%s.test'%(mission))
+    url.close()
+    raise SystemExit
+    
     missions = ['hst',# - Hubble Space Telescope 
                 'kepler',# - Kepler Data search form 
                 'kepler/kepler_fov',# - Kepler Target search form 

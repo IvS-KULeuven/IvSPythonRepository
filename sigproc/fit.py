@@ -1179,9 +1179,9 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in vars(parameter).keys():
+        for key in parameter.keys():
             if key in kwargs:
-                vars(parameter)[key] = kwargs[key]
+                parameter[key] = kwargs[key]
     
     def get_parameters(self, parameters=None, full_output=False):
         """
@@ -1254,7 +1254,7 @@ class Function(object):
 
 class Model(object):
     """
-    Class to create a model using different L{Function}s each with theire associated parameters.
+    Class to create a model using different L{Function}s each with their associated parameters.
     This Model can then be used to fit data using the L{Minimizer} class.  The Model can be 
     evaluated using the L{evaluate} method. Parameters can be added/updated, together with
     boundaries and expressions, and can be hold fixed or adjusted by changing the vary keyword
@@ -1418,6 +1418,13 @@ class Model(object):
         Return the parameter object belonging to the model
         """
         return self.parameters
+    
+    def param2str(self, full_output=False, accuracy=2):
+        """
+        Converts the parameter object of this function to an easy printable string
+        """
+        return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
+
     #}
     
     
@@ -1527,7 +1534,11 @@ class Minimizer(lmfit.Minimizer):
         
         F-test
         ======
-        The F-test is used to compare the null model, which is the best fit found by the minimizer, with an alternate model, where on of the parameters is fixed to a specific value. The value is changed util the differnce between chi2_0 and chi2_f can't be explained by the loss of a degree of freedom with a certain confidence.
+        The F-test is used to compare the null model, which is the best fit
+        found by the minimizer, with an alternate model, where on of the
+        parameters is fixed to a specific value. The value is changed util the
+        differnce between chi2_0 and chi2_f can't be explained by the loss of a
+        degree of freedom with a certain confidence.
         
         M{F = (chi2_f / chi2_0 - 1) * (N-P)/P_fix}
         
@@ -1539,7 +1550,7 @@ class Minimizer(lmfit.Minimizer):
         @param output: Output type, error or ci (confidence intervall)
         """
         
-        # if only 1 confidence interval is asked, the output can be tupple instead of dict.
+        # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
         short_output = (type(p_names)==str and type(sigmas)==float) and True or False
         if type(p_names)==str: p_names = [p_names]
         if type(sigmas)==float: sigmas = [sigmas]

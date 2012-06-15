@@ -23,7 +23,7 @@ Short list of available systems:
     BESSEL (  6 filters)
    BESSELL (  6 filters)
      COROT (  2 filters)
-   COUSINS (  2 filters)
+   COUSINS (  3 filters)
        DDO (  7 filters)
      DENIS (  3 filters)
      DIRBE ( 10 filters)
@@ -67,6 +67,7 @@ Short list of available systems:
    VILNIUS (  7 filters)
      VISIR ( 13 filters)
   WALRAVEN (  5 filters)
+     WFCAM (  5 filters)
      WFPC2 ( 21 filters)
       WISE (  4 filters)
       WOOD ( 12 filters)
@@ -189,6 +190,90 @@ Plots of all passbands of all systems:
 
 ]include figure]]ivs_sed_filters_WOOD.png]
 
+Section 2: Adding filters on the fly
+====================================
+
+You can add custom filters on the fly using L{add_custom_filter}. In this
+example we add a weird-looking filter and check the definition of Flambda and
+Fnu and its relation to the effective wavelength of a passband:
+
+Prerequisites: some modules that come in handy:
+
+>>> from ivs.sigproc import funclib
+>>> from ivs.sed import model
+>>> from ivs.units import conversions
+
+First, we'll define a double peakd Gaussian profile on the wavelength grid of
+the WISE.W3 response curve:
+
+>>> wave = get_response('WISE.W3')[0]
+>>> trans = funclib.evaluate('gauss',wave,[1.5,76000.,10000.,0.])
+>>> trans+= funclib.evaluate('gauss',wave,[1.0,160000.,25000.,0.])
+
+This is what it looks like:
+
+>>> p = pl.figure()
+>>> p = pl.plot(wave/1e4,trans,'k-')
+>>> p = pl.xlabel("Wavelength [micron]")
+>>> p = pl.ylabel("Transmission [arbitrary units]")
+
+]include figure]]ivs_sed_filters_weird_trans.png]
+
+We can add this filter to the list of predefined filters in the following way
+(for the doctests to work, we have to do a little work around and call
+filters via that module, this is not needed in a normal workflow):
+
+>>> model.filters.add_custom_filter(wave,trans,photband='LAMBDA.CCD',type='CCD')
+>>> model.filters.add_custom_filter(wave,trans,photband='LAMBDA.BOL',type='BOL')
+
+Note that we add the filter twice, once assuming that it is mounted on a
+bolometer, and once on a CCD device. We'll call the filter C{LAMBDA.CCD} and
+C{LAMBDA.BOL}. From now on, they are available within functions as L{get_info}
+and L{get_response}. For example, what is the effective (actually pivot)
+wavelength?
+
+>>> effwave_ccd = model.filters.eff_wave('LAMBDA.CCD')
+>>> effwave_bol = model.filters.eff_wave('LAMBDA.BOL')
+>>> print(effwave_ccd,effwave_bol)
+(119263.54911400242, 102544.27931275869)
+
+Let's do some synthetic photometry now. Suppose we have a black body atmosphere:
+
+>>> bb = model.blackbody((wave,'angstrom'),(5777.,'K'),units='erg/s/cm2/A')
+
+We now calculate the synthetic flux, assuming the CCD and BOL device. We
+compute the synthetic flux both in Flambda and Fnu:
+
+>>> flam_ccd,flam_bol = model.synthetic_flux(wave,bb,['LAMBDA.CCD','LAMBDA.BOL'])
+>>> fnu_ccd,fnu_bol = model.synthetic_flux(wave,bb,['LAMBDA.CCD','LAMBDA.BOL'],units=['FNU','FNU'])
+
+You can see that the fluxes can be quite different when you assume photon or
+energy counting devices!
+
+>>> flam_ccd,flam_bol
+(897.68536911320564, 1495.248213834755)
+>>> fnu_ccd,fnu_bol
+(4.2591095543803019e-06, 5.2446332430111166e-06)
+
+Can we now readily convert Flambda to Fnu with assuming the pivot wavelength?
+
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,wave=(effwave_ccd,'A'))
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,wave=(effwave_bol,'A'))
+
+Which is equivalent with:
+
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,photband='LAMBDA.CCD')
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,photband='LAMBDA.BOL')
+
+Apparently, with the definition of pivot wavelength, you can safely convert from
+Fnu to Flambda:
+
+>>> print(fnu_ccd,fnu_fromflam_ccd)
+(4.2591095543803019e-06, 4.259110447428463e-06)
+>>> print(fnu_bol,fnu_fromflam_bol)
+(5.2446332430111166e-06, 5.2446373530017525e-06)
+
+The slight difference you see is numerical.
 
 """
 import os
@@ -220,10 +305,9 @@ def get_response(photband):
     
     Example usage:
     
-    >>> from pylab import plot,show
+    >>> p = pl.figure()
     >>> for band in ['J','H','KS']:
-    ...    p = plot(*get_response('2MASS.%s'%(band)))
-    >>> p = show()
+    ...    p = pl.plot(*get_response('2MASS.%s'%(band)))
     
     @param photband: photometric passband
     @type photband: str ('SYSTEM.FILTER')
@@ -240,7 +324,7 @@ def get_response(photband):
     elif photband in custom_filters:
         wave, response = custom_filters[photband]['response']
     else:
-        raise IOError
+        raise IOError,('{0} does not exist {1}'.format(photband,custom_filters.keys()))
     sa = np.argsort(wave)
     return wave[sa],response[sa]
 
@@ -274,9 +358,12 @@ def add_custom_filter(wave,response,**kwargs):
     photfile = os.path.join(basedir,'filters',photband)
     if os.path.isfile(photfile):
         raise ValueError,'bandpass {0} already exists'.format(photfile)
+    elif photband in custom_filters:
+        logger.warning('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
     #-- set effective wavelength
-    kwargs.setdefault('eff_wave',eff_wave(photband))
+    kwargs.setdefault('type','CCD')
+    kwargs.setdefault('eff_wave',eff_wave(photband,det_type=kwargs['type']))
     #-- add info for zeropoints.dat file: make sure wherever "lit" is part of
     #   the name, we replace it with "0". Then, we overwrite any existing
     #   information with info given
@@ -285,10 +372,31 @@ def add_custom_filter(wave,response,**kwargs):
         if 'lit' in name:
             myrow[name] = 0
         myrow[name] = kwargs.pop(name,myrow[name])
-    del decorators.memory['ivs.sed.filters']
+    del decorators.memory[__name__]
     #-- add info:
     custom_filters[photband]['zp'] = myrow
     logger.info('Added photband {0} to the predefined set'.format(photband))
+
+
+def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
+    #-- STEP 1: define wavelength bins
+    Delta = np.log10(1.+1./R)
+    x = np.arange(np.log10(lambda0),np.log10(lambdan)+Delta,Delta)
+    x = 10**x
+    photbands = []
+    for i in range(len(x)-1):
+        wave = np.linspace(x[i],x[i+1],100)
+        resp = np.ones_like(wave)
+        dw = wave[1]-wave[0]
+        wave = np.hstack([wave[0]-dw,wave,wave[-1]+dw])
+        resp = np.hstack([0,resp,0])
+        photband = 'BOXCAR_R{0:d}.{1:d}'.format(int(R),int(x[i]))
+        try:
+            add_custom_filter(wave,resp,photband=photband)
+        except ValueError:
+            logger.info('{0} already exists, skipping'.format(photband))
+        photbands.append(photband)
+    return photbands
 
 
 def list_response(name='*',wave_range=(-np.inf,+np.inf)):
@@ -307,8 +415,11 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     """
     #-- collect all curve files but remove human eye responses
     if not '*' in name:
-        name = '*' + name + '*'
-    curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name.upper())))
+        name_ = '*' + name + '*'
+    else:
+        name_ = name
+    curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name_.upper())))
+    curve_files = sorted(curve_files+[key for key in custom_filters.keys() if name in key])
     curve_files = [cf for cf in curve_files if not ('HUMAN' in cf or 'EYE' in cf) ]
     #-- select in correct wavelength range
     curve_files = [os.path.basename(curve_file) for curve_file in curve_files if (wave_range[0]<=eff_wave(os.path.basename(curve_file))<=wave_range[1])]
@@ -356,7 +467,7 @@ def get_color_photband(photband):
     return bands
 
 
-def eff_wave(photband,model=None):
+def eff_wave(photband,model=None,det_type=None):
     """
     Return the effective wavelength of a photometric passband.
     
@@ -364,7 +475,7 @@ def eff_wave(photband,model=None):
     the response curve.
     
     >>> eff_wave('2MASS.J')
-    12412.136241640892
+    12393.093155655277
     
     If you give model fluxes as an extra argument, the wavelengths will take
     these into account to calculate the `true' effective wavelength (e.g., 
@@ -391,17 +502,24 @@ def eff_wave(photband,model=None):
     for iphotband in photband:
         try:
             wave,response = get_response(iphotband)
+            #-- bolometric or ccd?
+            if det_type is None and len(get_info([iphotband])):
+                det_type = get_info([iphotband])['type'][0]
+            elif det_type is None:
+                det_type = 'CCD'
             if model is None:
                 #this_eff_wave = np.average(wave,weights=response)
-                this_eff_wave = np.sqrt(np.trapz(wave*response,x=wave)/np.trapz(response/wave,x=wave))
+                if det_type=='BOL':
+                    this_eff_wave = np.sqrt(np.trapz(response,x=wave)/np.trapz(response/wave**2,x=wave))
+                else:
+                    this_eff_wave = np.sqrt(np.trapz(wave*response,x=wave)/np.trapz(response/wave,x=wave))
             else:
                 #-- interpolate response curve onto higher resolution model and
                 #   take weighted average
                 is_response = response>1e-10
                 start_response,end_response = wave[is_response].min(),wave[is_response].max()
                 fluxm = np.sqrt(10**np.interp(np.log10(wave),np.log10(model[0]),np.log10(model[1])))
-                #-- bolometric or ccd?
-                det_type = get_info([iphotband])['type'][0]
+                
                 if det_type=='CCD':
                     this_eff_wave = np.sqrt(np.trapz(wave*fluxm*response,x=wave) / np.trapz(fluxm*response/wave,x=wave))
                 elif det_type=='BOL':
