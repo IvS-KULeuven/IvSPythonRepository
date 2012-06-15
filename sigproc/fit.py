@@ -1625,7 +1625,7 @@ class Minimizer(lmfit.Minimizer):
     #}
 
 def minimize(x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kwargs=None, scale_covar=True, iter_cb=None, **fit_kws):
+             engine='leastsq', args=None, kwargs=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
     """
     Basic minimizer function using the L{Minimizer} class, find values for the parameters so that the
     sum-of-squares of M{(y-model(x))} is minimized. When the fitting process is completed, the 
@@ -1666,12 +1666,12 @@ def minimize(x, y, model, err=None, weights=None,
     
     fitter = Minimizer(x, y, model, err=err, weights=weights,
              engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-    if fitter.message:
+    if fitter.message and verbose:
         logger.warning(fitter.message)
     return fitter
 
 def grid_minimize(x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, **fit_kws):
+             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, parameters=None, **fit_kws):
     
     oldpar = model.parameters.copy()
     results = []

@@ -1646,6 +1646,11 @@ class SED(object):
                           rad=r'Radius [$R_\odot$]',\
                           mass=r'Mass [$M_\odot$]')
         
+        label_dict['teff-2'] = 'Effective temperature secondary [K]'
+        label_dict['z-2'] = 'log (Metallicity Z [$Z_\odot$]) secondary [dex]'
+        label_dict['logg-2'] = r'log (surface gravity [cm s$^{-2}$]) secondary [dex]'
+        label_dict['ebv-2'] = 'E(B-V) secondary [mag]'
+        
         pl.xlabel(label_dict[x])
         pl.ylabel(label_dict[y])
         cbar.set_label(label_dict[ptype])
@@ -1911,7 +1916,7 @@ class SED(object):
         pl.legend(loc='upper right',prop=dict(size='x-small'))
         pl.grid()
         pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.120),xycoords='axes fraction',color='r')
-        pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.075),xycoords='axes fraction',color='r')
+        #pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.075),xycoords='axes fraction',color='r')
         pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.030),xycoords='axes fraction',color='k')
         xlims = pl.xlim()
         pl.plot(xlims,[self.results[mtype]['grid']['chisq'][-1],self.results[mtype]['grid']['chisq'][-1]],'r-',lw=2)
