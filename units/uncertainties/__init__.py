@@ -1356,6 +1356,9 @@ def parse_error_in_parentheses(representation):
         # No uncertainty was found: an uncertainty of 1 on the last
         # digit is assumed:
         uncert_int = '1'
+        # No uncertainty was found: an uncertainty of 0 on the last
+        # digit is assumed:
+        uncert_int = '0'
 
     # Do we have a fully explicit uncertainty?
     if uncert_dec is not None:
