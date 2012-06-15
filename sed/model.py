@@ -934,7 +934,15 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 myflux[:,0] = np.log10(myflux[:,0])
                 flux = 10**griddata(myflux[:,:3],np.log10(myflux[:,3:]),(np.log10(teff),logg,ebv))
     except IndexError:
-        raise IndexError('point outside of grid')
+        #-- probably metallicity outside of grid
+        raise ValueError('point outside of grid')
+    except ValueError:
+        #-- you tried to make a code of a negative number
+        raise ValueError('point outside of grid')
+    
+    if np.any(np.isnan(flux)):
+        #-- you tried to make a code of a negative number
+        raise ValueError('point outside of grid')
     
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
@@ -1588,6 +1596,9 @@ def synthetic_flux(wave,flux,photbands,units=None):
         else:
             wave_ = wave[region]
             flux_ = flux[region]
+        if not len(wave_):
+            energys[i] = np.nan
+            continue
         #-- perhaps the entire response curve falls in between model points (happends with
         #   narrowband UV filters), or there's very few model points covering it
         if (np.searchsorted(wave_,waver[-1])-np.searchsorted(wave_,waver[0]))<5:
