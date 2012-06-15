@@ -939,11 +939,9 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     except ValueError:
         #-- you tried to make a code of a negative number
         raise ValueError('point outside of grid')
-    
     if np.any(np.isnan(flux)):
         #-- you tried to make a code of a negative number
         raise ValueError('point outside of grid')
-    
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
     #return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
@@ -1729,6 +1727,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         responses = filters.list_response(wave_range=(wave[0],wave[-1]))
     else:
         responses_ = []
+        if not any(['BOXCAR' in i for i in responses]) and add_spectrophotometry:
+            responses.append('BOXCAR')
         for resp in responses:
             responses_ += filters.list_response(resp)
         responses = responses_
