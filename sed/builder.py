@@ -1173,8 +1173,10 @@ class SED(object):
             extra_master['photband'][i] = photbands[i]
             extra_master['source'][i] = source[i]
             extra_master['flag'][i] = flags[i]
-            extra_master['bibcode'][i] = '-'
-            extra_master['comments'][i] = '-'
+            if 'bibcode' in extra_master.dtype.names:
+                extra_master['bibcode'][i] = '-'
+            if 'comments' in extra_master.dtype.names:
+                extra_master['comments'][i] = '-'
         
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
