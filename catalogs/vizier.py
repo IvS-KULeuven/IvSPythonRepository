@@ -457,7 +457,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
                 logger.debug("Did not extract %s (probably not a spectrum)"%(name))
         #-- remove the tar file:
         tarf.close()
-        #os.unlink(mytarfile)
+        os.unlink(mytarfile)
         for dirname in deldirs:
             if dirname and os.path.isdir(dirname) and not os.listdir(dirname):
                 os.rmdir(dirname)
@@ -470,7 +470,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
             continue
         if outfile and os.path.isfile(outfile):
             wavelength,flux,error,header = fits.read_iue(outfile,return_header=True)
-            #os.unlink(outfile)
+            os.unlink(outfile)
             output.append([wavelength,flux,error,header])
         else:
             logger.info('Unsuccesfull extraction of %s'%(outfile))
