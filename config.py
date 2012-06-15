@@ -85,13 +85,13 @@ if __name__=="__main__":
                   'timeseries/deeming','timeseries/eebls','timeseries/multih',
                   'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
                   'timeseries/pyGLS','timeseries/pyfasper_single','timeseries/pyfasper',
-                  'timeseries/pyscargle_single]
+                  'timeseries/pyscargle_single']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if len(sys.argv)>=3:
             compiler = sys.argv[2]
         else:
-            compiler = 'intel'
+            compiler = 'gfortran'
         if sys.argv[1]=='compile':
             #-- catch all output from f2py
             devnull = open(os.devnull,'wb')
