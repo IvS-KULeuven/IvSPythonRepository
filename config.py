@@ -103,7 +103,7 @@ if __name__=="__main__":
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
                     answer = raw_input('Continue? [Y/n] ')
-                    if answer.lwer()=='n':
+                    if answer.lower()=='n':
                         continue
                     #-- call the compiling command
                     p = subprocess.Popen(cmd,shell=True,stdout=devnull)
