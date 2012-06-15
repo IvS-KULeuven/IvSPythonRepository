@@ -2750,16 +2750,16 @@ class Unit(object):
         self.value = value
         self.unit = unit
         self.kwargs = kwargs
-        #-- make sure we can calculate with:
-        if isinstance(self.value,tuple):
+        #-- make sure we can calculate with defined constants        
+        if isinstance(self.value,str) and hasattr(constants,self.value):
+            self.unit = getattr(constants,self.value+'_units')
+            self.value = getattr(constants,self.value)
+        elif isinstance(self.value,str) or isinstance(self.value,tuple):
             try:
                 self.value = ufloat(self.value)
             except:
                 self.value = unumpy.uarray(self.value)
-        #-- we can calculate with defined constants        
-        if isinstance(self.value,str):
-            self.unit = getattr(constants,self.value+'_units')
-            self.value = getattr(constants,self.value)
+        
         #-- values and units to work with
         if self.unit is not None:
             #-- perhaps someone says the unit is of "type" length. If so,
@@ -2981,6 +2981,9 @@ class Unit(object):
             
     def __str__(self):
         return '{0} {1}'.format(self.value,self.unit)
+    
+    def __repr__(self):
+        return "Unit('{value}','{unit}')".format(value=repr(self.value),unit=self.unit)
         
         
 
