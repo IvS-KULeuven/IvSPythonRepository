@@ -338,6 +338,7 @@ import re
 import copy
 import pylab as pl
 from ivs.sigproc import lmfit
+from multiprocessing import Process,Manager, Pool, cpu_count
 
 logger = logging.getLogger('TS.FIT')
 
@@ -1149,23 +1150,31 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in parameter.keys():
+        for key in vars(parameter).keys():
             if key in kwargs:
-                parameter[key] = kwargs[key]
+                vars(parameter)[key] = kwargs[key]
     
-    def get_parameters(self, full_output=False):
+    def get_parameters(self, parameters=None, full_output=False):
         """
-        Returns the parameter values together with the errors if they exist. If No fitting
+        Returns the parameter values together with the errors if they exist. If no fitting
         has been done, or the errors could not be calculated, None is returned for the error.
         
-        @param full_output: When True, also vary, the boundaries and expr are returned
+        @param parameters: A list of which parameters the values should be returned. If None,
+        the values of all parameters are returned
+        @type parameters: array
+        @param full_output: When True, also vary, the boundaries and expression are returned
         @type full_output: bool
         
-        @return: the parameter values and there errors value, err, [vary, min, max, expr]
+        @return: the parameter values and there errors: value, err, [vary, min, max, expr]
         @rtype: numpy arrays
         """
+        
+        if parameters == None:
+            parameters  = self.par_names
+        
         val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name, par in self.parameters.items():
+        for name in parameters:
+            par = self.parameters[name]
             val.append(par.value)
             err.append(par.stderr)
             vary.append(par.vary)
@@ -1641,24 +1650,99 @@ def minimize(x, y, model, err=None, weights=None,
              engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
     if fitter.message and verbose:
         logger.warning(fitter.message)
-    return fitter
+    return fitter    
 
-def grid_minimize(x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, parameters=None, **fit_kws):
+
+def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
+                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False, **fit_kws):
+    """                  
+    Grid minimizer
+    """
+    #-- create new models
+    newmodels = []
+    for i in range(points):
+        mod_ = copy.deepcopy(model)
+        mod_.parameters.kick(pnames=parameters)
+        newmodels.append(mod_)  
+    newmodels = np.array(newmodels)
     
-    oldpar = model.parameters.copy()
-    results = []
-    chi2s = []
-    for i in range(grid):
-        model.parameters.kick()
-        fitter = Minimizer(x, y, model, err=err, weights=weights,
-             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        results.append(fitter)
-        chi2s.append(fitter.chisqr)
+    fitters, chisqrs = [], []
+    for mod_ in newmodels:
+        # refit and store the results
+        fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
+                            kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+        fitters.append(fitter)
+        chisqrs.append(fitter.chisqr)
+    fitters, chisqrs = np.array(fitters), np.array(chisqrs)
     
-    print chi2s
+    #-- sort the results on increasing chisqr
+    inds = chisqrs.argsort()
+    fitters = fitters[inds]
+    newmodels = newmodels[inds]
+    chisqrs = chisqrs[inds]
+    
+    #store the best fitting model in the given model and return the results
+    model.parameters = newmodels[0].parameters
+    if return_all:
+        return fitters, newmodels, chisqrs
+    else:
+        return fitters[0]
+                      
+#def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
+                  #scale_covar=True, iter_cb=None, threads=8, points=100, parameters=None, return_all=False, **fit_kws):
+    #"""
+    #Grid minimizer
+    #"""
+    #from multiprocessing import Process, Pipe
+    #import sys
+    ##-- select number of threads
+    #if threads=='max':
+        #threads = cpu_count()
+    #elif threads=='half':
+        #threads = cpu_count()/2
+    #elif threads=='safe':
+        #threads = cpu_count()-1
+    #threads = int(threads)
+    
+    ##-- create new models
+    #newmodels = []
+    #for i in range(points):
+        #mod_ = copy.deepcopy(model)
+        #mod_.parameters.kick(pnames=parameters)
+        #newmodels.append(mod_)
+           
+    #def fit_models(models, results):
+        #fitters, chisqrs = [], []
+        #for mod_ in models:
+            ## refit and store the results
+            #fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
+                               #kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+            #results.append([fitter, mod_, fitter.chisqr])
+            
+    #def spawn(f):
+        #def fun(pipe,mod, res):
+            #pipe.send(f(mod, res))
+            #pipe.close()
+        #return fun
+    
+    ##-- multiprocess fitting
+    #processes = []
+    #manager = Manager()
+    #results = manager.list([])
+    #all_processes = []
+    #pipe = [Pipe() for x in range(threads)]
+    #for j in range(threads):
+    ##for j,(p,c) in izip(range(threads),pipe):
+        #proc = Process(target=spawn(fit_models), args=(pipe[j][1],newmodels[j::threads],results))
+        #all_processes.append(proc)
+        ##all_processes.append(Process(target=fit_models,args=(newmodels[j::threads],results)))
+        #all_processes[-1].start()
+    #for p in all_processes:
+        #p.join()
         
-        
+    #print results
+
+  
     
 
 #}
