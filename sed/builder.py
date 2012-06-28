@@ -1262,6 +1262,7 @@ class SED(object):
                 limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
+        logger.info('Parameter ranges calculated for type {0:s}, starting from {1:s} and using distribution {2:s}.'.format(type,start_from,distribution))
         return limits,type
     
     #{ Fitting routines
@@ -1284,36 +1285,36 @@ class SED(object):
         #-- set defaults limits
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
         if exist_previous and teffrange is None:
-            teffrange = self.results['igrid_search']['CI']['teffL'],self.results['igrid_search']['CI']['teffU']
+            teffrange = self.results['igrid_search']['CI']['teff_l'],self.results['igrid_search']['CI']['teff_u']
             if type=='multiple' or type=='binary':
-                teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2L'],self.results['igrid_search']['CI']['teff-2U']))
+                teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2_l'],self.results['igrid_search']['CI']['teff-2_u']))
         elif teffrange is None:
             teffrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 teffrange = teffrange,(-np.inf,np.inf)
             
         if exist_previous and loggrange is None:
-            loggrange = self.results['igrid_search']['CI']['loggL'],self.results['igrid_search']['CI']['loggU']
+            loggrange = self.results['igrid_search']['CI']['logg_l'],self.results['igrid_search']['CI']['logg_u']
             if type=='multiple' or type=='binary':
-                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2L'],self.results['igrid_search']['CI']['logg-2U']))
+                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2_l'],self.results['igrid_search']['CI']['logg-2_l']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
-            ebvrange = self.results['igrid_search']['CI']['ebvL'],self.results['igrid_search']['CI']['ebvU']
+            ebvrange = self.results['igrid_search']['CI']['ebv_u'],self.results['igrid_search']['CI']['ebv_u']
             if type=='multiple' or type=='binary':
-                ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2L'],self.results['igrid_search']['CI']['ebv-2U']))
+                ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2_l'],self.results['igrid_search']['CI']['ebv-2_u']))
         elif ebvrange is None:
             ebvrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 ebvrange = ebvrange,(-np.inf,np.inf)
             
         if exist_previous and zrange is None:
-            zrange = self.results['igrid_search']['CI']['zL'],self.results['igrid_search']['CI']['zU']
+            zrange = self.results['igrid_search']['CI']['z_l'],self.results['igrid_search']['CI']['z_u']
             if type=='multiple' or type=='binary':
-                zrange = (zrange,(self.results['igrid_search']['CI']['z-2L'],self.results['igrid_search']['CI']['z-2U']))
+                zrange = (zrange,(self.results['igrid_search']['CI']['z-2_l'],self.results['igrid_search']['CI']['z-2_u']))
         elif zrange is None:
             zrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
@@ -1373,8 +1374,8 @@ class SED(object):
         if k<=0:
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
-        #   rescale if needed and compute confidence intervals
-        print grid_results.dtype.names,grid_results.shape
+        
+        #-- rescale if needed and compute confidence intervals
         factor = max(grid_results['chisq'][-1]/k,1)
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
         CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
@@ -1426,8 +1427,8 @@ class SED(object):
             #    self.results['igrid_search']['grid']['scale']*d_min
             
         
-    def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,\
-             start_from='imc',distribution='uniform',points=None,fitmethod='fmin'):
+    def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='imc',\
+                 distribution='uniform',points=None,fitmethod='fmin',disturb=True):
         
         limits,type = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
                                       ebvrange=ebvrange,zrange=zrange,distribution=distribution,\
@@ -1436,30 +1437,59 @@ class SED(object):
         #-- grid search on all include data: extract the best CHI2
         include = self.master['include']
         meas = self.master['cmeas'][include]
-        emeas = self.master['e_cmeas'][include]
+        if disturb:
+            emeas = self.master['e_cmeas'][include]
+        else:
+            emeas = self.master['e_cmeas'][include]*1e-6
         photbands = self.master['photband'][include]
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include])))
         
         #-- generate initial guesses
-        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],type=type,points=points,**limits)         
-        output = np.zeros((points,8))
-        for i,(teff,logg,ebv,z) in enumerate(zip(teffs,loggs,ebvs,zs)):
-            newmeas = meas# + np.random.normal(scale=emeas)
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],type=type,points=points+25,**limits)         
+        NrPoints = len(teffs)>points and points or len(teffs)
+        firstoutput = np.zeros((len(teffs)-NrPoints,9))
+        output = np.zeros((NrPoints,9))
+        
+        #-- fit the original data a number of times
+        for i,(teff,logg,ebv,z) in enumerate(zip(teffs[NrPoints:],loggs[NrPoints:],ebvs[NrPoints:],zs[NrPoints:])):
+            try:
+                fittedpars,warnflag = fit.iminimize2(meas,emeas,photbands,teff,logg,ebv,z,fitmethod=fitmethod)
+                firstoutput[i,1:] = fittedpars
+                firstoutput[i,0] = warnflag
+            except IOError:
+                firstoutput[i,0] = 3
+        
+        logger.info("{0}/{1} fits on original data failed (max func call)".format(sum(firstoutput[:,0]==1),firstoutput.shape[0]))
+        logger.info("{0}/{1} fits on original failed (max iter)".format(sum(firstoutput[:,0]==2),firstoutput.shape[0]))
+        logger.info("{0}/{1} fits on original data failed (outside of grid)".format(sum(firstoutput[:,0]==3),firstoutput.shape[0]))
+        
+        #-- retrieve the best fitting result and make it the first entry of output
+        keep = (firstoutput[:,0]==0) & (firstoutput[:,1]>0)
+        best = firstoutput[keep,-2].argmin()
+        output[-1,:] = firstoutput[keep][best,:]
+        
+        # calculate the factor with which to multiply the scale
+        #factor = np.sqrt(output[-1,5]/len(meas))
+        #print factor
+        
+        #-- now do the actual Monte Carlo simulation
+        for i,(teff,logg,ebv,z) in enumerate(zip(teffs[:NrPoints-1],loggs[:NrPoints-1],ebvs[:NrPoints-1],zs[:NrPoints-1])):
+            newmeas = meas + np.random.normal(scale=emeas) #*factor)
             try:
                 fittedpars,warnflag = fit.iminimize2(newmeas,emeas,photbands,teff,logg,ebv,z,fitmethod=fitmethod)
                 output[i,1:] = fittedpars
                 output[i,0] = warnflag
             except IOError:
                 output[i,0] = 3
-            
-         
-        logger.info("{0}/{1} MC simulations failed (max func call)".format(sum(output[:,0]==1),points))
-        logger.info("{0}/{1} MC simulations failed (max iter)".format(sum(output[:,0]==2),points))
-        logger.info("{0}/{1} MC simulations failed (outside of grid)".format(sum(output[:,0]==3),points))
+                
+        logger.info("{0}/{1} MC simulations failed (max func call)".format(sum(output[:,0]==1),NrPoints))
+        logger.info("{0}/{1} MC simulations failed (max iter)".format(sum(output[:,0]==2),NrPoints))
+        logger.info("{0}/{1} MC simulations failed (outside of grid)".format(sum(output[:,0]==3),NrPoints))
+        
         #-- remove nonsense results
         keep = (output[:,0]==0) & (output[:,1]>0)
         output = output[keep]
-        output = np.rec.fromarrays(output[:,1:-1].T,names=['teff','logg','ebv','z','chisq','scale'])
+        output = np.rec.fromarrays(output[:,1:-1].T,names=['teff','logg','ebv','z','labs','chisq','scale'])
         #-- derive confidence intervals and median values
         #print np.median(output[:,1:],axis=0)
         
@@ -1471,7 +1501,7 @@ class SED(object):
             sortarr = np.sort(output[name])
             trimarr = scipy.stats.trimboth(sortarr,(1-CI_limit)/2.) # trim 2.5% of top and bottom, to arrive at 95% CI
             self.results['imc']['CI'][name+'_l'] = trimarr.min()
-            self.results['imc']['CI'][name] = np.median(output[name])
+            self.results['imc']['CI'][name] = output[name][-1]#np.median(output[name])
             self.results['imc']['CI'][name+'_u'] = trimarr.max()
             logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['imc']['CI'][name+'_l'],
                                                            self.results['imc']['CI'][name],
@@ -1647,26 +1677,6 @@ class SED(object):
         #-- compute angular diameter
         theta = conversions.convert('sr','mas',4*np.pi*np.sqrt(self.results[mtype]['grid']['scale']))
         
-        if limit is not None:
-            region = self.results[mtype]['grid']['ci_red']<limit
-        else:
-            region = self.results[mtype]['grid']['ci_red']<np.inf
-        #-- get the colors and the color scale
-        if d is not None and ptype=='labs':
-            colors = locals()[ptype][region]
-        elif ptype in self.results[mtype]['grid'].dtype.names:
-            colors = self.results[mtype]['grid'][ptype][region]
-        else:
-            colors = locals()[ptype][region]
-        
-        if 'CI' in ptype:
-            colors *= 100.
-            vmin = colors.min()
-            vmax = 95.
-        else:
-            vmin = kwargs.pop('vmin',colors.min())
-            vmax = kwargs.pop('vmax',colors.max())
-        
         #-- define abbrevation for plotting
         if x in self.results[mtype]['grid'].dtype.names:
             X = self.results[mtype]['grid'][x]
@@ -1677,17 +1687,8 @@ class SED(object):
             Y = self.results[mtype]['grid'][y]
         else:
             Y = locals()[y]
-        #-- grid scatter plot
-        pl.scatter(X[region],Y[region],
-             c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
-        #-- mark best value
-        pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
-        #-- set the limits to only include the 95 interval
-        pl.xlim(X[region].max(),X[region].min())
-        pl.ylim(Y[region].max(),Y[region].min())
-        cbar = pl.colorbar()
         
-        #-- set the x/y/color labels
+        #-- for setting the x/y/color labels
         label_dict = dict(teff='Effective temperature [K]',\
                           z='log (Metallicity Z [$Z_\odot$]) [dex]',\
                           logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
@@ -1696,15 +1697,58 @@ class SED(object):
                           ci_red='Reduced probability [%]',\
                           Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
                           rad=r'Radius [$R_\odot$]',\
-                          mass=r'Mass [$M_\odot$]',
+                          mass=r'Mass [$M_\odot$]',\
+                          mc=r'MC [Nr. points in hexagonal bin]',
                           )
-
-        pl.xlabel(label_dict[x])
-        pl.ylabel(label_dict[y])
+        
+        #-- make the plot
+        if mtype == 'imc':
+            pl.hexbin(X,Y,mincnt=1,cmap=pl.cm.spectral)  #bins='log'
+            ptype = 'mc'
+                        
+            #-- set the limits
+            pl.xlim(X.max(),X.min())
+            pl.ylim(Y.max(),Y.min())
+            cbar = pl.colorbar()
+        else:
+            if limit is not None:
+                region = self.results[mtype]['grid']['ci_red']<limit
+            else:
+                region = self.results[mtype]['grid']['ci_red']<np.inf
+            #-- get the colors and the color scale
+            if d is not None and ptype=='labs':
+                colors = locals()[ptype][region]
+            elif ptype in self.results[mtype]['grid'].dtype.names:
+                colors = self.results[mtype]['grid'][ptype][region]
+            else:
+                colors = locals()[ptype][region]
+            
+            if 'ci' in ptype:
+                colors *= 100.
+                vmin = colors.min()
+                vmax = 95.
+            else:
+                vmin = kwargs.pop('vmin',colors.min())
+                vmax = kwargs.pop('vmax',colors.max())
+            
+            #-- grid scatter plot
+            pl.scatter(X[region],Y[region],
+                 c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
+            #-- set the limits to only include the 95 interval
+            pl.xlim(X[region].max(),X[region].min())
+            pl.ylim(Y[region].max(),Y[region].min())
+            cbar = pl.colorbar()
+            
+        #-- mark best value
+        pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
+        
+        pl.xlabel(label_dict[x.rstrip('-2')])
+        pl.ylabel(label_dict[y.rstrip('-2')])
         cbar.set_label(label_dict[ptype])
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
-    
+
+
     @standalone_figure
     def plot_data(self,colors=False, plot_unselected=True,
                   unit_wavelength='angstrom',unit_flux=None,**kwargs):
@@ -1913,17 +1957,17 @@ class SED(object):
         else:
             leg = pl.legend(loc='upper right',prop=dict(size='x-small'))
             leg.get_frame().set_alpha(0.5)
-        loc = (0.05,0.05)
+        loc = (0.45,0.05)
         if mtype in self.results:
-            teff = self.results[mtype]['grid']['teff'][-1]
-            logg = self.results[mtype]['grid']['logg'][-1]
-            ebv = self.results[mtype]['grid']['ebv'][-1]
-            scale = self.results[mtype]['grid']['scale'][-1]
+            teff = self.results[mtype]['CI']['teff']
+            logg = self.results[mtype]['CI']['logg']
+            ebv = self.results[mtype]['CI']['ebv']
+            scale = self.results[mtype]['CI']['scale']
             angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
             try:
-                teff2 = self.results[mtype]['grid']['teff-2'][-1]
-                logg2 = self.results[mtype]['grid']['logg-2'][-1]
-                radii = self.results[mtype]['grid']['rad-2'][-1]/self.results[mtype]['grid']['rad'][-1]
+                teff2 = self.results[mtype]['CI']['teff-2']
+                logg2 = self.results[mtype]['CI']['logg-2']
+                radii = self.results[mtype]['CI']['rad-2']/self.results[mtype]['CI']['rad']
                 pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
                         loc,xycoords='axes fraction')
             except:
@@ -1981,9 +2025,10 @@ class SED(object):
                     pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system,color=color)
             pl.legend(loc='upper right',prop=dict(size='x-small'))
             pl.grid()
-            pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.69,0.120),xycoords='axes fraction',color='r')
-            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.69,0.075),xycoords='axes fraction',color='r')
-            pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.69,0.030),xycoords='axes fraction',color='k')
+            pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.59,0.120),xycoords='axes fraction',color='r')
+            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.59,0.075),xycoords='axes fraction',color='r')
+            if 'factor' in self.results[mtype]:
+                pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.59,0.030),xycoords='axes fraction',color='k')
             xlims = pl.xlim()
             pl.plot(xlims,[self.results[mtype]['grid']['chisq'][-1],self.results[mtype]['grid']['chisq'][-1]],'r-',lw=2)
             pl.xlim(xlims)
@@ -1996,40 +2041,42 @@ class SED(object):
         
     @standalone_figure    
     def plot_distance(self,mtype='igrid_search'):
-        #-- necessary information
-        (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
-        (d,dprob) = self.results['igrid_search']['d']
-        
-        ax_d = pl.gca()
-        
-        
-        gal = self.info['galpos']
-        #-- the plot
-        dzoom = dprob>1e-4
-        pl.plot(d,dprob,'k-')
-        pl.grid()
-        pl.xlabel('Distance [pc]')
-        pl.ylabel('Probability [unnormalized]')
-        pl.xlim(d[dzoom].min(),d[dzoom].max())
-        xlims = pl.xlim()
-        pl.twiny(ax_d)
-        pl.xlim(xlims)
-        xticks = pl.xticks()
-        pl.xticks(xticks[0],['%.2f'%(conversions.convert('pc','Rsol',np.sqrt(self.results['igrid_search']['grid']['scale'][-1])*di)) for di in xticks[0]])
-        pl.xlabel('Radius [$R_\odot$]')
-        pl.twinx(ax_d)
-        res = 100
-        d_keep = (xlims[0]<=d[::res]) & (d[::res]<=xlims[1])
-        if len(self.results['igrid_search']['drimmel']):
-            pl.plot(d[::res][d_keep],self.results['igrid_search']['drimmel'].ravel()[d_keep],'b-',label='Drimmel')
-        if len(self.results['igrid_search']['marshall']):
-            pl.plot(d[::res][d_keep],self.results['igrid_search']['marshall'].ravel()[d_keep],'b--',label='Marshall')
-        ebv = self.results[mtype]['grid']['ebv'][-1]
-        pl.plot(xlims,[ebv*3.1,ebv*3.1],'r--',lw=2,label='measured')
-        pl.ylabel('Visual extinction $A_v$ [mag]')
-        pl.legend(loc='lower right',prop=dict(size='x-small'))
-        pl.xlim(xlims)
-        logger.info('Plotted distance/reddening')
+        try:
+            #-- necessary information
+            (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
+            (d,dprob) = self.results['igrid_search']['d']
+            
+            ax_d = pl.gca()
+                   
+            gal = self.info['galpos']
+            #-- the plot
+            dzoom = dprob>1e-4
+            pl.plot(d,dprob,'k-')
+            pl.grid()
+            pl.xlabel('Distance [pc]')
+            pl.ylabel('Probability [unnormalized]')
+            pl.xlim(d[dzoom].min(),d[dzoom].max())
+            xlims = pl.xlim()
+            pl.twiny(ax_d)
+            pl.xlim(xlims)
+            xticks = pl.xticks()
+            pl.xticks(xticks[0],['%.2f'%(conversions.convert('pc','Rsol',np.sqrt(self.results['igrid_search']['grid']['scale'][-1])*di)) for di in xticks[0]])
+            pl.xlabel('Radius [$R_\odot$]')
+            pl.twinx(ax_d)
+            res = 100
+            d_keep = (xlims[0]<=d[::res]) & (d[::res]<=xlims[1])
+            if len(self.results['igrid_search']['drimmel']):
+                pl.plot(d[::res][d_keep],self.results['igrid_search']['drimmel'].ravel()[d_keep],'b-',label='Drimmel')
+            if len(self.results['igrid_search']['marshall']):
+                pl.plot(d[::res][d_keep],self.results['igrid_search']['marshall'].ravel()[d_keep],'b--',label='Marshall')
+            ebv = self.results[mtype]['grid']['ebv'][-1]
+            pl.plot(xlims,[ebv*3.1,ebv*3.1],'r--',lw=2,label='measured')
+            pl.ylabel('Visual extinction $A_v$ [mag]')
+            pl.legend(loc='lower right',prop=dict(size='x-small'))
+            pl.xlim(xlims)
+            logger.info('Plotted distance/reddening')
+        except KeyError:
+            logger.info('No distance/reddening plotted due to KeyError.')
     
     @standalone_figure
     def plot_grid_model(self,ptype='prob'):
@@ -2199,8 +2246,7 @@ class SED(object):
                     rad_velo += '+/-%.1f'%(self.info['Vel']['e'])
                 pl.annotate(rad_velo+' km/s',xy=(0.05,0.15),xycoords='axes fraction',color='red')
     
-        
-        
+                
     def make_plots(self):
         """
         Make all available plots
@@ -2220,8 +2266,8 @@ class SED(object):
         pl.subplot(rows,cols,7);self.plot_chi2(colors=False)
         pl.subplot(rows,cols,11);self.plot_chi2(colors=True)
         
-        pl.subplot(rows,cols,8);self.plot_grid_model(ptype='prob')
-        pl.subplot(rows,cols,12);self.plot_grid_model(ptype='radii')
+        #pl.subplot(rows,cols,8);self.plot_grid_model(ptype='prob')
+        #pl.subplot(rows,cols,12);self.plot_grid_model(ptype='radii')
         
         pl.figure(figsize=(12,12))
         pl.axes([0,0.0,1.0,0.5]);self.plot_MW_side()
@@ -2304,22 +2350,24 @@ class SED(object):
                 eff_waves,synflux,photbands = self.results[mtype]['synflux']
                 chi2 = self.results[mtype]['chi2']
                 
-                results_dict = dict(extname='model_'+mtype)
+                results_modeldict = dict(extname='model_'+mtype)
+                results_griddict = dict(extname=mtype)
                 keys = sorted(self.results[mtype])
                 for key in keys:
                     if 'CI' in key:
                         for ikey in self.results[mtype][key]:
-                            results_dict[ikey] = self.results[mtype][key][ikey]
+                            if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
+                                results_modeldict[ikey] = self.results[mtype][key][ikey]
+                            results_griddict[ikey] = self.results[mtype][key][ikey]    
                     if key=='factor':
-                        results_dict[key] = self.results[mtype][key]
+                        results_griddict[key] = self.results[mtype][key]
             
                 fits.write_array(list(self.results[mtype]['model']),filename,
                                 names=('wave','flux','dered_flux'),
                                 units=('A','erg/s/cm2/A','erg/s/cm2/A'),
-                                header_dict=results_dict)
+                                header_dict=results_modeldict)
             
-                results_dict['extname'] = mtype
-                fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_dict)
+                fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
                 
                 results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
                 
@@ -2375,20 +2423,21 @@ class SED(object):
                 self.results[mtype] = {}
                 self.results[mtype]['grid'] = master
                 if 'factor' in ff[mtype].header:
-                    self.results[mtype]['factor'] = ff[mtype].header['factor']
+                    self.results[mtype]['factor'] = np.array([ff[mtype].header['factor']])[0]
                 
-                self.results[mtype]['model'] = ff['model_'+mtype].data.field('wave'),ff['model_'+mtype].data.field('flux'),ff['model_'+mtype].data.field('dered_flux')
-                self.results[mtype]['chi2'] = ff['synflux_'+mtype].data.field('chi2')
-                self.results[mtype]['synflux'] = ff['synflux_'+mtype].data.field('mod_eff_wave'),ff['synflux_'+mtype].data.field('synflux'),self.master['photband']
-                headerkeys = ff['model_igrid_search'].header.ascardlist().keys()
+                self.results[mtype]['model'] = np.array(ff['model_'+mtype].data.field('wave'),dtype='float64'),np.array(ff['model_'+mtype].data.field('flux'),dtype='float64'),np.array(ff['model_'+mtype].data.field('dered_flux'),dtype='float64')
+                self.results[mtype]['chi2'] = np.array(ff['synflux_'+mtype].data.field('chi2'),dtype='float64')
+                self.results[mtype]['synflux'] = np.array(ff['synflux_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff['synflux_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
+                headerkeys = ff[mtype].header.ascardlist().keys()
                 for key in headerkeys[::-1]:
-                    for badkey in ['xtension','bitpix','naxis','pcount','gcount','tfields','ttype','tform','tunit','extname']:
+                    for badkey in ['xtension','bitpix','naxis','pcount','gcount','tfields','ttype','tform','tunit','factor','extname']:
                         if key.lower().count(badkey):
                             headerkeys.remove(key)
                             continue
                 self.results[mtype]['CI'] = {}
                 for key in headerkeys:
-                    self.results[mtype]['CI'][key.lower()] = ff['model_igrid_search'].header[key]
+                    #-- we want to have the same types as the original: numpy.float64 --> np.array([..])[0]
+                    self.results[mtype]['CI'][key.lower()] = np.array([ff[mtype].header[key]])[0]
             except KeyError:
                 continue
         
