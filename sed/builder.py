@@ -1192,15 +1192,18 @@ class SED(object):
     #{ Request additional information
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
+        output = {}
+        if not 'galpos' in self.info:
+            return output
         gal = self.info['galpos']
         if distance is None:
-            d = self.get_distance()
+            d = self.get_distance_from_plx()
             if isinstance(d,tuple):
                 d = d[0][np.argmax(d[1])]
-        output = {}
         for model in ['arenou','schlegel','drimmel','marshall']:
-            EBV = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)/Rv
-            output[model] = EBV
+            EBV_Rv = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)
+            if EBV_Rv is not None:
+               output[model] = EBV_Rv/Rv
         return output
     
     #}
@@ -1290,36 +1293,36 @@ class SED(object):
         #-- set defaults limits
         exist_previous = ('igrid_search' in self.results and 'CI' in self.results['igrid_search'])
         if exist_previous and teffrange is None:
-            teffrange = self.results['igrid_search']['CI']['teffL'],self.results['igrid_search']['CI']['teffU']
+            teffrange = self.results['igrid_search']['CI']['teff_l'],self.results['igrid_search']['CI']['teff_u']
             if type=='multiple' or type=='binary':
-                teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2L'],self.results['igrid_search']['CI']['teff-2U']))
+                teffrange = (teffrange,(self.results['igrid_search']['CI']['teff-2_l'],self.results['igrid_search']['CI']['teff-2_u']))
         elif teffrange is None:
             teffrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 teffrange = teffrange,(-np.inf,np.inf)
             
         if exist_previous and loggrange is None:
-            loggrange = self.results['igrid_search']['CI']['loggL'],self.results['igrid_search']['CI']['loggU']
+            loggrange = self.results['igrid_search']['CI']['logg_l'],self.results['igrid_search']['CI']['logg_u']
             if type=='multiple' or type=='binary':
-                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2L'],self.results['igrid_search']['CI']['logg-2U']))
+                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2_l'],self.results['igrid_search']['CI']['logg-2_u']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
-            ebvrange = self.results['igrid_search']['CI']['ebvL'],self.results['igrid_search']['CI']['ebvU']
+            ebvrange = self.results['igrid_search']['CI']['ebv_l'],self.results['igrid_search']['CI']['ebv_u']
             if type=='multiple' or type=='binary':
-                ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2L'],self.results['igrid_search']['CI']['ebv-2U']))
+                ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2_l'],self.results['igrid_search']['CI']['ebv-2_u']))
         elif ebvrange is None:
             ebvrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 ebvrange = ebvrange,(-np.inf,np.inf)
             
         if exist_previous and zrange is None:
-            zrange = self.results['igrid_search']['CI']['zL'],self.results['igrid_search']['CI']['zU']
+            zrange = self.results['igrid_search']['CI']['z_l'],self.results['igrid_search']['CI']['z_u']
             if type=='multiple' or type=='binary':
-                zrange = (zrange,(self.results['igrid_search']['CI']['z-2L'],self.results['igrid_search']['CI']['z-2U']))
+                zrange = (zrange,(self.results['igrid_search']['CI']['z-2_l'],self.results['igrid_search']['CI']['z-2_u']))
         elif zrange is None:
             zrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
@@ -1647,7 +1650,7 @@ class SED(object):
             logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
             rad  = d*np.sqrt(self.results[mtype]['grid']['scale'])
             rad  = conversions.convert('pc','Rsol',rad) # in Rsol
-            Labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
+            labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
             mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
                                            (rad,'Rsol'),unit='Msol')
         #-- compute angular diameter
@@ -1662,8 +1665,11 @@ class SED(object):
             colors = locals()[ptype][region]
         elif ptype in self.results[mtype]['grid'].dtype.names:
             colors = self.results[mtype]['grid'][ptype][region]
-        else:
+        elif ptype in locals():
             colors = locals()[ptype][region]
+        else:
+            logger.warning('Cannot plot {0}'.format(ptype))
+            return None
         
         if 'CI' in ptype:
             colors *= 100.
@@ -1700,7 +1706,7 @@ class SED(object):
                           ebv='E(B-V) [mag]',\
                           ci_raw='Raw probability [%]',\
                           ci_red='Reduced probability [%]',\
-                          Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
                           rad=r'Radius [$R_\odot$]',\
                           mass=r'Mass [$M_\odot$]',
                           )
