@@ -87,6 +87,10 @@ from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
 
+from ivs import config
+from ivs.io import fits
+from scipy.interpolate import interp1d
+
 logger = logging.getLogger("SPEC.TOOLS")
 
 def doppler_shift(wave,vrad,vrad_units='km/s',flux=None):
@@ -406,7 +410,55 @@ def combine(list_of_spectra,R=200.,lambda0=(950.,'A'),lambdan=(3350.,'A')):
     #-- that's it!
     return x[:-1],totalflux,totalerr,totalspec
 
+def get_response(instrument='hermes'):
+    """
+    Returns the response curve of the given instrument. Up till now only a HERMES response cruve is
+    available. This response curve is based on 25 spectra of the single sdB star Feige 66, and has
+    a wavelenght range of 3800 to 8000 A.
+    
+    @param instrument: the instrument of which you want the response curve
+    @type instrument: string
+    """
+        
+    basedir = 'spectables/responses/'
+    
+    if instrument == 'hermes':
+        basename = 'response_Feige66.fits'
+        
+    response = config.get_datafile(basedir,basename)
+    
+    wave, flux = fits.read_spectrum(response)
+        
+    return wave, flux
 
+def remove_response(wave, flux, instrument='hermes'):
+    """
+    Divides the provided spectrum by the response curve of the given instrument. Up till now only
+    a HERMES response curve is available.
+    
+    @param wave: wavelenght array
+    @type wave: numpy array
+    @param flux: flux array
+    @type flux: numpy array
+    @param instrument: the instrument of which you want the response curve
+    @type instrument: string
+    
+    @return: the new spectrum (wave, flux)
+    @rtype: (array, array)
+    """
+    
+    #-- get the response curve
+    wr, fr = get_response(instrument=instrument)
+    fr_ = interp1d(wr, fr, kind='linear')
+    
+    #-- select usefull part of the spectrum
+    flux = flux[(wave >= wr[0]) & (wave <= wr[-1])]
+    wave = wave[(wave >= wr[0]) & (wave <= wr[-1])]
+    
+    flux = flux / fr_(wave)
+    
+    return wave, flux
+    
 
 if __name__=="__main__":
     import doctest
