@@ -59,58 +59,58 @@ The results will be written to the file B{HD180642.phot}. An example content is:
 
   #  meas    e_meas flag unit photband          source                        _r   _RAJ2000    _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
   #float64   float64 |S20 |S30 |S30              |S50                     float64    float64     float64 float64     float64     float64 |S50         bool    bool
-    7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/A     0       1
-    7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/A     0       1
-     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/A     0       1
-    7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/A     0       1
-    8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/A     0       1
-    8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/A     0       1
-     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+    7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/AA     0       1
+    7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/AA     0       1
+     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/AA     0       1
+    7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/AA     0       1
+    8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/AA     0       1
+    8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/AA     0       1
+     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
      0.22       nan nan  mag  JOHNSON.B-V       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
+     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
     2.601       nan nan  mag  STROMGREN.HBN-HBW J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.66181    0.166181 flux_ratio      1       0
    -0.043       nan nan  mag  STROMGREN.M1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan    0.961281   0.0961281 flux_ratio      1       0
-    8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/A     0       1
+    8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/AA     0       1
     0.009       nan nan  mag  STROMGREN.C1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     0.93125    0.093125 flux_ratio      1       0
     0.238       nan nan  mag  STROMGREN.B-Y     J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.28058    0.128058 flux_ratio      1       0
-    8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/A     0       1
-    8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/A     0       1
-    8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/A     0       1
-     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/A     0       1
-     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/A     0       1
-     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/A     0       1
-   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/A     0       1
-    8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/A     0       1
-    8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/A     0       1
-     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/A     0       1
-    8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/A     0       1
-     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/A     0       1
-     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/A     0       1
-    8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/A     0       1
-    8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/A     0       1
-    7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/A     0       1
-    7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/A     0       1
-    7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/A     0       1
-    8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/A     0       1
+    8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/AA     0       1
+    8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/AA     0       1
+    8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/AA     0       1
+     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/AA     0       1
+     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/AA     0       1
+     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/AA     0       1
+   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/AA     0       1
+    8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/AA     0       1
+    8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/AA     0       1
+     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/AA     0       1
+    8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/AA     0       1
+     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/AA     0       1
+     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/AA     0       1
+    8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/AA     0       1
+    8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/AA     0       1
+    7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/AA     0       1
+    7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/AA     0       1
+    7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/AA     0       1
+    8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/AA     0       1
       1.8     0.004 nan  mag  GENEVA.G-B        GCPD                         nan        nan         nan     nan    0.669837  0.00669837 flux_ratio      1       0
     1.384     0.004 nan  mag  GENEVA.V1-B       GCPD                         nan        nan         nan     nan    0.749504  0.00749504 flux_ratio      1       0
      0.85     0.004 nan  mag  GENEVA.B1-B       GCPD                         nan        nan         nan     nan     1.05773   0.0105773 flux_ratio      1       0
     1.517     0.004 nan  mag  GENEVA.B2-B       GCPD                         nan        nan         nan     nan    0.946289  0.00946289 flux_ratio      1       0
     0.668     0.004 nan  mag  GENEVA.V-B        GCPD                         nan        nan         nan     nan    0.726008  0.00726008 flux_ratio      1       0
     0.599     0.004 nan  mag  GENEVA.U-B        GCPD                         nan        nan         nan     nan     1.13913   0.0113913 flux_ratio      1       0
-    7.604 0.0174642 nan  mag  GENEVA.B          GCPD                         nan        nan         nan 4200.85 2.59014e-12 4.16629e-14 erg/s/cm2/A     0       1
-    9.404 0.0179165 nan  mag  GENEVA.G          GCPD                         nan        nan         nan 5765.89 1.73497e-12   2.863e-14 erg/s/cm2/A     0       1
-    8.988 0.0179165 nan  mag  GENEVA.V1         GCPD                         nan        nan         nan 5395.63 1.94132e-12 3.20351e-14 erg/s/cm2/A     0       1
-    8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/A     0       1
-    9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/A     0       1
-    8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/A     0       1
-     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+    7.604 0.0174642 nan  mag  GENEVA.B          GCPD                         nan        nan         nan 4200.85 2.59014e-12 4.16629e-14 erg/s/cm2/AA     0       1
+    9.404 0.0179165 nan  mag  GENEVA.G          GCPD                         nan        nan         nan 5765.89 1.73497e-12   2.863e-14 erg/s/cm2/AA     0       1
+    8.988 0.0179165 nan  mag  GENEVA.V1         GCPD                         nan        nan         nan 5395.63 1.94132e-12 3.20351e-14 erg/s/cm2/AA     0       1
+    8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/AA     0       1
+    9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/AA     0       1
+    8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/AA     0       1
+     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
      0.22       nan nan  mag  JOHNSON.B-V       GCPD                         nan        nan         nan     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       GCPD                         nan        nan         nan     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
+     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
    -0.035       nan nan  mag  STROMGREN.M1      GCPD                         nan        nan         nan     nan    0.954224   0.0954224 flux_ratio      1       0
     0.031       nan nan  mag  STROMGREN.C1      GCPD                         nan        nan         nan     nan     0.91257    0.091257 flux_ratio      1       0
     0.259       nan nan  mag  STROMGREN.B-Y     GCPD                         nan        nan         nan     nan     1.25605    0.125605 flux_ratio      1       0
@@ -368,9 +368,9 @@ the following information (we print part of each header)::
     TTYPE1  = 'wave    '                                                            
     TUNIT1  = 'A       '                                                            
     TTYPE2  = 'flux    '                                                            
-    TUNIT2  = 'erg/s/cm2/A'                                                         
+    TUNIT2  = 'erg/s/cm2/AA'                                                         
     TTYPE3  = 'dered_flux'                                                          
-    TUNIT3  = 'erg/s/cm2/A'                                                         
+    TUNIT3  = 'erg/s/cm2/AA'                                                         
     TEFFL   =    23000.68377498454                                                  
     TEFF    =    23644.49138963689                                                  
     TEFFU   =    29999.33189058337                                                  
@@ -917,7 +917,7 @@ class SED(object):
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,
                        include=None,exclude=None,
-                       units='erg/s/cm2/A'):
+                       units='erg/s/cm2/AA'):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -954,7 +954,7 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def get_spectrophotometry(self,directory=None):
+    def get_spectrophotometry(self,directory=None,force_download=False):
         """
         Retrieve and combine spectra.
         
@@ -970,20 +970,20 @@ class SED(object):
             
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
-        if hasattr(self,'master') and self.master is not None:
+        if hasattr(self,'master') and self.master is not None and not force_download:
             if any(['BOXCAR' in photband for photband in self.master['photband']]):
                 return None
         #-- FUSE spectra
         fuse_direc = os.path.join(directory,'FUSE')
         iue_direc = os.path.join(directory,'IUE')
-        if not os.path.isdir(fuse_direc):
+        if not os.path.isdir(fuse_direc) or force_download:
             out1 = mast.get_FUSE_spectra(ID=os.path.basename(self.ID),directory=fuse_direc,select=['ano'])
             if out1 is None:
                 out1 = []
         else:
             out1 = glob.glob(fuse_direc+'/*')
         #-- IUE spectra    
-        if not os.path.isdir(iue_direc):
+        if not os.path.isdir(iue_direc) or force_download:
             out2 = vizier.get_IUE_spectra(ID=os.path.basename(self.ID),directory=iue_direc,select='lo')
             if out2 is None:
                 out2 = []
@@ -996,7 +996,7 @@ class SED(object):
         wave,flux,err,nspec = tools.combine(list_of_spectra)
         #-- add to the master
         N = len(flux)
-        units = ['erg/s/cm2/A']*N
+        units = ['erg/s/cm2/AA']*N
         source = ['specphot']*N
         self.add_photometry_fromarrays(flux,err,units,photbands,source,flags=nspec)
         
@@ -1101,9 +1101,9 @@ class SED(object):
                 if meas['color']:
                     bands = filters.get_color_photband(meas['photband'])
                     eff_waves = filters.eff_wave(bands)
-                    is_infrared = any([(conversions.Unit(*infrared)<conversions.Unit(eff_wave,'A')) for eff_wave in eff_waves])
+                    is_infrared = any([(conversions.Unit(*infrared)<conversions.Unit(eff_wave,'AA')) for eff_wave in eff_waves])
                 else:
-                    is_infrared = conversions.Unit(*infrared)<conversions.Unit(meas['cwave'],'A')
+                    is_infrared = conversions.Unit(*infrared)<conversions.Unit(meas['cwave'],'AA')
                 if is_infrared and meas['color']:
                     self.master['include'][i] = False
                 #-- if measurement is in the infrared and it is not color, keep it (only use absolute values in IR)
@@ -1147,7 +1147,7 @@ class SED(object):
                        ('bibcode','S20'),('comments','S200')]
             logger.info('No previous measurements available, initialising master record')
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
-            _to_unit = 'erg/s/cm2/A'
+            _to_unit = 'erg/s/cm2/AA'
         else:
             _to_unit = self.master['cunit'][0]
         extra_master = np.zeros(len(meas),dtype=self.master.dtype)
@@ -1192,18 +1192,15 @@ class SED(object):
     #{ Request additional information
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
-        output = {}
-        if not 'galpos' in self.info:
-            return output
         gal = self.info['galpos']
         if distance is None:
-            d = self.get_distance_from_plx()
+            d = self.get_distance()
             if isinstance(d,tuple):
                 d = d[0][np.argmax(d[1])]
+        output = {}
         for model in ['arenou','schlegel','drimmel','marshall']:
-            EBV_Rv = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)
-            if EBV_Rv is not None:
-               output[model] = EBV_Rv/Rv
+            EBV = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)/Rv
+            output[model] = EBV
         return output
     
     #}
@@ -1650,7 +1647,7 @@ class SED(object):
             logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
             rad  = d*np.sqrt(self.results[mtype]['grid']['scale'])
             rad  = conversions.convert('pc','Rsol',rad) # in Rsol
-            labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
+            Labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
             mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
                                            (rad,'Rsol'),unit='Msol')
         #-- compute angular diameter
@@ -1665,11 +1662,8 @@ class SED(object):
             colors = locals()[ptype][region]
         elif ptype in self.results[mtype]['grid'].dtype.names:
             colors = self.results[mtype]['grid'][ptype][region]
-        elif ptype in locals():
-            colors = locals()[ptype][region]
         else:
-            logger.warning('Cannot plot {0}'.format(ptype))
-            return None
+            colors = locals()[ptype][region]
         
         if 'CI' in ptype:
             colors *= 100.
@@ -1706,15 +1700,10 @@ class SED(object):
                           ebv='E(B-V) [mag]',\
                           ci_raw='Raw probability [%]',\
                           ci_red='Reduced probability [%]',\
-                          labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
                           rad=r'Radius [$R_\odot$]',\
                           mass=r'Mass [$M_\odot$]',
                           )
-                          
-        label_dict['teff-2'] = 'Effective temperature of secondary [K]'
-        label_dict['logg-2'] = r'log (surface gravity of secondary [cm s$^{-2}$]) [dex]'
-        label_dict['ebv-2'] = 'E(B-V) of secondary [mag]'
-        label_dict['z-2'] = 'log (Metallicity Z [$Z_\odot$]) of secondary [dex]'
 
         pl.xlabel(label_dict[x])
         pl.ylabel(label_dict[y])
@@ -1798,7 +1787,7 @@ class SED(object):
     
     @standalone_figure
     def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,
-            plot_unselected=True,wave_units='A',flux_units='erg/s/cm2',**kwargs):
+            plot_unselected=True,wave_units='AA',flux_units='erg/s/cm2',**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1858,8 +1847,8 @@ class SED(object):
                     x = self.results[mtype]['synflux'][0][keep]
                     y = self.results[mtype]['synflux'][1][keep]
                     #-- convert to correct units
-                    y = conversions.convert('erg/s/cm2/A',flux_units,y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)
+                    y = conversions.convert('erg/s/cm2/AA',flux_units,y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)
                 pl.plot(x,y,'x',ms=10,mew=2,alpha=0.75,color=color,**kwargs)
             #-- include:
             keep = (systems==system) & (self.master['color']==colors) & self.master['include']
@@ -1874,8 +1863,8 @@ class SED(object):
                         x = self.master['cwave'][keep]
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
-                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)    
+                    y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)    
                     
                     
                 p = pl.errorbar(x,y,yerr=e_y,fmt='o',label=system,
@@ -1891,8 +1880,8 @@ class SED(object):
                     x = self.results[mtype]['synflux'][0][keep]
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
-                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)    
+                    y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)    
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
         
@@ -1907,9 +1896,9 @@ class SED(object):
             if mtype in self.results and 'model' in self.results[mtype]:
                 wave,flux,flux_ur = self.results[mtype]['model']
                 
-                flux = conversions.convert('erg/s/cm2/A',flux_units,flux,wave=(wave,'A'))
-                flux_ur = conversions.convert('erg/s/cm2/A',flux_units,flux_ur,wave=(wave,'A'))
-                wave = conversions.convert('A',wave_units,wave)    
+                flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
+                flux_ur = conversions.convert('erg/s/cm2/AA',flux_units,flux_ur,wave=(wave,'AA'))
+                wave = conversions.convert('AA',wave_units,wave)    
                 
                 pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
@@ -2332,7 +2321,7 @@ class SED(object):
             
                 fits.write_array(list(self.results[mtype]['model']),filename,
                                 names=('wave','flux','dered_flux'),
-                                units=('A','erg/s/cm2/A','erg/s/cm2/A'),
+                                units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
                                 header_dict=results_dict)
             
                 results_dict['extname'] = mtype
@@ -2488,7 +2477,7 @@ if __name__ == "__main__":
         name = " ".join([string for string in sys.argv[1:] if not '=' in string])
         units = [string.split('=')[1] for string in sys.argv[1:] if 'units=' in string]
         if not units:
-            units = 'erg/s/cm2/A'
+            units = 'erg/s/cm2/AA'
         else:
             units = units[0]
         logger = loggers.get_basic_logger("")
