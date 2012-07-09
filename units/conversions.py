@@ -799,7 +799,7 @@ def convert(_from,_to,*args,**kwargs):
     elif len(args)==2:
         start_value = unumpy.uarray([args[0],args[1]])
     else:
-        raise ValueError,'illegal input'
+        raise ValueError('illegal input')
     
     #-- (un)logarithmicize (denoted by '[]')
     m_in = re.search(r'\[(.*)\]',_from)
@@ -948,7 +948,7 @@ def nconvert(_froms,_tos,*args,**kwargs):
     elif isinstance(_froms,str):
         _froms = [_froms for i in _tos]
     
-    for i,(_from,_to) in enumerate(zip(_froms,_tos)):
+    for i,(_from,_to) in enumerate(list(zip(_froms,_tos))):
         myargs = [iarg[i] for iarg in args]
         mykwargs = {}
         for key in kwargs:
@@ -1130,7 +1130,7 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     for fac in _factors:
         _factors[fac] = new_factors[fac]
     #-- convert the names of combinations of basic units:
-    for name in _names.keys():
+    for name in list(_names.keys()):
         new_name = change_convention(units,name)
         _names[new_name] = _names.pop(name)
     #-- convert the switches in this module to the new convention
@@ -1337,7 +1337,7 @@ def components(unit):
     #   a base unit
     else:
         if not basis in _factors:
-            raise ValueError, 'Unknown unit %s'%(basis)
+            raise ValueError('Unknown unit %s'%(basis))
         
     #-- switch from base units to SI units
     if hasattr(_factors[basis][0],'__call__'):
@@ -1667,6 +1667,7 @@ def get_help():
         text[i%2] += [bar,'%-48s'%("=   Units of %-20s   ="%(key)),bar]
         text[i%2] += help_text[key]
     out = ''
+    #for i,j in itertools.zip_longest(*text,fillvalue=''): # for Python 3
     for i,j in itertools.izip_longest(*text,fillvalue=''):
         out += '%s| %s\n'%(i,j)
     
@@ -1702,7 +1703,7 @@ def distance2velocity(arg,**kwargs):
         wave = kwargs['wave']
         velocity = (arg-wave) / wave * constants.cc
     else:
-        raise ValueError,'reference wavelength (wave) not given'
+        raise ValueError('reference wavelength (wave) not given')
     return velocity
 
 def velocity2distance(arg,**kwargs):
@@ -1720,7 +1721,7 @@ def velocity2distance(arg,**kwargs):
         wave = kwargs['wave']
         distance = wave / constants.cc * arg + wave
     else:
-        raise ValueError,'reference wavelength (wave) not given'
+        raise ValueError('reference wavelength (wave) not given')
     return distance
 
 def fnu2flambda(arg,**kwargs):
@@ -1752,7 +1753,7 @@ def fnu2flambda(arg,**kwargs):
         freq = kwargs['freq']/(2*np.pi)
         flambda = freq**2/constants.cc * arg
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return flambda*(2*np.pi)
 
 def flambda2fnu(arg,**kwargs):
@@ -1784,7 +1785,7 @@ def flambda2fnu(arg,**kwargs):
         freq = kwargs['freq']/(2*np.pi)
         fnu = constants.cc/freq**2 * arg
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return fnu/(2*np.pi)
 
 def fnu2nufnu(arg,**kwargs):
@@ -1816,7 +1817,7 @@ def fnu2nufnu(arg,**kwargs):
         freq = kwargs['freq']
         fnu = freq * arg
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return fnu*(2*np.pi)
 
 def nufnu2fnu(arg,**kwargs):
@@ -1848,7 +1849,7 @@ def nufnu2fnu(arg,**kwargs):
         freq = kwargs['freq']
         fnu = arg / freq
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return fnu/(2*np.pi)
 
 def flam2lamflam(arg,**kwargs):
@@ -1880,7 +1881,7 @@ def flam2lamflam(arg,**kwargs):
         freq = kwargs['freq']
         lamflam = constants.cc/freq * arg
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return lamflam
 
 def lamflam2flam(arg,**kwargs):
@@ -1912,7 +1913,7 @@ def lamflam2flam(arg,**kwargs):
         freq = kwargs['freq']
         flam = arg / (cc/freq)
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return flam
 
 def distance2spatialfreq(arg,**kwargs):
@@ -1939,7 +1940,7 @@ def distance2spatialfreq(arg,**kwargs):
     elif 'freq' in kwargs:
         spatfreq = 2*np.pi*arg/(constants.cc/kwargs['freq'])
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return spatfreq
 
 def spatialfreq2distance(arg,**kwargs):
@@ -1966,7 +1967,7 @@ def spatialfreq2distance(arg,**kwargs):
     elif 'freq' in kwargs:
         distance = constants.cc/kwargs['freq']*arg/(2*np.pi)
     else:
-        raise ValueError,'reference wave/freq not given'
+        raise ValueError('reference wave/freq not given')
     return distance
 
 def per_sr(arg,**kwargs):
@@ -1988,7 +1989,7 @@ def per_sr(arg,**kwargs):
         pix = kwargs['pix']
         surface = pix**2
     else:
-        raise ValueError,'angular size (ang_diam/radius) not given'
+        raise ValueError('angular size (ang_diam/radius) not given')
     Qsr = arg/surface
     return Qsr
 
@@ -2011,7 +2012,7 @@ def times_sr(arg,**kwargs):
         pix = kwargs['pix']
         surface = pix**2
     else:
-        raise ValueError,'angular size (ang_diam/radius) not given'
+        raise ValueError('angular size (ang_diam/radius) not given')
     Q = arg*surface
     return Q
 
@@ -2483,7 +2484,7 @@ class VegaMag(NonLinearConverter):
         #-- this part should include something where the zero-flux is retrieved
         zp = filters.get_info()
         match = zp['photband']==photband.upper()
-        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        if sum(match)==0: raise ValueError("No calibrations for %s"%(photband))
         F0 = convert(zp['Flam0_units'][match][0],'W/m3',zp['Flam0'][match][0])
         mag0 = float(zp['vegamag'][match][0])
         if not inv: return 10**(-(meas-mag0)/2.5)*F0
@@ -2497,7 +2498,7 @@ class ABMag(NonLinearConverter):
         zp = filters.get_info()
         F0 = convert('W/m2/Hz',constants._current_convention,3.6307805477010024e-23)
         match = zp['photband']==photband.upper()
-        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        if sum(match)==0: raise ValueError("No calibrations for %s"%(photband))
         mag0 = float(zp['ABmag'][match][0])
         if np.isnan(mag0): mag0 = 0.
         if not inv:
@@ -2519,7 +2520,7 @@ class STMag(NonLinearConverter):
         zp = filters.get_info()
         F0 = convert('erg/s/cm2/AA',constants._current_convention,3.6307805477010028e-09)#0.036307805477010027
         match = zp['photband']==photband.upper()
-        if sum(match)==0: raise ValueError, "No calibrations for %s"%(photband)
+        if sum(match)==0: raise ValueError("No calibrations for %s"%(photband))
         mag0 = float(zp['STmag'][match][0])
         if np.isnan(mag0): mag0 = 0.
         if not inv: return 10**(-(meas-mag0)/-2.5)*F0
@@ -2588,7 +2589,7 @@ class Color(NonLinearConverter):
             mv = convert('W/m3','mag',1.00,photband='STROMGREN.B')
             return mv-2*mb+my
         else:
-            raise ValueError, "No color calibrations for %s"%(photband)
+            raise ValueError("No color calibrations for %s"%(photband))
 
 class JulianDay(NonLinearConverter):
     """
@@ -2719,6 +2720,7 @@ def set_exchange_rates():
     """
     myurl = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
     url = urllib.URLopener()
+    #url = urllib.request.URLopener() # for Python 3
     logger.info('Downloading current exchanges rates from ecb.europa.eu')
     filen,msg = url.retrieve(myurl)
     ff = open(filen,'r')
@@ -2730,6 +2732,7 @@ def set_exchange_rates():
     #-- now also retrieve the name of the currencies:
     myurl = 'http://www.ecb.europa.eu/stats/exchange/eurofxref/html/index.en.html'
     url = urllib.URLopener()
+    #url = urllib.request.URLopener() # for Python 3
     logger.info('Downloading information on currency names from ecb.europa.eu')
     filen,msg = url.retrieve(myurl)
     ff = open(filen,'r')
@@ -2991,7 +2994,7 @@ class Unit(object):
         unit1 = breakdown(self.unit)[1]
         unit2 = breakdown(other.unit)[1]
         if unit1!=unit2:
-            raise ValueError,'unequal units %s and %s'%(unit1,unit2)
+            raise ValueError('unequal units %s and %s'%(unit1,unit2))
         other_value = convert(other.unit,self.unit,other.value,unpack=False)
         return Unit(self.value+other_value,self.unit)
         
@@ -3002,7 +3005,7 @@ class Unit(object):
         unit1 = breakdown(self.unit)[1]
         unit2 = breakdown(other.unit)[1]
         if unit1!=unit2:
-            raise ValueError,'unequal units %s and %s'%(unit1,unit2)
+            raise ValueError('unequal units %s and %s'%(unit1,unit2))
         other_value = convert(other.unit,self.unit,other.value,unpack=False)
         return Unit(self.value-other_value,self.unit)
     
@@ -3187,8 +3190,8 @@ _factors = collections.OrderedDict([
            ('knot',  (1852./3600.,   'm s-1','velocity','nautical mile per hour')),
 # MASS
            ('g',     (  1e-03,       'kg','mass','gram')), # gram
-           ('gr',    (6.479891e-5,   'kg','mass','gram')),
-           ('ton',   (1e3,           'kg','mass','gram')), # metric ton(ne)
+           ('gr',    (6.479891e-5,   'kg','mass','grain')),
+           ('ton',   (1e3,           'kg','mass','metric tonne')), # metric ton(ne)
            ('u',     (1.66053892173e-27,'kg','mass','atomic mass')), # atomic mass unit (NIST 2010)
            ('Msol',  (constants.Msol,   constants.Msol_units,'mass','Solar mass')), # Solar mass
            ('Mearth',(constants.Mearth, constants.Mearth_units,'mass','Earth mass')), # Earth mass
@@ -3325,13 +3328,13 @@ _factors = collections.OrderedDict([
            ])
 #-- set of conventions:
 _conventions = {'SI': dict(mass='kg',length='m', time='s',temperature='K',
-                          electric_current='A',lum_intens='cd',amount='mol'), # International standard
+                          electric_current='A',lum_intens='cd',amount='mol',currency='EUR'), # International standard
                'cgs':dict(mass='g', length='cm',time='s',temperature='K',
-                          electric_current='A',lum_intens='cd',amount='mol'), # Centi-gramme-second
+                          electric_current='A',lum_intens='cd',amount='mol',currency='EUR'), # Centi-gramme-second
                'sol':dict(mass='Msol',length='Rsol',time='s',temperature='Tsol',
-                          electric_current='A',lum_intens='cd',amount='mol'), # solar
+                          electric_current='A',lum_intens='cd',amount='mol',currency='EUR'), # solar
                'imperial':dict(mass='lb',length='yd',time='s',temperature='K',
-                          electric_current='A',lum_intens='cd',amount='mol'), # Imperial (UK/US) system
+                          electric_current='A',lum_intens='cd',amount='mol',currency='GBP'), # Imperial (UK/US) system
                }           
 
 #-- some names of combinations of units
@@ -3471,7 +3474,7 @@ if __name__=="__main__":
     #-- define all the input parameters
     parser = OptionParser(option_class=MyOption,usage=usage)
     parser.add_option('--from',dest='_from',type='str',
-                        help="units to convert from",default=None)
+                        help="units to convert from",default='SI')
     parser.add_option('--to',dest='_to',type='str',
                         help="units to convert to",default='SI')
     
@@ -3489,10 +3492,6 @@ if __name__=="__main__":
     options = vars(options)
     _from = options.pop('_from')
     _to = options.pop('_to')
-    if _to in _conventions:
-        _to = change_convention(_to,_from)
-    if _from in _conventions:
-        _from = change_convention(_from,_to)
     
     #-- in case of normal floats or floats with errors
     if not any([',' in i for i in args]):
@@ -3509,19 +3508,28 @@ if __name__=="__main__":
         if isinstance(options[option],str) and ',' in options[option]:
             entry = options[option].split(',')
             options[option] = (float(entry[0]),entry[1])
+    
     #-- check if currencies are asked. If so, download the latest exchange rates
-    if (_from.isupper() and len(_from)==3) and (_to.isupper() and (len(_to)==3 or _to=='SI')):
+    #   we cannot exactly know if something is a currency before we download all
+    #   the names, and we don't want to download the names if no currencies are
+    #   given. Therefore, we make an educated guess here:
+    from_is_probably_currency = (hasattr(_from,'isupper') and _from.isupper() and len(_from)==3)
+    to_is_probably_currency = (hasattr(_to,'isupper') and _to.isupper() and len(_to)==3)
+    if from_is_probably_currency or to_is_probably_currency:
         set_exchange_rates()
+    
     #-- do the conversion
     output = convert(_from,_to,*args,**options)
     
     #-- and nicely print to the screen
     if _to=='SI':
         fac,_to = breakdown(_from)
+    if _from=='SI':
+        fac,_from = breakdown(_to)
     if isinstance(output,tuple) and len(output)==2 and len(args)==2:
-        print "%g +/- %g %s    =    %g +/- %g %s"%(args[0],args[1],_from,output[0],output[1],_to)
+        print(("%g +/- %g %s    =    %g +/- %g %s"%(args[0],args[1],_from,output[0],output[1],_to)))
     elif isinstance(output,tuple) and len(output)==2:
-        print "%s %s    =    %s,%s %s"%(args[0],_from,output[0],output[1],_to)
+        print(("%s %s    =    %s,%s %s"%(args[0],_from,output[0],output[1],_to)))
     elif _to.lower()=='cd':
         year,month,day = output
         year,month = int(year),int(month)
@@ -3532,6 +3540,6 @@ if __name__=="__main__":
         minute,fraction = int(minute),minute-int(minute)
         second = int(fraction*60)
         dt = datetime.datetime(year,month,day,hour,minute,second)
-        print "%.10g %s    =    %s %s (YYYY-MM-DD HH:MM:SS)"%(args[0],_from,dt,_to)
+        print(("%.10g %s    =    %s %s (YYYY-MM-DD HH:MM:SS)"%(args[0],_from,dt,_to)))
     else:
-        print "%.10g %s    =    %.10g %s"%(args[0],_from,output,_to)
+        print(("%.10g %s    =    %.10g %s"%(args[0],_from,output,_to)))
