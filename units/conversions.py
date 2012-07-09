@@ -3207,12 +3207,12 @@ _factors = collections.OrderedDict([
            ('s',     (  1e+00,       's','time','second')),     # second
            ('min',   (  60.,         's','time','minute')),     # minute
            ('h',     (3600.,         's','time','hour')),     # hour 
-           ('d',     (24*3600.,      's','time','day')),     # day
+           ('d',     (86400.,      's','time','day')),     # day
            ('wk',    (7*24*3600.,    's','time','week')),     # week
            ('mo',    (30*7*24*3600., 's','time','month')),     # month
            ('sidereal', (1.0027379093,'','time','sidereal day')),     # sidereal
-           ('yr',    (31557600.0,'s','time','year')),     # year (1 Julian century = 36525 yr, see NIST appendix B)
-           ('cr',    (100*365*24*3600,'s','time','century')),    # century
+           ('yr',    (31557600.0,'s','time','Julian year')),     # year (1 Julian century = 36525 d, see NIST appendix B)
+           ('cr',    (36525*86400,'s','time','Julian century')),    # century
            ('hz',    (2*np.pi,         'rad s-1','frequency','Hertz')),# Hertz (periodic phenomena)
 #           ('rhz',   (1e+00,         'rad s-1','angular frequency','RadHertz')),# Rad Hertz (periodic phenomena)
            ('Bq',    (1e+00,         's-1','time','Becquerel')), # Becquerel (stochastic or non-recurrent phenomena)
