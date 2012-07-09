@@ -404,8 +404,7 @@ You can query for info on the current convention without changing it:
 
 But for the sake of the examples, we'll switch back to the default SI...
 
->>> set_convention()
-('cgs', 'mesa', 'rad')
+>>> reset()
 
 
 Section 4. Calculating with units
@@ -903,8 +902,13 @@ def convert(_from,_to,*args,**kwargs):
                     logger.debug('fac_from=%s, start_value=%s with kwargs %s'%(fac_from,start_value,kwargs_SI))
                     ret_value *= _switch[key](fac_from*start_value,**kwargs_SI)
             except KeyError:
-                logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(_from,_to,key))
-                raise
+                #-- try to be smart an reverse the units:
+                if not (Unit(1.,uni_from)*Unit(1.,uni_to))[1]:
+                    ret_value *= period2freq(fac_from*start_value,**kwargs_SI)
+                    logger.warning('It is assumed that the "from" unit is the inverse of the "to" unit')
+                else:
+                    logger.critical('cannot convert %s to %s: no %s definition in dict _switch'%(_from,_to,key))
+                    raise
         else:
             ret_value *= start_value
     #-- final step: convert to ... (again distinction between linear and
@@ -1139,15 +1143,13 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     constants._current_convention = units
     constants._current_values = values
     #-- when we set everything back to SI, make sure we have no rounding errors:
-    #if units=='SI':
-    #    reload(constants)
-    #    logger.warning('Reloading of constants')
+    if units=='SI' and values=='standard' and frequency=='rad':
+        reload(constants)
+        logger.warning('Reloading of constants')
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
-def reset():
-    reload(constants)
-    logger.warning('Reloading of constants')
+def reset(): set_convention()
 
 def get_convention():
     """
@@ -3209,7 +3211,7 @@ _factors = collections.OrderedDict([
            ('h',     (3600.,         's','time','hour')),     # hour 
            ('d',     (86400.,      's','time','day')),     # day
            ('wk',    (7*24*3600.,    's','time','week')),     # week
-           ('mo',    (30*7*24*3600., 's','time','month')),     # month
+           ('mo',    (30*24*3600., 's','time','month')),     # month
            ('sidereal', (1.0027379093,'','time','sidereal day')),     # sidereal
            ('yr',    (31557600.0,'s','time','Julian year')),     # year (1 Julian century = 36525 d, see NIST appendix B)
            ('cr',    (36525*86400,'s','time','Julian century')),    # century
