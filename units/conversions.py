@@ -11,18 +11,20 @@ Contents:
         - Changing the values of the fundamental constants
     4. B{Calculating with units}
     5. B{Dealing with and interpreting unit strings}
-    
-Much of the unit conversions has been tested using Appendix B and examples within,
-of L{http://physics.nist.gov/cuu/pdf/sp811.pdf}, which is the international
-document describing the SI standard. As a matter of fact, this module should be
-fully compatible with the SI unit conventions, except for the notation of units
-(brackets are not allowed). This module extends the SI unit conventions to be
-more flexible and intuitive, and also allows to ditch the SI unit convention
-alltogether.
+
+Much of the unit conversions has been tested using Appendix B of
+U{http://physics.nist.gov/cuu/pdf/sp811.pdf}, and examples within, which is the
+international document describing the SI standard. As a matter of fact, this
+module should be fully compatible with the SI unit conventions, except for the
+notation of units (brackets are not allowed). This module extends the SI unit
+conventions to be more flexible and intuitive, and also allows to ditch the SI
+unit convention alltogether.
+
+
 
 Some of the many possibilities include (see L{convert} for an extensive set of
 examples):
-    
+
     1. Conversions between equal-type units: meter to nano-lightyears, erg/s
     to W, cy/d to muHz, but also erg/s/cm2/A to W/m2/mum, sr to deg2, etc...
     2. Conversions between unequal-type units: angstrom to km/s via the speed
@@ -43,6 +45,7 @@ examples):
     terminal tool).
     10. Computations with units.
 
+
 B{Warning 1:} frequency units are technically given in cycles per time (cy).
 This means that if you want to convert e.g. muHz to d-1 (or 1/d), you need to
 ask for cy/d. There is a general ambiguity concerning the unit 'cycles': it is
@@ -52,7 +55,7 @@ radians are not really a unit. This gives room for confusion! To make everything
 even more confusing, there is another unit which is equal to the reciprocal
 second, namely the Becquerel. This is used for stochastic or non-recurrent
 phenomena. Basically, the problem is::
-
+    
     rad/s == 1/s
     1/s   == Hz
 
@@ -60,9 +63,11 @@ but::
 
     rad/s != Hz
 
+
 If you have any doubts, set the logger to display debug messages (e.g.
 C{logger.setLevel(10)}, see L{ivs.aux.loggers}). It will sometimes tell you if
 certain assumptions are made.
+
 
 B{Warning 2:} there is some ambiguity between units. For example, C{as} can be
 interpreted as 'arcsecond', but also as 'attosecond'. In case of ambiguity,
@@ -86,7 +91,8 @@ B{Warning 3:} the unit name of angstrom is AA, ampere is A.
 B{Warning 4:} Most of the imperial units are UK/Canada. If you need US, prefix
 the unit with C{US}: E.g. The gallon (C{gal}) is the international imperial
 gallon, C{USgal} is the US gallon.
-    
+
+
 Section 1. The Python module
 ============================
     
@@ -670,6 +676,15 @@ def convert(_from,_to,*args,**kwargs):
     
     >>> convert('sr','deg2',1.)
     3282.806350011744
+    
+    >>> ang_diam = 3.21 # mas
+    >>> scale = convert('mas','sr',ang_diam/2.)
+    >>> print(ang_diam,scale)
+    (3.21, 6.054800067947964e-17)
+    >>> ang_diam = 2*convert('sr','mas',scale)
+    >>> print(ang_diam,scale)
+    (3.2100000000000004, 6.054800067947964e-17)
+
     
     B{Magnitudes and amplitudes}:
     
@@ -2049,6 +2064,12 @@ def do_nothing(arg,**kwargs):
     return arg
 
 
+def do_sqrt(arg,**kwargs):
+    return sqrt(arg)
+
+def do_quad(arg,**kwargs):
+    return arg**2
+
 def Hz2_to_ss(change,frequency):
     """
     Convert Frequency shift in Hz2 to period change in seconds per second.
@@ -3231,7 +3252,7 @@ _factors = collections.OrderedDict([
            ('deg',         (np.pi/180.,          'rad','angle','degree')),  # degree
            ('am',          (np.pi/180./60.,      'rad','angle','arcminute')),  # arcminute
            ('as',          (np.pi/180./3600.,    'rad','angle','arcsecond')),  # arcsecond
-           ('sr',          (1,                   'rad2','angle','sterradian')), # sterradian #1/39.4784176045
+           ('sr',          (1,                   'sr','angle','sterradian')), # sterradian #1/39.4784176045
            ('rpm',         (0.104719755,         'rad/s','angle','revolutions per minute')),# revolutions per minute
 # COORDINATES
            ('complex_coord',(1e+00+0*1j, 'complex_coord','coordinate','<own unit>')), # own unit
@@ -3438,6 +3459,10 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            #'rad-2_to_':    times_sr,
            'rad1_to_':     do_nothing,#per_cy,
            'rad-1_to_':    do_nothing,#times_cy,
+           'rad-2sr1_to_': do_nothing,
+           'rad2sr-1_to_': do_nothing,
+           'rad-1sr1_to_': do_sqrt,
+           'rad1sr-1_to_': do_quad,
            'rad-1s2_to_':   period2freq, # same for both, since just inverse
            'rad1s-2_to_':   period2freq,
            #'cy1_to_':      do_nothing,
