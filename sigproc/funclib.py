@@ -26,12 +26,20 @@ function in this module.
 >>> p = plt.figure()
 >>> x = np.linspace(0,10,1000)
 >>> p = plt.plot(x,evaluate('sine',x,[1.,2.,0,0]),label='sine')
->>> p = plt.plot(x,evaluate('sine_freqshift',x,[1.,0.5,0,0,.5]),label='sine_freqshift')
->>> p = plt.plot(x,evaluate('sine_orbit',x,[1.,2.,0,0,0.1,10.,0.1]),label='sine_orbit')
+>>> p = plt.plot(x,evaluate('sine_linfreqshift',x,[1.,0.5,0,0,.5]),label='sine_linfreqshift')
+>>> p = plt.plot(x,evaluate('sine_expfreqshift',x,[1.,0.5,0,0,1.2]),label='sine_expfreqshift')
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
 
 ]include figure]]ivs_sigproc_fit_funclib03.png]
+
+>>> p = plt.figure()
+>>> p = plt.plot(x,evaluate('sine',x,[1.,2.,0,0]),label='sine')
+>>> p = plt.plot(x,evaluate('sine_orbit',x,[1.,2.,0,0,0.1,10.,0.1]),label='sine_orbit')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib03a.png]
 
 >>> p = plt.figure()
 >>> x_single = np.linspace(0,10,1000)
@@ -53,8 +61,21 @@ from numpy import pi,cos,sin,sqrt,tan,arctan
 from scipy.special import erf,jn
 from ivs.sigproc.fit import Model, Function
 import ivs.timeseries.keplerorbit as kepler
+from ivs.sed import model as sed_model
+import logging
+
+logger = logging.getLogger("SP.FUNCLIB")
 
 #{ Function Library
+def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Blackbody.
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.blackbody((x,wave_units), p[0], units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
 
 def kepler_orbit(type='single'):
     """
@@ -96,6 +117,18 @@ def box_transit(t0=0.):
     return Function(function=function, par_names=pnames)
 
 
+def polynomial(d=1):
+    """
+    Polynomial.
+    
+    f(x) = a * exp( - (x - mu)**2 / (2 * sigma**2) ) + c
+    """
+    pnames = ['a{:d}'.format(i) for i in range(d,0,-1)]+['a0']
+    function = lambda p, x: np.polyval(p,x)
+    
+    return Function(function=function, par_names=pnames)
+
+
 def gauss():
     """
     Gaussian (a,mu,sigma,c)
@@ -119,7 +152,7 @@ def sine():
     return Function(function=function, par_names=pnames)
 
 
-def sine_freqshift(t0=0.):
+def sine_linfreqshift(t0=0.):
     """
     Sine with linear frequency shift (ampl,freq,phase,const,D).
         
@@ -132,6 +165,26 @@ def sine_freqshift(t0=0.):
     pnames = ['ampl', 'freq', 'phase', 'const','D']
     def function(p,x):
         freq = (p[1] + p[4]/2.*(x-t0))*(x-t0)
+        return p[0] * sin(2*pi*(freq + p[2])) + p[3]
+    return Function(function=function, par_names=pnames)
+    
+def sine_expfreqshift(t0=0.):
+    """
+    Sine with exponential frequency shift (ampl,freq,phase,const,K).
+        
+    Similar to C{sine}, but with extra parameter 'K', which is the exponential
+    frequency shift parameter.
+    
+    frequency(x) = freq / log(K) * (K**(x-t0)-1)
+    
+    f(x) = ampl * sin( 2*pi * (frequency + phase))
+    
+    @param t0: reference time (defaults to 0)
+    @type t0: float
+    """
+    pnames = ['ampl', 'freq', 'phase', 'const','K']
+    def function(p,x):
+        freq = p[1] / np.log(p[4]) * (p[4]**(x-t0)-1.)
         return p[0] * sin(2*pi*(freq + p[2])) + p[3]
     return Function(function=function, par_names=pnames)
 
@@ -222,6 +275,12 @@ def multi_sine(n=10):
     Multiple sines.
     """
     return Model(functions=[sine() for i in range(n)])
+
+def multi_blackbody(n=3,**kwargs):
+    """
+    Multiple black bodies.
+    """
+    return Model(functions=[blackbody(**kwargs) for i in range(n)])
 
 #}
 
