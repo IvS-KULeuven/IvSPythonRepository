@@ -207,7 +207,7 @@ we know are not so trustworthy:
 
 Speed up the fitting process by copying the model grids to the scratch disk
 
->>> model.copy2scratch()
+>>> model.copy2scratch(z='*')
 
 Start the grid based fitting process and show some plots. We use 100000 randomly
 distributed points over the grid:
@@ -453,7 +453,7 @@ via the radius (solar units)::
 
 Finally, the angular diameter can be computed via::
 
-    >> conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
+    >> 2*conversions.convert('sr','mas',scale)
 
 Subsection 4.2. Seismic constraints
 -----------------------------------
@@ -1380,7 +1380,7 @@ class SED(object):
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
         #   rescale if needed and compute confidence intervals
-        print grid_results.dtype.names,grid_results.shape
+        #print grid_results.dtype.names,grid_results.shape
         factor = max(grid_results['chisq'][-1]/k,1)
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
         CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
@@ -1651,7 +1651,7 @@ class SED(object):
             mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
                                            (rad,'Rsol'),unit='Msol')
         #-- compute angular diameter
-        theta = conversions.convert('sr','mas',4*np.pi*np.sqrt(self.results[mtype]['grid']['scale']))
+        theta = 2*conversions.convert('sr','mas',self.results[mtype]['grid']['scale'])
         
         if limit is not None:
             region = self.results[mtype]['grid']['ci_red']<limit
@@ -1925,7 +1925,7 @@ class SED(object):
             logg = self.results[mtype]['grid']['logg'][-1]
             ebv = self.results[mtype]['grid']['ebv'][-1]
             scale = self.results[mtype]['grid']['scale'][-1]
-            angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
+            angdiam = 2*conversions.convert('sr','mas',scale)
             try:
                 teff2 = self.results[mtype]['grid']['teff-2'][-1]
                 logg2 = self.results[mtype]['grid']['logg-2'][-1]

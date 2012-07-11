@@ -77,7 +77,7 @@ convection theory parameter C{ct} has no influence when the Kurucz grid is
 chosen.
 
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}
 
 or
 
@@ -88,13 +88,13 @@ You can change the defaults with the function L{set_defaults}:
 
 >>> set_defaults(z=0.5)
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.5, 'nover': False, 'He': 97}
 
 And reset the 'default' default values by calling L{set_defaults} without arguments
 
 >>> set_defaults()
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}
 
 Subsection 2.2 Speeding up
 --------------------------
@@ -122,6 +122,10 @@ only clean the scratch disk after the last process is finished.
 
 The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
 and multiple sed fitting.
+
+For the sake of the examples, we'll set the defaults back to z=0.0:
+
+>>> set_defaults()
 
 Subsection 2.3 Model SEDs
 -------------------------
@@ -160,9 +164,9 @@ To B{remove the steradian} from the units when you know the angular diameter of
 your star in milliarcseconds, you can do (we have to convert diameter to surface):
 
 >>> ang_diam = 3.21 # mas
->>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+>>> scale = conversions.convert('mas','sr',ang_diam/2.)
 >>> wave,flux = get_table(teff=9602,logg=4.1,ebv=0.0,z=0.0,grid='kurucz')
->>> flux *= scale**2
+>>> flux *= scale
 
 The example above is representative for the case of Vega. So, if we now calculate
 the B{synthetic flux} in the GENEVA.V band, we should end up with the zeropoint
@@ -241,19 +245,19 @@ These are the relevant parameters of Vega and photometric passbands
 
 We can compute (R/d) to scale the synthetic flux as
 
->>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+>>> scale = conversions.convert('mas','sr',ang_diam/2.)
 
 We retrieve the SED
 
 >>> wave,flux = get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz')
->>> flux *= scale**2
+>>> flux *= scale
 
 Then compute the synthetic fluxes, and compare them with the synthetic fluxes as
 retrieved from the pre-calculated tables
 
 >>> fluxes_calc = synthetic_flux(wave,flux,photbands)
 >>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands,wave_units='AA')
->>> fluxes_int *= scale**2
+>>> fluxes_int *= scale
 
 Convert to magnitudes:
 
@@ -356,7 +360,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch():
+def copy2scratch(z=None):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -367,6 +371,9 @@ def copy2scratch():
     
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
+    
+    It is possible to give z='*' as an option; when you do that, the grids
+    with all z values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -374,29 +381,46 @@ def copy2scratch():
         os.makedirs('/scratch/%s/'%(uname))
     scratchdir = '/scratch/%s/'%(uname)
     
+    #-- we have defaults for the single and multiple grid
     defaults_ = []
     defaults_.append(defaults)
     defaults_.extend(defaults_multiple)
     
+    #-- now run over the defaults for the single and multiple grid, and
+    #   copy the necessary files to the scratch disk
     for default in defaults_:
         default['use_scratch'] = False
+        #-- set the z with the starred version '*' if asked for, but remember
+        #   the original value to reset it after the loop is done.
+        if z is not None:
+            previous_z = default['z']
+            default['z']
         #grid
         fname = get_file(integrated=False,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        #-- we could have received a list (multiple files) or a string (single file)
+        if isinstance(fname,str):
+            fname = [fname]
+        for ifname in fname:
+            if not os.path.isfile(scratchdir + os.path.basename(ifname)):
+                shutil.copy(ifname,scratchdir)
+                logger.info('Copied grid: %s to scratch'%(ifname))
+            else:
+                logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         #integrated grid
         fname = get_file(integrated=True,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        if isinstance(fname,str):
+            fname = [fname]
+        for ifname in fname:
+            if not os.path.isfile(scratchdir + os.path.basename(ifname)):
+                shutil.copy(ifname,scratchdir)
+                logger.info('Copied grid: %s to scratch'%(ifname))
+            else:
+                logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
+        if z is not None:
+            default['z'] = previous_z
 
-def clean_scratch():
+def clean_scratch(z=None):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -410,15 +434,27 @@ def clean_scratch():
     
     for default in defaults_:
         if default['use_scratch']:
+            if z is not None:
+                previous_z = default['z']
+                default['z']
             fname = get_file(integrated=False,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)
+            if isinstance(fname,str):
+                fname = [fname]
+            for ifname in fname:
+                if os.path.isfile(ifname):
+                    logger.info('Removed file: %s'%(ifname))
+                    os.remove(ifname)
+            
             fname = get_file(integrated=True,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)    
+            if isinstance(fname,str):
+                fname = [fname]
+            for ifname in fname:
+                if os.path.isfile(ifname):
+                    logger.info('Removed file: %s'%(ifname))
+                    os.remove(ifname)    
             default['use_scratch'] = False
+            if z is not None:
+                default['z'] = previous_z
 
 def defaults2str():
     """
@@ -621,21 +657,39 @@ def get_file(integrated=False,**kwargs):
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
-def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True):
+def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
     
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
     multiplied by sqrt(2*pi).
     
+    You can only give an angular diameter if disc_integrated is True.
+    
+    To convert the scale parameter back to mas, simply do:
+    
+    ang_diam = 2*conversions.convert('sr','mas',scale)
+    
+    Be careful when, e.g. during fitting, scale contains an error: be sure to set
+    the option C{unpack=True} in the L{conversions.convert} function!
+    
     @param: wavelength, unit
     @type: tuple (ndarray,str)
     @param T: temperature, unit
     @type: tuple (float,str)
+    @param units: flux units (could be in Fnu-units or Flambda-units)
+    @type units: str (units)
+    @param disc_integrated: if True, they are in the same units as Kurucz-disc-integrated SEDs
+    @type disc_integrated: bool
+    @param ang_diam: angular diameter (in mas or rad or something similar)
+    @type ang_diam: (value, unit)
     """
     #-- what kind of units did we receive?
-    unit_type = conversions.change_convention('SI',x[1])
-    x = conversions.convert(x[1],'SI',x[0])
+    if isinstance(x,tuple):
+        unit_type = conversions.change_convention('SI',x[1])
+        x = conversions.convert(x[1],'SI',x[0])
+    else:
+        unit_type = 'm1'
     if isinstance(T,tuple):
         T = conversions.convert(T[1],'K',T[0])
     #-- now make the appropriate black body
@@ -650,6 +704,9 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True):
     #-- do disc integration
     if disc_integrated:
         I *= np.sqrt(2*np.pi)
+        if ang_diam is not None:
+            scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
+            I *= scale
     return conversions.convert('SI',units,I)
 
 
@@ -758,7 +815,6 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
         if 'wave' in kwargs.keys():
             removed = kwargs.pop('wave')
         flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
-    
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.convert('erg/s/cm2/AA/sr',flux_units,flux,wave=(wave,'AA'),**kwargs)
     if wave_units!='AA':
