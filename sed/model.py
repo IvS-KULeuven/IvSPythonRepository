@@ -304,6 +304,7 @@ from ivs.aux.decorators import memoized,clear_memoization
 import itertools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
+from ivs.sed.decorators import blackbody_input
 from ivs.io import ascii
 import reddening
 import getpass
@@ -657,6 +658,7 @@ def get_file(integrated=False,**kwargs):
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
+@blackbody_input
 def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
@@ -673,6 +675,30 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     Be careful when, e.g. during fitting, scale contains an error: be sure to set
     the option C{unpack=True} in the L{conversions.convert} function!
     
+    >>> x = np.linspace(2.3595,193.872,500)
+    >>> F1 = blackbody((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
+    >>> F2 = rayleigh_jeans((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
+    >>> F3 = wien((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
+    
+    
+    >>> p = plt.figure()
+    >>> p = plt.subplot(121)
+    >>> p = plt.plot(x,F1)
+    >>> p = plt.plot(x,F2)
+    >>> p = plt.plot(x,F3)
+    
+    
+    >>> F1 = blackbody((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+    >>> F2 = rayleigh_jeans((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+    >>> F3 = wien((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+
+    
+    >>> p = plt.subplot(122)
+    >>> p = plt.plot(x,F1)
+    >>> p = plt.plot(x,F2)
+    >>> p = plt.plot(x,F3)
+
+    
     @param: wavelength, unit
     @type: tuple (ndarray,str)
     @param T: temperature, unit
@@ -683,31 +709,74 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     @type disc_integrated: bool
     @param ang_diam: angular diameter (in mas or rad or something similar)
     @type ang_diam: (value, unit)
+    @return: intensity
+    @rtype: array
     """
-    #-- what kind of units did we receive?
-    if isinstance(x,tuple):
-        unit_type = conversions.change_convention('SI',x[1])
-        x = conversions.convert(x[1],'SI',x[0])
-    else:
-        unit_type = 'm1'
-    if isinstance(T,tuple):
-        T = conversions.convert(T[1],'K',T[0])
-    #-- now make the appropriate black body
-    if unit_type in ['s-1','cy1 s-1']: # frequency units
+    x,x_unit_type = x   
+    #-- make the appropriate black body
+    if x_unit_type=='frequency': # frequency units
         factor = 2.0 * constants.hh / constants.cc**2
         expont = constants.hh / (constants.kB*T)
         I = factor * x**3 * 1. / (np.exp(expont*x) - 1.)
-    elif unit_type=='m1': # wavelength units
+    elif x_unit_type=='length': # wavelength units
         factor = 2.0 * constants.hh * constants.cc**2
         expont = constants.hh*constants.cc / (constants.kB*T)
         I = factor / x**5. * 1. / (np.exp(expont/x) - 1.)
-    #-- do disc integration
-    if disc_integrated:
-        I *= np.sqrt(2*np.pi)
-        if ang_diam is not None:
-            scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
-            I *= scale
-    return conversions.convert('SI',units,I)
+    else:
+        raise ValueError(x_unit_type)
+    return I
+
+
+@blackbody_input
+def rayleigh_jeans(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
+    """
+    Rayleigh-Jeans approximation of a black body.
+    
+    Valid at long wavelengths.
+    
+    For input details, see L{blackbody}.
+    
+    @return: intensity
+    @rtype: array
+    """
+    x,x_unit_type = x   
+    #-- now make the appropriate model
+    if x_unit_type=='frequency': # frequency units
+        factor = 2.0 * constants.kB*T / constants.cc**2
+        I = factor * x**2
+    elif x_unit_type=='length': # wavelength units
+        factor = 2.0 * constants.cc * constants.kB*T
+        I = factor / x**4.
+    else:
+        raise ValueError(unit_type)
+    return I
+
+
+@blackbody_input
+def wien(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
+    """
+    Wien approximation of a black body.
+    
+    Valid at short wavelengths.
+    
+    For input details, see L{blackbody}.
+    
+    @return: intensity
+    @rtype: array
+    """
+    x,x_unit_type = x   
+    #-- now make the appropriate model
+    if x_unit_type=='frequency': # frequency units
+        factor = 2.0 * constants.hh / constants.cc**2
+        expont = constants.hh / (constants.kB*T)
+        I = factor * x**3 * 1. * np.exp(-expont*x)
+    elif x_unit_type=='length': # wavelength units
+        factor = 2.0 * constants.hh * constants.cc**2
+        expont = constants.hh*constants.cc / (constants.kB*T)
+        I = factor / x**5. * np.exp(-expont/x)
+    else:
+        raise ValueError(unit_type)
+    return I
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
@@ -2019,7 +2088,6 @@ def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
         fluxes = fluxes
     return fluxes
                 
-
 
 if __name__=="__main__":
     import doctest
