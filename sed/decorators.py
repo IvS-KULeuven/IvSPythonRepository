@@ -7,7 +7,9 @@ import logging
 import numpy as np
 import pylab as pl
 from multiprocessing import Manager,Process,cpu_count
-from ivs.sed import model
+import model
+from ivs.units import conversions
+from ivs.units import constants
 
 logger = logging.getLogger('SED.DEC')
 
@@ -138,3 +140,47 @@ def standalone_figure(fctn):
         return out
         
     return dofig
+    
+    
+    
+def blackbody_input(fctn):
+    """
+    Prepare input and output for blackbody-like functions.
+    """
+    @functools.wraps(fctn)
+    def dobb(x,T,**kwargs):
+        units = kwargs.get('units','erg/s/cm2/AA')
+        #-- prepare input
+        #-- what kind of units did we receive?
+        curr_conv = constants._current_convention
+        # X: wavelength/frequency
+        if isinstance(x,tuple):
+            x_unit_type = conversions.get_type(x[1])
+            x = conversions.convert(x[1],curr_conv,x[0])
+        else:
+            x_unit_type = 'length'
+        # T: temperature
+        if isinstance(T,tuple):
+            T = conversions.convert(T[1],'K',T[0])
+        # Y: flux
+        y_unit_type = conversions.change_convention('SI',units)
+        #-- if you give Jy vs micron, we need to first convert wavelength to frequency
+        if y_unit_type=='kg1 rad-1 s-2' and x_unit_type=='length':
+            x = conversions.convert(conversions._conventions[curr_conv]['length'],'Hz',x)
+            x_unit_type = 'frequency'
+    
+        #-- run function
+        I = fctn((x,x_unit_type),T)        
+        
+        #-- prepare output
+        disc_integrated = kwargs.get('disc_integrated',True)
+        ang_diam = kwargs.get('ang_diam',None)
+        if disc_integrated:
+            I *= np.sqrt(2*np.pi)
+            if ang_diam is not None:
+                scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
+                I *= scale
+        I = conversions.convert('SI',units,I)
+        return I
+        
+    return dobb
