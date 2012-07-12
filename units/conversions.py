@@ -3253,7 +3253,7 @@ _factors = collections.OrderedDict([
            ('am',          (np.pi/180./60.,      'rad','angle','arcminute')),  # arcminute
            ('as',          (np.pi/180./3600.,    'rad','angle','arcsecond')),  # arcsecond
            ('sr',          (1,                   'sr','angle','sterradian')), # sterradian #1/39.4784176045
-           ('rpm',         (0.104719755,         'rad/s','angle','revolutions per minute')),# revolutions per minute
+           ('rpm',         (0.104719755,         'rad s-1','angle','revolutions per minute')),# revolutions per minute
 # COORDINATES
            ('complex_coord',(1e+00+0*1j, 'complex_coord','coordinate','<own unit>')), # own unit
            ('equatorial',   (EquCoords,  'complex_coord','coordinate','equatorial')), # Equatorial coordinates
