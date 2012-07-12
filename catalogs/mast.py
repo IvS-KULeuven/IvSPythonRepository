@@ -115,6 +115,7 @@ def galex(**kwargs):
         ra,dec = kwargs.pop('ra'),kwargs.pop('dec')
     else:
         info = sesame.search(ID,db='A')
+        if not 'jradeg' in info: return None,None,None
         ra,dec = info['jradeg'],info['jdedeg']
     radius = 0.1
     #radius = radius/60.
@@ -392,7 +393,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     
     For extra kwargs, see L{_get_URI} and L{mast2phot}
     """
-    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    to_units = kwargs.pop('to_units','erg/s/cm2/AA')
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements

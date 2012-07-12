@@ -375,7 +375,7 @@ def add_custom_filter(wave,response,**kwargs):
     del decorators.memory[__name__]
     #-- add info:
     custom_filters[photband]['zp'] = myrow
-    logger.info('Added photband {0} to the predefined set'.format(photband))
+    logger.debug('Added photband {0} to the predefined set'.format(photband))
 
 
 def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
@@ -396,6 +396,7 @@ def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
         except ValueError:
             logger.info('{0} already exists, skipping'.format(photband))
         photbands.append(photband)
+    logger.info('Added spectrophotometric filters')
     return photbands
 
 

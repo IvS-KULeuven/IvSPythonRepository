@@ -77,7 +77,7 @@ convection theory parameter C{ct} has no influence when the Kurucz grid is
 chosen.
 
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}
 
 or
 
@@ -88,13 +88,13 @@ You can change the defaults with the function L{set_defaults}:
 
 >>> set_defaults(z=0.5)
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.5, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.5, 'nover': False, 'He': 97}
 
 And reset the 'default' default values by calling L{set_defaults} without arguments
 
 >>> set_defaults()
 >>> print defaults
-{'a': 0.0, 'use_scratch': False, 'c': 0.5, 'odfnew': True, 'co': 1.05, 'm': 1.0, 'vturb': 2, 'ct': 'mlt', 'grid': 'kurucz', 't': 1.0, 'alpha': False, 'z': 0.0, 'nover': False, 'He': 97}
+{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}
 
 Subsection 2.2 Speeding up
 --------------------------
@@ -122,6 +122,10 @@ only clean the scratch disk after the last process is finished.
 
 The gain in speed can be up to 70% in single sed fitting, and up to 40% in binary
 and multiple sed fitting.
+
+For the sake of the examples, we'll set the defaults back to z=0.0:
+
+>>> set_defaults()
 
 Subsection 2.3 Model SEDs
 -------------------------
@@ -151,7 +155,7 @@ The default settings will not change in this case.
 
 >>> wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid='tlusty')
 
-The default B{units} of the SEDs are angstrom and erg/s/cm2/A/sr. To change them,
+The default B{units} of the SEDs are angstrom and erg/s/cm2/AA/sr. To change them,
 do:
 
 >>> wave,flux = get_table(teff=16321,logg=4.321,wave_units='micron',flux_units='Jy/sr')
@@ -160,16 +164,16 @@ To B{remove the steradian} from the units when you know the angular diameter of
 your star in milliarcseconds, you can do (we have to convert diameter to surface):
 
 >>> ang_diam = 3.21 # mas
->>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+>>> scale = conversions.convert('mas','sr',ang_diam/2.)
 >>> wave,flux = get_table(teff=9602,logg=4.1,ebv=0.0,z=0.0,grid='kurucz')
->>> flux *= scale**2
+>>> flux *= scale
 
 The example above is representative for the case of Vega. So, if we now calculate
 the B{synthetic flux} in the GENEVA.V band, we should end up with the zeropoint
 magnitude of this band, which is close to zero:
 
 >>> flam = synthetic_flux(wave,flux,photbands=['GENEVA.V'])
->>> print '%.3f'%(conversions.convert('erg/s/cm2/A','mag',flam,photband='GENEVA.V')[0])
+>>> print '%.3f'%(conversions.convert('erg/s/cm2/AA','mag',flam,photband='GENEVA.V')[0])
 0.063
 
 Compare this with the calibrated value
@@ -213,13 +217,13 @@ L{filters.eff_wave}.
 
 >>> photbands = ['GENEVA.U','2MASS.J']
 >>> fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands)
->>> waves,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands,wave_units='A')
+>>> waves,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands,wave_units='AA')
 
 Note that the integration only gives you fluxes, and is thus independent from
 the zeropoints of the filters (but dependent on the transmission curves). To
 get the synthetic magnitudes, you can do
 
->>> mymags = [conversions.convert('erg/s/cm2/A','mag',fluxes[i],photband=photbands[i]) for i in range(len(photbands))]
+>>> mymags = [conversions.convert('erg/s/cm2/AA','mag',fluxes[i],photband=photbands[i]) for i in range(len(photbands))]
 
 The don't mean anything in this case because they have not been corrected for
 the distance to the star.
@@ -241,24 +245,24 @@ These are the relevant parameters of Vega and photometric passbands
 
 We can compute (R/d) to scale the synthetic flux as
 
->>> scale = conversions.convert('mas','sr',ang_diam)/(4*np.pi)
+>>> scale = conversions.convert('mas','sr',ang_diam/2.)
 
 We retrieve the SED
 
 >>> wave,flux = get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz')
->>> flux *= scale**2
+>>> flux *= scale
 
 Then compute the synthetic fluxes, and compare them with the synthetic fluxes as
 retrieved from the pre-calculated tables
 
 >>> fluxes_calc = synthetic_flux(wave,flux,photbands)
->>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands,wave_units='A')
->>> fluxes_int *= scale**2
+>>> wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands,wave_units='AA')
+>>> fluxes_int *= scale
 
 Convert to magnitudes:
 
->>> m1 = [conversions.convert('erg/s/cm2/A','mag',fluxes_calc[i],photband=photbands[i]) for i in range(len(photbands))]
->>> m2 = [conversions.convert('erg/s/cm2/A','mag',fluxes_int[i],photband=photbands[i]) for i in range(len(photbands))]
+>>> m1 = [conversions.convert('erg/s/cm2/AA','mag',fluxes_calc[i],photband=photbands[i]) for i in range(len(photbands))]
+>>> m2 = [conversions.convert('erg/s/cm2/AA','mag',fluxes_int[i],photband=photbands[i]) for i in range(len(photbands))]
 
 And make a nice plot
 
@@ -269,7 +273,7 @@ And make a nice plot
 >>> p = [pl.annotate('%s: %.3f'%(b,m),(w,f),color='r') for b,m,w,f in zip(photbands,m1,wave_int,fluxes_calc)]
 >>> p = [pl.annotate('%s: %.3f'%(b,m),(w-1000,0.8*f),color='b') for b,m,w,f in zip(photbands,m2,wave_int,fluxes_int)]
 >>> p = pl.xlabel('Wavelength [Angstrom]')
->>> p = pl.ylabel('Flux [erg/s/cm2/A]')
+>>> p = pl.ylabel('Flux [erg/s/cm2/AA]')
 
 ]include figure]]ivs_sed_model_example.png]
 
@@ -356,7 +360,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch():
+def copy2scratch(z=None):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -367,6 +371,9 @@ def copy2scratch():
     
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
+    
+    It is possible to give z='*' as an option; when you do that, the grids
+    with all z values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -374,29 +381,46 @@ def copy2scratch():
         os.makedirs('/scratch/%s/'%(uname))
     scratchdir = '/scratch/%s/'%(uname)
     
+    #-- we have defaults for the single and multiple grid
     defaults_ = []
     defaults_.append(defaults)
     defaults_.extend(defaults_multiple)
     
+    #-- now run over the defaults for the single and multiple grid, and
+    #   copy the necessary files to the scratch disk
     for default in defaults_:
         default['use_scratch'] = False
+        #-- set the z with the starred version '*' if asked for, but remember
+        #   the original value to reset it after the loop is done.
+        if z is not None:
+            previous_z = default['z']
+            default['z']
         #grid
         fname = get_file(integrated=False,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        #-- we could have received a list (multiple files) or a string (single file)
+        if isinstance(fname,str):
+            fname = [fname]
+        for ifname in fname:
+            if not os.path.isfile(scratchdir + os.path.basename(ifname)):
+                shutil.copy(ifname,scratchdir)
+                logger.info('Copied grid: %s to scratch'%(ifname))
+            else:
+                logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         #integrated grid
         fname = get_file(integrated=True,**default)
-        if not os.path.isfile(scratchdir + os.path.basename(fname)):
-            shutil.copy(fname,scratchdir)
-            logger.info('Copied grid: %s to scratch'%(fname))
-        else:
-            logger.info('Using existing grid: %s from scratch'%(os.path.basename(fname)))
+        if isinstance(fname,str):
+            fname = [fname]
+        for ifname in fname:
+            if not os.path.isfile(scratchdir + os.path.basename(ifname)):
+                shutil.copy(ifname,scratchdir)
+                logger.info('Copied grid: %s to scratch'%(ifname))
+            else:
+                logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
+        if z is not None:
+            default['z'] = previous_z
 
-def clean_scratch():
+def clean_scratch(z=None):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -410,15 +434,27 @@ def clean_scratch():
     
     for default in defaults_:
         if default['use_scratch']:
+            if z is not None:
+                previous_z = default['z']
+                default['z']
             fname = get_file(integrated=False,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)
+            if isinstance(fname,str):
+                fname = [fname]
+            for ifname in fname:
+                if os.path.isfile(ifname):
+                    logger.info('Removed file: %s'%(ifname))
+                    os.remove(ifname)
+            
             fname = get_file(integrated=True,**default)
-            if os.path.isfile(fname):
-                logger.info('Removed file: %s'%(fname))
-                os.remove(fname)    
+            if isinstance(fname,str):
+                fname = [fname]
+            for ifname in fname:
+                if os.path.isfile(ifname):
+                    logger.info('Removed file: %s'%(ifname))
+                    os.remove(ifname)    
             default['use_scratch'] = False
+            if z is not None:
+                default['z'] = previous_z
 
 def defaults2str():
     """
@@ -621,21 +657,39 @@ def get_file(integrated=False,**kwargs):
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
-def blackbody(x,T,units='erg/s/cm2/A',disc_integrated=True):
+def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
     
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
     multiplied by sqrt(2*pi).
     
+    You can only give an angular diameter if disc_integrated is True.
+    
+    To convert the scale parameter back to mas, simply do:
+    
+    ang_diam = 2*conversions.convert('sr','mas',scale)
+    
+    Be careful when, e.g. during fitting, scale contains an error: be sure to set
+    the option C{unpack=True} in the L{conversions.convert} function!
+    
     @param: wavelength, unit
     @type: tuple (ndarray,str)
     @param T: temperature, unit
     @type: tuple (float,str)
+    @param units: flux units (could be in Fnu-units or Flambda-units)
+    @type units: str (units)
+    @param disc_integrated: if True, they are in the same units as Kurucz-disc-integrated SEDs
+    @type disc_integrated: bool
+    @param ang_diam: angular diameter (in mas or rad or something similar)
+    @type ang_diam: (value, unit)
     """
     #-- what kind of units did we receive?
-    unit_type = conversions.change_convention('SI',x[1])
-    x = conversions.convert(x[1],'SI',x[0])
+    if isinstance(x,tuple):
+        unit_type = conversions.change_convention('SI',x[1])
+        x = conversions.convert(x[1],'SI',x[0])
+    else:
+        unit_type = 'm1'
     if isinstance(T,tuple):
         T = conversions.convert(T[1],'K',T[0])
     #-- now make the appropriate black body
@@ -650,16 +704,19 @@ def blackbody(x,T,units='erg/s/cm2/A',disc_integrated=True):
     #-- do disc integration
     if disc_integrated:
         I *= np.sqrt(2*np.pi)
+        if ang_diam is not None:
+            scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
+            I *= scale
     return conversions.convert('SI',units,I)
 
 
 def get_table(teff=None,logg=None,ebv=None,star=None,
-              wave_units='A',flux_units='erg/s/cm2/A/sr',**kwargs):
+              wave_units='AA',flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere.
         
     Wavelengths in A (angstrom)
-    Fluxes in Ilambda = ergs/cm2/s/A/sr, except specified via 'units',
+    Fluxes in Ilambda = ergs/cm2/s/AA/sr, except specified via 'units',
     
     If you give 'units', and /sr is not included, you are responsible yourself
     for giving an extra keyword with the angular diameter C{ang_diam}, or other
@@ -683,7 +740,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     >>> p = loglog(*get_table(grid='TLUSTY',teff=35000,logg=4.0),**dict(label='Tlusty'))
     >>> p = loglog(*get_table(grid='MARCS',teff=5000,logg=2.0),**dict(label='Marcs'))
     >>> p = loglog(*get_table(grid='KURUCZ',teff=5000,logg=2.0),**dict(label='Kurucz'))
-    >>> p = pl.xlabel('Wavelength [angstrom]');p = pl.ylabel('Flux [erg/s/cm2/A/sr]')
+    >>> p = pl.xlabel('Wavelength [angstrom]');p = pl.ylabel('Flux [erg/s/cm2/AA/sr]')
     >>> p = pl.legend(loc='upper right',prop=dict(size='small'))
     >>> p = subplot(132)
     >>> p = loglog(*get_table(grid='FASTWIND',teff=35000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='Fastwind'))
@@ -712,7 +769,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     @type ebv: float
     @param wave_units: units to convert the wavelengths to (if not given, A)
     @type wave_units: str
-    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
     @type flux_units: str
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
@@ -758,11 +815,10 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
         if 'wave' in kwargs.keys():
             removed = kwargs.pop('wave')
         flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
-    
-    if flux_units!='erg/s/cm2/A/sr':
-        flux = conversions.convert('erg/s/cm2/A/sr',flux_units,flux,wave=(wave,'A'),**kwargs)
-    if wave_units!='A':
-        wave = conversions.convert('A',wave_units,wave,**kwargs)
+    if flux_units!='erg/s/cm2/AA/sr':
+        flux = conversions.convert('erg/s/cm2/AA/sr',flux_units,flux,wave=(wave,'AA'),**kwargs)
+    if wave_units!='AA':
+        wave = conversions.convert('AA',wave_units,wave,**kwargs)
     
     ff.close()
     
@@ -770,7 +826,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
 
 
 def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
-               wave_units=None,flux_units='erg/s/cm2/A/sr',**kwargs):
+               wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere in
     photometric passbands.
@@ -778,7 +834,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     Wavelengths in A (angstrom). If you set 'wavelengths' to None, no effective
     wavelengths will be calculated. Otherwise, the effective wavelength is
     calculated taking the model flux into account.
-    Fluxes in Ilambda = ergs/cm2/s/A/sr, except specified via 'units',
+    Fluxes in Ilambda = ergs/cm2/s/AA/sr, except specified via 'units',
     
     If you give 'units', and /sr is not included, you are responsible yourself
     for giving an extra keyword with the angular diameter C{ang_diam}, or other
@@ -801,7 +857,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @type photbands: list of photometric passbands
     @param wave_units: units to convert the wavelengths to (if not given, A)
     @type wave_units: str
-    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
     @type flux_units: str
     @keyword clear_memory: flag to clear memory from previously loaded SED tables.
     If you set it to False, you can easily get an overloaded memory!
@@ -950,14 +1006,14 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     #   absolute luminosity
     flux,Labs = np.array(flux[:-1],float),flux[-1]
     
-    if flux_units!='erg/s/cm2/A/sr':
-        flux = conversions.nconvert('erg/s/cm2/A/sr',flux_units,flux,photband=photbands,**kwargs)
+    if flux_units!='erg/s/cm2/AA/sr':
+        flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
     
     if wave_units is not None:
         model = get_table(teff=teff,logg=logg,ebv=ebv,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
-        if wave_units !='A':
-            wave = wave = conversions.convert('A',wave_units,wave,**kwargs)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave,**kwargs)
     
         return wave,flux,Labs
     else:
@@ -965,7 +1021,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
-              wave_units='A',flux_units='erg/cm2/s/A/sr',grids=None,full_output=False,**kwargs):
+              wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_output=False,**kwargs):
     """
     Retrieve the spectral energy distribution of a combined model atmosphere.
     
@@ -994,7 +1050,7 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
     @type radius: tuple of floats
     @param wave_units: units to convert the wavelengths to (if not given, A)
     @type wave_units: str
-    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
     @type flux_units: str
     @param grids: specifications for grid1
     @type grids: list of dict
@@ -1035,10 +1091,10 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
             fluxes_.append(radius[i]**2*10**intf(np.log10(waves_)))
         else:
             fluxes_ += radius[i]**2*10**intf(np.log10(waves_))
-    if flux_units!='erg/cm2/s/A/sr':
-        fluxes_ = conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes_,wave=(waves_,'A'),**kwargs)
-    if wave_units!='A':
-        waves_ = conversions.convert('A',wave_units,waves_,**kwargs)
+    if flux_units!='erg/cm2/s/AA/sr':
+        fluxes_ = conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes_,wave=(waves_,'AA'),**kwargs)
+    if wave_units!='AA':
+        waves_ = conversions.convert('AA',wave_units,waves_,**kwargs)
     #-- where the fluxes are zero, log can do weird
     if full_output:
         fluxes_ = np.vstack(fluxes_)
@@ -1052,7 +1108,7 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
     return waves_,fluxes_
     
 def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
-              photbands=None,wave_units=None,flux_units='erg/s/cm2/A/sr',grids=None,**kwargs):
+              photbands=None,wave_units=None,flux_units='erg/s/cm2/AA/sr',grids=None,**kwargs):
     """
     Retrieve the integrated spectral energy distribution of a combined model
     atmosphere.
@@ -1066,7 +1122,7 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
     >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
     >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])
     
-    >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='A')
+    >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='AA')
     >>> iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
     >>> iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)
     
@@ -1091,7 +1147,7 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
     @type radius: tuple of floats
     @param photbands: photometric passbands
     @type photbands: list
-    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/A/sr)
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
     @type flux_units: str
     @param grids: specifications for grid1
     @type grids: list of dict
@@ -1118,14 +1174,14 @@ def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
         Labs.append(iLabs*irrad**2)
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs)
-    if flux_units!='erg/s/cm2/A/sr':
-        fluxes = np.array([conversions.convert('erg/s/cm2/A/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+    if flux_units!='erg/s/cm2/AA/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
         
     if wave_units is not None:
         model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
-        if wave_units !='A':
-            wave = wave = conversions.convert('A',wave_units,wave)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave)
         return wave,fluxes,Labs
     return fluxes,Labs
 
@@ -1338,9 +1394,9 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     @type name: str
     @param version: version of the calibration file
     @type version: str
-    @param wave_units: units of wavelength arrays (default: A)
+    @param wave_units: units of wavelength arrays (default: AA)
     @type wave_units: str (interpretable by C{units.conversions.convert})
-    @param flux_units: units of flux arrays (default: erg/s/cm2/A)
+    @param flux_units: units of flux arrays (default: erg/s/cm2/AA)
     @type flux_units: str (interpretable by C{units.conversions.convert})
     @return: wavelength and flux arrays of calibrator
     @rtype: (ndarray,ndarray)
@@ -1367,9 +1423,9 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
         raise ValueError, 'Calibrator %s (version=%s) not found'%(name,version)
     
     if flux_units is not None:
-        flux = conversions.convert('erg/s/cm2/A',flux_units,flux,wave=(wave,'A'))
+        flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
     if wave_units is not None:
-        wave = conversions.convert('A',wave_units,wave)
+        wave = conversions.convert('AA',wave_units,wave)
     
     
     logger.info('Calibrator %s selected'%(calfile))
@@ -1392,12 +1448,12 @@ def calibrate():
     Magnitude computed as -2.5*log10(Fmeas/F0)
     F0 = 3.6307805477010029e-20 erg/s/cm2/Hz
     
-    STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/A
+    STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/AA
     Flux computed as 10**(-(meas-mag0)/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
-    F0 = 3.6307805477010028e-09 erg/s/cm2/A
+    F0 = 3.6307805477010028e-09 erg/s/cm2/AA
     
-    Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/A
+    Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/AA
     Flux computed as 10**(-meas/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
     """
@@ -1410,7 +1466,7 @@ def calibrate():
     #-- calculate synthetic fluxes
     syn_flux = synthetic_flux(wave,flux,zp['photband'])
     syn_flux_fnu = synthetic_flux(wave,flux,zp['photband'],units='Fnu')
-    Flam0_lit = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/A',zp['Flam0'],photband=zp['photband'])
+    Flam0_lit = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/AA',zp['Flam0'],photband=zp['photband'])
     Fnu0_lit = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/Hz',zp['Fnu0'],photband=zp['photband'])
     
     #-- we have Flam0 but not Fnu0: compute Fnu0
@@ -1421,17 +1477,17 @@ def calibrate():
     
     #-- we have Fnu0 but not Flam0: compute Flam0
     keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==1)
-    Flam0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/A',zp['Fnu0'],photband=zp['photband'])
+    Flam0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/AA',zp['Fnu0'],photband=zp['photband'])
     
     #   set everything in correct units for convenience:
-    Flam0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/A',zp['Flam0'])
+    Flam0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/AA',zp['Flam0'])
     Fnu0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/Hz',zp['Fnu0'])
     
     #-- as a matter of fact, set Flam0 and Fnu for all the stuff for which we
     #   have no literature values
     keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==0)
     zp['Flam0'][keep] = syn_flux[keep]
-    zp['Flam0_units'][keep] = 'erg/s/cm2/A'
+    zp['Flam0_units'][keep] = 'erg/s/cm2/AA'
     zp['Fnu0'][keep] = syn_flux_fnu[keep]
     zp['Fnu0_units'][keep] = 'erg/s/cm2/Hz'
     
@@ -1440,7 +1496,7 @@ def calibrate():
     #-- we have no Flam0, only ZP vegamags
     keep = (zp['vegamag_lit']==1) & (zp['Flam0_lit']==0)
     zp['Flam0'][keep] = syn_flux[keep]
-    zp['Flam0_units'][keep] = 'erg/s/cm2/A'
+    zp['Flam0_units'][keep] = 'erg/s/cm2/AA'
     
     #-- we have no Flam0, no ZP vegamas but STmags
     keep = (zp['STmag_lit']==1) & (zp['Flam0_lit']==0)
@@ -1449,7 +1505,7 @@ def calibrate():
     
     #-- we have no Fnu0, no ZP vegamas but ABmags
     keep = (zp['ABmag_lit']==1) & (zp['Flam0_lit']==0)
-    F0AB_lam = conversions.convert('erg/s/cm2/Hz','erg/s/cm2/A',F0AB,photband=zp['photband'])
+    F0AB_lam = conversions.convert('erg/s/cm2/Hz','erg/s/cm2/AA',F0AB,photband=zp['photband'])
     m_vega = 2.5*np.log10(F0AB_lam/syn_flux) + zp['ABmag']
     zp['vegamag'][keep] = m_vega[keep]
     
@@ -1501,11 +1557,11 @@ def synthetic_flux(wave,flux,photbands,units=None):
     Maiz-Apellaniz, he states that P_lam = P_nu/lambda. But in the definition
     we use above here, it *is* the same!
     
-    The model fluxes should B{always} be given in Flambda (erg/s/cm2/A). The
+    The model fluxes should B{always} be given in Flambda (erg/s/cm2/AA). The
     program will convert them to Fnu where needed.
     
     The output is a list of numbers, equal in length to the 'photband' inputs.
-    The units of the output are erg/s/cm2/A where Flambda was given, and
+    The units of the output are erg/s/cm2/AA where Flambda was given, and
     erg/s/cm2/Hz where Fnu was given.
     
     The difference is only marginal for 'blue' bands. For example, integrating
@@ -1513,28 +1569,28 @@ def synthetic_flux(wave,flux,photbands,units=None):
     
     >>> wave,flux = get_table(teff=10000,logg=4.0)
     >>> energys = synthetic_flux(wave,flux,['2MASS.J','2MASS.J'],units=['flambda','fnu'])
-    >>> e0_conv = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',energys[0],photband='2MASS.J')
+    >>> e0_conv = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',energys[0],photband='2MASS.J')
     >>> np.abs(energys[1]-e0_conv)/energys[1]<0.012
     True
     
     But this is not the case for IRAS.F12:
     
     >>> energys = synthetic_flux(wave,flux,['IRAS.F12','IRAS.F12'],units=['flambda','fnu'])
-    >>> e0_conv = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',energys[0],photband='IRAS.F12')
+    >>> e0_conv = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',energys[0],photband='IRAS.F12')
     >>> np.abs(energys[1]-e0_conv)/energys[1]>0.1
     True
     
     If you have a spectrum in micron vs Jy and want to calculate the synthetic
     fluxes in Jy, a little bit more work is needed to get everything in the
     right units. In the following example, we first generate a constant flux
-    spectrum in micron and Jy. Then, we convert flux to erg/s/cm2/A using the
+    spectrum in micron and Jy. Then, we convert flux to erg/s/cm2/AA using the
     wavelengths (this is no approximation) and convert wavelength to angstrom.
     Next, we compute the synthetic fluxes in the IRAS band in Fnu, and finally
     convert the outcome (in erg/s/cm2/Hz) to Jansky.
     
     >>> wave,flux = np.linspace(0.1,200,10000),np.ones(10000)
-    >>> flam = conversions.convert('Jy','erg/s/cm2/A',flux,wave=(wave,'micron'))
-    >>> lam = conversions.convert('micron','A',wave)
+    >>> flam = conversions.convert('Jy','erg/s/cm2/AA',flux,wave=(wave,'micron'))
+    >>> lam = conversions.convert('micron','AA',wave)
     >>> energys = synthetic_flux(lam,flam,['IRAS.F12','IRAS.F25','IRAS.F60','IRAS.F100'],units=['Fnu','Fnu','Fnu','Fnu'])
     >>> energys = conversions.convert('erg/s/cm2/Hz','Jy',energys)
     
@@ -1560,13 +1616,13 @@ def synthetic_flux(wave,flux,photbands,units=None):
     
     @param wave: model wavelengths (angstrom)
     @type wave: ndarray
-    @param flux: model fluxes (erg/s/cm2/A)
+    @param flux: model fluxes (erg/s/cm2/AA)
     @type flux: ndarray
     @param photbands: list of photometric passbands
     @type photbands: list of str
     @param units: list containing Flambda or Fnu flag (defaults to all Flambda)
     @type units: list of strings or str
-    @return: model fluxes (erg/s/cm2/A or erg/s/cm2/Hz)
+    @return: model fluxes (erg/s/cm2/AA or erg/s/cm2/Hz)
     @rtype: ndarray
     """    
     if isinstance(units,str):
@@ -1619,8 +1675,8 @@ def synthetic_flux(wave,flux,photbands,units=None):
         #-- we work in FNU
         elif units[i].upper()=='FNU':
             #-- convert wavelengths to frequency, Flambda to Fnu
-            freq_ = conversions.convert('A','Hz',wave_)
-            flux_f = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flux_,wave=(wave_,'A'))
+            freq_ = conversions.convert('AA','Hz',wave_)
+            flux_f = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flux_,wave=(wave_,'AA'))
             #-- sort again!
             sa = np.argsort(freq_)
             transr = transr[sa]

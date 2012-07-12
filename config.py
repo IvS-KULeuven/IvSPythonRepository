@@ -14,7 +14,10 @@ import glob as glob_module
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
 data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/',
+<<<<<<< HEAD
              '/home/ben/public_html/opacities',
+=======
+>>>>>>> 32bc0e9cba8c5f3103e58b86e91eb28cf6a35797
              '/STER/kenneth/Python_repository/']
              
 ivs_dirs = dict(coralie='/STER/coralie/',

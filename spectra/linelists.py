@@ -14,18 +14,17 @@ Mendelev's Table::
     9  F  Fluorine   19 K  Potassium  29 Cu Copper    39 Y  Yttrium    49 In Indium     59 Pr Praseodymium
     10 Ne Neon       20 Ca Calcium    30 Zn Zinc      40 Zr Zirconium  50 Sn Tin        60 Nd Neodymium
 
-    61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg Roentgenium
-    62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 UubUnunbium
-    63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 UutUnuntrium
-    64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 UuqUnunquadium
-    65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 UupUnunpentium
-    66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 UuhUnunhexium
-    67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 UuoUnunoctium
+    61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg  Roentgenium
+    62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 Uub Ununbium
+    63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 Uut Ununtrium
+    64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 Uuq Ununquadium
+    65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 Uup Ununpentium
+    66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 Uuh Ununhexium
+    67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 Uuo Ununoctium
     68 Er Erbium     78 Pt Platinum   88 Ra Radium    98 Cf Californium  108 Hs Hassium
     69 Tm Thulium    79 Au Gold       89 Ac Actinium  99 Es Einsteinium  109 Mt Meitnerium
     70 Yb Ytterbium  80 Hg Mercury    90 Th Thorium   100 Fm Fermium     110 Ds Darmstadtium
 
-End
 """
 import os
 
@@ -104,6 +103,8 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
     a number
     
     A lines is considerd a blend if the closest line is closer than C{blend} angstrom.
+    
+    Returns record array with fields C{wavelength}, C{ion} and C{depth}.
     
     Example usage:
     
