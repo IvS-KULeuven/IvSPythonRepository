@@ -54,6 +54,15 @@ function in this module.
 
 ]include figure]]ivs_sigproc_fit_funclib04.png]
 
+>>> p = plt.figure()
+>>> x = np.linspace(-1,1,1000)
+>>> gammas = [-0.25,0.1,0.25,0.5,1,2,4]
+>>> y = np.array([evaluate('soft_parabola',x,[1.,0,1.,gamma]) for gamma in gammas])
+>>> for iy,gamma in zip(y,gammas): p = plt.plot(x,iy,label="soft_parabola $\gamma$={:.2f}".format(gamma))
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib05.png]
 
 """
 import numpy as np
@@ -69,10 +78,51 @@ logger = logging.getLogger("SP.FUNCLIB")
 #{ Function Library
 def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     """
-    Blackbody.
+    Blackbody (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
     """
     pnames = ['T', 'scale']
     function = lambda p, x: p[1]*sed_model.blackbody((x,wave_units), p[0], units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
+    
+def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Rayleigh-Jeans tail (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.rayleigh_jeans((x,wave_units), p[0], units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
+    
+def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Wien approximation (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.wien((x,wave_units), p[0], units=flux_units,\
                                                 disc_integrated=disc_integrated)
     
     return Function(function=function, par_names=pnames)
@@ -104,6 +154,9 @@ def kepler_orbit(type='single'):
 def box_transit(t0=0.):
     """
     Box transit model (cont,freq,ingress,egress,depth)
+    
+    @param t0: reference time (defaults to 0)
+    @type t0: float
     """
     pnames = 'cont','freq','ingress','egress','depth'
     def function(p,x):
@@ -119,12 +172,33 @@ def box_transit(t0=0.):
 
 def polynomial(d=1):
     """
-    Polynomial.
+    Polynomial (a1,a0).
     
-    f(x) = a * exp( - (x - mu)**2 / (2 * sigma**2) ) + c
+    y(x) = ai*x**i + a(i-1)*x**(i-1) + ... + a1*x + a0
+    
+    @param d: degree of the polynomial
+    @type d: int
     """
     pnames = ['a{:d}'.format(i) for i in range(d,0,-1)]+['a0']
     function = lambda p, x: np.polyval(p,x)
+    
+    return Function(function=function, par_names=pnames)
+
+
+def soft_parabola():
+    """
+    Soft parabola (ta,vlsr,vinf,gamma).
+    
+    See Olofsson 1993ApJS...87...267O.
+    
+    T_A(x) = T_A(0) * [ 1 - ((x- v_lsr)/v_inf)**2 ] ** (gamma/2)
+    """
+    pnames = ['ta','vlsr','vinf','gamma']
+    def function(p,x):
+        term = (x-p[1]) / p[2]
+        y = p[0] * (1- term**2)**(p[3]/2.)
+        if p[3]<=0: y[np.abs(term)>=1] = 0
+        return y
     
     return Function(function=function, par_names=pnames)
 
@@ -273,12 +347,18 @@ def voigt():
 def multi_sine(n=10):
     """
     Multiple sines.
+    
+    @param n: number of sines
+    @type n: int
     """
     return Model(functions=[sine() for i in range(n)])
 
 def multi_blackbody(n=3,**kwargs):
     """
     Multiple black bodies.
+    
+    @param n: number of blackbodies
+    @type n: int
     """
     return Model(functions=[blackbody(**kwargs) for i in range(n)])
 
