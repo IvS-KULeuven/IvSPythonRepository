@@ -659,12 +659,12 @@ def get_file(integrated=False,**kwargs):
     return grid
 
 @blackbody_input
-def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
+def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
     
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
-    multiplied by sqrt(2*pi).
+    multiplied by sqrt(2*pi) (set C{disc_integrated=True}).
     
     You can only give an angular diameter if disc_integrated is True.
     
@@ -672,13 +672,19 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     
     ang_diam = 2*conversions.convert('sr','mas',scale)
     
+    See decorator L{blackbody_input} for details on how the input parameters
+    are handled: the user is free to choose wavelength or frequency units, choose
+    *which* wavelength or frequency units, and can even mix them. To be sure that
+    everything is handled correctly, we need to do some preprocessing and unit
+    conversions.
+    
     Be careful when, e.g. during fitting, scale contains an error: be sure to set
     the option C{unpack=True} in the L{conversions.convert} function!
     
     >>> x = np.linspace(2.3595,193.872,500)
-    >>> F1 = blackbody((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
-    >>> F2 = rayleigh_jeans((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
-    >>> F3 = wien((x,'micron'),280.,units='Jy',ang_diam=(1.,'mas'))
+    >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='Jy',ang_diam=(1.,'mas'))
+    >>> F2 = rayleigh_jeans(x,280.,wave_units='micron',flux_units='Jy',ang_diam=(1.,'mas'))
+    >>> F3 = wien(x,280.,wave_units='micron',flux_units='Jy',ang_diam=(1.,'mas'))
     
     
     >>> p = plt.figure()
@@ -688,9 +694,9 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     >>> p = plt.plot(x,F3)
     
     
-    >>> F1 = blackbody((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
-    >>> F2 = rayleigh_jeans((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
-    >>> F3 = wien((x,'micron'),280.,units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+   >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+    >>> F2 = rayleigh_jeans(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+    >>> F3 = wien(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
 
     
     >>> p = plt.subplot(122)
@@ -699,12 +705,14 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     >>> p = plt.plot(x,F3)
 
     
-    @param: wavelength, unit
-    @type: tuple (ndarray,str)
+    @param: wavelength
+    @type: ndarray
     @param T: temperature, unit
     @type: tuple (float,str)
-    @param units: flux units (could be in Fnu-units or Flambda-units)
-    @type units: str (units)
+    @param wave_units: wavelength units (frequency or length)
+    @type wave_units: str (units)
+    @param flux_units: flux units (could be in Fnu-units or Flambda-units)
+    @type flux_units: str (units)
     @param disc_integrated: if True, they are in the same units as Kurucz-disc-integrated SEDs
     @type disc_integrated: bool
     @param ang_diam: angular diameter (in mas or rad or something similar)
@@ -728,7 +736,7 @@ def blackbody(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
 
 
 @blackbody_input
-def rayleigh_jeans(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
+def rayleigh_jeans(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Rayleigh-Jeans approximation of a black body.
     
@@ -753,7 +761,7 @@ def rayleigh_jeans(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
 
 
 @blackbody_input
-def wien(x,T,units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
+def wien(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Wien approximation of a black body.
     
