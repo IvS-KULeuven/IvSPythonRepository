@@ -173,12 +173,15 @@ def blackbody_input(fctn):
         y_unit_type = conversions.change_convention('SI',flux_units)
         #-- if you give Jy vs micron, we need to first convert wavelength to frequency
         if y_unit_type=='kg1 rad-1 s-2' and x_unit_type=='length':
-            x = conversions.convert(conversions._conventions[curr_conv]['length'],'Hz',x)
+            x = conversions.convert(conversions._conventions[curr_conv]['length'],'rad/s',x)
             x_unit_type = 'frequency'
+        elif y_unit_type=='kg1 m-1 s-3' and x_unit_type=='frequency':
+            x = conversions.convert('rad/s',conversions._conventions[curr_conv]['length'],x)
+            x_unit_type = 'length'
         #-- correct for rad
-        elif x_unit_type=='frequency':
+        if x_unit_type=='frequency':
             x /= (2*np.pi)
-    
+        print y_unit_type
         #-- run function
         I = fctn((x,x_unit_type),T)        
         
