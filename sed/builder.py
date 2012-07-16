@@ -764,10 +764,10 @@ def photometry2str(master,comment=''):
     @type master: numpy record array
     """
     master = master[np.argsort(master['photband'])]
-    txt = comment+'%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
+    txt = comment+'%20s %12s %12s %12s %10s %12s %12s %12s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= comment+'==========================================================================================================================\n'
     for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %12s %s\n'%(i,j,k,l,m,n,o,p,q)
+        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q)
     return txt
 
 @memoized
@@ -866,9 +866,23 @@ class SED(object):
         5. C{sed.results}: results and summary of the fitting process (dict)
         
     """
-    def __init__(self,ID,photfile=None,plx=None,load_fits=True,label=''):
+    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label=''):
         """
         Initialize SED class.
+        
+        Different ways to initialize:
+        
+        B{1. If no previous data are saved:}
+        
+        >>> mysed = SED('HD129929')
+        
+        B{2. If previous data exists:}
+        
+        >>> #mysed = SED(photfile='HD129929.phot') # will set ID with 'oname' field from SIMBAD
+        >>> #mysed = SED(ID='bla', photfile='HD129929.phot') # Sets custom ID
+        
+        The C{ID} variable is used internally to look up data, so it should be
+        something SIMBAD understands and that designates the target.
         
         @param plx: parallax (and error) of the object
         @type plx: tuple (plx,e_plx)
@@ -905,6 +919,9 @@ class SED(object):
                 self.info['plx']['e'] = plx[1]
         else:
             self.load_photometry()
+            #-- if no ID was given, set the official name as the ID.
+            if self.ID is None:
+                self.ID = self.info['oname']
         #--load information from the FITS file if it exists
         self.results = {}
         if load_fits:
@@ -913,7 +930,21 @@ class SED(object):
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
         
-    
+    def __str__(self):
+        txt = []
+        txt.append("Object identification: {:s}".format(self.ID))
+        if hasattr(self,'info') and self.info and 'oname' in self.info:
+            txt.append("Official designation: {:s}".format(self.info['oname']))
+        txt.append("Included photometry:")
+        if hasattr(self,'master') and self.master is not None:
+            include_grid = self.master['include']
+            txt.append(photometry2str(self.master[include_grid]))
+        txt.append("Excluded photometry:")
+        if hasattr(self,'master') and self.master is not None:
+            include_grid = self.master['include']
+            txt.append(photometry2str(self.master[-include_grid]))
+        return "\n".join(txt)
+        
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,
                        include=None,exclude=None,
@@ -1202,6 +1233,9 @@ class SED(object):
             EBV = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)/Rv
             output[model] = EBV
         return output
+    
+    def get_angular_diameter(self):
+        return None
     
     #}
     
@@ -1903,7 +1937,7 @@ class SED(object):
                 pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
                     pl.plot(wave,flux_ur,'k-',**kwargs)
-            pl.ylabel(conversions.unit2texlabel(flux_units))
+            pl.ylabel(conversions.unit2texlabel(flux_units,full=True))
             pl.xlabel('wavelength [{0}]'.format(conversions.unit2texlabel(wave_units)))
         else:
             xlabels = color_dict.keys()
