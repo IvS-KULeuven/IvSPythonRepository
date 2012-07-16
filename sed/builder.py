@@ -1220,7 +1220,24 @@ class SED(object):
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
     #}
-    #{ Request additional information
+    #{ Additional information
+    
+    def is_target(self,name):
+        """
+        Check if this SED represents the object `name'.
+        
+        Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
+        checking for "V* V836 Cen", which is the same target.
+        """
+        try:
+            info = sesame.search(name)
+            oname = info['oname']
+        except:
+            logger.warning('Did not find {:s} on Simbad}'.format(name))
+            return False
+            
+        if oname==self.info['oname']:
+            return True
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
         gal = self.info['galpos']
