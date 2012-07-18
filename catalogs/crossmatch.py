@@ -31,7 +31,7 @@ from scipy.spatial import KDTree
 
 logger = logging.getLogger("CAT.XMATCH")
 
-def get_photometry(ID=None,to_units='erg/s/cm2/A',extra_fields=[],include=None,
+def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
          exclude=None,**kwargs):
     """
     Collect photometry from different sources.
@@ -175,12 +175,12 @@ def add_bibcodes(master):
     return numpy_ext.recarr_join(master,bibcodes)
 
 
-def make_bibtex(master,ID):
+def make_bibtex(master,filename):
     """
     Make a bib file from a master record
     """
     bibcodes = sorted(set(list(master['bibcode'])))
-    with open('{0}.bib'.format(ID),'w') as ff:
+    with open(filename,'w') as ff:
         ff.write('% \citet{{{0}}}\n\n\n'.format(','.join(bibcodes)))
         for bibcode in bibcodes:
             try:
@@ -226,7 +226,7 @@ def photometry2str(master):
     txt = '#%19s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= '#=========================================================================================================================\n'
     for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
-        txt+='%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/A %s\n'%(i,j,k,l,m,n,o,p)
+        txt+='%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/AA %s\n'%(i,j,k,l,m,n,o,p)
     return txt    
 
 if __name__=="__main__":

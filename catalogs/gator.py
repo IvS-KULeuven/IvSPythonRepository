@@ -128,8 +128,8 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     >>> import pylab
     >>> import vizier
     >>> name = 'kr cam'
-    >>> master = vizier.get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[])
-    >>> master = get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[],master=master)
+    >>> master = vizier.get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[])
+    >>> master = get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[],master=master)
     >>> p = pylab.figure()
     >>> wise = np.array(['WISE' in photband and True or False for photband in master['photband']])
     >>> p = pylab.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
@@ -139,11 +139,11 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     >>> p = pylab.show()
     
     Other examples:
-    >>> master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
+    >>> master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
     >>> master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
     """
     kwargs['ID'] = ID
-    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    to_units = kwargs.pop('to_units','erg/s/cm2/AA')
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements
@@ -166,6 +166,8 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
             try:
                 value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
             except ValueError: # calibrations not available
+                value,e_value = np.nan,np.nan
+            except AssertionError: # the error or flux must be positive number
                 value,e_value = np.nan,np.nan
             try:
                 eff_wave = filters.eff_wave(master['photband'][i])
@@ -440,8 +442,8 @@ if __name__=="__main__":
     from ivs.misc import loggers
     logger = loggers.get_basic_logger("")
     #-- example 1
-    #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
-    #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/A',extra_fields=[],radius=5.,master=master)
+    #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
+    #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=5.,master=master)
     
     #-- example 2
     #master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
@@ -453,11 +455,11 @@ if __name__=="__main__":
     #master = vizier.get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=5.,master=master)
     
     #-- example 4
-    #master = get_photometry(ID='HD143454',to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
-    #master = vizier.get_photometry(ID='HD143454',to_units='erg/s/cm2/A',extra_fields=[],radius=30.,master=master)
+    #master = get_photometry(ID='HD143454',to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
+    #master = vizier.get_photometry(ID='HD143454',to_units='erg/s/cm2/AA',extra_fields=[],radius=30.,master=master)
     #-- example 5
-    master = get_photometry(ID='RR Aql',to_units='erg/s/cm2/A',extra_fields=[],radius=1.)
-    master = vizier.get_photometry(ID='RR Aql',to_units='erg/s/cm2/A',extra_fields=[],radius=30.,master=master)
+    master = get_photometry(ID='RR Aql',to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
+    master = vizier.get_photometry(ID='RR Aql',to_units='erg/s/cm2/AA',extra_fields=[],radius=30.,master=master)
     
     
     print master
@@ -488,8 +490,8 @@ if __name__=="__main__":
     ##list_gator_catalogs()
     ##sys.exit()
     #name = 'kr cam'
-    #master = vizier.get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[])
-    #master = get_photometry(name,to_units='erg/s/cm2/A',extra_fields=[],master=master)
+    #master = vizier.get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[])
+    #master = get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[],master=master)
     
     #pylab.figure()
     #wise = np.array(['WISE' in photband and True or False for photband in master['photband']])

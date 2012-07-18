@@ -149,7 +149,7 @@ def get_file(integrated=False,**kwargs):
 
 
 def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
-              wave_units='A',flux_units='erg/cm2/s/A/sr',**kwargs):
+              wave_units='A',flux_units='erg/cm2/s/AA/sr',**kwargs):
     """
     Retrieve the specific intensity of a model atmosphere.
     
@@ -453,11 +453,17 @@ def ld_power(mu,coeffs):
 
 #{ Fitting routines (thanks to Steven Bloemen)
 
-def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
+def fit_law(mu,Imu,law='claret',fitmethod='equidist_mu_leastsq'):
     """
     Fit an LD law to a sampled set of limb angles/intensities.
     
+    In my (Pieter) experience, C{fitmethod='equidist_mu_leastsq' seems
+    appropriate for the Kurucz models.
+    
     Make sure the intensities are normalised!
+    
+    @return: coefficients, sum of squared residuals,relative flux difference between prediction and model integrated intensity
+    @rtype: array, float, float
     """
     #-- prepare array for coefficients and set the initial guess
     Ncoeffs = dict(claret=4,linear=1,nonlinear=2,logarithmic=2,quadratic=2,
@@ -495,30 +501,78 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
         mu_spl = np.sqrt(1-r_spl**2)
         Imu_spl = splev(mu_spl,tck,der=0)
         csol  = fmin(ldres_fmin, c0, maxiter=1000, maxfun=2000,args=(mu_spl,Imu_spl,law))
-    return csol
+    myfit = globals()['ld_%s'%(law)](mu,csol)
+    res =  np.sum(Imu - myfit)**2
+    int1,int2 = np.trapz(Imu,x=mu),np.trapz(myfit,x=mu)
+    dflux = (int1-int2)/int1
+    return csol,res,dflux
     
     
-def fit_law_to_grid(**kwargs):
+def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
+             law='claret',fitmethod='equidist_mu_leastsq',**kwargs):
     """
     Gets the grid and fits LD law to all the models.
     
     Does not use mu=0 point in the fitting process.
     """
     teffs, loggs = get_grid_dimensions(**kwargs)
-    teffs=teffs[0:3]
-    loggs=loggs[0:3]
+    teffs=teffs
+    loggs=loggs
+    grid_pars = []
     grid_coeffs = []
     Imu1s = []
     for teff_, logg_ in zip(teffs, loggs):
-        print teff_, logg_
-        mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, **kwargs)
-        mu1, Imu1 = get_limbdarkening(teff=teff_, logg=logg_, mu=1., **kwargs)
-        print Imu1
-        Imu1s.append(Imu1)
-        coeffs = fit_claret4(mu[mu>0], Imu[mu>0], teff=teff_, logg=logg_, **kwargs)
-        grid_coeffs.append(coeffs)
-        mu_grid=np.linspace(0,1,200)
-    return teffs, loggs, np.array(grid_coeffs), np.array(Imu1s)
+        for ebv_ in ebvs:
+            for vrad_ in vrads:
+                print teff_, logg_,ebv_,vrad_
+                mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, ebv=ebv_,vrad=vrad_,photbands=[photband],**kwargs)
+                Imu1 = Imu.max()
+                Imu = Imu[:,0]/Imu1
+                coeffs,res,dflux = fit_law(mu[mu>0], Imu[mu>0],law=law,fitmethod=fitmethod)
+                grid_coeffs.append(coeffs)
+                grid_pars.append([teff_,logg_,ebv_,vrad_])
+                Imu1s.append([Imu1,res,dflux])
+    #- wrap up results in nice arrays
+    grid_pars = np.array(grid_pars)
+    grid_coeffs = np.array(grid_coeffs)
+    Imu1s = np.array(Imu1s)
+    
+    return grid_pars, grid_coeffs, Imu1s
+    
+def generate_grid(photbands,vrads=[0],ebvs=[0],
+             law='claret',fitmethod='equidist_mu_leastsq',outfile='mygrid.fits',**kwargs):
+    hdulist = pyfits.HDUList([])
+    hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+
+    hd = hdulist[0].header
+    hd.update('FIT', fitmethod, 'FIT ROUTINE')
+    hd.update('LAW', law, 'FITTED LD LAW')
+    hd.update('GRID', kwargs.get('grid',defaults['grid']), 'GRID')
+    
+    for photband in photbands:
+        print photband
+        pars,coeffs,Imu1s = fit_law_to_grid(photband,**kwargs)
+        cols = []
+
+        cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
+        cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
+        cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
+        cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
+        cols.append(pyfits.Column(name='a1', format='E', array=coeffs[:,0]))
+        cols.append(pyfits.Column(name='a2', format='E', array=coeffs[:,1]))
+        cols.append(pyfits.Column(name='a3', format='E', array=coeffs[:,2]))
+        cols.append(pyfits.Column(name='a4', format='E', array=coeffs[:,3]))
+        cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
+        cols.append(pyfits.Column(name='SRS', format='E', array=Imu1s[:,1]))
+        cols.append(pyfits.Column(name='dint', format='E', array=Imu1s[:,2]))
+
+        newtable = pyfits.new_table(pyfits.ColDefs(cols))
+        newtable.header.update('EXTNAME', photband, "SYSTEM.FILTER")
+        newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
+        newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
+        hdulist.append(newtable)
+
+    hdulist.writeto(outfile)
 #}
 
 

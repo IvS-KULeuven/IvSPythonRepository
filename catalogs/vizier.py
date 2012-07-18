@@ -477,7 +477,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
         
     return output
     
-def get_UVSST_spectrum(units='erg/s/cm2/A',**kwargs):
+def get_UVSST_spectrum(units='erg/s/cm2/AA',**kwargs):
     """
     Get a spectrum from the UVSST spectrograph onboard TD1.
     
@@ -496,7 +496,7 @@ def get_UVSST_spectrum(units='erg/s/cm2/A',**kwargs):
         wave,flux = float(field[1:]),data[field][0]
         if flux==0: continue
         #-- there is an error in the units ***in vizier***!
-        flux = conversions.convert(units_o[field],units,100*flux,wave=(wave,'A'),unpack=True)
+        flux = conversions.convert(units_o[field],units,100*flux,wave=(wave,'AA'),unpack=True)
         e_flux = data['e_'+field][0]/100.*flux
         spectrum[i][0] = wave
         spectrum[i][1] = flux
@@ -515,7 +515,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
     
     """
     kwargs['ID'] = ID
-    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    to_units = kwargs.pop('to_units','erg/s/cm2/AA')
     sources = kwargs.get('sources',cat_info.sections())
     master_ = kwargs.get('master',None)
     master = None
@@ -829,7 +829,7 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     
     >>> master = master[(-np.isnan(master['e_meas'])) & (-np.isnan(master['meas']))]
     >>> zp = filters.get_info(master['photband'])
-    >>> myvalue,e_myvalue = conversions.nconvert(master['unit'],'erg/s/cm2/A',master['meas'],master['e_meas'],photband=master['photband'])
+    >>> myvalue,e_myvalue = conversions.nconvert(master['unit'],'erg/s/cm2/AA',master['meas'],master['e_meas'],photband=master['photband'])
     >>> for i in range(len(master)):
     ...    print '%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue[i],'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
           JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.598e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
