@@ -92,6 +92,8 @@ B{Warning 4:} Most of the imperial units are UK/Canada. If you need US, prefix
 the unit with C{US}: E.g. The gallon (C{gal}) is the international imperial
 gallon, C{USgal} is the US gallon.
 
+B{Note 1:} Photometric passbands are given as a string C{"SYSTEM.FILTER"}. For
+a list of defined systems and filters, see L{ivs.sed.filters}.
 
 Section 1. The Python module
 ============================
