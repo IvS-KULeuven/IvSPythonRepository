@@ -175,12 +175,12 @@ def add_bibcodes(master):
     return numpy_ext.recarr_join(master,bibcodes)
 
 
-def make_bibtex(master,ID):
+def make_bibtex(master,filename):
     """
     Make a bib file from a master record
     """
     bibcodes = sorted(set(list(master['bibcode'])))
-    with open('{0}.bib'.format(ID),'w') as ff:
+    with open(filename,'w') as ff:
         ff.write('% \citet{{{0}}}\n\n\n'.format(','.join(bibcodes)))
         for bibcode in bibcodes:
             try:
