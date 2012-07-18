@@ -525,6 +525,7 @@ import pyfits
 
 from ivs import config
 from ivs.aux import numpy_ext
+from ivs.aux import termtools
 from ivs.aux.decorators import memoized
 from ivs.io import ascii
 from ivs.io import fits
@@ -756,7 +757,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
                         master['include'][index] = include
                         break
 
-def photometry2str(master,comment=''):
+def photometry2str(master,comment='',color=False):
     """
     String representation of master record array
     
@@ -766,8 +767,12 @@ def photometry2str(master,comment=''):
     master = master[np.argsort(master['photband'])]
     txt = comment+'%20s %12s %12s %12s %10s %12s %12s %12s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
     txt+= comment+'==========================================================================================================================\n'
-    for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q)
+    for nr,(i,j,k,l,m,n,o,p,q) in enumerate(zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source'])):
+        if not color:
+            txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q)
+        else:
+            mycolor = termtools.green if master['include'][nr] else termtools.red
+            txt+=comment+mycolor('%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q))
     return txt
 
 @memoized
@@ -935,14 +940,15 @@ class SED(object):
         txt.append("Object identification: {:s}".format(self.ID))
         if hasattr(self,'info') and self.info and 'oname' in self.info:
             txt.append("Official designation: {:s}".format(self.info['oname']))
-        txt.append("Included photometry:")
-        if hasattr(self,'master') and self.master is not None:
-            include_grid = self.master['include']
-            txt.append(photometry2str(self.master[include_grid]))
-        txt.append("Excluded photometry:")
-        if hasattr(self,'master') and self.master is not None:
-            include_grid = self.master['include']
-            txt.append(photometry2str(self.master[-include_grid]))
+        #txt.append("Included photometry:")
+        #if hasattr(self,'master') and self.master is not None:
+            #include_grid = self.master['include']
+            #txt.append(photometry2str(self.master[include_grid]))
+        #txt.append("Excluded photometry:")
+        #if hasattr(self,'master') and self.master is not None:
+            #include_grid = self.master['include']
+            #txt.append(photometry2str(self.master[-include_grid]))
+        txt.append(photometry2str(self.master,color=True))
         return "\n".join(txt)
         
     #{ Handling photometric data
@@ -1228,6 +1234,11 @@ class SED(object):
         
         Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
         checking for "V* V836 Cen", which is the same target.
+        
+        @param name: object name
+        @type name: str
+        @return: True if this object instance represent the target "name".
+        @rtype: bool
         """
         try:
             info = sesame.search(name)
@@ -1238,6 +1249,15 @@ class SED(object):
             
         if oname==self.info['oname']:
             return True
+    
+    def has_photfile(self):
+        """
+        Check if this SED has a phot file.
+        
+        @return: True if this object instance has a photfile
+        @rtype: bool
+        """
+        return os.path.isfile(self.photfile)
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
         gal = self.info['galpos']
@@ -1322,6 +1342,19 @@ class SED(object):
         return limits,type
     
     #{ Fitting routines
+    
+    def clip_grid(self,type='igrid_search',CI_limit=None):
+        """
+        Clip grid on CI limit, to save memory.
+        """
+        if CI_limit is None:
+            CI_limit = self.CI_limit
+        new_grid = self.results['igrid_search']['grid']
+        new_grid = new_grid[new_grid['ci_red']<=CI_limit]
+        self.results['igrid_search']['grid'] = new_grid
+        logger.info("Clipped grid at {:.6f}%".format(CI_limit*100))
+    
+    
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=None,radiusrange=None,masses=None,
                           threads='safe',increase=1,speed=1,res=1,
@@ -1414,8 +1447,18 @@ class SED(object):
         failures = np.isnan(grid_results['chisq'])
         if sum(failures):
             logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
-        grid_results = grid_results[-failures]
+            grid_results = grid_results[-failures]
         
+        #-- make room for chi2 statistics
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
+        
+        #-- take the previous results into account if they exist:
+        if not 'igrid_search' in self.results:
+            self.results['igrid_search'] = {}
+        elif 'grid' in self.results['igrid_search']:
+            logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results['igrid_search']['grid']),len(grid_results)))
+            grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1438,15 +1481,8 @@ class SED(object):
         CI_red = scipy.stats.distributions.chi2.cdf(grid_results['chisq']/factor,k)
         
         #-- add the results to the record array and to the results dictionary
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', CI_raw)
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', CI_red)
-        if not 'igrid_search' in self.results:
-            self.results['igrid_search'] = {}
-        elif 'grid' in self.results['igrid_search']:
-            logger.info('New results appended to previous results')
-            grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
-            sa = np.argsort(grid_results['chisq'])[::-1]
-            grid_results = grid_results[sa]
+        grid_results['ci_raw'] = CI_raw
+        grid_results['ci_red'] = CI_red
         
         self.results['igrid_search']['grid'] = grid_results
         self.results['igrid_search']['factor'] = factor
@@ -1573,12 +1609,14 @@ class SED(object):
         include = self.master['include']
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
+        keep = keep & include
         if type=='single':
             synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
                                   z=self.results[mtype]['CI']['z'],
                                   photbands=self.master['photband'][keep])
+            
         elif type=='multiple' or type=='binary':
             synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                   logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
@@ -1716,7 +1754,7 @@ class SED(object):
         else:
             colors = locals()[ptype][region]
         
-        if 'CI' in ptype:
+        if 'ci_' in ptype.lower():
             colors *= 100.
             vmin = colors.min()
             vmax = 95.
@@ -1790,35 +1828,49 @@ class SED(object):
         if unit_flux is None:
             unit_flux = master['cunit'][0]
         wave,flux,e_flux = master['cwave'],master['cmeas'],master['e_cmeas']
+        sources = master['source']
         iscolor = np.array(master['color'],bool)
         photbands = master['photband']
+        indices = np.arange(len(master))
         
         allsystems = np.array([i.split('.')[0] for i in photbands])
         systems = sorted(set(allsystems))
         color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(systems))]
-        pl.gca().set_color_cycle(color_cycle)            
+        
         if not colors:
+            color_cycle = itertools.cycle(color_cycle)
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             wave = conversions.convert('angstrom',unit_wavelength,wave)
             flux,e_flux = conversions.convert(master['cunit'][0],unit_flux,flux,e_flux,wave=(wave,unit_wavelength))
             mf = []
+            # plot photometric systems in different colors
             for system in systems:
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
-                    pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
+                    # plot each photometric points separately, so that we could
+                    # use it interactively. Label them all with a unique ID
+                    # and make them pickable.
+                    color = color_cycle.next()
+                    #for i in range(sum(keep)):
+                        #label = system if i==0 else '_nolegend_'
+                        #pltlin,caplins,barlincs = pl.errorbar(wave[keep][i],flux[keep][i],yerr=e_flux[keep][i],fmt='o',label=label,ms=7,picker=5,color=color,**kwargs)
+                        #pltlin.sed_index = indices[keep][i]
+                        #caplins[0].sed_index = indices[keep][i]
+                        #caplins[1].sed_index = indices[keep][i]
+                        #barlincs[0].sed_index = indices[keep][i]
+                    pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,color=color,**kwargs)
                     mf.append(flux[keep])
             if keep.sum():
-                label = conversions.unit2texlabel(unit_flux)
-                pl.ylabel(label)
+                pl.ylabel(conversions.unit2texlabel(unit_flux,full=True))
             pl.xlabel('Wavelength [{0}]'.format(conversions.unit2texlabel(unit_wavelength)))
             #-- scale y-axis (sometimes necessary for data with huge errorbars)
             mf = np.log10(np.hstack(mf))
             lmin,lmax = np.nanmin(mf),np.nanmax(mf)
             lrange = np.abs(lmin-lmax)
-            
             pl.ylim(10**(lmin-0.1*lrange),10**(lmax+0.1*lrange))
         else:
+            pl.gca().set_color_cycle(color_cycle)
             names = []
             start_index = 1
             for system in systems:
@@ -2470,9 +2522,10 @@ class SED(object):
         The first line in the bibtex file contains a \citet command citing
         all photometry.
         """
-        crossmatch.make_bibtex(self.master,ID)
+        filename = os.path.splitext(self.photfile)[0]+'.bib'
+        crossmatch.make_bibtex(self.master,ID,filename=filename)
     
-    def save_summary(self,filename=None,CI_limit=None,method='igrid_search'):
+    def save_summary(self,filename=None,CI_limit=None,method='igrid_search',chi2type='ci_red'):
         """
         Save a summary of the results to an ASCII file.
         """
@@ -2485,10 +2538,10 @@ class SED(object):
         
         #-- gather the results:
         grid_results = self.results[method]['grid']
-        start_CI = np.argmin(np.abs(grid_results['ci_red']-self.CI_limit))
+        start_CI = np.argmin(np.abs(grid_results[chi2type]-self.CI_limit))
         factor = self.results[method]['factor']
-        names = ['factor']
-        results = [factor]
+        names = ['factor','chi2_type','ci_limit']
+        results = [factor,chi2type,CI_limit*100]
         for name in grid_results.dtype.names:
             lv,cv,uv = grid_results[name][start_CI:].min(),\
                        grid_results[name][-1],\
@@ -2498,17 +2551,19 @@ class SED(object):
         #-- write the used photometry to a file
         include_grid = self.master['include']
         photbands = ":".join(self.master[include_grid]['photband'])
+        references = ",".join(self.master[include_grid]['bibcode'])
         used_photometry = photometry2str(self.master[include_grid],comment='#')
         used_atmosphere = '#'+model.defaults2str()+'\n'
-        used_photbands = '#'+photbands
-        comments = used_photometry+used_atmosphere+used_photbands
+        used_photbands = '#'+photbands+'\n'
+        used_references = '#'+references
+        comments = used_photometry+used_atmosphere+used_photbands+used_references
         
         contents = np.array([results]).T
         contents = np.rec.fromarrays(contents,names=names)
         ascii.write_array(contents,filename,auto_width=True,header=True,
-                          comments=comments.split('\n'),mode='a')
+                          comments=comments.split('\n'),mode='a',use_float='%g')
         
-        
+        logger.info('Saved summary to {0}'.format(filename))
         
         
     
