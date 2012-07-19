@@ -2,7 +2,7 @@
 """
 Global configuration of the IvS package.
 
-Usage: $ python config.py
+Usage: $ python config.py compile
 """
 
 import os
