@@ -332,7 +332,7 @@ import scipy.optimize
 
 from ivs.aux import loggers
 from ivs.sigproc import evaluate
-import pyKEP
+from ivs.timeseries import pyKEP
 
 import re
 import copy
