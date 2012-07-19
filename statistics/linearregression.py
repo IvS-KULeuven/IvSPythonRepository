@@ -1836,6 +1836,9 @@ class LinearFit(object):
         Remarks:
             - Gaussian noise is assumed, with unknown variance sigma^2
             - Constant terms in the log-likelihood were omitted
+            - If the number of observations equals the number of parameters + 1
+              then the 2nd order AIC is not defined. In this case the method
+              gives a nan.
             
         TODO: . make a weighted version
 
@@ -1847,10 +1850,14 @@ class LinearFit(object):
         if self._AICvalue is not None:
             return self._AICvalue
         else:
-            # Include the sigma of the noise in the number of unknown fit parameters
             nParam = self._nParameters + 1
-            self._AICvalue = self._nObservations * log(self.sumSqResiduals(weighted=False)/self._nObservations)     \
-                       + 2*nParam + 2*nParam*(nParam+1)/(self._nObservations - nParam - 1)
+            if (self._nObservations - nParam - 1) == 0:
+                # In this case we would get a division by zero
+                self._AICvalue = np.nan
+            else:
+                # Include the sigma of the noise in the number of unknown fit parameters
+                self._AICvalue = self._nObservations * log(self.sumSqResiduals(weighted=False)/self._nObservations)     \
+                                 + 2*nParam + 2*nParam*(nParam+1)/(self._nObservations - nParam - 1)
             return self._AICvalue
         
 
