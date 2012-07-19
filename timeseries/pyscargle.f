@@ -574,3 +574,5 @@ Cf2py intent(out) F1
  
       RETURN
       END
+      program dummy
+      end
