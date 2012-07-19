@@ -1405,7 +1405,6 @@ class LinearFit(object):
         self._weightedResidualVariance = None
         self._BICvalue = None
         self._AICvalue = None
-        self._Ttest = None
         self._Fstatistic = None
         self._weightedFstatistic = None
         
@@ -1667,11 +1666,7 @@ class LinearFit(object):
         
         t = stats.t.ppf(1.0-alpha/2., self._linearModel.degreesOfFreedom())
          
-        if self._Ttest is not None:
-            return self._Ttest
-        else:
-            self._Ttest = np.fabs(self.t_values()) > t
-            return self._Ttest
+        return np.fabs(self.t_values()) > t
 
  
 
