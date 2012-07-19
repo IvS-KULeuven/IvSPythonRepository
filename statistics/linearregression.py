@@ -16,7 +16,7 @@ We first make some "fake" observations I{obs} that were measured as a function o
 The model we want to fit is y = a_0 + a_1 * exp(x) = a_0 * 1 + a_1 * exp(x):
 
 >>> myModel = LinearModel([ones(10), exp(x)], ["1", "exp(x)"])
->>> print myModel
+>>> print(myModel)
 Model: y = a_0 + a_1 * exp(x)
 Expected number of observations: 10
 
@@ -69,6 +69,16 @@ array([[  3.30553480e-01,  -3.49164676e-03],
 
 The 95% confidence interval of coefficient a_0 is thus [0.19, 2.85]. See the list 
 of methods for more functionality. Note that also weights can be taken into account.
+
+To evaluate your linear model in a new set of covariates 'xnew', use the method evaluate().
+Be aware, however, that you need to give the regressors evaluated in the new covariates,
+not only the covariates. For example:
+
+>>> xnew = linspace(-5.0, +5.0, 20)
+>>> y = myFit.evaluate([ones_like(x), exp(x)])
+>>> print(y)
+[   4.52579578    6.75909272   10.65152604   17.43568311   29.25985151
+   49.86830102   85.78695312  148.38989509  257.50112598  447.67207215]
 
 
 Assessing the models
@@ -2001,6 +2011,53 @@ class LinearFit(object):
 
 
 
+
+    def evaluate(self, regressors):
+    
+        """
+        Evaluates your current best fit in regressors evaluated in new covariates.
+        
+        Remark:
+            - The new regressor functions should be exactly the same ones as you used
+              to define the linear model. They should only be evaluated in new covariates.
+              This is not checked for!
+                     
+        @param regressors: either a list of equally-sized numpy arrays with the regressors 
+                           evaluated in the new covariates: [f_0(xnew),f_1(xnew),f_2(xnew),...],
+                           or an N x M design matrix (numpy array) where these regressor arrays 
+                           are column-stacked, with N the number of regressors, and M the number
+                           of data points.
+        @type regressors: either a list or an ndarray
+        @return: the linear model evaluated in the new regressors
+        @rtype: ndarray
+        """
+        
+        # Sanity check of the 'regressors'
+        
+        if not isinstance(regressors, list) and not isinstance(regressors, np.ndarray):
+            raise TypeError, "LinearModel only accepts a list of regressors, or a design matrix"
+            
+        # Construct the design matrix, if required    
+            
+        if isinstance(regressors, list):
+            designMatrix = np.column_stack(np.double(regressors))
+        else:
+            designMatrix = regressors
+            
+        # Check whether the design matrix has the proper shape
+        
+        if designMatrix.ndim != 2:
+            raise TypeError, "Design matrix is not 2-dimensional"
+            
+        if designMatrix.shape[1] != self._nParameters:
+            raise TypeError, "Number of regressors not equal to the one of the original model"          
+        
+        # Evaluate the model in the new regressors    
+            
+        return np.dot(designMatrix, self.regressionCoefficients())
+        
+        
+        
 
 
 
