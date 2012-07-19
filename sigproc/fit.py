@@ -320,6 +320,87 @@ We use the data on CU Cnc of Ribas, 2003:
 >>> data,units,comms = vizier.search('J/A+A/398/239/table1')
 >>> times,signal = data['HJD'],data['Dmag']
 
+
+Section 6. Blackbody fit
+========================
+
+We generate a single black body curve with Teff=10000. and scale=1.:
+
+>>> from ivs.sed import model as sed_model
+>>> wave_dense = np.logspace(2.6,6,1000)
+>>> flux_dense = sed_model.blackbody((wave_dense,'AA'),10000.)
+
+We simulate 20 datapoints of this model and perturb it a bit:
+
+>>> wave = np.logspace(3,6,20)
+>>> flux = sed_model.blackbody((wave,'AA'),10000.)
+>>> error = flux/2.
+>>> flux += np.random.normal(size=len(wave),scale=error)
+
+Next, we setup a single black body model to fit through the simulated data. Our
+initial guess is a temperature of 1000K and a scale of 1:
+
+>>> pars = [1000.,1.]
+>>> mymodel = funclib.blackbody()
+>>> mymodel.setup_parameters(values=pars)
+
+Fitting and evaluating the fit is as easy as:
+
+>>> result = minimize(wave,flux, mymodel,weights=1./error)
+>>> myfit = mymodel.evaluate(wave_dense)
+
+This is the result:
+
+>>> print mymodel.param2str()
+             T = 9678.90 +/- 394.26 
+         scale = 1.14 +/- 0.17
+
+A multiple black body is very similar (we make the errors somewhat smaller for
+easier fitting):
+
+>>> flux2 = sed_model.blackbody((wave,'AA'),15000.)
+>>> flux2+= sed_model.blackbody((wave,'AA'),6000.)*10.
+>>> flux2+= sed_model.blackbody((wave,'AA'),3000.)*100.
+>>> error2 = flux2/10.
+>>> flux2 += np.random.normal(size=len(wave),scale=error2)
+
+The setup now needs three sets of parameters, which we choose to be all equal.
+
+>>> pars = [[1000.,1.],[1000.,1.],[1000.,1.]]
+>>> mymodel = funclib.multi_blackbody(n=3)
+>>> mymodel.setup_parameters(values=pars)
+
+Fitting and evaluate is again very easy:
+
+>>> result = minimize(wave,flux2, mymodel,weights=1./error2)
+>>> myfit2 = result.model.evaluate(wave_dense)
+
+This is the result:
+
+>>> print mymodel.param2str()
+           T_0 = 6155.32 +/- 3338.54 
+       scale_0 = 9.54 +/- 23.00 
+           T_1 = 3134.37 +/- 714.01 
+       scale_1 = 93.40 +/- 17.98 
+           T_2 = 14696.40 +/- 568.76 
+       scale_2 = 1.15 +/- 0.33
+
+And a nice plot of the two cases:
+
+>>> p = pl.figure()
+>>> p = pl.subplot(121)
+>>> p = pl.plot(wave_dense,flux_dense,'k-')
+>>> p = pl.plot(wave_dense,myfit,'r-')
+>>> p = pl.errorbar(wave,flux,yerr=error,fmt='bs')
+>>> p = pl.gca().set_xscale('log')
+>>> p = pl.gca().set_yscale('log')
+>>> p = pl.subplot(122)
+>>> p = pl.plot(wave_dense,myfit2,'r-')
+>>> p = pl.errorbar(wave,flux2,yerr=error2,fmt='bs')
+>>> p = pl.gca().set_xscale('log')
+>>> p = pl.gca().set_yscale('log')
+
+]include figure]]ivs_sigproc_lmfit_blackbody.png]
 """ 
 import time
 import logging
@@ -332,13 +413,12 @@ import scipy.optimize
 
 from ivs.aux import loggers
 from ivs.sigproc import evaluate
-import pyKEP
+from ivs.timeseries import pyKEP
 
 import re
 import copy
 import pylab as pl
 from ivs.sigproc import lmfit
-from multiprocessing import Process,Manager, Pool, cpu_count
 
 logger = logging.getLogger('TS.FIT')
 
@@ -1150,31 +1230,23 @@ class Function(object):
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
-        for key in vars(parameter).keys():
+        for key in parameter.keys():
             if key in kwargs:
-                vars(parameter)[key] = kwargs[key]
+                parameter[key] = kwargs[key]
     
-    def get_parameters(self, parameters=None, full_output=False):
+    def get_parameters(self, full_output=False):
         """
-        Returns the parameter values together with the errors if they exist. If no fitting
+        Returns the parameter values together with the errors if they exist. If No fitting
         has been done, or the errors could not be calculated, None is returned for the error.
         
-        @param parameters: A list of which parameters the values should be returned. If None,
-        the values of all parameters are returned
-        @type parameters: array
-        @param full_output: When True, also vary, the boundaries and expression are returned
+        @param full_output: When True, also vary, the boundaries and expr are returned
         @type full_output: bool
         
-        @return: the parameter values and there errors: value, err, [vary, min, max, expr]
+        @return: the parameter values and there errors value, err, [vary, min, max, expr]
         @rtype: numpy arrays
         """
-        
-        if parameters == None:
-            parameters  = self.par_names
-        
         val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name in parameters:
-            par = self.parameters[name]
+        for name, par in self.parameters.items():
             val.append(par.value)
             err.append(par.stderr)
             vary.append(par.vary)
@@ -1377,7 +1449,6 @@ class Model(object):
         """
         if parameters == None:
             parameters = self.parameters
-        
         for pnames,function in zip(self.par_names, self.functions):
             old_parameters = function.parameters
             for name in pnames:
@@ -1650,99 +1721,24 @@ def minimize(x, y, model, err=None, weights=None,
              engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
     if fitter.message and verbose:
         logger.warning(fitter.message)
-    return fitter    
+    return fitter
 
-
-def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False, **fit_kws):
-    """                  
-    Grid minimizer
-    """
-    #-- create new models
-    newmodels = []
-    for i in range(points):
-        mod_ = copy.deepcopy(model)
-        mod_.parameters.kick(pnames=parameters)
-        newmodels.append(mod_)  
-    newmodels = np.array(newmodels)
+def grid_minimize(x, y, model, err=None, weights=None,
+             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, parameters=None, **fit_kws):
     
-    fitters, chisqrs = [], []
-    for mod_ in newmodels:
-        # refit and store the results
-        fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
-                            kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        fitters.append(fitter)
-        chisqrs.append(fitter.chisqr)
-    fitters, chisqrs = np.array(fitters), np.array(chisqrs)
+    oldpar = model.parameters.copy()
+    results = []
+    chi2s = []
+    for i in range(grid):
+        model.parameters.kick()
+        fitter = Minimizer(x, y, model, err=err, weights=weights,
+             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+        results.append(fitter)
+        chi2s.append(fitter.chisqr)
     
-    #-- sort the results on increasing chisqr
-    inds = chisqrs.argsort()
-    fitters = fitters[inds]
-    newmodels = newmodels[inds]
-    chisqrs = chisqrs[inds]
-    
-    #store the best fitting model in the given model and return the results
-    model.parameters = newmodels[0].parameters
-    if return_all:
-        return fitters, newmodels, chisqrs
-    else:
-        return fitters[0]
-                      
-#def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  #scale_covar=True, iter_cb=None, threads=8, points=100, parameters=None, return_all=False, **fit_kws):
-    #"""
-    #Grid minimizer
-    #"""
-    #from multiprocessing import Process, Pipe
-    #import sys
-    ##-- select number of threads
-    #if threads=='max':
-        #threads = cpu_count()
-    #elif threads=='half':
-        #threads = cpu_count()/2
-    #elif threads=='safe':
-        #threads = cpu_count()-1
-    #threads = int(threads)
-    
-    ##-- create new models
-    #newmodels = []
-    #for i in range(points):
-        #mod_ = copy.deepcopy(model)
-        #mod_.parameters.kick(pnames=parameters)
-        #newmodels.append(mod_)
-           
-    #def fit_models(models, results):
-        #fitters, chisqrs = [], []
-        #for mod_ in models:
-            ## refit and store the results
-            #fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
-                               #kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-            #results.append([fitter, mod_, fitter.chisqr])
-            
-    #def spawn(f):
-        #def fun(pipe,mod, res):
-            #pipe.send(f(mod, res))
-            #pipe.close()
-        #return fun
-    
-    ##-- multiprocess fitting
-    #processes = []
-    #manager = Manager()
-    #results = manager.list([])
-    #all_processes = []
-    #pipe = [Pipe() for x in range(threads)]
-    #for j in range(threads):
-    ##for j,(p,c) in izip(range(threads),pipe):
-        #proc = Process(target=spawn(fit_models), args=(pipe[j][1],newmodels[j::threads],results))
-        #all_processes.append(proc)
-        ##all_processes.append(Process(target=fit_models,args=(newmodels[j::threads],results)))
-        #all_processes[-1].start()
-    #for p in all_processes:
-        #p.join()
+    print chi2s
         
-    #print results
-
-  
+        
     
 
 #}
