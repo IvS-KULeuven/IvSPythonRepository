@@ -92,6 +92,8 @@ B{Warning 4:} Most of the imperial units are UK/Canada. If you need US, prefix
 the unit with C{US}: E.g. The gallon (C{gal}) is the international imperial
 gallon, C{USgal} is the US gallon.
 
+B{Note 1:} Photometric passbands are given as a string C{"SYSTEM.FILTER"}. For
+a list of defined systems and filters, see L{ivs.sed.filters}.
 
 Section 1. The Python module
 ============================
@@ -940,7 +942,11 @@ def convert(_from,_to,*args,**kwargs):
     #-- unpack the uncertainties if: 
     #    1. the input was not given as an uncertainty
     #    2. the input was without uncertainties, but extra keywords had uncertainties
-    if unpack and (len(args)==2 or (len(args)==1 and isinstance(ret_value,AffineScalarFunc))):
+    #    3. the input was with uncertainties (float or array) and unpack==True
+    unpack_case1 = len(args)==2
+    unpack_case2 = len(args)==1 and isinstance(ret_value,AffineScalarFunc)
+    #unpack_case3 = len(args)==1 and isinstance(ret_value,np.ndarray) and isinstance(ret_value[0],AffineScalarFunc)
+    if unpack and (unpack_case1 or unpack_case2):#,unpack_case3):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
@@ -2993,7 +2999,11 @@ class Unit(object):
         """
         Returns (value,error) in case of uncertainties.
         """
-        return unumpy.nominal_values(self.value),unumpy.std_devs(self.value)
+        val = unumpy.nominal_values(self.value)
+        err = unumpy.std_devs(self.value)
+        if not val.shape: val = float(val)
+        if not err.shape: err = float(err)
+        return val,err
     
     def __getitem__(self,key):
         """
