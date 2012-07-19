@@ -212,4 +212,5 @@ c
       return
       end
 c
-c
+      program dummy
+      end

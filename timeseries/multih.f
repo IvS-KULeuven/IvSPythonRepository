@@ -143,7 +143,8 @@ c         th(l)=betai(half*df2,half*df1,df2/(df2+df1*th(l)))
  1      sum=sum+z(iz)*conjg(w(iz))
       dotp=sum/nz
       end
-
+      program dummy
+      end
 c                                                                               
 
 

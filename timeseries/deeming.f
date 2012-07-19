@@ -100,3 +100,5 @@ Cf2py intent(out) S1
       end do
       RETURN
       END
+      program dummy
+      end
