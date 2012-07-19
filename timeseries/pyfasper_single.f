@@ -244,3 +244,5 @@ CU    USES four1
       endif
       return
       END
+      program dummy
+      end
