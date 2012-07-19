@@ -75,11 +75,13 @@ Be aware, however, that you need to give the regressors evaluated in the new cov
 not only the covariates. For example:
 
 >>> xnew = linspace(-5.0, +5.0, 20)
->>> y = myFit.evaluate([ones_like(x), exp(x)])
+>>> y = myFit.evaluate([ones_like(xnew), exp(xnew)])
 >>> print(y)
-[   4.52579578    6.75909272   10.65152604   17.43568311   29.25985151
-   49.86830102   85.78695312  148.38989509  257.50112598  447.67207215]
-
+[   1.53989966    1.55393018    1.57767944    1.61787944    1.68592536
+    1.80110565    1.99606954    2.32608192    2.8846888     3.83023405
+    5.43074394    8.13990238   12.72565316   20.48788288   33.62688959
+   55.86708392   93.51271836  157.23490405  265.09646647  447.67207215]
+   
 
 Assessing the models
 ====================
@@ -2021,6 +2023,25 @@ class LinearFit(object):
             - The new regressor functions should be exactly the same ones as you used
               to define the linear model. They should only be evaluated in new covariates.
               This is not checked for!
+                     
+        Example:
+        
+            >>> noise = array([0.44, -0.48, 0.26, -2.00, -0.93, 2.21, -0.57, -2.04, -1.09, 1.53])
+            >>> x = linspace(0, 5, 10)
+            >>> obs = 2.0 + 3.0 * exp(x) + noise
+            >>> myModel = LinearModel([ones(10), exp(x)], ["1", "exp(x)"])
+            >>> print(myModel)
+            Model: y = a_0 + a_1 * exp(x)
+            Expected number of observations: 10
+
+            >>> myFit = myModel.fitData(obs)
+            >>> xnew = linspace(-5.0, +5.0, 20)
+            >>> y = myFit.evaluate([ones_like(xnew), exp(xnew)])
+            >>> print(y)
+            [ 1.53989966 1.55393018 1.57767944 1.61787944 1.68592536
+              1.80110565 1.99606954 2.32608192 2.8846888 3.83023405
+              5.43074394 8.13990238 12.72565316 20.48788288 33.62688959
+              55.86708392 93.51271836 157.23490405 265.09646647 447.67207215]
                      
         @param regressors: either a list of equally-sized numpy arrays with the regressors 
                            evaluated in the new covariates: [f_0(xnew),f_1(xnew),f_2(xnew),...],
