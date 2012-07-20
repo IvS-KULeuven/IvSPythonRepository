@@ -1,6 +1,8 @@
 """
 Roche models of binary or multiple stars.
 
+You'd better not use this module, but talk to Pieter Degroote.
+
 The premisse of the Roche potential is that the stellar mass can be represented
 by a point source.
 
