@@ -545,6 +545,7 @@ from ivs.units import constants
 from ivs.units.uncertainties import unumpy,ufloat
 from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
+from ivs.sigproc import evaluate
 
 logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)
@@ -1259,6 +1260,46 @@ class SED(object):
         """
         return os.path.isfile(self.photfile)
     
+    def get_distance_from_plx(self,plx=None,lutz_kelker=True,unit='pc'):
+        """
+        Get the probability density function for the distance, given a parallax.
+        
+        If no parallax is given, the catalogue value will be used. If that one
+        is also not available, a ValueError will be raised.
+        
+        Parallax must be given in mas.
+        
+        If the parallax is a float without uncertainty, an uncertainty of 0 will
+        be assumed.
+        
+        If C{lutz_kelker=True}, a probability density function will be given for
+        the distance, otherwise the distance is computed from simply inverting
+        the parallax.
+        
+        Distance is returned in parsec (pc).
+        """
+        #-- we need parallax and galactic position
+        if plx is None and 'plx' in self.info:
+            plx = self.info['plx']['v'],self.info['plx']['e']
+        elif plx is None:
+            raise ValueError('distance cannot be computed from parallax (no parallax)')
+        if not 'galpos' in self.info:
+            raise ValueError('distance cannot be computed from parallax (no position)')
+        gal = self.info['galpos']
+        #-- if the parallax has an uncertainty and the Lutz-Kelker bias needs
+        #   to be taken into account, compute probability density function
+        if lutz_kelker and hasattr(plx,'__iter__'):
+            d = np.logspace(np.log10(0.1),np.log10(25000),100000)
+            dprob = distance.distprob(d,gal[1],plx)
+            dprob = dprob / dprob.max()
+            logger.info('Computed distance to target with Lutz-Kelker bias')
+            return d,dprob
+        #-- just invert (with or without error)
+        else:
+            dist = (conversions.Unit(plx,'kpc-1')**-1).convert(unit)
+            logger.info('Computed distance to target via parallax inversion: {:s}'.format(dist))
+            return dist.get_value()
+    
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
         gal = self.info['galpos']
         if distance is None:
@@ -1272,7 +1313,40 @@ class SED(object):
         return output
     
     def get_angular_diameter(self):
-        return None
+        raise NotImplementedError
+    
+    def compute_distance(self,mtype='igrid_search'):
+        """
+        Compute distance from radius and angular diameter (scale factor).
+        
+        The outcome is added to the C{results} attribute::
+        
+            distance = r/sqrt(scale)
+        
+        @return: distance,uncertainty (pc)
+        @rtype: (float,float)
+        """
+        grid = self.results[mtype]['grid']
+        radius = grid['radius']
+        e_radius = grid['e_radius']
+        scale = grid['scale']
+        e_scale = grid['escale']
+        
+        radius = conversions.unumpy.uarray([radius,e_radius])
+        scale = conversions.unumpy.uarray([scale,e_scale])
+        
+        distance = radius/scale**0.5
+        distance = conversions.convert('Rsol','pc',distance)
+        distance,e_distance = conversions.unumpy.nominal_values(distance),\
+                      conversions.unumpy.std_devs(distance)
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                        ['distance','e_distance'],[distance,e_distance])
+        d,e_d = distance.mean(),distance.std() 
+        logger.info("Computed distance from R and scale: {0}+/-{1} pc".format(d,e_d))
+        return d,e_d
+    
+    
+    
     
     #}
     
@@ -1343,16 +1417,50 @@ class SED(object):
     
     #{ Fitting routines
     
-    def clip_grid(self,type='igrid_search',CI_limit=None):
+    def clip_grid(self,mtype='igrid_search',CI_limit=None):
         """
         Clip grid on CI limit, to save memory.
+        
+        @param mtype: type or results to clip
+        @type mtype: str
+        @param CI_limit: confidence limit to clip on
+        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
         """
         if CI_limit is None:
             CI_limit = self.CI_limit
-        new_grid = self.results['igrid_search']['grid']
+        new_grid = self.results[mtype]['grid']
         new_grid = new_grid[new_grid['ci_red']<=CI_limit]
-        self.results['igrid_search']['grid'] = new_grid
+        self.results[mtype]['grid'] = new_grid
         logger.info("Clipped grid at {:.6f}%".format(CI_limit*100))
+    
+    def calculate_confidence_intervals(self,mtype='igrid_search',chi2_type='red',CI_limit=None):
+        """
+        Compute confidence interval of all columns in the results grid.
+        
+        @param mtype: type of results to compute confidence intervals of
+        @type mtype: str
+        @param chi2_type: type of chi2 (raw or reduced)
+        @type chi2_type: str ('raw' or 'red')
+        @param CI_limit: confidence limit to clip on
+        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
+        """
+        #-- get some info
+        grid_results = self.results[mtype]['grid']
+        if not 'CI' in self.results[mtype]:
+            self.results['igrid_search']['CI'] = {}
+        if CI_limit is None or CI_limit > 1.0:
+            CI_limit = self.CI_limit
+        #-- the chi2 grid is ordered: where is the value closest to the CI limit?
+        region = self.results[mtype]['grid']['ci_'+chi2_type]<=CI_limit
+        #-- now compute the confidence intervals
+        for name in grid_results.dtype.names:
+            self.results['igrid_search']['CI'][name+'_l'] = grid_results[name][region].min()
+            self.results['igrid_search']['CI'][name] = grid_results[name][-1]
+            self.results['igrid_search']['CI'][name+'_u'] = grid_results[name][region].max()
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'_l'],
+                                                           self.results['igrid_search']['CI'][name],
+                                                           self.results['igrid_search']['CI'][name+'_u']))
+    
     
     
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
@@ -1365,6 +1473,9 @@ class SED(object):
         
         If called consecutively, the ranges will be set to the CI_limit of previous
         estimations, unless set explicitly.
+        
+        If you don't give C{points}, I guess only the predefined grid points
+        will be fitted.
         
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
@@ -1483,40 +1594,14 @@ class SED(object):
         #-- add the results to the record array and to the results dictionary
         grid_results['ci_raw'] = CI_raw
         grid_results['ci_red'] = CI_red
-        
         self.results['igrid_search']['grid'] = grid_results
         self.results['igrid_search']['factor'] = factor
-        self.results['igrid_search']['CI'] = {}
         
-        start_CI = np.argmin(np.abs(grid_results['ci_red']-CI_limit))
-        for name in grid_results.dtype.names:
-            self.results['igrid_search']['CI'][name+'_l'] = grid_results[name][start_CI:].min()
-            self.results['igrid_search']['CI'][name] = grid_results[name][-1]
-            self.results['igrid_search']['CI'][name+'_u'] = grid_results[name][start_CI:].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'_l'],
-                                                           self.results['igrid_search']['CI'][name],
-                                                           self.results['igrid_search']['CI'][name+'_u']))
+        #-- compute the confidence intervals
+        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
         
+        #-- remember the best model
         self.set_best_model(type=type)
-        if False:
-            self.set_distance()
-            d,dprob = self.results['igrid_search']['d'] # in parsecs
-            dcumprob = np.cumsum(dprob[1:]*np.diff(d))
-            dcumprob /= dcumprob.max()
-            d_min = d[dcumprob>0.38].min()
-            d_best = d[np.argmax(dprob)]
-            d_max = d[dcumprob<0.38].max()
-            e_d_best = min([abs(d_best-d_min),abs(d_max-d_best)])
-            print d_best,e_d_best
-            d_best = ufloat((d_best,e_d_best))
-
-            scales = self.results['igrid_search']['grid']['scale']
-            R = scales*d_best
-            print R
-            
-            #radii = np.zeros_like()
-            #for di,dprobi in zip(d,dprob):
-            #    self.results['igrid_search']['grid']['scale']*d_min
             
         
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,\
@@ -1639,60 +1724,191 @@ class SED(object):
         self.results[mtype]['synflux'] = eff_waves,synflux,self.master['photband']
         self.results[mtype]['chi2'] = chi2
     
-    def get_distance_from_plx(self,plx=None):
-        """
-        Get the probability density function for the distance, given a parallax.
-        
-        If no parallax is given, the catalogue value will be used. If that one
-        is also not available, a ValueError will be raised.
-        
-        Parallax must be given in mas.
-        
-        If the parallax is a float without uncertainty, a float will be returned.
-        Otherwise, a probability density function will be given.
-        
-        Distance is returned in parsec (pc).
-        """
-        #-- we need parallax and galactic position
-        if plx is None and 'plx' in self.info:
-            plx = self.info['plx']['v'],self.info['plx']['e']
-        elif plx is None:
-            raise ValueError,'distance cannot be computed from parallax (no parallax)'
-        if not 'galpos' in self.info:
-            raise ValueError,'distance cannot be computed from parallax (no position)'
-        gal = self.info['galpos']
-        #-- if the parallax has an uncertainty, compute probability density function
-        if hasattr(plx,'__iter__'):
-            d = np.logspace(np.log10(0.1),np.log10(25000),100000)
-            dprob = distance.distprob(d,gal[1],plx)
-            dprob = dprob / dprob.max()
-            return d,dprob
-        #-- just invert
-        else:
-            return 1000./plx
+    
         
     
-    #def set_distance(self):
-        #"""
-        #Deprecated!
-        #"""
-        ##-- calculate the distance
-        #cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['ci_red']<=0.95)
-        #gal = self.info['galpos']
-        #if 'plx' in self.info:
-            #plx = self.info['plx']['v'],self.info['plx']['e']
-        #else:
-            #plx = None
-        #(d_models,dprob_models,radii),(d,dprob)\
-                   #= calculate_distance(plx,self.info['galpos'],self.results['igrid_search']['grid']['teff'][cutlogg],\
-                                                   #self.results['igrid_search']['grid']['logg'][cutlogg],\
-                                                   #self.results['igrid_search']['grid']['scale'][cutlogg])
-        ##-- calculate model extinction
-        #res = 100
-        #self.results['igrid_search']['drimmel'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='drimmel', distance=myd) for myd in d[::res]]))
-        #self.results['igrid_search']['marshall'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='marshall', distance=myd) for myd in d[::res]]))
-        #self.results['igrid_search']['d_mod'] = (d_models,dprob_models,radii)
-        #self.results['igrid_search']['d'] = (d,dprob)
+    #}
+    #{ Add constraints
+    
+    def add_constraint_distance(self,distance=None,mtype='igrid_search',**kwargs):
+        """
+        Use the distance to compute additional information.
+        
+        Compute radii, absolute luminosities and masses, and add them to the
+        results.
+        
+        Extra kwargs go to L{get_distance_from_plx}.
+        
+        B{Warning:} after calling this function, the C{labs} column in the grid
+        is actually absolutely calibrated and reflects the true absolute
+        luminosity instead of the absolute luminosity assuming 1 solar radius.
+        
+        @param distance: distance in solar units and error
+        @type distance: tuple (float,float)
+        @param mtype: type of results to add the information to
+        @type mtype: str
+        """
+        if distance is None:
+            kwargs['lutz_kelker'] = False # we can't handle asymmetric error bars
+            kwargs['unit'] = 'Rsol'
+            distance = self.get_distance_from_plx(**kwargs)
+        
+        #-- compute the radius, absolute luminosity and mass: note that there is
+        #   an uncertainty on the scaling factor *and* on the distance!
+        scale = conversions.unumpy.uarray([self.results[mtype]['grid']['scale'],\
+                                           self.results[mtype]['grid']['escale']])
+        distance = conversions.ufloat(distance)
+        radius = distance*np.sqrt(self.results[mtype]['grid']['scale']) # in Rsol
+        labs = self.results[mtype]['grid']['labs']*radius**2
+        mass = conversions.derive_mass((self.results[mtype]['grid']['logg'],'[cm/s2]'),\
+                                      (radius,'Rsol'),unit='Msol')
+                                      
+        #-- store the results in the grid
+        mass,e_mass = conversions.unumpy.nominal_values(mass),\
+                      conversions.unumpy.std_devs(mass)
+        radius,e_radius = conversions.unumpy.nominal_values(radius),\
+                      conversions.unumpy.std_devs(radius)
+        labs,e_labs = conversions.unumpy.nominal_values(labs),\
+                      conversions.unumpy.std_devs(labs)
+        self.results[mtype]['grid']['labs'] = labs # Labs is already there, overwrite
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
+                     ['e_labs','radius','e_radius','mass','e_mass'],
+                     [e_labs,radius,e_radius,mass,e_mass])
+                     
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: distance (improved luminosity, added info on radius and mass)')
+    
+    def add_constraint_slo(self,numax,Deltanu0,mtype='igrid_search',chi2_type='red'):
+        """
+        Use diagnostics from solar-like oscillations to put additional constraints on the parameters.
+        
+        If the results are contrained with the distance before L{add_constraint_distance},
+        then these results are combined with the SLO constraints.
+        
+        @param numax: frequency of maximum amplitude
+        @type numax: 3-tuple (value,error,unit)
+        @param Deltanu0: large separation (l=0)
+        @type Deltanu0: 3-tuple (value,error,unit)
+        @param chi2_type: type of chi2 (raw or reduced)
+        @type chi2_type: str ('raw' or 'red')
+        """
+        grid = self.results[mtype]['grid']
+        #-- we need the teffs, so that we can compute the logg and radius using
+        #   the solar-like oscillations information.
+        teff = grid['teff']
+        logg = grid['logg']
+        pvalues = [1-grid['ci_'+chi2_type]]
+        names = ['ci_'+chi2_type+'_phot']
+        
+        #-- we *always* have a logg, that's the way SEDs work:
+        logg_slo = conversions.derive_logg_slo((teff,'K'),numax)
+        logg_slo,e_logg_slo = conversions.unumpy.nominal_values(logg_slo),\
+                      conversions.unumpy.std_devs(logg_slo)
+        #   compute the probabilities: scale to standard normal
+        logg_prob = scipy.stats.distributions.norm.sf(abs(logg_slo-logg)/e_logg_slo)
+        
+        pvalues.append(logg_prob)
+        names.append('ci_logg_slo')        
+        
+        #-- but we only sometimes have a radius (viz. when the distance is
+        #   known). There is an uncertainty on that radius!
+        radius_slo = conversions.derive_radius_slo(numax,Deltanu0,(teff,'K'),unit='Rsol')
+        radius_slo,e_radius_slo = conversions.unumpy.nominal_values(radius_slo),\
+                                  conversions.unumpy.std_devs(radius_slo)
+        if 'radius' in grid.dtype.names:
+            radius = grid['radius']
+            e_radius = grid['e_radius']
+            #total_error = np.sqrt( (e_radius_slo**2+e_radius**2))
+            total_error = np.sqrt( (e_radius_slo**2+e_radius**2)/2. + (radius-radius_slo)**2/4.)
+            radius_prob = scipy.stats.distributions.norm.sf(abs(radius_slo-radius)/total_error)
+            pvalues.append(radius_prob)
+            names.append('ci_radius_slo')
+            #-- combined standard deviation and mean for two populations with
+            #   possibly zero intersection (wiki: standard deviation)
+            #total_error = np.sqrt( (e_radius_slo**2+e_radius**2)/2. + (radius-radius_slo)**2/4.)
+            total_mean = (radius+radius_slo)/2.
+            grid['radius'] = total_mean
+            grid['e_radius'] = total_error
+            logger.info('Added contraint: combined existing radius estimate with slo estimate')
+        #   otherwise, we just add info on the radius
+        else:
+            labs = grid['labs']*conversions.unumpy.uarray([radius_slo,e_radius_slo])**2
+            labs,e_labs = conversions.unumpy.nominal_values(labs),\
+                          conversions.unumpy.std_devs(labs)
+            grid['labs'] = labs
+            mass = conversions.derive_mass((self.results[mtype]['grid']['logg'],'[cm/s2]'),\
+                                           (radius_slo,e_radius_slo,'Rsol'),unit='Msol')
+            mass,e_mass = conversions.unumpy.nominal_values(mass),\
+                          conversions.unumpy.std_devs(mass)
+            grid = pl.mlab.rec_append_fields(grid,['radius','e_radius','e_labs','mass','e_mass'],\
+                                        [radius_slo,e_radius_slo,e_labs,mass,e_mass])
+            logger.info('Added constraint: {0:s} via slo, improved luminosity'.format(', '.join(['radius','e_radius','e_labs','mass','e_mass'])))
+            
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method(pvalues)
+        
+        #-- add the information to the grid
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                     names,pvalues)
+        
+        #-- and replace the original confidence intervals, and re-order
+        self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
+        sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: {0:s} via slo and replaced ci_{1:s} with combined CI'.format(', '.join(names),chi2_type))
+                      
+    def add_constraint_reddening(self,distance=None,ebv=None,e_ebv=0.1,Rv=3.1,\
+                model='drimmel',mtype='igrid_search',chi2_type='red'):
+        """
+        Use reddening maps to put additional constraints on the parameters.
+                
+        @param distance: distance and uncertainty in parsec
+        @type distance: tuple (float,float)
+        @param ebv: E(B-V) reddening in magnitude
+        @type ebv: float
+        @param e_ebv: error on the reddening in percentage
+        @type e_ebv: float
+        @param mtype: type of results to add the information to
+        @type mtype: str
+        """
+        #-- if I need to figure out the reddening myself, I need the distance!
+        if ebv is None and distance is None:
+            distance = self.get_distance_from_plx(lutz_kelker=False,unit='pc')
+        #-- let me figure out the reddening if you didn't give it:
+        if ebv is None:
+            gal = self.info['galpos']
+            ebv = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0])/Rv
+            ebv_u = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0]-distance[1])/Rv
+            ebv_l = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0]+distance[1])/Rv
+            e_ebv = max(ebv-ebv_l,ebv_u-ebv)
+        else:
+            e_ebv = 0.1*ebv
+        grid = self.results[mtype]['grid']
+        ebvs = grid['ebv']
+        ebv_prob = scipy.stats.distributions.norm.cdf(abs(ebv-ebvs)/e_ebv)
+        
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method([1-grid['ci_'+chi2_type],ebv_prob])
+        
+        #-- and replace the original confidence intervals, and re-order
+        grid['ci_'+chi2_type] = 1-combined_pvals
+        sa = np.argsort(grid['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = grid[sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: E(B-V)={0}+/-{1}'.format(ebv,e_ebv))
+        
+        
+        
+    def add_constraint_evolution_models(self):
+        raise NotImplementedError
+        
+    
     
     #}
     
@@ -1723,27 +1939,27 @@ class SED(object):
         
         """
         #-- if no distance is set, derive the most likely distance from the plx:
-        if d is None:
-            try:
-                d = self.get_distance_from_plx()
-            except ValueError:
-                d = None
-                logger.info('Distance to {0} unknown'.format(self.ID))
-            if isinstance(d,tuple):
-                d = d[0][np.argmax(d[1])]
-        #-- it's possible that we still don't have a distance
-        if d is not None:
-            logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
-            rad  = d*np.sqrt(self.results[mtype]['grid']['scale'])
-            rad  = conversions.convert('pc','Rsol',rad) # in Rsol
-            Labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
-            mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
-                                           (rad,'Rsol'),unit='Msol')
+        #if d is None:
+            #try:
+                #d = self.get_distance_from_plx()
+            #except ValueError:
+                #d = None
+                #logger.info('Distance to {0} unknown'.format(self.ID))
+            #if isinstance(d,tuple):
+                #d = d[0][np.argmax(d[1])]
+        ##-- it's possible that we still don't have a distance
+        #if d is not None:
+            #logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
+            #radius  = d*np.sqrt(self.results[mtype]['grid']['scale'])
+            #radius  = conversions.convert('pc','Rsol',radius) # in Rsol
+            #labs = np.log10(self.results[mtype]['grid']['labs']*radius**2) # in [Lsol]
+            #mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
+                                           #(radius,'Rsol'),unit='Msol')
         #-- compute angular diameter
         theta = 2*conversions.convert('sr','mas',self.results[mtype]['grid']['scale'])
         
         if limit is not None:
-            region = self.results[mtype]['grid']['ci_red']<limit
+            region = self.results[mtype]['grid']['ci_red']<=limit
         else:
             region = self.results[mtype]['grid']['ci_red']<np.inf
         #-- get the colors and the color scale
@@ -1789,8 +2005,9 @@ class SED(object):
                           ebv='E(B-V) [mag]',\
                           ci_raw='Raw probability [%]',\
                           ci_red='Reduced probability [%]',\
-                          Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
-                          rad=r'Radius [$R_\odot$]',\
+                          #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          labs=r'Absolute Luminosity [$L_\odot$]',\
+                          radius=r'Radius [$R_\odot$]',\
                           mass=r'Mass [$M_\odot$]',
                           )
 
@@ -2453,13 +2670,14 @@ class SED(object):
         
         @param filename: name of SED FITS file
         @type filename: string
-        
+        @rtype: bool
+        @return: true if Fits file could be loaded
         """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
         if not os.path.isfile(filename):
-            logger.warning('No previous results saved to FITS')
-            return None
+            logger.warning('No previous results saved to FITS file {:s}'.format(filename))
+            return False
         ff = pyfits.open(filename)
         
         #-- observed photometry
@@ -2514,6 +2732,7 @@ class SED(object):
         ff.close()
         
         logger.info('Loaded previous results from FITS')
+        return True
     
     def save_bibtex(self):
         """
