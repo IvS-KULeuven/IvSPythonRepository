@@ -861,7 +861,10 @@ def convert(_from,_to,*args,**kwargs):
         if isinstance(fac_from,NonLinearConverter):
             ret_value *= fac_from(start_value,**kwargs_SI)
         else:
-            ret_value *= fac_from*start_value
+            try:
+                ret_value *= fac_from*start_value
+            except TypeError:
+                raise TypeError('Cannot multiply value with a float; probably argument is a tuple (value,error), please expand with *(value,error)')
             
     #-- otherwise a little bit more complicated
     else:
@@ -945,13 +948,12 @@ def convert(_from,_to,*args,**kwargs):
     #    3. the input was with uncertainties (float or array) and unpack==True
     unpack_case1 = len(args)==2
     unpack_case2 = len(args)==1 and isinstance(ret_value,AffineScalarFunc)
-    #unpack_case3 = len(args)==1 and isinstance(ret_value,np.ndarray) and isinstance(ret_value[0],AffineScalarFunc)
-    if unpack and (unpack_case1 or unpack_case2):#,unpack_case3):
+    unpack_case3 = len(args)==1 and isinstance(ret_value,np.ndarray) and isinstance(ret_value[0],AffineScalarFunc)
+    if unpack and (unpack_case1 or unpack_case2):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
             ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])
-    
     
     return ret_value
 
@@ -2205,6 +2207,11 @@ def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     """
     Derive stellar radius from solar-like oscillations diagnostics.
     
+    Large separation is frequency spacing between modes of different radial order.
+    
+    Small separation is spacing between modes of even and odd angular degree but
+    same radial order.
+    
     @param numax: (numax(, error), units)
     @type numax: 2 or 3 tuple
     @param Deltanu0: (large separation(, error), units)
@@ -3343,6 +3350,7 @@ _factors = collections.OrderedDict([
 # FLUX
 # -- absolute magnitudes
            ('Jy',      (1e-26/(2*np.pi),'kg s-2 rad-1','flux density','Jansky')), # W/m2/Hz
+           ('fu',      (1e-26/(2*np.pi),'kg s-2 rad-1','flux density','flux unit')), # W/m2/Hz
            ('vegamag', (VegaMag,       'kg m-1 s-3','flux','Vega magnitude')),  # W/m2/m
            ('mag',     (VegaMag,       'kg m-1 s-3','flux','magnitude')),  # W/m2/m
            ('STmag',   (STMag,         'kg m-1 s-3','flux','ST magnitude')),  # W/m2/m
@@ -3449,7 +3457,7 @@ _aliases = [('micron','mum'),('au','AU'),('lbs','lb'),
             ('Vegamag','vegamag'),('mile','mi'),
             ('oz','ounce'),('sun','sol'),('_sun','sol'),('_sol','sol'),
             ('solMass','Msol'),('solLum','Lsol'),
-            ('pk','hp'),('mph','mi/h')
+            ('pk','hp'),('mph','mi/h'),('f.u.','fu')
             ]
  
 #-- Change-of-base function definitions
