@@ -3,7 +3,10 @@
 covellipse package
 Author: Joris De Ridder
 
-The covellipse package allows to draw contours of a 2D covariance matrix.
+Sometime people plot an "errorbox" in a 2D diagram while they should actually
+plot an "error-ellipse". This package allows to draw such an error-ellipse
+given the 2D covariance matrix of your measurement. The latter also allows
+to take into account the correlation between the two quantitites.
 
 Example:
 
@@ -14,7 +17,7 @@ Import the required packages:
 >>> from matplotlib import pylab as p
 >>> from covellipse import sigmaEllipse
 
-Make some fake data:
+For the sake of this example, we make some fake data:
 
 >>> covMatrix = array([[2.0, -0.75*sqrt(4)*sqrt(2)],[-0.75*sqrt(4)*sqrt(2), 4.0]])
 >>> m = multivariate_normal([0,0],covMatrix, 3000)
