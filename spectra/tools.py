@@ -78,7 +78,7 @@ Set the xticks to vsini values for clarity:
 ]include figure]]ivs_spectra_tools_vsini02.png]
 
 """
-import pyrotin4
+from ivs.spectra import pyrotin4
 import numpy as np
 import logging
 from numpy import pi,sin,cos,sqrt
