@@ -779,9 +779,13 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     if sort and not index:
         master = master[np.argsort(master[sort])]
     
-    templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s} {:s}'
-    templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s} {:s}'
-    header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE','COMMENTS']
+    templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s}'
+    templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s}'
+    header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE']
+    if 'comments' in master.dtype.names:
+        templateh += ' {:s}'
+        templated += ' {:s}'
+        header += ['COMMENTS']
     if index:
         templateh = '{:3s} '+templateh
         templated = '{:3d} '+templated
@@ -789,9 +793,11 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
         
     txt = [comment+templateh.format(*header)]
     txt.append(comment+'='*170)
-    for nr,contents in enumerate(zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source'],master['comments'])):
+    columns = [master[col.lower()] for col in header]
+    for nr,contents in enumerate(zip(*columns)):
         contents = list(contents)
-        contents[-1] = contents[-1].replace('_',' ')
+        if 'comments' in master.dtype.names:
+            contents[-1] = contents[-1].replace('_',' ')
         if index:
             contents = [nr] + contents
         line = templated.format(*contents)
@@ -801,84 +807,178 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
         txt.append(comment + line)
     return "\n".join(txt)
 
-@memoized
-def get_schaller_grid():
-    """
-    Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
-    function.
+#@memoized
+#def get_schaller_grid():
+    #"""
+    #Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
+    #function.
     
-    @return: Rbf interpolation function
-    @rtype: Rbf interpolation function
-    """
-    #-- translation between table names and masses
-    #masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
-    #tables = ['table20','table18','table17','table16','table15','table14',
-    #          'table13','table12','table11','table10','table9','table8',
-    #          'table7','table6','table5','table4','table3'][:-1]
-    #-- read in all the tables and compute radii and luminosities.
-    data,comms,units = vizier.search('J/A+AS/96/269/models')
-    all_teffs = 10**data['logTe']
-    all_radii = np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs))
-    all_loggs = np.log10(constants.GG_cgs*data['Mass']*constants.Msol_cgs/(all_radii**2))
-    all_radii /= constants.Rsol_cgs
-    #-- remove low temperature models, the evolutionary tracks are hard to
-    #   interpolate there.
-    keep = all_teffs>5000
-    all_teffs = all_teffs[keep]
-    all_radii = all_radii[keep]
-    all_loggs = all_loggs[keep]
-    #-- make linear interpolation model between all modelpoints
-    mygrid = Rbf(np.log10(all_teffs),all_loggs,all_radii,function='linear')
-    logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
-    return mygrid
+    #@return: Rbf interpolation function
+    #@rtype: Rbf interpolation function
+    #"""
+    ##-- translation between table names and masses
+    ##masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
+    ##tables = ['table20','table18','table17','table16','table15','table14',
+    ##          'table13','table12','table11','table10','table9','table8',
+    ##          'table7','table6','table5','table4','table3'][:-1]
+    ##-- read in all the tables and compute radii and luminosities.
+    #data,comms,units = vizier.search('J/A+AS/96/269/models')
+    #all_teffs = 10**data['logTe']
+    #all_radii = np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs))
+    #all_loggs = np.log10(constants.GG_cgs*data['Mass']*constants.Msol_cgs/(all_radii**2))
+    #all_radii /= constants.Rsol_cgs
+    ##-- remove low temperature models, the evolutionary tracks are hard to
+    ##   interpolate there.
+    #keep = all_teffs>5000
+    #all_teffs = all_teffs[keep]
+    #all_radii = all_radii[keep]
+    #all_loggs = all_loggs[keep]
+    ##-- make linear interpolation model between all modelpoints
+    #mygrid = Rbf(np.log10(all_teffs),all_loggs,all_radii,function='linear')
+    #logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
+    #return mygrid
 
-
-def get_radii(teffs,loggs):
+def get_siess_grid(z=0.,phase='MS'):
     """
-    Retrieve radii from stellar evolutionary tracks from Schaller 1992.
-    
-    @param teffs: model effective temperatures
-    @type teffs: numpy array
-    @param loggs: model surface gravities
-    @type loggs: numpy array
-    @return: model radii (solar units)
-    @rtype: numpy array
+    Construct the grid from Siess et al. 2000.
     """
-    mygrid = get_schaller_grid()
-    radii = mygrid(np.log10(teffs),loggs)
-    return radii
-
-
-def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
-    """
-    Calculate distances and radii of a target given its parallax and location
-    in the galaxy.
-    
-    
-    """
-    #-- compute distance up to 25 kpc, which is about the maximum distance from
-    #   earth to the farthest side of the Milky Way galaxy
-    #   rescale to set the maximum to 1
-    d = np.logspace(np.log10(0.1),np.log10(25000),100000)
-    if plx is not None:
-        dprob = distance.distprob(d,gal[1],plx)
-        dprob = dprob / dprob.max()
+    phases = dict(PMS=1,MS=2,POSTMS=3)
+    z = None
+    if z is not None:
+        z = 0.02*10**z*100 
+        grid_zs = np.array([1,2,3,4])
+        index = np.argmin(np.abs(grid_zs-z))
+        z = grid_zs[index]
+        files = sorted(glob.glob('/STER/pieterd/workspace/MichielMin/tracks/*z{:02d}.hrd'.format(z)))
+        ncol = 2
     else:
-        dprob = np.ones_like(d)
-    #-- compute the radii for the computed models, and convert to parsec
-    #radii = np.ones(len(teffs[-n:]))
-    radii = get_radii(teffs[-n:],loggs[-n:])
-    radii = conversions.convert('Rsol','pc',radii)
-    d_models = radii/np.sqrt(scales[-n:])
-    #-- we set out of boundary values to zero
-    if plx is not None:
-        dprob_models = np.interp(d_models,d[-n:],dprob[-n:],left=0,right=0)
-    else:
-        dprob_models = np.ones_like(d_models)
-    #-- reset the radii to solar units for return value
-    radii = conversions.convert('pc','Rsol',radii)
-    return (d_models,dprob_models,radii),(d,dprob)
+        files = sorted(glob.glob('/STER/pieterd/workspace/MichielMin/tracks/*z??.hrd'.format(z)))
+        ncol = 3
+    all_data = []
+    for ff in files:
+        data = ascii.read2array(ff)
+        #-- cut pre-main sequence
+        keep = data[:,1]==phases[phase]
+        if not sum(keep):
+            continue
+        data = data[keep]
+        #-- extract columns and transform to log10 where necessary        
+        teff,logg = np.log10(data[:,6]),data[:,8]
+        z = float(os.path.splitext(ff)[0].split('z')[-1])/100.*np.ones(len(teff))
+        z = np.log10(z/0.02)
+        age = np.log10(data[:,10])         # in year
+        labs = np.log10(data[:,2])         # in solar units
+        radius = np.log10(data[:,4])       # in solar units
+        #-- mass: not important, since logg and radius constrain mass
+        #mass = np.log10(
+        
+        if ncol==2:
+            all_data.append(np.column_stack([teff,logg,age,labs,radius]))
+        elif ncol==3:
+            all_data.append(np.column_stack([teff,logg,z,age,labs,radius]))
+     
+    all_data = np.vstack(all_data)
+    all_data_,indices = numpy_ext.unique_arr(all_data[:,:ncol],return_index=True)
+    all_data = all_data[indices]
     
+    x,y = all_data[:,:ncol],all_data[:,ncol:] 
+    return x,y
+
+def siess2000(teff,logg,z,ylabels=['age','labs','radius']):
+    x,y = get_siess_grid()
+    teff = np.log10(teff)
+    out = {}
+    if 'age' in ylabels:
+        out['age'] = create_evolutionary_grid(x,y[:,0])(teff,logg,z)
+    if 'labs' in ylabels:
+        out['labs'] = 10**create_evolutionary_grid(x,y[:,1])(teff,logg,z)
+    if 'radius' in ylabels:
+        out['radius'] = 10**create_evolutionary_grid(x,y[:,2])(teff,logg,z)
+    return out
+    
+
+    
+    
+    
+    
+
+
+#def get_radii(teffs,loggs):
+    #"""
+    #Retrieve radii from stellar evolutionary tracks from Schaller 1992.
+    
+    #@param teffs: model effective temperatures
+    #@type teffs: numpy array
+    #@param loggs: model surface gravities
+    #@type loggs: numpy array
+    #@return: model radii (solar units)
+    #@rtype: numpy array
+    #"""
+    #mygrid = get_schaller_grid()
+    #radii = mygrid(np.log10(teffs),loggs)
+    #return radii
+
+
+#def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
+    #"""
+    #Calculate distances and radii of a target given its parallax and location
+    #in the galaxy.
+    
+    
+    #"""
+    ##-- compute distance up to 25 kpc, which is about the maximum distance from
+    ##   earth to the farthest side of the Milky Way galaxy
+    ##   rescale to set the maximum to 1
+    #d = np.logspace(np.log10(0.1),np.log10(25000),100000)
+    #if plx is not None:
+        #dprob = distance.distprob(d,gal[1],plx)
+        #dprob = dprob / dprob.max()
+    #else:
+        #dprob = np.ones_like(d)
+    ##-- compute the radii for the computed models, and convert to parsec
+    ##radii = np.ones(len(teffs[-n:]))
+    #radii = get_radii(teffs[-n:],loggs[-n:])
+    #radii = conversions.convert('Rsol','pc',radii)
+    #d_models = radii/np.sqrt(scales[-n:])
+    ##-- we set out of boundary values to zero
+    #if plx is not None:
+        #dprob_models = np.interp(d_models,d[-n:],dprob[-n:],left=0,right=0)
+    #else:
+        #dprob_models = np.ones_like(d_models)
+    ##-- reset the radii to solar units for return value
+    #radii = conversions.convert('pc','Rsol',radii)
+    #return (d_models,dprob_models,radii),(d,dprob)
+
+def create_evolutionary_grid(x,y,function='linear'):
+    """
+    Create an interpolatable grid of stellar evolutionary models.
+    
+    The domains will be chosen such that all the rows are unique. E.g. if the
+    domain is only teff and logg, no teff and logg combination will occur twice.
+    The omittance of the points is first-defined last-out.
+    
+    The output is an Rbf grid.
+    
+    @param x: array representing domain of interpolation (n models x N dimensions)
+    @type x: nXN array
+    @param y: values to be interpolated
+    @type y: n array
+    @return: rbf grid
+    @rtype: function
+    """
+    #-- clip to have unique domain (otherwise we get singular matrix error in
+    #   rbf interpolation
+    x_,indices = numpy_ext.unique_arr(x,return_index=True)
+    x = x[indices]
+    y = y[indices]
+    #-- create the grid
+    args = list(x.T)+[y]
+    logger.info('Constructing grid of size {}'.format(y.shape))
+    mygrid = Rbf(*args,function=function)
+    return mygrid     
+
+
+
 
 
 class SED(object):
@@ -1320,6 +1420,9 @@ class SED(object):
         the parallax.
         
         Distance is returned in parsec (pc).
+        
+        @return: distance
+        @rtype: (float,float)
         """
         #-- we need parallax and galactic position
         if plx is None and 'plx' in self.info:
@@ -1344,6 +1447,9 @@ class SED(object):
             return dist.get_value()
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
+        """
+        Under construction.
+        """
         gal = self.info['galpos']
         if distance is None:
             d = self.get_distance()
@@ -1356,6 +1462,9 @@ class SED(object):
         return output
     
     def get_angular_diameter(self):
+        """
+        Under construction.
+        """
         raise NotImplementedError
     
     def compute_distance(self,mtype='igrid_search'):
@@ -1980,10 +2089,61 @@ class SED(object):
         
         
         
-    def add_constraint_evolution_models(self):
-        raise NotImplementedError
+    def add_constraint_evolution_models(self,models='siess2000',\
+               ylabels=['age','labs','radius'],e_y=None,
+               function='linear',mtype='igrid_search',chi2_type='red'):
+        """
+        Use stellar evolutionary models to put additional constraints on the parameters.
+        """
+        grid = self.results[mtype]['grid']
         
-    
+        #-- make sure y's and ylabels are iterable
+        if isinstance(ylabels,str):
+            ylabels = [ylabels]        
+        #-- cycle over all yvalues and compute the pvalues
+        pvalues = []
+        add_info = []
+        #-- create the evolutionary grid and interpolate the stellar evolutinary
+        #   grid on the SED-integrated grid points
+        output = globals()[models](grid['teff'],grid['logg'],grid['z'],ylabels)
+        labels = list(output.keys())
+        for label in labels:
+            y_interpolated = output[label]
+            add_info.append(y_interpolated)
+            #-- only add the contraint when it is possible to do so.
+            if not label in grid.dtype.names:
+                logger.info("Cannot put constraint on {} (not a parameter)".format(label))
+                continue
+            y_computed = grid[label]
+            #-- error on the y-value: either it is computed, it is given or it is
+            #   assumed it is 10% of the value
+            if e_y is None and ('e_'+label) in grid.dtype.names:
+                e_y = grid['e_'+label]
+            elif e_y is None:
+                e_y = 0.1*y_computed
+            y_prob = scipy.stats.distributions.norm.sf(abs(y_computed-y_interpolated)/e_y)
+            pl.figure()
+            pl.title(label)
+            pl.plot(y_computed,y_interpolated,'ko')
+            pvalues.append(y_prob)
+        pl.show()    
+        
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method(pvalues)
+        
+        #-- add the information to the grid
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                     ['c_'+ylabel for ylabel in labels],add_info)
+        
+        #-- and replace the original confidence intervals, and re-order
+        self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
+        
+        sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: {0:s} via stellar models and replaced ci_{1:s} with combined CI'.format(', '.join(ylabels),chi2_type))    
     
     #}
     
