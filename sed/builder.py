@@ -669,7 +669,7 @@ def fix_master(master,e_default=None):
     return master
 
 
-def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=False):
+def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='all',include=False):
     """
     Exclude/include photometric passbands containing one of the strings listed in
     photbands.
@@ -716,6 +716,10 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
     @type names: list of strings
     @param wrange: wavelength range (most likely angstrom) to include/exclude
     @type wrange: 2-tuple (start wavelength,end wavelength)
+    @param sources: list of sources
+    @type sources: list of strings
+    @param indices: list of indices (integers)
+    @type indices: list of integers
     @param ptype: type of photometry to include/exclude: absolute values, colors
     or both
     @type ptype: string, one of 'abs','col','all'
@@ -757,24 +761,45 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
                     if ptype=='all' or (ptype=='abs' and -master['color'][index]) or (ptype=='col' and master['color'][index]):
                         master['include'][index] = include
                         break
+    #-- exclude/include passbands based on their index
+    if indices is not None:
+        logger.info('%s photometry based on index'%((include and 'Include' or "Exclude")))
+        indices = np.array(indices,int)
+        if not indices.shape: indices = indices.reshape(1)
+        master['include'][indices] = include
+    
 
-def photometry2str(master,comment='',color=False):
+def photometry2str(master,comment='',sort='photband',color=False,index=False):
     """
     String representation of master record array
     
     @param master: master record array containing photometry
     @type master: numpy record array
     """
-    master = master[np.argsort(master['photband'])]
-    txt = comment+'%20s %12s %12s %12s %10s %12s %12s %12s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
-    txt+= comment+'==========================================================================================================================\n'
-    for nr,(i,j,k,l,m,n,o,p,q) in enumerate(zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source'])):
-        if not color:
-            txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q)
-        else:
+    if sort and not index:
+        master = master[np.argsort(master[sort])]
+    
+    templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s} {:s}'
+    templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s} {:s}'
+    header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE','COMMENTS']
+    if index:
+        templateh = '{:3s} '+templateh
+        templated = '{:3d} '+templated
+        header = ['NR']+header
+        
+    txt = [comment+templateh.format(*header)]
+    txt.append(comment+'='*170)
+    for nr,contents in enumerate(zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source'],master['comments'])):
+        contents = list(contents)
+        contents[-1] = contents[-1].replace('_',' ')
+        if index:
+            contents = [nr] + contents
+        line = templated.format(*contents)
+        if color:
             mycolor = termtools.green if master['include'][nr] else termtools.red
-            txt+=comment+mycolor('%20s %12g %12g %12s %10.0f %12g %12g %13s %s\n'%(i,j,k,l,m,n,o,p,q))
-    return txt
+            line = mycolor(line)
+        txt.append(comment + line)
+    return "\n".join(txt)
 
 @memoized
 def get_schaller_grid():
@@ -1046,50 +1071,50 @@ class SED(object):
             
             
     
-    def exclude(self,names=None,wrange=None,sources=None):
+    def exclude(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (any) photometry from fitting process.
         
         If called without arguments, all photometry will be excluded.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='all')
     
-    def exclude_colors(self,names=None,wrange=None,sources=None):
+    def exclude_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (color) photometry from fitting process.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,0)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='col')
     
-    def exclude_abs(self,names=None,wrange=None,sources=None):
+    def exclude_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (absolute) photometry from fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='abs')
     
     
-    def include(self,names=None,wrange=None,sources=None):
+    def include(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (any) photometry in fitting process.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='all')
     
-    def include_colors(self,names=None,wrange=None,sources=None):
+    def include_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (color) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='col')
     
-    def include_abs(self,names=None,wrange=None,sources=None):
+    def include_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (absolute) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='abs')
     
     def set_photometry_scheme(self,scheme,infrared=(1,'micron')):
         """
@@ -1322,6 +1347,9 @@ class SED(object):
         The outcome is added to the C{results} attribute::
         
             distance = r/sqrt(scale)
+        
+        This particularly useful when you added constraints from solar-like
+        oscillations (L{add_constraint_slo}).
         
         @return: distance,uncertainty (pc)
         @rtype: (float,float)
