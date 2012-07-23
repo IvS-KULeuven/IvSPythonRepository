@@ -961,11 +961,28 @@ class SED(object):
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
         
+    def __repr__(self):
+        """
+        Machine readable string representation of an SED object.
+        """
+        return "SED('{}')".format(self.ID)
+    
     def __str__(self):
+        """
+        Human readable string representation of an SED object.
+        """
         txt = []
+        #-- object designation
         txt.append("Object identification: {:s}".format(self.ID))
         if hasattr(self,'info') and self.info and 'oname' in self.info:
             txt.append("Official designation: {:s}".format(self.info['oname']))
+        #-- additional info
+        for key in sorted(self.info.keys()):
+            if isinstance(self.info[key],dict):
+                txt.append(" {:10s} = ".format(key)+", ".join(["{}: {}".format(i,j) for i,j in self.info[key].iteritems()]))
+            else:
+                txt.append(" {:10s} = {}".format(key,self.info[key]))
+
         #txt.append("Included photometry:")
         #if hasattr(self,'master') and self.master is not None:
             #include_grid = self.master['include']
@@ -974,7 +991,8 @@ class SED(object):
         #if hasattr(self,'master') and self.master is not None:
             #include_grid = self.master['include']
             #txt.append(photometry2str(self.master[-include_grid]))
-        txt.append(photometry2str(self.master,color=True))
+        if hasattr(self,'master'):
+            txt.append(photometry2str(self.master,color=True))
         return "\n".join(txt)
         
     #{ Handling photometric data
