@@ -15,9 +15,10 @@ Table of contents:
         - Loading SED fits
     4. Radii, distances and luminosities
         - Relations between quantities
-        - Seismic constraints
         - Parallaxes
+        - Seismic constraints
         - Reddening constraints
+        - Evolutionary constraints
 
 Section 1. Retrieving and plotting photometry of a target
 =========================================================
@@ -49,9 +50,16 @@ Note that C{ra} and C{dec} are given in B{degrees}.
 
 You best B{switch on the logger} (see L{ivs.aux.loggers.get_basic_logger}) to see the progress:
 sometimes, access to catalogs can take a long time (the GATOR sources are
-typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow,
-you can B{include/exclude these sources} via the keywords C{include} or C{exclude},
-which take a list of strings (choose from C{gator}, C{vizier} and/or C{gcpd}).
+typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow
+or the site is down, you can B{include/exclude these sources} via the keywords
+C{include} or C{exclude}, which take a list of strings (choose from C{gator},
+C{vizier} and/or C{gcpd}). For ViZieR, there is an extra option to change to
+another mirror site via
+
+>>> vizier.change_mirror()
+
+The L{vizier.change_mirror} function cycles through all the mirrors continuously,
+so sooner or later you will end up with the default one and repeat the cycle.
 
 >>> mysed.get_photometry(exclude=['gator'])
 
@@ -124,12 +132,24 @@ Once a .phot file is written and L{get_photometry} is called again for the same
 target, the script will B{not retrieve the photometry from the internet again},
 but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
-delete the .phot file.
+delete the .phot file or set C{force=True} when calling L{get_photometry}. 
 
 The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
+
+Notice that in the C{.phot} files, also a C{comment} column is added. You can 
+find translation of some of the flags here (i.e. upper limit, extended source etc..),
+or sometimes just additional remarks on variability etc. Not all catalogs have
+this feature implemented, so you are still responsible yourself for checking
+the quality of the photometry.
+
+The references to each source are given in the C{bibtex} column. Simply call
+
+>>> mysed.save_bibtex()
+
+to convert those bibcodes to a C{.bib} file.
 
 Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
 your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
@@ -204,6 +224,17 @@ we know are not so trustworthy:
 
 >>> mysed.set_photometry_scheme('combo')
 >>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
+
+You can L{include}/L{exclude} photoemtry based on name, wavelength range, source and index,
+and only select absolute photometry or colors (L{include_abs},L{include_colors}).
+When working in interactive mode, in particular the index is useful. Print the
+current set of photometry to the screen with 
+
+>>> print(photometry2str(mysed.master,color=True,index=True))
+
+and you will see in green the included photometry, and in red the excluded photometry.
+You will see that each column is preceded by an index, you can use these indices
+to select/deselect the photometry.
 
 Speed up the fitting process by copying the model grids to the scratch disk
 
@@ -546,6 +577,10 @@ from ivs.units.uncertainties import unumpy,ufloat
 from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
 from ivs.sigproc import evaluate
+try:
+    from ivs.stellar_evolution import evolutionmodels
+except ImportError:
+    print("Warning: no evolution models available (probably not important)")
 
 logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)
@@ -771,7 +806,9 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
 
 def photometry2str(master,comment='',sort='photband',color=False,index=False):
     """
-    String representation of master record array
+    String representation of master record array.
+    
+    Sorting is disabled when C{index=True}.
     
     @param master: master record array containing photometry
     @type master: numpy record array
@@ -838,65 +875,6 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
     #return mygrid
 
-def get_siess_grid(z=0.,phase='MS'):
-    """
-    Construct the grid from Siess et al. 2000.
-    """
-    phases = dict(PMS=1,MS=2,POSTMS=3)
-    z = None
-    if z is not None:
-        z = 0.02*10**z*100 
-        grid_zs = np.array([1,2,3,4])
-        index = np.argmin(np.abs(grid_zs-z))
-        z = grid_zs[index]
-        files = sorted(glob.glob('/STER/pieterd/workspace/MichielMin/tracks/*z{:02d}.hrd'.format(z)))
-        ncol = 2
-    else:
-        files = sorted(glob.glob('/STER/pieterd/workspace/MichielMin/tracks/*z??.hrd'.format(z)))
-        ncol = 3
-    all_data = []
-    for ff in files:
-        data = ascii.read2array(ff)
-        #-- cut pre-main sequence
-        keep = data[:,1]==phases[phase]
-        if not sum(keep):
-            continue
-        data = data[keep]
-        #-- extract columns and transform to log10 where necessary        
-        teff,logg = np.log10(data[:,6]),data[:,8]
-        z = float(os.path.splitext(ff)[0].split('z')[-1])/100.*np.ones(len(teff))
-        z = np.log10(z/0.02)
-        age = np.log10(data[:,10])         # in year
-        labs = np.log10(data[:,2])         # in solar units
-        radius = np.log10(data[:,4])       # in solar units
-        #-- mass: not important, since logg and radius constrain mass
-        #mass = np.log10(
-        
-        if ncol==2:
-            all_data.append(np.column_stack([teff,logg,age,labs,radius]))
-        elif ncol==3:
-            all_data.append(np.column_stack([teff,logg,z,age,labs,radius]))
-     
-    all_data = np.vstack(all_data)
-    all_data_,indices = numpy_ext.unique_arr(all_data[:,:ncol],return_index=True)
-    all_data = all_data[indices]
-    
-    x,y = all_data[:,:ncol],all_data[:,ncol:] 
-    return x,y
-
-def siess2000(teff,logg,z,ylabels=['age','labs','radius']):
-    x,y = get_siess_grid()
-    teff = np.log10(teff)
-    out = {}
-    if 'age' in ylabels:
-        out['age'] = create_evolutionary_grid(x,y[:,0])(teff,logg,z)
-    if 'labs' in ylabels:
-        out['labs'] = 10**create_evolutionary_grid(x,y[:,1])(teff,logg,z)
-    if 'radius' in ylabels:
-        out['radius'] = 10**create_evolutionary_grid(x,y[:,2])(teff,logg,z)
-    return out
-    
-
     
     
     
@@ -948,36 +926,6 @@ def siess2000(teff,logg,z,ylabels=['age','labs','radius']):
     ##-- reset the radii to solar units for return value
     #radii = conversions.convert('pc','Rsol',radii)
     #return (d_models,dprob_models,radii),(d,dprob)
-
-def create_evolutionary_grid(x,y,function='linear'):
-    """
-    Create an interpolatable grid of stellar evolutionary models.
-    
-    The domains will be chosen such that all the rows are unique. E.g. if the
-    domain is only teff and logg, no teff and logg combination will occur twice.
-    The omittance of the points is first-defined last-out.
-    
-    The output is an Rbf grid.
-    
-    @param x: array representing domain of interpolation (n models x N dimensions)
-    @type x: nXN array
-    @param y: values to be interpolated
-    @type y: n array
-    @return: rbf grid
-    @rtype: function
-    """
-    #-- clip to have unique domain (otherwise we get singular matrix error in
-    #   rbf interpolation
-    x_,indices = numpy_ext.unique_arr(x,return_index=True)
-    x = x[indices]
-    y = y[indices]
-    #-- create the grid
-    args = list(x.T)+[y]
-    logger.info('Constructing grid of size {}'.format(y.shape))
-    mygrid = Rbf(*args,function=function)
-    return mygrid     
-
-
 
 
 
@@ -1097,7 +1045,7 @@ class SED(object):
         
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,
-                       include=None,exclude=None,
+                       include=None,exclude=None,force=False,
                        units='erg/s/cm2/AA'):
         """
         Search photometry on the net or from the phot file if it exists.
@@ -1112,7 +1060,7 @@ class SED(object):
                 radius = 60.
             else:
                 radius = 10.
-        if not os.path.isfile(self.photfile):
+        if not os.path.isfile(self.photfile) or force:
             #-- get and fix photometry. Set default errors to 1%, and set
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
@@ -1725,7 +1673,10 @@ class SED(object):
             self.results['igrid_search'] = {}
         elif 'grid' in self.results['igrid_search']:
             logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results['igrid_search']['grid']),len(grid_results)))
-            grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
+            ex_names = grid_results.dtype.names
+            ex_grid = np.rec.fromarrays([self.results['igrid_search']['grid'][exname] for exname in ex_names],
+                                        names=ex_names)
+            grid_results = np.hstack([ex_grid,grid_results])
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1955,9 +1906,15 @@ class SED(object):
         labs,e_labs = conversions.unumpy.nominal_values(labs),\
                       conversions.unumpy.std_devs(labs)
         self.results[mtype]['grid']['labs'] = labs # Labs is already there, overwrite
-        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
-                     ['e_labs','radius','e_radius','mass','e_mass'],
-                     [e_labs,radius,e_radius,mass,e_mass])
+        #-- check if the others are already in there or not:
+        labels,data = ['e_labs','radius','e_radius','mass','e_mass'],\
+                      [e_labs,radius,e_radius,mass,e_mass]
+        if 'e_labs' in self.results[mtype]['grid'].dtype.names:
+            for idata,ilabel in zip(data,labels):
+                self.results[mtype]['grid'][ilabel] = idata
+        else:
+            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
+                     labels,data)
                      
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
@@ -2101,13 +2058,13 @@ class SED(object):
         if isinstance(ylabels,str):
             ylabels = [ylabels]        
         #-- cycle over all yvalues and compute the pvalues
-        pvalues = []
+        pvalues = [1-grid['ci_'+chi2_type]]
         add_info = []
         #-- create the evolutionary grid and interpolate the stellar evolutinary
         #   grid on the SED-integrated grid points
-        output = globals()[models](grid['teff'],grid['logg'],grid['z'],ylabels)
-        labels = list(output.keys())
-        for label in labels:
+        output = np.array([evolutionmodels.get_itable(iteff,ilogg,iz) for iteff,ilogg,iz in zip(grid['teff'],grid['logg'],grid['z'])])
+        output = np.rec.fromarrays(output.T,names=['age','labs','radius'])
+        for label in ylabels:
             y_interpolated = output[label]
             add_info.append(y_interpolated)
             #-- only add the contraint when it is possible to do so.
@@ -2118,22 +2075,73 @@ class SED(object):
             #-- error on the y-value: either it is computed, it is given or it is
             #   assumed it is 10% of the value
             if e_y is None and ('e_'+label) in grid.dtype.names:
-                e_y = grid['e_'+label]
+                e_y = np.sqrt(grid['e_'+label]**2+(0.1*y_interpolated)**2)
             elif e_y is None:
-                e_y = 0.1*y_computed
+                e_y = np.sqrt((0.1*y_computed)**2+(0.1*y_interpolated)**2)
             y_prob = scipy.stats.distributions.norm.sf(abs(y_computed-y_interpolated)/e_y)
             pl.figure()
+            pl.subplot(221)
             pl.title(label)
-            pl.plot(y_computed,y_interpolated,'ko')
+            pl.scatter(y_computed,y_interpolated,c=y_prob,edgecolors='none',cmap=pl.cm.spectral)
+            pl.plot([pl.xlim()[0],pl.xlim()[1]],[pl.xlim()[0],pl.xlim()[1]],'r-',lw=2)
+            pl.xlim(pl.xlim())
+            pl.ylim(pl.xlim())
+            pl.xlabel('Computed')
+            pl.ylabel('Interpolated')
+            pl.colorbar()
+            pl.subplot(223)
+            pl.title('y_interpolated')
+            pl.scatter(grid['teff'],grid['logg'],c=y_interpolated,edgecolors='none',cmap=pl.cm.spectral)
+            pl.colorbar()
+            pl.subplot(224)
+            pl.title('y_computed')
+            pl.scatter(grid['teff'],grid['logg'],c=y_computed,edgecolors='none',cmap=pl.cm.spectral)
+            pl.colorbar()
             pvalues.append(y_prob)
-        pl.show()    
+        
+        pl.figure()
+        pl.subplot(221)
+        pl.title('p1')
+        sa = np.argsort(pvalues[0])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[0][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.subplot(222)
+        pl.title('p2')
+        sa = np.argsort(pvalues[1])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[1][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.subplot(223)
+        pl.title('p3')
+        sa = np.argsort(pvalues[2])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[2][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
         
         #-- combine p values using Fisher's method
         combined_pvals = evaluate.fishers_method(pvalues)
+        pl.subplot(224)
+        pl.title('pcombined')
+        sa = np.argsort(combined_pvals)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=combined_pvals[sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.show()    
         
-        #-- add the information to the grid
-        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
-                     ['c_'+ylabel for ylabel in labels],add_info)
+        #-- add the information to the grid (assume that if there one label
+        #   not in there already, none of them are
+        if not 'c_'+ylabels[0] in grid.dtype.names:
+            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                        ['c_'+ylabel for ylabel in ylabels],add_info)
+        #-- if they are already in there, overwrite!
+        else:
+            for info,ylabel in zip(add_info,ylabels):
+                self.results[mtype]['grid']['c_'+ylabel] = add_info
         
         #-- and replace the original confidence intervals, and re-order
         self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
@@ -3006,7 +3014,7 @@ class SED(object):
         ff.close()
         
         logger.info('Loaded previous results from FITS')
-        return True
+        return filename
     
     def save_bibtex(self):
         """
