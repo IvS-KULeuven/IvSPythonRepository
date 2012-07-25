@@ -1859,14 +1859,14 @@ def synthetic_color(wave,flux,colors,units=None):
         units = [None for color in colors]
         
     syn_colors = np.zeros(len(colors))
-    for i,color,unit in enumerate(zip(colors,units)):
+    for i,(color,unit) in enumerate(zip(colors,units)):
         #-- retrieve the passbands necessary to construct the color, and the
         #   function that defines the color
         photbands,color_func = filters.make_color(color)
         #-- compute the synthetic fluxes to construct the color
         fluxes = synthetic_flux(wave,flux,photbands,units=unit)
         #-- construct the color
-        syn_colors[i] = color_func(fluxes)
+        syn_colors[i] = color_func(*list(fluxes))
     
     return syn_colors 
         
