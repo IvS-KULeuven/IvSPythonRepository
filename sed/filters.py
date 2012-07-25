@@ -239,7 +239,7 @@ wavelength?
 
 Let's do some synthetic photometry now. Suppose we have a black body atmosphere:
 
->>> bb = model.blackbody((wave,'angstrom'),(5777.,'K'),units='erg/s/cm2/A')
+>>> bb = model.blackbody(wave,5777.)
 
 We now calculate the synthetic flux, assuming the CCD and BOL device. We
 compute the synthetic flux both in Flambda and Fnu:
@@ -253,17 +253,17 @@ energy counting devices!
 >>> flam_ccd,flam_bol
 (897.68536911320564, 1495.248213834755)
 >>> fnu_ccd,fnu_bol
-(4.2591095543803019e-06, 5.2446332430111166e-06)
+(4.2591095543803019e-06, 5.2446332430111098e-06)
 
 Can we now readily convert Flambda to Fnu with assuming the pivot wavelength?
 
->>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,wave=(effwave_ccd,'A'))
->>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,wave=(effwave_bol,'A'))
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_ccd,wave=(effwave_ccd,'A'))
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_bol,wave=(effwave_bol,'A'))
 
 Which is equivalent with:
 
->>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,photband='LAMBDA.CCD')
->>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,photband='LAMBDA.BOL')
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_ccd,photband='LAMBDA.CCD')
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_bol,photband='LAMBDA.BOL')
 
 Apparently, with the definition of pivot wavelength, you can safely convert from
 Fnu to Flambda:
@@ -271,7 +271,7 @@ Fnu to Flambda:
 >>> print(fnu_ccd,fnu_fromflam_ccd)
 (4.2591095543803019e-06, 4.259110447428463e-06)
 >>> print(fnu_bol,fnu_fromflam_bol)
-(5.2446332430111166e-06, 5.2446373530017525e-06)
+(5.2446332430111098e-06, 5.2446373530017525e-06)
 
 The slight difference you see is numerical.
 
@@ -290,7 +290,7 @@ from ivs.io import ascii
 
 basedir = os.path.dirname(__file__)
 
-logger = logging.getLogger("CAT.VIZIER")
+logger = logging.getLogger("SED.FILT")
 logger.addHandler(loggers.NullHandler())
 
 custom_filters = {}
@@ -359,7 +359,7 @@ def add_custom_filter(wave,response,**kwargs):
     if os.path.isfile(photfile):
         raise ValueError,'bandpass {0} already exists'.format(photfile)
     elif photband in custom_filters:
-        logger.warning('Overwriting previous definition of {0}'.format(photband))
+        logger.debug('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
     #-- set effective wavelength
     kwargs.setdefault('type','CCD')
@@ -466,6 +466,35 @@ def get_color_photband(photband):
         bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','U']])
     
     return bands
+
+def make_color(photband):
+    """
+    Make a color from a color name and fluxes.
+    
+    You get two things: a list of photbands that are need to construct the color,
+    and a function which you need to pass fluxes to compute the color.
+    
+    >>> bands, func = make_color('JOHNSON.B-V')
+    >>> print(bands)
+    ('JOHNSON.B', 'JOHNSON.V')
+    >>> print(func(2,3.))
+    0.666666666667
+    
+    @return: photbands, function to construct color
+    @rtype: tuple,callable
+    """
+    system,band = photband.split('.')
+    band = band.strip() # remove extra spaces
+    photbands = get_color_photband(photband)
+    if len(band.split('-'))==2:
+        func = lambda f0,f1: f0/f1
+    elif band=='M1':
+        func = lambda fv,fb,fy: fv*fy/fb**2
+    elif band=='C1':
+        func = lambda fv,fb,fu: fu*fb/fv**2
+    else:
+        raise ValueError('cannot recognize color {}'.format(photband))
+    return photbands,func
 
 
 def eff_wave(photband,model=None,det_type=None):
