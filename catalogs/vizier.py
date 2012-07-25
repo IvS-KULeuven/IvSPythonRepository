@@ -665,7 +665,7 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                      '4':'most likely not variable (4, 0=certainly not-5=probably not)',
                      '5':'most likely not variable (5, 0=certainly not-5=probably not)',
                      '6':'likely variable (6, 6=likely-7=more likely)',
-                     '6':'likely variable (7, 6=likely-7=more likely)',
+                     '7':'likely variable (7, 6=likely-7=more likely)',
                      '8':'most likely variable (8, 8=most likely-9=almost certain)',
                      '9':'most likely variable (9, 8=most likely-9=almost certain)'}
     twomass_qual_flag = {'X':'detection, but no valid brightness estimate (X)',
@@ -707,6 +707,9 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
             ex = int(results[0]['ex'])
             for i,photband in enumerate(['WISE.W1','WISE.W2','WISE.W3','WISE.W4']):
                 index = indices[(master['source']==source) & (master['photband']==photband)]
+                if len(index)!=1:
+                    logger.warning("Skipping WISE flags, don't know what to do with {}".format(index))
+                    continue
                 if conf[i]!=' ' and conf[i] in wise_conf_flag:
                     messages[index] = '; '.join([messages[index],wise_conf_flag[conf[i].lower()]])
                 if var[i]!=' ':
