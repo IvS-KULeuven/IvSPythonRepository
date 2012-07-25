@@ -302,9 +302,9 @@ from ivs.units import constants
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized,clear_memoization
 import itertools
+import functools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
-from ivs.sed.decorators import blackbody_input
 from ivs.io import ascii
 import reddening
 import getpass
@@ -658,7 +658,73 @@ def get_file(integrated=False,**kwargs):
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
-@blackbody_input
+
+def _blackbody_input(fctn):
+    """
+    Prepare input and output for blackbody-like functions.
+    
+    If the user gives wavelength units and Flambda units, we only need to convert
+    everything to SI (and back to the desired units in the end).
+    
+    If the user gives frequency units and Fnu units, we only need to convert
+    everything to SI ( and back to the desired units in the end).
+    
+    If the user gives wavelength units and Fnu units, we need to convert
+    the wavelengths first to frequency.
+    """
+    @functools.wraps(fctn)
+    def dobb(x,T,**kwargs):
+        wave_units = kwargs.get('wave_units','AA')
+        flux_units = kwargs.get('flux_units','erg/s/cm2/AA')
+        to_kwargs = {}
+        #-- prepare input
+        #-- what kind of units did we receive?
+        curr_conv = constants._current_convention
+        # X: wavelength/frequency
+        x_unit_type = conversions.get_type(wave_units)
+        x = conversions.convert(wave_units,curr_conv,x)
+        # T: temperature
+        if isinstance(T,tuple):
+            T = conversions.convert(T[1],'K',T[0])
+        # Y: flux
+        y_unit_type = conversions.change_convention('SI',flux_units)
+        #-- if you give Jy vs micron, we need to first convert wavelength to frequency
+        if y_unit_type=='kg1 rad-1 s-2' and x_unit_type=='length':
+            x = conversions.convert(conversions._conventions[curr_conv]['length'],'rad/s',x)
+            x_unit_type = 'frequency'
+        elif y_unit_type=='kg1 m-1 s-3' and x_unit_type=='frequency':
+            x = conversions.convert('rad/s',conversions._conventions[curr_conv]['length'],x)
+            x_unit_type = 'length'
+        elif not y_unit_type in ['kg1 rad-1 s-2','kg1 m-1 s-3']:
+            raise NotImplementedError(flux_units,y_unit_type)
+        #-- correct for rad
+        if x_unit_type=='frequency':
+            x /= (2*np.pi)
+            to_kwargs['freq'] = (x,'Hz')
+        else:
+            to_kwargs['wave'] = (x,conversions._conventions[curr_conv]['length'])
+        #-- run function
+        I = fctn((x,x_unit_type),T)        
+        
+        #-- prepare output
+        disc_integrated = kwargs.get('disc_integrated',True)
+        ang_diam = kwargs.get('ang_diam',None)
+        if disc_integrated:
+            I *= np.sqrt(2*np.pi)
+            if ang_diam is not None:
+                scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
+                I *= scale
+        I = conversions.convert(curr_conv,flux_units,I,**to_kwargs)
+        return I
+        
+    return dobb
+
+
+
+
+
+
+@_blackbody_input
 def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
@@ -687,22 +753,22 @@ def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True
     >>> F3 = wien(x,280.,wave_units='micron',flux_units='Jy',ang_diam=(1.,'mas'))
     
     
-    >>> p = plt.figure()
-    >>> p = plt.subplot(121)
-    >>> p = plt.plot(x,F1)
-    >>> p = plt.plot(x,F2)
-    >>> p = plt.plot(x,F3)
+    >>> p = pl.figure()
+    >>> p = pl.subplot(121)
+    >>> p = pl.plot(x,F1)
+    >>> p = pl.plot(x,F2)
+    >>> p = pl.plot(x,F3)
     
     
-   >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
+    >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
     >>> F2 = rayleigh_jeans(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
     >>> F3 = wien(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
 
     
-    >>> p = plt.subplot(122)
-    >>> p = plt.plot(x,F1)
-    >>> p = plt.plot(x,F2)
-    >>> p = plt.plot(x,F3)
+    >>> p = pl.subplot(122)
+    >>> p = pl.plot(x,F1)
+    >>> p = pl.plot(x,F2)
+    >>> p = pl.plot(x,F3)
 
     
     @param: wavelength
@@ -735,7 +801,7 @@ def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True
     return I
 
 
-@blackbody_input
+@_blackbody_input
 def rayleigh_jeans(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Rayleigh-Jeans approximation of a black body.
@@ -760,7 +826,7 @@ def rayleigh_jeans(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated
     return I
 
 
-@blackbody_input
+@_blackbody_input
 def wien(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Wien approximation of a black body.
@@ -1068,13 +1134,16 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
                 flux = 10**griddata(myflux[:,:3],np.log10(myflux[:,3:]),(np.log10(teff),logg,ebv))
     except IndexError:
         #-- probably metallicity outside of grid
-        raise ValueError('point outside of grid')
+        raise ValueError('point outside of grid (teff={teff}, logg={logg}, ebv={ebv}, z={z}'.format(**locals()))
     except ValueError:
         #-- you tried to make a code of a negative number
-        raise ValueError('point outside of grid')
+        raise ValueError('point outside of grid (teff={teff}, logg={logg}, ebv={ebv}, z={z}'.format(**locals()))
     if np.any(np.isnan(flux)):
         #-- you tried to make a code of a negative number
-        raise ValueError('point outside of grid')
+        print myflux
+        print flux
+        print photbands
+        raise ValueError('point outside of grid (teff={teff}, logg={logg}, ebv={ebv}, z={z}'.format(**locals()))
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
     #return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
@@ -1595,7 +1664,7 @@ def calibrate():
 
 #}
 
-#{ Synthetic photometry
+#{ Synthetic photometry    
 
 def synthetic_flux(wave,flux,photbands,units=None):
     """
@@ -1712,6 +1781,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
     filter_info = filter_info[keep]
     
     for i,photband in enumerate(photbands):
+        #if filters.is_color
         waver,transr = filters.get_response(photband)
         #-- make wavelength range a bit bigger, otherwise F25 from IRAS has only
         #   one Kurucz model point in its wavelength range... this is a bit
@@ -1769,6 +1839,37 @@ def synthetic_flux(wave,flux,photbands,units=None):
     #-- that's it!
     return energys
 
+
+def synthetic_color(wave,flux,colors,units=None):
+    """
+    Construct colors from a synthetic SED.
+    
+    @param wave: model wavelengths (angstrom)
+    @type wave: ndarray
+    @param flux: model fluxes (erg/s/cm2/AA)
+    @type flux: ndarray
+    @param colors: list of photometric passbands
+    @type colors: list of str
+    @param units: list containing Flambda or Fnu flag (defaults to all Flambda)
+    @type units: list of strings or str
+    @return: flux ratios or colors
+    @rtype: ndarray
+    """
+    if units is None:
+        units = [None for color in colors]
+        
+    syn_colors = np.zeros(len(colors))
+    for i,color,unit in enumerate(zip(colors,units)):
+        #-- retrieve the passbands necessary to construct the color, and the
+        #   function that defines the color
+        photbands,color_func = filters.make_color(color)
+        #-- compute the synthetic fluxes to construct the color
+        fluxes = synthetic_flux(wave,flux,photbands,units=unit)
+        #-- construct the color
+        syn_colors[i] = color_func(fluxes)
+    
+    return syn_colors 
+        
 
 
 def luminosity(wave,flux,radius=1.):
@@ -2096,6 +2197,7 @@ def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
         fluxes = fluxes
     return fluxes
                 
+
 
 if __name__=="__main__":
     import doctest
