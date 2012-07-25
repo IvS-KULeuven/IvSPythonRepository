@@ -464,7 +464,8 @@ def get_color_photband(photband):
         bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','Y']])
     elif band.upper()=='C1':
         bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','U']])
-    
+    else:
+        raise ValueError('cannot recognize color {}'.format(photband))
     return bands
 
 def make_color(photband):
