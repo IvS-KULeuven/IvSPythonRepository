@@ -58,11 +58,61 @@ function in this module.
 >>> x = np.linspace(-1,1,1000)
 >>> gammas = [-0.25,0.1,0.25,0.5,1,2,4]
 >>> y = np.array([evaluate('soft_parabola',x,[1.,0,1.,gamma]) for gamma in gammas])
+divide by zero encountered in power
 >>> for iy,gamma in zip(y,gammas): p = plt.plot(x,iy,label="soft_parabola $\gamma$={:.2f}".format(gamma))
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
 
 ]include figure]]ivs_sigproc_fit_funclib05.png]
+
+>>> p = plt.figure()
+>>> x = np.logspace(-1,2,1000)
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> p = plt.subplot(221)
+>>> p = plt.title(r'$\lambda$ vs $F_\lambda$')
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> p = plt.subplot(223)
+>>> p = plt.title(r"$\lambda$ vs $F_\\nu$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> x = np.logspace(0.47,3.47,1000)
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> p = plt.subplot(224)
+>>> p = plt.title(r"$\\nu$ vs $F_\\nu$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> p = plt.subplot(222)
+>>> p = plt.title(r"$\\nu$ vs $F_\lambda$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib06.png]
 
 """
 import numpy as np
@@ -88,7 +138,8 @@ def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     @type disc_integrated: bool
     """
     pnames = ['T', 'scale']
-    function = lambda p, x: p[1]*sed_model.blackbody((x,wave_units), p[0], units=flux_units,\
+    function = lambda p, x: p[1]*sed_model.blackbody(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     
     return Function(function=function, par_names=pnames)
@@ -105,7 +156,8 @@ def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=Tru
     @type disc_integrated: bool
     """
     pnames = ['T', 'scale']
-    function = lambda p, x: p[1]*sed_model.rayleigh_jeans((x,wave_units), p[0], units=flux_units,\
+    function = lambda p, x: p[1]*sed_model.rayleigh_jeans(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     
     return Function(function=function, par_names=pnames)
@@ -122,7 +174,8 @@ def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     @type disc_integrated: bool
     """
     pnames = ['T', 'scale']
-    function = lambda p, x: p[1]*sed_model.wien((x,wave_units), p[0], units=flux_units,\
+    function = lambda p, x: p[1]*sed_model.wien(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     
     return Function(function=function, par_names=pnames)
@@ -198,6 +251,7 @@ def soft_parabola():
         term = (x-p[1]) / p[2]
         y = p[0] * (1- term**2)**(p[3]/2.)
         if p[3]<=0: y[np.abs(term)>=1] = 0
+        y[np.isnan(y)] = 0
         return y
     
     return Function(function=function, par_names=pnames)
