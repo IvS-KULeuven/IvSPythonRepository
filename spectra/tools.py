@@ -234,8 +234,11 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     ]include figure]]ivs_spectra_tools_vsini_kernel.png]
     
     Extra keyword arguments are passed to L{pergrams.deeming}
+    
+    @rtype: (array,array),(array,array),array
+    @return: periodogram, extrema, vsini values
     """
-    cc = conversions.convert('m/s','A/s',constants.cc)
+    cc = conversions.convert('m/s','AA/s',constants.cc)
     #-- clip the wavelength and flux region if needed:
     if window is not None:
         keep = (window[0]<=wave) & (wave<=window[1])
@@ -256,9 +259,9 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     minvals = ampls[1:-1][rise & fall]
     #-- compute the vsini and convert to km/s
     freqs = freqs*clam/q1/cc
-    freqs = conversions.convert('s/A','s/km',freqs,wave=(clam,'A'))
+    freqs = conversions.convert('s/AA','s/km',freqs,wave=(clam,'AA'))
     vsini_values = cc/clam*q1/minima
-    vsini_values = conversions.convert('A/s','km/s',vsini_values,wave=(clam,'A'))
+    vsini_values = conversions.convert('AA/s','km/s',vsini_values,wave=(clam,'AA'))
     
     return (freqs,ampls),(minima,minvals),vsini_values
 
@@ -347,7 +350,7 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     
     return w3[:ind],f3[:ind]
 
-def combine(list_of_spectra,R=200.,lambda0=(950.,'A'),lambdan=(3350.,'A')):
+def combine(list_of_spectra,R=200.,lambda0=(950.,'AA'),lambdan=(3350.,'AA')):
     """
     Combine and weight-average spectra on a common wavelength grid.
     
@@ -368,8 +371,8 @@ def combine(list_of_spectra,R=200.,lambda0=(950.,'A'),lambdan=(3350.,'A')):
     @return: binned spectrum (wavelengths,flux, error)
     @rtype: array, array, array
     """
-    l0 = conversions.convert(lambda0[1],'A',lambda0[0])
-    ln = conversions.convert(lambdan[1],'A',lambdan[0])
+    l0 = conversions.convert(lambda0[1],'AA',lambda0[0])
+    ln = conversions.convert(lambdan[1],'AA',lambdan[0])
     #-- STEP 1: define wavelength bins
     Delta = np.log10(1.+1./R)
     x = np.arange(np.log10(l0),np.log10(ln)+Delta,Delta)
