@@ -2,9 +2,43 @@
 """
 Interface to the limb-darkening library.
 
+Section 1. Basic interface
+==========================
+
 Retrieve a normalised passband-integrated limb darkening profile via:
 
 >>> mu,intensities = get_limbdarkening(teff=10000,logg=4.0,photbands=['JOHNSON.V'],normalised=True)
+
+and fit a particular law via:
+
+>>> coeffs,ssr,idiff = fit_law(mu,intensities[:,0],law='claret',fitmethod='equidist_mu_leastsq')
+>>> print(coeffs)
+[ 2.00943266 -3.71261279  4.25469623 -1.70466934]
+
+You can evaluate this law on a particular angle-sampling grid:
+
+>>> mus = np.linspace(0,1,1000)
+>>> mu_law = ld_claret(mus,coeffs)
+
+Or on a disk-sampling grid:
+
+>>> rs = np.linspace(0,1,1000)
+>>> r_law = ld_claret(_mu(rs),coeffs)
+
+Make a simple plot:
+
+>>> p = pl.figure()
+>>> p,q = pl.subplot(121),pl.title('Angle-sampled')
+>>> p = pl.plot(mu,intensities,'ko-')
+>>> p = pl.plot(mus,mu_law,'r-',lw=2)
+>>> p,q = pl.subplot(122),pl.title('Disk-sampled')
+>>> p = pl.plot(_r(mu),intensities,'ko-')
+>>> p = pl.plot(rs,r_law,'r-',lw=2)
+
+]include figure]]ivs_limbdark_basic.png]
+
+Section 2. Fit comparison
+=========================
 
 You can fit a limb darkening law in various ways: using different laws, different
 optimizers and different x-coordinates (limb angle mu or radius). In the figure
@@ -14,7 +48,7 @@ below, you can see the influence of some of these choices:
 
 >>> laws = ['claret','linear','logarithmic','quadratic','power']
 >>> fitmethods = ['equidist_mu_leastsq','equidist_r_leastsq','leastsq']
->>> mus = np.linspace(0,1,1000)
+
 >>> r,rs = _r(mu),_r(mus)
 >>> integ_mu = np.trapz(intensities[:,0],x=mu)
 >>> integ_r = np.trapz(intensities[:,0],x=r)
@@ -63,7 +97,7 @@ logarithmic  (leastsq            ): [ 0.6  0. ]
 quadratic    (leastsq            ): [ 0.00717934  0.65416204]
 power        (leastsq            ): [ 0.27032565]
 
-]include figure]]ivs_limbdark_comp.png]
+]include figure]]ivs_limbdark_fitcomp.png]
 
 Author: Pieter Degroote, with thanks to Steven Bloemen.
 """
@@ -649,11 +683,11 @@ def ld_power(mu,coeffs):
 
 #{ Fitting routines (thanks to Steven Bloemen)
 
-def fit_law(mu,Imu,law='claret',fitmethod='equidist_mu_leastsq'):
+def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
     """
     Fit an LD law to a sampled set of limb angles/intensities.
     
-    In my (Pieter) experience, C{fitmethod='equidist_mu_leastsq' seems
+    In my (Pieter) experience, C{fitmethod='equidist_r_leastsq' seems
     appropriate for the Kurucz models.
     
     Make sure the intensities are normalised!
@@ -716,7 +750,7 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_mu_leastsq'):
     
     
 def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
-             law='claret',fitmethod='equidist_mu_leastsq',**kwargs):
+             law='claret',fitmethod='equidist_r_leastsq',**kwargs):
     """
     Gets the grid and fits LD law to all the models.
     
@@ -747,7 +781,7 @@ def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
     return grid_pars, grid_coeffs, Imu1s
     
 def generate_grid(photbands,vrads=[0],ebvs=[0],
-             law='claret',fitmethod='equidist_mu_leastsq',outfile='mygrid.fits',**kwargs):
+             law='claret',fitmethod='equidist_r_leastsq',outfile='mygrid.fits',**kwargs):
     hdulist = pyfits.HDUList([])
     hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
 
@@ -758,17 +792,15 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],
     
     for photband in photbands:
         print photband
-        pars,coeffs,Imu1s = fit_law_to_grid(photband,**kwargs)
+        pars,coeffs,Imu1s = fit_law_to_grid(photband,vrads=vrads,ebvs=ebvs,**kwargs)
         cols = []
 
         cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
         cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
         cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
         cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
-        cols.append(pyfits.Column(name='a1', format='E', array=coeffs[:,0]))
-        cols.append(pyfits.Column(name='a2', format='E', array=coeffs[:,1]))
-        cols.append(pyfits.Column(name='a3', format='E', array=coeffs[:,2]))
-        cols.append(pyfits.Column(name='a4', format='E', array=coeffs[:,3]))
+        for col in range(coeffs.shape[1]):
+            cols.append(pyfits.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
         cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
         cols.append(pyfits.Column(name='SRS', format='E', array=Imu1s[:,1]))
         cols.append(pyfits.Column(name='dint', format='E', array=Imu1s[:,2]))
@@ -936,8 +968,18 @@ def _get_itable_markers(photband,gridfile,
     
 
 if __name__=="__main__":
-    import pylab as pl
-    import doctest
-    doctest.testmod()
-    pl.show()
-    
+    import sys
+    if not sys.argv[1:]:
+        import pylab as pl
+        import doctest
+        doctest.testmod()
+        pl.show()
+    else:
+        #from ivs.aux import argkwargparser
+        #method,args,kwargs = argkwargparser.parse()
+        #print("Calling {} with args=({}) and kwargs=({})".format(method,args,kwargs)
+        photbands = ['JOHNSON.U','JOHNSON.B','JOHNSON.V','KEPLER.V','COROT.SIS','COROT.EXO']
+        photbands+= ['2MASS.J','2MASS.H','2MASS.KS']
+        generate_grid(photbands,vrads=np.arange(-500,501,10),ebvs=np.arange(0,2.005,0.01),law='claret',outfile='claret.fits')
+        #generate_grid(photbands,vrads=np.arange(-500,501,10),ebvs=np.arange(0,2.005,0.01),law='linear',outfile='linear.fits')
+       
