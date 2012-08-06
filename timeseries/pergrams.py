@@ -2,6 +2,9 @@
 """
 Contains many different periodogram calculations
 
+Section 1. Basic usage
+======================
+
 Given a time series of the form
 
 >>> times = np.linspace(0,1,1000)
@@ -24,7 +27,21 @@ B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain the
 same timepoint twice}. Otherwise, a 'ValueError, concatenation problem' can
 occur.
 
-Section 1. Speed comparison
+Section 2. Nyquist frequency
+============================
+
+The periodogram functions are written such that they never exceed the value
+of the Nyquist frequency. This behaviour can be changed.
+
+By default, the Nyquist frequency is defined as half of the inverse of the smallest
+time step in the data. That is, the C{nyq_stat} variable is set to the function
+C{np.min}. If you prefer the Nyquist to be defined as the median, set the
+C{nyq_stat} variable for any periodogram to C{np.median}. If you want a more
+complex or self-defined function, that is also acceptable. If you give a number
+to C{nyq_stat}, nothing will be computed but that value will be considered the
+nyquist frequency.
+
+Section 3. Speed comparison
 ===========================
 
 >>> import time
@@ -123,6 +140,7 @@ from numpy import cos,sin,pi
 from scipy.special import jn
 from ivs.aux.decorators import make_parallel
 from ivs.aux import loggers
+from ivs.aux import termtools
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram,getNyquist
 
 import pyscargle
@@ -1303,6 +1321,59 @@ def windowfunction(time, freq):
     # Normalise such that winkernel(nu = 0.0) = 1.0 
 
     return winkernel/Ntime**2
+
+
+def check_input(times,signal,**kwargs):
+    """
+    Check the input arguments for periodogram calculations for mistakes.
+    
+    If you get an error when trying to compute a periodogram, and you don't
+    understand it, just feed the input you gave to this function, and it will
+    perform some basic checks.
+    """
+    #-- check if the input are arrays and have the same 1D shape
+    is_array0 = isinstance(times,np.ndarray)
+    is_array1 = isinstance(signal,np.ndarray)
+    if not is_array0: print(termtools.red('ERROR: time input is not an array'))
+    if not is_array1: print(termtools.red('ERROR: signal input is not an array'))
+    if not is_array0 or not is_array1:
+        times = np.asarray(times)
+        signal = np.asarray(signal)
+        print(termtools.green("---> FIXED: inputs are arrays"))
+    print(termtools.green("OK: inputs are arrays"))
+    onedim = (len(times.shape)==1) & (len(signal.shape)==1)
+    same_shape = times.shape==signal.shape
+    if not onedim or not same_shape:
+        print(termtools.red('ERROR: input is not 1D or not of same length'))
+        return False
+    print(termtools.green("OK: inputs are 1D and have same length"))
+    #-- check if the signal constains nans or infs:
+    isnan0 = np.sum(np.isnan(times))
+    isnan1 = np.sum(np.isnan(signal))
+    isinf0 = np.sum(np.isinf(times))
+    isinf1 = np.sum(np.isinf(signal))
+    if isnan0: print(termtools.red('ERROR: time array contains nans'))
+    if isnan1: print(termtools.red('ERROR: signal array contains nans'))
+    if isinf0: print(termtools.red('ERROR: time array contains infs'))
+    if isinf1: print(termtools.red('ERROR: signal array contains infs'))
+    if not isnan0 and not isnan1 and not isinf0 and not isinf1:
+        print(termtools.green('OK: no infs or nans'))
+    else:
+        keep = -np.isnan(times) & -np.isnan(signal) & -np.isinf(times) & -np.isinf(signal)
+        times,signal = times[keep],signal[keep]
+        print(termtools.green('---> FIXED: infs and nans removed'))
+    #-- check if the timeseries is sorted
+    is_sorted = np.all(np.diff(times)>0)
+    if not is_sorted:
+        print(termtools.red('ERROR: time array is not sorted'))
+        sa = np.argsort(times)
+        times,signal = times[sa],signal[sa]
+        print(termtools.green('---> FIXED: time array is sorted'))
+    else:
+        print(termtools.green("OK: time array is sorted"))
+    print(termtools.green("No inconsistencies found or inconsistencies are fixed"))
+    return times,signal
+
 
 def __spread__(y, yy, n, x, m):
     """
