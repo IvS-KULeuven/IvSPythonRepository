@@ -225,8 +225,14 @@ get the synthetic magnitudes, you can do
 
 >>> mymags = [conversions.convert('erg/s/cm2/AA','mag',fluxes[i],photband=photbands[i]) for i in range(len(photbands))]
 
-The don't mean anything in this case because they have not been corrected for
-the distance to the star.
+The mags don't mean anything in this case because they have not been corrected
+for the distance to the star.
+
+The retrieval of integrated photometry can go much faster if you want to do
+it for a whole set of parameters. The L{get_itable_pix} function has a much
+more flexible, reliable and fast interpolation scheme. It is possible to
+interpolate also over doppler shift and interstellar Rv, as long as the grids
+have been computed before. See L{get_itable_pix} for more information.
 
 Subsection 3. Full example
 ==========================
@@ -306,6 +312,7 @@ import functools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.io import ascii
+from ivs.sigproc import interpol
 import reddening
 import getpass
 import shutil
@@ -549,6 +556,7 @@ def get_file(integrated=False,**kwargs):
     
     #-- general
     z = kwargs.get('z',defaults['z'])
+    Rv = kwargs.get('Rv',defaults['Rv'])
     #-- only for Kurucz
     vturb = int(kwargs.get('vturb',defaults['vturb']))
     odfnew = kwargs.get('odfnew',defaults['odfnew'])
@@ -568,17 +576,23 @@ def get_file(integrated=False,**kwargs):
     #-- figure out what grid to use
     if grid=='fastwind':
         basename = 'fastwind_sed.fits'
-    elif grid=='kurucz':
+    elif grid in ['kurucz','kurucz2']:
         if not isinstance(z,str): z = '%.1f'%(z)
         if not isinstance(vturb,str): vturb = '%d'%(vturb)
+        if grid=='kurucz2':
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
         if not alpha and not nover and not odfnew:
-            basename = 'kurucz93_z%s_k%s_sed.fits'%(z,vturb)
+            basename = 'kurucz93_z%s_k%s_sed%sls.fits'%(z,vturb,postfix)
         elif alpha and odfnew:
-            basename = 'kurucz93_z%s_ak%sodfnew_sed.fits'%(z,vturb)
+            basename = 'kurucz93_z%s_ak%sodfnew_sed%s.fits'%(z,vturb,postfix)
         elif odfnew:
-            basename = 'kurucz93_z%s_k%sodfnew_sed.fits'%(z,vturb)
+            basename = 'kurucz93_z%s_k%sodfnew_sed%s.fits'%(z,vturb,postfix)
         elif nover:
-            basename = 'kurucz93_z%s_k%snover_sed.fits'%(z,vturb)            
+            basename = 'kurucz93_z%s_k%snover_sed%s.fits'%(z,vturb,postfix)            
     elif grid=='cmfgen':
         basename = 'cmfgen_sed.fits'        
     elif grid=='sdb_uli':
@@ -629,6 +643,8 @@ def get_file(integrated=False,**kwargs):
          basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
          basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+    else:
+        raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
         if use_scratch:
@@ -1140,9 +1156,6 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         raise ValueError('point outside of grid (teff={teff}, logg={logg}, ebv={ebv}, z={z}'.format(**locals()))
     if np.any(np.isnan(flux)):
         #-- you tried to make a code of a negative number
-        print myflux
-        print flux
-        print photbands
         raise ValueError('point outside of grid (teff={teff}, logg={logg}, ebv={ebv}, z={z}'.format(**locals()))
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
@@ -1164,6 +1177,77 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         return wave,flux,Labs
     else:
         return flux,Labs
+
+
+def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
+               wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
+    """
+    Super fast grid interpolator.
+    
+    Possible kwargs are teffrange,loggrange etc.... that are past on to 
+    L{_get_pix_grid}. You should probably use these options when you want to
+    interpolate in many variables; supplying these ranges will make the grid
+    smaller and thus decrease memory usage.
+    
+    It is possible to fix C{teff}, C{logg}, C{ebv}, C{z}, C{rv} and/or C{vrad}
+    to one value, in which case it B{has} to be a point in the grid. If you want
+    to retrieve a list of fluxes with the same ebv value that is not in the grid,
+    you need to give an array with all equal values. The reason is that the
+    script can try to minimize the number of interpolations, by fixing a
+    variable on a grid point. The fluxes on the other gridpoints will then not 
+    be loaded or not interpolated over.
+    
+    >>> teffs = np.linspace(5000,7000,100)
+    >>> loggs = np.linspace(4.0,4.5,100)
+    >>> ebvs = np.linspace(0,1,100)
+    >>> zs = np.linspace(-0.5,0.5,100)
+    >>> rvs = np.linspace(2.2,5.0,100)
+    
+    >>> set_defaults(grid='kurucz2')
+    >>> flux,labs = get_itable_pix(teffs,loggs,ebvs,zs,rvs,photbands=['JOHNSON.V'])
+    
+    >>> names = ['teffs','loggs','ebvs','zs','rvs']
+    >>> p = pl.figure()
+    >>> for i in range(len(names)):
+    ...     p = pl.subplot(2,3,i+1)
+    ...     p = pl.plot(locals()[names[i]],flux[0],'k-')
+    ...     p = pl.xlabel(names[i])
+    
+    
+    Thanks to Steven Bloemen for the core implementation of the interpolation
+    algorithm.
+    """
+    clear_memory = kwargs.pop('clear_memory',False)
+    for var in ['teff','logg','ebv','z','rv','vrad']:
+        if not hasattr(locals()[var],'__iter__'):
+            kwargs.setdefault(var+'range',(locals()[var],locals()[var]))
+        else:
+            N = len(locals()[var])
+    #-- retrieve structured information on the grid (memoized)
+    axis_values,gridpnts,pixelgrid,cols = _get_pix_grid(photbands,
+                            include_Labs=True,clear_memory=clear_memory,**kwargs)
+    #-- prepare input:
+    values = np.zeros((len(cols),N))
+    for i,col in enumerate(cols):
+        values[i] = locals()[col]
+    
+    pars = 10**interpol.interpolate(values,axis_values,pixelgrid)
+    
+    flux,Labs = pars[:-1],pars[-1]
+    
+    #-- change flux and wavelength units if needed
+    if flux_units!='erg/s/cm2/AA/sr':
+        flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
+    if wave_units is not None:
+        model = get_table(teff=teff,logg=logg,ebv=ebv,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave,**kwargs)
+        return wave,flux,Labs
+    else:
+        return flux,Labs
+
+    
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
@@ -2149,6 +2233,72 @@ def _get_itable_markers(photbands,
     grid_z = np.sort(grid_z)
     
     return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs,grid_z),gridpnts,flux
+
+
+@memoized
+def _get_pix_grid(photbands,
+                    teffrange=(-np.inf,np.inf),loggrange=(-np.inf,np.inf),
+                    ebvrange=(-np.inf,np.inf),zrange=(-np.inf,np.inf),
+                    rvrange=(-np.inf,np.inf),vradrange=(-np.inf,np.inf),
+                    include_Labs=True,clear_memory=True,
+                    variables=['teff','logg','ebv','z','rv','vrad'],**kwargs):
+    """
+    Prepare the pixalted grid.
+    
+    In principle, it should be possible to return any number of free parameters
+    here. I'm thinking about:
+    
+        teff, logg, ebv, z, Rv, vrad.
+    """
+    if clear_memory:
+        clear_memoization(keys=['ivs.sed.model'])
+    gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
+    if isinstance(gridfiles,str):
+        gridfiles = [gridfiles]
+    flux = []
+    grid_pars = []
+    grid_names = np.array(variables)
+    #-- collect information from all the grid files
+    for gridfile in gridfiles:
+        with pyfits.open(gridfile) as ff:
+            #-- make an alias for further reference
+            ext = ff[1]
+            #-- we already cut the grid here, in order to take to much memory
+            keep = np.ones(len(ext.data),bool)
+            for name in variables:
+                #-- we need to be carefull for rounding errors
+                low,high = locals()[name+'range']
+                in_range = (low<=ext.data.field(name)) & (ext.data.field(name)<=high)
+                on_edge  = np.allclose(ext.data.field(name),low) | np.allclose(ext.data.field(name),high)
+                keep = keep & (in_range | on_edge)
+            partial_grid = np.vstack([ext.data.field(name)[keep] for name in variables])
+            if sum(keep):
+                grid_pars.append(partial_grid)
+                #-- the flux grid:
+                flux.append(_get_flux_from_table(ext,photbands,include_Labs=include_Labs)[keep])
+    #-- make the entire grid: it consists of fluxes and grid parameters
+    flux = np.vstack(flux)
+    grid_pars = np.hstack(grid_pars)
+    #-- this is also the place to put some stuff in logarithmic scale if
+    #   this is needed
+    #grid_pars[0] = np.log10(grid_pars[0])
+    flux = np.log10(flux)
+    
+    #-- don't take axes into account if it has only one value
+    keep = np.ones(len(grid_names),bool)
+    for i in range(len(grid_names)):
+        if np.all(grid_pars[i]==grid_pars[i][0]):
+            keep[i] = False
+    grid_pars = grid_pars[keep]
+    
+    #-- we need to know what variable parameters we have in the grid
+    grid_names = grid_names[keep]
+    
+    #-- create the pixeltype grid
+    axis_values, pixelgrid = interpol.create_pixeltypegrid(grid_pars,flux.T)
+    return axis_values,grid_pars.T,pixelgrid,grid_names
+
+
 
 
 def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
