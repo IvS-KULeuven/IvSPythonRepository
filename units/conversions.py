@@ -1994,7 +1994,6 @@ def derive_radius(luminosity,temperature, units='m'):
     
     @param luminosity: (Luminosity(, error), units)
     @type luminosity: 2 or 3 tuple
-    @type radius: 2 or 3 tuple, Unit or float (current convention)
     @param temperature: (effective temperature(, error), units)
     @type temperature: 2 or 3 tuple, Unit or float (current convention)
     @return: radius
@@ -2165,9 +2164,9 @@ def derive_zg(mass, logg, unit='cm s-1', **kwargs):
     
     @param mass: (mass(, error), units)
     @type mass: 2 or 3 tuple
-    @param zg: (zg(, error), units)
-    @type zg: 2 or 3 tuple
-    @param unit: unit of logg
+    @param logg: (logg(, error), units)
+    @type logg: 2 or 3 tuple
+    @param unit: unit of zg
     @type unit: str
     @return: log g (and error)
     @rtype: 1- or 2-tuple
@@ -2339,7 +2338,8 @@ def derive_galactic_uvw(ra, dec, pmra, pmdec, d, vrad, lsr=False, unit='km s-1')
     (U,V,W)_Sun = (-8.5, 13.38, 6.49)
     
     Example for HD 6755:
-    >>>derive_galactic_uvw((17.42943586, 'deg'), (61.54727506, 'deg'), (628.42, 'mas yr-1'), (76.65, 'mas yr-1'), (139, 'pc'), (-321.4, 'km s-1'), lsr=True)
+    
+    >>> derive_galactic_uvw((17.42943586, 'deg'), (61.54727506, 'deg'), (628.42, 'mas yr-1'), (76.65, 'mas yr-1'), (139, 'pc'), (-321.4, 'km s-1'), lsr=True)
     (142.66328352779027, -483.55149105148121, 93.216106970932813)
     
     @param ra: Right assension of the star
