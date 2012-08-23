@@ -2070,6 +2070,41 @@ def derive_logg(mass,radius, unit='[cm/s2]'):
     logg = log10(constants.GG_cgs*M / (R**2))
     logg = convert('[cm/s2]',unit,logg)
     return logg
+    
+    
+def derive_logg_zg(mass, zg, unit='cm s-2', **kwargs):
+    """
+    Convert mass and gravitational redshift to stellar surface gravity. Provide the gravitational
+    redshift as a velocity.
+    
+    Units given to mass and zg must be understandable by C{convert}.
+    
+    Logarithm of surface gravity is returned in CGS units unless otherwhise stated in unit.
+    
+    >>> print derive_logg_zg((0.47, 'Msol'), (2.57, 'km/s'))
+    5.97849814386
+    
+    @param mass: (mass(, error), units)
+    @type mass: 2 or 3 tuple
+    @param zg: (zg(, error), units)
+    @type zg: 2 or 3 tuple
+    @param unit: unit of logg
+    @type unit: str
+    @return: log g (and error)
+    @rtype: 1- or 2-tuple
+    """
+    
+    #-- take care of mass
+    if len(mass)==3:
+        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+    M = convert(mass[-1],'g',*mass[:-1],unpack=False)
+    #-- take care of zg
+    if len(zg)==3:
+        zg = (unumpy.uarray([zg[0],zg[1]]),zg[2])
+    gr = convert(zg[-1],'cm s-1',*zg[:-1],unpack=False, **kwargs)
+    
+    logg = np.log10( gr**2 * constants.cc_cgs**2 / (constants.GG_cgs * M) )
+    return convert('cm s-2', unit, logg)
 
 def derive_logg_slo(teff,numax, unit='[cm/s2]'):
     """
@@ -2099,11 +2134,7 @@ def derive_logg_slo(teff,numax, unit='[cm/s2]'):
     GG = convert(constants.GG_units,'Rsol3 Msol-1 s-2',constants.GG)
     surf_grav = GG*sqrt(teff)*numax / numax_sol
     logg = convert('Rsol s-2',unit,surf_grav)
-    return logg    
-
-
-
-    
+    return logg     
 
 def derive_mass(surface_gravity,radius,unit='kg'):
     """
@@ -2120,6 +2151,38 @@ def derive_mass(surface_gravity,radius,unit='kg'):
     #-- calculate mass in SI
     M = grav*R**2/constants.GG
     return convert('kg',unit,M)
+    
+def derive_zg(mass, logg, unit='cm s-1', **kwargs):
+    """
+    Convert mass and stellar surface gravity to gravitational redshift. 
+    
+    Units given to mass and logg must be understandable by C{convert}.
+    
+    Gravitational redshift is returned in CGS units unless otherwhise stated in unit.
+    
+    >>> print derive_zg((0.47, 'Msol'), (5.98, 'cm s-2'), unit='km s-1')
+    2.57444756874
+    
+    @param mass: (mass(, error), units)
+    @type mass: 2 or 3 tuple
+    @param zg: (zg(, error), units)
+    @type zg: 2 or 3 tuple
+    @param unit: unit of logg
+    @type unit: str
+    @return: log g (and error)
+    @rtype: 1- or 2-tuple
+    """
+    #-- take care of mass
+    if len(mass)==3:
+        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+    M = convert(mass[-1],'g',*mass[:-1],unpack=False)
+    #-- take care of logg
+    if len(logg)==3:
+        logg = (unumpy.uarray([logg[0],logg[1]]),logg[2])
+    g = convert(logg[-1],'cm s-2',*logg[:-1],unpack=False, **kwargs)
+    
+    zg = 10**g / constants.cc_cgs * np.sqrt(constants.GG_cgs * M / 10**g)
+    return convert('cm s-1', unit, zg)
 
 def derive_numax(mass,radius,temperature,unit='mHz'):
     """
@@ -2260,6 +2323,111 @@ def derive_amplvel(luminosity,mass,unit='cm/s'):
     lumi = convert(luminosity[-1],'Lsol',*luminosity[:-1])
     amplvel = lumi / M * ufloat((23.4,1.4))
     return convert('cm/s',unit,amplvel)
+
+def derive_galactic_uvw(ra, dec, pmra, pmdec, d, vrad, lsr=False, unit='km s-1'):
+    """
+    Calculate the Galactic space velocity (U,V,W) of a star based on the propper motion,
+    location, radial velocity and distance. (U,V,W) are returned in km/s unless stated
+    otherwhise in unit.
+    
+    Follows the general outline of Johnson & Soderblom (1987, AJ, 93,864)
+    except that U is positive outward toward the Galactic *anti*center, and 
+    the J2000 transformation matrix to Galactic coordinates is taken from  
+    the introduction to the Hipparcos catalog.
+    
+    Uses solar motion from Coskunoglu et al. 2011 MNRAS:
+    (U,V,W)_Sun = (-8.5, 13.38, 6.49)
+    
+    Example for HD 6755:
+    >>>derive_galactic_uvw((17.42943586, 'deg'), (61.54727506, 'deg'), (628.42, 'mas yr-1'), (76.65, 'mas yr-1'), (139, 'pc'), (-321.4, 'km s-1'), lsr=True)
+    (142.66328352779027, -483.55149105148121, 93.216106970932813)
+    
+    @param ra: Right assension of the star
+    @param dec: Declination of the star
+    @param pmra: propper motion  in RA
+    @param pmdec: propper motion in DEC
+    @param d: distance
+    @param vrad: radial velocity
+    @param lsr: if True, correct for solar motion
+    @param unit: units for U,V and W
+    
+    @return: (U,V,W)
+    """
+    #-- take care of ra
+    if len(ra)==3:
+        ra = (unumpy.uarray([ra[0],ra[1]]),ra[2])
+    ra = convert(ra[-1],'deg',*ra[:-1])
+    #-- take care of dec
+    if len(dec)==3:
+        dec = (unumpy.uarray([dec[0],dec[1]]),dec[2])
+    dec = convert(dec[-1],'deg',*dec[:-1])
+    #-- take care of pmra
+    if len(pmra)==3:
+        pmra = (unumpy.uarray([pmra[0],pmra[1]]),pmra[2])
+    pmra = convert(pmra[-1],'mas yr-1',*pmra[:-1])
+    #-- take care of pmdec
+    if len(pmdec)==3:
+        pmdec = (unumpy.uarray([pmdec[0],pmdec[1]]),pmdec[2])
+    pmdec = convert(pmdec[-1],'mas yr-1',*pmdec[:-1])
+    #-- take care of d
+    if len(d)==3:
+        d = (unumpy.uarray([d[0],d[1]]),d[2])
+    d = convert(d[-1],'pc',*d[:-1])
+    #-- take care of pmdec
+    if len(vrad)==3:
+        vrad = (unumpy.uarray([vrad[0],vrad[1]]),vrad[2])
+    vrad = convert(vrad[-1],'km s-1',*vrad[:-1])
+    
+    plx = 1e3 / d # parallax in mas
+
+    cosd = np.cos(np.radians(dec))
+    sind = np.sin(np.radians(dec))
+    cosa = np.cos(np.radians(ra))
+    sina = np.sin(np.radians(ra))
+
+    k = 4.74047     #Equivalent of 1 A.U/yr in km/s   
+    A_G = np.array( [ [ 0.0548755604, +0.4941094279, -0.8676661490],  
+                    [ 0.8734370902, -0.4448296300, -0.1980763734], 
+                    [ 0.4838350155,  0.7469822445, +0.4559837762] ]).T
+
+    vec1 = vrad
+    vec2 = k * pmra / plx
+    vec3 = k * pmdec / plx
+
+    u = ( A_G[0,0]*cosa*cosd+A_G[0,1]*sina*cosd+A_G[0,2]*sind)*vec1+ \
+        (-A_G[0,0]*sina     +A_G[0,1]*cosa                   )*vec2+ \
+        (-A_G[0,0]*cosa*sind-A_G[0,1]*sina*sind+A_G[0,2]*cosd)*vec3
+    v = ( A_G[1,0]*cosa*cosd+A_G[1,1]*sina*cosd+A_G[1,2]*sind)*vec1+ \
+        (-A_G[1,0]*sina     +A_G[1,1]*cosa                   )*vec2+ \
+        (-A_G[1,0]*cosa*sind-A_G[1,1]*sina*sind+A_G[1,2]*cosd)*vec3
+    w = ( A_G[2,0]*cosa*cosd+A_G[2,1]*sina*cosd+A_G[2,2]*sind)*vec1+ \
+        (-A_G[2,0]*sina     +A_G[2,1]*cosa                   )*vec2+ \
+        (-A_G[2,0]*cosa*sind-A_G[2,1]*sina*sind+A_G[2,2]*cosd)*vec3
+        
+    if lsr:
+        #lsr_vel=[-10.0,5.2,7.2] # Dehnen & Binney (1998)
+        #lsr_vel=[-11.1, 12.24, 7.25] # Schonrich et al. (2010)
+        lsr_vel=[-8.5,13.38,6.49] # Coskunoglu et al. (2011)
+        u = u+lsr_vel[0]
+        v = v+lsr_vel[1]
+        w = w+lsr_vel[2]
+        
+    return convert('km s-1',unit,u), convert('km s-1',unit,v), convert('km s-1',unit,w)
+
+def convert_Z_FeH(Z=None, FeH=None, Zsun=0.0122):
+    """
+    Convert between Z and [Fe/H] using the conversion of Bertelli et al. (1994).
+    Provide one of the 2 arguments, and the other will be returned.
+    
+    log10(Z/Zsun) = 0.977 [Fe/H]
+    """
+    
+    if Z != None:
+        return np.log10(Z/Zsun) / 0.977
+    else:
+        return 10**(0.977*FeH + np.log10(Zsun))
+        
+
 #}
 
 
@@ -3245,6 +3413,7 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
  
  
 if __name__=="__main__":
+    
     if not sys.argv[1:]:
         import doctest
         doctest.testmod()
