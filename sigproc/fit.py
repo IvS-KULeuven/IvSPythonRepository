@@ -74,6 +74,28 @@ parameters, and show the correlation between them, fx between the period and T0:
 
 ]include figure]]ivs_sigproc_lmfit_BD+29.3070_2.png]
 
+To get a better idea of how the parameter space behaves we can start the fitting process from
+different starting values and see how they converge. Fx, we will let the fitting process start 
+from different values for the period and the eccentricity, and then plot where they converge to
+
+Herefore we use the L{grid_minimize} function which has the same input as the normal minimize function
+and some extra parameters.
+
+>>> fitters, startpars, models, chi2s = fit.grid_minimize(dates, rv, mymodel, weights=1/err, points=200, parameters = ['p','e'], return_all=True)
+
+We started fitting from 200 points randomly distributed in period and eccentricity space, with the 
+boundary values for there parameters as limits.
+
+Based on this output we can use the L{plot_convergence} function to plot to which values each starting point converges.
+
+>>> p = pl.figure(3)
+>>> plot_convergence(startpars, models, chi2s, xpar='p', ypar='e')
+
+]include figure]]ivs_sigproc_lmfit_BD+29.3070_3.png]
+
+
+
+
 1.2 LSI+65010
 -------------
 Fit orbit of massive X-ray binary LSI+65010, after Grundstrom 2007:
@@ -337,6 +359,7 @@ import pyKEP
 import re
 import copy
 import pylab as pl
+import matplotlib as mpl
 from ivs.sigproc import lmfit
 from multiprocessing import Process,Manager, Pool, cpu_count
 
@@ -1044,19 +1067,49 @@ class Function(object):
     L{evaluate} method. Parameters can be added/updated, together with boundaries and expressions,
     and can be hold fixed and released by adjusting the vary keyword in L{setup_parameters}.
     
+    The provided function needs to take two arguments. The first one is a list of parameters, the 
+    second is a list of x-values for which the function will be evaluated. For example if you want
+    to define a quadratic function it will look like:
+    
+    >>> func = lambda pars, x: pars[0] + pars[1] * x + pars[2] * x**2
+    
     Functions can be combined using the L{Model} class, or can be fitted directly to data using the
     L{Minimizer} class.
+    
+    To improve the fit, a jacobian can be provided as well. However, some care is nessessary when
+    defining this function. When using the L{Minimizer} class to fit a Function to data, the 
+    residual function is defined as::
+        
+        residuals = data - Function.evaluate()
+        
+    To derive the jacobian you have to take the derivatives of -1 * function. Furthermore the 
+    derivatives have to be across the rows. For the example quadratic function above, the jacobian
+    would look like:
+    
+    >>> jacobian = lambda pars, x: np.array([-np.ones(len(x)), -x, -x**2]).T
+        
+    If you get bad results, try flipping all signs. The jacobian does not really improve the speed
+    of the fitprocess, but it does help to reach the minimum in a more consistent way (see examples).
     
     The internal representation of the parameters uses a parameter object of the U{lmfit 
     <http://cars9.uchicago.edu/software/python/lmfit/index.html>} package. No knowledge of this
     repersentation is required as methods for direct interaction with the parameter values and
     other settings are provided. If wanted, the parameters object itself can be obtained with
     L{get_parameters_object}.
-    
-    At the moment the use of a jacobian is not supported.
     """
     
     def __init__(self, function=None, par_names=None, jacobian=None):
+        """
+        Create a new Function by providing the function of which it consists together with the names
+        of each parameter in this function. You can specify the jacobian as well.
+        
+        @param function: A function expression
+        @type function: function
+        @param par_names: The names of each parameter of function
+        @type par_names: list of strings
+        @param jacobian: A function expression for the jacobian of function.
+        @type jacobian: function
+        """
         self.function = function
         self.par_names = par_names
         self.jacobian = jacobian
@@ -1102,10 +1155,44 @@ class Function(object):
                 
             return self.function(pars,x)
             
+    def evaluate_jacobian(self, x, *args):
+        """
+        Evaluates the jacobian if that function is provided, using the given parameter object.
+        If no parameter object is given then the parameter object belonging to the function
+        is used.
+        """
+        if self.jacobian == None:
+            return [0.0 for i in self.par_names]
+        
+        if len(args) == 0:
+            #-- Use the parameters belonging to this object
+            pars = []
+            for name in self.par_names:
+                pars.append(self.parameters[name].value)
+                
+            return self.jacobian(pars,x)
+        
+        if len(args) == 1:
+            #-- Use the provided parameters
+            #-- if provided as a ParameterObject
+            if isinstance(args[0],dict):
+                pars = []
+                for name in self.par_names:
+                    pars.append(args[0][name].value)
+            else:
+                pars = args[0]
+                
+            return self.jacobian(pars,x)
+            
     def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
         Create or adjust a parameter object based on the parameter names and if provided
-        the values, bounds, vary and expressions.
+        the values, bounds, vary and expressions. Basic checking if the parameter boundaries
+        are consistent is performed.
+        
+        Example Use:
+        
+        >>> setup_parameters(values=[v1, v2, ...], bounds=[(b1, b2), (b3, b4), ...], vary=[True, False, ...])
         
         @param values: The values of the parameters
         @type values: array
@@ -1126,29 +1213,56 @@ class Function(object):
         if exprs == None:
             exprs = [None for i in range(nrpars)]
         
+        def check_boundaries(min, max, value, name):
+            #-- Check if boundaries are consistent
+            if max != None and min != None and max < min:
+                min, max = max, min
+                logging.warning('Parameter %s: max < min, switched boundaries!'%(name))
+            if min != None and value < min:
+                min = value
+                logging.warning('Parameter %s: value < min, adjusted min!'%(name))
+            if max != None and value > max:
+                max = value
+                logging.warning('Parameter %s: value > max, adjusted max!'%(name))
+            return min, max
+        
         if self.parameters == None:
             #-- Create a new parameter object
             self.parameters = lmfit.Parameters()
             for i,name in enumerate(self.par_names):
-                self.parameters.add(name, value=values[i], vary=vary[i], min=bounds[i][0], max=bounds[i][1], expr=exprs[i])
+                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
+                self.parameters.add(name, value=values[i], vary=vary[i], min=min, max=max, expr=exprs[i])
         else:
             #-- Adjust an existing parameter object
             for i,name in enumerate(self.par_names):
+                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
                 self.parameters[name].value = values[i]
                 self.parameters[name].vary = vary[i]
-                self.parameters[name].min = bounds[i][0]
-                self.parameters[name].max = bounds[i][1]
+                self.parameters[name].min = min
+                self.parameters[name].max = max
                 self.parameters[name].expr = exprs[i]
     
     def update_parameter(self, parameter=None, **kwargs):
         """
-        Updates a specified parameter. The parameter can be given by name or by index
+        Updates a specified parameter. The parameter can be given by name or by index. This 
+        method also supports the use of min and max keywords to set the lower and upper boundary
+        seperatly.
+        
+        Example Use:
+        
+        >>> update_parameter(parameter='parname', value=10.0, min=5.0, vary=True)
+        >>> update_parameter(parameter=2, value=0.15, bounds=(0.10, 0.20))
         """
         
         if type(parameter) == int:
             parameter = self.parameters[self.par_names[parameter]]
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
+            
+        #-- if bounds is provided, break them up in min and max.
+        if 'bounds' in kwargs:
+            kwargs['min'] = kwargs['bounds'][0]
+            kwargs['max'] = kwargs['bounds'][1]
         
         for key in vars(parameter).keys():
             if key in kwargs:
@@ -1189,7 +1303,13 @@ class Function(object):
     
     def param2str(self, full_output=False, accuracy=2):
         """
-        Converts the parameter object of this function to an easy printable string
+        Converts the parameter object of this function to an easy printable string, including
+        the value, error, boundaries, if the parameter is varied, and if in the fitting process
+        on of the boundaries was reached. 
+        
+        The accuracy with which the parameters are printed can be set with the accuracy keyword.
+        And the amount of information that is printed is determined by full_output. If False, 
+        only parameter value and error are printed, if True also boundaries and vary are shown.
         """
         return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
         
@@ -1229,19 +1349,23 @@ class Model(object):
     This Model can then be used to fit data using the L{Minimizer} class.  The Model can be 
     evaluated using the L{evaluate} method. Parameters can be added/updated, together with
     boundaries and expressions, and can be hold fixed or adjusted by changing the vary keyword
-    in L{setup_parameters}.
+    in L{update_parameter}.
     
     Parameters for the different Functions are combined. To keep track of which parameter is
-    which, they get a number added to the end indicating the function they belong to: 
-    paramters of the first function are renamed to 'parname_0', parameters of the second function
-    are renamed to 'parname_1' ect.
+    which, they get a number added to the end indicating the function they belong to. For example:
+    when a Model is created summing a gaussian function with a quadratic function. The gaussian has
+    parameters [a, mu, sigma, c] and the quadratic function has parameters [s0, s1, s2]. If the 
+    functions are provided in order [Gaussian, Quadratic], the parameters will be renames to:
+    [a_0, mu_0, sigma_0, c_0] and [s0_1, s1_1, s2_1]. Keep in mind that this renaming only happens
+    in the Model object. In the underlying Functions the parameters will keep there original name.
     
     The functions themselfs can be combined using a mathematical expression in the constructor. 
-    If no expression is provided, they are summed together::
+    If no expression is provided, the output of each function is summed up. Keep in mind that each
+    function needs to have the same output shape::
     
         Model(x) = Function1(x) + Function2(x) + ...
         
-    The provided expression needs to be a function taking the an array with the results of the
+    The provided expression needs to be a function taking an array with the results of the
     Functions in the model as arguments, and having an numpy array as result. This can be done
     with simple I{lambda} expression or more complicated functions::
     
@@ -1253,14 +1377,17 @@ class Model(object):
     other settings are provided. If wanted, the parameters object itself can be obtained with
     L{get_parameters_object}.
     
-    At the moment the use of a jacobian is not supported. 
+    At the moment the use of a jacobian is not supported at the Model level as it is not possible
+    to derive a symbolic jacobian from the provided functions. If you want to use a jacobian you
+    will have to write a Function yourself in which you can provide a jacobian function.
     """
     
     def __init__(self, functions=None, expr=None):
         """
-        Create a new Model by providing the functions of which it consists. You can provid an expression
-        describing how the Functions have to be combined as well. This expression needs to take the out
-        put of the Fuctions in an array as argument, and provide a new numpy array as result.
+        Create a new Model by providing the functions of which it consists. You can provid an
+        expression describing how the Functions have to be combined as well. This expression needs
+        to take the out put of the Fuctions in an array as argument, and provide a new numpy array
+        as result.
         
         @param functions: A list of L{Function}s
         @type functions: list
@@ -1269,6 +1396,10 @@ class Model(object):
         """
         self.functions = functions
         self.expr = expr
+        self.jacobian = None
+        self.par_names = None
+        self.parameters = None
+        
         #-- Combine the parameters
         self.pull_parameters()
     
@@ -1308,13 +1439,22 @@ class Model(object):
             result = []
             for function in self.functions:
                 result.append(function.evaluate(x))
-            results = self.expr(result)
+            result = self.expr(result)
                
         return result
         
+    def evaluate_jacobian(self, x, *args):
+        """
+        Not implemented
+        """
+        return [0.0 for p in self.parameters]
+        
     def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
-        Not implemented yet, use the setup_parameters method of the Functions themselfs.
+        Not implemented yet, use the L{setup_parameters} method of the Functions themselfs, or for 
+        adjustments of a single parameter use the L{update_parameter} function
+        
+        Please provide feedback on redmine on how you would like to use this function!!!
         """
         if values is None: values = [None for i in self.functions]
         if bounds is None: bounds = [None for i in self.functions]
@@ -1323,7 +1463,38 @@ class Model(object):
         
         for i,func in enumerate(self.functions):
             func.setup_parameters(values=values[i],bounds=bounds[i],vary=vary[i],exprs=exprs[i])
+            
         self.pull_parameters()
+        
+    def update_parameter(self, parameter=None, **kwargs):
+        """
+        Updates a specified parameter. The parameter can be given by name or by index. However, you
+        have to be carefull when using the names. The model class changes the names of the parameters
+        of the underlying functions based on the order in which the functions are provided 
+        (See introduction). This method also supports the use of kwargs min and max to set the lower
+        and upper boundary separatly.
+        
+        Example use:
+        
+        >>> update_parameter(parameter='parname_0', value=10.0, min=5.0, vary=True)
+        >>> update_parameter(parameter=2, value=0.15, bounds=(0.10, 0.20))
+        """
+        
+        if type(parameter) == int:
+            parameter = self.parameters[self.par_names[parameter]]
+        elif type(parameter) == str:
+            parameter = self.parameters[parameter]
+        
+        #-- if bounds is provided, break them up in min and max.
+        if 'bounds' in kwargs:
+            kwargs['min'] = kwargs['bounds'][0]
+            kwargs['max'] = kwargs['bounds'][1]
+        
+        for key in vars(parameter).keys():
+            if key in kwargs:
+                vars(parameter)[key] = kwargs[key]
+        
+        self.push_parameters()
     
     def get_parameters(self, full_output=False):
         """
@@ -1345,7 +1516,42 @@ class Model(object):
             return out.T
         else:
             return out[:,0], out[:,1]  
-    #}    
+            
+    def param2str(self, full_output=False, accuracy=2):
+        """
+        Converts the parameter object of this function to an easy printable string, including
+        the value, error, boundaries, if the parameter is varied, and if in the fitting process
+        on of the boundaries was reached. 
+        
+        The accuracy with which the parameters are printed can be set with the accuracy keyword.
+        And the amount of information that is printed is determined by full_output. If False, 
+        only parameter value and error are printed, if True also boundaries and vary are shown.
+        """
+        return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
+        
+    #}   
+    
+    #{ Getters and Setters
+    
+    def get_model_functions(self):
+        """
+        Returns an array of all functions that can be evaluated using function(parameters, x)
+        """
+        return self.functions
+        
+    def get_parameters_object(self):
+        """
+        Return the parameter object belonging to the function
+        """
+        return self.parameters
+        
+    def get_par_names(self):
+        """
+        returns the names of the different parameters
+        """
+        return self.par_names
+
+    #}   
     
     #{ Internal
     def pull_parameters(self):
@@ -1384,18 +1590,6 @@ class Model(object):
                 old_name = re.sub('_[0123456789]*$','',name)
                 old_parameters[old_name] = parameters[name]
     
-    def get_parameters_object(self):
-        """
-        Return the parameter object belonging to the model
-        """
-        return self.parameters
-    
-    def param2str(self, full_output=False, accuracy=2):
-        """
-        Converts the parameter object of this function to an easy printable string
-        """
-        return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
-
     #}
     
     
@@ -1452,6 +1646,7 @@ class Minimizer(lmfit.Minimizer):
         
         #-- Setup the residual function and the lmfit.minimizer object
         residuals, fcn_args = self.setup_residual_function(args=args)
+        jacobian = self.setup_jacobian_function(args=args)
         
         #-- Setup the Minimizer object
         lmfit.Minimizer.__init__(self,residuals, params, fcn_args=fcn_args, fcn_kws=kws,
@@ -1463,7 +1658,7 @@ class Minimizer(lmfit.Minimizer):
         elif engine == 'lbfgsb':
             self.lbfgsb()
         else:
-            self.leastsq()
+            self.leastsq(Dfun=jacobian)
     
 
     def setup_residual_function(self, args=None):
@@ -1490,6 +1685,15 @@ class Minimizer(lmfit.Minimizer):
                 fcn_args = (self.x,self.y,self.weights)
                 
         return residuals, fcn_args
+    
+    def setup_jacobian_function(self, args=None):
+        #Internal function to setup the jacobian function for the minimizer.
+        if self.model.jacobian != None:
+            def jacobian(params, x, y, **kwargs):
+                return self.model.evaluate_jacobian(x, params, **kwargs)
+            return jacobian
+        else:
+            return None
     
     #{ Error determination
     
@@ -1656,35 +1860,81 @@ def minimize(x, y, model, err=None, weights=None,
 def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
                   scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False, **fit_kws):
     """                  
-    Grid minimizer
+    Grid minimizer. Offers the posibility to start minimizing from a grid of starting parameters defined by the used.
+    The number of starting points can be specified, as well as the parameters that are varried. For each parameter 
+    for which the start value should be varied, a minimum and maximum value should be provided when setting up that
+    parameter. The starting values are chosen randomly in the range [min,max]. The other arguments are the same as 
+    for the normal L{minimize} function.
+    
+    If parameters are provided that can not be kicked (starting value can not be varried), they will be removed from
+    the parameters array automaticaly. If no parameters can be kicked, only one minimize will be performed independently
+    from the number of points provided. Pay attention with the vary function of the parameters, even if a parameter has
+    vary = False, it will be kicked by the grid minimizer if it appears in parameters. This parameter will then be fixed
+    at its new starting value.
+    
+    @param parameters: The parameters that you want to randomly chose in the fitting process
+    @type parameters: array of strings
+    @param points: The number of starting points
+    @type points: int
+    @param return_all: if True, the results of all fits are returned, if False, only the best fit is returned.
+    @type return_all: Boolean
+    
+    @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
+    @rtype: Minimizer object or array of [Minimizer, Parameters, Model, float]
     """
+    if parameters == None:
+        parameters = model.get_par_names()
+    
+    #-- check if all grid parameters actually have boundaries.
+    kick_parameters = []
+    for name in parameters:
+        if model.parameters[name].min == None or model.parameters[name].max == None:
+            logging.warning('Parameter %s has no boundaries defined and will not be kicked by the grid minimizer!'%(name))
+        else:
+            kick_parameters.append(name)
+    parameters = kick_parameters
+    if len(parameters) == 0:
+        logging.warning('No parameters provided to kick, grid minimize will not be performed!')
+        startpar = copy.deepcopy(model.parameters)
+        result = minimize(x, y, model, err=err, weights=weights, engine=engine, args=args,
+                               kwargs=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+        if not return_all:
+            return result
+        else:
+            return [result], [startpar], [model], [result.chisqr]
+    
+    #-- setup result arrays
+    newmodels = np.zeros(points, dtype=Model)
+    startpars = np.zeros(points, dtype=lmfit.Parameters)
+    fitters = np.zeros(points, dtype=Minimizer)
+    chisqrs = np.zeros(points, dtype=float)
+    
     #-- create new models
-    newmodels = []
     for i in range(points):
         mod_ = copy.deepcopy(model)
         mod_.parameters.kick(pnames=parameters)
-        newmodels.append(mod_)  
-    newmodels = np.array(newmodels)
+        newmodels[i] = mod_
+        startpars[i] = copy.deepcopy(mod_.parameters)
     
-    fitters, chisqrs = [], []
-    for mod_ in newmodels:
+    #-- minimize every model.
+    for i,mod_ in enumerate(newmodels):
         # refit and store the results
         fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
                             kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        fitters.append(fitter)
-        chisqrs.append(fitter.chisqr)
-    fitters, chisqrs = np.array(fitters), np.array(chisqrs)
+        fitters[i] = fitter
+        chisqrs[i] = fitter.chisqr
     
-    #-- sort the results on increasing chisqr
+    #-- sort the results on increasing chisqr so best fit is on top
     inds = chisqrs.argsort()
     fitters = fitters[inds]
+    startpars = startpars[inds]
     newmodels = newmodels[inds]
     chisqrs = chisqrs[inds]
     
     #store the best fitting model in the given model and return the results
     model.parameters = newmodels[0].parameters
     if return_all:
-        return fitters, newmodels, chisqrs
+        return fitters, startpars, newmodels, chisqrs
     else:
         return fitters[0]
                       
@@ -1704,12 +1954,18 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
         #threads = cpu_count()-1
     #threads = int(threads)
     
+    ##-- setup result arrays
+    #newmodels = np.zeros(points, dtype=Model)
+    #startpars = np.zeros(points, dtype=lmfit.Parameters)
+    #fitters = np.zeros(points, dtype=Minimizer)
+    #chisqrs = np.zeros(points, dtype=float)
+    
     ##-- create new models
-    #newmodels = []
     #for i in range(points):
         #mod_ = copy.deepcopy(model)
         #mod_.parameters.kick(pnames=parameters)
-        #newmodels.append(mod_)
+        #newmodels[i] = mod_
+        #startpars[i] = copy.deepcopy(mod_.parameters)
            
     #def fit_models(models, results):
         #fitters, chisqrs = [], []
@@ -1784,25 +2040,66 @@ def get_correlation_factor(residus, full_output=False):
 
 #}
 
-#{ Print functions
+#{ Print and plot functions
+
+def _calc_length(par, accuracy):
+    """ helper function to calculate the length of the given parameters for parameters2string """
+    if par == None or par == np.nan:
+        return 3
+    else:
+        try:
+            length = np.floor(np.log10(abs(par))) > 0 and np.floor(np.log10(abs(par))) + 1 or 1
+            length = par < 0 and length + 1 or length # 1 for the minus sign
+            length = length + accuracy + 1 # 1 for the decimal point
+            return length
+        except:
+            return 0
 
 def parameters2string(parameters, accuracy=2, full_output=False):
-    #Converts a parameter object to string
+    """ Converts a parameter object to string """
     out = ""
     fmt = '{{:.{0}f}}'.format(accuracy)
+    
+    #-- run over the parameters to calculate the nessessary space
+    max_value = 0
+    max_bounds = 0
+    for name, par in parameters.items():
+        current = _calc_length(par.value, accuracy) + _calc_length(par.stderr, accuracy)
+        max_value = current > max_value and current or max_value
+        current = _calc_length(par.min, accuracy) + _calc_length(par.max, accuracy)
+        max_bounds = current > max_bounds and current or max_bounds
+    max_value = int(max_value + 5)
+    max_bounds = int(max_bounds + 5)
+    
+    #-- format the output
     for name, par in parameters.items():
         if par.stderr == None:
             stderr = np.nan
         else:
             stderr = par.stderr
-            
+        
+        value = '{fmt} +/- {fmt}'.format(fmt=fmt).format(par.value, stderr)
+        
         if not full_output:
-            template = '{name:>10s} = {fmt} +/- {fmt} \n'.format(name=name,fmt=fmt)
+            template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
         else:
-            template = '{name:>10s} = {fmt} +/- {fmt} \t bounds = {bmin} <-> {bmax} {vary} \n'
-            template = template.format(name=name,fmt=fmt,bmin=par.min,bmax=par.max,\
-                                       vary=(par.vary and '(fit)' or '(fixed)'))
-        out += template.format(par.value, stderr)
+            try:
+                #print abs((par.value - par.min)/par.value) , abs((par.max - par.value)/par.value) 
+                lim = (abs((float(par.value) - par.min)/par.value) <= 0.001 or abs((par.max - float(par.value))/par.value) <= 0.001) and 'reached limit' or ' '
+            except:
+                lim = ' '
+            if par.min != None and par.max != None:
+                bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
+            elif par.max != None:
+                bounds = 'None <-> {{:.{0}f}}'.format(accuracy).format(par.max)
+            elif par.min != None:
+                bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
+            else:
+                bounds = 'None <-> None'
+            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary} {limit}\n'
+            template = template.format(name=name, value=value, vlim=max_value, bounds=bounds, blim=max_bounds,\
+                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim)
+        out += template
     return out.rstrip()
 
 def confidence2string(ci, accuracy=2):
@@ -1831,7 +2128,54 @@ def confidence2string(ci, accuracy=2):
                 val = np.round(ci[par][sigma][1], decimals=accuracy)
             out += "{0:20}  ".format(val)
         out += '\n'
-    return out.rstrip()        
+    return out.rstrip() 
+    
+def plot_convergence(startpars, models, chi2s, xpar=None, ypar=None, clim=None):
+    """
+    Plot the convergence path of the results from grid_minimize.
+    """
+    #-- sort the models on reverse chi2 so that the best model is plotted on top
+    inds = chi2s.argsort()#[::-1]
+    startpars = startpars[inds]
+    models = models[inds]
+    chi2s = chi2s[inds]
+    
+    if clim != None:
+        selected = np.where(chi2s <= clim*max(chi2s))
+        startpars = startpars[selected]
+        models = models[selected]
+        chi2s = chi2s[selected]
+    
+    #-- read the requested parameter values
+    points=len(startpars)
+    x1 = np.zeros(points,dtype=float)
+    y1 = np.zeros(points,dtype=float)
+    x2 = np.zeros(points,dtype=float)
+    y2 = np.zeros(points,dtype=float)
+    for i in range(points):
+        x1[i] = startpars[i][xpar].value
+        y1[i] = startpars[i][ypar].value
+        x2[i] = models[i].parameters[xpar].value
+        y2[i] = models[i].parameters[ypar].value
+
+    #-- set the colors
+    jet = cm = pl.get_cmap('jet') 
+    cNorm  = mpl.colors.Normalize(vmin=0, vmax=max(chi2s))
+    scalarMap = mpl.cm.ScalarMappable(norm=cNorm, cmap=jet)
+
+    #-- plot the arrows
+    ax=pl.gca()
+    for x1_, y1_, x2_, y2_, chi2 in zip(x1,y1,x2,y2, chi2s):
+        colorVal = scalarMap.to_rgba(chi2)
+        ax.add_patch(mpl.patches.FancyArrowPatch((x1_,y1_),(x2_,y2_),arrowstyle='->',mutation_scale=30, color=colorVal))
+    pl.scatter(x2, y2, s=30, c=chi2s, cmap=mpl.cm.jet, edgecolors=None, lw=0)
+    pl.plot(x2[-1],y2[-1], '+r', ms=12, mew=3)
+    pl.colorbar(fraction=0.08)
+    pl.xlim(min([min(x1),min(x2)]), max([max(x1),max(x2)]))
+    pl.ylim(min([min(y1),min(y2)]), max([max(y1),max(y2)]))
+    pl.xlabel(xpar)
+    pl.ylabel(ypar)
+    
 
 #}
 
