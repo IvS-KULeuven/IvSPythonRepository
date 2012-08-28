@@ -1276,6 +1276,11 @@ class Function(object):
         Returns the parameter values together with the errors if they exist. If no fitting
         has been done, or the errors could not be calculated, None is returned for the error.
         
+        The parameters of which the settings should be returned can be given in I{parameters}.
+        If None is given, all parameters are returned. If only one parameter name is given as
+        a string, the setup of this parameter is returned as an array of floating points. When
+        the parameter name is given as an array, and array of arrays is returned.
+        
         @param parameters: A list of which parameters the values should be returned. If None,
         the values of all parameters are returned
         @type parameters: array
@@ -1285,6 +1290,10 @@ class Function(object):
         @return: the parameter values and there errors: value, err, [vary, min, max, expr]
         @rtype: numpy arrays
         """
+        reduced_output = False
+        if type(parameters) == str:
+            parameters = [parameters]
+            reduced_output = True # return the values directly, not in a list
         
         if parameters == None:
             parameters  = self.par_names
@@ -1298,11 +1307,14 @@ class Function(object):
             min.append(par.min)
             max.append(par.max)
             expr.append(par.expr)
-            
+        
+        if reduced_output:
+                val, err, vary, min, max, expr = val[0],err[0],vary[0],min[0],max[0],expr[0]
+        
         if full_output:
             return val,err,vary,min,max,expr
         else:
-            return np.array(val),np.array(err)        
+            return np.array(val),np.array(err)
     
     def param2str(self, full_output=False, accuracy=2):
         """
@@ -1748,37 +1760,6 @@ class Minimizer(lmfit.Minimizer):
         if short_output:
             out = out[p_names[0]][sigmas[0]]
         return out
-        
-    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
-        """
-        Plot the confidence interval for 2 given parameters. The confidence interval is calculated
-        using the F-test method from the I{estimate_error} method.
-        
-        Extra kwargs are passed to C{confourf} or C{contour}.
-        
-        @param xname: The parameter on the x axis
-        @param yname: The parameter on the y axis
-        @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param filled: True for filled contour plot, False for normal contour plot
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
-        """
-        
-        xn = hasattr(res,'__iter__') and res[0] or res
-        yn = hasattr(res,'__iter__') and res[1] or res
-        
-        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
-        grid *= 100.
-        
-        if filled:
-            pl.contourf(x,y,grid,np.linspace(0,100,25),**kwargs)
-            pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
-        else:
-            cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
-            cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
-            pl.clabel(cs, inline=1, fontsize=10)
-        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
-        pl.xlabel(xname)
-        pl.ylabel(yname)
     
     #}
     
@@ -1819,6 +1800,37 @@ class Minimizer(lmfit.Minimizer):
         pl.xlim(xlim)
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
+    
+    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
+        """
+        Plot the confidence interval for 2 given parameters. The confidence interval is calculated
+        using the F-test method from the I{estimate_error} method.
+        
+        Extra kwargs are passed to C{confourf} or C{contour}.
+        
+        @param xname: The parameter on the x axis
+        @param yname: The parameter on the y axis
+        @param res: The resolution of the grid over which the confidence intervall is calculated
+        @param filled: True for filled contour plot, False for normal contour plot
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
+        """
+        
+        xn = hasattr(res,'__iter__') and res[0] or res
+        yn = hasattr(res,'__iter__') and res[1] or res
+        
+        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
+        grid *= 100.
+        
+        if filled:
+            pl.contourf(x,y,grid,np.linspace(0,100,25),**kwargs)
+            pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
+        else:
+            cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
+            cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
+            pl.clabel(cs, inline=1, fontsize=10)
+        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
+        pl.xlabel(xname)
+        pl.ylabel(yname)
     
     #}
 
@@ -2097,8 +2109,7 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
         else:
             try:
-                #print abs((par.value - par.min)/par.value) , abs((par.max - par.value)/par.value) 
-                lim = (abs((float(par.value) - par.min)/par.value) <= 0.001 or abs((par.max - float(par.value))/par.value) <= 0.001) and 'reached limit' or ' '
+                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ' '
             except:
                 lim = ' '
             if par.min != None and par.max != None:
