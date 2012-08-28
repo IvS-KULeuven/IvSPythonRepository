@@ -1098,7 +1098,7 @@ class Function(object):
     L{get_parameters_object}.
     """
     
-    def __init__(self, function=None, par_names=None, jacobian=None):
+    def __init__(self, function=None, par_names=None, jacobian=None, resfunc=None):
         """
         Create a new Function by providing the function of which it consists together with the names
         of each parameter in this function. You can specify the jacobian as well.
@@ -1109,10 +1109,13 @@ class Function(object):
         @type par_names: list of strings
         @param jacobian: A function expression for the jacobian of function.
         @type jacobian: function
+        @param resfunc: Function to calculate the residuals. (Not obligatory)
+        @type resfunc: function
         """
         self.function = function
         self.par_names = par_names
         self.jacobian = jacobian
+        self.resfunc = resfunc
         
         #create an empty parameter set based on the parameter names
         self.parameters = None
@@ -1120,7 +1123,7 @@ class Function(object):
     
     #{ Interaction
     
-    def evaluate(self,x, *args):
+    def evaluate(self,x, *args, **kwargs):
         """
         Evaluate the function for the given values and optional the given parameter object.
         If no parameter object is given then the parameter object belonging to the function
@@ -1141,7 +1144,7 @@ class Function(object):
             for name in self.par_names:
                 pars.append(self.parameters[name].value)
                 
-            return self.function(pars,x)
+            return self.function(pars,x, **kwargs)
             
         if len(args) == 1:
             #-- Use the provided parameters
@@ -1153,7 +1156,7 @@ class Function(object):
             else:
                 pars = args[0]
                 
-            return self.function(pars,x)
+            return self.function(pars,x, **kwargs)
             
     def evaluate_jacobian(self, x, *args):
         """
@@ -1382,7 +1385,7 @@ class Model(object):
     will have to write a Function yourself in which you can provide a jacobian function.
     """
     
-    def __init__(self, functions=None, expr=None):
+    def __init__(self, functions=None, expr=None, resfunc=None):
         """
         Create a new Model by providing the functions of which it consists. You can provid an
         expression describing how the Functions have to be combined as well. This expression needs
@@ -1393,9 +1396,12 @@ class Model(object):
         @type functions: list
         @param expr: An expression to combine the given functions.
         @type expr: function
+        @param resfunc: A function to calculate the residuals (Not obligatory)
+        @type resfunc: function
         """
         self.functions = functions
         self.expr = expr
+        self.resfunc = resfunc
         self.jacobian = None
         self.par_names = None
         self.parameters = None
@@ -1405,7 +1411,7 @@ class Model(object):
     
     #{ Interaction
     
-    def evaluate(self, x, *args):
+    def evaluate(self, x, *args, **kwargs):
         """
         Evaluate the model for the given values and optional a given parameter object.
         If no parameter object is given then the parameter object belonging to the model
@@ -1434,11 +1440,11 @@ class Model(object):
         if self.expr == None:
             result = np.zeros(len(x))
             for function in self.functions:
-                result += function.evaluate(x)
+                result += function.evaluate(x, **kwargs)
         else:
             result = []
             for function in self.functions:
-                result.append(function.evaluate(x))
+                result.append(function.evaluate(x, **kwargs))
             result = self.expr(result)
                
         return result
@@ -1603,8 +1609,17 @@ class Minimizer(lmfit.Minimizer):
     uncertainties and correlation between fitted variables are calculated as well.
     
     This minimizer finds the best parameters to fit a given L{Model} or L{Function} to a set of
-    data. You only need to provide the Model and data, not the residuals function. Weighted fitting
-    is supported.
+    data. You only need to provide the Model and data. Weighted fitting is supported.
+    
+    This minimizer uses the basic residual function::
+    
+        residuals = ( data - model(x) ) * weights
+        
+    If a more advanced residual functions is required, fx when working with multi dimentional data,
+    the used can specify its own residual function in the provided Function or Model, or by setting
+    the I{resfunc} keyword. This residual function needs to be of the following call sign::
+    
+        resfunc(synth, data, weights=None, errors=None, **kwargs)
     
     Functions
     =========
@@ -1630,26 +1645,36 @@ class Minimizer(lmfit.Minimizer):
     to handle the parameters in a model are provided, but the user is recommended handle the parameters
     at Function level as the naming of the parameters changes at Model level. 
 
-
     """
 
-    def __init__(self, x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, **kwargs):
+    def __init__(self, x, y, model, err=None, weights=None, resfunc=None,
+             engine='leastsq', args=None, kws=None, scale_covar=True, iter_cb=None, **kwargs):
         
         self.x = x
         self.y = y
         self.model = model
-        self.err = err
+        self.errors = err
         self.weights = weights
+        self.resfunc = model.resfunc
+        
+        if weights == None:
+            self.weights = np.ones(len(y)) # if no weigths definded set them all at one.
+
+        if resfunc != None: 
+            self.resfunc = resfunc # if residual function is provided, use that one.
         
         params = model.get_parameters_object()
         
         #-- Setup the residual function and the lmfit.minimizer object
-        residuals, fcn_args = self.setup_residual_function(args=args)
-        jacobian = self.setup_jacobian_function(args=args)
+        residuals = self.setup_residual_function()
+        jacobian = self.setup_jacobian_function()
+        fcn_args = (self.x, self.y)
+        fcn_kws = dict(weights=self.weights, errors=self.errors)
+        if kws != None:
+            fcn_kws.update(kws)
         
         #-- Setup the Minimizer object
-        lmfit.Minimizer.__init__(self,residuals, params, fcn_args=fcn_args, fcn_kws=kws,
+        lmfit.Minimizer.__init__(self,residuals, params, fcn_args=fcn_args, fcn_kws=fcn_kws,
                              iter_cb=iter_cb, scale_covar=scale_covar, **kwargs)
         
         #-- Actual fitting
@@ -1659,37 +1684,24 @@ class Minimizer(lmfit.Minimizer):
             self.lbfgsb()
         else:
             self.leastsq(Dfun=jacobian)
-    
-
-    def setup_residual_function(self, args=None):
-        #Internal function to setup the residual function for the minimizer.
-        if self.y.shape > 1:
-            if self.weights == None:
-                def residuals(params, x, y, **kwargs):
-                    return np.ravel(y - self.model.evaluate(x, params, **kwargs))
-                fcn_args = (self.x,self.y)
-                                
-            else:
-                def residuals(params, x, y, weights, **kwargs):
-                    return np.ravel((y - self.model.evaluate(x, params, **kwargs))*weights)
-                fcn_args = (self.x,self.y,self.weights)
+            
+    def setup_residual_function(self):
+        """Internal function to setup the residual function for the minimizer."""
+        
+        if self.resfunc != None:
+            def residuals(params, x, y, weights=None, errors=None, **kwargs):
+                synth = self.model.evaluate(x, params, **kwargs)
+                return self.resfunc(synth, y, weights=weights, errors=errors, **kwargs)
         else:
-            if self.weights == None:
-                def residuals(params, x, y, **kwargs):
-                    return (y - self.model.evaluate(x, params, **kwargs))
-                fcn_args = (self.x,self.y)
-                                
-            else:
-                def residuals(params, x, y, weights, **kwargs):
-                    return (y - self.model.evaluate(x, params, **kwargs))*weights
-                fcn_args = (self.x,self.y,self.weights)
+            def residuals(params, x, y, weights=None, errors=None, **kwargs):
+                return ( y - self.model.evaluate(x, params, **kwargs) ) * weights
                 
-        return residuals, fcn_args
+        return residuals
     
-    def setup_jacobian_function(self, args=None):
-        #Internal function to setup the jacobian function for the minimizer.
+    def setup_jacobian_function(self):
+        """Internal function to setup the jacobian function for the minimizer."""
         if self.model.jacobian != None:
-            def jacobian(params, x, y, **kwargs):
+            def jacobian(params, x, y, weights=None, errors=None, **kwargs):
                 return self.model.evaluate_jacobian(x, params, **kwargs)
             return jacobian
         else:
@@ -1786,7 +1798,7 @@ class Minimizer(lmfit.Minimizer):
         pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
         
         ax = pl.subplot2grid((3,4), (0,0), rowspan=2, colspan=4)
-        if self.err == None:
+        if self.errors == None:
             pl.plot(self.x,self.y,'+b')
         else:
             pl.errorbar(self.x,self.y, yerr=self.err, ls='', marker='+', color='b')
@@ -1799,7 +1811,7 @@ class Minimizer(lmfit.Minimizer):
             tick.set_fontsize(0.0)
             
         ax = pl.subplot2grid((3,4), (2,0), colspan=4)
-        if self.err == None:
+        if self.errors == None:
             pl.plot(self.x,self.y-self.model.evaluate(self.x), '+b')
         else:
             pl.errorbar(self.x,self.y-self.model.evaluate(self.x), yerr=self.err, ls='', marker='+', color='b')
@@ -1810,8 +1822,8 @@ class Minimizer(lmfit.Minimizer):
     
     #}
 
-def minimize(x, y, model, err=None, weights=None,
-             engine='leastsq', args=None, kwargs=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
+def minimize(x, y, model, err=None, weights=None, resfunc=None,
+             engine='leastsq', args=None, kws=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
     """
     Basic minimizer function using the L{Minimizer} class, find values for the parameters so that the
     sum-of-squares of M{(y-model(x))} is minimized. When the fitting process is completed, the 
@@ -1842,16 +1854,17 @@ def minimize(x, y, model, err=None, weights=None,
     @param model: The I{Model} to fit to the data
     @param err: The errors on the y data, same dimentions as y
     @param weights: The weights given to the different y data
+    @param resfunc: A function to calculate the residuals, if not provided standard residual function is used.
     @param engine: Which fitting engine to use: 'leastsq', 'anneal', 'lbfgsb'
-    @param kwargs: Extra keyword arguments to be passed to the model
+    @param kws: Extra keyword arguments to be passed to the model
     @param fit_kws: Extra keyword arguments to be passed to the fitter function
     
     @return: (I{Parameter} object, I{Minimizer} object)
     
     """
     
-    fitter = Minimizer(x, y, model, err=err, weights=weights,
-             engine=engine, args=args, kws=kwargs, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+    fitter = Minimizer(x, y, model, err=err, weights=weights, resfunc=resfunc,
+             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
     if fitter.message and verbose:
         logger.warning(fitter.message)
     return fitter    
@@ -1897,7 +1910,7 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
         logging.warning('No parameters provided to kick, grid minimize will not be performed!')
         startpar = copy.deepcopy(model.parameters)
         result = minimize(x, y, model, err=err, weights=weights, engine=engine, args=args,
-                               kwargs=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+                               kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
         if not return_all:
             return result
         else:
