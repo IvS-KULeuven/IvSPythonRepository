@@ -312,7 +312,10 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     for obs in data:
         if info:
             jd  = _timestamp2jd(obs['date-avg'])
-            bvcorr, hjd = helcorr(ra, dec, jd)
+            # the previous line is equivalent to:
+            # day = dateutil.parser.parse(header['DATE-AVG'])
+            # BJD = ephem.julian_date(day)
+            bvcorr, hjd = helcorr(ra/360.*24, dec, jd)
         else:
             break
         if np.isnan(obs['bvcor']):
