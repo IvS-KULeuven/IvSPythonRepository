@@ -506,7 +506,9 @@ erg  s$^{-1}$ $\mu$m$^{-2}$ $\AA$$^{-1}$
 """
 #-- standard libraries
 import itertools
+import functools
 import collections
+import inspect
 import re
 import os
 import sys
@@ -1709,7 +1711,15 @@ def units2sphinx():
         text.append("| {0:20s} | {1:50} | {2:20s} | {3:30s} | {4:50s} |".format(key,*_factors[key]))
         text.append(divider)
     return "\n".join(text)
-
+    
+def derive_wrapper(fctn):
+    @functools.wraps(fctn)
+    def func(*args,**kwargs):
+        argspec = inspect.getargspec(fctn)
+        print argspec
+        result = fctn(*args,**kwargs)
+        return result
+    return func
 #}
 #{ Linear change-of-base conversions
         
@@ -2237,6 +2247,15 @@ def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     Deltanu0 = convert(Deltanu0[-1],'muHz',*Deltanu0[:-1],unpack=False)
     R = sqrt(teff)/numax_sol * numax/Deltanu0**2 * Deltanu0_sol**2
     return convert('Rsol',unit,R)    
+    
+#@derive_wrapper
+def derive_radius_rot(veq_sini,rot_period,incl=(90.,'deg'),unit='Rsol'):
+    """
+    Derive radius from rotation period and inclination angle.
+    """
+    incl = Unit(incl)
+    radius = veq_sini*rot_period/(2*np.pi)/np.sin(incl)
+    return radius
     
 
     
