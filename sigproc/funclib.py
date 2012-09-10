@@ -185,10 +185,10 @@ def kepler_orbit(type='single'):
     Kepler orbits ((p,t0,e,omega,K,v0) or (p,t0,e,omega,K1,v01,K2,v02))
     
     A single kepler orbit
-    parameters are: [P, T0, e, omega, K, v0]
+    parameters are: [p, t0, e, omega, k, v0]
     
     A double kepler orbit
-    parameters are: [P, T0, e, omega, K_1, v0_1, K_2, v0_2]
+    parameters are: [p, t0, e, omega, k_1, v0_1, k_2, v0_2]
     Warning: This function uses 2d input and output!
     """
     if type == 'single':
@@ -198,11 +198,13 @@ def kepler_orbit(type='single'):
         return Function(function=function, par_names=pnames)
         
     elif type == 'double':
-        function = lambda p, x: np.vstack([kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
-                                 kepler.radial_velocity([p[0],p[1],p[2],p[3],p[6],p[7]], times=x[1], itermax=8)])
+        function = lambda p, x: [kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
+                                 kepler.radial_velocity([p[0],p[1],p[2],p[3],p[6],p[7]], times=x[1], itermax=8)]
+        def residuals(syn, data, weights=None, errors=None, **kwargs):
+            return np.hstack( [( data[0] - syn[0] ) * weights[0],  ( data[1] - syn[1] ) * weights[1] ] )
         pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
     
-        return Function(function=function, par_names=pnames)
+        return Function(function=function, par_names=pnames, resfunc=residuals)
 
 def box_transit(t0=0.):
     """
@@ -426,13 +428,13 @@ def _complex_error_function(x):
     """
     cef_value = np.exp(-x**2)*(1-erf(-1j*x))
     if sum(np.isnan(cef_value))>0:
-        logger.warning("Complex Error function: NAN encountered, results are biased")
+        logging.warning("Complex Error function: NAN encountered, results are biased")
         noisnans = np.compress(1-np.isnan(cef_value),cef_value)
         try:
             last_value = noisnans[-1]
         except:
             last_value = 0
-            logger.warning("Complex Error function: all values are NAN, results are wrong")
+            logging.warning("Complex Error function: all values are NAN, results are wrong")
         cef_value = np.where(np.isnan(cef_value),last_value,cef_value)
 
     return cef_value
