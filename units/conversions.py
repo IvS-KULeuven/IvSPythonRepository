@@ -1679,10 +1679,10 @@ def get_help():
     
     @rtype: str
     """
-    #try:
-    #    set_exchange_rates()
-    #except IOError:
-    #    logger.warning('Unable to connect to ecb.europa.eu')
+    try:
+        set_exchange_rates()
+    except IOError:
+        logger.warning('Unable to connect to ecb.europa.eu')
     help_text = {}
     for fac in sorted(_factors.keys()):
         if _factors[fac][2] not in help_text:
