@@ -13,6 +13,8 @@ If you want to specify your own fortran compiler you can do so with
 
     $ python config.py compile f77
 
+Note: sometimes the compilation process fails. If so, try to compile spectra/pyrotin4.f
+manually, and then retry the automatic compilation.
 
 * In the config file you may also change the paths where the data catalogs (variable: data_dir) 
 can be found, if you are not using the default locations. If you clone the repository
