@@ -1351,7 +1351,7 @@ class Function(object):
             if key in kwargs:
                 parameter[key] = kwargs[key]
     
-    def get_parameters(self, full_output=False):
+    def get_parameters(self,parameters=None,full_output=False):
         """
         Returns the parameter values together with the errors if they exist. If No fitting
         has been done, or the errors could not be calculated, None is returned for the error.
