@@ -1347,9 +1347,9 @@ class Function(object):
             kwargs['min'] = kwargs['bounds'][0]
             kwargs['max'] = kwargs['bounds'][1]
         
-        for key in parameter.keys():
+        for key in vars(parameter).keys():
             if key in kwargs:
-                parameter[key] = kwargs[key]
+                vars(parameter)[key] = kwargs[key]
     
     def get_parameters(self,parameters=None,full_output=False):
         """
