@@ -3,7 +3,7 @@
 """
 Contains functions to calculate confidence intervals.
 """
-
+import copy
 import numpy as np
 from scipy.stats import f
 from scipy.optimize import brentq
@@ -283,13 +283,13 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
         Function to calculate the probality from the opimized chi-square.
         Default (``None``) uses built-in f_compare (F test).
     """
+    from ivs.aux import progressMeter as progress
 
     best_chi = minimizer.chisqr
     org = copy_vals(minimizer.params)
 
     if prob_func is None or not hasattr(prob_func, '__call__'):
         prob_func = f_compare
-
 
     x = minimizer.params[x_name]
     y = minimizer.params[y_name]
@@ -309,8 +309,9 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
 
     x.vary = False
     y.vary = False
-
-    def calc_prob(vals, restore=False):
+    
+    Pmeter = progress.ProgressMeter(total=nx*ny)
+    def calc_prob(vals, restore=True):
         if restore:
             restore_vals(org, minimizer.params)
         x.value = vals[0]
@@ -324,6 +325,7 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
 
         prob = prob_func(out.ndata, out.ndata - out.nfree, out.chisqr,
                          best_chi, Nfix=2.)
+        Pmeter.update(1)
         return prob
 
     out = x_points, y_points, np.apply_along_axis(calc_prob, -1, grid)
