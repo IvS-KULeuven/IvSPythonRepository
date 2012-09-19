@@ -11,7 +11,7 @@ function-to-be-minimized (residual function) in terms of these Parameters.
    <newville@cars.uchicago.edu>
 """
 
-from numpy import sqrt
+from numpy import sqrt, random
 
 from scipy.optimize import leastsq as scipy_leastsq
 from scipy.optimize import anneal as scipy_anneal
@@ -35,6 +35,7 @@ class Parameters(OrderedDict):
 
     add()
     add_many()
+    kick(pnames)
     """
     def __init__(self, *args, **kwds):
         OrderedDict.__init__(self)
@@ -75,6 +76,16 @@ class Parameters(OrderedDict):
         """
         for para in parlist:            
             self.add(*para)
+            
+    def kick(self,pnames=None):
+        """
+        Kicks the given parameters to a new value chosen by from the unifor 
+        distribution between max and min value.
+        """
+        if pnames == None:
+            pnames = self.keys()
+        for key in pnames:
+            self[key].kick()
 
 class Parameter(object):
     """A Parameter is the basic Parameter going
@@ -108,6 +119,9 @@ class Parameter(object):
         if self.expr is not None:
             s.append("expr='%s'" % (self.expr))
         return "<Parameter %s>" % ', '.join(s)
+        
+    def kick(self):
+        self.value = random.uniform(low=self.min, high=self.max)
 
 class MinimizerException(Exception):
     """General Purpose Exception"""
