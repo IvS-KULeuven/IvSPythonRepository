@@ -1378,7 +1378,8 @@ class Function(object):
             parameters  = self.par_names
         
         val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name, par in self.parameters.items():
+        for name in parameters:
+            par = self.parameters[name]
             val.append(par.value)
             err.append(par.stderr)
             vary.append(par.vary)
