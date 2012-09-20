@@ -443,7 +443,7 @@ import pylab as pl
 import matplotlib as mpl
 from ivs.sigproc import lmfit
 
-logger = logging.getLogger('TS.FIT')
+logger = logging.getLogger('SP.FIT')
 
 #{Linear fit functions
 
@@ -1928,6 +1928,7 @@ class Minimizer(lmfit.Minimizer):
         @param method: Method to use, 'F-test' or 'MC' (monte carlo simulation)
         @param output: Output type, error or ci (confidence intervall)
         """
+        logger.warning("DEPRECATED: estimate_error is replaced by calculate_CI")
         
         # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
         short_output = (type(p_names)==str and type(sigmas)==float) and True or False
