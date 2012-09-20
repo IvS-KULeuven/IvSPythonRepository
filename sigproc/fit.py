@@ -1828,7 +1828,8 @@ class Minimizer(lmfit.Minimizer):
         This method relies completely on the I(conf_interval) method of the lmfit
         package. 
         
-        @param parameters: Names of the parameters to calculate the CIs from (if None, all parameters are used)
+        @param parameters: Names of the parameters to calculate the CIs from (if None,
+                           all parameters are used)
         @type parameters: array of strings
         @param sigma: The probability level used to calculate the CI
         @type sigma: float
@@ -1836,11 +1837,15 @@ class Minimizer(lmfit.Minimizer):
         @return: A dictionary with for each parameter the lower and upper limit.
         @rtype: dict
         """
+        if parameters == None:
+            parameters = self.model.par_names
+        
         if type(parameters) == str:
             parameters = [parameters]
         
         # Use the adjusted conf_interval() function of the lmfit package.
-        ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter, prob_func=None, trace=False, verbose=False)
+        ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter,\
+                                 prob_func=None, trace=False, verbose=False)
         
         # Prepare the output
         if len(parameters) == 1 and short_output:
@@ -1869,7 +1874,8 @@ class Minimizer(lmfit.Minimizer):
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
         @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall
+                       is calculated. If None, 5 times the stderr is used.
         @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare plot. 
         @param filled: True for filled contour plot, False for normal contour plot
         
