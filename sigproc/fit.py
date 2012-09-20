@@ -1981,7 +1981,7 @@ class Minimizer(lmfit.Minimizer):
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
     
-    def plot_confidence_interval(self, xname=None, yname=None, res=10,  limits=None, type='prob', filled=True, **kwargs):
+    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, type='prob', filled=True, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. Both the  confidence interval calculated
         using the F-test method from the I{estimate_error} method, and the normal chi squares can be 
@@ -1998,18 +1998,9 @@ class Minimizer(lmfit.Minimizer):
         @param filled: True for filled contour plot, False for normal contour plot
         """
         
-        xn = hasattr(res,'__iter__') and res[0] or res
-        yn = hasattr(res,'__iter__') and res[1] or res
-        
-        prob_func = None
-        if type == 'chi2':
-            def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
-                return new_chi
-        
-        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits, prob_func=prob_func)
+        x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  limits=limits, type=type)
         
         if type=='prob':
-            grid *= 100.
             levels = np.linspace(0,100,25)
             ticks = [0,20,40,60,80,100]
         elif type=='chi2':
@@ -2019,14 +2010,15 @@ class Minimizer(lmfit.Minimizer):
         
         if filled:
             pl.contourf(x,y,grid,levels,**kwargs)
-            pl.colorbar(fraction=0.08,ticks=ticks)
+            cbar = pl.colorbar(fraction=0.08,ticks=ticks)
+            cbar.set_label(type=='prob' and r'Probability' or r'log($\chi^2$)')
         else:
             cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
             cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
-        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
-        pl.xlabel(xname)
-        pl.ylabel(yname)
+        pl.plot(self.params[xpar].value, self.params[ypar].value, '+r', ms=10, mew=2)
+        pl.xlabel(xpar)
+        pl.ylabel(ypar)
     
     #}
 
