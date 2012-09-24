@@ -64,6 +64,38 @@ def line_at_a_time(fileobj):
             return
         yield line    
 
+
+def subprocess_timeout(command, time_out):
+    """
+    
+    Kill a running subprocess after a certain amount of time.
+    
+    Command represents the command for the process you would give in a terminal e.g. 'ls -l' in a terminal becomes ["ls", "-l"] or 'firefox' becomes ["firefox"]'; time_out is expressed in seconds. If the process did not complete before time_out, the process is killed.
+    
+    """
+
+    # launching the command
+    c = subprocess.Popen(command)
+
+    # now waiting for the command to complete
+    t = 0
+    while t < time_out and c.poll() is None:
+        time.sleep(1)  # (comment 1)
+        t += 1
+
+    # there are two possibilities for the while to have stopped:
+    if c.poll() is None:
+        # in the case the process did not complete, we kill it
+        c.terminate()
+        # and fill the return code with some error value
+        returncode = -1  # (comment 2)
+
+    else:                 
+        # in the case the process completed normally
+        returncode = c.poll()
+
+    return returncode
+
 class CallInstruct:
     """
     Generate a callable function on-the-fly.
