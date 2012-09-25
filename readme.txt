@@ -1,3 +1,7 @@
+* Clone the git repository to create a local copy:
+    
+    git clone /home/pieterd/python/ivs/ivs .
+
 * Don't forget to add the repository to your pythonpath. If it is located in the
 directory DIRECTORY, then, e.g. in your bash profile, add:
     
