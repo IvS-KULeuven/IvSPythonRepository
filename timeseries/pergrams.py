@@ -492,7 +492,7 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
 
 
     
-def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
+def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
 
     """
     Computes the modulus square of the fourier transform. 
