@@ -44,7 +44,7 @@ using, for example:
 
   in the repository's root folder. 
  
-Open "/doc/index.html" in your favorite browser and start browsing!
+Open "/doc/html/index.html" in your favorite browser and start browsing!
 Whenever you change something yourself in your local branch or you pull changes
 from someone else, you can re-run the makedoc.py script.
 
