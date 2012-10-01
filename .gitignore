@@ -20,8 +20,9 @@
 *.zip
 *.bz2
 
-# Logs and databases
+# Backups, logs and databases
 
+*.swp
 *.log
 *.sql
 *.sqlite
