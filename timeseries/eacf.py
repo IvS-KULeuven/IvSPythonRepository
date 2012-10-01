@@ -1,6 +1,58 @@
 # -*- coding: utf-8 -*-
 """
-Functions to compute the mean large separation using the envelope auto-correlation function.
+Computes the envelope auto-correlation function. This function is estimated by computing the power spectrum of 
+a smoothed power spectrum of a time series. It is ideally suited to discover periodicities in the power spectrum,
+as is often the case for solar-like oscillators (cf the asymptotic relation of Tassoul), and can thus be used to 
+estimate the mean large separation (mean frequency spacing between two consecutive radial modes).
+
+As an example we take the Kepler red giant KIC3744043, which shows a beautiful spectrum of solar-like oscillations:
+
+]include figure]]powerspec_KIC3744043.png]
+
+To compute the EACF, we first import:
+
+>>> import numpy as np
+>>> from ivs.timeseries.eacf import *
+
+Red giants have spacings in the power spectrum between, say, 1.0 and 15.0, so this is the interval in which we will
+compute the EACF:
+
+>>> spacings = np.arange(1.0, 15.0, 0.005)
+
+The figure above shows that the oscillations are only present between (roughly) 80 microHz and 135 microHz, so we will limit ourselves to this frequency interval:
+
+>>> minFreq, maxFreq = 80.0, 135.0
+
+The EACF is now computed as:
+
+>>> autoCorrelation, croppedFreqs, smoothedSpectrum = eacf(freq, spec, spacings, 2.0, minFreq, maxFreq)
+
+The value '2.0' is related to the FWHM of the (Hann) kernel that is used to smooth the power spectrum of the signal, on which we will come back later.
+
+The EACF looks as follows:
+
+]include figure]]eacf_smooth15.png]
+
+The highest peak is caused by the main periodicity in the power spectrum. This does not, however, correspond directly 
+to the mean large separation, but to half the large separation. The reason is that almost in the middle between each 
+two radial modes there is a dipole mode. To compute the large separation we therefore have to enter:
+
+>>> meanLargeSeparation = 2.0 * spacings[np.argmax(autoCorrelation)]
+>>> meanLargeSeparation
+9.8599999999998325
+
+How did we choose the value 2.0 (microHz) for the FWHM of the smoothing kernel? The smoothing is done by convolving
+the power spectrum with a Hann kernel with a certain width. If you take the width too large, the spectrum will be too
+heavily smoothed so that no periodicities can be detected. If you take the width too small, the EACF will contain too 
+many features, which makes it difficult to recognize the right peak. As a rule-of-thumb you can take the kernel width
+to be 1/8 of your initial estimate of the mean large separation. If you don't have such an initial estimate, you can
+estimate nu_max, which is the frequency of maximum power (= the location of the gaussian envelope of the 
+power excess), and derive from that value a first estimate for the large separation:
+
+>>> nuMax = 120.0                                      # for KIC3744043
+>>> initialEstimateLargeSep = 0.24 * nuMax**0.78       # general approximation for red giants
+>>> kernelWidth = initialEstimateLargeSep / 8.0        # rule of thumb
+>>> autoCorrelation, croppedFreqs, smoothedSpectrum = eacf(freq, spec, spacings, kernelWidth, minFreq, maxFreq)
 
 """
 
@@ -42,7 +94,8 @@ def DFTpower(time, signal, freqs):
 
 
     
-    
+   
+
 
 def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
 
@@ -56,11 +109,6 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     Source: 
         - Mosser & Appourchaux, 2009, A&A 508, p. 877
         - Mosser, 2010, Astron. Nachr. 331, p. 944
-    
-    Example:
-    
-    >>>
-    >>>
     
     @param freqs: frequencies in which the power specturm is given. Assumed to be equidistant.
     @type freqs: ndarray
@@ -114,44 +162,5 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     # That's it.
     
     return autoCorrelation, croppedFreqs, smoothedSpectrum 
-    
-
-
-
-
-
-
-
-
-
-
-def meanLargeSeparation(freq, spec, nuMax, minFreq=None, maxFreq=None):
-
-    """
-    Estimate the mean large separation from oscillation peaks in a power spectrum.
-
-    @param freq:  frequencies in which the power specturm is given. Assumed to be equidistant.
-    @type freq: ndarray
-    @param spec:  power spectrum corresponding to the given frequency points.
-    @type spec: ndarray
-    @param nuMax: Estimate of the freq of maximum power of the oscillation power excess. Unit: same as 'freqs'.
-    @type nuMax: float
-    @param minFreq: only the part [minFreq, maxFreq] of the spectrum is taken into account.
-                    If it is None, the 1st point of the 'freqs' array is taken.
-    @type minFreq: float
-    @param maxFreq: only the part [minFreq, maxFreq] of the spectrum is taken into account
-                    If it is None, the last point of the 'freqs' array is taken.
-    @type maxFreq: float
-    @return: mean large separation. Unit: same as 'freqs'.
-    @rtype: float
-    """
-    
-    firstEstimateLargeSep = 0.24 * nuMax**0.78
-    kernelWidth = firstEstimateLargeSep / 8.0
-    spacings = np.arange(1.0, 15.0, 0.005)
-    autoCorrelation = eacf(freq, spec, spacings, kernelWidth, minFreq, maxFreq)
-    freqOfHighestPeak = spacings[np.argmax(autoCorrelation)]
-    
-    return 2*freqOfHighestPeak
     
 
