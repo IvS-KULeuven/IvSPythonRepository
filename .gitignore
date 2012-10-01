@@ -9,7 +9,7 @@
 
 # HTML files of the documentation
 
-doc/*.*
+doc/html/*
 
 # Packages
 

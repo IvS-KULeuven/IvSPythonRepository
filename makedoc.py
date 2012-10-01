@@ -24,7 +24,7 @@ alldirs = [ff for ff in alldirs if not 'lmfit' in ff]
 #-- build documentation
 print "Building documentation:"
 cmd = 'epydoc --html '+" ".join(alldirs)+\
-            ' -o doc --parse-only --graph all'# -v'
+            ' -o doc/html --parse-only --graph all'# -v'
 print cmd
 os.system(cmd)
 
@@ -35,23 +35,23 @@ if not os.path.isdir('doc/images'):
     raise SystemExit
 
 
-shutil.move('doc/ivs.timeseries.freqanalyse-module.html','doc/ivs.timeseries.freqanalyse-module_.html')
-ff = open('doc/ivs.timeseries.freqanalyse-module_.html','r')
-oo = open('doc/ivs.timeseries.freqanalyse-module.html','w')
+shutil.move('doc/html/ivs.timeseries.freqanalyse-module.html','doc/html/ivs.timeseries.freqanalyse-module_.html')
+ff = open('doc/html/ivs.timeseries.freqanalyse-module_.html','r')
+oo = open('doc/html/ivs.timeseries.freqanalyse-module.html','w')
 for line in ff.readlines():
     if r'p = pl.ylim(0,0.018)' in line:
         oo.write(line+'\n\n')
-        oo.write(r"<center><img src='images/timeseries_freqanalyse_01.png' alt='[image example]' /></center>"+'\n\n')
+        oo.write(r"<center><img src='../images/timeseries_freqanalyse_01.png' alt='[image example]' /></center>"+'\n\n')
         print 'Added image to ivs.timeseries.freqanalyse'
     else:
         oo.write(line)
 ff.close()
 oo.close()
-os.remove('doc/ivs.timeseries.freqanalyse-module_.html')
+os.remove('doc/html/ivs.timeseries.freqanalyse-module_.html')
 
 
-files = sorted(glob.glob('doc/*module.html'))
-files+= sorted(glob.glob('doc/*class.html'))
+files = sorted(glob.glob('doc/html/*module.html'))
+files+= sorted(glob.glob('doc/html/*class.html'))
 for myfile in files:
     shutil.move(myfile,myfile+'_')
     ff = open(myfile+'_','r')
@@ -62,7 +62,7 @@ for myfile in files:
         
         if ']include figure]' in line or line_break:
             filename = line.split(']')[-2].strip()
-            oo.write(r"<center><img src='images/%s' alt='[image example]' width='75%%'/></center>"%(filename)+'\n\n')
+            oo.write(r"<center><img src='../images/%s' alt='[image example]' width='75%%'/></center>"%(filename)+'\n\n')
             print 'Added image %s to %s'%(filename,myfile)
             oo.write('\n\n')
             line_break = False
