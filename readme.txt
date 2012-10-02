@@ -38,28 +38,15 @@ using, for example:
     export PYTHONPATH
 
 
-* To generate the documentation, copy the file
+* To generate the documentation, simply run the script
 
-    /home/pieterd/python/ivs/makedoc.py
-    
-to a directory of your choice (referenced as /home/user/mydir/ henceforth),
-but preferable *not* in the ivs root directory (e.g. one directory above it).
-Create a directory "doc" in that directory:
-    
-    $ mkdir /home/user/mydir/doc
-
-And copy the directory "/home/pieterd/python/ivs/doc/images" to that directory:
-    
-    $ cp -r /home/pieterd/python/ivs/doc/images /home/user/mydir/doc/
-    
-Now run the makedoc.py script in the right directory:
-    
-    $ cd /home/user/mydir
     $ python makedoc.py
-    
-Open "/home/user/mydir/doc/index.html" in your favorite browser and start browsing!
+
+  in the repository's root folder. 
+ 
+Open "/doc/html/index.html" in your favorite browser and start browsing!
 Whenever you change something yourself in your local branch or you pull changes
-from someone elses, you can re-run the makedoc.py script.
+from someone else, you can re-run the makedoc.py script.
 
 
 
