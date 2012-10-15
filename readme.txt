@@ -34,8 +34,9 @@ using, for example:
 
   If your python repository is in, e.g., ~/python/ivs/ivs , you can put in your .bash_profile:
   
-    PYTHONPATH="/Users/Joris/Development/Python/ivs/"
-    export PYTHONPATH
+    export PYTHONPATH=/home/joris/python/ivs:$PYTHONPATH
+
+Warning: don't put ~/python/ivs/ivs in your Python path, but ~/python/ivs.
 
 
 * To generate the documentation, simply run the script
