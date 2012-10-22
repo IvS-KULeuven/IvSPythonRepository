@@ -1178,7 +1178,7 @@ class SED(object):
         
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
-        self.master = fix_master(np.hstack([self.master,extra_master]))
+        self.master = fix_master(np.hstack([self.master,extra_master]),e_default=0.1)
         #self.master = np.hstack([self.master,extra_array])
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
@@ -2026,7 +2026,7 @@ class SED(object):
             pl.legend(loc='upper right',prop=dict(size='x-small'))
             pl.grid()
             pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.59,0.120),xycoords='axes fraction',color='r')
-            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.59,0.075),xycoords='axes fraction',color='r')
+            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2[include_grid][keep])),(0.59,0.075),xycoords='axes fraction',color='r')
             if 'factor' in self.results[mtype]:
                 pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.59,0.030),xycoords='axes fraction',color='k')
             xlims = pl.xlim()
