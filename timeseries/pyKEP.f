@@ -92,7 +92,7 @@ c     ------------------------------------------------------------------
 c      ! wexp = weightening exponent (default Chi2)
 c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       LOGICAL exists
-      CHARACTER TV*40, fittype*8/"unknown"/
+      CHARACTER TV*40, fittype*8
       DOUBLE PRECISION twopi,G,AU,Msun,Mjup, fa
       PARAMETER(twopi=2.*3.141592654,G=6.6726E-11,AU=1.496E11)
       PARAMETER(Msun=1.989E30, Mjup = Msun/1047.39)
@@ -102,7 +102,7 @@ c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       DOUBLE PRECISION s2(maxstep)
       DOUBLE PRECISION k2(6)
       DOUBLE PRECISION JD(Nmax),RV(Nmax),RVerr(Nmax),phase(Nmax)
-      DOUBLE PRECISION t(Nmax),JDmin/1.E38/,JDmax/-1.E38/
+      DOUBLE PRECISION t(Nmax),JDmin,JDmax
       DOUBLE PRECISION PKep,Freq,Fbeg,Fend,step
       DOUBLE PRECISION ww(Nmax),v(Nmax),wy(Nmax),RVmean,m33,YY
       DOUBLE PRECISION pow,powLS,powSin,powKep,SW, z,wA
@@ -197,3 +197,5 @@ c              because the true anomaly is now calcuable:
       k2(6) = RV0
 
       END
+      program dummy
+      end

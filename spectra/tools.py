@@ -78,14 +78,18 @@ Set the xticks to vsini values for clarity:
 ]include figure]]ivs_spectra_tools_vsini02.png]
 
 """
-import pyrotin4
+from ivs.spectra import pyrotin4
 import numpy as np
 import logging
 from numpy import pi,sin,cos,sqrt
+import scipy.stats
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
-from ivs.aux import loggers
+
+from ivs import config
+from ivs.io import fits
+from scipy.interpolate import interp1d
 
 logger = logging.getLogger("SPEC.TOOLS")
 
@@ -230,8 +234,11 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     ]include figure]]ivs_spectra_tools_vsini_kernel.png]
     
     Extra keyword arguments are passed to L{pergrams.deeming}
+    
+    @rtype: (array,array),(array,array),array
+    @return: periodogram, extrema, vsini values
     """
-    cc = conversions.convert('m/s','A/s',constants.cc)
+    cc = conversions.convert('m/s','AA/s',constants.cc)
     #-- clip the wavelength and flux region if needed:
     if window is not None:
         keep = (window[0]<=wave) & (wave<=window[1])
@@ -252,9 +259,9 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     minvals = ampls[1:-1][rise & fall]
     #-- compute the vsini and convert to km/s
     freqs = freqs*clam/q1/cc
-    freqs = conversions.convert('s/A','s/km',freqs,wave=(clam,'A'))
+    freqs = conversions.convert('s/AA','s/km',freqs,wave=(clam,'AA'))
     vsini_values = cc/clam*q1/minima
-    vsini_values = conversions.convert('A/s','km/s',vsini_values,wave=(clam,'A'))
+    vsini_values = conversions.convert('AA/s','km/s',vsini_values,wave=(clam,'AA'))
     
     return (freqs,ampls),(minima,minvals),vsini_values
 
@@ -343,19 +350,32 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     
     return w3[:ind],f3[:ind]
 
-def combine(list_of_spectra):
+def combine(list_of_spectra,R=200.,lambda0=(950.,'AA'),lambdan=(3350.,'AA')):
     """
-    Combine and average spectra on a common wavelength grid.
+    Combine and weight-average spectra on a common wavelength grid.
     
     C{list_of_spectra} should be a list of lists/arrays. Each element in the
     main list should be (wavelength,flux,error).
     
+    If you have FUSE fits files, use L{ivs.fits.read_fuse}.
+    If you have IUE FITS files, use L{ivs.fits.read_iue}.
+    
     After Peter Woitke.
+    
+    @param R: resolution
+    @type R: float
+    @param lambda0: start wavelength, unit
+    @type lambda0: tuple (float,str)
+    @param lambdan: end wavelength, unit
+    @type lambdan: tuple (float,str)
+    @return: binned spectrum (wavelengths,flux, error)
+    @rtype: array, array, array
     """
+    l0 = conversions.convert(lambda0[1],'AA',lambda0[0])
+    ln = conversions.convert(lambdan[1],'AA',lambdan[0])
     #-- STEP 1: define wavelength bins
-    R = 200.
     Delta = np.log10(1.+1./R)
-    x = np.arange(np.log10(950),np.log10(3350)+Delta,Delta)
+    x = np.arange(np.log10(l0),np.log10(ln)+Delta,Delta)
     x = 10**x
     lamc_j = 0.5*(np.roll(x,1)+x)
 
@@ -377,21 +397,71 @@ def combine(list_of_spectra):
             B = np.max(np.vstack([lamc_j[j]*np.ones(len(wave)),lam_i0_dc]),axis=0)
             overlaps = scipy.stats.threshold(A-B,threshmin=0)
             norm = np.sum(overlaps)
-            binned_fluxes[fnr,j] = np.sum(flux*overlaps)/norm
-            binned_errors[fnr,j] = np.sqrt(np.sum((err*overlaps)**2))/norm
+            binned_fluxes[snr,j] = np.sum(flux*overlaps)/norm
+            binned_errors[snr,j] = np.sqrt(np.sum((err*overlaps)**2))/norm
     
     #-- STEP 3: all available spectra sets are co-added, using the inverse
     #   square of the bin uncertainty as weight
     binned_fluxes[np.isnan(binned_fluxes)] = 0
-    binned_errors[np.isnan(binned_errors)] = np.inf
+    binned_errors[np.isnan(binned_errors)] = 1e300
     weights = 1./binned_errors**2
+    
     totalflux = np.sum(weights*binned_fluxes,axis=0)/np.sum(weights,axis=0)
     totalerr = np.sqrt(np.sum((weights*binned_errors)**2,axis=0))/np.sum(weights,axis=0)
+    totalspec = np.sum(binned_fluxes>0,axis=0)
     
     #-- that's it!
-    return x[:-1],totalflux,totalerr
+    return x[:-1],totalflux,totalerr,totalspec
 
+def get_response(instrument='hermes'):
+    """
+    Returns the response curve of the given instrument. Up till now only a HERMES response cruve is
+    available. This response curve is based on 25 spectra of the single sdB star Feige 66, and has
+    a wavelenght range of 3800 to 8000 A.
+    
+    @param instrument: the instrument of which you want the response curve
+    @type instrument: string
+    """
+        
+    basedir = 'spectables/responses/'
+    
+    if instrument == 'hermes':
+        basename = 'response_Feige66.fits'
+        
+    response = config.get_datafile(basedir,basename)
+    
+    wave, flux = fits.read_spectrum(response)
+        
+    return wave, flux
 
+def remove_response(wave, flux, instrument='hermes'):
+    """
+    Divides the provided spectrum by the response curve of the given instrument. Up till now only
+    a HERMES response curve is available.
+    
+    @param wave: wavelenght array
+    @type wave: numpy array
+    @param flux: flux array
+    @type flux: numpy array
+    @param instrument: the instrument of which you want the response curve
+    @type instrument: string
+    
+    @return: the new spectrum (wave, flux)
+    @rtype: (array, array)
+    """
+    
+    #-- get the response curve
+    wr, fr = get_response(instrument=instrument)
+    fr_ = interp1d(wr, fr, kind='linear')
+    
+    #-- select usefull part of the spectrum
+    flux = flux[(wave >= wr[0]) & (wave <= wr[-1])]
+    wave = wave[(wave >= wr[0]) & (wave <= wr[-1])]
+    
+    flux = flux / fr_(wave)
+    
+    return wave, flux
+    
 
 if __name__=="__main__":
     import doctest

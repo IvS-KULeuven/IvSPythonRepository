@@ -532,3 +532,5 @@ C  find the max. location
       MAXLOC= LMAX
       RETURN
       END
+      program dummy
+      end

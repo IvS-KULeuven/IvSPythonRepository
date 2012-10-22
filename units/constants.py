@@ -31,6 +31,7 @@ This is independent of the way the conventions are set.
 """
 _current_convention = 'SI'
 _current_values = 'standard'
+_current_frequency = 'rad'
 # SI-units
 # value                    name                          unit          reference
 #===============================================================================
@@ -48,7 +49,7 @@ Rjup   = 6.9911e7          # Jupiter radius              m             mesa
 Mlun   = 7.346e22          # Lunar mass                  kg            wikipedia
 au     = 149597870700.     # astronomical unit           m             Harmanec & Prsa 2011
 pc     = 3.085677581503e+16# parsec                      m             Harmanec & Prsa 2011
-ly     = 9.4605284e+15     # light year                  m
+ly     = 9.460730472580800e+15     # light year                  m
 hh     = 6.6260689633e-34  # Planck constant             J/s
 hhbar  = 1.05457162853e-34 # reduced Planck constant     J/s
 kB     = 1.380650424e-23   # Boltzmann constant          J/K
@@ -95,7 +96,7 @@ aa_units     = 'kg m-1 s-2 K-4'
 a0_units     = 'm'
 ke_units     = 'N m2 C-2'
 eps0_units   = 'F m-1'
-mu0_units    = 'T m Am-1'
+mu0_units    = 'T m A-1'
 alpha_units  = ''
 me_units     = 'kg'
 qe_units     = 'C'

@@ -2,6 +2,13 @@
 """
 Functions relevant for photometric calibration
 
+Table of contents:
+
+    1. Available response functions
+    2. Adding filters on the fly
+        - Defining a new filter
+        - Temporarily modifying an existing filter
+
 Section 1. Available response functions
 =======================================
 
@@ -193,6 +200,9 @@ Plots of all passbands of all systems:
 Section 2: Adding filters on the fly
 ====================================
 
+Section 2.1: Defining a new filter
+----------------------------------
+
 You can add custom filters on the fly using L{add_custom_filter}. In this
 example we add a weird-looking filter and check the definition of Flambda and
 Fnu and its relation to the effective wavelength of a passband:
@@ -239,7 +249,7 @@ wavelength?
 
 Let's do some synthetic photometry now. Suppose we have a black body atmosphere:
 
->>> bb = model.blackbody((wave,'angstrom'),(5777.,'K'),units='erg/s/cm2/A')
+>>> bb = model.blackbody(wave,5777.)
 
 We now calculate the synthetic flux, assuming the CCD and BOL device. We
 compute the synthetic flux both in Flambda and Fnu:
@@ -253,17 +263,17 @@ energy counting devices!
 >>> flam_ccd,flam_bol
 (897.68536911320564, 1495.248213834755)
 >>> fnu_ccd,fnu_bol
-(4.2591095543803019e-06, 5.2446332430111166e-06)
+(4.2591095543803019e-06, 5.2446332430111098e-06)
 
 Can we now readily convert Flambda to Fnu with assuming the pivot wavelength?
 
->>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,wave=(effwave_ccd,'A'))
->>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,wave=(effwave_bol,'A'))
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_ccd,wave=(effwave_ccd,'A'))
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_bol,wave=(effwave_bol,'A'))
 
 Which is equivalent with:
 
->>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_ccd,photband='LAMBDA.CCD')
->>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/A','erg/s/cm2/Hz',flam_bol,photband='LAMBDA.BOL')
+>>> fnu_fromflam_ccd = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_ccd,photband='LAMBDA.CCD')
+>>> fnu_fromflam_bol = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',flam_bol,photband='LAMBDA.BOL')
 
 Apparently, with the definition of pivot wavelength, you can safely convert from
 Fnu to Flambda:
@@ -271,9 +281,26 @@ Fnu to Flambda:
 >>> print(fnu_ccd,fnu_fromflam_ccd)
 (4.2591095543803019e-06, 4.259110447428463e-06)
 >>> print(fnu_bol,fnu_fromflam_bol)
-(5.2446332430111166e-06, 5.2446373530017525e-06)
+(5.2446332430111098e-06, 5.2446373530017525e-06)
 
 The slight difference you see is numerical.
+
+Section 2.2: Temporarily modifying an existing filter
+-----------------------------------------------------
+
+Under usual conditions, you are prohibited from overwriting an existing predefined
+response curve. That is, if you try to L{add_custom_filter} with a C{photband}
+that already exists as a file, a C{ValueError} will be raised (this is not the
+case for a custom defined filter, which you can overwrite without problems!).
+If, for testing purposes, you want to use another definition of a predefined
+response curve, you need to set C{force=True} in L{add_custom_filter}, and then
+call
+
+>>> set_prefer_file(False)
+
+To reset and use the original definitions again, do
+
+>>> set_prefer_file(True)
 
 """
 import os
@@ -290,10 +317,10 @@ from ivs.io import ascii
 
 basedir = os.path.dirname(__file__)
 
-logger = logging.getLogger("CAT.VIZIER")
+logger = logging.getLogger("SED.FILT")
 logger.addHandler(loggers.NullHandler())
 
-custom_filters = {}
+custom_filters = {'_prefer_file':True}
 
 #{ response curves
 @memoized
@@ -309,24 +336,57 @@ def get_response(photband):
     >>> for band in ['J','H','KS']:
     ...    p = pl.plot(*get_response('2MASS.%s'%(band)))
     
+    If you defined a custom filter with the same name as an existing one and
+    you want to use that one in the future, set C{prefer_file=False} in the
+    C{custom_filters} module dictionary.
+    
     @param photband: photometric passband
     @type photband: str ('SYSTEM.FILTER')
     @return: (wavelength [A], response)
     @rtype: (array, array)
     """
     photband = photband.upper()
+    prefer_file = custom_filters['_prefer_file']
     if photband=='OPEN.BOL':
         return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])    
     #-- either get from file or get from dictionary
     photfile = os.path.join(basedir,'filters',photband)
-    if os.path.isfile(photfile):
+    photfile_is_file = os.path.isfile(photfile)
+    #-- if the file exists and files have preference
+    if photfile_is_file and prefer_file:
         wave, response = ascii.read2array(photfile).T[:2]
+    #-- if the custom_filter exist
     elif photband in custom_filters:
         wave, response = custom_filters[photband]['response']
+    #-- if the file exists but custom filters have preference
+    elif photfile_is_file:
+        wave, response = ascii.read2array(photfile).T[:2]
     else:
         raise IOError,('{0} does not exist {1}'.format(photband,custom_filters.keys()))
     sa = np.argsort(wave)
     return wave[sa],response[sa]
+
+def create_custom_filter(wave,peaks,range=(3000,4000),sigma=3.):
+    """
+    Create a custom filter as a sum of Gaussians.
+    
+    @param wave: wavelength to evaluate the profile on
+    @type wave: ndarray
+    @param peaks: heights of the peaks
+    @type peaks: ndarray of length N, with N peaks
+    @param range: wavelength range of the peaks
+    @type range: tuple
+    @param sigma: width of the peaks in units of (range/N)
+    @type sigma: float
+    @return: filter profile
+    @rtype: ndarray
+    """
+    wpnts = np.linspace(range[0],range[1],len(peaks)+2)[1:-1]
+    sigma = (range[1]-range[0])/(sigma*len(peaks))
+    gauss = lambda x,p: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2))
+    els = [gauss(wave,[pk,mu,sigma]) for pk,mu in zip(peaks,wpnts)]
+    profile = np.array(els).sum(axis=0)
+    return profile
 
 
 def add_custom_filter(wave,response,**kwargs):
@@ -353,13 +413,15 @@ def add_custom_filter(wave,response,**kwargs):
     @type photband: str ('SYSTEM.FILTER')
     """
     kwargs.setdefault('photband','CUSTOM.FILTER')
+    kwargs.setdefault('copy_from','JOHNSON.V')
+    kwargs.setdefault('force',False)
     photband = kwargs['photband']
     #-- check if the filter already exists:
     photfile = os.path.join(basedir,'filters',photband)
-    if os.path.isfile(photfile):
+    if os.path.isfile(photfile) and not kwargs['force']:
         raise ValueError,'bandpass {0} already exists'.format(photfile)
     elif photband in custom_filters:
-        logger.warning('Overwriting previous definition of {0}'.format(photband))
+        logger.debug('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
     #-- set effective wavelength
     kwargs.setdefault('type','CCD')
@@ -367,7 +429,7 @@ def add_custom_filter(wave,response,**kwargs):
     #-- add info for zeropoints.dat file: make sure wherever "lit" is part of
     #   the name, we replace it with "0". Then, we overwrite any existing
     #   information with info given
-    myrow = get_info(['JOHNSON.V'])
+    myrow = get_info([kwargs['copy_from']])
     for name in myrow.dtype.names:
         if 'lit' in name:
             myrow[name] = 0
@@ -375,7 +437,17 @@ def add_custom_filter(wave,response,**kwargs):
     del decorators.memory[__name__]
     #-- add info:
     custom_filters[photband]['zp'] = myrow
-    logger.info('Added photband {0} to the predefined set'.format(photband))
+    logger.debug('Added photband {0} to the predefined set'.format(photband))
+
+def set_prefer_file(prefer_file=True):
+    """
+    Set whether to prefer files or custom filters when both exist.
+    
+    @param prefer_file: boolean
+    @type prefer_file: bool
+    """
+    custom_filters['_prefer_file'] = prefer_file
+    logger.info("Preffering {}".format(prefer_file and 'files' or 'custom filters'))
 
 
 def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
@@ -396,6 +468,7 @@ def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
         except ValueError:
             logger.info('{0} already exists, skipping'.format(photband))
         photbands.append(photband)
+    logger.info('Added spectrophotometric filters')
     return photbands
 
 
@@ -419,7 +492,7 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     else:
         name_ = name
     curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name_.upper())))
-    curve_files = sorted(curve_files+[key for key in custom_filters.keys() if name in key])
+    curve_files = sorted(curve_files+[key for key in custom_filters.keys() if ((name in key) and not (key=='_prefer_file'))])
     curve_files = [cf for cf in curve_files if not ('HUMAN' in cf or 'EYE' in cf) ]
     #-- select in correct wavelength range
     curve_files = [os.path.basename(curve_file) for curve_file in curve_files if (wave_range[0]<=eff_wave(os.path.basename(curve_file))<=wave_range[1])]
@@ -463,8 +536,38 @@ def get_color_photband(photband):
         bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','Y']])
     elif band.upper()=='C1':
         bands = tuple(['%s.%s'%(system,iband) for iband in ['V','B','U']])
-    
+    else:
+        raise ValueError('cannot recognize color {}'.format(photband))
     return bands
+
+def make_color(photband):
+    """
+    Make a color from a color name and fluxes.
+    
+    You get two things: a list of photbands that are need to construct the color,
+    and a function which you need to pass fluxes to compute the color.
+    
+    >>> bands, func = make_color('JOHNSON.B-V')
+    >>> print(bands)
+    ('JOHNSON.B', 'JOHNSON.V')
+    >>> print(func(2,3.))
+    0.666666666667
+    
+    @return: photbands, function to construct color
+    @rtype: tuple,callable
+    """
+    system,band = photband.split('.')
+    band = band.strip() # remove extra spaces
+    photbands = get_color_photband(photband)
+    if len(band.split('-'))==2:
+        func = lambda f0,f1: f0/f1
+    elif band=='M1':
+        func = lambda fv,fb,fy: fv*fy/fb**2
+    elif band=='C1':
+        func = lambda fv,fb,fu: fu*fb/fv**2
+    else:
+        raise ValueError('cannot recognize color {}'.format(photband))
+    return photbands,func
 
 
 def eff_wave(photband,model=None,det_type=None):
@@ -560,7 +663,8 @@ def get_info(photbands=None):
     """
     zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
     zp = ascii.read2recarray(zp_file)
-    for iph in custom_filters:       
+    for iph in custom_filters:
+        if iph=='_prefer_file': continue
         if 'zp' in custom_filters[iph]:
             zp = np.hstack([zp,custom_filters[iph]['zp']])
     zp = zp[np.argsort(zp['photband'])]

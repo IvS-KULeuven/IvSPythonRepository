@@ -26,12 +26,20 @@ function in this module.
 >>> p = plt.figure()
 >>> x = np.linspace(0,10,1000)
 >>> p = plt.plot(x,evaluate('sine',x,[1.,2.,0,0]),label='sine')
->>> p = plt.plot(x,evaluate('sine_freqshift',x,[1.,0.5,0,0,.5]),label='sine_freqshift')
->>> p = plt.plot(x,evaluate('sine_orbit',x,[1.,2.,0,0,0.1,10.,0.1]),label='sine_orbit')
+>>> p = plt.plot(x,evaluate('sine_linfreqshift',x,[1.,0.5,0,0,.5]),label='sine_linfreqshift')
+>>> p = plt.plot(x,evaluate('sine_expfreqshift',x,[1.,0.5,0,0,1.2]),label='sine_expfreqshift')
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
 
 ]include figure]]ivs_sigproc_fit_funclib03.png]
+
+>>> p = plt.figure()
+>>> p = plt.plot(x,evaluate('sine',x,[1.,2.,0,0]),label='sine')
+>>> p = plt.plot(x,evaluate('sine_orbit',x,[1.,2.,0,0,0.1,10.,0.1]),label='sine_orbit')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib03a.png]
 
 >>> p = plt.figure()
 >>> x_single = np.linspace(0,10,1000)
@@ -46,6 +54,65 @@ function in this module.
 
 ]include figure]]ivs_sigproc_fit_funclib04.png]
 
+>>> p = plt.figure()
+>>> x = np.linspace(-1,1,1000)
+>>> gammas = [-0.25,0.1,0.25,0.5,1,2,4]
+>>> y = np.array([evaluate('soft_parabola',x,[1.,0,1.,gamma]) for gamma in gammas])
+divide by zero encountered in power
+>>> for iy,gamma in zip(y,gammas): p = plt.plot(x,iy,label="soft_parabola $\gamma$={:.2f}".format(gamma))
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib05.png]
+
+>>> p = plt.figure()
+>>> x = np.logspace(-1,2,1000)
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='micron',flux_units='W/m3')
+>>> p = plt.subplot(221)
+>>> p = plt.title(r'$\lambda$ vs $F_\lambda$')
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='micron',flux_units='Jy')
+>>> p = plt.subplot(223)
+>>> p = plt.title(r"$\lambda$ vs $F_\\nu$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> x = np.logspace(0.47,3.47,1000)
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='THz',flux_units='Jy')
+>>> p = plt.subplot(224)
+>>> p = plt.title(r"$\\nu$ vs $F_\\nu$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+>>> blbo = evaluate('blackbody',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> raje = evaluate('rayleigh_jeans',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> wien = evaluate('wien',x,[10000.,1.],wave_units='THz',flux_units='W/m3')
+>>> p = plt.subplot(222)
+>>> p = plt.title(r"$\\nu$ vs $F_\lambda$")
+>>> p = plt.loglog(x,blbo,label='Black Body')
+>>> p = plt.loglog(x,raje,label='Rayleigh-Jeans')
+>>> p = plt.loglog(x,wien,label='Wien')
+>>> leg = plt.legend(loc='best')
+>>> leg.get_frame().set_alpha(0.5)
+
+]include figure]]ivs_sigproc_fit_funclib06.png]
 
 """
 import numpy as np
@@ -53,18 +120,75 @@ from numpy import pi,cos,sin,sqrt,tan,arctan
 from scipy.special import erf,jn
 from ivs.sigproc.fit import Model, Function
 import ivs.timeseries.keplerorbit as kepler
+from ivs.sed import model as sed_model
+import logging
+
+logger = logging.getLogger("SP.FUNCLIB")
 
 #{ Function Library
+def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Blackbody (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.blackbody(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
+    
+def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Rayleigh-Jeans tail (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.rayleigh_jeans(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
+    
+def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
+    """
+    Wien approximation (T, scale).
+    
+    @param wave_units: wavelength units
+    @type wave_units: string
+    @param flux_units: flux units
+    @type flux_units: string
+    @param disc_integrated: sets units equal to SED models
+    @type disc_integrated: bool
+    """
+    pnames = ['T', 'scale']
+    function = lambda p, x: p[1]*sed_model.wien(x, p[0], wave_units=wave_units,\
+                                                flux_units=flux_units,\
+                                                disc_integrated=disc_integrated)
+    
+    return Function(function=function, par_names=pnames)
 
 def kepler_orbit(type='single'):
     """
     Kepler orbits ((p,t0,e,omega,K,v0) or (p,t0,e,omega,K1,v01,K2,v02))
     
     A single kepler orbit
-    parameters are: [P, T0, e, omega, K, v0]
+    parameters are: [p, t0, e, omega, k, v0]
     
     A double kepler orbit
-    parameters are: [P, T0, e, omega, K_1, v0_1, K_2, v0_2]
+    parameters are: [p, t0, e, omega, k_1, v0_1, k_2, v0_2]
     Warning: This function uses 2d input and output!
     """
     if type == 'single':
@@ -74,15 +198,20 @@ def kepler_orbit(type='single'):
         return Function(function=function, par_names=pnames)
         
     elif type == 'double':
-        function = lambda p, x: np.vstack([kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
-                                 kepler.radial_velocity([p[0],p[1],p[2],p[3],p[6],p[7]], times=x[1], itermax=8)])
+        function = lambda p, x: [kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
+                                 kepler.radial_velocity([p[0],p[1],p[2],p[3],p[6],p[7]], times=x[1], itermax=8)]
+        def residuals(syn, data, weights=None, errors=None, **kwargs):
+            return np.hstack( [( data[0] - syn[0] ) * weights[0],  ( data[1] - syn[1] ) * weights[1] ] )
         pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
     
-        return Function(function=function, par_names=pnames)
+        return Function(function=function, par_names=pnames, resfunc=residuals)
 
 def box_transit(t0=0.):
     """
     Box transit model (cont,freq,ingress,egress,depth)
+    
+    @param t0: reference time (defaults to 0)
+    @type t0: float
     """
     pnames = 'cont','freq','ingress','egress','depth'
     def function(p,x):
@@ -96,7 +225,41 @@ def box_transit(t0=0.):
     return Function(function=function, par_names=pnames)
 
 
-def gauss():
+def polynomial(d=1):
+    """
+    Polynomial (a1,a0).
+    
+    y(x) = ai*x**i + a(i-1)*x**(i-1) + ... + a1*x + a0
+    
+    @param d: degree of the polynomial
+    @type d: int
+    """
+    pnames = ['a{:d}'.format(i) for i in range(d,0,-1)]+['a0']
+    function = lambda p, x: np.polyval(p,x)
+    
+    return Function(function=function, par_names=pnames)
+
+
+def soft_parabola():
+    """
+    Soft parabola (ta,vlsr,vinf,gamma).
+    
+    See Olofsson 1993ApJS...87...267O.
+    
+    T_A(x) = T_A(0) * [ 1 - ((x- v_lsr)/v_inf)**2 ] ** (gamma/2)
+    """
+    pnames = ['ta','vlsr','vinf','gamma']
+    def function(p,x):
+        term = (x-p[1]) / p[2]
+        y = p[0] * (1- term**2)**(p[3]/2.)
+        if p[3]<=0: y[np.abs(term)>=1] = 0
+        y[np.isnan(y)] = 0
+        return y
+    
+    return Function(function=function, par_names=pnames)
+
+
+def gauss(use_jacobian=True):
     """
     Gaussian (a,mu,sigma,c)
     
@@ -105,7 +268,13 @@ def gauss():
     pnames = ['a', 'mu', 'sigma', 'c']
     function = lambda p, x: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2)) + p[3]
     
-    return Function(function=function, par_names=pnames)
+    if not use_jacobian:
+        return Function(function=function, par_names=pnames)
+    else:
+        def jacobian(p, x):
+            ex = np.exp( -(x-p[1])**2 / (2.0*p[2]**2) )
+            return np.array([-ex, -p[0] * (x-p[1]) * ex / p[2]**2, -p[0] * (x-p[1])**2 * ex / p[2]**3, [-1 for i in x] ]).T
+        return Function(function=function, par_names=pnames, jacobian=jacobian)
     
 def sine():
     """
@@ -119,7 +288,7 @@ def sine():
     return Function(function=function, par_names=pnames)
 
 
-def sine_freqshift(t0=0.):
+def sine_linfreqshift(t0=0.):
     """
     Sine with linear frequency shift (ampl,freq,phase,const,D).
         
@@ -132,6 +301,26 @@ def sine_freqshift(t0=0.):
     pnames = ['ampl', 'freq', 'phase', 'const','D']
     def function(p,x):
         freq = (p[1] + p[4]/2.*(x-t0))*(x-t0)
+        return p[0] * sin(2*pi*(freq + p[2])) + p[3]
+    return Function(function=function, par_names=pnames)
+    
+def sine_expfreqshift(t0=0.):
+    """
+    Sine with exponential frequency shift (ampl,freq,phase,const,K).
+        
+    Similar to C{sine}, but with extra parameter 'K', which is the exponential
+    frequency shift parameter.
+    
+    frequency(x) = freq / log(K) * (K**(x-t0)-1)
+    
+    f(x) = ampl * sin( 2*pi * (frequency + phase))
+    
+    @param t0: reference time (defaults to 0)
+    @type t0: float
+    """
+    pnames = ['ampl', 'freq', 'phase', 'const','K']
+    def function(p,x):
+        freq = p[1] / np.log(p[4]) * (p[4]**(x-t0)-1.)
         return p[0] * sin(2*pi*(freq + p[2])) + p[3]
     return Function(function=function, par_names=pnames)
 
@@ -220,8 +409,20 @@ def voigt():
 def multi_sine(n=10):
     """
     Multiple sines.
+    
+    @param n: number of sines
+    @type n: int
     """
     return Model(functions=[sine() for i in range(n)])
+
+def multi_blackbody(n=3,**kwargs):
+    """
+    Multiple black bodies.
+    
+    @param n: number of blackbodies
+    @type n: int
+    """
+    return Model(functions=[blackbody(**kwargs) for i in range(n)])
 
 #}
 
@@ -233,13 +434,13 @@ def _complex_error_function(x):
     """
     cef_value = np.exp(-x**2)*(1-erf(-1j*x))
     if sum(np.isnan(cef_value))>0:
-        logger.warning("Complex Error function: NAN encountered, results are biased")
+        logging.warning("Complex Error function: NAN encountered, results are biased")
         noisnans = np.compress(1-np.isnan(cef_value),cef_value)
         try:
             last_value = noisnans[-1]
         except:
             last_value = 0
-            logger.warning("Complex Error function: all values are NAN, results are wrong")
+            logging.warning("Complex Error function: all values are NAN, results are wrong")
         cef_value = np.where(np.isnan(cef_value),last_value,cef_value)
 
     return cef_value

@@ -14,18 +14,17 @@ Mendelev's Table::
     9  F  Fluorine   19 K  Potassium  29 Cu Copper    39 Y  Yttrium    49 In Indium     59 Pr Praseodymium
     10 Ne Neon       20 Ca Calcium    30 Zn Zinc      40 Zr Zirconium  50 Sn Tin        60 Nd Neodymium
 
-    61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg Roentgenium
-    62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 UubUnunbium
-    63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 UutUnuntrium
-    64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 UuqUnunquadium
-    65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 UupUnunpentium
-    66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 UuhUnunhexium
-    67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 UuoUnunoctium
+    61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg  Roentgenium
+    62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 Uub Ununbium
+    63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 Uut Ununtrium
+    64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 Uuq Ununquadium
+    65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 Uup Ununpentium
+    66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 Uuh Ununhexium
+    67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 Uuo Ununoctium
     68 Er Erbium     78 Pt Platinum   88 Ra Radium    98 Cf Californium  108 Hs Hassium
     69 Tm Thulium    79 Au Gold       89 Ac Actinium  99 Es Einsteinium  109 Mt Meitnerium
     70 Yb Ytterbium  80 Hg Mercury    90 Th Thorium   100 Fm Fermium     110 Ds Darmstadtium
 
-End
 """
 import os
 
@@ -56,6 +55,43 @@ stellar = os.path.join('linelists/mask')
 
 #{ Main functions
 
+def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
+  """
+  Request linelists from VALD for each ion seperately within a specific wavelength range.
+  
+  elem = an array of ions e.g. ['CI','OII'], xmin and xmax: wavelength range in which the spectral lines are searched, outputdir = output directory chosen by the user.
+  
+  If no elements are given, this function returns all of them.
+  
+  @param elem: list of ions
+  @type elem: list of str
+  """
+  if elem is None:
+    files = sorted(config.glob('VALD_individual','VALD_*.lijnen'))
+    elem = [os.path.splitext(os.path.basename(ff))[0].split('_')[1] for ff in files]
+  
+  all_lines = []
+  for i in range(len(elem)):
+    print elem[i]
+    filename = config.get_datafile('VALD_individual','VALD_' + elem[i] + '.lijnen')
+    if not os.path.isfile(filename):
+      logger.info('No data for element ' + str(elem[i]))
+      return None
+   
+    newwav,newexc,newep,newgf = np.loadtxt(filename).T
+    lines = np.rec.fromarrays([newwav,newexc,newep,newgf],names=['wavelength','ion','ep','gf'])
+    keep = (xmin<=lines['wavelength']) & (lines['wavelength']<=xmax)
+    if not hasattr(keep,'__iter__'):
+      continue
+    lines = lines[keep]
+    if len(lines) and outputdir is not None:
+      ascii.write_array(lines,outputdir + 'VALD_' + str(elem[i]) + '_' + str(xmin) + '_' + str(xmax) + '.dat',auto_width=True,header=True,formats=['%.3f','%.1f','%.3f','%.3f'])
+    elif len(lines):
+      all_lines.append(lines)
+    else:
+      logger.info('No lines of ' + str(elem[i]) + ' in given wavelength range')
+  return np.hstack(all_lines)
+
 def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
                 blend=0.0):
     """
@@ -67,6 +103,8 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
     a number
     
     A lines is considerd a blend if the closest line is closer than C{blend} angstrom.
+    
+    Returns record array with fields C{wavelength}, C{ion} and C{depth}.
     
     Example usage:
     

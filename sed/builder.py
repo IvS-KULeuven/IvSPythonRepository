@@ -15,9 +15,10 @@ Table of contents:
         - Loading SED fits
     4. Radii, distances and luminosities
         - Relations between quantities
-        - Seismic constraints
         - Parallaxes
+        - Seismic constraints
         - Reddening constraints
+        - Evolutionary constraints
 
 Section 1. Retrieving and plotting photometry of a target
 =========================================================
@@ -49,9 +50,16 @@ Note that C{ra} and C{dec} are given in B{degrees}.
 
 You best B{switch on the logger} (see L{ivs.aux.loggers.get_basic_logger}) to see the progress:
 sometimes, access to catalogs can take a long time (the GATOR sources are
-typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow,
-you can B{include/exclude these sources} via the keywords C{include} or C{exclude},
-which take a list of strings (choose from C{gator}, C{vizier} and/or C{gcpd}).
+typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow
+or the site is down, you can B{include/exclude these sources} via the keywords
+C{include} or C{exclude}, which take a list of strings (choose from C{gator},
+C{vizier} and/or C{gcpd}). For ViZieR, there is an extra option to change to
+another mirror site via
+
+>>> vizier.change_mirror()
+
+The L{vizier.change_mirror} function cycles through all the mirrors continuously,
+so sooner or later you will end up with the default one and repeat the cycle.
 
 >>> mysed.get_photometry(exclude=['gator'])
 
@@ -59,58 +67,58 @@ The results will be written to the file B{HD180642.phot}. An example content is:
 
   #  meas    e_meas flag unit photband          source                        _r   _RAJ2000    _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
   #float64   float64 |S20 |S30 |S30              |S50                     float64    float64     float64 float64     float64     float64 |S50         bool    bool
-    7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/A     0       1
-    7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/A     0       1
-     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/A     0       1
-    7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/A     0       1
-    8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/A     0       1
-    8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/A     0       1
-     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+    7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/AA     0       1
+    7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/AA     0       1
+     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/AA     0       1
+    7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/AA     0       1
+    8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/AA     0       1
+    8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/AA     0       1
+     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
      0.22       nan nan  mag  JOHNSON.B-V       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
+     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
     2.601       nan nan  mag  STROMGREN.HBN-HBW J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.66181    0.166181 flux_ratio      1       0
    -0.043       nan nan  mag  STROMGREN.M1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan    0.961281   0.0961281 flux_ratio      1       0
-    8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/A     0       1
+    8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/AA     0       1
     0.009       nan nan  mag  STROMGREN.C1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     0.93125    0.093125 flux_ratio      1       0
     0.238       nan nan  mag  STROMGREN.B-Y     J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.28058    0.128058 flux_ratio      1       0
-    8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/A     0       1
-    8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/A     0       1
-    8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/A     0       1
-     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/A     0       1
-     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/A     0       1
-     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/A     0       1
-   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/A     0       1
-    8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/A     0       1
-    8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/A     0       1
-     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/A     0       1
-    8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/A     0       1
-     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/A     0       1
-     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/A     0       1
-    8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/A     0       1
-    8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/A     0       1
-    7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/A     0       1
-    7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/A     0       1
-    7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/A     0       1
-    8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/A     0       1
+    8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/AA     0       1
+    8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/AA     0       1
+    8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/AA     0       1
+     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/AA     0       1
+     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/AA     0       1
+     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/AA     0       1
+   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/AA     0       1
+    8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/AA     0       1
+    8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/AA     0       1
+     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/AA     0       1
+    8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/AA     0       1
+     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/AA     0       1
+     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/AA     0       1
+    8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/AA     0       1
+    8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/AA     0       1
+    7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/AA     0       1
+    7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/AA     0       1
+    7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/AA     0       1
+    8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/AA     0       1
       1.8     0.004 nan  mag  GENEVA.G-B        GCPD                         nan        nan         nan     nan    0.669837  0.00669837 flux_ratio      1       0
     1.384     0.004 nan  mag  GENEVA.V1-B       GCPD                         nan        nan         nan     nan    0.749504  0.00749504 flux_ratio      1       0
      0.85     0.004 nan  mag  GENEVA.B1-B       GCPD                         nan        nan         nan     nan     1.05773   0.0105773 flux_ratio      1       0
     1.517     0.004 nan  mag  GENEVA.B2-B       GCPD                         nan        nan         nan     nan    0.946289  0.00946289 flux_ratio      1       0
     0.668     0.004 nan  mag  GENEVA.V-B        GCPD                         nan        nan         nan     nan    0.726008  0.00726008 flux_ratio      1       0
     0.599     0.004 nan  mag  GENEVA.U-B        GCPD                         nan        nan         nan     nan     1.13913   0.0113913 flux_ratio      1       0
-    7.604 0.0174642 nan  mag  GENEVA.B          GCPD                         nan        nan         nan 4200.85 2.59014e-12 4.16629e-14 erg/s/cm2/A     0       1
-    9.404 0.0179165 nan  mag  GENEVA.G          GCPD                         nan        nan         nan 5765.89 1.73497e-12   2.863e-14 erg/s/cm2/A     0       1
-    8.988 0.0179165 nan  mag  GENEVA.V1         GCPD                         nan        nan         nan 5395.63 1.94132e-12 3.20351e-14 erg/s/cm2/A     0       1
-    8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/A     0       1
-    9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/A     0       1
-    8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/A     0       1
-     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/A     0       1
+    7.604 0.0174642 nan  mag  GENEVA.B          GCPD                         nan        nan         nan 4200.85 2.59014e-12 4.16629e-14 erg/s/cm2/AA     0       1
+    9.404 0.0179165 nan  mag  GENEVA.G          GCPD                         nan        nan         nan 5765.89 1.73497e-12   2.863e-14 erg/s/cm2/AA     0       1
+    8.988 0.0179165 nan  mag  GENEVA.V1         GCPD                         nan        nan         nan 5395.63 1.94132e-12 3.20351e-14 erg/s/cm2/AA     0       1
+    8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/AA     0       1
+    9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/AA     0       1
+    8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/AA     0       1
+     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
      0.22       nan nan  mag  JOHNSON.B-V       GCPD                         nan        nan         nan     nan     1.40749    0.140749 flux_ratio      1       0
     -0.66       nan nan  mag  JOHNSON.U-B       GCPD                         nan        nan         nan     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/A     0       1
-     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/A     0       1
+     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
+     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
    -0.035       nan nan  mag  STROMGREN.M1      GCPD                         nan        nan         nan     nan    0.954224   0.0954224 flux_ratio      1       0
     0.031       nan nan  mag  STROMGREN.C1      GCPD                         nan        nan         nan     nan     0.91257    0.091257 flux_ratio      1       0
     0.259       nan nan  mag  STROMGREN.B-Y     GCPD                         nan        nan         nan     nan     1.25605    0.125605 flux_ratio      1       0
@@ -124,12 +132,24 @@ Once a .phot file is written and L{get_photometry} is called again for the same
 target, the script will B{not retrieve the photometry from the internet again},
 but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
-delete the .phot file.
+delete the .phot file or set C{force=True} when calling L{get_photometry}. 
 
 The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
+
+Notice that in the C{.phot} files, also a C{comment} column is added. You can 
+find translation of some of the flags here (i.e. upper limit, extended source etc..),
+or sometimes just additional remarks on variability etc. Not all catalogs have
+this feature implemented, so you are still responsible yourself for checking
+the quality of the photometry.
+
+The references to each source are given in the C{bibtex} column. Simply call
+
+>>> mysed.save_bibtex()
+
+to convert those bibcodes to a C{.bib} file.
 
 Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
 your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
@@ -205,9 +225,20 @@ we know are not so trustworthy:
 >>> mysed.set_photometry_scheme('combo')
 >>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
 
+You can L{include}/L{exclude} photoemtry based on name, wavelength range, source and index,
+and only select absolute photometry or colors (L{include_abs},L{include_colors}).
+When working in interactive mode, in particular the index is useful. Print the
+current set of photometry to the screen with 
+
+>>> print(photometry2str(mysed.master,color=True,index=True))
+
+and you will see in green the included photometry, and in red the excluded photometry.
+You will see that each column is preceded by an index, you can use these indices
+to select/deselect the photometry.
+
 Speed up the fitting process by copying the model grids to the scratch disk
 
->>> model.copy2scratch()
+>>> model.copy2scratch(z='*')
 
 Start the grid based fitting process and show some plots. We use 100000 randomly
 distributed points over the grid:
@@ -368,9 +399,9 @@ the following information (we print part of each header)::
     TTYPE1  = 'wave    '                                                            
     TUNIT1  = 'A       '                                                            
     TTYPE2  = 'flux    '                                                            
-    TUNIT2  = 'erg/s/cm2/A'                                                         
+    TUNIT2  = 'erg/s/cm2/AA'                                                         
     TTYPE3  = 'dered_flux'                                                          
-    TUNIT3  = 'erg/s/cm2/A'                                                         
+    TUNIT3  = 'erg/s/cm2/AA'                                                         
     TEFFL   =    23000.68377498454                                                  
     TEFF    =    23644.49138963689                                                  
     TEFFU   =    29999.33189058337                                                  
@@ -453,7 +484,7 @@ via the radius (solar units)::
 
 Finally, the angular diameter can be computed via::
 
-    >> conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
+    >> 2*conversions.convert('sr','mas',scale)
 
 Subsection 4.2. Seismic constraints
 -----------------------------------
@@ -525,6 +556,7 @@ import pyfits
 
 from ivs import config
 from ivs.aux import numpy_ext
+from ivs.aux import termtools
 from ivs.aux.decorators import memoized
 from ivs.io import ascii
 from ivs.io import fits
@@ -544,6 +576,11 @@ from ivs.units import constants
 from ivs.units.uncertainties import unumpy,ufloat
 from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
+from ivs.sigproc import evaluate
+try:
+    from ivs.stellar_evolution import evolutionmodels
+except ImportError:
+    print("Warning: no evolution models available (probably not important)")
 
 logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)
@@ -667,7 +704,7 @@ def fix_master(master,e_default=None):
     return master
 
 
-def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=False):
+def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='all',include=False):
     """
     Exclude/include photometric passbands containing one of the strings listed in
     photbands.
@@ -714,6 +751,10 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
     @type names: list of strings
     @param wrange: wavelength range (most likely angstrom) to include/exclude
     @type wrange: 2-tuple (start wavelength,end wavelength)
+    @param sources: list of sources
+    @type sources: list of strings
+    @param indices: list of indices (integers)
+    @type indices: list of integers
     @param ptype: type of photometry to include/exclude: absolute values, colors
     or both
     @type ptype: string, one of 'abs','col','all'
@@ -755,99 +796,137 @@ def decide_phot(master,names=None,wrange=None,sources=None,ptype='all',include=F
                     if ptype=='all' or (ptype=='abs' and -master['color'][index]) or (ptype=='col' and master['color'][index]):
                         master['include'][index] = include
                         break
+    #-- exclude/include passbands based on their index
+    if indices is not None:
+        logger.info('%s photometry based on index'%((include and 'Include' or "Exclude")))
+        indices = np.array(indices,int)
+        if not indices.shape: indices = indices.reshape(1)
+        master['include'][indices] = include
+    
 
-def photometry2str(master,comment=''):
+def photometry2str(master,comment='',sort='photband',color=False,index=False):
     """
-    String representation of master record array
+    String representation of master record array.
+    
+    Sorting is disabled when C{index=True}.
     
     @param master: master record array containing photometry
     @type master: numpy record array
     """
-    master = master[np.argsort(master['photband'])]
-    txt = comment+'%20s %12s %12s %12s %10s %12s %12s %11s %s\n'%('PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE')
-    txt+= comment+'==========================================================================================================================\n'
-    for i,j,k,l,m,n,o,p,q in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['cunit'],master['source']):
-        txt+=comment+'%20s %12g %12g %12s %10.0f %12g %12g %12s %s\n'%(i,j,k,l,m,n,o,p,q)
-    return txt
-
-@memoized
-def get_schaller_grid():
-    """
-    Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
-    function.
+    if sort and not index:
+        master = master[np.argsort(master[sort])]
     
-    @return: Rbf interpolation function
-    @rtype: Rbf interpolation function
-    """
-    #-- translation between table names and masses
-    #masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
-    #tables = ['table20','table18','table17','table16','table15','table14',
-    #          'table13','table12','table11','table10','table9','table8',
-    #          'table7','table6','table5','table4','table3'][:-1]
-    #-- read in all the tables and compute radii and luminosities.
-    data,comms,units = vizier.search('J/A+AS/96/269/models')
-    all_teffs = 10**data['logTe']
-    all_radii = np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs))
-    all_loggs = np.log10(constants.GG_cgs*data['Mass']*constants.Msol_cgs/(all_radii**2))
-    all_radii /= constants.Rsol_cgs
-    #-- remove low temperature models, the evolutionary tracks are hard to
-    #   interpolate there.
-    keep = all_teffs>5000
-    all_teffs = all_teffs[keep]
-    all_radii = all_radii[keep]
-    all_loggs = all_loggs[keep]
-    #-- make linear interpolation model between all modelpoints
-    mygrid = Rbf(np.log10(all_teffs),all_loggs,all_radii,function='linear')
-    logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
-    return mygrid
+    templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s}'
+    templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s}'
+    header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','UNIT','SOURCE']
+    if 'comments' in master.dtype.names:
+        templateh += ' {:s}'
+        templated += ' {:s}'
+        header += ['COMMENTS']
+    if index:
+        templateh = '{:3s} '+templateh
+        templated = '{:3d} '+templated
+        header = ['NR']+header
+        
+    txt = [comment+templateh.format(*header)]
+    txt.append(comment+'='*170)
+    columns = [master[col.lower()] for col in header]
+    for nr,contents in enumerate(zip(*columns)):
+        contents = list(contents)
+        if 'comments' in master.dtype.names:
+            contents[-1] = contents[-1].replace('_',' ')
+        if index:
+            contents = [nr] + contents
+        line = templated.format(*contents)
+        if color:
+            mycolor = termtools.green if master['include'][nr] else termtools.red
+            line = mycolor(line)
+        txt.append(comment + line)
+    return "\n".join(txt)
+
+#@memoized
+#def get_schaller_grid():
+    #"""
+    #Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
+    #function.
+    
+    #@return: Rbf interpolation function
+    #@rtype: Rbf interpolation function
+    #"""
+    ##-- translation between table names and masses
+    ##masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
+    ##tables = ['table20','table18','table17','table16','table15','table14',
+    ##          'table13','table12','table11','table10','table9','table8',
+    ##          'table7','table6','table5','table4','table3'][:-1]
+    ##-- read in all the tables and compute radii and luminosities.
+    #data,comms,units = vizier.search('J/A+AS/96/269/models')
+    #all_teffs = 10**data['logTe']
+    #all_radii = np.sqrt((10**data['logL']*constants.Lsol_cgs)/(10**data['logTe'])**4/(4*np.pi*constants.sigma_cgs))
+    #all_loggs = np.log10(constants.GG_cgs*data['Mass']*constants.Msol_cgs/(all_radii**2))
+    #all_radii /= constants.Rsol_cgs
+    ##-- remove low temperature models, the evolutionary tracks are hard to
+    ##   interpolate there.
+    #keep = all_teffs>5000
+    #all_teffs = all_teffs[keep]
+    #all_radii = all_radii[keep]
+    #all_loggs = all_loggs[keep]
+    ##-- make linear interpolation model between all modelpoints
+    #mygrid = Rbf(np.log10(all_teffs),all_loggs,all_radii,function='linear')
+    #logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
+    #return mygrid
+
+    
+    
+    
+    
 
 
-def get_radii(teffs,loggs):
-    """
-    Retrieve radii from stellar evolutionary tracks from Schaller 1992.
+#def get_radii(teffs,loggs):
+    #"""
+    #Retrieve radii from stellar evolutionary tracks from Schaller 1992.
     
-    @param teffs: model effective temperatures
-    @type teffs: numpy array
-    @param loggs: model surface gravities
-    @type loggs: numpy array
-    @return: model radii (solar units)
-    @rtype: numpy array
-    """
-    mygrid = get_schaller_grid()
-    radii = mygrid(np.log10(teffs),loggs)
-    return radii
+    #@param teffs: model effective temperatures
+    #@type teffs: numpy array
+    #@param loggs: model surface gravities
+    #@type loggs: numpy array
+    #@return: model radii (solar units)
+    #@rtype: numpy array
+    #"""
+    #mygrid = get_schaller_grid()
+    #radii = mygrid(np.log10(teffs),loggs)
+    #return radii
 
 
-def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
-    """
-    Calculate distances and radii of a target given its parallax and location
-    in the galaxy.
+#def calculate_distance(plx,gal,teffs,loggs,scales,n=75000):
+    #"""
+    #Calculate distances and radii of a target given its parallax and location
+    #in the galaxy.
     
     
-    """
-    #-- compute distance up to 25 kpc, which is about the maximum distance from
-    #   earth to the farthest side of the Milky Way galaxy
-    #   rescale to set the maximum to 1
-    d = np.logspace(np.log10(0.1),np.log10(25000),100000)
-    if plx is not None:
-        dprob = distance.distprob(d,gal[1],plx)
-        dprob = dprob / dprob.max()
-    else:
-        dprob = np.ones_like(d)
-    #-- compute the radii for the computed models, and convert to parsec
-    #radii = np.ones(len(teffs[-n:]))
-    radii = get_radii(teffs[-n:],loggs[-n:])
-    radii = conversions.convert('Rsol','pc',radii)
-    d_models = radii/np.sqrt(scales[-n:])
-    #-- we set out of boundary values to zero
-    if plx is not None:
-        dprob_models = np.interp(d_models,d[-n:],dprob[-n:],left=0,right=0)
-    else:
-        dprob_models = np.ones_like(d_models)
-    #-- reset the radii to solar units for return value
-    radii = conversions.convert('pc','Rsol',radii)
-    return (d_models,dprob_models,radii),(d,dprob)
-    
+    #"""
+    ##-- compute distance up to 25 kpc, which is about the maximum distance from
+    ##   earth to the farthest side of the Milky Way galaxy
+    ##   rescale to set the maximum to 1
+    #d = np.logspace(np.log10(0.1),np.log10(25000),100000)
+    #if plx is not None:
+        #dprob = distance.distprob(d,gal[1],plx)
+        #dprob = dprob / dprob.max()
+    #else:
+        #dprob = np.ones_like(d)
+    ##-- compute the radii for the computed models, and convert to parsec
+    ##radii = np.ones(len(teffs[-n:]))
+    #radii = get_radii(teffs[-n:],loggs[-n:])
+    #radii = conversions.convert('Rsol','pc',radii)
+    #d_models = radii/np.sqrt(scales[-n:])
+    ##-- we set out of boundary values to zero
+    #if plx is not None:
+        #dprob_models = np.interp(d_models,d[-n:],dprob[-n:],left=0,right=0)
+    #else:
+        #dprob_models = np.ones_like(d_models)
+    ##-- reset the radii to solar units for return value
+    #radii = conversions.convert('pc','Rsol',radii)
+    #return (d_models,dprob_models,radii),(d,dprob)
+
 
 
 class SED(object):
@@ -866,9 +945,23 @@ class SED(object):
         5. C{sed.results}: results and summary of the fitting process (dict)
         
     """
-    def __init__(self,ID,photfile=None,plx=None,load_fits=True,label=''):
+    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label=''):
         """
         Initialize SED class.
+        
+        Different ways to initialize:
+        
+        B{1. If no previous data are saved:}
+        
+        >>> mysed = SED('HD129929')
+        
+        B{2. If previous data exists:}
+        
+        >>> #mysed = SED(photfile='HD129929.phot') # will set ID with 'oname' field from SIMBAD
+        >>> #mysed = SED(ID='bla', photfile='HD129929.phot') # Sets custom ID
+        
+        The C{ID} variable is used internally to look up data, so it should be
+        something SIMBAD understands and that designates the target.
         
         @param plx: parallax (and error) of the object
         @type plx: tuple (plx,e_plx)
@@ -890,14 +983,14 @@ class SED(object):
         #-- load information from the photometry file if it exists
         if not os.path.isfile(self.photfile):
             try:
-                self.info = sesame.search(ID,fix=True)
+                self.info = sesame.search(os.path.basename(ID),fix=True)
             except KeyError:
-                logger.warning('Star %s not recognised by SIMBAD'%(ID))
+                logger.warning('Star %s not recognised by SIMBAD'%(os.path.basename(ID)))
                 try:
-                    self.info = sesame.search(ID,db='N',fix=True)
-                    logger.info('Star %s recognised by NED'%(ID))
+                    self.info = sesame.search(os.path.basename(ID),db='N',fix=True)
+                    logger.info('Star %s recognised by NED'%(os.path.basename(ID)))
                 except KeyError:
-                    logger.warning('Star %s not recognised by NED'%(ID))
+                    logger.warning('Star %s not recognised by NED'%(os.path.basename(ID)))
             if plx is not None:
                 if not 'plx' in self.info:
                     self.info['plx'] = {}
@@ -905,6 +998,9 @@ class SED(object):
                 self.info['plx']['e'] = plx[1]
         else:
             self.load_photometry()
+            #-- if no ID was given, set the official name as the ID.
+            if self.ID is None:
+                self.ID = self.info['oname']
         #--load information from the FITS file if it exists
         self.results = {}
         if load_fits:
@@ -913,11 +1009,44 @@ class SED(object):
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
         
+    def __repr__(self):
+        """
+        Machine readable string representation of an SED object.
+        """
+        return "SED('{}')".format(self.ID)
     
+    def __str__(self):
+        """
+        Human readable string representation of an SED object.
+        """
+        txt = []
+        #-- object designation
+        txt.append("Object identification: {:s}".format(self.ID))
+        if hasattr(self,'info') and self.info and 'oname' in self.info:
+            txt.append("Official designation: {:s}".format(self.info['oname']))
+        #-- additional info
+        for key in sorted(self.info.keys()):
+            if isinstance(self.info[key],dict):
+                txt.append(" {:10s} = ".format(key)+", ".join(["{}: {}".format(i,j) for i,j in self.info[key].iteritems()]))
+            else:
+                txt.append(" {:10s} = {}".format(key,self.info[key]))
+
+        #txt.append("Included photometry:")
+        #if hasattr(self,'master') and self.master is not None:
+            #include_grid = self.master['include']
+            #txt.append(photometry2str(self.master[include_grid]))
+        #txt.append("Excluded photometry:")
+        #if hasattr(self,'master') and self.master is not None:
+            #include_grid = self.master['include']
+            #txt.append(photometry2str(self.master[-include_grid]))
+        if hasattr(self,'master'):
+            txt.append(photometry2str(self.master,color=True))
+        return "\n".join(txt)
+        
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,
-                       include=None,exclude=None,
-                       units='erg/s/cm2/A'):
+                       include=None,exclude=None,force=False,
+                       units='erg/s/cm2/AA'):
         """
         Search photometry on the net or from the phot file if it exists.
         
@@ -931,15 +1060,15 @@ class SED(object):
                 radius = 60.
             else:
                 radius = 10.
-        if not os.path.isfile(self.photfile):
+        if not os.path.isfile(self.photfile) or force:
             #-- get and fix photometry. Set default errors to 1%, and set
             #   USNOB1 errors to 3%
             if ra is None and dec is None:
-                master = crossmatch.get_photometry(ID=self.ID,radius=radius,
+                master = crossmatch.get_photometry(ID=os.path.basename(self.ID),radius=radius,
                                        include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             else:
-                master = crossmatch.get_photometry(ID=self.ID,ra=ra,dec=dec,radius=radius,
+                master = crossmatch.get_photometry(ID=os.path.basename(self.ID),ra=ra,dec=dec,radius=radius,
                                        include=include,exclude=exclude,to_units=units,
                                        extra_fields=['_r','_RAJ2000','_DEJ2000']) # was radius=3.
             if 'jradeg' in self.info:
@@ -954,33 +1083,37 @@ class SED(object):
             #-- write to file
             self.save_photometry()
     
-    def get_spectrophotometry(self,directory=None):
+    def get_spectrophotometry(self,directory=None,force_download=False):
         """
         Retrieve and combine spectra.
         
         B{WARNING:} this function creates FUSE and DIR directories!
         """
-        if directory is None:
+        if directory is None and os.path.dirname(self.ID) == '':
             directory = os.getcwd()
-        elif not os.path.isdir(directory):
+        elif os.path.dirname(self.ID) != '':
+            directory = os.path.dirname(self.ID)
+            
+        if not os.path.isdir(directory):
             os.mkdir(directory)
+            
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
-        if hasattr(self,'master') and self.master is not None:
+        if hasattr(self,'master') and self.master is not None and not force_download:
             if any(['BOXCAR' in photband for photband in self.master['photband']]):
                 return None
         #-- FUSE spectra
         fuse_direc = os.path.join(directory,'FUSE')
         iue_direc = os.path.join(directory,'IUE')
-        if not os.path.isdir(fuse_direc):
-            out1 = mast.get_FUSE_spectra(ID=self.ID,directory=fuse_direc,select=['ano'])
+        if not os.path.isdir(fuse_direc) or force_download:
+            out1 = mast.get_FUSE_spectra(ID=os.path.basename(self.ID),directory=fuse_direc,select=['ano'])
             if out1 is None:
                 out1 = []
         else:
             out1 = glob.glob(fuse_direc+'/*')
         #-- IUE spectra    
-        if not os.path.isdir(iue_direc):
-            out2 = vizier.get_IUE_spectra(ID=self.ID,directory=iue_direc,select='lo')
+        if not os.path.isdir(iue_direc) or force_download:
+            out2 = vizier.get_IUE_spectra(ID=os.path.basename(self.ID),directory=iue_direc,select='lo')
             if out2 is None:
                 out2 = []
         else:
@@ -992,7 +1125,7 @@ class SED(object):
         wave,flux,err,nspec = tools.combine(list_of_spectra)
         #-- add to the master
         N = len(flux)
-        units = ['erg/s/cm2/A']*N
+        units = ['erg/s/cm2/AA']*N
         source = ['specphot']*N
         self.add_photometry_fromarrays(flux,err,units,photbands,source,flags=nspec)
         
@@ -1004,50 +1137,50 @@ class SED(object):
             
             
     
-    def exclude(self,names=None,wrange=None,sources=None):
+    def exclude(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (any) photometry from fitting process.
         
         If called without arguments, all photometry will be excluded.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='all')
     
-    def exclude_colors(self,names=None,wrange=None,sources=None):
+    def exclude_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (color) photometry from fitting process.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,0)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='col')
     
-    def exclude_abs(self,names=None,wrange=None,sources=None):
+    def exclude_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (absolute) photometry from fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=False,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='abs')
     
     
-    def include(self,names=None,wrange=None,sources=None):
+    def include(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (any) photometry in fitting process.
         """
-        if names is None and wrange is None and sources is None:
+        if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='all')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='all')
     
-    def include_colors(self,names=None,wrange=None,sources=None):
+    def include_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (color) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='col')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='col')
     
-    def include_abs(self,names=None,wrange=None,sources=None):
+    def include_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (absolute) photometry in fitting process.
         """
-        decide_phot(self.master,names=names,wrange=wrange,sources=sources,include=True,ptype='abs')
+        decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='abs')
     
     def set_photometry_scheme(self,scheme,infrared=(1,'micron')):
         """
@@ -1097,9 +1230,9 @@ class SED(object):
                 if meas['color']:
                     bands = filters.get_color_photband(meas['photband'])
                     eff_waves = filters.eff_wave(bands)
-                    is_infrared = any([(conversions.Unit(*infrared)<conversions.Unit(eff_wave,'A')) for eff_wave in eff_waves])
+                    is_infrared = any([(conversions.Unit(*infrared)<conversions.Unit(eff_wave,'AA')) for eff_wave in eff_waves])
                 else:
-                    is_infrared = conversions.Unit(*infrared)<conversions.Unit(meas['cwave'],'A')
+                    is_infrared = conversions.Unit(*infrared)<conversions.Unit(meas['cwave'],'AA')
                 if is_infrared and meas['color']:
                     self.master['include'][i] = False
                 #-- if measurement is in the infrared and it is not color, keep it (only use absolute values in IR)
@@ -1143,7 +1276,7 @@ class SED(object):
                        ('bibcode','S20'),('comments','S200')]
             logger.info('No previous measurements available, initialising master record')
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
-            _to_unit = 'erg/s/cm2/A'
+            _to_unit = 'erg/s/cm2/AA'
         else:
             _to_unit = self.master['cunit'][0]
         extra_master = np.zeros(len(meas),dtype=self.master.dtype)
@@ -1173,8 +1306,10 @@ class SED(object):
             extra_master['photband'][i] = photbands[i]
             extra_master['source'][i] = source[i]
             extra_master['flag'][i] = flags[i]
-            extra_master['bibcode'][i] = '-'
-            extra_master['comments'][i] = '-'
+            if 'bibcode' in extra_master.dtype.names:
+                extra_master['bibcode'][i] = '-'
+            if 'comments' in extra_master.dtype.names:
+                extra_master['comments'][i] = '-'
         
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
@@ -1183,9 +1318,86 @@ class SED(object):
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
     #}
-    #{ Request additional information
+    #{ Additional information
+    
+    def is_target(self,name):
+        """
+        Check if this SED represents the object `name'.
+        
+        Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
+        checking for "V* V836 Cen", which is the same target.
+        
+        @param name: object name
+        @type name: str
+        @return: True if this object instance represent the target "name".
+        @rtype: bool
+        """
+        try:
+            info = sesame.search(name)
+            oname = info['oname']
+        except:
+            logger.warning('Did not find {:s} on Simbad}'.format(name))
+            return False
+            
+        if oname==self.info['oname']:
+            return True
+    
+    def has_photfile(self):
+        """
+        Check if this SED has a phot file.
+        
+        @return: True if this object instance has a photfile
+        @rtype: bool
+        """
+        return os.path.isfile(self.photfile)
+    
+    def get_distance_from_plx(self,plx=None,lutz_kelker=True,unit='pc'):
+        """
+        Get the probability density function for the distance, given a parallax.
+        
+        If no parallax is given, the catalogue value will be used. If that one
+        is also not available, a ValueError will be raised.
+        
+        Parallax must be given in mas.
+        
+        If the parallax is a float without uncertainty, an uncertainty of 0 will
+        be assumed.
+        
+        If C{lutz_kelker=True}, a probability density function will be given for
+        the distance, otherwise the distance is computed from simply inverting
+        the parallax.
+        
+        Distance is returned in parsec (pc).
+        
+        @return: distance
+        @rtype: (float,float)
+        """
+        #-- we need parallax and galactic position
+        if plx is None and 'plx' in self.info:
+            plx = self.info['plx']['v'],self.info['plx']['e']
+        elif plx is None:
+            raise ValueError('distance cannot be computed from parallax (no parallax)')
+        if not 'galpos' in self.info:
+            raise ValueError('distance cannot be computed from parallax (no position)')
+        gal = self.info['galpos']
+        #-- if the parallax has an uncertainty and the Lutz-Kelker bias needs
+        #   to be taken into account, compute probability density function
+        if lutz_kelker and hasattr(plx,'__iter__'):
+            d = np.logspace(np.log10(0.1),np.log10(25000),100000)
+            dprob = distance.distprob(d,gal[1],plx)
+            dprob = dprob / dprob.max()
+            logger.info('Computed distance to target with Lutz-Kelker bias')
+            return d,dprob
+        #-- just invert (with or without error)
+        else:
+            dist = (conversions.Unit(plx,'kpc-1')**-1).convert(unit)
+            logger.info('Computed distance to target via parallax inversion: {:s}'.format(dist))
+            return dist.get_value()
     
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
+        """
+        Under construction.
+        """
         gal = self.info['galpos']
         if distance is None:
             d = self.get_distance()
@@ -1196,6 +1408,48 @@ class SED(object):
             EBV = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance)/Rv
             output[model] = EBV
         return output
+    
+    def get_angular_diameter(self):
+        """
+        Under construction.
+        """
+        raise NotImplementedError
+    
+    def compute_distance(self,mtype='igrid_search'):
+        """
+        Compute distance from radius and angular diameter (scale factor).
+        
+        The outcome is added to the C{results} attribute::
+        
+            distance = r/sqrt(scale)
+        
+        This particularly useful when you added constraints from solar-like
+        oscillations (L{add_constraint_slo}).
+        
+        @return: distance,uncertainty (pc)
+        @rtype: (float,float)
+        """
+        grid = self.results[mtype]['grid']
+        radius = grid['radius']
+        e_radius = grid['e_radius']
+        scale = grid['scale']
+        e_scale = grid['escale']
+        
+        radius = conversions.unumpy.uarray([radius,e_radius])
+        scale = conversions.unumpy.uarray([scale,e_scale])
+        
+        distance = radius/scale**0.5
+        distance = conversions.convert('Rsol','pc',distance)
+        distance,e_distance = conversions.unumpy.nominal_values(distance),\
+                      conversions.unumpy.std_devs(distance)
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                        ['distance','e_distance'],[distance,e_distance])
+        d,e_d = distance.mean(),distance.std() 
+        logger.info("Computed distance from R and scale: {0}+/-{1} pc".format(d,e_d))
+        return d,e_d
+    
+    
+    
     
     #}
     
@@ -1266,6 +1520,53 @@ class SED(object):
         return limits,type
     
     #{ Fitting routines
+    
+    def clip_grid(self,mtype='igrid_search',CI_limit=None):
+        """
+        Clip grid on CI limit, to save memory.
+        
+        @param mtype: type or results to clip
+        @type mtype: str
+        @param CI_limit: confidence limit to clip on
+        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
+        """
+        if CI_limit is None:
+            CI_limit = self.CI_limit
+        new_grid = self.results[mtype]['grid']
+        new_grid = new_grid[new_grid['ci_red']<=CI_limit]
+        self.results[mtype]['grid'] = new_grid
+        logger.info("Clipped grid at {:.6f}%".format(CI_limit*100))
+    
+    def calculate_confidence_intervals(self,mtype='igrid_search',chi2_type='red',CI_limit=None):
+        """
+        Compute confidence interval of all columns in the results grid.
+        
+        @param mtype: type of results to compute confidence intervals of
+        @type mtype: str
+        @param chi2_type: type of chi2 (raw or reduced)
+        @type chi2_type: str ('raw' or 'red')
+        @param CI_limit: confidence limit to clip on
+        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
+        """
+        #-- get some info
+        grid_results = self.results[mtype]['grid']
+        if not 'CI' in self.results[mtype]:
+            self.results['igrid_search']['CI'] = {}
+        if CI_limit is None or CI_limit > 1.0:
+            CI_limit = self.CI_limit
+        #-- the chi2 grid is ordered: where is the value closest to the CI limit?
+        region = self.results[mtype]['grid']['ci_'+chi2_type]<=CI_limit
+        #-- now compute the confidence intervals
+        for name in grid_results.dtype.names:
+            self.results['igrid_search']['CI'][name+'_l'] = grid_results[name][region].min()
+            self.results['igrid_search']['CI'][name] = grid_results[name][-1]
+            self.results['igrid_search']['CI'][name+'_u'] = grid_results[name][region].max()
+            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'_l'],
+                                                           self.results['igrid_search']['CI'][name],
+                                                           self.results['igrid_search']['CI'][name+'_u']))
+    
+    
+    
     def igrid_search(self,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=None,radiusrange=None,masses=None,
                           threads='safe',increase=1,speed=1,res=1,
@@ -1276,6 +1577,9 @@ class SED(object):
         
         If called consecutively, the ranges will be set to the CI_limit of previous
         estimations, unless set explicitly.
+        
+        If you don't give C{points}, I guess only the predefined grid points
+        will be fitted.
         
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
@@ -1296,14 +1600,14 @@ class SED(object):
         if exist_previous and loggrange is None:
             loggrange = self.results['igrid_search']['CI']['logg_l'],self.results['igrid_search']['CI']['logg_u']
             if type=='multiple' or type=='binary':
-                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2_l'],self.results['igrid_search']['CI']['logg-2_l']))
+                loggrange = (loggrange,(self.results['igrid_search']['CI']['logg-2_l'],self.results['igrid_search']['CI']['logg-2_u']))
         elif loggrange is None:
             loggrange = (-np.inf,np.inf)
             if type=='multiple' or type=='binary':
                 loggrange = loggrange,(-np.inf,np.inf)
         
         if exist_previous and ebvrange is None:
-            ebvrange = self.results['igrid_search']['CI']['ebv_u'],self.results['igrid_search']['CI']['ebv_u']
+            ebvrange = self.results['igrid_search']['CI']['ebv_l'],self.results['igrid_search']['CI']['ebv_u']
             if type=='multiple' or type=='binary':
                 ebvrange = (ebvrange,(self.results['igrid_search']['CI']['ebv-2_l'],self.results['igrid_search']['CI']['ebv-2_u']))
         elif ebvrange is None:
@@ -1358,8 +1662,21 @@ class SED(object):
         failures = np.isnan(grid_results['chisq'])
         if sum(failures):
             logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
-        grid_results = grid_results[-failures]
+            grid_results = grid_results[-failures]
         
+        #-- make room for chi2 statistics
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
+        
+        #-- take the previous results into account if they exist:
+        if not 'igrid_search' in self.results:
+            self.results['igrid_search'] = {}
+        elif 'grid' in self.results['igrid_search']:
+            logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results['igrid_search']['grid']),len(grid_results)))
+            ex_names = grid_results.dtype.names
+            ex_grid = np.rec.fromarrays([self.results['igrid_search']['grid'][exname] for exname in ex_names],
+                                        names=ex_names)
+            grid_results = np.hstack([ex_grid,grid_results])
         
         #-- inverse sort according to chisq: this means the best models are at
         #   the end (mainly for plotting reasons, so that the best models
@@ -1374,7 +1691,6 @@ class SED(object):
         if k<=0:
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
-        
         #-- rescale if needed and compute confidence intervals
         factor = max(grid_results['chisq'][-1]/k,1)
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
@@ -1382,49 +1698,16 @@ class SED(object):
         CI_red = scipy.stats.distributions.chi2.cdf(grid_results['chisq']/factor,k)
         
         #-- add the results to the record array and to the results dictionary
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', CI_raw)
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', CI_red)
-        if not 'igrid_search' in self.results:
-            self.results['igrid_search'] = {}
-        elif 'grid' in self.results['igrid_search']:
-            logger.info('New results appended to previous results')
-            grid_results = np.hstack([self.results['igrid_search']['grid'],grid_results])
-            sa = np.argsort(grid_results['chisq'])[::-1]
-            grid_results = grid_results[sa]
-        
+        grid_results['ci_raw'] = CI_raw
+        grid_results['ci_red'] = CI_red
         self.results['igrid_search']['grid'] = grid_results
         self.results['igrid_search']['factor'] = factor
-        self.results['igrid_search']['CI'] = {}
         
-        start_CI = np.argmin(np.abs(grid_results['ci_red']-CI_limit))
-        for name in grid_results.dtype.names:
-            self.results['igrid_search']['CI'][name+'_l'] = grid_results[name][start_CI:].min()
-            self.results['igrid_search']['CI'][name] = grid_results[name][-1]
-            self.results['igrid_search']['CI'][name+'_u'] = grid_results[name][start_CI:].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'_l'],
-                                                           self.results['igrid_search']['CI'][name],
-                                                           self.results['igrid_search']['CI'][name+'_u']))
+        #-- compute the confidence intervals
+        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
         
+        #-- remember the best model
         self.set_best_model(type=type)
-        if False:
-            self.set_distance()
-            d,dprob = self.results['igrid_search']['d'] # in parsecs
-            dcumprob = np.cumsum(dprob[1:]*np.diff(d))
-            dcumprob /= dcumprob.max()
-            d_min = d[dcumprob>0.38].min()
-            d_best = d[np.argmax(dprob)]
-            d_max = d[dcumprob<0.38].max()
-            e_d_best = min([abs(d_best-d_min),abs(d_max-d_best)])
-            print d_best,e_d_best
-            d_best = ufloat((d_best,e_d_best))
-
-            scales = self.results['igrid_search']['grid']['scale']
-            R = scales*d_best
-            print R
-            
-            #radii = np.zeros_like()
-            #for di,dprobi in zip(d,dprob):
-            #    self.results['igrid_search']['grid']['scale']*d_min
             
         
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='imc',\
@@ -1546,12 +1829,14 @@ class SED(object):
         include = self.master['include']
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
+        keep = keep & include
         if type=='single':
             synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                                   logg=self.results[mtype]['CI']['logg'],
                                   ebv=self.results[mtype]['CI']['ebv'],
                                   z=self.results[mtype]['CI']['z'],
                                   photbands=self.master['photband'][keep])
+            
         elif type=='multiple' or type=='binary':
             synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
                                   logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
@@ -1574,60 +1859,299 @@ class SED(object):
         self.results[mtype]['synflux'] = eff_waves,synflux,self.master['photband']
         self.results[mtype]['chi2'] = chi2
     
-    def get_distance_from_plx(self,plx=None):
-        """
-        Get the probability density function for the distance, given a parallax.
-        
-        If no parallax is given, the catalogue value will be used. If that one
-        is also not available, a ValueError will be raised.
-        
-        Parallax must be given in mas.
-        
-        If the parallax is a float without uncertainty, a float will be returned.
-        Otherwise, a probability density function will be given.
-        
-        Distance is returned in parsec (pc).
-        """
-        #-- we need parallax and galactic position
-        if plx is None and 'plx' in self.info:
-            plx = self.info['plx']['v'],self.info['plx']['e']
-        elif plx is None:
-            raise ValueError,'distance cannot be computed from parallax (no parallax)'
-        if not 'galpos' in self.info:
-            raise ValueError,'distance cannot be computed from parallax (no position)'
-        gal = self.info['galpos']
-        #-- if the parallax has an uncertainty, compute probability density function
-        if hasattr(plx,'__iter__'):
-            d = np.logspace(np.log10(0.1),np.log10(25000),100000)
-            dprob = distance.distprob(d,gal[1],plx)
-            dprob = dprob / dprob.max()
-            return d,dprob
-        #-- just invert
-        else:
-            return 1000./plx
+    
         
     
-    #def set_distance(self):
-        #"""
-        #Deprecated!
-        #"""
-        ##-- calculate the distance
-        #cutlogg = (self.results['igrid_search']['grid']['logg']<=4.4) & (self.results['igrid_search']['grid']['ci_red']<=0.95)
-        #gal = self.info['galpos']
-        #if 'plx' in self.info:
-            #plx = self.info['plx']['v'],self.info['plx']['e']
-        #else:
-            #plx = None
-        #(d_models,dprob_models,radii),(d,dprob)\
-                   #= calculate_distance(plx,self.info['galpos'],self.results['igrid_search']['grid']['teff'][cutlogg],\
-                                                   #self.results['igrid_search']['grid']['logg'][cutlogg],\
-                                                   #self.results['igrid_search']['grid']['scale'][cutlogg])
-        ##-- calculate model extinction
-        #res = 100
-        #self.results['igrid_search']['drimmel'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='drimmel', distance=myd) for myd in d[::res]]))
-        #self.results['igrid_search']['marshall'] = np.ravel(np.array([extinctionmodels.findext(gal[0], gal[1], model='marshall', distance=myd) for myd in d[::res]]))
-        #self.results['igrid_search']['d_mod'] = (d_models,dprob_models,radii)
-        #self.results['igrid_search']['d'] = (d,dprob)
+    #}
+    #{ Add constraints
+    
+    def add_constraint_distance(self,distance=None,mtype='igrid_search',**kwargs):
+        """
+        Use the distance to compute additional information.
+        
+        Compute radii, absolute luminosities and masses, and add them to the
+        results.
+        
+        Extra kwargs go to L{get_distance_from_plx}.
+        
+        B{Warning:} after calling this function, the C{labs} column in the grid
+        is actually absolutely calibrated and reflects the true absolute
+        luminosity instead of the absolute luminosity assuming 1 solar radius.
+        
+        @param distance: distance in solar units and error
+        @type distance: tuple (float,float)
+        @param mtype: type of results to add the information to
+        @type mtype: str
+        """
+        if distance is None:
+            kwargs['lutz_kelker'] = False # we can't handle asymmetric error bars
+            kwargs['unit'] = 'Rsol'
+            distance = self.get_distance_from_plx(**kwargs)
+        
+        #-- compute the radius, absolute luminosity and mass: note that there is
+        #   an uncertainty on the scaling factor *and* on the distance!
+        scale = conversions.unumpy.uarray([self.results[mtype]['grid']['scale'],\
+                                           self.results[mtype]['grid']['escale']])
+        distance = conversions.ufloat(distance)
+        radius = distance*np.sqrt(self.results[mtype]['grid']['scale']) # in Rsol
+        labs = self.results[mtype]['grid']['labs']*radius**2
+        mass = conversions.derive_mass((self.results[mtype]['grid']['logg'],'[cm/s2]'),\
+                                      (radius,'Rsol'),unit='Msol')
+                                      
+        #-- store the results in the grid
+        mass,e_mass = conversions.unumpy.nominal_values(mass),\
+                      conversions.unumpy.std_devs(mass)
+        radius,e_radius = conversions.unumpy.nominal_values(radius),\
+                      conversions.unumpy.std_devs(radius)
+        labs,e_labs = conversions.unumpy.nominal_values(labs),\
+                      conversions.unumpy.std_devs(labs)
+        self.results[mtype]['grid']['labs'] = labs # Labs is already there, overwrite
+        #-- check if the others are already in there or not:
+        labels,data = ['e_labs','radius','e_radius','mass','e_mass'],\
+                      [e_labs,radius,e_radius,mass,e_mass]
+        if 'e_labs' in self.results[mtype]['grid'].dtype.names:
+            for idata,ilabel in zip(data,labels):
+                self.results[mtype]['grid'][ilabel] = idata
+        else:
+            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
+                     labels,data)
+                     
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: distance (improved luminosity, added info on radius and mass)')
+    
+    def add_constraint_slo(self,numax,Deltanu0,mtype='igrid_search',chi2_type='red'):
+        """
+        Use diagnostics from solar-like oscillations to put additional constraints on the parameters.
+        
+        If the results are contrained with the distance before L{add_constraint_distance},
+        then these results are combined with the SLO constraints.
+        
+        @param numax: frequency of maximum amplitude
+        @type numax: 3-tuple (value,error,unit)
+        @param Deltanu0: large separation (l=0)
+        @type Deltanu0: 3-tuple (value,error,unit)
+        @param chi2_type: type of chi2 (raw or reduced)
+        @type chi2_type: str ('raw' or 'red')
+        """
+        grid = self.results[mtype]['grid']
+        #-- we need the teffs, so that we can compute the logg and radius using
+        #   the solar-like oscillations information.
+        teff = grid['teff']
+        logg = grid['logg']
+        pvalues = [1-grid['ci_'+chi2_type]]
+        names = ['ci_'+chi2_type+'_phot']
+        
+        #-- we *always* have a logg, that's the way SEDs work:
+        logg_slo = conversions.derive_logg_slo((teff,'K'),numax)
+        logg_slo,e_logg_slo = conversions.unumpy.nominal_values(logg_slo),\
+                      conversions.unumpy.std_devs(logg_slo)
+        #   compute the probabilities: scale to standard normal
+        logg_prob = scipy.stats.distributions.norm.sf(abs(logg_slo-logg)/e_logg_slo)
+        
+        pvalues.append(logg_prob)
+        names.append('ci_logg_slo')        
+        
+        #-- but we only sometimes have a radius (viz. when the distance is
+        #   known). There is an uncertainty on that radius!
+        radius_slo = conversions.derive_radius_slo(numax,Deltanu0,(teff,'K'),unit='Rsol')
+        radius_slo,e_radius_slo = conversions.unumpy.nominal_values(radius_slo),\
+                                  conversions.unumpy.std_devs(radius_slo)
+        if 'radius' in grid.dtype.names:
+            radius = grid['radius']
+            e_radius = grid['e_radius']
+            #total_error = np.sqrt( (e_radius_slo**2+e_radius**2))
+            total_error = np.sqrt( (e_radius_slo**2+e_radius**2)/2. + (radius-radius_slo)**2/4.)
+            radius_prob = scipy.stats.distributions.norm.sf(abs(radius_slo-radius)/total_error)
+            pvalues.append(radius_prob)
+            names.append('ci_radius_slo')
+            #-- combined standard deviation and mean for two populations with
+            #   possibly zero intersection (wiki: standard deviation)
+            #total_error = np.sqrt( (e_radius_slo**2+e_radius**2)/2. + (radius-radius_slo)**2/4.)
+            total_mean = (radius+radius_slo)/2.
+            grid['radius'] = total_mean
+            grid['e_radius'] = total_error
+            logger.info('Added contraint: combined existing radius estimate with slo estimate')
+        #   otherwise, we just add info on the radius
+        else:
+            labs = grid['labs']*conversions.unumpy.uarray([radius_slo,e_radius_slo])**2
+            labs,e_labs = conversions.unumpy.nominal_values(labs),\
+                          conversions.unumpy.std_devs(labs)
+            grid['labs'] = labs
+            mass = conversions.derive_mass((self.results[mtype]['grid']['logg'],'[cm/s2]'),\
+                                           (radius_slo,e_radius_slo,'Rsol'),unit='Msol')
+            mass,e_mass = conversions.unumpy.nominal_values(mass),\
+                          conversions.unumpy.std_devs(mass)
+            grid = pl.mlab.rec_append_fields(grid,['radius','e_radius','e_labs','mass','e_mass'],\
+                                        [radius_slo,e_radius_slo,e_labs,mass,e_mass])
+            logger.info('Added constraint: {0:s} via slo, improved luminosity'.format(', '.join(['radius','e_radius','e_labs','mass','e_mass'])))
+            
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method(pvalues)
+        
+        #-- add the information to the grid
+        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                     names,pvalues)
+        
+        #-- and replace the original confidence intervals, and re-order
+        self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
+        sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: {0:s} via slo and replaced ci_{1:s} with combined CI'.format(', '.join(names),chi2_type))
+                      
+    def add_constraint_reddening(self,distance=None,ebv=None,e_ebv=0.1,Rv=3.1,\
+                model='drimmel',mtype='igrid_search',chi2_type='red'):
+        """
+        Use reddening maps to put additional constraints on the parameters.
+                
+        @param distance: distance and uncertainty in parsec
+        @type distance: tuple (float,float)
+        @param ebv: E(B-V) reddening in magnitude
+        @type ebv: float
+        @param e_ebv: error on the reddening in percentage
+        @type e_ebv: float
+        @param mtype: type of results to add the information to
+        @type mtype: str
+        """
+        #-- if I need to figure out the reddening myself, I need the distance!
+        if ebv is None and distance is None:
+            distance = self.get_distance_from_plx(lutz_kelker=False,unit='pc')
+        #-- let me figure out the reddening if you didn't give it:
+        if ebv is None:
+            gal = self.info['galpos']
+            ebv = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0])/Rv
+            ebv_u = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0]-distance[1])/Rv
+            ebv_l = extinctionmodels.findext(gal[0], gal[1], model=model, distance=distance[0]+distance[1])/Rv
+            e_ebv = max(ebv-ebv_l,ebv_u-ebv)
+        else:
+            e_ebv = 0.1*ebv
+        grid = self.results[mtype]['grid']
+        ebvs = grid['ebv']
+        ebv_prob = scipy.stats.distributions.norm.cdf(abs(ebv-ebvs)/e_ebv)
+        
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method([1-grid['ci_'+chi2_type],ebv_prob])
+        
+        #-- and replace the original confidence intervals, and re-order
+        grid['ci_'+chi2_type] = 1-combined_pvals
+        sa = np.argsort(grid['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = grid[sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: E(B-V)={0}+/-{1}'.format(ebv,e_ebv))
+        
+        
+        
+    def add_constraint_evolution_models(self,models='siess2000',\
+               ylabels=['age','labs','radius'],e_y=None,
+               function='linear',mtype='igrid_search',chi2_type='red'):
+        """
+        Use stellar evolutionary models to put additional constraints on the parameters.
+        """
+        grid = self.results[mtype]['grid']
+        
+        #-- make sure y's and ylabels are iterable
+        if isinstance(ylabels,str):
+            ylabels = [ylabels]        
+        #-- cycle over all yvalues and compute the pvalues
+        pvalues = [1-grid['ci_'+chi2_type]]
+        add_info = []
+        #-- create the evolutionary grid and interpolate the stellar evolutinary
+        #   grid on the SED-integrated grid points
+        output = np.array([evolutionmodels.get_itable(iteff,ilogg,iz) for iteff,ilogg,iz in zip(grid['teff'],grid['logg'],grid['z'])])
+        output = np.rec.fromarrays(output.T,names=['age','labs','radius'])
+        for label in ylabels:
+            y_interpolated = output[label]
+            add_info.append(y_interpolated)
+            #-- only add the contraint when it is possible to do so.
+            if not label in grid.dtype.names:
+                logger.info("Cannot put constraint on {} (not a parameter)".format(label))
+                continue
+            y_computed = grid[label]
+            #-- error on the y-value: either it is computed, it is given or it is
+            #   assumed it is 10% of the value
+            if e_y is None and ('e_'+label) in grid.dtype.names:
+                e_y = np.sqrt(grid['e_'+label]**2+(0.1*y_interpolated)**2)
+            elif e_y is None:
+                e_y = np.sqrt((0.1*y_computed)**2+(0.1*y_interpolated)**2)
+            y_prob = scipy.stats.distributions.norm.sf(abs(y_computed-y_interpolated)/e_y)
+            pl.figure()
+            pl.subplot(221)
+            pl.title(label)
+            pl.scatter(y_computed,y_interpolated,c=y_prob,edgecolors='none',cmap=pl.cm.spectral)
+            pl.plot([pl.xlim()[0],pl.xlim()[1]],[pl.xlim()[0],pl.xlim()[1]],'r-',lw=2)
+            pl.xlim(pl.xlim())
+            pl.ylim(pl.xlim())
+            pl.xlabel('Computed')
+            pl.ylabel('Interpolated')
+            pl.colorbar()
+            pl.subplot(223)
+            pl.title('y_interpolated')
+            pl.scatter(grid['teff'],grid['logg'],c=y_interpolated,edgecolors='none',cmap=pl.cm.spectral)
+            pl.colorbar()
+            pl.subplot(224)
+            pl.title('y_computed')
+            pl.scatter(grid['teff'],grid['logg'],c=y_computed,edgecolors='none',cmap=pl.cm.spectral)
+            pl.colorbar()
+            pvalues.append(y_prob)
+        
+        pl.figure()
+        pl.subplot(221)
+        pl.title('p1')
+        sa = np.argsort(pvalues[0])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[0][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.subplot(222)
+        pl.title('p2')
+        sa = np.argsort(pvalues[1])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[1][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.subplot(223)
+        pl.title('p3')
+        sa = np.argsort(pvalues[2])
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[2][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        
+        #-- combine p values using Fisher's method
+        combined_pvals = evaluate.fishers_method(pvalues)
+        pl.subplot(224)
+        pl.title('pcombined')
+        sa = np.argsort(combined_pvals)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=combined_pvals[sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.colorbar()
+        pl.xlabel('labs')
+        pl.ylabel('radius')
+        pl.show()    
+        
+        #-- add the information to the grid (assume that if there one label
+        #   not in there already, none of them are
+        if not 'c_'+ylabels[0] in grid.dtype.names:
+            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
+                        ['c_'+ylabel for ylabel in ylabels],add_info)
+        #-- if they are already in there, overwrite!
+        else:
+            for info,ylabel in zip(add_info,ylabels):
+                self.results[mtype]['grid']['c_'+ylabel] = add_info
+        
+        #-- and replace the original confidence intervals, and re-order
+        self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
+        
+        sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
+        self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
+        
+        #-- update the confidence intervals
+        self.calculate_confidence_intervals(mtype=mtype)
+        logger.info('Added constraint: {0:s} via stellar models and replaced ci_{1:s} with combined CI'.format(', '.join(ylabels),chi2_type))    
     
     #}
     
@@ -1658,24 +2182,44 @@ class SED(object):
         
         """
         #-- if no distance is set, derive the most likely distance from the plx:
-        if d is None:
-            try:
-                d = self.get_distance_from_plx()
-            except ValueError:
-                d = None
-                logger.info('Distance to {0} unknown'.format(self.ID))
-            if isinstance(d,tuple):
-                d = d[0][np.argmax(d[1])]
-        #-- it's possible that we still don't have a distance
-        if d is not None:
-            logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
-            rad  = d*np.sqrt(self.results[mtype]['grid']['scale'])
-            rad  = conversions.convert('pc','Rsol',rad) # in Rsol
-            Labs = np.log10(self.results[mtype]['grid']['labs']*rad**2) # in [Lsol]
-            mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
-                                           (rad,'Rsol'),unit='Msol')
+        #if d is None:
+            #try:
+                #d = self.get_distance_from_plx()
+            #except ValueError:
+                #d = None
+                #logger.info('Distance to {0} unknown'.format(self.ID))
+            #if isinstance(d,tuple):
+                #d = d[0][np.argmax(d[1])]
+        ##-- it's possible that we still don't have a distance
+        #if d is not None:
+            #logger.info('Assumed distance to {0} = {1:.3e} pc'.format(self.ID,d))
+            #radius  = d*np.sqrt(self.results[mtype]['grid']['scale'])
+            #radius  = conversions.convert('pc','Rsol',radius) # in Rsol
+            #labs = np.log10(self.results[mtype]['grid']['labs']*radius**2) # in [Lsol]
+            #mass = conversions.derive_mass((self.results[mtype]['grid']['logg'].copy(),'[cm/s2]'),\
+                                           #(radius,'Rsol'),unit='Msol')
         #-- compute angular diameter
-        theta = conversions.convert('sr','mas',4*np.pi*np.sqrt(self.results[mtype]['grid']['scale']))
+        theta = 2*conversions.convert('sr','mas',self.results[mtype]['grid']['scale'])
+        
+        if limit is not None:
+            region = self.results[mtype]['grid']['ci_red']<=limit
+        else:
+            region = self.results[mtype]['grid']['ci_red']<np.inf
+        #-- get the colors and the color scale
+        if d is not None and ptype=='labs':
+            colors = locals()[ptype][region]
+        elif ptype in self.results[mtype]['grid'].dtype.names:
+            colors = self.results[mtype]['grid'][ptype][region]
+        else:
+            colors = locals()[ptype][region]
+        
+        if 'ci_' in ptype.lower():
+            colors *= 100.
+            vmin = colors.min()
+            vmax = 95.
+        else:
+            vmin = kwargs.pop('vmin',colors.min())
+            vmax = kwargs.pop('vmax',colors.max())
         
         #-- define abbrevation for plotting
         if x in self.results[mtype]['grid'].dtype.names:
@@ -1695,9 +2239,10 @@ class SED(object):
                           ebv='E(B-V) [mag]',\
                           ci_raw='Raw probability [%]',\
                           ci_red='Reduced probability [%]',\
-                          Labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
-                          rad=r'Radius [$R_\odot$]',\
-                          mass=r'Mass [$M_\odot$]',\
+                          #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          labs=r'Absolute Luminosity [$L_\odot$]',\
+                          radius=r'Radius [$R_\odot$]',\
+                          mass=r'Mass [$M_\odot$]',
                           mc=r'MC [Nr. points in hexagonal bin]',
                           )
         
@@ -1777,35 +2322,49 @@ class SED(object):
         if unit_flux is None:
             unit_flux = master['cunit'][0]
         wave,flux,e_flux = master['cwave'],master['cmeas'],master['e_cmeas']
+        sources = master['source']
         iscolor = np.array(master['color'],bool)
         photbands = master['photband']
+        indices = np.arange(len(master))
         
         allsystems = np.array([i.split('.')[0] for i in photbands])
         systems = sorted(set(allsystems))
         color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(systems))]
-        pl.gca().set_color_cycle(color_cycle)            
+        
         if not colors:
+            color_cycle = itertools.cycle(color_cycle)
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             wave = conversions.convert('angstrom',unit_wavelength,wave)
             flux,e_flux = conversions.convert(master['cunit'][0],unit_flux,flux,e_flux,wave=(wave,unit_wavelength))
             mf = []
+            # plot photometric systems in different colors
             for system in systems:
                 keep = (allsystems==system) & -iscolor
                 if keep.sum():
-                    pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
+                    # plot each photometric points separately, so that we could
+                    # use it interactively. Label them all with a unique ID
+                    # and make them pickable.
+                    color = color_cycle.next()
+                    #for i in range(sum(keep)):
+                        #label = system if i==0 else '_nolegend_'
+                        #pltlin,caplins,barlincs = pl.errorbar(wave[keep][i],flux[keep][i],yerr=e_flux[keep][i],fmt='o',label=label,ms=7,picker=5,color=color,**kwargs)
+                        #pltlin.sed_index = indices[keep][i]
+                        #caplins[0].sed_index = indices[keep][i]
+                        #caplins[1].sed_index = indices[keep][i]
+                        #barlincs[0].sed_index = indices[keep][i]
+                    pl.errorbar(wave[keep],flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,color=color,**kwargs)
                     mf.append(flux[keep])
             if keep.sum():
-                label = conversions.unit2texlabel(unit_flux)
-                pl.ylabel(label)
+                pl.ylabel(conversions.unit2texlabel(unit_flux,full=True))
             pl.xlabel('Wavelength [{0}]'.format(conversions.unit2texlabel(unit_wavelength)))
             #-- scale y-axis (sometimes necessary for data with huge errorbars)
             mf = np.log10(np.hstack(mf))
             lmin,lmax = np.nanmin(mf),np.nanmax(mf)
             lrange = np.abs(lmin-lmax)
-            
             pl.ylim(10**(lmin-0.1*lrange),10**(lmax+0.1*lrange))
         else:
+            pl.gca().set_color_cycle(color_cycle)
             names = []
             start_index = 1
             for system in systems:
@@ -1825,7 +2384,7 @@ class SED(object):
     
     @standalone_figure
     def plot_sed(self,colors=False,mtype='igrid_search',plot_deredded=False,
-            plot_unselected=True,wave_units='A',flux_units='erg/s/cm2',**kwargs):
+            plot_unselected=True,wave_units='AA',flux_units='erg/s/cm2',**kwargs):
         """
         Plot a fitted SED together with the data.
         
@@ -1885,8 +2444,8 @@ class SED(object):
                     x = self.results[mtype]['synflux'][0][keep]
                     y = self.results[mtype]['synflux'][1][keep]
                     #-- convert to correct units
-                    y = conversions.convert('erg/s/cm2/A',flux_units,y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)
+                    y = conversions.convert('erg/s/cm2/AA',flux_units,y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)
                 pl.plot(x,y,'x',ms=10,mew=2,alpha=0.75,color=color,**kwargs)
             #-- include:
             keep = (systems==system) & (self.master['color']==colors) & self.master['include']
@@ -1901,8 +2460,8 @@ class SED(object):
                         x = self.master['cwave'][keep]
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
-                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)    
+                    y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)    
                     
                     
                 p = pl.errorbar(x,y,yerr=e_y,fmt='o',label=system,
@@ -1918,8 +2477,8 @@ class SED(object):
                     x = self.results[mtype]['synflux'][0][keep]
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
-                    y,e_y = conversions.convert('erg/s/cm2/A',flux_units,y,e_y,wave=(x,'A'))
-                    x = conversions.convert('A',wave_units,x)    
+                    y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
+                    x = conversions.convert('AA',wave_units,x)    
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
         
@@ -1934,14 +2493,14 @@ class SED(object):
             if mtype in self.results and 'model' in self.results[mtype]:
                 wave,flux,flux_ur = self.results[mtype]['model']
                 
-                flux = conversions.convert('erg/s/cm2/A',flux_units,flux,wave=(wave,'A'))
-                flux_ur = conversions.convert('erg/s/cm2/A',flux_units,flux_ur,wave=(wave,'A'))
-                wave = conversions.convert('A',wave_units,wave)    
+                flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
+                flux_ur = conversions.convert('erg/s/cm2/AA',flux_units,flux_ur,wave=(wave,'AA'))
+                wave = conversions.convert('AA',wave_units,wave)    
                 
                 pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
                     pl.plot(wave,flux_ur,'k-',**kwargs)
-            pl.ylabel(conversions.unit2texlabel(flux_units))
+            pl.ylabel(conversions.unit2texlabel(flux_units,full=True))
             pl.xlabel('wavelength [{0}]'.format(conversions.unit2texlabel(wave_units)))
         else:
             xlabels = color_dict.keys()
@@ -1959,11 +2518,11 @@ class SED(object):
             leg.get_frame().set_alpha(0.5)
         loc = (0.45,0.05)
         if mtype in self.results:
-            teff = self.results[mtype]['CI']['teff']
-            logg = self.results[mtype]['CI']['logg']
-            ebv = self.results[mtype]['CI']['ebv']
-            scale = self.results[mtype]['CI']['scale']
-            angdiam = conversions.convert('sr','mas',4*np.pi*np.sqrt(scale))
+            teff = self.results[mtype]['grid']['teff'][-1]
+            logg = self.results[mtype]['grid']['logg'][-1]
+            ebv = self.results[mtype]['grid']['ebv'][-1]
+            scale = self.results[mtype]['grid']['scale'][-1]
+            angdiam = 2*conversions.convert('sr','mas',scale)
             try:
                 teff2 = self.results[mtype]['CI']['teff-2']
                 logg2 = self.results[mtype]['CI']['logg-2']
@@ -2364,7 +2923,7 @@ class SED(object):
             
                 fits.write_array(list(self.results[mtype]['model']),filename,
                                 names=('wave','flux','dered_flux'),
-                                units=('A','erg/s/cm2/A','erg/s/cm2/A'),
+                                units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
                                 header_dict=results_modeldict)
             
                 fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
@@ -2392,13 +2951,14 @@ class SED(object):
         
         @param filename: name of SED FITS file
         @type filename: string
-        
+        @rtype: bool
+        @return: true if Fits file could be loaded
         """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
         if not os.path.isfile(filename):
-            logger.warning('No previous results saved to FITS')
-            return None
+            logger.warning('No previous results saved to FITS file {:s}'.format(filename))
+            return False
         ff = pyfits.open(filename)
         
         #-- observed photometry
@@ -2454,6 +3014,7 @@ class SED(object):
         ff.close()
         
         logger.info('Loaded previous results from FITS')
+        return filename
     
     def save_bibtex(self):
         """
@@ -2462,9 +3023,10 @@ class SED(object):
         The first line in the bibtex file contains a \citet command citing
         all photometry.
         """
-        crossmatch.make_bibtex(self.master,ID)
+        filename = os.path.splitext(self.photfile)[0]+'.bib'
+        crossmatch.make_bibtex(self.master,ID,filename=filename)
     
-    def save_summary(self,filename=None,CI_limit=None,method='igrid_search'):
+    def save_summary(self,filename=None,CI_limit=None,method='igrid_search',chi2type='ci_red'):
         """
         Save a summary of the results to an ASCII file.
         """
@@ -2477,10 +3039,10 @@ class SED(object):
         
         #-- gather the results:
         grid_results = self.results[method]['grid']
-        start_CI = np.argmin(np.abs(grid_results['ci_red']-self.CI_limit))
+        start_CI = np.argmin(np.abs(grid_results[chi2type]-self.CI_limit))
         factor = self.results[method]['factor']
-        names = ['factor']
-        results = [factor]
+        names = ['factor','chi2_type','ci_limit']
+        results = [factor,chi2type,CI_limit*100]
         for name in grid_results.dtype.names:
             lv,cv,uv = grid_results[name][start_CI:].min(),\
                        grid_results[name][-1],\
@@ -2490,17 +3052,19 @@ class SED(object):
         #-- write the used photometry to a file
         include_grid = self.master['include']
         photbands = ":".join(self.master[include_grid]['photband'])
+        references = ",".join(self.master[include_grid]['bibcode'])
         used_photometry = photometry2str(self.master[include_grid],comment='#')
         used_atmosphere = '#'+model.defaults2str()+'\n'
-        used_photbands = '#'+photbands
-        comments = used_photometry+used_atmosphere+used_photbands
+        used_photbands = '#'+photbands+'\n'
+        used_references = '#'+references
+        comments = used_photometry+used_atmosphere+used_photbands+used_references
         
         contents = np.array([results]).T
         contents = np.rec.fromarrays(contents,names=names)
         ascii.write_array(contents,filename,auto_width=True,header=True,
-                          comments=comments.split('\n'),mode='a')
+                          comments=comments.split('\n'),mode='a',use_float='%g')
         
-        
+        logger.info('Saved summary to {0}'.format(filename))
         
         
     
@@ -2520,7 +3084,7 @@ if __name__ == "__main__":
         name = " ".join([string for string in sys.argv[1:] if not '=' in string])
         units = [string.split('=')[1] for string in sys.argv[1:] if 'units=' in string]
         if not units:
-            units = 'erg/s/cm2/A'
+            units = 'erg/s/cm2/AA'
         else:
             units = units[0]
         logger = loggers.get_basic_logger("")

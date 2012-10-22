@@ -164,7 +164,7 @@ logger = logging.getLogger("TS.FREQANAL")
 #{ Convenience functions
 
 def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
-            optimize=0,max_loops=20, scale_region=0.1, scale_df=0.20,
+            optimize=0,max_loops=20, scale_region=0.1, scale_df=0.20, model_kwargs=None,
             **kwargs):
     """
     Find one frequency, automatically going to maximum precision and return
@@ -183,9 +183,12 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     
     The method with which to find the frequency can be set with the keyword
     C{method}, the model used to fit and optimize should be set with C{model}.
+    Extra keywords for the model functions should go in C{model_kwargs}. If
+    C{method} is a tuple, the first method will be used for the first frequency
+    search only. This could be useful to take advantage of such methods as
+    fasper which do not allow for iterative zoom-ins.
     
-    Possible Extra keywords: see definition of the used periodogram function,
-    evaluating and fitting functions, etc...
+    Possible extra keywords: see definition of the used periodogram function.
     
     B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain
     the same timepoint twice}. Otherwise, a 'ValueError, concatenation problem'
@@ -222,6 +225,8 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     @rtype: record array(, 2x1Darray, 1Darray)
     @return: parameters and errors(, periodogram, model function)
     """
+    if model_kwargs is None:
+        model_kwargs = dict()
     #-- initial values
     e_f = 0
     freq_diff = np.inf
@@ -233,8 +238,8 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     
     #-- calculate periodogram until frequency precision is
     #   under 1/10th of correlation corrected version of frequency error
-    if full_output:
-        freqs_,ampls_ = [],[]
+    method_kwargs = kwargs.copy() # don't modify the dictionary the user gave
+
     while freq_diff>e_f/10.:
         #-- possibly, we might want to use different periodograms for the first
         #   calculation than for the zoom in, since some periodograms are faster
@@ -243,7 +248,7 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
             method_ = method[1]
             method = method[0]  # override method to be a string the next time
         #-- calculate periodogram
-        freqs,ampls = getattr(pergrams,method)(times,signal,**kwargs)
+        freqs,ampls = getattr(pergrams,method)(times,signal,**method_kwargs)
         f0,fn,df = freqs[0],freqs[-1],freqs[1]-freqs[0]
         #-- now use the second method for the zoom-ins from now on
         if freq_diff==np.inf and not isinstance(method,str):
@@ -254,13 +259,16 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
             frequency = freqs[np.argmin(ampls)]
         else:
             frequency = freqs[np.argmax(ampls)]
-        if full_output:
-            freqs_,ampls_ = np.hstack([freqs_,freqs]),np.hstack([ampls_,ampls])
-        
+        if full_output and counter==0:
+            freqs_,ampls_ = freqs,ampls
         #-- estimate parameters and calculate a fit, errors and residuals
-        params = getattr(fit,model)(times,signal,frequency)
-        errors = getattr(fit,'e_'+model)(times,signal,params)
-        
+        params = getattr(fit,model)(times,signal,frequency,**model_kwargs)
+        if hasattr(fit,'e_'+model):
+            errors = getattr(fit,'e_'+model)(times,signal,params)
+            e_f = errors['e_freq'][-1]
+        #-- possibly there are not errors defined for this fitting functions
+        else:
+            errors = None
         #-- optimize inside loop if necessary and if we gained prediction
         #   value:
         if optimize==2:
@@ -276,34 +284,33 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
         f0 = max(f_min,frequency-freq_region*scale_region/2.)
         fn = min(f_max,frequency+freq_region*scale_region/2.)
         df *= scale_df
-        kwargs.setdefault('f0',f0)
-        kwargs.setdefault('fn',fn)
-        kwargs.setdefault('df',df)
-        
+        method_kwargs['f0'] = f0
+        method_kwargs['fn'] = fn
+        method_kwargs['df'] = df
         #-- possibilities to escape iterative zoom in
-        if scale_region==0 or scale_df==0: break
+        #print '---> {counter}/{max_loops}: freq={frequency} ({f0}-->{fn}/{df}), e_f={e_f}, freq_diff={freq_diff}'.format(**locals()),max(ampls)
+        if scale_region==0 or scale_df==0:
+            break
         if counter >= max_loops:
             logger.error("Frequency precision not reached in %d steps, breaking loop"%(max_loops))
             break
+        if (fn-f0)/df<5:
+            logger.error("Frequency precision not reached with stepsize %e , breaking loop"%(df/scale_df))
+            break
         counter += 1
-        
     #-- optimize parameters outside of loop if necessary:
     if optimize==1:
         params_,errors_,gain = fit.optimize(times,signal,params,model)
         if gain>0:
             params = params_
             logger.info('Accepted optimization (gained %g%%)'%gain)
-    
-    params = numpy_ext.recarr_join(params,errors)
-    
+    #-- add the errors to the parameter array if possible
+    if errors is not None:
+        params = numpy_ext.recarr_join(params,errors)
     logger.info("%s model parameters via %s periodogram:\n"%(model,method)+pl.mlab.rec2txt(params,precision=8))
-    
     #-- when full output is required, return parameters, periodogram and fitting
     #   function
     if full_output:
-        sa = np.argsort(freqs_)
-        freqs_ = freqs_[sa]
-        ampls_ = ampls_[sa]
         mymodel = getattr(evaluate,model)(times,params)
         return params,(freqs_,ampls_),mymodel
     else:
@@ -566,7 +573,7 @@ def time_frequency(times,signal,window_width=None,n_windows=100,
     out['pars']      = np.hstack(pars)
     out['pergram']   = (output[1][0],spec)
     return out
-
+    
 #{ Convenience stop-criteria
 
 def stopcrit_scargle_prob(times,signal,modelfunc,allparams,pergram,crit_value):
@@ -594,7 +601,99 @@ def stopcrit_scargle_snr(times,signal,modelfunc,allparams,pergram,crit_value,wid
     return value<crit_value,value
 #}
 
-
+def autocorrelation(frequencies,power,max_step=1.5,interval=(),threshold=None,method=1):
+    """
+    Compute the autocorrelation.
+    
+    The formulate to estimate the autocorrelation in the periodogram is
+    
+    R(k) = 1 / (n * s^2) * \sum_{t=1}^n (X_t - mu) * (X_{t+k} - mu)
+    
+    where n is the number of points in the interval, mu an estimator for the
+    sample mean and s is an estimator for the standard deviation of the sample.
+    
+    When computed over a large interval, we have to take into account that
+    we cannot sample more points than we have in the spectrum, so we have to
+    average out over fewer and fewer points, the more we shift the spectrum.
+    
+    Above formula becomes
+    
+    R(k) = 1 / ((n-k) * s^2) * \sum_{t=1}^{n-k} (X_t - mu) * (X_{t+k} - mu)
+    
+    Highs and lows are cut of. The lower cut off value is the sample mean, the
+    higher cut off is a user-defined multiple of the sample mean.
+    
+    This function can also be used to compute period spacings: just invert the
+    frequency spacing, reverse the order and reinterpolate to be equidistant:
+    Example:
+        >>> periods = linspace(1./p[0][-1],1./p[0][0],2*len(p[0]))
+        >>> ampl = interpol.linear_interpolation(1./p[0][::-1],p[1][::-1],periods)
+        >>> ampl = where(isnan(ampl),hstack([ampl[1:],ampl[:1]]),ampl)
+    
+    @param frequencies: frequency array
+    @type frequencies: numpy 1d array
+    @param power: power spectrum
+    @type power: numpy 1d array
+    @keyword max_step: maximum time shift
+    @type max_step: float
+    @keyword interval: tuple of frequencies (start, end)
+    @type interval: tuple of floats
+    @keyword threshold: high cut off value (in units of sample mean)
+    @type threshold: float
+    @return: domain of autocorrelation and autocorrelation
+    @rtype: (ndarray,ndarray)
+    """
+    #-- cut out the interesting part of the spectrum
+    if interval is not ():
+        cut_out = frequencies[(interval[0]<=frequencies) & (frequencies<=interval[1])]
+        start_freq = cut_out[0]
+        stop_freq  = cut_out[-1]
+        start = np.argmin(abs(frequencies-interval[0]))
+        stop = np.argmin(abs(frequencies-interval[1]))        
+    else:
+        start =  1
+        stop  = len(frequencies)-1
+    
+    #-- compute the frequency step
+    Dfreq = (frequencies[start+1] - frequencies[start+0])
+    max_step = int(max_step/Dfreq)
+    autocorr = []
+    variance = []
+    mean = np.average(power)
+    
+    #-- cut of high peaks at a signal to noise level of 6
+    #   cut of low values at a signal to noise level of 1
+    if threshold is not None:
+        power[power>=(threshold*mean)] = threshold*mean
+        #power = where(less(power, mean), mean, power)
+    
+    #-- normalize power as to arrive at the AUTO-correlation function.
+    mean  = np.average(power)
+    power = power-mean
+    
+    #-- compute autocorrelation. If nessecary, take border effects into
+    #   account.
+    for i in xrange(2,max_step):
+        end_s = min(len(power), stop+i)
+        end_o = start + end_s - (start+i)
+        original = power[start  :end_o]
+        shifted  = power[start+i:end_s]
+        if len(original) < 10:
+            logger.error("AUTOCORR: too few points left in interval, breaking up.")
+            break
+        if method==1:
+            autocorr.append(np.average(original*shifted))
+        else:
+            autocorr.append(np.correlate(original,shifted))
+        variance.append(np.average(original*original))
+    
+    domain = np.arange(2,max_step) * Dfreq
+    domain = domain[0:len(autocorr)]
+    
+    #-- normalize
+    autocorr = np.array(autocorr)/np.array(variance)
+    logger.info("Computed autocorrelation in interval %s with maxstep %s"%(interval,max_step))
+    return domain, autocorr
 
 if __name__=="__main__":
     import doctest

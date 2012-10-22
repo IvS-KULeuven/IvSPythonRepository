@@ -66,7 +66,7 @@ Ak/Av = 0.114
 >>> p = pl.xlabel('Wavelength [micron]')
 >>> p = pl.ylabel('Extinction A($\lambda$)/Av [mag]')
 
-]include figure]]ivs_sed_reddening_02]
+]include figure]]ivs_sed_reddening_02.png]
 
 Compute the Cardelli law normalised to Ak and Av.
 
@@ -86,7 +86,7 @@ Compute the Cardelli law normalised to Ak and Av.
 >>> p = pl.xlabel('Wavelength [micron]')
 >>> p = pl.ylabel('Extinction A($\lambda$)/A($\mu$) [mag]')
 
-]include figure]]ivs_sed_reddening_03]
+]include figure]]ivs_sed_reddening_03.png]
 """
 
 import os
@@ -101,13 +101,13 @@ import filters
 import model
 
 logger = logging.getLogger("SED.RED")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 basename = os.path.join(os.path.dirname(__file__),'redlaws')
 
 #{ Main interface
 
-def get_law(name,norm='E(B-V)',wave_units='A',photbands=None,**kwargs):
+def get_law(name,norm='E(B-V)',wave_units='AA',photbands=None,**kwargs):
     """
     Retrieve an interstellar reddening law.
     
@@ -154,11 +154,12 @@ def get_law(name,norm='E(B-V)',wave_units='A',photbands=None,**kwargs):
     
     #-- get the curve
     wave,mag = globals()[name.lower()](**kwargs)
+    wave_orig,mag_orig = wave.copy(),mag.copy()
     
     #-- interpolate on user defined grid
     if wave_ is not None:
-        if wave_units != 'A':
-            wave_ = conversions.convert(wave_units,'A',wave_)
+        if wave_units != 'AA':
+            wave_ = conversions.convert(wave_units,'AA',wave_)
         mag = np.interp(wave_,wave,mag,right=0)
         wave = wave_
            
@@ -172,7 +173,7 @@ def get_law(name,norm='E(B-V)',wave_units='A',photbands=None,**kwargs):
             norm = 'JOHNSON.K'
         elif norm.lower()=='av':
             norm = 'JOHNSON.V'
-        norm_reddening = model.synthetic_flux(wave,mag,[norm])[0]
+        norm_reddening = model.synthetic_flux(wave_orig,mag_orig,[norm])[0]
         logger.info('Normalisation via %s: Av/%s = %.6g'%(norm,norm,1./norm_reddening))
         mag /= norm_reddening
     
@@ -183,8 +184,8 @@ def get_law(name,norm='E(B-V)',wave_units='A',photbands=None,**kwargs):
     
     
     #-- set the units of the wavelengths
-    if wave_units != 'A' and photbands is not None:
-        wave = conversions.convert('A',wave_units,wave)
+    if wave_units != 'AA' and photbands is not None:
+        wave = conversions.convert('AA',wave_units,wave)
     
     return wave,mag
 

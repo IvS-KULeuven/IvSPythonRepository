@@ -2,9 +2,6 @@
 """
 Interface the spectra from the Hermes spectrograph.
 
-Developer's to-do: remove doubles entries from the catalog, and I{derive}
-the path names of the different datafiles (?).
-
 The most important function is L{search}. This looks in SIMBAD for the coordinates
 of a given object, and finds all spectra matching those within a given radius.
 If the object's name is not recognised, it will look for correspondence between
@@ -100,6 +97,40 @@ And run the DRS:
 
 >>> CCFList('HD170200',mask_file=mask_file)
 
+
+Section 4. Hermes overview file
+===============================
+
+To ensure a fast lookup of datafiles, an overview file C{HermesFullDataOverview.tsv}
+is created via L{make_data_overview}. The file resides in one of the C{IVSdata}
+directories, and there should also exist a copy at C{/STER/mercator/hermes/}.
+
+The best strategy to keep the file up-to-date is by running this module in the
+background in a terminal, via (probably on pleiad22)::
+
+    $:> python hermes.py update
+    
+This script will look for a C{HermesFullDataOverview.tsv} in one of the data
+directories (see L{config} module), check until what date data files are stored,
+and add entries for HERMES data files created since the last update. If you
+want a complete update of all the HERMES data folders, you will need to remove
+the file and run the update. Indeed, if C{HermesFullDataOverview.tsv} does not
+exist, it will create a new file in the current working directory from scratch,
+and copy it to C{/STER/mercator/hermes/}. It is the user's responsibility to
+copy the file also to one of the IVSdata directories where the user has write
+permission, so that next time the update is performed, the script can start from
+the previous results.
+
+When running the above command in the terminal, you will notice that the script
+does not terminate until a manual C{CTRL+C} is performed. Indeed, when left running
+the script will perform the update once a day. So once it runs, as long as the
+filepaths do not change or computers do not shut down, you don't need to run it
+again. If a computer does stop running, just restart again with::
+
+    $:> python hermes.py update
+    
+and everything should be fine.
+
 """
 import re
 import sys
@@ -120,7 +151,7 @@ from ivs.units import conversions
 from ivs import config
 
 logger = logging.getLogger("CAT.HERMES")
-logger.addHandler(loggers.NullHandler)
+logger.addHandler(loggers.NullHandler())
 
 #{ User functions
 
@@ -281,11 +312,19 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     for obs in data:
         if info:
             jd  = _timestamp2jd(obs['date-avg'])
-            bvcorr, hjd = helcorr(ra, dec, jd)
+            # the previous line is equivalent to:
+            # day = dateutil.parser.parse(header['DATE-AVG'])
+            # BJD = ephem.julian_date(day)
+            bvcorr, hjd = helcorr(ra/360.*24, dec, jd)
         else:
             break
-        if np.isnan(obs['bvcor']): obs['bvcor'] = bvcorr
-        if np.isnan(obs['bjd']):   obs['bjd'] = hjd
+        if np.isnan(obs['bvcor']):
+            logger.info("Corrected 'bvcor' for unseq {} (missing in header)".format(obs['unseq']))
+            obs['bvcor'] = float(bvcorr)
+        if np.isnan(obs['bjd']):
+            logger.info("Corrected 'bjd' for unseq {} (missing in header)".format(obs['unseq']))
+            obs['bjd'] = float(hjd)
+        
     
     #-- do we need the information as a file, or as a numpy array?
     if filename is not None:
@@ -406,7 +445,7 @@ def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,
             logger.error("Child (%s) was terminated by signal %d"%(cmd,-retcode))
         else:
             logger.error("Child (%s) returned %d"%(cmd,retcode))
-    except OSError, e:
+    except OSError as e:
         logger.error("Execution (%s) failed: %s"%(cmd,e))
     
     
@@ -466,14 +505,14 @@ def make_data_overview():
     
     #-- keep track of what is already in the file, if it exists:
     try:
-        overview_file = os.path.join('/STER/100/pieterd/IVSDATA/catalogs/hermes','HermesFullDataOverview.tsv')
+        overview_file = config.get_datafile('catalogs/hermes','HermesFullDataOverview.tsv')
         #overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
         overview_data = ascii.read2recarray(overview_file,splitchar='\t')
         outfile = open(overview_file,'a')
         logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
     #   if not, begin a new file
     except IOError:
-        overview_file = os.path.join('/STER/100/pieterd/IVSDATA/catalogs/hermes','HermesFullDataOverview.tsv')
+        overview_file = 'HermesFullDataOverview.tsv'
         outfile = open(overview_file,'w')
         outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime pmtotal date-avg airmass filename\n')
         outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 >f8 a30 >f8 a200\n')
@@ -522,6 +561,7 @@ def make_data_overview():
         outfile.flush()
         sys.stdout.write(chr(27)+'[u') # reset cursor
     outfile.close()
+    return overview_file
 
 def _derive_filelocation_from_raw(rawfile,data_type):
     """
@@ -599,9 +639,7 @@ if __name__=="__main__":
         logger = loggers.get_basic_logger()
         
         while 1:
-            make_data_overview()
-            
-            source = '/STER/100/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
+            source = make_data_overview()
             destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
             if os.path.isfile(destination):
                 original_size = os.path.getsize(destination)
@@ -620,7 +658,7 @@ if __name__=="__main__":
             
     elif sys.argv[1].lower()=='copy':
         while 1:
-            source = '/STER/100/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
+            source = '/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
             destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
             if os.path.isfile(destination):
                 original_size = os.path.getsize(destination)
