@@ -27,6 +27,10 @@ B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain the
 same timepoint twice}. Otherwise, a 'ValueError, concatenation problem' can
 occur.
 
+If something goes wrong in the periodogram computation, be sure to run
+L{check_input} on your input data. This will print out some basic diagnostics
+to see if your data are valid.
+
 Section 2. Nyquist frequency
 ============================
 
