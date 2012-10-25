@@ -97,7 +97,7 @@ def DFTpower(time, signal, freqs):
    
 
 
-def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
+def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doSanityCheck=False):
 
     """
     Compute the Envelope Auto-Correlation Function (EACF) of a signal.
@@ -124,6 +124,9 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     @param maxFreq: only the part [minFreq, maxFreq] of the spectrum is taken into account
                     If it is None, the last point of the 'freqs' array is taken.
     @type maxFreq: float
+    @param doSanityCheck: if True: make a few sanity checks of the arguments (e.g. equidistancy of freqs).
+                          If False, do nothing.
+    @type doSanityCheck: boolean
     @return: autoCorrelation, croppedFreqs, smoothedSpectrum
                 - autoCorrelation:  the EACF evaluated in the values of 'spacings'
                 - croppedFreqs:     the frequencies of the selected part [minFreq, maxFreq]
@@ -131,6 +134,25 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     @rtype: (ndarray, ndarray, ndarray)
     """
     
+    # If requested, perform sanity checks
+
+    if doSanityCheck:
+        if len(freqs) != len(spectrum):
+            raise ValueError("freqs and spectrum don't have the same length")
+        if len(np.unique(np.diff(freqs))) != 1:
+            raise ValueError("freqs array is not equidistant")
+        if np.alltrue(spacings > 0.0):
+            raise ValueError("spacings are not all strictly positive")
+        if kernelWidth <= 0.0:
+            raise ValueError("kernel width is not > 0.0")
+        if minFreq > freqs[-1]:
+            raise ValueError("minimum frequency 'minFreq' is larger than largest frequency in freqs array")
+        if maxFreq < freqs[0]:
+            raise ValueError("maximum frequency 'maxFreq' is smaller than smallest frequency in freqs array")
+        if minFreq >= maxFreq:
+            raise ValueError("minFreq >= maxFreq")
+
+
     # Set the default values
     
     if minFreq == None: minFreq = freqs[0]
