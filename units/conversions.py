@@ -3662,6 +3662,8 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            'm-1_to_':      flam2lamflam, # switch from Flam to lamFlam
            #'rad2_to_':     per_sr,
            #'rad-2_to_':    times_sr,
+           'sr1_to_': per_sr,
+           'sr-1_to_': times_sr,
            'rad1_to_':     do_nothing,#per_cy,
            'rad-1_to_':    do_nothing,#times_cy,
            'rad-2sr1_to_': do_nothing,
