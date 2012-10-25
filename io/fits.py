@@ -88,17 +88,20 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
         logger.debug('Read CoRoT SISMO file %s'%(fits_file))
     elif fits_file_[0].header['hlfccdid'][0]=='E':
         times = fits_file_['bintable'].data.field('datehel')
-        blueflux,e_blueflux = fits_file_['bintable'].data.field('blueflux'),fits_file_['bintable'].data.field('bluefluxdev')
-        greenflux,e_greenflux = fits_file_['bintable'].data.field('greenflux'),fits_file_['bintable'].data.field('greenfluxdev')
-        redflux,e_redflux = fits_file_['bintable'].data.field('redflux'),fits_file_['bintable'].data.field('redfluxdev')
-        #-- chromatic light curves
-        if type_data=='colors':
-            flux = np.column_stack([blueflux,greenflux,redflux])
-            error = np.column_stack([e_blueflux,e_greenflux,e_redflux]).min(axis=1)
-        #-- white light curves
+        if 'blueflux' in fits_file_['bintable'].columns.names:
+            blueflux,e_blueflux = fits_file_['bintable'].data.field('blueflux'),fits_file_['bintable'].data.field('bluefluxdev')
+            greenflux,e_greenflux = fits_file_['bintable'].data.field('greenflux'),fits_file_['bintable'].data.field('greenfluxdev')
+            redflux,e_redflux = fits_file_['bintable'].data.field('redflux'),fits_file_['bintable'].data.field('redfluxdev')
+            #-- chromatic light curves
+            if type_data=='colors':
+                flux = np.column_stack([blueflux,greenflux,redflux])
+                error = np.column_stack([e_blueflux,e_greenflux,e_redflux]).min(axis=1)
+            #-- white light curves
+            else:
+                flux = blueflux + greenflux + redflux
+                error = np.sqrt(e_blueflux**2 + e_greenflux**2 + e_redflux**2)
         else:
-            flux = blueflux + greenflux + redflux
-            error = np.sqrt(e_blueflux**2 + e_greenflux**2 + e_redflux**2)
+            flux,error = fits_file_['bintable'].data.field('whiteflux'),fits_file_['bintable'].data.field('whitefluxdev')
         flags = fits_file_['bintable'].data.field('status')
         
     # remove flagged datapoints if asked
@@ -118,7 +121,7 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
         return times, flux, error, flags
 
 
-def read_fuse(ff,return_header=False):
+def read_fuse(ff,combine=True,return_header=False):
     """
     Read FUSE spectrum.
     
@@ -127,21 +130,40 @@ def read_fuse(ff,return_header=False):
     Do 'EXPEND'-'EXPSTART'
     
     V_GEOCEN,V_HELIO
+    
+    ANO: all night only: data obtained during orbital night (highest SNR when airglow is not an issue)
+    ALL: all: highest SNR with minimal airglow contamination
+    
+    Preference of ANO over ALL for science purpose.
+    
+    Use TTAGfcal files.
     """
     ff = pyfits.open(ff)
+    hdr = ff[0].header
     if hdr['SRC_TYPE']=='EE':
         logger.warning("Warning: %s is not thrustworty (see manual)"%(ff))
-    wave = ff[1].data.field('WAVE')
-    flux = ff[1].data.field('FLUX')
-    errr = ff[1].data.field('ERROR')
-    hdr = ff[0].header
+    waves,fluxs,errrs = [],[],[]
+    for seg in range(1,len(ff)):
+        if ff[seg].data is None: continue
+        waves.append(ff[seg].data.field('WAVE'))
+        fluxs.append(ff[seg].data.field('FLUX'))
+        errrs.append(ff[seg].data.field('ERROR'))
     ff.close()
+    
+    if combine:
+        waves = np.hstack(waves)
+        fluxs = np.hstack(fluxs)
+        errrs = np.hstack(errrs)
+        sa = np.argsort(waves)
+        waves,fluxs,errrs = waves[sa],fluxs[sa],errrs[sa]
+        keep = fluxs>0
+        waves,fluxs,errrs = waves[keep],fluxs[keep],errrs[keep]
     
     
     if return_header:
-        return wave,flux,errr,hdr
+        return waves,fluxs,errrs,hdr
     else:
-        return wave,flux,errr
+        return waves,fluxs,errrs
         
 def read_iue(filename,return_header=False):
     """
@@ -149,7 +171,7 @@ def read_iue(filename,return_header=False):
     
     Instrumental profiles: http://starbrite.jpl.nasa.gov/pds/viewInstrumentProfile.jsp?INSTRUMENT_ID=LWR&INSTRUMENT_HOST_ID=IUE
     
-    Better only use .mxlo for reliable absolute calibration
+    Better only use .mxlo for reliable absolute calibration!!
     
     LWP
  
@@ -170,7 +192,7 @@ def read_iue(filename,return_header=False):
     
     """
     ff = pyfits.open(filename)
-    header = None
+    header = ff[0].header
     if os.path.splitext(filename)[1]=='.mxlo':
         try:
             flux = ff[1].data.field('flux')[0]
@@ -322,10 +344,10 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            #if (len(key)>8) and (not key in tbhdu.header.keys()) and (not key[:9]=='HIERARCH'):
-            #    key_ = 'HIERARCH '+key
-            #else:
-            key_ = key
+            if (len(key)>8) and (not key in tbhdu.header.keys()) and (not key[:9]=='HIERARCH'):
+                key_ = 'HIERARCH '+key
+            else:
+                key_ = key
             tbhdu.header.update(key_,header_dict[key])
         if ext!='new':
             tbhdu.header.update('EXTNAME',ext)

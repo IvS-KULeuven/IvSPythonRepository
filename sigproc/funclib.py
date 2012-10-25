@@ -259,7 +259,7 @@ def soft_parabola():
     return Function(function=function, par_names=pnames)
 
 
-def gauss():
+def gauss(use_jacobian=True):
     """
     Gaussian (a,mu,sigma,c)
     
@@ -268,7 +268,13 @@ def gauss():
     pnames = ['a', 'mu', 'sigma', 'c']
     function = lambda p, x: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2)) + p[3]
     
-    return Function(function=function, par_names=pnames)
+    if not use_jacobian:
+        return Function(function=function, par_names=pnames)
+    else:
+        def jacobian(p, x):
+            ex = np.exp( -(x-p[1])**2 / (2.0*p[2]**2) )
+            return np.array([-ex, -p[0] * (x-p[1]) * ex / p[2]**2, -p[0] * (x-p[1])**2 * ex / p[2]**3, [-1 for i in x] ]).T
+        return Function(function=function, par_names=pnames, jacobian=jacobian)
     
 def sine():
     """

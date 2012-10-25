@@ -14,10 +14,13 @@ You can combine all the possibilities, as the functions are generated on the fly
 blinking green bold text on red background
     
 """
+from __future__ import print_function
 import functools
 import inspect
 import sys
 import types
+import subprocess
+import time
 RED="\[\033[0;35m\]"
 YELLOW="\[\033[0;33m\]"
 instructs = {'black':"\033[30m",
@@ -40,6 +43,17 @@ instructs = {'black':"\033[30m",
           'underline':'\033[4m',
           'bold':'\033[1m',
           'reset':'\033[m'}
+
+def overwrite_line(message):
+    """
+    Save cursor at current position, clear current line, print the message and reset the cursor.
+    
+    @param message: message to print to the screen
+    @type message: str
+    """
+    ESC=chr(27)
+    print('{ESC}[s{ESC}[2K{message}{ESC}[u'.format(ESC=ESC,message=message),end='')
+    
 
 def line_at_a_time(fileobj):
     """
@@ -82,6 +96,30 @@ class CallInstruct:
         Print the instructions, the text and reset the terminal.
         """
         return "".join([instructs[i] for i in self.instr.split('_')]) + text + '\033[m'
+
+
+
+class MemoryMonitor(object):
+
+    def __init__(self, username=None):
+        """Create new MemoryMonitor instance."""
+        self.username = username
+        self.time = []
+        self.free = []
+        self.used = []
+    
+    def usage(self):
+        """Return int containing memory used by user's processes."""
+        #self.process = subprocess.Popen("ps -u %s -o rss | awk '{sum+=$1} END {print sum}'" % self.username,
+        #                                shell=True,
+        #                               stdout=subprocess.PIPE,
+        #                                )
+        process = subprocess.Popen("free -mto",shell=True,stdout=subprocess.PIPE)
+        self.time.append(time.time())
+        used,free = process.communicate()[0].split('\n')[1].split()[2:4]
+        self.free.append(free)
+        self.used.append(used)
+        
 
 
 
