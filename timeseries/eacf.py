@@ -12,7 +12,7 @@ As an example we take the Kepler red giant KIC3744043, which shows a beautiful s
 To compute the EACF, we first import:
 
 >>> import numpy as np
->>> from ivs.timeseries.eacf import *
+>>> from ivs.timeseries.eacf import eacf
 
 Red giants have spacings in the power spectrum between, say, 1.0 and 15.0, so this is the interval in which we will
 compute the EACF:
@@ -57,7 +57,7 @@ power excess), and derive from that value a first estimate for the large separat
 """
 
 
-__all__ = ['eacf', 'meanLargeSeparation']
+__all__ = ['eacf']
 
 
 import numpy as np
@@ -133,8 +133,8 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     
     # Set the default values
     
-    if minFreq == None: minFreq = freq[0]
-    if maxFreq == None: maxFreq = freq[-1]
+    if minFreq == None: minFreq = freqs[0]
+    if maxFreq == None: maxFreq = freqs[-1]
     freqStep = freqs[1]-freqs[0]
    
     # Crop the spectrum to the specified range
