@@ -13,7 +13,8 @@ Table of contents:
     3. SED fitting using a grid based approach
         - Saving SED fits
         - Loading SED fits
-    4. Radii, distances and luminosities
+    4. Accessing the best fitting full SED model
+    5. Radii, distances and luminosities
         - Relations between quantities
         - Parallaxes
         - Seismic constraints
@@ -462,7 +463,22 @@ predefined plotting scripts to start a plot, and then later on change the
 properties of the labels, legends etc... for higher quality plots or to better
 suit your needs.
 
-Section 4. Radii, distances and luminosities
+Section 4. Accessing the best fitting full SED model
+====================================================
+
+You can access the full SED model that matches the parameters found by the
+fitting routine via:
+
+>>> wavelength,flux,deredded_flux = mysed.get_best_model()
+
+Note that this model is retrieved after fitting, and was not in any way used
+during the fitting. As a consequence, there could be small differences between
+synthetic photometry calculated from this returned model and the synthetic
+fluxes stored in C{mysed.results['igrid_search']['synflux'], which is the
+synthetic photometry coming from the interpolation of the grid of pre-interpolated
+photometry. See the documentation of L{SED.get_model} for more information.
+
+Section 5. Radii, distances and luminosities
 ============================================
 
 Subsection 4.1. Relations between quantities
@@ -1865,6 +1881,22 @@ class SED(object):
         logger.debug('Stored model SED in {}'.format(label))
     
     def get_model(self,label='igrid_search'):
+        """
+        Retrieve the best SED model.
+        
+        B{Warning}: the grid search interpolation is also done with interpolation
+        in metallicity, while this is not the case for the best full SED model.
+        Interpolation of the full SED is only done in teff/logg, and the
+        metallicity is chosen to be equal to the closest grid point. On the
+        other hand, while the reddening value is interpolated in the grid search,
+        this is not the case for the best model (the model is simply reddened
+        according the found best value). So don't be surprised if you find
+        differences between the values of C{self.results[label]['synflux']},
+        which are the value sfor the interpolated photometric points of the
+        best model, and the synthetic photometry obtained by manual integration
+        of the returned full SED model. Those differences should be incredible
+        small and mainly due to the metallicity.
+        """
         wave,flux,urflux = self.results[label]['model']
         return wave,flux,urflux
     
