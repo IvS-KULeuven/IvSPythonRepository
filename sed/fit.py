@@ -206,20 +206,115 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     @return: chi-square, scale, e_scale
     @rtype: float,float,float
     """
-    if sum(-colors) > 0:
-        ratio = (meas/syn)[-colors]
-        weights = (meas/e_meas)[-colors]
-        #-- weighted average and standard deviation
-        scale = np.average(ratio,weights=weights)
-        e_scale = np.sqrt(np.dot(weights, (ratio-scale)**2)/weights.sum())
+    #-- if syn represents only one measurement
+    if len(syn.shape)==1:
+        if sum(-colors) > 0:
+            ratio = (meas/syn)[-colors]
+            weights = (meas/e_meas)[-colors]
+            #-- weighted average and standard deviation
+            scale = np.average(ratio,weights=weights)
+            #print 'bla',weights.shape,ratio.shape,scale
+            e_scale = np.sqrt(np.dot(weights, (ratio-scale)**2)/weights.sum())
+        else:
+            scale,e_scale = 0,0
+        #-- we don't need to scale the colors, only the absolute fluxes
+        chisq = np.where(colors, (syn-meas)**2/e_meas**2, (syn*scale-meas)**2/e_meas**2)
+        if full_output:
+            return chisq,meas/syn,meas/e_meas
+        else:
+            return chisq.sum(),scale,e_scale
+    #-- if syn is many measurements, we need to vectorize this:
     else:
-        scale,e_scale = 0,0
-    #-- we don't need to scale the colors, only the absolute fluxes
-    chisq = np.where(colors, (syn-meas)**2/e_meas**2, (syn*scale-meas)**2/e_meas**2)
-    if full_output:
-        return chisq,meas/syn,meas/e_meas
+        if sum(-colors) > 0:
+            ratio = (meas/syn)[-colors]
+            weights = (meas/e_meas)[-colors]
+            #-- weighted average and standard deviation
+            scale = np.average(ratio,weights=weights.reshape(-1),axis=0)
+            e_scale = np.sqrt(np.dot(weights.T, (ratio-scale)**2)/weights.sum(axis=0))[0]
+            #scale = np.average(ratio,axis=0)
+            #e_scale = np.zeros_like(scale)
+        else:
+            scale,e_scale = np.zeros(syn.shape[1]),np.zeros(syn.shape[1])
+        #-- we don't need to scale the colors, only the absolute fluxes
+        chisq = np.where(colors.reshape(-1,1), (syn-meas)**2/e_meas**2, (syn*scale-meas)**2/e_meas**2)
+        if full_output:
+            return chisq,meas/syn,meas/e_meas
+        else:
+            return chisq.sum(axis=0),scale,e_scale
+
+def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
+                  ebvrange=(-inf,inf),zrange=(-inf,inf),rvrange=(-inf,inf),
+                  vradrange=(0,0),points=None,clear_memory=True,
+                  **kwargs):
+    """
+    Generate a grid of parameters.
+    """
+    #-- get the pixelgrid
+    axis_values,gridpnts,flux,colnames = \
+                 model._get_pix_grid(photbands,teffrange=(-inf,inf),
+                 loggrange=(-inf,inf),ebvrange=(-inf,inf),
+                 zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
+                 include_Labs=True,clear_memory=clear_memory,**kwargs)
+    #-- report on the received grid
+    if not kwargs:
+        logger.info('Received grid (%s)'%model.defaults2str())
     else:
-        return chisq.sum(),scale,e_scale
+        logger.info('Received custom grid (%s)'%kwargs)
+    
+    #-- we first generate random teff-logg coordinates, since the grid is
+    #   not exactly convex in these parameters. We assume it is for all the
+    #   other parameters. We need to extract the teff/logg points, but make them
+    #   unique
+    colnames = list(colnames)
+    teff_index = colnames.index('teff')
+    logg_index = colnames.index('logg')
+    teffs,loggs = gridpnts[:,teff_index],gridpnts[:,logg_index]
+    
+    #-- we need to cut the grid to fit the teff and logg range: we replace the
+    #   values for the upper and lower limit in the grid with those from the
+    #   given ranges. This is a bit elaborate, but I don't see a better way
+    #   of doin' it.
+    teffl_index = max(np.searchsorted(axis_values[teff_index],teffrange[0])-1,0)
+    teffu_index = min(np.searchsorted(axis_values[teff_index],teffrange[1]),len(axis_values[teff_index])-1)
+    teff_lower = axis_values[teff_index][teffl_index]
+    teff_upper = axis_values[teff_index][teffu_index]
+    cut = (teffs<teff_lower) | (teff_upper<teffs)
+    if teff_lower<teffrange[0]: teffs[teffs==teff_lower] = teffrange[0]
+    if teff_upper>teffrange[1]: teffs[teffs==teff_upper] = teffrange[1]
+    
+    loggl_index = max(np.searchsorted(axis_values[logg_index],loggrange[0])-1,0)
+    loggu_index = min(np.searchsorted(axis_values[logg_index],loggrange[1]),len(axis_values[logg_index])-1)
+    logg_lower = axis_values[logg_index][loggl_index]
+    logg_upper = axis_values[logg_index][loggu_index]
+    cut = cut | (loggs<logg_lower) | (logg_upper<loggs)
+    if logg_lower<loggrange[0]: loggs[loggs==logg_lower] = loggrange[0]
+    if logg_upper>loggrange[1]: loggs[loggs==logg_upper] = loggrange[1]
+    teffs = teffs[-cut]
+    loggs = loggs[-cut]
+    
+    
+    
+    gridpnts_ = numpy_ext.unique_arr(np.column_stack([teffs,loggs]))
+    #-- now we can generate random points:
+    sample1 = numpy_ext.random_rectangular_grid(gridpnts_,points)
+    sample2 = np.random.uniform(low =[max(ax.min(),locals()[name+'range'][0]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+                                high=[min(ax.max(),locals()[name+'range'][1]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+                                size=((len(sample1),len(colnames)-2)))
+    colnames.remove('teff')
+    colnames.remove('logg')
+    #-- return grid and column names
+    out_dict = {}
+    for col,name in zip(np.column_stack([sample1,sample2]).T,['teff','logg']+colnames):
+        out_dict[name] = col
+        print name,col.min(),col.max()
+    return out_dict
+    
+    
+    
+    
+    
+    
+
 
 def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
                   ebvrange=(-inf,inf),zrange=(-inf,inf),
@@ -321,15 +416,17 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     factors
     @rtype: record array
     """
-    logger.info('Generate "single" grid with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
+    #test
+    logger.info('Grid search with parameters teffrange=%s, loggrange=%s, ebvrange=%s, zrange=%s, points=%s'%(teffrange,loggrange,ebvrange,zrange,points))
     
     #-- we first get/set the grid. Calling this function means it will be
     #   memoized, so that we can safely thread (and don't have to memoize for
     #   each thread). We also have an exact view of the size of the grid here...
     markers,(unique_teffs,unique_loggs,unique_ebvs,unique_zs),gridpnts,flux = \
-                 model._get_itable_markers(photbands,ebvrange=(-np.inf,np.inf),
-                        zrange=(-np.inf,np.inf),include_Labs=True,
-                        clear_memory=clear_memory,**kwargs)
+             model._get_itable_markers(photbands,ebvrange=(-np.inf,np.inf),
+                    zrange=(-np.inf,np.inf),include_Labs=True,
+                    clear_memory=clear_memory,**kwargs)
+
     if not kwargs:
         logger.info('Received grid (%s)'%model.defaults2str())
     else:
@@ -337,7 +434,7 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
     teffs,loggs,ebvs,zs = gridpnts.T
     
     #-- We need to avoid having only one grid point! If nessessary the grid needs to be 
-    #   broader to get points in the entire intervall. 
+    #   broader to get points in the entire interval. 
     index1 = teffrange[0] in unique_teffs and unique_teffs.searchsorted(teffrange[0]) or \
             max(0,unique_teffs.searchsorted(teffrange[0])-1)
     index2 = teffrange[1] in unique_teffs and unique_teffs.searchsorted(teffrange[1]) or \
@@ -401,11 +498,6 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         teffs,loggs,ebvs,zs = np.hstack([np.random.uniform(low=[lims[0][0],lims[1][0],lims[2][0],lims[3][0]],
                                                        high=[lims[0][1],lims[1][1],lims[2][1],lims[3][1]],
                                                        size=(int(lims[-1]/total_size*points),4)).T for lims in limits_and_sizes])
-    #-- override grid generation... seems to still be troubled....                                                   
-    #if points:
-    #    teffs,loggs,ebvs,zs = np.random.uniform(low=[teffrange[0],loggrange[0],ebvrange_[0],zrange_[0]],
-    #                                                   high=[teffrange[1],loggrange[1],ebvrange_[1],zrange_[1]],
-    #                                                   size=(points,4)).T
     keep = (teffrange[0]<=teffs) & (teffs<=teffrange[1]) &\
             (loggrange[0]<=loggs) & (loggs<=loggrange[1]) &\
             (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1]) &\
@@ -416,13 +508,6 @@ def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
         teffs,loggs,ebvs,zs = teffs[::res],loggs[::res],ebvs[::res],zs[::res]
     logger.info('Evaluating %d points in parameter space'%(len(teffs)))
     
-    ##-- run over the grid and calculate chisq and scale factors for each point
-    ##-- then we do the grid search
-    #chisqs,scales,e_scales,lumis,index = do_grid_search(teffs,loggs,ebvs,zs,meas,e_meas,photbands,colors,**kwargs)
-    ##-- transform output to record array
-    #data_rec = np.rec.fromarrays([teffs,loggs,ebvs,zs,chisqs,scales,e_scales,lumis],
-                   #dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),
-                          #('chisq','f8'),('scale','f8'),('e_scale','f8'),('Labs','f8')])
     return teffs,loggs,ebvs,zs
 
 def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
@@ -538,7 +623,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
         #--Single grid, uses the basic function
         teffs,loggs,ebvs,zs = generate_grid_single(photbands,teffrange=teffrange,
                       loggrange=loggrange,ebvrange=ebvrange,
-                      zrange=zrange,points=points)
+                      zrange=zrange,points=points,clear_memory=clear_memory)
         radii = np.ones(len(teffs))#[1 for i in teffs]
         return teffs,loggs,ebvs,zs,radii
     
@@ -585,7 +670,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     zs = np.column_stack([zs[:,0]]*len(grids))
     
     if type=='binary':
-        #-- The radius of the stars is calculated bassed on logg and the provided masses
+        #-- The radius of the stars is calculated based on logg and the provided masses
         masses = 'masses' in kwargs and  kwargs['masses'] or (1,1)
         G = constants.GG_cgs
         Msol = constants.Msol_cgs
@@ -614,7 +699,60 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
                               #high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
     
     return teffs,loggs,ebvs,zs,radii                     
-    
+
+
+def igrid_search_pix(meas,e_meas,photbands,**kwargs):
+        """
+        Run over gridpoints and evaluate model C{model_func} via C{stat_func}.
+        
+        The measurements are defined via C{meas, e_meas, photbands, colors} and
+        should be 1d arrays of equal length. C{colors} should be a boolean
+        array, C{photbands} should be a string array.
+        
+        The grid points are defined via C{args}. C{args} should be a tuple of 
+        1x? dimensional arrays of equal length. For single stars, this is
+        typically effective temperatures, loggs, reddenings and metallicities.
+        For multiple systems, (at least some of the) previously mentioned
+        parameters are typically doubled, and radius ratios are added. Remember
+        to specify the C{model_func} to match single or multiple systems.
+        
+        At each grid point, the pre-calculated photometry will be retrieved via
+        the keyword C{model_func} and compared to the measurements via the function
+        definded via C{stat_func}. This function should be of the same form as
+        L{stat_chi2}.
+        
+        Extra arguments are passed to L{parallel_gridsearch} for parallelization
+        and to {model_func} for further specification of grids etc.
+        
+        The index array is returned to trace the results after parallelization.
+        
+        @param meas: the measurements that have to be compared with the models
+        @type meas: 1D numpy array of floats
+        @param e_meas: errors on the measurements
+        @type e_meas: 1D numpy array of floats
+        @param photbands: names of the photometric passbands
+        @type photbands: 1D numpy array of strings
+        @keyword model_func: function to translate parameters to synthetic (model) data
+        @type model_func: function
+        @keyword stat_func: function to evaluate the fit
+        @type stat_func: function
+        @return: (chi squares, scale factors, error on scale factors, absolute
+        luminosities (R=1Rsol), index
+        @rtype: 4/5X1d array
+        """
+        model_func = kwargs.pop('model_func',model.get_itable_pix)
+        stat_func = kwargs.pop('stat_func',stat_chi2)
+        colors = np.array([filters.is_color(photband) for photband in photbands],bool)
+        #-- run over the grid, retrieve synthetic fluces and compare with
+        #   observations.
+        syn_flux,lumis = model_func(photbands=photbands,**kwargs)
+        chisqs,scales,e_scales = stat_func(meas.reshape(-1,1),\
+                                           e_meas.reshape(-1,1),\
+                                           colors,syn_flux)
+        #-- return results
+        return chisqs,scales,e_scales,lumis
+
+
 @parallel_gridsearch
 @make_parallel
 def igrid_search(meas,e_meas,photbands,*args,**kwargs):
@@ -693,7 +831,7 @@ def residual_single(params, meas, photbands, kwargs):
     
     print np.array(meas-iflux*scale).shape
     return (meas-iflux*scale)#**2 / e_meas**2
-
+        
 def residual_multiple(params, meas, e_meas, photbands, kwargs):
     teff = params['teff'].value
     logg = params['logg'].value
@@ -807,7 +945,6 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     
     # the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
     def residual_single(parameters):
-        print parameters
         syn_flux,Labs = model_func(*parameters,photbands=photbands,**kwargs)
         # in case any of the parameters goes out of its bounds
         #if isnan(syn_flux).any():    
@@ -817,9 +954,7 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     # calling the fitting function NOTE: the initial metallicity is returned in the output!
     
     if method=='fmin': # fmin
-        print args
         optpars,fopt,niter,funcalls,warnflag = fmin(res_func,np.array(args),xtol=0.0001,disp=0,full_output=True)
-        print optpars,fopt,niter,funcalls,warnflag
     elif method=='fmin_powell': #fmin_powell
         optpars = fmin_powell(res_func,np.array(args))
     else:
@@ -837,51 +972,6 @@ def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     return optpars,warnflag
 #}
 
-#{ Monte Carlo
-
-#def iminimize2(meas,e_meas,photbands,teff_init,logg_init,ebv_init,z_init,**kwargs):
-    #model_func = kwargs.pop('model_func',model.get_itable)
-    #res_func = kwargs.pop('res_func',residual_single)
-    #method = kwargs.pop('fitmethod','fmin')
-    #stat_func = kwargs.pop('stat_func',stat_chi2)
-            
-    #colors = np.array([filters.is_color(photband) for photband in photbands],bool)
-    
-    ## the help function which returns the chisquare  NOTE: metallicity is not yet included in the fitting!
-    #def residual_single(parameters):
-        #teff,logg,ebv = parameters
-        #syn_flux,Labs = model_func(teff=teff,logg=logg,ebv=ebv,z=z_init,photbands=photbands,**kwargs)
-        ## in case any of the parameters goes out of its bounds
-        ##if isnan(syn_flux).any():
-            
-        #chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
-        #return chisq
-    
-    ## calling the fitting function NOTE: the initial metallicity is returned in the output!
-    #if method=='fmin': # fmin
-        #teff,logg,ebv = fmin(res_func,array([teff_init,logg_init,ebv_init]),xtol=0.01,disp=0)
-        #optpars = [teff,logg,ebv,z_init]
-    #elif method=='fmin_powell': #fmin_powell
-        #teff,logg,ebv = fmin_powell(res_func,array([teff_init,logg_init,ebv_init]))
-        #optpars = [teff,logg,ebv,z_init]
-    #else:
-        #raise NotImplementedError
-    #logger.debug("Optimization finished")
-     
-    #syn_flux,Labs = model_func(teff=parsopt['teff'],logg=parsopt['logg'],ebv=parsopt['ebv'],z=z_init,photbands=photbands,**kwargs)
-     
-    ## when any of the parameters goes out of the bounds of the grid, syn_flux contains NaN
-    #if isnan(syn_flux).any():
-        #raise IndexError
-    
-    #chisq,scale,e_scale = stat_func(meas,e_meas,colors,syn_flux,full_output=False)
-    #optpars.append(chisq)
-    #optpars.append(scale)
-    #optpars.append(e_scale)
-
-    #return optpars
-
-#}
 
 if __name__=="__main__":
     from ivs.aux import loggers

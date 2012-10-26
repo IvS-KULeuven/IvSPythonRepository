@@ -89,8 +89,8 @@ Assessing the models
 Test if we can reject the null hypothesis that all coefficients are zero 
 with a 5% significance level:
 
-In [57]: myFit.FstatisticTest(0.05)
-Out[57]: True
+>>> myFit.FstatisticTest(0.05)
+True
 
 The "True" result means that H0 can indeed be rejected. Now we test if we can
 reject the null hypothesis that one particular coefficient is zero with a 5%

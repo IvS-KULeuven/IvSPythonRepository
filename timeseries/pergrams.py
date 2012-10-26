@@ -27,6 +27,10 @@ B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain the
 same timepoint twice}. Otherwise, a 'ValueError, concatenation problem' can
 occur.
 
+If something goes wrong in the periodogram computation, be sure to run
+L{check_input} on your input data. This will print out some basic diagnostics
+to see if your data are valid.
+
 Section 2. Nyquist frequency
 ============================
 
@@ -510,7 +514,7 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
 
 
     
-def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
+def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
 
     """
     Computes the modulus square of the fourier transform. 
