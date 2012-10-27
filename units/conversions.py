@@ -3214,27 +3214,39 @@ class Unit(object):
         """
         return self.convert('SI')[0]<other.convert('SI')[0]
     
+    def __radd__(self,other):
+        return self.__add__(other)
+    
     def __add__(self,other):
         """
         Add a Unit to a Unit.
+        
+        You can add a non-Unit to a Unit only if the Unit has an empty unit string.
         """
         unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
+        if not hasattr(other,'unit'):
+            unit2 = ''
+        else:
+            unit2 = breakdown(other.unit)[1]
         if unit1!=unit2:
             raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value+other_value,self.unit)
-        
+        elif unit2=='':
+            return self.value+other
+        else:
+            other_value = convert(other.unit,self.unit,other.value,unpack=False)
+            return Unit(self.value+other_value,self.unit)
+    
     def __sub__(self,other):
         """
         Subtract a Unit from a Unit.
         """
-        unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
-        if unit1!=unit2:
-            raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value-other_value,self.unit)
+        return self.__add__(-1*other)
+    
+    def __rsub__(self,other):
+        """
+        Subtract a Unit from a Unit.
+        """
+        return self.__radd__(-1*other)
     
     def __mul__(self,other):
         """
@@ -3662,6 +3674,8 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            'm-1_to_':      flam2lamflam, # switch from Flam to lamFlam
            #'rad2_to_':     per_sr,
            #'rad-2_to_':    times_sr,
+           'sr1_to_': per_sr,
+           'sr-1_to_': times_sr,
            'rad1_to_':     do_nothing,#per_cy,
            'rad-1_to_':    do_nothing,#times_cy,
            'rad-2sr1_to_': do_nothing,
