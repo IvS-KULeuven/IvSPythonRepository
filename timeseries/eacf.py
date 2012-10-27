@@ -135,13 +135,15 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doS
     """
     
     # If requested, perform sanity checks
+    # The 1000. in the check on equidistancy was needed to let pass the arrays created by 
+    # linspace() and arange().
 
     if doSanityCheck:
         if len(freqs) != len(spectrum):
             raise ValueError("freqs and spectrum don't have the same length")
-        if len(np.unique(np.diff(freqs))) != 1:
+        if np.fabs(np.diff(np.diff(freqs)).max()) > 1000. * np.finfo(freqs.dtype).eps:
             raise ValueError("freqs array is not equidistant")
-        if np.alltrue(spacings > 0.0):
+        if np.sometrue(spacings <= 0.0):
             raise ValueError("spacings are not all strictly positive")
         if kernelWidth <= 0.0:
             raise ValueError("kernel width is not > 0.0")
