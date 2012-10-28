@@ -953,13 +953,17 @@ class SED(object):
     This class is meant to be an easy interface to many of the ivs.sed module's
     functionality.
     
-    The attributes of SED are:
+    The most important attributes of SED are:
     
         1. C{sed.ID}: star's identification (str)
         2. C{sed.photfile}: name of the file containing all photometry (str)
         3. C{sed.info}: star's information from Simbad (dict)
         4. C{sed.master}: photometry data (record array)
         5. C{sed.results}: results and summary of the fitting process (dict)
+    
+    After fitting, e.g. via calling L{igrid_search}, you can call L{get_model}
+    to retrieve the full SED matching the best fitting parameters (or, rather,
+    closely matching them, see the documentation).
         
     """
     def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label=''):
