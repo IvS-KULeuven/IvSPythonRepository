@@ -61,41 +61,7 @@ __all__ = ['eacf']
 
 
 import numpy as np
-
-
-
-def DFTpower(time, signal, freqs):
-
-    """
-    Computes the power spectrum of a signal using a discrete Fourier transform.
-
-    Auxiliary function. Not to be imported. It is re-implemented here because
-    the standard power spectrum functions in the repository only allow for equidistant frequencies.
-
-    @param time: time points, not necessarily equidistant
-    @type time: ndarray
-    @param signal: signal corresponding to the given time points
-    @type signal: ndarray
-    @param freqs: frequencies for which the power spectrum will be computed. Unit: inverse of 'time'.
-    @type freqs: ndarray
-    @return: power spectrum. Unit: square of unit of 'signal'
-    @rtype: ndarray
-    """
-    
-    powerSpectrum = np.zeros(len(freqs))
-
-    for i, freq in enumerate(freqs):
-        arg = 2.0 * np.pi * freq * time
-        powerSpectrum[i] = np.sum(signal * np.cos(arg))**2 + np.sum(signal * np.sin(arg))**2
-
-    powerSpectrum = powerSpectrum * 4.0 / len(time)**2
-    return(powerSpectrum)
-    
-
-
-    
-   
-
+from ivs.timeseries.pergrams import DFTpower2 as DFTpower
 
 def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
 
