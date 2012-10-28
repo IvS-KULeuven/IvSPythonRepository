@@ -2814,6 +2814,17 @@ class Color(NonLinearConverter):
         else:
             raise ValueError("No color calibrations for %s"%(photband))
 
+class DecibelSPL(NonLinearConverter):
+    """
+    Convert a Decibel to intensity W/m2 and back.
+    
+    This is only valid for Decibels as a sound Pressure level
+    """
+    def __call__(self,meas,inv=False):
+        F0 = 1e-12 # W/m2
+        if not inv: return 10**(-meas)*F0
+        else:       return log10(meas/F0)
+
 class JulianDay(NonLinearConverter):
     """
     Convert a calender date to Julian date and back
@@ -3500,6 +3511,7 @@ _factors = collections.OrderedDict([
            ('Sv',    (1.,            'm2 s-2','dose equivalent','sievert')),
            ('kat',   (1.,            'mol s-1','catalytic activity','katal')),
            ('rem',   (1e-2,          'm2 s-2','dose equivalent','rem')),
+           ('dB',    (DecibelSPL,    'kg s-3','sound intensity','Decibel')),  # W/m2
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # ACCELERATION
