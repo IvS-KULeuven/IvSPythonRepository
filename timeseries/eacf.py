@@ -61,9 +61,9 @@ __all__ = ['eacf']
 
 
 import numpy as np
-from ivs.timeseries.pergrams import DFTpower2 as DFTpower
+from ivs.timeseries.pergrams import DFTpower2
 
-def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
+def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doSanityCheck=False):
 
     """
     Compute the Envelope Auto-Correlation Function (EACF) of a signal.
@@ -90,6 +90,9 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     @param maxFreq: only the part [minFreq, maxFreq] of the spectrum is taken into account
                     If it is None, the last point of the 'freqs' array is taken.
     @type maxFreq: float
+    @param doSanityCheck: if True: make a few sanity checks of the arguments (e.g. equidistancy of freqs).
+                          If False, do nothing.
+    @type doSanityCheck: boolean
     @return: autoCorrelation, croppedFreqs, smoothedSpectrum
                 - autoCorrelation:  the EACF evaluated in the values of 'spacings'
                 - croppedFreqs:     the frequencies of the selected part [minFreq, maxFreq]
@@ -97,6 +100,27 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     @rtype: (ndarray, ndarray, ndarray)
     """
     
+    # If requested, perform sanity checks
+    # The 1000. in the check on equidistancy was needed to let pass the arrays created by 
+    # linspace() and arange().
+
+    if doSanityCheck:
+        if len(freqs) != len(spectrum):
+            raise ValueError("freqs and spectrum don't have the same length")
+        if np.fabs(np.diff(np.diff(freqs)).max()) > 1000. * np.finfo(freqs.dtype).eps:
+            raise ValueError("freqs array is not equidistant")
+        if np.sometrue(spacings <= 0.0):
+            raise ValueError("spacings are not all strictly positive")
+        if kernelWidth <= 0.0:
+            raise ValueError("kernel width is not > 0.0")
+        if minFreq > freqs[-1]:
+            raise ValueError("minimum frequency 'minFreq' is larger than largest frequency in freqs array")
+        if maxFreq < freqs[0]:
+            raise ValueError("maximum frequency 'maxFreq' is smaller than smallest frequency in freqs array")
+        if minFreq >= maxFreq:
+            raise ValueError("minFreq >= maxFreq")
+
+
     # Set the default values
     
     if minFreq == None: minFreq = freqs[0]
@@ -123,7 +147,7 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     
     # Compute the power spectrum of the power spectrum
     
-    autoCorrelation = DFTpower(croppedFreqs, smoothedSpectrum, 1.0/spacings)
+    autoCorrelation = DFTpower2(croppedFreqs, smoothedSpectrum, 1.0/spacings)
     
     # That's it.
     

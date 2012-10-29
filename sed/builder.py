@@ -687,7 +687,7 @@ def fix_master(master,e_default=None):
                 row[columns.index('cunit')] = 'flux_ratio'
                 add_rows.append(tuple(row))
     master = numpy_ext.recarr_addrows(master,add_rows)
-                
+    
     #-- add an extra column with a flag to distinguish colors from absolute
     #   fluxes, and a column with flags to include/exclude photometry
     #   By default, exclude photometry if the effective wavelength is above
