@@ -1174,7 +1174,11 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
-def reset(): set_convention()
+def reset():
+    """
+    Resets all values and conventions to the original values.
+    """
+    set_convention()
 
 def get_convention():
     """
@@ -2814,6 +2818,17 @@ class Color(NonLinearConverter):
         else:
             raise ValueError("No color calibrations for %s"%(photband))
 
+class DecibelSPL(NonLinearConverter):
+    """
+    Convert a Decibel to intensity W/m2 and back.
+    
+    This is only valid for Decibels as a sound Pressure level
+    """
+    def __call__(self,meas,inv=False):
+        F0 = 1e-12 # W/m2
+        if not inv: return 10**(-meas)*F0
+        else:       return log10(meas/F0)
+
 class JulianDay(NonLinearConverter):
     """
     Convert a calender date to Julian date and back
@@ -3002,7 +3017,7 @@ class Unit(object):
     >>> print a+b
     4002.0 m
     
-    B{Example 1:} You want to calculated the equatorial velocity of the Sun:
+    B{Example 1:} You want to calculate the equatorial velocity of the Sun:
     
     >>> distance = Unit(2*np.pi,'Rsol')
     >>> time = Unit(22.,'d')
@@ -3246,7 +3261,7 @@ class Unit(object):
         """
         Subtract a Unit from a Unit.
         """
-        return self.__radd__(-1*other)
+        return (self*-1).__radd__(other)
     
     def __mul__(self,other):
         """
@@ -3500,6 +3515,7 @@ _factors = collections.OrderedDict([
            ('Sv',    (1.,            'm2 s-2','dose equivalent','sievert')),
            ('kat',   (1.,            'mol s-1','catalytic activity','katal')),
            ('rem',   (1e-2,          'm2 s-2','dose equivalent','rem')),
+           ('dB',    (DecibelSPL,    'kg s-3','sound intensity','Decibel')),  # W/m2
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # ACCELERATION

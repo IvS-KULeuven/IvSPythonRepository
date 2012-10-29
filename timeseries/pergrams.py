@@ -508,16 +508,12 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
     # th *= 0.5 seemed necessary to fit the F-distribution
         
     return frequencies,th
-
-
-
-
-
     
-def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
+def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
 
     """
     Computes the modulus square of the fourier transform. 
+    
     Unit: square of the unit of signal. Time points need not be equidistant.
     The normalisation is such that a signal A*sin(2*pi*nu_0*t)
     gives power A^2 at nu=nu_0
@@ -544,9 +540,7 @@ def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
     B = np.exp(1j*2.*pi*df*time)
     ft = np.zeros(Nfreq, complex) 
     ft[0] = A.sum()
-    print Nfreq
     for k in range(1,Nfreq):
-        if k%10000==0: print k,Nfreq
         A *= B
         ft[k] = np.sum(A)
     
@@ -554,6 +548,33 @@ def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
         return freqs,ft**2*4.0/Ntime**2
     else:
         return freqs,(ft.real**2 + ft.imag**2) * 4.0 / Ntime**2    
+
+
+def DFTpower2(time, signal, freqs):
+
+    """
+    Computes the power spectrum of a signal using a discrete Fourier transform.
+
+    @param time: time points, not necessarily equidistant
+    @type time: ndarray
+    @param signal: signal corresponding to the given time points
+    @type signal: ndarray
+    @param freqs: frequencies for which the power spectrum will be computed. Unit: inverse of 'time'.
+    @type freqs: ndarray
+    @return: power spectrum. Unit: square of unit of 'signal'
+    @rtype: ndarray
+    """
+    
+    powerSpectrum = np.zeros(len(freqs))
+
+    for i, freq in enumerate(freqs):
+        arg = 2.0 * np.pi * freq * time
+        powerSpectrum[i] = np.sum(signal * np.cos(arg))**2 + np.sum(signal * np.sin(arg))**2
+
+    powerSpectrum = powerSpectrum * 4.0 / len(time)**2
+    return(powerSpectrum)
+
+
     
 def DFTscargle(times, signal,f0,fn,df):
     
@@ -1376,6 +1397,15 @@ def check_input(times,signal,**kwargs):
     else:
         print(termtools.green("OK: time array is sorted"))
     print(termtools.green("No inconsistencies found or inconsistencies are fixed"))
+    
+    #-- check keyword arguments:
+    fnyq = getNyquist(times,nyq_stat=np.min)
+    print("Default Nyquist frequency: {}".format(fnyq))
+    if 'nyq_stat' in kwargs:
+        fnyq = getNyquist(times,nyq_stat=kwargs['nyq_stat'])
+        print("Nyquist value manually set to {}".format(fnyq))
+    if 'fn' in kwargs and kwargs['fn']>fnyq:
+        print(termtools.red("Final frequency 'fn' is larger than the Nyquist frequency"))
     return times,signal
 
 
