@@ -61,7 +61,7 @@ __all__ = ['eacf']
 
 
 import numpy as np
-from ivs.timeseries.pergrams import DFTpower2 as DFTpower
+from ivs.timeseries.pergrams import DFTpower2
 
 def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doSanityCheck=False):
 
@@ -147,7 +147,7 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doS
     
     # Compute the power spectrum of the power spectrum
     
-    autoCorrelation = DFTpower(croppedFreqs, smoothedSpectrum, 1.0/spacings)
+    autoCorrelation = DFTpower2(croppedFreqs, smoothedSpectrum, 1.0/spacings)
     
     # That's it.
     
