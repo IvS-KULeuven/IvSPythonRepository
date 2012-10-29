@@ -509,7 +509,7 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
         
     return frequencies,th
     
-def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
+def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
 
     """
     Computes the modulus square of the fourier transform. 
@@ -522,16 +522,16 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
     @type time: ndarray
     @param signal: signal [0..Ntime-1]
     @type signal: ndarray
-    @param f0: the power is computed for the frequencies
-                      freq = arange(startfreq,stopfreq,stepfreq)
+    @param f0: the power is computed for the frequencies freq = arange(f0,fn,df)
     @type f0: float
-    @param fn: see startfreq
+    @param fn: see f0
     @type fn: float
-    @param df: see startfreq
+    @param df: see f0
     @type df: float
     @return: power spectrum of the signal
     @rtype: array 
     """
+
     freqs = np.arange(f0,fn,df)
     Ntime = len(time)
     Nfreq = int(np.ceil((fn-f0)/df))
@@ -554,6 +554,9 @@ def DFTpower2(time, signal, freqs):
 
     """
     Computes the power spectrum of a signal using a discrete Fourier transform.
+
+    The main difference between DFTpower and DFTpower2, is that the latter allows for non-equidistant
+    frequencies for which the power spectrum will be computed.
 
     @param time: time points, not necessarily equidistant
     @type time: ndarray
