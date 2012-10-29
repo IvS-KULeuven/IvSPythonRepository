@@ -12,7 +12,7 @@ As an example we take the Kepler red giant KIC3744043, which shows a beautiful s
 To compute the EACF, we first import:
 
 >>> import numpy as np
->>> from ivs.timeseries.eacf import *
+>>> from ivs.timeseries.eacf import eacf
 
 Red giants have spacings in the power spectrum between, say, 1.0 and 15.0, so this is the interval in which we will
 compute the EACF:
@@ -57,45 +57,11 @@ power excess), and derive from that value a first estimate for the large separat
 """
 
 
-__all__ = ['eacf', 'meanLargeSeparation']
+__all__ = ['eacf']
 
 
 import numpy as np
-
-
-
-def DFTpower(time, signal, freqs):
-
-    """
-    Computes the power spectrum of a signal using a discrete Fourier transform.
-
-    Auxiliary function. Not to be imported. It is re-implemented here because
-    the standard power spectrum functions in the repository only allow for equidistant frequencies.
-
-    @param time: time points, not necessarily equidistant
-    @type time: ndarray
-    @param signal: signal corresponding to the given time points
-    @type signal: ndarray
-    @param freqs: frequencies for which the power spectrum will be computed. Unit: inverse of 'time'.
-    @type freqs: ndarray
-    @return: power spectrum. Unit: square of unit of 'signal'
-    @rtype: ndarray
-    """
-    
-    powerSpectrum = np.zeros(len(freqs))
-
-    for i, freq in enumerate(freqs):
-        arg = 2.0 * np.pi * freq * time
-        powerSpectrum[i] = np.sum(signal * np.cos(arg))**2 + np.sum(signal * np.sin(arg))**2
-
-    powerSpectrum = powerSpectrum * 4.0 / len(time)**2
-    return(powerSpectrum)
-    
-
-
-    
-   
-
+from ivs.timeseries.pergrams import DFTpower2 as DFTpower
 
 def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
 
@@ -133,8 +99,8 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None):
     
     # Set the default values
     
-    if minFreq == None: minFreq = freq[0]
-    if maxFreq == None: maxFreq = freq[-1]
+    if minFreq == None: minFreq = freqs[0]
+    if maxFreq == None: maxFreq = freqs[-1]
     freqStep = freqs[1]-freqs[0]
    
     # Crop the spectrum to the specified range

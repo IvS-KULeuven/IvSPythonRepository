@@ -93,8 +93,6 @@ if __name__=="__main__":
         else:
             compiler = 'gfortran'
         if sys.argv[1]=='compile':
-            #-- catch all output from f2py
-            #   devnull = open(os.devnull,'wb')
             for name in to_install:
                 #-- break up fortran filepath in file and directory name
                 direc,pname = os.path.dirname(name),os.path.basename(name)
@@ -116,4 +114,3 @@ if __name__=="__main__":
                         logger.error('FAILED')
                 else:
                     logger.info('%s already compiled'%(pname.upper()))
-            devnull.close()
