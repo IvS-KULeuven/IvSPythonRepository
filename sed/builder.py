@@ -3382,27 +3382,26 @@ class BinarySED(SED):
             self.results[mtype]['chi2'] = chi2
     
 class Calibrator(SED):
+    """
+    Convenience class for a photometric standard star or calibrator.
+    """
     def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label='',library='calspec'):
-        #-- list all the available calibrator photfiles:
-        this_ID = sesame.search(ID)['oname']
-        photfiles = config.glob(os.path.join('sedtables','calibrators','photfiles'),'*.phot')
-        #-- check if the photfile is of the given target, if so, load it
-        for photfile in photfiles:
-            with open(photfile,'r') as ff:
-                info = json.loads(ff.readline()[1:].strip())
-                if info['oname']==this_ID:
-                    #-- try to get the calibrator spectrum
-                    wave,flux = model.get_calibrator(name=ID,library=library)
-                    break
-        else:
-            raise ValueError("Target {} not found in calibrator set".format(ID))
+        names,fits_files,phot_files = model.read_calibrator_info(library='ngsl')
+        index = names.index(ID)
+        #--retrieve fitsfile information
+        fits_file = pyfits.open(fits_files[index])
+        wave = fits_file[1].data.field('wavelength')
+        flux = fits_file[1].data.field('flux')
+        fits_file.close()
+        #--photfile:
+        photfile = phot_files[index]
         super(Calibrator,self).__init__(photfile=photfile,plx=plx,load_fits=load_fits,label=label)
         self.set_model(wave,flux)
         
 
 class SampleSEDs(object):
     """
-    Object representing a list of SEDs.
+    Class representing a list of SEDs.
     """
     def __init__(self,targets,**kwargs):
         """
