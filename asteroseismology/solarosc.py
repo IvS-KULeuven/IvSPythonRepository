@@ -4,6 +4,12 @@ Simulation of a solarlike oscillations
 Author: Joris De Ridder
 
 Error messages are written to the logger "solarosc".
+
+Notes:
+
+Suppose Delta is the peak FWHM linewidth (muHz) and eta is the damping rate (muHz), then::
+
+    Delta = eta/pi
 """
 
 import numpy as np
@@ -34,18 +40,6 @@ def solarosc(time, freq, ampl, eta):
     Compute time series of stochastically excited damped modes
     
     See also De Ridder et al., 2006, MNRAS 365, pp. 595-605.
-    
-    @param time: time points [0..Ntime-1] (unit: e.g. Ms)
-    @type time: ndarray
-    @param freq: oscillation freqs [0..Nmodes-1] (unit: e.g. microHz)
-    @type freq: ndarray
-    @param ampl: amplitude of each oscillation mode
-                 rms amplitude = ampl / sqrt(2.)
-    @type ampl: ndarray
-    @param eta: damping rates (unit: e.g. (Ms)^{-1})
-    @type eta: ndarray
-    @return: signal[0..Ntime-1]
-    @rtype: ndarray
 
     Example:
     
@@ -67,6 +61,17 @@ def solarosc(time, freq, ampl, eta):
     300 kicks for warm up for oscillation signal
     Simulating stochastic oscillations
     
+    @param time: time points [0..Ntime-1] (unit: e.g. Ms)
+    @type time: ndarray
+    @param freq: oscillation freqs [0..Nmodes-1] (unit: e.g. microHz)
+    @type freq: ndarray
+    @param ampl: amplitude of each oscillation mode
+                 rms amplitude = ampl / sqrt(2.)
+    @type ampl: ndarray
+    @param eta: damping rates (unit: e.g. (Ms)^{-1})
+    @type eta: ndarray
+    @return: signal[0..Ntime-1]
+    @rtype: ndarray
     """
   
     Ntime = len(time)
