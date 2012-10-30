@@ -16,6 +16,8 @@ from numpy import sqrt, random
 from scipy.optimize import leastsq as scipy_leastsq
 from scipy.optimize import anneal as scipy_anneal
 from scipy.optimize import fmin_l_bfgs_b as scipy_lbfgsb
+from scipy.optimize import fmin as scipy_fmin
+from scipy.optimize import fmin_powell as scipy_fmin_powell
 
 try:
     from collections import OrderedDict
@@ -346,7 +348,24 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
 
         self.nfev =  info['funcalls']
         self.message = info['task']
-
+    
+    def fmin(self, fmintype='powell',**kws):
+        """
+        use fmin (fmintype=='plain') or fmin_powell (fmintype='powell') minimization
+        """
+        self.prepare_fit()
+        lb_kws = dict()
+        lb_kws.update(self.kws)
+        lb_kws.update(kws)
+        def penalty(params):
+            "local penalty function -- fmin wants sum-squares residual"
+            r = self.__residual(params)
+            return (r*r).sum()
+        
+        if fmintype=='plain':
+            xout = scipy_fmin(penalty, self.vars, **lb_kws)
+        elif fmintype=='powell':
+            xout = scipy_fmin_powell(penalty, self.vars, **lb_kws)
 
     def leastsq(self, scale_covar=True, **kws):
         """
@@ -437,6 +456,8 @@ def minimize(fcn, params, engine='leastsq', args=None, kws=None,
         fitter.anneal()
     elif engine == 'lbfgsb':
         fitter.lbfgsb()
+    elif engine == 'fmin':
+        fitter.fmin()
     else:
         fitter.leastsq()
     return fitter
