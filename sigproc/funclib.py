@@ -16,8 +16,8 @@ function in this module.
 
 >>> p = plt.figure()
 >>> x = np.linspace(0,10,1000)[1:]
->>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0.5]),label='power_law')
->>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0.5])+evaluate('gauss',x,[1.,5.,0.5,0]),label='power_law + gauss')
+>>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0,0.5]),label='power_law')
+>>> p = plt.plot(x,evaluate('power_law',x,[2.,3.,1.5,0,0.5])+evaluate('gauss',x,[1.,5.,0.5,0,0]),label='power_law + gauss')
 >>> leg = plt.legend(loc='best')
 >>> leg.get_frame().set_alpha(0.5)
 
@@ -369,12 +369,12 @@ def sine_orbit(t0=0.,nmax=10):
 
 def power_law():
     """
-    Power law (A,B,C,const)
+    Power law (A,B,C,f0,const)
     
-    P(f) = A / (1+ Bf)**C + const
+    P(f) = A / (1+ B(f-f0))**C + const
     """
-    pnames = ['ampl','b','c','const']
-    function = lambda p, x: p[0] / (1 + (p[1]*x)**p[2]) + p[3]
+    pnames = ['ampl','b','c','f0','const']
+    function = lambda p, x: p[0] / (1 + (p[1]*(x-p[3]))**p[2]) + p[4]
     return Function(function=function, par_names=pnames)
 
 
