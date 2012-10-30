@@ -86,6 +86,8 @@ def subprocess_timeout(command, time_out):
     
     Command represents the command for the process you would give in a terminal e.g. 'ls -l' in a terminal becomes ["ls", "-l"] or 'firefox' becomes ["firefox"]'; time_out is expressed in seconds. If the process did not complete before time_out, the process is killed.
     
+    @param command: command to run
+    @type command: str
     """
 
     # launching the command
