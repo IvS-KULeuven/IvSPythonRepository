@@ -1702,7 +1702,14 @@ class SED(object):
         
         #-- remember the best model
         if set_model: self.set_best_model(type=type)
-            
+    
+    def iminimize(self, teff=None, logg=None, ebv=None, z=None, radius=None, teffrange=None,
+                     loggrange=None, ebvrange=None, zrange=None, radiusrange=None, points=1, 
+                     start_from='igrid_search',df=None,CI_limit=None, set_model=True, **kwargs):
+        """ 
+        Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
+        """
+        raise NotImplementedError
         
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='imc',\
                  distribution='uniform',points=None,fitmethod='fmin',disturb=True):
