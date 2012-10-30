@@ -18,6 +18,7 @@ import numpy as np
 from numpy import pi,cos,sin,sqrt,tan,arctan
 from scipy.interpolate import splev
 from scipy.special import erf,jn
+from scipy.stats import distributions
 from ivs.timeseries import keplerorbit
 
 logger = logging.getLogger('SIGPROC.EVAL')
@@ -39,6 +40,129 @@ def check_input(fctn):
         args[1] = parameters
         return fctn(*args,**kwargs)
     return check
+
+#{ Evaluating model fits
+
+def RSS(data,model):
+    """
+    Residual sum of squares.
+    
+    @param data: data
+    @type data: numpy array
+    @param model: model
+    @type model: numpy array
+    @rtype: float
+    @return: residual sum of squares
+    """
+    return np.sum( (model-data)**2 )
+
+
+def varred(data,model):
+    """
+    Calculate variance reduction.
+    
+    @param data: data
+    @type data: numpy array
+    @param model: model
+    @type model: numpy array
+    @rtype: percentage
+    @return: variance reduction (percentage)
+    """
+    residus = data-model
+    variance_reduction = 1.-np.sum(residus**2.)/sum((data-data.mean())**2.)
+    return variance_reduction*100.
+
+def bic(data,model,k=0,n=None):
+    """
+    BIC for time regression
+    
+    This one is based on the MLE of the variance,
+    
+    Sigma_k^2 = RSS/n
+    
+    Where our maximum likelihood estimator is then (RSS/n)^n
+    
+    @param data: data
+    @type data: numpy array
+    @param model: model
+    @type model: numpy array
+    @param k: number of free, independent parameters
+    @type k: integer
+    @param n: number of effective observations
+    @type n: integer or None
+    @rtype: float
+    @return: BIC
+    """
+    if n is None:
+        n = len(data)
+    #-- calculate RSS
+    RSS_ = RSS(data,model)
+    #-- calculate BIC
+    BIC = n * np.log(RSS_/n) + k * np.log(n)
+    return BIC
+    
+def aic(data,model,k=0,n=None):
+    """
+    AIC for time regression
+    
+    This one is based on the MLE of the variance,
+    
+    Sigma_k^2 = RSS/n
+    
+    Where our maximum likelihood estimator is then (RSS/n)^n
+    
+    @param data: data
+    @type data: numpy array
+    @param model: model
+    @type model: numpy array
+    @param k: number of free, independent parameters
+    @type k: integer
+    @param n: number of effective observations
+    @type n: integer or None
+    @rtype: float
+    @return: AIC
+    """
+    if n is None:
+        n = len(data)
+    #-- calculate RSS
+    RSS_ = RSS(data,model)
+    #-- calculate AIC
+    AIC = n * np.log(RSS_/n) + 2*k + n
+    return AIC
+
+def fishers_method(pvalues):
+    """
+    Use Fisher's test to combine probabilities.
+    
+    http://en.wikipedia.org/wiki/Fisher's_method
+    
+    >>> rvs1 = distributions.norm().rvs(10000)
+    >>> rvs2 = distributions.norm().rvs(10000)
+    >>> pvals1 = scipy.stats.distributions.norm.sf(rvs1)
+    >>> pvals2 = scipy.stats.distributions.norm.sf(rvs2)
+    >>> fpval = fishers_method([pvals1,pvals2])
+    
+    And make a plot (compare with the wiki page).
+    
+    >>> p = pl.figure()
+    >>> p = pl.scatter(pvals1,pvals2,c=fpval,edgecolors='none',cmap=pl.cm.spectral)
+    >>> p = pl.colorbar()
+
+
+
+    
+    @param pvalues: array of pvalues, the first axis will be combined
+    @type pvalues: ndarray (shape Nprob times n)
+    @return: combined pvalues
+    @rtype: ndarray (shape n)
+    """
+    pvalues = np.asarray(pvalues)
+    X2 = -2*np.sum(np.log(pvalues),axis=0)
+    df = 2*pvalues.shape[0]
+    return distributions.chi2.sf(X2,df)
+    
+
+#}
 
 #{ Timeseries
 
