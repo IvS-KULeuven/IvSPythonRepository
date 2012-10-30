@@ -170,3 +170,5 @@ Cf2py intent(out) W
 30    CONTINUE
       RETURN
 	  END
+      program dummy
+      end

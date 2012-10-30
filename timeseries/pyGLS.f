@@ -171,3 +171,5 @@ c     Fit a sine function
       if( FAP .gt. 0.01 ) FAP = 1. - (1.-prob)**M
 
       END
+      program dummy
+      end

@@ -443,7 +443,7 @@ import pylab as pl
 import matplotlib as mpl
 from ivs.sigproc import lmfit
 
-logger = logging.getLogger('TS.FIT')
+logger = logging.getLogger('SP.FIT')
 
 #{Linear fit functions
 
@@ -1798,9 +1798,111 @@ class Minimizer(lmfit.Minimizer):
     
     #{ Error determination
     
+    def calculate_CI(self, parameters=None, sigma=0.99, maxiter=200, short_output=True, **kwargs):
+        """
+        Returns the confidence intervalls of the given parameters. This function uses
+        the F-test method described below to calculate confidence intervalls. The
+        I{sigma} parameter describes which confidence level is required in percentage: 
+        sigma=0.65 corresponds with the standard 1 sigma level.
+        
+        The output is a dictionary containing for each parameter the lower and upper
+        boundary of the asked confidence level. If short_output is True, an array of
+        tupples is returned instead. When only one parameter is given, and short_output
+        is True, only a tupple of the lower and upper boundary is returned.
+        
+        F-test
+        ======
+        The F-test is used to compare the null model, which is the best fit
+        found by the minimizer, with an alternate model, where one of the
+        parameters is fixed to a specific value. The value is changed util the
+        differnce between chi2_0 and chi2_f can't be explained by the loss of a
+        degree of freedom with a certain confidence.
+        
+        M{F = (chi2_f / chi2_0 - 1) * (N-P)/P_fix}
+        
+        N is the number of data-points, P the number of parameter of the null model.
+        P_fix is the number of fixed parameters (or to be more clear, the difference 
+        of number of parameters betweeen the null model and the alternate model).
+        
+        This method relies completely on the I(conf_interval) method of the lmfit
+        package. 
+        
+        @param parameters: Names of the parameters to calculate the CIs from (if None,
+                           all parameters are used)
+        @type parameters: array of strings
+        @param sigma: The probability level used to calculate the CI
+        @type sigma: float
+        
+        @return: A dictionary with for each parameter the lower and upper limit.
+        @rtype: dict
+        """
+        if parameters == None:
+            parameters = self.model.par_names
+        
+        if type(parameters) == str:
+            parameters = [parameters]
+        
+        # Use the adjusted conf_interval() function of the lmfit package.
+        ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter,\
+                                 prob_func=None, trace=False, verbose=False)
+        
+        # Prepare the output
+        if len(parameters) == 1 and short_output:
+            out = np.array(ci[parameters[0]][sigma])
+        elif short_output:
+            out = []
+            for p in parameters:
+                out.append(ci[p][sigma])
+            out = np.array(out)
+        else:
+            out = {}
+            for p in parameters:
+                out[p] = ci[p][sigma]
+        
+        return out
+    
+    def calculate_CI_2D(self, xpar=None, ypar=None, res=10,  limits=None, type='prob'):
+        """
+        Calculates the confidence interval for 2 given parameters. Both the  confidence interval
+        calculated using the F-test method from the I{estimate_error} method, and the normal chi 
+        squares can be obtained using the I{type} keyword. 
+        
+        The confidence intervall is returned as a grid, together with the x and y distribution of
+        the parameters: (x-values, y-values, grid)
+        
+        @param xname: The parameter on the x axis
+        @param yname: The parameter on the y axis
+        @param res: The resolution of the grid over which the confidence intervall is calculated
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall
+                       is calculated. If None, 5 times the stderr is used.
+        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare plot. 
+        @param filled: True for filled contour plot, False for normal contour plot
+        
+        @return: the x values, y values and confidence values
+        @rtype: (array, array, 2d array)
+        """
+        
+        xn = hasattr(res,'__iter__') and res[0] or res
+        yn = hasattr(res,'__iter__') and res[1] or res
+        
+        prob_func = None
+        if type == 'chi2':
+            def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
+                return new_chi
+        old = np.seterr(divide='ignore') #turn division errors off temporary
+        x, y, grid = lmfit.conf_interval2d(self,xpar,ypar,xn,yn, limits=limits, prob_func=prob_func)
+        np.seterr(divide=old['divide'])
+        
+        if type=='prob':
+            grid *= 100.
+ 
+        return x, y, grid
+    
     def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200,\
              prob_func=None, method='F-test', output='error', **kwargs):
         """
+        DEPRECATED
+        
         Returns the confidence intervalls of the given parameters. 
         Two different methods can be used, Monte Carlo simulation and F-test method. 
         
@@ -1825,6 +1927,7 @@ class Minimizer(lmfit.Minimizer):
         @param method: Method to use, 'F-test' or 'MC' (monte carlo simulation)
         @param output: Output type, error or ci (confidence intervall)
         """
+        logger.warning("DEPRECATED: estimate_error is replaced by calculate_CI")
         
         # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
         short_output = (type(p_names)==str and type(sigmas)==float) and True or False
@@ -1878,6 +1981,7 @@ class Minimizer(lmfit.Minimizer):
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
     
+
     def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. The confidence interval is calculated

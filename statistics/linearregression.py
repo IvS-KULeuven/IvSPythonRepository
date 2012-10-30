@@ -16,7 +16,7 @@ We first make some "fake" observations I{obs} that were measured as a function o
 The model we want to fit is y = a_0 + a_1 * exp(x) = a_0 * 1 + a_1 * exp(x):
 
 >>> myModel = LinearModel([ones(10), exp(x)], ["1", "exp(x)"])
->>> print myModel
+>>> print(myModel)
 Model: y = a_0 + a_1 * exp(x)
 Expected number of observations: 10
 
@@ -70,6 +70,18 @@ array([[  3.30553480e-01,  -3.49164676e-03],
 The 95% confidence interval of coefficient a_0 is thus [0.19, 2.85]. See the list 
 of methods for more functionality. Note that also weights can be taken into account.
 
+To evaluate your linear model in a new set of covariates 'xnew', use the method evaluate().
+Be aware, however, that you need to give the regressors evaluated in the new covariates,
+not only the covariates. For example:
+
+>>> xnew = linspace(-5.0, +5.0, 20)
+>>> y = myFit.evaluate([ones_like(xnew), exp(xnew)])
+>>> print(y)
+[   1.53989966    1.55393018    1.57767944    1.61787944    1.68592536
+    1.80110565    1.99606954    2.32608192    2.8846888     3.83023405
+    5.43074394    8.13990238   12.72565316   20.48788288   33.62688959
+   55.86708392   93.51271836  157.23490405  265.09646647  447.67207215]
+   
 
 Assessing the models
 ====================
@@ -77,8 +89,8 @@ Assessing the models
 Test if we can reject the null hypothesis that all coefficients are zero 
 with a 5% significance level:
 
-In [57]: myFit.FstatisticTest(0.05)
-Out[57]: True
+>>> myFit.FstatisticTest(0.05)
+True
 
 The "True" result means that H0 can indeed be rejected. Now we test if we can
 reject the null hypothesis that one particular coefficient is zero with a 5%
@@ -1405,7 +1417,6 @@ class LinearFit(object):
         self._weightedResidualVariance = None
         self._BICvalue = None
         self._AICvalue = None
-        self._Ttest = None
         self._Fstatistic = None
         self._weightedFstatistic = None
         
@@ -1667,11 +1678,7 @@ class LinearFit(object):
         
         t = stats.t.ppf(1.0-alpha/2., self._linearModel.degreesOfFreedom())
          
-        if self._Ttest is not None:
-            return self._Ttest
-        else:
-            self._Ttest = np.fabs(self.t_values()) > t
-            return self._Ttest
+        return np.fabs(self.t_values()) > t
 
  
 
@@ -1841,6 +1848,9 @@ class LinearFit(object):
         Remarks:
             - Gaussian noise is assumed, with unknown variance sigma^2
             - Constant terms in the log-likelihood were omitted
+            - If the number of observations equals the number of parameters + 1
+              then the 2nd order AIC is not defined. In this case the method
+              gives a nan.
             
         TODO: . make a weighted version
 
@@ -1852,10 +1862,14 @@ class LinearFit(object):
         if self._AICvalue is not None:
             return self._AICvalue
         else:
-            # Include the sigma of the noise in the number of unknown fit parameters
             nParam = self._nParameters + 1
-            self._AICvalue = self._nObservations * log(self.sumSqResiduals(weighted=False)/self._nObservations)     \
-                       + 2*nParam + 2*nParam*(nParam+1)/(self._nObservations - nParam - 1)
+            if (self._nObservations - nParam - 1) == 0:
+                # In this case we would get a division by zero
+                self._AICvalue = np.nan
+            else:
+                # Include the sigma of the noise in the number of unknown fit parameters
+                self._AICvalue = self._nObservations * log(self.sumSqResiduals(weighted=False)/self._nObservations)     \
+                                 + 2*nParam + 2*nParam*(nParam+1)/(self._nObservations - nParam - 1)
             return self._AICvalue
         
 
@@ -1999,6 +2013,72 @@ class LinearFit(object):
 
 
 
+
+    def evaluate(self, regressors):
+    
+        """
+        Evaluates your current best fit in regressors evaluated in new covariates.
+        
+        Remark:
+            - The new regressor functions should be exactly the same ones as you used
+              to define the linear model. They should only be evaluated in new covariates.
+              This is not checked for!
+                     
+        Example:
+        
+            >>> noise = array([0.44, -0.48, 0.26, -2.00, -0.93, 2.21, -0.57, -2.04, -1.09, 1.53])
+            >>> x = linspace(0, 5, 10)
+            >>> obs = 2.0 + 3.0 * exp(x) + noise
+            >>> myModel = LinearModel([ones(10), exp(x)], ["1", "exp(x)"])
+            >>> print(myModel)
+            Model: y = a_0 + a_1 * exp(x)
+            Expected number of observations: 10
+
+            >>> myFit = myModel.fitData(obs)
+            >>> xnew = linspace(-5.0, +5.0, 20)
+            >>> y = myFit.evaluate([ones_like(xnew), exp(xnew)])
+            >>> print(y)
+            [ 1.53989966 1.55393018 1.57767944 1.61787944 1.68592536
+              1.80110565 1.99606954 2.32608192 2.8846888 3.83023405
+              5.43074394 8.13990238 12.72565316 20.48788288 33.62688959
+              55.86708392 93.51271836 157.23490405 265.09646647 447.67207215]
+                     
+        @param regressors: either a list of equally-sized numpy arrays with the regressors 
+                           evaluated in the new covariates: [f_0(xnew),f_1(xnew),f_2(xnew),...],
+                           or an N x M design matrix (numpy array) where these regressor arrays 
+                           are column-stacked, with N the number of regressors, and M the number
+                           of data points.
+        @type regressors: either a list or an ndarray
+        @return: the linear model evaluated in the new regressors
+        @rtype: ndarray
+        """
+        
+        # Sanity check of the 'regressors'
+        
+        if not isinstance(regressors, list) and not isinstance(regressors, np.ndarray):
+            raise TypeError, "LinearModel only accepts a list of regressors, or a design matrix"
+            
+        # Construct the design matrix, if required    
+            
+        if isinstance(regressors, list):
+            designMatrix = np.column_stack(np.double(regressors))
+        else:
+            designMatrix = regressors
+            
+        # Check whether the design matrix has the proper shape
+        
+        if designMatrix.ndim != 2:
+            raise TypeError, "Design matrix is not 2-dimensional"
+            
+        if designMatrix.shape[1] != self._nParameters:
+            raise TypeError, "Number of regressors not equal to the one of the original model"          
+        
+        # Evaluate the model in the new regressors    
+            
+        return np.dot(designMatrix, self.regressionCoefficients())
+        
+        
+        
 
 
 

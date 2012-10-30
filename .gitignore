@@ -7,6 +7,10 @@
 *.o
 *.so
 
+# HTML files of the documentation
+
+doc/html/*
+
 # Packages
 
 *.7z
@@ -20,8 +24,9 @@
 *.zip
 *.bz2
 
-# Logs and databases
+# Backups, logs and databases
 
+*.swp
 *.log
 *.sql
 *.sqlite

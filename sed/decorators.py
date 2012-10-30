@@ -7,7 +7,9 @@ import logging
 import numpy as np
 import pylab as pl
 from multiprocessing import Manager,Process,cpu_count
-from ivs.sed import model
+import model
+from ivs.units import conversions
+from ivs.units import constants
 
 logger = logging.getLogger('SED.DEC')
 
@@ -138,3 +140,60 @@ def standalone_figure(fctn):
         return out
         
     return dofig
+    
+    
+    
+def blackbody_input(fctn):
+    """
+    Prepare input and output for blackbody-like functions.
+    
+    If the user gives wavelength units and Flambda units, we only need to convert
+    everything to SI (and back to the desired units in the end).
+    
+    If the user gives frequency units and Fnu units, we only need to convert
+    everything to SI ( and back to the desired units in the end).
+    
+    If the user gives wavelength units and Fnu units, we need to convert
+    the wavelengths first to frequency.
+    """
+    @functools.wraps(fctn)
+    def dobb(x,T,**kwargs):
+        wave_units = kwargs.get('wave_units','AA')
+        flux_units = kwargs.get('flux_units','erg/s/cm2/AA')
+        #-- prepare input
+        #-- what kind of units did we receive?
+        curr_conv = constants._current_convention
+        # X: wavelength/frequency
+        x_unit_type = conversions.get_type(wave_units)
+        x = conversions.convert(wave_units,curr_conv,x)
+        # T: temperature
+        if isinstance(T,tuple):
+            T = conversions.convert(T[1],'K',T[0])
+        # Y: flux
+        y_unit_type = conversions.change_convention('SI',flux_units)
+        #-- if you give Jy vs micron, we need to first convert wavelength to frequency
+        if y_unit_type=='kg1 rad-1 s-2' and x_unit_type=='length':
+            x = conversions.convert(conversions._conventions[curr_conv]['length'],'rad/s',x)
+            x_unit_type = 'frequency'
+        elif y_unit_type=='kg1 m-1 s-3' and x_unit_type=='frequency':
+            x = conversions.convert('rad/s',conversions._conventions[curr_conv]['length'],x)
+            x_unit_type = 'length'
+        #-- correct for rad
+        if x_unit_type=='frequency':
+            x /= (2*np.pi)
+        print y_unit_type
+        #-- run function
+        I = fctn((x,x_unit_type),T)        
+        
+        #-- prepare output
+        disc_integrated = kwargs.get('disc_integrated',True)
+        ang_diam = kwargs.get('ang_diam',None)
+        if disc_integrated:
+            I *= np.sqrt(2*np.pi)
+            if ang_diam is not None:
+                scale = conversions.convert(ang_diam[1],'sr',ang_diam[0]/2.)
+                I *= scale
+        I = conversions.convert(curr_conv,flux_units,I)
+        return I
+        
+    return dobb

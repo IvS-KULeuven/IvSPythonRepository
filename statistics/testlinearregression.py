@@ -828,6 +828,21 @@ class LinearFitTestCase(unittest.TestCase):
 
 
 
+    def testEvaluate(self):
+    
+        expectedOutput = np.array([ 52.86397947,  42.8147219 ,  33.8820485 ,  26.06595927,
+                                    19.36645422,  13.78353335,   9.31719665,   5.96744412,
+                                    3.73427577,   2.6176916 ,   2.6176916 ,   3.73427577,
+                                    5.96744412,   9.31719665,  13.78353335,  19.36645422,
+                                    26.06595927,  33.8820485 ,  42.8147219 ,  52.86397947])
+                                    
+        xnew = np.linspace(-5.0, +5.0, 20)
+        newRegressorList = [np.ones_like(xnew), xnew**2]
+        output = self.linearFit.evaluate(newRegressorList)
+        self.assertTrue(np.allclose(output, expectedOutput, rtol=1.0e-6, atol=1.e-08))
+        
+
+
 
 
 class WeightedLinearFitTestCase(unittest.TestCase):

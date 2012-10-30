@@ -4,6 +4,8 @@ Operations on numpy arrays not present in the standard package.
 """
 import numpy as np
 import pylab as pl
+from scipy import spatial
+import itertools
 
 #{ Normal arrays
 def unique_arr(a,axis=0,return_index=False):
@@ -39,12 +41,12 @@ def unique_arr(a,axis=0,return_index=False):
     
     if axis==0:
         a = np.ascontiguousarray(a)
-        a_,index = np.unique1d(a.view([('',a.dtype)]*a.shape[1]),return_index=True)
+        a_,index = np.unique(a.view([('',a.dtype)]*a.shape[1]),return_index=True)
         a = a_.view(a.dtype).reshape(-1,a.shape[1])
     elif axis==1:
         a = np.transpose(a)
         a = np.ascontiguousarray(a)
-        a_,index = np.unique1d(a.view([('',a.dtype)]*a.shape[1]),return_index=True)
+        a_,index = np.unique(a.view([('',a.dtype)]*a.shape[1]),return_index=True)
         a = a_.view(a.dtype).reshape(-1,a.shape[1])
         a = np.transpose(a)
     if return_index:
@@ -89,6 +91,52 @@ def sort_order(a,order):
     a_ = np.sort(a.view([('',a.dtype)]*a.shape[1]), order=['f%d'%(i) for i in order], axis=0)
     a = a_.view(a.dtype).reshape(-1,a.shape[1])
     return a
+    
+def argmax2D(a):
+    """
+    Calculate the argmax of a 2D array.
+    
+    Example usage:
+    
+    >>> output = np.zeros(100)
+    >>> for i in xrange(100):
+    ...     a = np.random.normal(size=(5,6))
+    ...     x,y = argmax2D(a)
+    ...     output[i] = (a[x,y] == a.max())
+    >>> sum(output)
+    100.0
+    
+    @param a: array to calculate the position of the maximum of
+    @type a: numpy 2D array
+    @rtype: (index,index)
+    @return: x,y coordinates
+    """
+    index = np.argmax(a)
+    y,x = index%a.shape[1],index//a.shape[1]
+    return x,y
+    
+def argmin2D(a):
+    """
+    Calculate the argmin of a 2D array.
+    
+    Example usage:
+    
+    >>> output = np.zeros(100)
+    >>> for i in xrange(100):
+    ...     a = np.random.normal(size=(5,6))
+    ...     x,y = argmin2D(a)
+    ...     output[i] = (a[x,y] == a.min())
+    >>> sum(output)
+    100.0
+    
+    @param a: array to calculate the position of the minimum of
+    @type a: numpy 2D array
+    @rtype: (index,index)
+    @return: x,y coordinates
+    """
+    index = np.argmin(a)
+    y,x = index%a.shape[1],index//a.shape[1]
+    return x,y
 
 
 def match_arrays(a,b):
@@ -133,7 +181,8 @@ def stdw(data,weights=None):
     stdev=np.sqrt(nFactor*(sum/wSum))
     
     return stdev    
-    
+
+
     
 def deriv(x,y):
     """
@@ -181,6 +230,55 @@ def deriv(x,y):
     #hi0 = 
     #hi1 = 
     #hi_1*
+
+def random_rectangular_grid(gridpoints,size):
+    """
+    Generate random points in a non-convex continuous rectangular grid.
+    
+    >>> xs = np.array([1,2,0,1,2,3,0,1,2,3,1,2.])
+    >>> ys = np.array([4,4,3,3,3,3,2,2,2,2,1,1.])
+    >>> gridpoints = np.column_stack([xs,ys])
+    >>> sample = random_rectangular_grid(gridpoints,10000)
+    
+    >>> p = pl.figure()
+    >>> p = pl.plot(xs,ys,'ro')
+    >>> p = pl.plot(sample[:,0],sample[:,1],'ko',ms=2)
+    
+    ]include figure]]ivs_aux_numpy_ext_grid.png]
+    
+    Gridpoints should be Ngridpoints x Ncols
+    """
+    #-- make the KDTree, axis values and axis indices
+    tree = spatial.KDTree(gridpoints)
+    axis_values = [np.sort(np.unique(col)) for col in gridpoints.T]
+    axis_indices = [np.arange(1,len(axis)) for axis in axis_values]
+    #-- we need to find the total volume and then we need to sample that volume
+    #   uniformly. We can only include grid cubes that have corners that are all
+    #   present in the grid
+    hypercube_sides  = [abs(np.diff(axis)) for axis in axis_values]
+    hypercube_volume = 0.
+    random_ranges_sizes = []
+    for combination,limit_indices in itertools.izip(itertools.product(*hypercube_sides),itertools.product(*axis_indices)):
+        limit_indices = np.array(limit_indices)
+        #-- create all corners of the particular grid cube, they need to be in the
+        #   KDTree!
+        for corner in itertools.product(*zip(limit_indices-1,limit_indices)):
+            dist = tree.query([axis_values[i][j] for i,j in enumerate(corner)])[0]
+            if dist!=0:
+                break
+        #-- if all the corners of the cube are in the grid, compute the volume and
+        #   remember the lower and upper limits to generate random uniform points.
+        else:
+            low = [axis_values[i][j-1] for i,j in enumerate(limit_indices)]
+            high = [axis_values[i][j] for i,j in enumerate(limit_indices)]
+            volume = np.product(combination)
+            hypercube_volume+= volume
+            random_ranges_sizes.append([low,high,volume])
+            
+    #-- now we're ready to actually generate the grid        
+    sample = np.vstack([np.random.uniform(low=low,high=high,size=(vol/hypercube_volume*size,len(low))) for low,high,vol in random_ranges_sizes])
+
+    return sample
 
 #}
 #{ Record arrays
@@ -276,15 +374,24 @@ def find_intersections(A, B):
     
     >>> pcoeff1 = [1,2,-2.]
     >>> pcoeff2 = [-2.12,2.45,3.7321]
-    >>> A = np.column_stack([x,polyval(pcoeff1,x)])
-    >>> B = np.column_stack([x,polyval(pcoeff2,x)])
+    >>> x = np.linspace(-3,3,7)
+    >>> A = np.column_stack([x,np.polyval(pcoeff1,x)])
+    >>> B = np.column_stack([x,np.polyval(pcoeff2,x)])
 
     We find two intersections:
     
-    >>> xs,ys = ne.find_intersections(A,B)
+    >>> xs,ys = find_intersections(A,B)
     >>> print xs,ys
     [-1.22039755  1.34367003] [-2.77960245  2.71835017]
-
+    
+    >>> p = pl.figure()
+    >>> p = pl.plot(x,A[:,1],'bo-')
+    >>> p = pl.plot(x,B[:,1],'go-')
+    >>> p = pl.plot(xs,ys,'rs',ms=5)
+    
+    Returns empty arrays when there are no intersections.
+    
+    ]include figure]]ivs_aux_numpy_ext_intersect.png]
     """
     # min, max and all for arrays
     amin = lambda x1, x2: np.where(x1<x2, x1, x2)
@@ -315,3 +422,4 @@ def find_intersections(A, B):
 if __name__=="__main__":
     import doctest
     doctest.testmod()
+    pl.show()

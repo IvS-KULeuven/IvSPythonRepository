@@ -82,6 +82,8 @@ def search(name,**kwargs):
         values = [value.replace('*','').replace('STD','').replace('/','') for value in values]
         #-- some columns have no values
         values = [(value and value or 'nan') for value in values]
+        #-- some columns are upper limits (or whatever ':' means)
+        values = [(':' in value and 'nan' or value) for value in values]
         dtypes = np.dtype([(i,'f8') for i in entries])
         units = {}
         for entry in entries:
@@ -207,7 +209,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
     
     For extra kwargs, see L{_get_URI} and L{gcpd2phot}
     """
-    to_units = kwargs.pop('to_units','erg/s/cm2/A')
+    to_units = kwargs.pop('to_units','erg/s/cm2/AA')
     master_ = kwargs.get('master',None)
     master = None
     #-- retrieve all measurements

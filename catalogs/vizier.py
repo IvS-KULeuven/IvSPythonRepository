@@ -59,7 +59,7 @@ negative H-K index, you can do
 
 You can also read in a data file you've previously downloaded via
 
->>> data,units,comms = tvs2recordarray('vanleeuwen.tsv')
+>>> data,units,comms = tsv2recarray('vanleeuwen.tsv')
 
 Section 1.3 List relevant catalogs
 ----------------------------------
@@ -80,13 +80,14 @@ passbands (and colors). For examples, see the file itself.
 You can add catalogs on the fly via
 
 >>> cat_info.add_section('my_new_catalog')
->>> cat_info.update('my_new_catalog','Bmag','JOHNSON.B')
+>>> cat_info.set('my_new_catalog','Bmag','JOHNSON.B')
 """
 #-- standard libraries
 import numpy as np
 import urllib
 import logging
 import os
+import itertools
 import pyfits
 import tarfile
 import tempfile
@@ -118,8 +119,25 @@ cat_info_fund = ConfigParser.ConfigParser()
 cat_info_fund.optionxform = str # make sure the options are case sensitive
 cat_info_fund.readfp(open(os.path.join(basedir,'vizier_cats_fund.cfg')))
 
+mirrors = {'cycle': itertools.cycle(['vizier.u-strasbg.fr',      # France
+                                     'vizier.nao.ac.jp',         # Japan
+                                     'vizier.hia.nrc.ca',        # Canada
+                                     'vizier.ast.cam.ac.uk',     # UK
+                                     'vizier.cfa.harvard.edu',   # USA CFA/harvard
+                                     'www.ukirt.jach.hawaii.edu',# USA Ukirt
+                                     'vizier.inasan.ru',         # Russia
+                                     'vizier.iucaa.ernet.in',    # India
+                                     'data.bao.ac.cn'])}        # China
+mirrors['current'] = mirrors['cycle'].next()
 
 #{ Basic interfaces
+
+def change_mirror():
+    """
+    Cycle through the mirrors of ViZieR.
+    """
+    mirrors['current'] = mirrors['cycle'].next()
+    logger.info("Changed cycle to {}".format(mirrors['current']))
 
 def search(name,filetype='tsv',filename=None,**kwargs):
     """
@@ -168,19 +186,19 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         Download the results to a FITS file, read the file, and plot the results
         to the screen.
     
-        >>> filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,filetype='fits',filename='2mass_test',out_all=None)
+        >>> #filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,filetype='fits',filename='2mass_test',out_all=None)
     
         Now read in the FITS-file and plot the contents
         
-        >>> import pyfits,pylab
-        >>> ff = pyfits.open('2mass_test.fits')
-        >>> p = pylab.gcf().canvas.set_window_title('test of <search>')
-        >>> p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
-        >>> p = pylab.colorbar()
-        >>> p = p.set_label('Jmag')
-        >>> p,q = pylab.xlabel('RA [deg]'),pylab.ylabel('DEC [deg]')
-        >>> ff.close()
-        >>> os.remove('2mass_test.fits')
+        >>> #import pyfits,pylab
+        >>> #ff = pyfits.open('2mass_test.fits')
+        >>> #p = pylab.gcf().canvas.set_window_title('test of <search>')
+        >>> #p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
+        >>> #p = pylab.colorbar()
+        >>> #p = p.set_label('Jmag')
+        >>> #p,q = pylab.xlabel('RA [deg]'),pylab.ylabel('DEC [deg]')
+        >>> #ff.close()
+        >>> #os.remove('2mass_test.fits')
         
     
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
@@ -299,8 +317,8 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
         output_file = "__".join([source1,source2]).replace('/','_').replace('+','')+'.tsv'
     
     #-- download the two catalogs
-    cat1,units1,comms1 = vizier.search(source1,**kwargs)
-    cat2,units2,comms2 = vizier.search(source2,**kwargs)
+    cat1,units1,comms1 = search(source1,**kwargs)
+    cat2,units2,comms2 = search(source2,**kwargs)
     
     logger.info('Start Vizier Xmatch')
     coords1 = np.array([cat1['_RAJ2000'],cat1['_DEJ2000']]).T
@@ -647,13 +665,13 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                      '4':'most likely not variable (4, 0=certainly not-5=probably not)',
                      '5':'most likely not variable (5, 0=certainly not-5=probably not)',
                      '6':'likely variable (6, 6=likely-7=more likely)',
-                     '6':'likely variable (7, 6=likely-7=more likely)',
+                     '7':'likely variable (7, 6=likely-7=more likely)',
                      '8':'most likely variable (8, 8=most likely-9=almost certain)',
                      '9':'most likely variable (9, 8=most likely-9=almost certain)'}
-    twomass_qual_flag = {'X':'detection, but no valid brightness estimate',
-                         'U':'upper limit',
-                         'F':'error estimate not reliable',
-                         'E':'poor PSF fit',
+    twomass_qual_flag = {'X':'detection, but no valid brightness estimate (X)',
+                         'U':'upper limit (U)',
+                         'F':'error estimate not reliable (F)',
+                         'E':'poor PSF fit (E)',
                          'A':'high quality (A)',
                          'B':'high quality (B)',
                          'C':'high quality (C)',
@@ -689,6 +707,9 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
             ex = int(results[0]['ex'])
             for i,photband in enumerate(['WISE.W1','WISE.W2','WISE.W3','WISE.W4']):
                 index = indices[(master['source']==source) & (master['photband']==photband)]
+                if len(index)!=1:
+                    logger.warning("Skipping WISE flags, don't know what to do with {}".format(index))
+                    continue
                 if conf[i]!=' ' and conf[i] in wise_conf_flag:
                     messages[index] = '; '.join([messages[index],wise_conf_flag[conf[i].lower()]])
                 if var[i]!=' ':
@@ -828,63 +849,71 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     observation to 'Jy' and keep track of the results to plot.
     
     >>> master = master[(-np.isnan(master['e_meas'])) & (-np.isnan(master['meas']))]
-    >>> zp = filters.get_info(master['photband'])
+    >>> eff_waves = filters.eff_wave(master['photband'])
     >>> myvalue,e_myvalue = conversions.nconvert(master['unit'],'erg/s/cm2/AA',master['meas'],master['e_meas'],photband=master['photband'])
     >>> for i in range(len(master)):
     ...    print '%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'%(master[i]['photband'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],myvalue[i],'Jy',master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
-          JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.598e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
-        JOHNSON.B-V -1.000e-03+/- 5.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
-        JOHNSON.U-B -6.000e-03+/- 6.000e-03         mag        nan  Jy 279.23  38.78  0.000         II/168/ubvmeans
-          JOHNSON.B  3.200e-02+/- 1.300e-02         mag  4.054e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
-          JOHNSON.U  2.600e-02+/- 1.432e-02         mag  1.807e+03  Jy 279.23  38.78  0.000         II/168/ubvmeans
-           TD1.1965  4.928e-09+/- 1.300e-11  10mW/m2/nm  6.347e+02  Jy 279.23  38.78 18.520          II/59B/catalog
-           TD1.1565  5.689e-09+/- 1.700e-11  10mW/m2/nm  4.648e+02  Jy 279.23  38.78 18.520          II/59B/catalog
-           TD1.2365  3.700e-09+/- 1.000e-11  10mW/m2/nm  6.903e+02  Jy 279.23  38.78 18.520          II/59B/catalog
-           TD1.2740  3.123e-09+/- 9.000e-12  10mW/m2/nm  7.821e+02  Jy 279.23  38.78 18.520          II/59B/catalog
-        AKARI.WIDEL  4.047e+00+/- 3.500e-01          Jy  4.047e+00  Jy 279.23  38.78  3.400              II/298/fis
-        AKARI.WIDES  6.201e+00+/- 1.650e-01          Jy  6.201e+00  Jy 279.23  38.78  3.400              II/298/fis
-         AKARI.N160  3.221e+00+/- 2.550e-01          Jy  3.221e+00  Jy 279.23  38.78  3.400              II/298/fis
-          AKARI.N60  6.582e+00+/- 2.090e-01          Jy  6.582e+00  Jy 279.23  38.78  3.400              II/298/fis
-         DIRBE.F140  2.557e+02+/- 5.223e+03          Jy  2.557e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
-         DIRBE.F240  8.290e+01+/- 2.881e+03          Jy  8.290e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
-         DIRBE.F4_9  1.504e+02+/- 6.200e+00          Jy  1.504e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
-         DIRBE.F2_2  6.217e+02+/- 9.500e+00          Jy  6.217e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
-         DIRBE.F3_5  2.704e+02+/- 1.400e+01          Jy  2.704e+02  Jy 279.23  38.78  0.120          J/ApJS/154/673
-          DIRBE.F12  2.910e+01+/- 1.570e+01          Jy  2.910e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
-          DIRBE.F25  1.630e+01+/- 3.120e+01          Jy  1.630e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
-          DIRBE.F60  1.220e+01+/- 5.610e+01          Jy  1.220e+01  Jy 279.23  38.78  0.120          J/ApJS/154/673
-         DIRBE.F100 -7.000e-01+/- 7.790e+01          Jy -7.000e-01  Jy 279.23  38.78  0.120          J/ApJS/154/673
-            MIPS.70  1.142e+04+/- 2.283e+03         mJy  1.142e+01  Jy 279.23  38.78  0.000    J/ApJ/653/675/table1
-            MIPS.24  8.900e+03+/- 8.900e+01         mJy  8.900e+00  Jy 279.23  38.78  0.000    J/ApJ/653/675/table1
-           GENEVA.V  6.100e-02+/- 2.500e-02         mag  3.629e+03  Jy 279.24  38.77 56.000             II/169/main
-           GENEVA.B -8.980e-01+/- 2.500e-02         mag  3.837e+03  Jy 279.24  38.77 56.000             II/169/main
-           GENEVA.G  1.270e+00+/- 2.500e-02         mag  3.450e+03  Jy 279.24  38.77 56.000             II/169/main
-          GENEVA.B2  6.120e-01+/- 2.500e-02         mag  4.152e+03  Jy 279.24  38.77 56.000             II/169/main
-           GENEVA.U  6.070e-01+/- 2.500e-02         mag  1.259e+03  Jy 279.24  38.77 56.000             II/169/main
-          GENEVA.V1  7.640e-01+/- 2.500e-02         mag  3.673e+03  Jy 279.24  38.77 56.000             II/169/main
-          GENEVA.B1  2.000e-03+/- 2.500e-02         mag  3.521e+03  Jy 279.24  38.77 56.000             II/169/main
-           IRAS.F60  9.510e+00+/- 8.000e+00          Jy  9.510e+00  Jy 279.23  38.78  9.400             II/125/main
-          IRAS.F100  7.760e+00+/- 9.000e+00          Jy  7.760e+00  Jy 279.23  38.78  9.400             II/125/main
-           IRAS.F12  4.160e+01+/- 4.000e+00          Jy  4.160e+01  Jy 279.23  38.78  9.400             II/125/main
-           IRAS.F25  1.100e+01+/- 5.000e+00          Jy  1.100e+01  Jy 279.23  38.78  9.400             II/125/main
-         AKARI.L18W  1.254e+01+/- 7.770e-02          Jy  1.254e+01  Jy 279.24  38.78  2.540              II/297/irc
-          AKARI.S9W  5.670e+01+/- 4.010e-01          Jy  5.670e+01  Jy 279.24  38.78  2.540              II/297/irc
-          JOHNSON.K  1.300e-01+/- 1.900e-01         mag  6.051e+02  Jy 279.23  38.78  0.000 J/PASP/120/1128/catalog
-             ANS.25  4.600e-02+/- 4.000e-03         mag        nan  Jy 279.23  38.78 14.000               II/97/ans
-            ANS.15W -4.410e-01+/- 1.200e-02         mag        nan  Jy 279.23  38.78 14.000               II/97/ans
-             ANS.33  1.910e-01+/- 3.000e-03         mag        nan  Jy 279.23  38.78 14.000               II/97/ans
-             ANS.18 -4.620e-01+/- 3.000e-03         mag        nan  Jy 279.23  38.78 14.000               II/97/ans
-            ANS.15N -4.910e-01+/- 1.000e-03         mag        nan  Jy 279.23  38.78 14.000               II/97/ans
-          JOHNSON.B  1.900e-02+/- 1.000e-02         mag  4.102e+03  Jy 279.23  38.78  3.070             I/280B/ascc
-          JOHNSON.V  7.400e-02+/- 2.000e-03         mag  3.465e+03  Jy 279.23  38.78  3.070             I/280B/ascc
-            2MASS.J -1.770e-01+/- 2.060e-01         mag  1.845e+03  Jy 279.23  38.78  0.034              II/246/out
-           2MASS.KS  1.290e-01+/- 1.860e-01         mag  6.083e+02  Jy 279.23  38.78  0.034              II/246/out
-            2MASS.H -2.900e-02+/- 1.460e-01         mag  1.067e+03  Jy 279.23  38.78  0.034              II/246/out
+           GENEVA.V  6.100e-02+/- 2.500e-02         mag  3.620e-09  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.B -8.980e-01+/- 2.500e-02         mag  6.518e-09  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.U  6.070e-01+/- 2.500e-02         mag  3.223e-09  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.V1  7.640e-01+/- 2.500e-02         mag  3.782e-09  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.B1  2.000e-03+/- 2.500e-02         mag  6.584e-09  Jy 279.24  38.77 56.000             II/169/main
+          GENEVA.B2  6.120e-01+/- 2.500e-02         mag  6.208e-09  Jy 279.24  38.77 56.000             II/169/main
+           GENEVA.G  1.270e+00+/- 2.500e-02         mag  3.111e-09  Jy 279.24  38.77 56.000             II/169/main
+            2MASS.J -1.770e-01+/- 2.060e-01         mag  3.591e-10  Jy 279.23  38.78  0.034              II/246/out
+            2MASS.H -2.900e-02+/- 1.460e-01         mag  1.176e-10  Jy 279.23  38.78  0.034              II/246/out
+           2MASS.KS  1.290e-01+/- 1.860e-01         mag  3.799e-11  Jy 279.23  38.78  0.034              II/246/out
+           IRAS.F12  4.160e+01+/- 1.664e+00          Jy  1.024e-13  Jy 279.23  38.78  9.400             II/125/main
+           IRAS.F25  1.100e+01+/- 5.500e-01          Jy  6.195e-15  Jy 279.23  38.78  9.400             II/125/main
+           IRAS.F60  9.510e+00+/- 7.608e-01          Jy  8.420e-16  Jy 279.23  38.78  9.400             II/125/main
+          IRAS.F100  7.760e+00+/- 6.984e-01          Jy  2.349e-16  Jy 279.23  38.78  9.400             II/125/main
+           TD1.1565  5.689e-09+/- 1.700e-11  10mW/m2/nm  5.689e-09  Jy 279.23  38.78 18.510          II/59B/catalog
+           TD1.1965  4.928e-09+/- 1.300e-11  10mW/m2/nm  4.928e-09  Jy 279.23  38.78 18.510          II/59B/catalog
+           TD1.2365  3.700e-09+/- 1.000e-11  10mW/m2/nm  3.700e-09  Jy 279.23  38.78 18.510          II/59B/catalog
+           TD1.2740  3.123e-09+/- 9.000e-12  10mW/m2/nm  3.123e-09  Jy 279.23  38.78 18.510          II/59B/catalog
+            ANS.15N -4.910e-01+/- 1.000e-03         mag  5.707e-09  Jy 279.23  38.78 14.000               II/97/ans
+            ANS.15W -4.410e-01+/- 1.200e-02         mag  5.450e-09  Jy 279.23  38.78 14.000               II/97/ans
+             ANS.18 -4.620e-01+/- 3.000e-03         mag  5.556e-09  Jy 279.23  38.78 14.000               II/97/ans
+             ANS.25  4.600e-02+/- 4.000e-03         mag  3.480e-09  Jy 279.23  38.78 14.000               II/97/ans
+             ANS.33  1.910e-01+/- 3.000e-03         mag  3.045e-09  Jy 279.23  38.78 14.000               II/97/ans
+       HIPPARCOS.HP  8.680e-02+/- 2.100e-03         mag  3.840e-09  Jy 279.23  38.78  3.060          I/239/hip_main
+            MIPS.24  8.900e+03+/- 8.900e+01         mJy  4.628e-15  Jy 279.23  38.78  0.010    J/ApJ/653/675/table1
+            MIPS.70  1.142e+04+/- 2.283e+03         mJy  7.075e-16  Jy 279.23  38.78  0.010    J/ApJ/653/675/table1
+          JOHNSON.B  1.900e-02+/- 1.000e-02         mag  6.216e-09  Jy 279.23  38.78  3.060             I/280B/ascc
+          JOHNSON.V  7.400e-02+/- 2.000e-03         mag  3.428e-09  Jy 279.23  38.78  3.060             I/280B/ascc
+          JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.560e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans
+        JOHNSON.B-V -1.000e-03+/- 5.000e-03         mag        nan  Jy 279.23  38.78  0.010         II/168/ubvmeans
+        JOHNSON.U-B -6.000e-03+/- 6.000e-03         mag        nan  Jy 279.23  38.78  0.010         II/168/ubvmeans
+          JOHNSON.B  3.200e-02+/- 1.300e-02         mag  6.142e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans
+          JOHNSON.U  2.600e-02+/- 1.432e-02         mag  4.086e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans
+          JOHNSON.K  1.300e-01+/- 1.900e-01         mag  3.764e-11  Jy 279.23  38.78  0.010 J/PASP/120/1128/catalog
+          AKARI.N60  6.582e+00+/- 2.090e-01          Jy  4.614e-16  Jy 279.23  38.78  3.400              II/298/fis
+        AKARI.WIDES  6.201e+00+/- 1.650e-01          Jy  2.566e-16  Jy 279.23  38.78  3.400              II/298/fis
+        AKARI.WIDEL  4.047e+00+/- 3.500e-01          Jy  5.658e-17  Jy 279.23  38.78  3.400              II/298/fis
+         AKARI.N160  3.221e+00+/- 2.550e-01          Jy  3.695e-17  Jy 279.23  38.78  3.400              II/298/fis
+          AKARI.S9W  5.670e+01+/- 4.010e-01          Jy  2.169e-13  Jy 279.24  38.78  2.550              II/297/irc
+         AKARI.L18W  1.254e+01+/- 7.770e-02          Jy  1.050e-14  Jy 279.24  38.78  2.550              II/297/irc
+      STROMGREN.B-Y  3.000e-03+/- 3.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog
+       STROMGREN.M1  1.570e-01+/- 3.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog
+       STROMGREN.C1  1.088e+00+/- 4.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog
+        STROMGREN.B  4.300e-02+/- 3.000e-03         mag  5.604e-09  Jy 279.23  38.78 22.000          II/215/catalog
+         DIRBE.F2_2  6.217e+02+/- 9.500e+00          Jy  3.791e-11  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+         DIRBE.F3_5  2.704e+02+/- 1.400e+01          Jy  6.534e-12  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+         DIRBE.F4_9  1.504e+02+/- 6.200e+00          Jy  1.895e-12  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+          DIRBE.F12  2.910e+01+/- 1.570e+01          Jy  6.014e-14  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+          DIRBE.F25  1.630e+01+/- 3.120e+01          Jy  1.153e-14  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+          DIRBE.F60  1.220e+01+/- 5.610e+01          Jy  1.195e-15  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+         DIRBE.F100 -7.000e-01+/- 7.790e+01          Jy -2.238e-17  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+         DIRBE.F140  2.557e+02+/- 5.223e+03          Jy  3.577e-15  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+         DIRBE.F240  8.290e+01+/- 2.881e+03          Jy  4.152e-16  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE
+            WISE.W2  1.143e+00+/- 1.900e-02         mag  8.428e-13  Jy 279.24  38.78  3.276             II/311/wise
+            WISE.W3 -6.700e-02+/- 8.000e-03         mag  6.930e-14  Jy 279.24  38.78  3.276             II/311/wise
+            WISE.W4 -1.270e-01+/- 6.000e-03         mag  5.722e-15  Jy 279.24  38.78  3.276             II/311/wise
                 
     Make a quick plot:
     
     >>> p = pylab.figure()
-    >>> p = pylab.loglog(zp['eff_wave'],myvalue,'ko')
+    >>> p = pylab.loglog(eff_waves,myvalue,'ko')
     >>> p = pylab.show()
     
     @param source: name of the VizieR source
@@ -1010,9 +1039,9 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     >>> master = master[-np.isnan(master['meas'])]
     >>> for i in range(len(master)):
     ...     print '%10s %10.3e+/-%10.3e %11s %6.2f %6.2f %6.3f %23s'%(master[i]['name'],master[i]['meas'],master[i]['e_meas'],master[i]['unit'],master[i]['_RAJ2000'],master[i]['_DEJ2000'],master[i]['_r'],master[i]['source'])
-        [Fe/H] -8.700e-01+/-       nan       [Sun]  12.67 -72.83  0.002         B/pastel/pastel
           Teff  7.304e+03+/-       nan           K  12.67 -72.83  0.002         B/pastel/pastel
-          logg  2.000e+00+/-       nan      [m/s2]  12.67 -72.83  0.002         B/pastel/pastel
+          logg  2.000e+00+/-       nan     [cm/s2]  12.67 -72.83  0.002         B/pastel/pastel
+        [Fe/H] -8.700e-01+/-       nan       [Sun]  12.67 -72.83  0.002         B/pastel/pastel
     
     @param source: name of the VizieR source
     @type source: str
@@ -1180,7 +1209,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     @return: url
     @rtype: str
     """
-    base_url = 'http://vizier.u-strasbg.fr/viz-bin/asu-%s/VizieR?&-oc=%s,eq=%s'%(filetype,oc,oc_eq)
+    base_url = 'http://{0}/viz-bin/asu-{1}/VizieR?&-oc={2},eq={3}'.format(mirrors['current'],filetype,oc,oc_eq)
     if sort:
         base_url += '&-sort=%s'%(sort)
     if constraints is not None:

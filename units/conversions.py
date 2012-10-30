@@ -92,6 +92,8 @@ B{Warning 4:} Most of the imperial units are UK/Canada. If you need US, prefix
 the unit with C{US}: E.g. The gallon (C{gal}) is the international imperial
 gallon, C{USgal} is the US gallon.
 
+B{Note 1:} Photometric passbands are given as a string C{"SYSTEM.FILTER"}. For
+a list of defined systems and filters, see L{ivs.sed.filters}.
 
 Section 1. The Python module
 ============================
@@ -504,7 +506,9 @@ erg  s$^{-1}$ $\mu$m$^{-2}$ $\AA$$^{-1}$
 """
 #-- standard libraries
 import itertools
+import functools
 import collections
+import inspect
 import re
 import os
 import sys
@@ -859,7 +863,10 @@ def convert(_from,_to,*args,**kwargs):
         if isinstance(fac_from,NonLinearConverter):
             ret_value *= fac_from(start_value,**kwargs_SI)
         else:
-            ret_value *= fac_from*start_value
+            try:
+                ret_value *= fac_from*start_value
+            except TypeError:
+                raise TypeError('Cannot multiply value with a float; probably argument is a tuple (value,error), please expand with *(value,error)')
             
     #-- otherwise a little bit more complicated
     else:
@@ -940,12 +947,15 @@ def convert(_from,_to,*args,**kwargs):
     #-- unpack the uncertainties if: 
     #    1. the input was not given as an uncertainty
     #    2. the input was without uncertainties, but extra keywords had uncertainties
-    if unpack and (len(args)==2 or (len(args)==1 and isinstance(ret_value,AffineScalarFunc))):
+    #    3. the input was with uncertainties (float or array) and unpack==True
+    unpack_case1 = len(args)==2
+    unpack_case2 = len(args)==1 and isinstance(ret_value,AffineScalarFunc)
+    unpack_case3 = len(args)==1 and isinstance(ret_value,np.ndarray) and isinstance(ret_value[0],AffineScalarFunc)
+    if unpack and (unpack_case1 or unpack_case2):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
             ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])
-    
     
     return ret_value
 
@@ -1164,7 +1174,11 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
-def reset(): set_convention()
+def reset():
+    """
+    Resets all values and conventions to the original values.
+    """
+    set_convention()
 
 def get_convention():
     """
@@ -1669,10 +1683,10 @@ def get_help():
     
     @rtype: str
     """
-    #try:
-    #    set_exchange_rates()
-    #except IOError:
-    #    logger.warning('Unable to connect to ecb.europa.eu')
+    try:
+        set_exchange_rates()
+    except IOError:
+        logger.warning('Unable to connect to ecb.europa.eu')
     help_text = {}
     for fac in sorted(_factors.keys()):
         if _factors[fac][2] not in help_text:
@@ -1701,7 +1715,15 @@ def units2sphinx():
         text.append("| {0:20s} | {1:50} | {2:20s} | {3:30s} | {4:50s} |".format(key,*_factors[key]))
         text.append(divider)
     return "\n".join(text)
-
+    
+def derive_wrapper(fctn):
+    @functools.wraps(fctn)
+    def func(*args,**kwargs):
+        argspec = inspect.getargspec(fctn)
+        print argspec
+        result = fctn(*args,**kwargs)
+        return result
+    return func
 #}
 #{ Linear change-of-base conversions
         
@@ -2179,7 +2201,6 @@ def derive_radius(luminosity,temperature, units='m'):
     
     @param luminosity: (Luminosity(, error), units)
     @type luminosity: 2 or 3 tuple
-    @type radius: 2 or 3 tuple, Unit or float (current convention)
     @param temperature: (effective temperature(, error), units)
     @type temperature: 2 or 3 tuple, Unit or float (current convention)
     @return: radius
@@ -2198,6 +2219,11 @@ def derive_radius(luminosity,temperature, units='m'):
 def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     """
     Derive stellar radius from solar-like oscillations diagnostics.
+    
+    Large separation is frequency spacing between modes of different radial order.
+    
+    Small separation is spacing between modes of even and odd angular degree but
+    same radial order.
     
     @param numax: (numax(, error), units)
     @type numax: 2 or 3 tuple
@@ -2224,6 +2250,15 @@ def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     Deltanu0 = convert(Deltanu0[-1],'muHz',*Deltanu0[:-1],unpack=False)
     R = sqrt(teff)/numax_sol * numax/Deltanu0**2 * Deltanu0_sol**2
     return convert('Rsol',unit,R)    
+    
+#@derive_wrapper
+def derive_radius_rot(veq_sini,rot_period,incl=(90.,'deg'),unit='Rsol'):
+    """
+    Derive radius from rotation period and inclination angle.
+    """
+    incl = Unit(incl)
+    radius = veq_sini*rot_period/(2*np.pi)/np.sin(incl)
+    return radius
     
 
     
@@ -2255,6 +2290,41 @@ def derive_logg(mass,radius, unit='[cm/s2]'):
     logg = log10(constants.GG_cgs*M / (R**2))
     logg = convert('[cm/s2]',unit,logg)
     return logg
+    
+    
+def derive_logg_zg(mass, zg, unit='cm s-2', **kwargs):
+    """
+    Convert mass and gravitational redshift to stellar surface gravity. Provide the gravitational
+    redshift as a velocity.
+    
+    Units given to mass and zg must be understandable by C{convert}.
+    
+    Logarithm of surface gravity is returned in CGS units unless otherwhise stated in unit.
+    
+    >>> print derive_logg_zg((0.47, 'Msol'), (2.57, 'km/s'))
+    5.97849814386
+    
+    @param mass: (mass(, error), units)
+    @type mass: 2 or 3 tuple
+    @param zg: (zg(, error), units)
+    @type zg: 2 or 3 tuple
+    @param unit: unit of logg
+    @type unit: str
+    @return: log g (and error)
+    @rtype: 1- or 2-tuple
+    """
+    
+    #-- take care of mass
+    if len(mass)==3:
+        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+    M = convert(mass[-1],'g',*mass[:-1],unpack=False)
+    #-- take care of zg
+    if len(zg)==3:
+        zg = (unumpy.uarray([zg[0],zg[1]]),zg[2])
+    gr = convert(zg[-1],'cm s-1',*zg[:-1],unpack=False, **kwargs)
+    
+    logg = np.log10( gr**2 * constants.cc_cgs**2 / (constants.GG_cgs * M) )
+    return convert('cm s-2', unit, logg)
 
 def derive_logg_slo(teff,numax, unit='[cm/s2]'):
     """
@@ -2284,11 +2354,7 @@ def derive_logg_slo(teff,numax, unit='[cm/s2]'):
     GG = convert(constants.GG_units,'Rsol3 Msol-1 s-2',constants.GG)
     surf_grav = GG*sqrt(teff)*numax / numax_sol
     logg = convert('Rsol s-2',unit,surf_grav)
-    return logg    
-
-
-
-    
+    return logg     
 
 def derive_mass(surface_gravity,radius,unit='kg'):
     """
@@ -2305,6 +2371,38 @@ def derive_mass(surface_gravity,radius,unit='kg'):
     #-- calculate mass in SI
     M = grav*R**2/constants.GG
     return convert('kg',unit,M)
+    
+def derive_zg(mass, logg, unit='cm s-1', **kwargs):
+    """
+    Convert mass and stellar surface gravity to gravitational redshift. 
+    
+    Units given to mass and logg must be understandable by C{convert}.
+    
+    Gravitational redshift is returned in CGS units unless otherwhise stated in unit.
+    
+    >>> print derive_zg((0.47, 'Msol'), (5.98, 'cm s-2'), unit='km s-1')
+    2.57444756874
+    
+    @param mass: (mass(, error), units)
+    @type mass: 2 or 3 tuple
+    @param logg: (logg(, error), units)
+    @type logg: 2 or 3 tuple
+    @param unit: unit of zg
+    @type unit: str
+    @return: log g (and error)
+    @rtype: 1- or 2-tuple
+    """
+    #-- take care of mass
+    if len(mass)==3:
+        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+    M = convert(mass[-1],'g',*mass[:-1],unpack=False)
+    #-- take care of logg
+    if len(logg)==3:
+        logg = (unumpy.uarray([logg[0],logg[1]]),logg[2])
+    g = convert(logg[-1],'cm s-2',*logg[:-1],unpack=False, **kwargs)
+    
+    zg = 10**g / constants.cc_cgs * np.sqrt(constants.GG_cgs * M / 10**g)
+    return convert('cm s-1', unit, zg)
 
 def derive_numax(mass,radius,temperature,unit='mHz'):
     """
@@ -2445,6 +2543,112 @@ def derive_amplvel(luminosity,mass,unit='cm/s'):
     lumi = convert(luminosity[-1],'Lsol',*luminosity[:-1])
     amplvel = lumi / M * ufloat((23.4,1.4))
     return convert('cm/s',unit,amplvel)
+
+def derive_galactic_uvw(ra, dec, pmra, pmdec, d, vrad, lsr=False, unit='km s-1'):
+    """
+    Calculate the Galactic space velocity (U,V,W) of a star based on the propper motion,
+    location, radial velocity and distance. (U,V,W) are returned in km/s unless stated
+    otherwhise in unit.
+    
+    Follows the general outline of Johnson & Soderblom (1987, AJ, 93,864)
+    except that U is positive outward toward the Galactic *anti*center, and 
+    the J2000 transformation matrix to Galactic coordinates is taken from  
+    the introduction to the Hipparcos catalog.
+    
+    Uses solar motion from Coskunoglu et al. 2011 MNRAS:
+    (U,V,W)_Sun = (-8.5, 13.38, 6.49)
+    
+    Example for HD 6755:
+    
+    >>> derive_galactic_uvw((17.42943586, 'deg'), (61.54727506, 'deg'), (628.42, 'mas yr-1'), (76.65, 'mas yr-1'), (139, 'pc'), (-321.4, 'km s-1'), lsr=True)
+    (142.66328352779027, -483.55149105148121, 93.216106970932813)
+    
+    @param ra: Right assension of the star
+    @param dec: Declination of the star
+    @param pmra: propper motion  in RA
+    @param pmdec: propper motion in DEC
+    @param d: distance
+    @param vrad: radial velocity
+    @param lsr: if True, correct for solar motion
+    @param unit: units for U,V and W
+    
+    @return: (U,V,W)
+    """
+    #-- take care of ra
+    if len(ra)==3:
+        ra = (unumpy.uarray([ra[0],ra[1]]),ra[2])
+    ra = convert(ra[-1],'deg',*ra[:-1])
+    #-- take care of dec
+    if len(dec)==3:
+        dec = (unumpy.uarray([dec[0],dec[1]]),dec[2])
+    dec = convert(dec[-1],'deg',*dec[:-1])
+    #-- take care of pmra
+    if len(pmra)==3:
+        pmra = (unumpy.uarray([pmra[0],pmra[1]]),pmra[2])
+    pmra = convert(pmra[-1],'mas yr-1',*pmra[:-1])
+    #-- take care of pmdec
+    if len(pmdec)==3:
+        pmdec = (unumpy.uarray([pmdec[0],pmdec[1]]),pmdec[2])
+    pmdec = convert(pmdec[-1],'mas yr-1',*pmdec[:-1])
+    #-- take care of d
+    if len(d)==3:
+        d = (unumpy.uarray([d[0],d[1]]),d[2])
+    d = convert(d[-1],'pc',*d[:-1])
+    #-- take care of pmdec
+    if len(vrad)==3:
+        vrad = (unumpy.uarray([vrad[0],vrad[1]]),vrad[2])
+    vrad = convert(vrad[-1],'km s-1',*vrad[:-1])
+    
+    plx = 1e3 / d # parallax in mas
+
+    cosd = np.cos(np.radians(dec))
+    sind = np.sin(np.radians(dec))
+    cosa = np.cos(np.radians(ra))
+    sina = np.sin(np.radians(ra))
+
+    k = 4.74047     #Equivalent of 1 A.U/yr in km/s   
+    A_G = np.array( [ [ 0.0548755604, +0.4941094279, -0.8676661490],  
+                    [ 0.8734370902, -0.4448296300, -0.1980763734], 
+                    [ 0.4838350155,  0.7469822445, +0.4559837762] ]).T
+
+    vec1 = vrad
+    vec2 = k * pmra / plx
+    vec3 = k * pmdec / plx
+
+    u = ( A_G[0,0]*cosa*cosd+A_G[0,1]*sina*cosd+A_G[0,2]*sind)*vec1+ \
+        (-A_G[0,0]*sina     +A_G[0,1]*cosa                   )*vec2+ \
+        (-A_G[0,0]*cosa*sind-A_G[0,1]*sina*sind+A_G[0,2]*cosd)*vec3
+    v = ( A_G[1,0]*cosa*cosd+A_G[1,1]*sina*cosd+A_G[1,2]*sind)*vec1+ \
+        (-A_G[1,0]*sina     +A_G[1,1]*cosa                   )*vec2+ \
+        (-A_G[1,0]*cosa*sind-A_G[1,1]*sina*sind+A_G[1,2]*cosd)*vec3
+    w = ( A_G[2,0]*cosa*cosd+A_G[2,1]*sina*cosd+A_G[2,2]*sind)*vec1+ \
+        (-A_G[2,0]*sina     +A_G[2,1]*cosa                   )*vec2+ \
+        (-A_G[2,0]*cosa*sind-A_G[2,1]*sina*sind+A_G[2,2]*cosd)*vec3
+        
+    if lsr:
+        #lsr_vel=[-10.0,5.2,7.2] # Dehnen & Binney (1998)
+        #lsr_vel=[-11.1, 12.24, 7.25] # Schonrich et al. (2010)
+        lsr_vel=[-8.5,13.38,6.49] # Coskunoglu et al. (2011)
+        u = u+lsr_vel[0]
+        v = v+lsr_vel[1]
+        w = w+lsr_vel[2]
+        
+    return convert('km s-1',unit,u), convert('km s-1',unit,v), convert('km s-1',unit,w)
+
+def convert_Z_FeH(Z=None, FeH=None, Zsun=0.0122):
+    """
+    Convert between Z and [Fe/H] using the conversion of Bertelli et al. (1994).
+    Provide one of the 2 arguments, and the other will be returned.
+    
+    log10(Z/Zsun) = 0.977 [Fe/H]
+    """
+    
+    if Z != None:
+        return np.log10(Z/Zsun) / 0.977
+    else:
+        return 10**(0.977*FeH + np.log10(Zsun))
+        
+
 #}
 
 
@@ -2613,6 +2817,17 @@ class Color(NonLinearConverter):
             return mv-2*mb+my
         else:
             raise ValueError("No color calibrations for %s"%(photband))
+
+class DecibelSPL(NonLinearConverter):
+    """
+    Convert a Decibel to intensity W/m2 and back.
+    
+    This is only valid for Decibels as a sound Pressure level
+    """
+    def __call__(self,meas,inv=False):
+        F0 = 1e-12 # W/m2
+        if not inv: return 10**(-meas)*F0
+        else:       return log10(meas/F0)
 
 class JulianDay(NonLinearConverter):
     """
@@ -2802,7 +3017,7 @@ class Unit(object):
     >>> print a+b
     4002.0 m
     
-    B{Example 1:} You want to calculated the equatorial velocity of the Sun:
+    B{Example 1:} You want to calculate the equatorial velocity of the Sun:
     
     >>> distance = Unit(2*np.pi,'Rsol')
     >>> time = Unit(22.,'d')
@@ -2993,7 +3208,11 @@ class Unit(object):
         """
         Returns (value,error) in case of uncertainties.
         """
-        return unumpy.nominal_values(self.value),unumpy.std_devs(self.value)
+        val = unumpy.nominal_values(self.value)
+        err = unumpy.std_devs(self.value)
+        if not val.shape: val = float(val)
+        if not err.shape: err = float(err)
+        return val,err
     
     def __getitem__(self,key):
         """
@@ -3010,27 +3229,39 @@ class Unit(object):
         """
         return self.convert('SI')[0]<other.convert('SI')[0]
     
+    def __radd__(self,other):
+        return self.__add__(other)
+    
     def __add__(self,other):
         """
         Add a Unit to a Unit.
+        
+        You can add a non-Unit to a Unit only if the Unit has an empty unit string.
         """
         unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
+        if not hasattr(other,'unit'):
+            unit2 = ''
+        else:
+            unit2 = breakdown(other.unit)[1]
         if unit1!=unit2:
             raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value+other_value,self.unit)
-        
+        elif unit2=='':
+            return self.value+other
+        else:
+            other_value = convert(other.unit,self.unit,other.value,unpack=False)
+            return Unit(self.value+other_value,self.unit)
+    
     def __sub__(self,other):
         """
         Subtract a Unit from a Unit.
         """
-        unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
-        if unit1!=unit2:
-            raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value-other_value,self.unit)
+        return self.__add__(-1*other)
+    
+    def __rsub__(self,other):
+        """
+        Subtract a Unit from a Unit.
+        """
+        return (self*-1).__radd__(other)
     
     def __mul__(self,other):
         """
@@ -3284,6 +3515,7 @@ _factors = collections.OrderedDict([
            ('Sv',    (1.,            'm2 s-2','dose equivalent','sievert')),
            ('kat',   (1.,            'mol s-1','catalytic activity','katal')),
            ('rem',   (1e-2,          'm2 s-2','dose equivalent','rem')),
+           ('dB',    (DecibelSPL,    'kg s-3','sound intensity','Decibel')),  # W/m2
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # ACCELERATION
@@ -3333,6 +3565,7 @@ _factors = collections.OrderedDict([
 # FLUX
 # -- absolute magnitudes
            ('Jy',      (1e-26/(2*np.pi),'kg s-2 rad-1','flux density','Jansky')), # W/m2/Hz
+           ('fu',      (1e-26/(2*np.pi),'kg s-2 rad-1','flux density','flux unit')), # W/m2/Hz
            ('vegamag', (VegaMag,       'kg m-1 s-3','flux','Vega magnitude')),  # W/m2/m
            ('mag',     (VegaMag,       'kg m-1 s-3','flux','magnitude')),  # W/m2/m
            ('STmag',   (STMag,         'kg m-1 s-3','flux','ST magnitude')),  # W/m2/m
@@ -3439,7 +3672,7 @@ _aliases = [('micron','mum'),('au','AU'),('lbs','lb'),
             ('Vegamag','vegamag'),('mile','mi'),
             ('oz','ounce'),('sun','sol'),('_sun','sol'),('_sol','sol'),
             ('solMass','Msol'),('solLum','Lsol'),
-            ('pk','hp'),('mph','mi/h')
+            ('pk','hp'),('mph','mi/h'),('f.u.','fu')
             ]
  
 #-- Change-of-base function definitions
@@ -3457,6 +3690,8 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            'm-1_to_':      flam2lamflam, # switch from Flam to lamFlam
            #'rad2_to_':     per_sr,
            #'rad-2_to_':    times_sr,
+           'sr1_to_': per_sr,
+           'sr-1_to_': times_sr,
            'rad1_to_':     do_nothing,#per_cy,
            'rad-1_to_':    do_nothing,#times_cy,
            'rad-2sr1_to_': do_nothing,
@@ -3473,6 +3708,7 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
  
  
 if __name__=="__main__":
+    
     if not sys.argv[1:]:
         import doctest
         doctest.testmod()
