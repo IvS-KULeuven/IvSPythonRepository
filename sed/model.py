@@ -640,11 +640,17 @@ def get_file(integrated=False,**kwargs):
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
-        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_lowres%s.fits'%(postfix) #only available for 1 metalicity
     elif grid=='heberb':
-         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
-         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -2057,6 +2063,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     
     #-- set the parameters for the SED grid
     set_defaults(**kwargs)
+    logger.info('Using grid files:\n %s'%(get_file(z='*')))
     #-- get the dimensions of the grid: both the grid points, but also
     #   the wavelength range
     teffs,loggs = get_grid_dimensions()
