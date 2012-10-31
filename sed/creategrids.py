@@ -4,6 +4,7 @@ Create photometric and spectral grid.
 import pyfits
 import logging
 import numpy as np
+import time
 from multiprocessing import cpu_count,Manager,Process
 import os
 import shutil
@@ -134,7 +135,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             exceptions_logs.append(sys.exc_info()[1])
     
     #-- make FITS columns
-    gridfile = get_file()
+    gridfile = model.get_file()
     if os.path.isfile(os.path.basename(gridfile)):
         outfile = os.path.basename(gridfile)
     else:
