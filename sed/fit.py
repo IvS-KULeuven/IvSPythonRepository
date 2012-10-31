@@ -249,17 +249,19 @@ def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf)
     """
     Generate a grid of parameters.
     """
+     #-- report on the received grid
+    if not kwargs:
+        logger.info('Received grid (%s)'%model.defaults2str())
+    else:
+        logger.info('Received custom grid (%s)'%kwargs)
+        
     #-- get the pixelgrid
     axis_values,gridpnts,flux,colnames = \
                  model._get_pix_grid(photbands,teffrange=(-inf,inf),
                  loggrange=(-inf,inf),ebvrange=(-inf,inf),
                  zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
                  include_Labs=True,clear_memory=clear_memory,**kwargs)
-    #-- report on the received grid
-    if not kwargs:
-        logger.info('Received grid (%s)'%model.defaults2str())
-    else:
-        logger.info('Received custom grid (%s)'%kwargs)
+   
     
     #-- we first generate random teff-logg coordinates, since the grid is
     #   not exactly convex in these parameters. We assume it is for all the
@@ -311,8 +313,86 @@ def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf)
     
     
     
+def generate_grid_binary_pix(photbands, teffrange=((-inf,inf),(-inf,inf)),
+                  loggrange=((-inf,inf),(-inf,inf)), ebvrange=(-inf,inf),
+                  zrange=((-inf,inf),(-inf,inf)),rvrange=(-inf,inf), vradrange=(0,0),
+                  radiusrange=((1,1),(0.1,10.)), points=None, clear_memory=False,
+                  **kwargs):
     
     
+    #-- first collect the effetive temperatures, loggs, ebvs, zs for the
+    #   different stars in the multiple system
+    pars = []
+    grids = model.defaults_multiple
+    #-- but remove metallicity, as it will be fitted!
+    #for grid in grids:
+        #if 'z' in grid:
+            #thrash = grid.pop('z')
+    for i,grid in enumerate(grids):
+        #-- it is possible that we want certain parameters to be the same for
+        #   all components
+        model.set_defaults(**grid)
+        teffrange_ = hasattr(teffrange[0],'__iter__') and teffrange[i] or teffrange
+        loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
+        ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
+        zrange_ = hasattr(zrange[0],'__iter__') and zrange[i] or zrange
+        rvrange_ = hasattr(rvrange[0],'__iter__') and rvrange[i] or rvrange
+        vradrange_ = hasattr(vradrange[0],'__iter__') and vradrange[i] or vradrange
+        pars.append( generate_grid_single_pix(photbands, teffrange=teffrange_,
+                    loggrange=loggrange_, ebvrange=ebvrange_, zrange=zrange_, 
+                    rvrange=rvrange_, vradrange=vradrange_, points=points) )
+ 
+    
+    return pars
+    
+    #-- permute parameters so that the different blocks from the generate_grid
+    #   are not clustered together
+    for i in range(0,len(pars),4):
+        permutation = np.random.permutation(len(pars[0]))
+        pars[i:i+4] = pars[i:i+4,permutation]
+    #-- make arrays of the output parameters
+    teffs,loggs,ebvs,zs = pars[0::4].T,pars[1::4].T,pars[2::4].T,pars[3::4].T
+    
+    #-- keep in mind that we probably want all the members in the system to have
+    #   the same value for the interstellar reddening and metallicity, though
+    #   this is not obligatory
+    if not hasattr(teffrange[0],'__iter__'): teffs = np.column_stack([teffs[:,0]]*len(grids))
+    if not hasattr(loggrange[0],'__iter__'): loggs = np.column_stack([loggs[:,0]]*len(grids))
+    #if not hasattr(ebvrange[0],'__iter__'): ebvs = np.column_stack([ebvs[:,0]]*len(grids))
+    #if not hasattr(zrange[0],'__iter__'): zs = np.column_stack([zs[:,0]]*len(grids))
+    ebvs = np.column_stack([ebvs[:,0]]*len(grids))
+    zs = np.column_stack([zs[:,0]]*len(grids))
+    
+    if type=='binary':
+        #-- The radius of the stars is calculated based on logg and the provided masses
+        masses = 'masses' in kwargs and  kwargs['masses'] or (1,1)
+        G = constants.GG_cgs
+        Msol = constants.Msol_cgs
+        Rsol = constants.Rsol_cgs
+        radius1 = np.sqrt(G*masses[0]*Msol/10**loggs[:,0])/Rsol
+        radius2 = np.sqrt(G*masses[1]*Msol/10**loggs[:,1])/Rsol
+        #radii = radius2/radius1
+        
+        #radii = np.array([np.ones(len(radii)),radii]).T
+        radii = np.array([radius1,radius2]).T
+        
+        #-- maybe we need to lower the temperatures of the secondary, so that
+        #   it is not hotter than the primary effective temperature
+        if primary_hottest:
+            wrong = teffs[:,1]>teffs[:,0]
+            teffs[wrong,1] = np.random.uniform(low=teffs[:,1].min()*np.ones(sum(wrong)),\
+                                               high=teffs[wrong,0])
+            logger.info('Ensured primary is the hottest (%d/%d corrections)'%(sum(wrong),len(wrong)))
+                                               
+        
+    elif type=='multiple':
+        #-- We have random different radii for the stars
+        radii = np.array([10**np.random.uniform(low=radiusrange[0][0], high=radiusrange[0][1], size=(len(teffs))), 
+                    10**np.random.uniform(low=radiusrange[1][0], high=radiusrange[1][1], size=(len(teffs)))]).T
+        #radii = 10**np.random.uniform(low=[np.log10(i[0]) for i in radiusrange],
+                              #high=[np.log10(i[1]) for i in radiusrange],size=(len(teffs),2))                       
+    
+    return teffs,loggs,ebvs,zs,radii
     
 
 
