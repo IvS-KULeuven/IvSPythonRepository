@@ -235,6 +235,10 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     
     Extra keyword arguments are passed to L{pergrams.deeming}
     
+    @param wave: wavelength array in Angstrom
+    @type wave: ndarray
+    @param flux: normalised flux of the profile
+    @type flux: ndarray
     @rtype: (array,array),(array,array),array
     @return: periodogram, extrema, vsini values
     """
@@ -315,7 +319,8 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     Section 2. parameters for instrumental convolution
     ==================================================
 
-    C{FWHM}: full width at half maximum for Gaussian instrumental profile
+    C{FWHM}: WARNING: this is not the full width at half maximum for Gaussian
+    instrumental profile, but the sigma (FWHM = 2.3548 sigma).
     
     C{STEPI}: wavelength step for evaluating instrumental convolution
           - if =0, the program sets up default (FWHM/10.)
