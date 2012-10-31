@@ -235,6 +235,10 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     
     Extra keyword arguments are passed to L{pergrams.deeming}
     
+    @param wave: wavelength array in Angstrom
+    @type wave: ndarray
+    @param flux: normalised flux of the profile
+    @type flux: ndarray
     @rtype: (array,array),(array,array),array
     @return: periodogram, extrema, vsini values
     """
