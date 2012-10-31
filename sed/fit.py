@@ -318,7 +318,13 @@ def generate_grid_multiple_pix(photbands, teffrange=((-inf,inf),(-inf,inf)),
                   zrange=((-inf,inf),(-inf,inf)),rvrange=(-inf,inf), vradrange=(0,0),
                   radiusrange=((1,1),(0.1,10.)), points=None, clear_memory=False,
                   **kwargs):   
+    """
+    Generate a grid of parameters for 2 or more stars. Based on the generate_grid_single_pix
+    method. The radius of the components is based on the masses if given, otherwise on the 
+    radiusrange argument.
     
+    returns a dictionary with for each parameter that changes an array of values.
+    """
     #-- first collect the effetive temperatures, loggs, ebvs, zs for the
     #   different stars in the multiple system
     pars = []
@@ -327,7 +333,6 @@ def generate_grid_multiple_pix(photbands, teffrange=((-inf,inf),(-inf,inf)),
     for i,grid in enumerate(grids):
         #-- it is possible that we want certain parameters to be the same for
         #   all components
-        model.set_defaults(**grid)
         teffrange_ = hasattr(teffrange[0],'__iter__') and teffrange[i] or teffrange
         loggrange_ = hasattr(loggrange[0],'__iter__') and loggrange[i] or loggrange
         ebvrange_ = hasattr(ebvrange[0],'__iter__') and ebvrange[i] or ebvrange
@@ -336,7 +341,7 @@ def generate_grid_multiple_pix(photbands, teffrange=((-inf,inf),(-inf,inf)),
         vradrange_ = hasattr(vradrange[0],'__iter__') and vradrange[i] or vradrange
         ipars = generate_grid_single_pix(photbands, teffrange=teffrange_,
                     loggrange=loggrange_, ebvrange=ebvrange_, zrange=zrange_, 
-                    rvrange=rvrange_, vradrange=vradrange_, points=points) 
+                    rvrange=rvrange_, vradrange=vradrange_, points=points, **grid) 
         parameters = ipars.keys() if parameters == None else parameters
         for key in parameters:
             pars.append(ipars[key])

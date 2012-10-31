@@ -1256,6 +1256,40 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
         return flux,Labs
 
     
+def get_itable_multiple_pix(teff=None,logg=None,ebv=None, z=None, rv=None, vrad=None, 
+                photbands=None, radius=None, wave_units=None, flux_units='erg/cm2/s/AA/sr',
+                grids=None, **kwargs):
+    """
+    Super fast grid interpolator for multiple tables, completely based on get_itable_pix.
+    """
+    
+    z = np.array([[0.0 for i in teff] for j in teff[0]]).T if z == None else z
+    rv = np.array([[3.1 for i in teff] for j in teff[0]]).T if rv == None else rv
+    vrad = np.array([[0.0 for i in teff] for j in teff[0]]).T if vrad == None else vrad
+    
+    fluxes, Labs = [],[]
+    for i, grid in enumerate(defaults_multiple):
+        trash = grid.pop('z',0.0)
+        trash = grid.pop('Rv',0.0)
+        iteff,ilogg,iebv,iz,irv,ivrad,irad = teff[:,i],logg[:,i],ebv[:,i],z[:,i],rv[:,i],vrad[:,i],radius[:,i]
+        f,L = get_itable_pix(teff=iteff,logg=ilogg,ebv=iebv,z=iz,rv=irv,vrad=ivrad,
+                    photbands=photbands, wave_units=None,flux_units='erg/s/cm2/AA/sr', **grid)
+        fluxes.append(f*irad**2)
+        Labs.append(L*irad**2)
+    
+    fluxes = np.sum(fluxes,axis=0)
+    Labs = np.sum(Labs)
+    
+    if flux_units!='erg/s/cm2/AA/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+        
+    if wave_units is not None:
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave)
+        return wave,fluxes,Labs
+    return fluxes,Labs   
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
@@ -2102,6 +2136,10 @@ def _get_pix_grid(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
+        
+    #-- remove Rv and z from the grid keywords
+    trash = kwargs.pop('Rv', 0.0)
+    trash = kwargs.pop('z', 0.0)
     gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
