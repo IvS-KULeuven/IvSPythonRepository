@@ -1610,7 +1610,7 @@ class SED(object):
     
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
-                          zrange=None,radiusrange=None,rvrange=None,vradrange=(0,0),
+                          zrange=(0,0),radiusrange=None,rvrange=(3.1,3.1),vradrange=(0,0),
                           compare=True,df=None,CI_limit=None,set_model=True,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
@@ -3385,14 +3385,17 @@ class Calibrator(SED):
     """
     Convenience class for a photometric standard star or calibrator.
     """
-    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label='',library='calspec'):
-        names,fits_files,phot_files = model.read_calibrator_info(library='ngsl')
+    def __init__(self,ID=None,photfile=None,plx=None,load_fits=False,label='',library='calspec'):
+        names,fits_files,phot_files = model.read_calibrator_info(library=library)
         index = names.index(ID)
         #--retrieve fitsfile information
-        fits_file = pyfits.open(fits_files[index])
-        wave = fits_file[1].data.field('wavelength')
-        flux = fits_file[1].data.field('flux')
-        fits_file.close()
+        if library in ['ngsl','calspec']:
+            fits_file = pyfits.open(fits_files[index])
+            wave = fits_file[1].data.field('wavelength')
+            flux = fits_file[1].data.field('flux')
+            fits_file.close()
+        elif library=='stelib':
+            wave,flux = fits.read_spectrum(fits_files[index])
         #--photfile:
         photfile = phot_files[index]
         super(Calibrator,self).__init__(photfile=photfile,plx=plx,load_fits=load_fits,label=label)

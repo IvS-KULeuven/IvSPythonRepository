@@ -1772,6 +1772,8 @@ class Minimizer(lmfit.Minimizer):
             self.anneal()
         elif engine == 'lbfgsb':
             self.lbfgsb()
+        elif engine == 'fmin':
+            self.fmin()
         else:
             self.leastsq(Dfun=jacobian)
             
