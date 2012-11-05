@@ -1,5 +1,15 @@
 """
 Create photometric and spectral grid.
+
+It is possible to run this module from the terminal, e.g., to generate a
+limb darkening grid. All input is automatically processed, so there are a few
+tweaks you need to take into account when supplying parameters. Some of them are
+explained in the L{ivs.aux.argkwargparser} module.
+
+Examples::
+
+    $:> python creategrids.py calc_limbdark_grid 'responses=["OPEN.BOL","MOST.V","GENEVA"]' ebvs=[0.05] outfile=mygrid.fits
+
 """
 import pyfits
 import logging
@@ -11,10 +21,152 @@ import shutil
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import reddening
+from ivs.sed import limbdark
 from ivs.io import ascii
+from ivs.aux import argkwargparser
+from ivs.aux import loggers
 
 logger = logging.getLogger('IVS.SED.CREATE')
 
+
+#{ Helper functions
+
+def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
+    """
+    Get a list of response functions and their information.
+    
+    You can specify bandpass systems (e.g. GENEVA) and then all Geveva filters
+    will be collected. You can also specific specific bandpasses (e.g. GENEVA.V),
+    in which case only that one will be returned. The default C{None} returns
+    all systems except some Hubble ones.
+    
+    You can also set responses to C{None} and give a wavelength range for filter
+    selection.
+    
+    Example input for C{responses} are:
+    
+    >>> responses = ['GENEVA.V','2MASS.J']
+    >>> responses = ['GENEVA','2MASS.J']
+    >>> responses = ['BOXCAR','STROMGREN']
+    >>> responses = None
+    
+    @param responses: a list of filter systems of passbands
+    @type responses: list of str
+    @param add_spectrophotometry: add spectrophotometric filters to the filter list
+    @type add_spectrophotometry: bool
+    @param wave: wavelength range
+    @type wave: tuple (float,float)
+    """
+    #-- add spectrophometric filtes when asked or when BOXCAR is in responses
+    if add_spectrophotometry or (responses is not None and any(['BOXCAR' in i for i in responses])):
+        bands = filters.add_spectrophotometric_filters()
+        
+    #-- if no responses are given, select using wavelength range
+    if responses is None:
+        responses = filters.list_response(wave_range=(wave[0],wave[-1]))
+    else:
+        responses_ = []
+        if not any(['BOXCAR' in i for i in responses]) and add_spectrophotometry:
+            responses.append('BOXCAR')
+        for resp in responses:
+            logger.info('... subselection: {}'.format(resp))
+            if resp=='OPEN.BOL':
+                responses_.append(resp)
+            else:
+                responses_ += filters.list_response(resp)
+        responses = responses_
+    #-- get information on the responses
+    filter_info = filters.get_info(responses)
+    responses = filter_info['photband']
+    responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
+    
+    logger.info('Selected response curves: {}'.format(', '.join(responses)))
+    
+    return responses
+
+#}
+
+#{ Limb darkening coefficients
+
+def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
+         ld_law='claret',fitmethod='equidist_r_leastsq',
+         outfile=None,**kwargs):
+    """
+    Calculate a grid of limb-darkening coefficients.
+    
+    You  need to specify a list of response curves, and a grid of radial velocity
+    (C{vrads}), metallicity (C{z}) and reddening (C{ebvs}) points. You can
+    choose which C{law} to fit adn with which C{fitmethod}. Extra kwargs specify
+    the properties of the atmosphere grid to be used.
+    
+    If you give a gridfile that already exists, the current file is simply
+    updated with the new passbands, i.e. all overlapping response curves will not
+    be recomputed.
+    
+    Example usage:
+    
+    >>> calc_limbdark_grid(['MOST.V','GENEVA'],vrads=[0],ebvs=[0.06],zs=[0,0],\
+    ...  law='claret',fitmethod='equidist_r_leastsq',outfile='HD261903.fits')
+    
+    
+    """
+    #-- collect response curves from user input
+    photbands = get_responses(responses)
+    
+    if outfile is None:
+        outfile = '{}_{}_{}.fits'.format(kwargs.get('grid',limbdark.defaults['grid']),ld_law,fitmethod)
+    #-- add the possibility to update an existing file if it already exists.
+    if os.path.isfile(outfile):
+        hdulist = pyfits.open(outfile,mode='update')
+        existing_bands = [ext.header['extname'] for ext in hdulist[1:]]
+    else:
+        hdulist = pyfits.HDUList([])
+        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        existing_bands = []
+        
+    #-- update the header with some information on the fitting parameters
+    hd = hdulist[0].header
+    hd.update('FIT', fitmethod, 'FIT ROUTINE')
+    hd.update('LAW', ld_law, 'FITTED LD LAW')
+    hd.update('GRID', kwargs.get('grid',limbdark.defaults['grid']), 'GRID')
+    
+    #-- cycle through all the bands and compute the limb darkening coefficients
+    for i,photband in enumerate(photbands):
+        if photband in existing_bands:
+            logger.info('BAND {} already exists: skipping'.format(photband))
+            continue
+        logger.info('Calculating photband {} ({}/{})'.format(photband,i+1,len(photbands)))
+        pars,coeffs,Imu1s = limbdark.fit_law_to_grid(photband,vrads=vrads,ebvs=ebvs,zs=zs,\
+                      law=ld_law,fitmethod=fitmethod,**kwargs)
+        cols = []
+
+        cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
+        cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
+        cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
+        cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
+        cols.append(pyfits.Column(name="z"   , format='E', array=pars[:,4]))
+        for col in range(coeffs.shape[1]):
+            cols.append(pyfits.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
+        cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
+        cols.append(pyfits.Column(name='SRS', format='E', array=Imu1s[:,1]))
+        cols.append(pyfits.Column(name='dint', format='E', array=Imu1s[:,2]))
+
+        newtable = pyfits.new_table(pyfits.ColDefs(cols))
+        newtable.header.update('EXTNAME', photband, "SYSTEM.FILTER")
+        newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
+        newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
+        hdulist.append(newtable)
+    
+    #-- clean up
+    if os.path.isfile(outfile):
+        hdulist.close()
+    else:
+        hdulist.writeto(outfile)
+
+
+#}
+
+#{ Integrated photometry
 
 def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
            units='Flambda',responses=None,update=False,add_spectrophotometry=False,**kwargs):
@@ -24,7 +176,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     The output file can be used to fit SEDs more efficiently, since integration
     over the passbands has already been carried out.
     
-    WARNING: this function can take a day to complete on a 8-core processor!
+    WARNING: this function can take a loooooong time to compute!
     
     Extra keywords can be used to specify the grid.
     
@@ -55,7 +207,6 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     elif threads=='safe':
         threads = cpu_count()-1
     threads = int(threads)
-    
     if threads > len(ebvs):
         threads = len(ebvs)
     logger.info('Threads: %s'%(threads))
@@ -68,23 +219,10 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     wave,flux = model.get_table(teff=teffs[0],logg=loggs[0])
     #-- get the response functions covering the wavelength range of the models
     #   also get the information on those filters
-    if add_spectrophotometry:
-        bands = filters.add_spectrophotometric_filters()
-    if responses is None:
-        responses = filters.list_response(wave_range=(wave[0],wave[-1]))
-    else:
-        responses_ = []
-        if not any(['BOXCAR' in i for i in responses]) and add_spectrophotometry:
-            responses.append('BOXCAR')
-        for resp in responses:
-            responses_ += filters.list_response(resp)
-        responses = responses_
-    filter_info = filters.get_info(responses)
-    responses = filter_info['photband']
-    responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
-
-    logger.info('Integrating {0} filters'.format(len(responses)))
+    responses = get_responses(responses=responses,\
+              add_spectrophotometry=add_spectrophotometry,wave=wave)
     
+    #-- definition of one process:
     def do_ebv_process(ebvs,arr,responses):
         logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
         for ebv in ebvs:
@@ -197,6 +335,9 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         print i
 
 def update_grid(gridfile,responses,threads=10):
+    """
+    Add passbands to an existing grid.
+    """
     shutil.copy(gridfile,gridfile+'.backup')
     hdulist = pyfits.open(gridfile,mode='update')
     existing_responses = set(list(hdulist[1].columns.names))
@@ -345,3 +486,10 @@ def fix_grid(grid):
     #print len(ff[1].data),sum(keep)
     hdulist[1].data = hdulist[1].data[keep]
     hdulist.close()
+    
+#}    
+    
+if __name__=="__main__":
+    logger = loggers.get_basic_logger()
+    imethod,iargs,ikwargs = argkwargparser.parse()
+    output = globals()[imethod](*iargs,**ikwargs)

@@ -5,6 +5,14 @@ Interface to the limb-darkening library.
 Section 1. Basic interface
 ==========================
 
+Retrieve limb darkening coeffcients and goodness of fit parameters:
+
+>>> coefs,fac,ssr,idiff = get_coeffs(teff=10000,logg=4.0,'JOHNSON.V',law='claret')
+
+When you need this for a large grid of parameters, consider using L{get_itable}.
+The available laws are C{claret}, C{linear}, C{logarithmic}, C{quadratic} and
+C{power}.
+
 Retrieve a normalised passband-integrated limb darkening profile via:
 
 >>> mu,intensities = get_limbdarkening(teff=10000,logg=4.0,photbands=['JOHNSON.V'],normalised=True)
@@ -103,6 +111,7 @@ Author: Pieter Degroote, with thanks to Steven Bloemen.
 """
 import logging
 import os
+import itertools
 import pyfits
 import numpy as np
 from scipy.optimize import leastsq,fmin
@@ -136,7 +145,7 @@ def set_defaults(**kwargs):
     """
     clear_memoization(keys=['ivs.sed.ld'])
     if not kwargs:
-        kwargs = dict(grid='kurucz',odfnew=False,z=+0.0,vturb=2,
+        kwargs = dict(grid='kurucz',odfnew=True,z=+0.0,vturb=2,
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
@@ -327,6 +336,9 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     
     extra kwargs are for reddening
     
+    You get limb angles, wavelength and a table. The shape of the table is
+    (N_wave,N_mu).
+    
     WARNING: wave and flux units cannot be specificed for the moment.
         
     >>> mu,wave,table = get_table(10000,4.0)
@@ -385,6 +397,8 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     @type ebv: float
     @param vrad: radial velocity (for doppler shifting) (km/s)
     @type vrad: float
+    @return: mu angles, wavelengths, table (Nwave x Nmu)
+    @rtype: array, array, array
     """
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
@@ -424,7 +438,7 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
         for i in range(len(mu)):
             table[:,i] = reddening.redden(table[:,i],wave=wave,ebv=ebv,rtype='flux',**kwargs)
     
-    
+    #-- that's it!
     return mu,wave,table
 
 
@@ -497,7 +511,7 @@ def _get_itable_markers(photband,gridfile,
 
 
 
-def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,photbands=None,normalised=False,**kwargs):
+def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,z=None,photbands=None,normalised=False,**kwargs):
     """
     Retrieve a limb darkening law for a specific star and specific bandpass.
     
@@ -534,8 +548,10 @@ def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,photbands=None,norm
     @keyword mu: specificy specific angle
     @type mu: float
     """
+    if z is None:
+        z = defaults['z']
     #-- retrieve model atmosphere for a given teff and logg
-    mus,wave,table = get_table(teff=teff,logg=logg,ebv=ebv,vrad=vrad,**kwargs)
+    mus,wave,table = get_table(teff=teff,logg=logg,ebv=ebv,vrad=vrad,z=z,**kwargs)
     #-- compute intensity over the stellar disk, and normalise
     intensities = np.zeros((len(mus),len(photbands)))
     for i in range(len(mus)):
@@ -545,6 +561,31 @@ def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,photbands=None,norm
     #-- or compute the intensity only for one angle:
     logger.info('Calculated LD')
     return mus,intensities
+
+def get_coeffs(teff,logg,photband,ebv=None,vrad=None,law='claret',fitmethod='equidist_r_leastsq'):
+    """
+    Retrieve limb darkening coefficients on the fly.
+    
+    This is particularly useful if you only need a few and speed is not really
+    a problem (although this function is nearly instantaneous, looping over it
+    will expose that it's actually pretty slow).
+    
+    @keyword teff: effective temperature
+    @type teff: float
+    @keyword logg: logarithmic gravity (cgs)
+    @type logg: float
+    @keyword photbands: bandpass filters
+    @type photbands: list of strings
+    @keyword ebv: reddening coefficient
+    @type ebv: float
+    @keyword vrad: radial velocity (+ is redshift, - is blueshift)
+    @type vrad: float
+    """
+    mu,intensities = get_limbdarkening(teff=teff,logg=logg,ebv=ebv,vrad=vrad,photbands=[photband])
+    norm_factor = intensities.max(axis=0)
+    coeffs,ssr,idiff = fit_law(mu,intensities[:,0]/norm_factor,law=law,fitmethod=fitmethod)
+    return coeffs,norm_factor,ssr,idiff
+    
 
 
 
@@ -742,6 +783,8 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
         mu_spl = np.sqrt(1-r_spl**2)
         Imu_spl = splev(mu_spl,tck,der=0)
         csol  = fmin(ldres_fmin, c0, maxiter=1000, maxfun=2000,args=(mu_spl,Imu_spl,law),disp=0)
+    else:
+        raise ValueError("Fitmethod {} not recognised".format(fitmethod))
     myfit = globals()['ld_%s'%(law)](mu,csol)
     res =  np.sum(Imu - myfit)**2
     int1,int2 = np.trapz(Imu,x=mu),np.trapz(myfit,x=mu)
@@ -749,7 +792,7 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
     return csol,res,dflux
     
     
-def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
+def fit_law_to_grid(photband,vrads=[0],ebvs=[0],zs=[0],
              law='claret',fitmethod='equidist_r_leastsq',**kwargs):
     """
     Gets the grid and fits LD law to all the models.
@@ -763,16 +806,15 @@ def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
     grid_coeffs = []
     Imu1s = []
     for teff_, logg_ in zip(teffs, loggs):
-        for ebv_ in ebvs:
-            for vrad_ in vrads:
-                print teff_, logg_,ebv_,vrad_
-                mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, ebv=ebv_,vrad=vrad_,photbands=[photband],**kwargs)
-                Imu1 = Imu.max()
-                Imu = Imu[:,0]/Imu1
-                coeffs,res,dflux = fit_law(mu[mu>0], Imu[mu>0],law=law,fitmethod=fitmethod)
-                grid_coeffs.append(coeffs)
-                grid_pars.append([teff_,logg_,ebv_,vrad_])
-                Imu1s.append([Imu1,res,dflux])
+        for ebv_,vrad_,z_ in itertools.product(ebvs,vrads,zs):
+            print teff_, logg_,ebv_,vrad_,z_
+            mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, ebv=ebv_,vrad=vrad_,z=z_,photbands=[photband],**kwargs)
+            Imu1 = Imu.max()
+            Imu = Imu[:,0]/Imu1
+            coeffs,res,dflux = fit_law(mu[mu>0], Imu[mu>0],law=law,fitmethod=fitmethod)
+            grid_coeffs.append(coeffs)
+            grid_pars.append([teff_,logg_,ebv_,vrad_,z_])
+            Imu1s.append([Imu1,res,dflux])
     #- wrap up results in nice arrays
     grid_pars = np.array(grid_pars)
     grid_coeffs = np.array(grid_coeffs)
@@ -780,10 +822,16 @@ def fit_law_to_grid(photband,vrads=[0],ebvs=[0],
     
     return grid_pars, grid_coeffs, Imu1s
     
-def generate_grid(photbands,vrads=[0],ebvs=[0],
+def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
              law='claret',fitmethod='equidist_r_leastsq',outfile='mygrid.fits',**kwargs):
-    hdulist = pyfits.HDUList([])
-    hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+    
+    if os.path.isfile(outfile):
+        hdulist = pyfits.open(outfile,mode='update')
+        existing_bands = [ext.header['extname'] for ext in hdulist[1:]]
+    else:
+        hdulist = pyfits.HDUList([])
+        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        existing_bands = []
 
     hd = hdulist[0].header
     hd.update('FIT', fitmethod, 'FIT ROUTINE')
@@ -791,14 +839,17 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],
     hd.update('GRID', kwargs.get('grid',defaults['grid']), 'GRID')
     
     for photband in photbands:
-        print photband
-        pars,coeffs,Imu1s = fit_law_to_grid(photband,vrads=vrads,ebvs=ebvs,**kwargs)
+        if photband in existing_bands:
+            logger.info('BAND {} already exists: skipping'.format(photband))
+            continue
+        pars,coeffs,Imu1s = fit_law_to_grid(photband,vrads=vrads,ebvs=ebvs,zs=zs,**kwargs)
         cols = []
 
         cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
         cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
         cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
         cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
+        cols.append(pyfits.Column(name="z"   , format='E', array=pars[:,4]))
         for col in range(coeffs.shape[1]):
             cols.append(pyfits.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
         cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
@@ -810,8 +861,11 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],
         newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
         newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
         hdulist.append(newtable)
-
-    hdulist.writeto(outfile)
+    
+    if os.path.isfile(outfile):
+        hdulist.close()
+    else:
+        hdulist.writeto(outfile)
 #}
 
 
@@ -980,6 +1034,7 @@ if __name__=="__main__":
         #print("Calling {} with args=({}) and kwargs=({})".format(method,args,kwargs)
         photbands = ['JOHNSON.U','JOHNSON.B','JOHNSON.V','KEPLER.V','COROT.SIS','COROT.EXO']
         photbands+= ['2MASS.J','2MASS.H','2MASS.KS']
-        generate_grid(photbands,vrads=np.arange(-500,501,10),ebvs=np.arange(0,2.005,0.01),law='claret',outfile='claret.fits')
-        #generate_grid(photbands,vrads=np.arange(-500,501,10),ebvs=np.arange(0,2.005,0.01),law='linear',outfile='linear.fits')
-       
+        #generate_grid(photbands,vrads=np.arange(-500,501,50),ebvs=np.arange(0,2.005,0.01),law='claret',outfile='claret.fits')
+        #generate_grid(photbands,vrads=np.arange(-500,501,50),ebvs=np.arange(0,2.005,0.01),law='linear',outfile='linear.fits')
+        generate_grid(['MOST.V','IRAC.36','COROT.EXO'],vrads=[0],ebvs=[0.06],zs=[0,0]
+             law='claret',fitmethod='equidist_r_leastsq',outfile='HD261903.fits')
