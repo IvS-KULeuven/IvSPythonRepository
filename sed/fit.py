@@ -255,6 +255,8 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
+            
+    print ranges, parameters
        
     #-- report on the received grid
     if not kwargs:
@@ -318,8 +320,11 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
     sample1 = numpy_ext.random_rectangular_grid(gridpnts_,points)
     if correctTeff: sample1[:,0] = np.array([teffrange[0] for i in sample1[:,0]])
     if correctLogg: sample1[:,1] = np.array([loggrange[0] for i in sample1[:,1]])
-    sample2 = np.random.uniform(low =[max(ax.min(),ranges.pop(name+'range', (-inf,inf))[0]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
-                                high=[min(ax.max(),ranges.pop(name+'range', (-inf,inf))[1]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+    
+    for name in colnames:
+        if not name+'range' in ranges: ranges[name+'range'] = (-inf, inf)    
+    sample2 = np.random.uniform(low =[max(ax.min(),ranges[name+'range'][0]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+                                high=[min(ax.max(),ranges[name+'range'][1]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
                                 size=((len(sample1),len(colnames)-2)))
     
     colnames.remove('teff')
@@ -362,7 +367,7 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
     #-- If only one component we can directly return the grid
     if len(components) == 1:
         kwargs_ = kwargs
-        kwargs_.update(ranges_)
+        kwargs_.update(ranges)
         return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
     
     #-- For each component get the grid from grid_single_pix
@@ -410,8 +415,7 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
             
-    return pars
-    
+    return pars 
 
 
 def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
