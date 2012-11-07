@@ -261,7 +261,6 @@ def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf)
                  loggrange=(-inf,inf),ebvrange=(-inf,inf),
                  zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
                  include_Labs=True,clear_memory=clear_memory,**kwargs)
-   
     
     #-- we first generate random teff-logg coordinates, since the grid is
     #   not exactly convex in these parameters. We assume it is for all the
@@ -344,7 +343,8 @@ def generate_grid_multiple_pix(photbands, teffrange=((-inf,inf),(-inf,inf)),
                     rvrange=rvrange_, vradrange=vradrange_, points=points, **grid) 
         parameters = ipars.keys() if parameters == None else parameters
         for key in parameters:
-            pars.append(ipars[key])
+            if key in ipars:
+                pars.append(ipars[key])
     
     #-- the generate_grid_single_pix method does not guarantee the number of points.
     #   We have to strip some points if the arrays don't have the same shape
