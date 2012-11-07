@@ -370,7 +370,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch(**kwargs):
+def copy2scratch(z=None):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -382,8 +382,8 @@ def copy2scratch(**kwargs):
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
     
-    It is possible to give z='*' and Rv='*' as an option; when you do that, the grids
-    with all z, Rv values are copied. Don't forget to add that option to clean_scratch too!
+    It is possible to give z='*' as an option; when you do that, the grids
+    with all z values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -402,12 +402,9 @@ def copy2scratch(**kwargs):
         default['use_scratch'] = False
         #-- set the z with the starred version '*' if asked for, but remember
         #   the original value to reset it after the loop is done.
-        originalDefaults = {}
-        for key in kwargs:
-            if key in default:
-                originalDefaults[key] = default[key]
-                default[key] = kwargs[key]
-                logger.debug('Using provided value for {0:s}={1:s} when copying to scratch'.format(key,str(kwargs[key])))
+        if z is not None:
+            previous_z = default['z']
+            default['z']
         #grid
         fname = get_file(integrated=False,**default)
         #-- we could have received a list (multiple files) or a string (single file)
@@ -430,11 +427,10 @@ def copy2scratch(**kwargs):
             else:
                 logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
-        for key in kwargs:
-            if key in default:
-                default[key] = originalDefaults[key]
+        if z is not None:
+            default['z'] = previous_z
 
-def clean_scratch(**kwargs):
+def clean_scratch(z=None):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -448,16 +444,9 @@ def clean_scratch(**kwargs):
     
     for default in defaults_:
         if default['use_scratch']:
-            originalDefaults = {}
-            for key in kwargs:
-                if key in default:
-                    originalDefaults[key] = default[key]
-                    default[key] = kwargs[key]
-                    logger.debug('Using provided value for {0:s}={1:s} when deleting from scratch'.format(key,str(kwargs[key])))
-            
-            #if z is not None:
-                #previous_z = default['z']
-                #default['z']
+            if z is not None:
+                previous_z = default['z']
+                default['z']
             fname = get_file(integrated=False,**default)
             if isinstance(fname,str):
                 fname = [fname]
@@ -474,11 +463,8 @@ def clean_scratch(**kwargs):
                     logger.info('Removed file: %s'%(ifname))
                     os.remove(ifname)    
             default['use_scratch'] = False
-            for key in kwargs:
-                if key in default:
-                    default[key] = originalDefaults[key]
-            #if z is not None:
-                #default['z'] = previous_z
+            if z is not None:
+                default['z'] = previous_z
 
 def defaults2str():
     """
@@ -654,17 +640,11 @@ def get_file(integrated=False,**kwargs):
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
-        if integrated:
-            postfix = '_lawfitzpatrick2004_Rv'
-            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
-            postfix+= Rv
-        else:
-            postfix = ''
-        basename = 'TMAP2012_lowres%s.fits'%(postfix) #only available for 1 metalicity
+        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
     elif grid=='heberb':
-        basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
+         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
-        basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -1270,40 +1250,6 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
         return flux,Labs
 
     
-def get_itable_multiple_pix(teff=None,logg=None,ebv=None, z=None, rv=None, vrad=None, 
-                photbands=None, radius=None, wave_units=None, flux_units='erg/cm2/s/AA/sr',
-                grids=None, **kwargs):
-    """
-    Super fast grid interpolator for multiple tables, completely based on get_itable_pix.
-    """
-    
-    z = np.array([[0.0 for i in teff] for j in teff[0]]).T if z == None else z
-    rv = np.array([[3.1 for i in teff] for j in teff[0]]).T if rv == None else rv
-    vrad = np.array([[0.0 for i in teff] for j in teff[0]]).T if vrad == None else vrad
-    
-    fluxes, Labs = [],[]
-    for i, grid in enumerate(defaults_multiple):
-        trash = grid.pop('z',0.0)
-        trash = grid.pop('Rv',0.0)
-        iteff,ilogg,iebv,iz,irv,ivrad,irad = teff[:,i],logg[:,i],ebv[:,i],z[:,i],rv[:,i],vrad[:,i],radius[:,i]
-        f,L = get_itable_pix(teff=iteff,logg=ilogg,ebv=iebv,z=iz,rv=irv,vrad=ivrad,
-                    photbands=photbands, wave_units=None,flux_units='erg/s/cm2/AA/sr', **grid)
-        fluxes.append(f*irad**2)
-        Labs.append(L*irad**2)
-    
-    fluxes = np.sum(fluxes,axis=0)
-    Labs = np.sum(Labs,axis=0)
-    
-    if flux_units!='erg/s/cm2/AA/sr':
-        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
-        
-    if wave_units is not None:
-        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
-        wave = filters.eff_wave(photbands,model=model)
-        if wave_units !='AA':
-            wave = wave = conversions.convert('AA',wave_units,wave)
-        return wave,fluxes,Labs
-    return fluxes,Labs   
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
@@ -1961,6 +1907,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
             logger.debug('%10s: Interpolating model to integrate over response curve'%(photband))
             wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
             flux_ = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
+            flux_[np.isnan(flux_)] = 0.
         else:
             wave_ = wave[region]
             flux_ = flux[region]
@@ -2066,6 +2013,11 @@ def luminosity(wave,flux,radius=1.):
     Labs = Lint*4*np.pi/constants.Lsol_cgs*(radius*constants.Rsol_cgs)**2
     return Labs
 
+
+
+
+
+
 #}
 
 @memoized
@@ -2151,10 +2103,6 @@ def _get_pix_grid(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
-        
-    #-- remove Rv and z from the grid keywords
-    trash = kwargs.pop('Rv', 0.0)
-    trash = kwargs.pop('z', 0.0)
     gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
