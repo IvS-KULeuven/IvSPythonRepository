@@ -235,6 +235,15 @@ def random_rectangular_grid(gridpoints,size):
     """
     Generate random points in a non-convex continuous rectangular grid.
     
+    This routine will subdivide the grid in smaller cubicles and then populate
+    those with a number of points proportional to the relative size of the
+    cubicle. Because of this, C{size} will never be the true size of the
+    sample returned, but will always be a little bit higher or lower.
+    
+    B{Warning: This function requiresevery square to be populated by at least
+    one point. If this is not the case, it will be forced that every square
+    has a point.}
+    
     >>> xs = np.array([1,2,0,1,2,3,0,1,2,3,1,2.])
     >>> ys = np.array([4,4,3,3,3,3,2,2,2,2,1,1.])
     >>> gridpoints = np.column_stack([xs,ys])
@@ -252,6 +261,7 @@ def random_rectangular_grid(gridpoints,size):
     tree = spatial.KDTree(gridpoints)
     axis_values = [np.sort(np.unique(col)) for col in gridpoints.T]
     axis_indices = [np.arange(1,len(axis)) for axis in axis_values]
+    
     #-- we need to find the total volume and then we need to sample that volume
     #   uniformly. We can only include grid cubes that have corners that are all
     #   present in the grid
@@ -274,9 +284,8 @@ def random_rectangular_grid(gridpoints,size):
             volume = np.product(combination)
             hypercube_volume+= volume
             random_ranges_sizes.append([low,high,volume])
-            
     #-- now we're ready to actually generate the grid        
-    sample = np.vstack([np.random.uniform(low=low,high=high,size=(vol/hypercube_volume*size,len(low))) for low,high,vol in random_ranges_sizes])
+    sample = np.vstack([np.random.uniform(low=low,high=high,size=(max(vol/hypercube_volume*size,1),len(low))) for low,high,vol in random_ranges_sizes])
 
     return sample
 
