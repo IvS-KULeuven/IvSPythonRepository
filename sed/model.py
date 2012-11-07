@@ -370,7 +370,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch(z=None):
+def copy2scratch(**kwargs):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -382,8 +382,8 @@ def copy2scratch(z=None):
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
     
-    It is possible to give z='*' as an option; when you do that, the grids
-    with all z values are copied. Don't forget to add that option to clean_scratch too!
+    It is possible to give z='*' and Rv='*' as an option; when you do that, the grids
+    with all z, Rv values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -402,9 +402,12 @@ def copy2scratch(z=None):
         default['use_scratch'] = False
         #-- set the z with the starred version '*' if asked for, but remember
         #   the original value to reset it after the loop is done.
-        if z is not None:
-            previous_z = default['z']
-            default['z']
+        originalDefaults = {}
+        for key in kwargs:
+            if key in default:
+                originalDefaults[key] = default[key]
+                default[key] = kwargs[key]
+                logger.debug('Using provided value for {0:s}={1:s} when copying to scratch'.format(key,str(kwargs[key])))
         #grid
         fname = get_file(integrated=False,**default)
         #-- we could have received a list (multiple files) or a string (single file)
@@ -427,10 +430,11 @@ def copy2scratch(z=None):
             else:
                 logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
-        if z is not None:
-            default['z'] = previous_z
+        for key in kwargs:
+            if key in default:
+                default[key] = originalDefaults[key]
 
-def clean_scratch(z=None):
+def clean_scratch(**kwargs):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -444,9 +448,16 @@ def clean_scratch(z=None):
     
     for default in defaults_:
         if default['use_scratch']:
-            if z is not None:
-                previous_z = default['z']
-                default['z']
+            originalDefaults = {}
+            for key in kwargs:
+                if key in default:
+                    originalDefaults[key] = default[key]
+                    default[key] = kwargs[key]
+                    logger.debug('Using provided value for {0:s}={1:s} when deleting from scratch'.format(key,str(kwargs[key])))
+            
+            #if z is not None:
+                #previous_z = default['z']
+                #default['z']
             fname = get_file(integrated=False,**default)
             if isinstance(fname,str):
                 fname = [fname]
@@ -463,8 +474,11 @@ def clean_scratch(z=None):
                     logger.info('Removed file: %s'%(ifname))
                     os.remove(ifname)    
             default['use_scratch'] = False
-            if z is not None:
-                default['z'] = previous_z
+            for key in kwargs:
+                if key in default:
+                    default[key] = originalDefaults[key]
+            #if z is not None:
+                #default['z'] = previous_z
 
 def defaults2str():
     """
@@ -1278,7 +1292,7 @@ def get_itable_multiple_pix(teff=None,logg=None,ebv=None, z=None, rv=None, vrad=
         Labs.append(L*irad**2)
     
     fluxes = np.sum(fluxes,axis=0)
-    Labs = np.sum(Labs)
+    Labs = np.sum(Labs,axis=0)
     
     if flux_units!='erg/s/cm2/AA/sr':
         fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
