@@ -1912,6 +1912,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
             flux_ = flux[region]
         if not len(wave_):
             energys[i] = np.nan
+            logger.warning('Unable to integrate passband {}: inadequate wavelength range'.format(photband))
             continue
         #-- perhaps the entire response curve falls in between model points (happends with
         #   narrowband UV filters), or there's very few model points covering it
