@@ -1489,19 +1489,7 @@ class SED(object):
         """
         limits = {}
         exist_previous = (start_from in self.results and 'CI' in self.results[start_from])
-        #-- how many stellar components do we have? It has to be given when no
-        #   ranges are given. Otherwise, we can derive it from the ranges.
-        components = 1
-        if type is None:
-            components = max([(isinstance(kwargs[key][0],tuple) and len(kwargs[key]) or 1) for key in kwargs if (kwargs[key] is not None)])
-            type = (components==1) and 'single' or 'multiple-{0:d}'.format(components)
-        elif type=='binary':
-            components = 2
-        elif 'multiple' in type:
-            components = int(type.split('-')[-1])
-        #-- the field names are 'teff', 'logg' etc for the primary component, all
-        #   others have a postfix '-n' with n the number of the component
-        postfixes = [''] + ['-{0:d}'.format(i) for i in range(2,components+1)]
+        
         #-- run over all parnames, and generate the parameters ranges for each
         #   component:
         #   (1) if a previous parameter search is done and the user has not set
@@ -1531,32 +1519,19 @@ class SED(object):
                         parrange.append((self.results[start_from]['CI'][lkey],
                                          self.results[start_from]['CI'][ukey]))
             elif parrange is None:
-                parrange = [(-np.inf,np.inf) for i in range(components)]
-            else:
-                if components>1:
-                    print parrange,postfixes
-                    parrange = [(iparrange is not None) and iparrange or \
-                              (exist_previous and (self.results[start_from]['CI'][parname+postfix+'_l'],\
-                                                   self.results[start_from]['CI'][parname+postfix+'_u'])\
-                                              or (-np.inf,np.inf))\
-                               for iparrange,postfix in zip(parrange,postfixes)]
-            #-- if there is only one component, make sure the range is a tuple of a tuple
-            if not isinstance(parrange[0],tuple):
-                parrange = (parrange,)
+                parrange = (-np.inf,np.inf)
+
             #-- now, the ranges are (lower,upper) for the uniform distribution,
             #   and (mu,scale) for the normal distribution
             if distribution=='normal':
-                parrange = [((i[1]-i[0])/2.,(i[1]-i[0])/6.) for i in parrange]
+                parrange = ((i[1]-i[0])/2.,(i[1]-i[0])/6.)
             elif distribution!='uniform':
                 raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
-            #-- now we *don't* want a tuple if there is only one component:
-            if components==1:
-                limits[par_range_name] = parrange[0]
-            else:
-                limits[par_range_name] = parrange
+ 
+            limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
-        logger.info('Parameter ranges calculated for type {0:s}, starting from {1:s} and using distribution {2:s}.'.format(type,start_from,distribution))
+        logger.info('Parameter ranges calculated starting from {0:s} and using distribution {1:s}.'.format(start_from,distribution))
         return limits,type
     
     #{ Fitting routines
@@ -2668,9 +2643,9 @@ class SED(object):
             scale = self.results[mtype]['grid']['scale'][-1]
             angdiam = 2*conversions.convert('sr','mas',scale)
             try:
-                teff2 = self.results[mtype]['CI']['teff-2']
-                logg2 = self.results[mtype]['CI']['logg-2']
-                radii = self.results[mtype]['CI']['rad-2']/self.results[mtype]['CI']['rad']
+                teff2 = self.results[mtype]['CI']['teff2']
+                logg2 = self.results[mtype]['CI']['logg2']
+                radii = self.results[mtype]['CI']['rad2']/self.results[mtype]['CI']['rad']
                 pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
                         loc,xycoords='axes fraction')
             except:
@@ -3236,7 +3211,7 @@ class SED(object):
 class BinarySED(SED):
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
-                          zrange=None,radiusrange=None,rvrange=None,vradrange=(0,0),
+                          zrange=None,radiusrange=None,rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),
                           masses=None,compare=True,df=5,CI_limit=None,
                           primary_hottest=False, gr_diff=None,set_model=True,**kwargs):
         """
@@ -3250,10 +3225,15 @@ class BinarySED(SED):
         """
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
+            
         #-- set defaults limits
-        ranges,rtype = self.generate_ranges(teffrange=teffrange,\
-                             loggrange=loggrange,ebvrange=ebvrange,\
-                             zrange=zrange,rvrange=rvrange,vradrange=vradrange)
+        ranges,rtype = self.generate_ranges(teffrange=teffrange[0],\
+                             loggrange=loggrange[0],ebvrange=ebvrange[0],\
+                             zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
+                             teff2range=teffrange[1],\
+                             logg2range=loggrange[1],ebv2range=ebvrange[1],\
+                             z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
+                             type='single')
         
         if masses is None:
             # if masses are not given it doesn`t make much sense to use a binary grid...
@@ -3264,20 +3244,21 @@ class BinarySED(SED):
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
-        #-- build the grid, run over the grid and calculate the CHI2
-        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid], teffrange=teffrange, 
-                   loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
-                   points=points,res=res, type=type,primary_hottest=primary_hottest, gr_diff=gr_diff) 
-        chisqs,scales,escales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
-                            self.master['e_cmeas'][include_grid],
-                            self.master['photband'][include_grid],
-                            teffs,loggs,ebvs,zs,radii,threads=threads,model_func=model.get_itable_multiple)
-        grid_results = np.rec.fromarrays([teffs[:,0],loggs[:,0],ebvs[:,0],zs[:,0],radii[:,0],
-                                         teffs[:,1],loggs[:,1],ebvs[:,1],zs[:,1],radii[:,1],
-                                         chisqs,scales,escales,lumis],
-                                         dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),('rad','f8'),
-                                         ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
-                                         ('chisq','f8'),('scale','f8'),('escale','f8'),('labs','f8')])
+        #-- build the grid, run over the grid and calculate the CHI2         
+        pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges) 
+                   
+        chisqs,scales,escales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid], model_func=model.get_itable_pix, **pars)
+        parnames = sorted(pars.keys())
+        
+        pardtypes = [(name,'f8') for name in parnames]+[('chisq','f8'),('scale','f8'),('escale','f8'),('labs','f8')]
+        pararrays = []
+        for name in parnames:
+            pararrays.append(pars[name])
+        
+        pararrays = pararrays+[chisqs,scales,escales,lumis]
+        grid_results = np.rec.fromarrays(pararrays,dtype=pardtypes)
         
         #-- exclude failures
         failures = np.isnan(grid_results['chisq'])
@@ -3328,10 +3309,9 @@ class BinarySED(SED):
         self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
         
         #-- remember the best model
-        if set_model: self.set_best_model(type=type)
+        if set_model: self.set_best_model(mtype='igrid_search',law='fitzpatrick2004')
     
-    
-    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',type='single'):
+    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
         """
         Get reddenend and unreddened model
         """
@@ -3347,31 +3327,27 @@ class BinarySED(SED):
             scale = self.results[mtype]['CI']['scale']
             
             #-- get (approximated) reddened and unreddened model
-            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
-                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
-                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
+                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
+                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
+                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                     law=law)
-            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                                      logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
+            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
+                                      logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
                                       ebv=(0,0),
-                                      radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+                                      radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                       law=law)
             #-- get synthetic photometry
-            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                              logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
-                              ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
-                              z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z-2']),
-                              radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
+                              logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
+                              ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
+                              z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z2']),
+                              radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                               photbands=self.master['photband'][keep])
             flux,flux_ur = flux*scale,flux_ur*scale
                 
             synflux[keep] = synflux_
         
-            #synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
-            #                          logg=self.results[mtype]['CI']['logg'],
-            #                          ebv=self.results[mtype]['CI']['ebv'],
-            #                          photbands=self.master['photband'])
             synflux[-self.master['color']] *= scale
             chi2 = (self.master['cmeas']-synflux)**2/self.master['e_cmeas']**2
             #-- calculate effective wavelengths of the photometric bands via the model

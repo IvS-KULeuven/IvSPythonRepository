@@ -255,8 +255,6 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
-            
-    print ranges, parameters
        
     #-- report on the received grid
     if not kwargs:
@@ -401,7 +399,7 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         if 'rv' in parameters: pars['rv'+comp] = pars['rv']
         
     #-- Check if we are dealing with a binary or not and set the radii accordingly
-    if 'masses' in kwargs:
+    if 'masses' in kwargs and kwargs['masses'] != None:
         #-- The radius of the stars is calculated based on logg and the provided masses
         masses = kwargs['masses']
         G = constants.GG_cgs
