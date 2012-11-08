@@ -474,7 +474,7 @@ fitting routine via:
 Note that this model is retrieved after fitting, and was not in any way used
 during the fitting. As a consequence, there could be small differences between
 synthetic photometry calculated from this returned model and the synthetic
-fluxes stored in C{mysed.results['igrid_search']['synflux'], which is the
+fluxes stored in C{mysed.results['igrid_search']['synflux']}, which is the
 synthetic photometry coming from the interpolation of the grid of pre-interpolated
 photometry. See the documentation of L{SED.get_model} for more information.
 
@@ -3265,7 +3265,7 @@ class BinarySED(SED):
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
         #-- build the grid, run over the grid and calculate the CHI2
-        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid], teffrange=teffrange, 
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
                    loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
                    points=points,res=res, type=type,primary_hottest=primary_hottest, gr_diff=gr_diff) 
         chisqs,scales,escales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
