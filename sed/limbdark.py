@@ -1036,5 +1036,5 @@ if __name__=="__main__":
         photbands+= ['2MASS.J','2MASS.H','2MASS.KS']
         #generate_grid(photbands,vrads=np.arange(-500,501,50),ebvs=np.arange(0,2.005,0.01),law='claret',outfile='claret.fits')
         #generate_grid(photbands,vrads=np.arange(-500,501,50),ebvs=np.arange(0,2.005,0.01),law='linear',outfile='linear.fits')
-        generate_grid(['MOST.V','IRAC.36','COROT.EXO'],vrads=[0],ebvs=[0.06],zs=[0,0]
+        generate_grid(['MOST.V','IRAC.36','COROT.EXO'],vrads=[0],ebvs=[0.06],zs=[0,0],
              law='claret',fitmethod='equidist_r_leastsq',outfile='HD261903.fits')
