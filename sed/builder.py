@@ -3210,10 +3210,10 @@ class SED(object):
 
 class BinarySED(SED):
     
-    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
-                          zrange=None,radiusrange=None,rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),
+    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
+                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
                           masses=None,compare=True,df=5,CI_limit=None,
-                          primary_hottest=False, gr_diff=None,set_model=True,**kwargs):
+                          primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -3230,15 +3230,13 @@ class BinarySED(SED):
         ranges,rtype = self.generate_ranges(teffrange=teffrange[0],\
                              loggrange=loggrange[0],ebvrange=ebvrange[0],\
                              zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
-                             teff2range=teffrange[1],\
+                             radrange=radrange[0],teff2range=teffrange[1],\
                              logg2range=loggrange[1],ebv2range=ebvrange[1],\
                              z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
-                             type='single')
+                             rad2range=radrange[1])
         
         if masses is None:
-            # if masses are not given it doesn`t make much sense to use a binary grid...
-            logger.warning('Using igridsearch with type binary, but no masses are provided for the components! Using masses=(1,1)')
-            masses = (1,1)
+            logger.warning('No masses are provided, the radii of the components will NOT be coupled to logg.')
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
@@ -3253,11 +3251,7 @@ class BinarySED(SED):
         parnames = sorted(pars.keys())
         
         pardtypes = [(name,'f8') for name in parnames]+[('chisq','f8'),('scale','f8'),('escale','f8'),('labs','f8')]
-        pararrays = []
-        for name in parnames:
-            pararrays.append(pars[name])
-        
-        pararrays = pararrays+[chisqs,scales,escales,lumis]
+        pararrays = [pars[name] for name in parnames]+[chisqs,scales,escales,lumis]
         grid_results = np.rec.fromarrays(pararrays,dtype=pardtypes)
         
         #-- exclude failures

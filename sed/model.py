@@ -666,6 +666,17 @@ def get_file(integrated=False,**kwargs):
         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        
+    elif grid=='tmaptest':
+        """ Grids exclusively for testing purposes"""
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity  
+        
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -1312,7 +1323,7 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
         kwargs_.update(grid)
         for par in parameters:
             kwargs_[par] = values[par+comp] if par+comp in values else values[par]
-            
+        
         f,L = get_itable_single_pix(photbands=photbands,wave_units=None,**kwargs_)
                                      
         fluxes.append(f)
