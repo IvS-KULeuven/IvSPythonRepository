@@ -731,8 +731,10 @@ def _blackbody_input(fctn):
         if x_unit_type=='frequency':
             x /= (2*np.pi)
             to_kwargs['freq'] = (x,'Hz')
-        else:
+        elif x_unit_type=='length':
             to_kwargs['wave'] = (x,conversions._conventions[curr_conv]['length'])
+        else:
+            raise NotImplementedError(flux_units,y_unit_type)
         #-- run function
         I = fctn((x,x_unit_type),T)        
         
@@ -758,6 +760,8 @@ def _blackbody_input(fctn):
 def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
+    
+    Warning: C{this function only works for flambda}. Don't start using fnu!!!
     
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
     multiplied by sqrt(2*pi) (set C{disc_integrated=True}).
