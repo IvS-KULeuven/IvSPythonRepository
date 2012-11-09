@@ -173,9 +173,19 @@ def interpolate(p, axis_values, pixelgrid):
     @rtype: array
     """
     # convert requested parameter combination into a coordinate
-    p_ = [np.searchsorted(av_,val) for av_, val in zip(axis_values,p)]
+    #p_ = [np.searchsorted(av_,val) for av_, val in zip(axis_values,p)]
+    # we force the values to be inside the grid, to avoid edge-effect rounding
+    # (e.g. 3.099999 is edge, while actually it is 3.1). For values below the
+    # lowest value, this is automatically done via searchsorted (it return 0)
+    # for values higher up, we need to force it
+    p_ = []
+    for av_,val in zip(axis_values,p):
+        indices = np.searchsorted(av_,val)
+        indices[indices==len(av_)] = len(av_)-1
+        p_.append(indices)
+    
     lowervals_stepsize = np.array([[av_[p__-1], av_[p__]-av_[p__-1]] \
-                         for av_, p__ in zip(axis_values,p_)])
+                            for av_, p__ in zip(axis_values,p_)])
     p_coord = (p-lowervals_stepsize[:,0])/lowervals_stepsize[:,1] + np.array(p_)-1
 
 
