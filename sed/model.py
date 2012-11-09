@@ -312,7 +312,9 @@ import functools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.io import ascii
+from ivs.io import fits
 from ivs.sigproc import interpol
+from ivs.catalogs import sesame
 import reddening
 import getpass
 import shutil
@@ -579,7 +581,7 @@ def get_file(integrated=False,**kwargs):
     elif grid in ['kurucz','kurucz2']:
         if not isinstance(z,str): z = '%.1f'%(z)
         if not isinstance(vturb,str): vturb = '%d'%(vturb)
-        if grid=='kurucz2':
+        if grid=='kurucz2' and integrated:
             postfix = '_lawfitzpatrick2004_Rv'
             if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
             postfix+= Rv
@@ -1586,30 +1588,31 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 
 #{ Calibration
 
-def list_calibrators():
+def list_calibrators(library='calspec'):
     """
     Print and return the list of calibrators
     
+    @parameter library: name of the library (calspec, ngsl, stelib)
+    @type library: str
     @return: list of calibrator names
     @rtype: list of str
     """
-    files = config.glob(caldir,'*.fits')
+    files = config.glob(os.path.join(caldir,library),'*.fits')
+    targname = dict(calspec='targetid',ngsl='targname',stelib='object')[library]
+    
     names = []
     for ff in files:
-        fits_file = pyfits.open(ff)
-        names.append(fits_file[0].header['targetid'])
-        star_info = sesame.search(names[-1])
-        spType = ('spType' in star_info) and star_info['spType'] or ''
-        logger.info('%-15s: (%8s) %s'%(names[-1],spType,fits_file[0].header['descrip']))
-        fits_file.close()
+        name = pyfits.getheader(ff)[targname]
+        #star_info = sesame.search(name)
+        #if not star_info:
+        #    continue
+        #else:
+        names.append(name)
     return names
     
 
 
-
-
-
-def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None):
+def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None,library='calspec'):
     """
     Retrieve a calibration SED
     
@@ -1632,21 +1635,28 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     @rtype: (ndarray,ndarray)
     """
     #-- collect calibration files
-    files = config.glob(caldir,'*.fits')
+    files = config.glob(os.path.join(caldir,library),'*.fits')
+    targname = dict(calspec='targetid',ngsl='targname',stelib='object')[library]
+    
     calfile = None
     for ff in files:
         #-- check if the name matches with the given one
         fits_file = pyfits.open(ff)
         header = fits_file[0].header
-        if name in ff or name in header['targetid']:
+        if name in ff or name in header[targname]:
             #-- maybe the target is correct, but the 'model version' is not
             if version is not None and version not in ff:
                 fits_file.close()
                 continue
             #-- extract the wavelengths and flux
             calfile = ff
-            wave = fits_file[1].data.field('wavelength')
-            flux = fits_file[1].data.field('flux')
+            if library in ['calspec','ngsl']:
+                wave = fits_file[1].data.field('wavelength')
+                flux = fits_file[1].data.field('flux')
+            elif library in ['stelib']:
+                wave,flux = fits.read_spectrum(ff)
+            else:
+                raise ValueError("Don't know what to do with files from library {}".format(library))
         fits_file.close()
     
     if calfile is None:
@@ -1663,8 +1673,27 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     return wave,flux
 
 
+@memoized
+def read_calibrator_info(library='ngsl'):
+    filename = config.get_datafile('sedtables/calibrators','{}.ident'.format(library))
+    names = []
+    fits_files = []
+    phot_files = []
+    with open(filename,'r') as ff:
+        for line in ff.readlines():
+            line = line.strip().split(',')
+            try:
+                fits_file = config.get_datafile('sedtables/calibrators',line[1])
+                phot_file = config.get_datafile('sedtables/calibrators',line[2])
+            #-- it can happen that there is no photfile for a target
+            except IOError:
+                continue
 
-
+            names.append(line[0])
+            fits_files.append(fits_file)
+            phot_files.append(phot_file)
+            
+    return names,fits_files,phot_files
 
 
 def calibrate():
@@ -1878,11 +1907,13 @@ def synthetic_flux(wave,flux,photbands,units=None):
             logger.debug('%10s: Interpolating model to integrate over response curve'%(photband))
             wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
             flux_ = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
+            flux_[np.isnan(flux_)] = 0.
         else:
             wave_ = wave[region]
             flux_ = flux[region]
         if not len(wave_):
             energys[i] = np.nan
+            logger.warning('Unable to integrate passband {}: inadequate wavelength range'.format(photband))
             continue
         #-- perhaps the entire response curve falls in between model points (happends with
         #   narrowband UV filters), or there's very few model points covering it
@@ -1986,186 +2017,6 @@ def luminosity(wave,flux,radius=1.):
 
 
 
-
-def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
-           units='Flambda',responses=None,update=False,add_spectrophotometry=False,**kwargs):
-    """
-    Integrate an entire SED grid over all passbands and save to a FITS file.
-    
-    The output file can be used to fit SEDs more efficiently, since integration
-    over the passbands has already been carried out.
-    
-    WARNING: this function can take a day to complete on a 8-core processor!
-    
-    Extra keywords can be used to specify the grid.
-    
-    @param threads: number of threads
-    @type threads; integer, 'max', 'half' or 'safe' 
-    @param ebvs: reddening parameters to include
-    @type ebvs: numpy array
-    @param law: interstellar reddening law to use
-    @type law: string (valid law name, see C{reddening.py})
-    @param Rv: Rv value for reddening law
-    @type Rv: float
-    @param units: choose to work in 'Flambda' or 'Fnu'
-    @type units: str, one of 'Flambda','Fnu'
-    @param responses: respons curves to add (if None, add all)
-    @type responses: list of strings
-    @param update: if true append to existing FITS file, otherwise overwrite
-    possible existing file.
-    @type update: boolean
-    """    
-    if ebvs is None:
-        ebvs = np.r_[0:4.01:0.01]
-        
-    #-- select number of threads
-    if threads=='max':
-        threads = cpu_count()
-    elif threads=='half':
-        threads = cpu_count()/2
-    elif threads=='safe':
-        threads = cpu_count()-1
-    threads = int(threads)
-    
-    if threads > len(ebvs):
-        threads = len(ebvs)
-    logger.info('Threads: %s'%(threads))
-    
-    #-- set the parameters for the SED grid
-    set_defaults(**kwargs)
-    #-- get the dimensions of the grid: both the grid points, but also
-    #   the wavelength range
-    teffs,loggs = get_grid_dimensions()
-    wave,flux = get_table(teff=teffs[0],logg=loggs[0])
-    #-- get the response functions covering the wavelength range of the models
-    #   also get the information on those filters
-    if add_spectrophotometry:
-        bands = filters.add_spectrophotometric_filters()
-    if responses is None:
-        responses = filters.list_response(wave_range=(wave[0],wave[-1]))
-    else:
-        responses_ = []
-        if not any(['BOXCAR' in i for i in responses]) and add_spectrophotometry:
-            responses.append('BOXCAR')
-        for resp in responses:
-            responses_ += filters.list_response(resp)
-        responses = responses_
-    filter_info = filters.get_info(responses)
-    responses = filter_info['photband']
-    responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
-
-    logger.info('Integrating {0} filters'.format(len(responses)))
-    
-    def do_ebv_process(ebvs,arr,responses):
-        logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
-        for ebv in ebvs:
-            flux_ = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',law=law,Rv=Rv)
-            #-- calculate synthetic fluxes
-            synflux = synthetic_flux(wave,flux_,responses,units=units)
-            arr.append([np.concatenate(([ebv],synflux))])
-        logger.debug("Finished EBV process (len(arr)=%d)"%(len(arr)))
-    
-    #-- do the calculations
-    c0 = time.time()
-    output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
-    start = 0
-    logger.info('Total number of tables: %i'%(len(teffs)))
-    exceptions = 0
-    exceptions_logs = []
-    for i,(teff,logg) in enumerate(zip(teffs,loggs)):
-        if i>0:
-            logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
-        
-        #-- get model SED and absolute luminosity
-        wave,flux = get_table(teff,logg)
-        Labs = luminosity(wave,flux)
-        
-        #-- threaded calculation over all E(B-V)s
-        processes = []
-        manager = Manager()
-        arr = manager.list([])
-        all_processes = []
-        for j in range(threads):
-            all_processes.append(Process(target=do_ebv_process,args=(ebvs[j::threads],arr,responses)))
-            all_processes[-1].start()
-        for p in all_processes:
-            p.join()
-        
-        try:
-            #-- collect the results and add them to 'output'
-            arr = np.vstack([row for row in arr])
-            sa = np.argsort(arr[:,0])
-            arr = arr[sa]
-            output[start:start+arr.shape[0],:3] = teff,logg,Labs
-            output[start:start+arr.shape[0],3:] = arr
-            start += arr.shape[0]
-        except:
-            logger.warning('Exception in calculating Teff=%f, logg=%f'%(teff,logg))
-            logger.debug('Exception: %s'%(sys.exc_info()[1]))
-            exceptions = exceptions + 1
-            exceptions_logs.append(sys.exc_info()[1])
-    
-    #-- make FITS columns
-    gridfile = get_file()
-    if os.path.isfile(os.path.basename(gridfile)):
-        outfile = os.path.basename(gridfile)
-    else:
-        outfile = os.path.join(os.path.dirname(gridfile),'i{0}'.format(os.path.basename(gridfile)))
-    outfile = 'i{0}'.format(os.path.basename(gridfile))
-    outfile = os.path.splitext(outfile)
-    outfile = outfile[0]+'_law{0}_Rv{1:.2f}'.format(law,Rv)+outfile[1]
-    logger.info('Precaution: making original grid backup at {0}.backup'.format(outfile))
-    if os.path.isfile(outfile):
-        shutil.copy(outfile,outfile+'.backup')
-    output = output.T
-    if not update or not os.path.isfile(outfile):
-        cols = [pyfits.Column(name='teff',format='E',array=output[0]),
-                pyfits.Column(name='logg',format='E',array=output[1]),
-                pyfits.Column(name='ebv',format='E',array=output[3]),
-                pyfits.Column(name='Labs',format='E',array=output[2])]
-        for i,photband in enumerate(responses):
-            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
-    #-- make FITS columns but copy the existing ones
-    else:
-        hdulist = pyfits.open(outfile,mode='update')
-        names = hdulist[1].columns.names
-        cols = [pyfits.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
-        for i,photband in enumerate(responses):
-            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
-        
-    #-- make FITS extension and write grid/reddening specifications to header
-    table = pyfits.new_table(pyfits.ColDefs(cols))
-    table.header.update('gridfile',os.path.basename(gridfile))
-    for key in sorted(defaults.keys()):
-        key_ = (len(key)>8) and 'HIERARCH '+key or key
-        table.header.update(key_,defaults[key])
-    for key in sorted(kwargs.keys()):
-        key_ = (len(key)>8) and 'HIERARCH '+key or key
-        table.header.update(key_,kwargs[key])
-    table.header.update('FLUXTYPE',units)
-    table.header.update('REDLAW',law,'interstellar reddening law')
-    table.header.update('RV',Rv,'interstellar reddening parameter')
-    
-    #-- make/update complete FITS file
-    if not update or not os.path.isfile(outfile):
-        if os.path.isfile(outfile):
-            os.remove(outfile)
-            logger.warning('Removed existing file: %s'%(outfile))
-        hdulist = pyfits.HDUList([])
-        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
-        hdulist.append(table)
-        hdulist.writeto(outfile)
-        logger.info("Written output to %s"%(outfile))
-    else:
-        hdulist[1] = table
-        hdulist.flush()
-        hdulist.close()
-        logger.info("Appended output to %s"%(outfile))
-    
-    logger.warning('Encountered %s exceptions!'%(exceptions))
-    for i in exceptions_logs:
-        print 'ERROR'
-        print i
 
 #}
 

@@ -89,8 +89,8 @@ Assessing the models
 Test if we can reject the null hypothesis that all coefficients are zero 
 with a 5% significance level:
 
-In [57]: myFit.FstatisticTest(0.05)
-Out[57]: True
+>>> myFit.FstatisticTest(0.05)
+True
 
 The "True" result means that H0 can indeed be rejected. Now we test if we can
 reject the null hypothesis that one particular coefficient is zero with a 5%
@@ -147,6 +147,7 @@ The package is aimed to be robust and efficient.
 import sys
 import copy
 from math import sqrt,log,pi
+from itertools import combinations
 import numpy as np
 import scipy as sp
 import scipy.stats as stats
@@ -2079,42 +2080,5 @@ class LinearFit(object):
         
         
         
-
-
-
-
-
-def combinations(items, n):
-
-    """
-    Returns all combinations of size n without replacement
-    
-    Example:
-    
-    >>> [c for c in combinations("love", 2)]
-    [['l', 'o'], ['l', 'v'], ['l', 'e'], ['o', 'v'], ['o', 'e'], ['v', 'e']]
-    
-    @param items: a sequence
-    @type items: list, tuple, string, ndarray
-    @param n: size of the combinations
-    @type n: integer
-    @return: generator yielding lists of combinations
-    @rtype: generator
-    
-    """
-
-    if n==0: 
-        yield []
-    else:
-        for i in xrange(len(items)):
-            for cc in combinations(items[i+1:],n-1):
-                yield [items[i]]+cc
-
-
-
-
-
-
-
 
 __all__ = [LinearModel, PolynomialModel, HarmonicModel, LinearFit]

@@ -858,6 +858,7 @@ def convert(_from,_to,*args,**kwargs):
     
     #-- conversion is easy if same units
     ret_value = 1.
+    
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
         if isinstance(fac_from,NonLinearConverter):
@@ -867,7 +868,7 @@ def convert(_from,_to,*args,**kwargs):
                 ret_value *= fac_from*start_value
             except TypeError:
                 raise TypeError('Cannot multiply value with a float; probably argument is a tuple (value,error), please expand with *(value,error)')
-            
+    
     #-- otherwise a little bit more complicated
     else:
         #-- first check where the unit differences are
@@ -943,7 +944,7 @@ def convert(_from,_to,*args,**kwargs):
     #-- logarithmicize
     if m_out is not None:
         ret_value = log10(ret_value)
-    
+        
     #-- unpack the uncertainties if: 
     #    1. the input was not given as an uncertainty
     #    2. the input was without uncertainties, but extra keywords had uncertainties
@@ -955,7 +956,7 @@ def convert(_from,_to,*args,**kwargs):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
-            ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])
+            ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])    
     
     return ret_value
 
@@ -1085,10 +1086,12 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     if to_return[2]!=frequency and 'cy' in frequency.lower():
         _switch['rad1_to_'] = per_cy
         _switch['rad-1_to_'] = times_cy
+        constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
     elif to_return[2]!=frequency and 'rad' in frequency.lower():
         _switch['rad1_to_'] = do_nothing
         _switch['rad-1_to_'] = do_nothing
+        constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
         
     if to_return[:2]==(units,values):
@@ -1174,7 +1177,11 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
 
-def reset(): set_convention()
+def reset():
+    """
+    Resets all values and conventions to the original values.
+    """
+    set_convention()
 
 def get_convention():
     """
@@ -2814,6 +2821,17 @@ class Color(NonLinearConverter):
         else:
             raise ValueError("No color calibrations for %s"%(photband))
 
+class DecibelSPL(NonLinearConverter):
+    """
+    Convert a Decibel to intensity W/m2 and back.
+    
+    This is only valid for Decibels as a sound Pressure level
+    """
+    def __call__(self,meas,inv=False):
+        F0 = 1e-12 # W/m2
+        if not inv: return 10**(-meas)*F0
+        else:       return log10(meas/F0)
+
 class JulianDay(NonLinearConverter):
     """
     Convert a calender date to Julian date and back
@@ -3002,7 +3020,7 @@ class Unit(object):
     >>> print a+b
     4002.0 m
     
-    B{Example 1:} You want to calculated the equatorial velocity of the Sun:
+    B{Example 1:} You want to calculate the equatorial velocity of the Sun:
     
     >>> distance = Unit(2*np.pi,'Rsol')
     >>> time = Unit(22.,'d')
@@ -3189,6 +3207,9 @@ class Unit(object):
         self.unit = compress(self.unit)
         return self
     
+    def as_tuple(self):
+        return self[0],self[1]
+    
     def get_value(self):
         """
         Returns (value,error) in case of uncertainties.
@@ -3214,27 +3235,39 @@ class Unit(object):
         """
         return self.convert('SI')[0]<other.convert('SI')[0]
     
+    def __radd__(self,other):
+        return self.__add__(other)
+    
     def __add__(self,other):
         """
         Add a Unit to a Unit.
+        
+        You can add a non-Unit to a Unit only if the Unit has an empty unit string.
         """
         unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
+        if not hasattr(other,'unit'):
+            unit2 = ''
+        else:
+            unit2 = breakdown(other.unit)[1]
         if unit1!=unit2:
             raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value+other_value,self.unit)
-        
+        elif unit2=='':
+            return self.value+other
+        else:
+            other_value = convert(other.unit,self.unit,other.value,unpack=False)
+            return Unit(self.value+other_value,self.unit)
+    
     def __sub__(self,other):
         """
         Subtract a Unit from a Unit.
         """
-        unit1 = breakdown(self.unit)[1]
-        unit2 = breakdown(other.unit)[1]
-        if unit1!=unit2:
-            raise ValueError('unequal units %s and %s'%(unit1,unit2))
-        other_value = convert(other.unit,self.unit,other.value,unpack=False)
-        return Unit(self.value-other_value,self.unit)
+        return self.__add__(-1*other)
+    
+    def __rsub__(self,other):
+        """
+        Subtract a Unit from a Unit.
+        """
+        return (self*-1).__radd__(other)
     
     def __mul__(self,other):
         """
@@ -3488,6 +3521,7 @@ _factors = collections.OrderedDict([
            ('Sv',    (1.,            'm2 s-2','dose equivalent','sievert')),
            ('kat',   (1.,            'mol s-1','catalytic activity','katal')),
            ('rem',   (1e-2,          'm2 s-2','dose equivalent','rem')),
+           ('dB',    (DecibelSPL,    'kg s-3','sound intensity','Decibel')),  # W/m2
 # VELOCITY
            ('cc',  (constants.cc, constants.cc_units,'m/s','Speed of light')),
 # ACCELERATION
@@ -3662,6 +3696,8 @@ _switch = {'s1_to_':       distance2velocity, # switch from wavelength to veloci
            'm-1_to_':      flam2lamflam, # switch from Flam to lamFlam
            #'rad2_to_':     per_sr,
            #'rad-2_to_':    times_sr,
+           'sr1_to_': per_sr,
+           'sr-1_to_': times_sr,
            'rad1_to_':     do_nothing,#per_cy,
            'rad-1_to_':    do_nothing,#times_cy,
            'rad-2sr1_to_': do_nothing,

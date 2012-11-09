@@ -6,6 +6,7 @@ import logging
 import sys
 import pyfits
 import itertools
+import re
 
 import numpy as np
 from numpy import inf
@@ -242,24 +243,33 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
         else:
             return chisq.sum(axis=0),scale,e_scale
 
-def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),
-                  ebvrange=(-inf,inf),zrange=(-inf,inf),rvrange=(-inf,inf),
-                  vradrange=(0,0),points=None,clear_memory=True,
-                  **kwargs):
+
+def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs):                     
     """
     Generate a grid of parameters.
     """
+    
+    #-- Find the parameters provided and store them separately.
+    ranges, parameters = {}, []
+    for key in kwargs.keys():
+        if re.search('range$', key):
+            ranges[key] = kwargs.pop(key)
+            parameters.append(re.sub('range$', '', key))
+            
+    print ranges, parameters
+       
+    #-- report on the received grid
+    if not kwargs:
+        logger.info('Received grid (%s)'%model.defaults2str())
+    else:
+        logger.info('Received custom grid (%s)'%kwargs)
+     
     #-- get the pixelgrid
     axis_values,gridpnts,flux,colnames = \
                  model._get_pix_grid(photbands,teffrange=(-inf,inf),
                  loggrange=(-inf,inf),ebvrange=(-inf,inf),
                  zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
                  include_Labs=True,clear_memory=clear_memory,**kwargs)
-    #-- report on the received grid
-    if not kwargs:
-        logger.info('Received grid (%s)'%model.defaults2str())
-    else:
-        logger.info('Received custom grid (%s)'%kwargs)
     
     #-- we first generate random teff-logg coordinates, since the grid is
     #   not exactly convex in these parameters. We assume it is for all the
@@ -269,6 +279,17 @@ def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf)
     teff_index = colnames.index('teff')
     logg_index = colnames.index('logg')
     teffs,loggs = gridpnts[:,teff_index],gridpnts[:,logg_index]
+    
+    #-- get ranges for teff and logg
+    teffrange = ranges.pop('teffrange', (-inf,inf))
+    loggrange = ranges.pop('loggrange', (-inf,inf))
+    correctTeff, correctLogg = False, False
+    if teffrange[0] == teffrange[1]:
+        teffrange = [teffrange[0], teffrange[0]+1]
+        correctTeff = True
+    if loggrange[0] == loggrange[1]:
+        loggrange = [loggrange[0], loggrange[0]+0.01]
+        correctLogg = True
     
     #-- we need to cut the grid to fit the teff and logg range: we replace the
     #   values for the upper and lower limit in the grid with those from the
@@ -290,30 +311,111 @@ def generate_grid_single_pix(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf)
     if logg_lower<loggrange[0]: loggs[loggs==logg_lower] = loggrange[0]
     if logg_upper>loggrange[1]: loggs[loggs==logg_upper] = loggrange[1]
     teffs = teffs[-cut]
-    loggs = loggs[-cut]
+    loggs = loggs[-cut]    
     
-    
-    
+    #-- Generate a grid in logg/teff keeping in mind that this is not a rectangular space
     gridpnts_ = numpy_ext.unique_arr(np.column_stack([teffs,loggs]))
+    
     #-- now we can generate random points:
     sample1 = numpy_ext.random_rectangular_grid(gridpnts_,points)
-    sample2 = np.random.uniform(low =[max(ax.min(),locals()[name+'range'][0]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
-                                high=[min(ax.max(),locals()[name+'range'][1]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+    if correctTeff: sample1[:,0] = np.array([teffrange[0] for i in sample1[:,0]])
+    if correctLogg: sample1[:,1] = np.array([loggrange[0] for i in sample1[:,1]])
+    
+    for name in colnames:
+        if not name+'range' in ranges: ranges[name+'range'] = (-inf, inf)    
+    sample2 = np.random.uniform(low =[max(ax.min(),ranges[name+'range'][0]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
+                                high=[min(ax.max(),ranges[name+'range'][1]) for ax,name in zip(axis_values,colnames) if not name in ['teff','logg']],\
                                 size=((len(sample1),len(colnames)-2)))
+    
     colnames.remove('teff')
     colnames.remove('logg')
     #-- return grid and column names
-    out_dict = {}
+    out_dict_ = {}
     for col,name in zip(np.column_stack([sample1,sample2]).T,['teff','logg']+colnames):
-        out_dict[name] = col
-        print name,col.min(),col.max()
+        out_dict_[name] = col
+    
+    #-- Check if all collumns that were provided are also returned
+    out_dict = {}
+    for name in parameters:
+        if name in out_dict_:
+            out_dict[name] = out_dict_[name]
+        else:
+            out_dict[name] = np.array([ranges[name+'range'][0] for i in out_dict['teff']])
+        
     return out_dict
     
     
+def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs): 
+    """
+    Generate a grid of parameters for 2 or more stars. Based on the generate_grid_single_pix
+    method. The radius of the components is based on the masses if given, otherwise on the 
+    radiusrange argument.
     
+    returns a dictionary with for each parameter that changes an array of values.
+    """
     
+    #-- Find all ranges and the number of components
+    radiusrange = kwargs.pop('radiusrange', None)
+    ranges, parameters, components = {}, set(), set()
+    for key in kwargs.keys():
+        if re.search('range$', key):
+            ranges[key] = kwargs.pop(key)
+            name, comp = re.findall('(.*?)(\d?)range$', key)[0]
+            parameters.add(name)
+            components.add(comp)
     
+    #-- If only one component we can directly return the grid
+    if len(components) == 1:
+        kwargs_ = kwargs
+        kwargs_.update(ranges)
+        return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
     
+    #-- For each component get the grid from grid_single_pix
+    pars, npoints = {}, +inf
+    for i, (comp, grid) in enumerate(zip(components, model.defaults_multiple)):
+        ranges_ = {}
+        for par in parameters:
+            ranges_[par+'range'] = ranges[par+comp+'range'] if par+comp+'range' in ranges else ranges[par+'range']
+        
+        kwargs_ = kwargs
+        kwargs_.update(ranges_)
+        kwargs_.update(grid)
+        grid_ = generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
+        
+        #-- prepare a permutation so different blocks are not clustered together
+        permutation = np.random.permutation(len(grid_['teff']))
+        
+        for key in grid_.keys():
+            npoints = min(npoints,len(grid_[key]))
+            pars[key+comp] = grid_[key][permutation]      
+        
+    #-- The generate_grid_single_pix method does not guarantee the number of points.
+    #   So force that all arrays have the same length.
+    for key in pars.keys():
+        pars[key] = pars[key][:npoints]
+    
+    #-- Check that ebv, z and rv is the same for each component
+    for comp in components:
+        if 'ebv' in parameters: pars['ebv'+comp] = pars['ebv']
+        if 'z' in parameters: pars['z'+comp] = pars['z']
+        if 'rv' in parameters: pars['rv'+comp] = pars['rv']
+        
+    #-- Check if we are dealing with a binary or not and set the radii accordingly
+    if 'masses' in kwargs:
+        #-- The radius of the stars is calculated based on logg and the provided masses
+        masses = kwargs['masses']
+        G = constants.GG_cgs
+        Msol = constants.Msol_cgs
+        Rsol = constants.Rsol_cgs
+        for i, comp in enumerate(components):
+            pars['rad'+comp] = np.sqrt(G*masses[i]*Msol/10**pars['logg'+comp])/Rsol
+    else:
+        #-- We have random different radii for the stars
+        if radiusrange == None: radiusrange = [(0.1,10) for i in components]
+        for i, comp in enumerate(components):
+            pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
+            
+    return pars 
 
 
 def generate_grid_single(photbands,teffrange=(-inf,inf),loggrange=(-inf,inf),

@@ -93,8 +93,6 @@ if __name__=="__main__":
         else:
             compiler = 'gfortran'
         if sys.argv[1]=='compile':
-            #-- catch all output from f2py
-            devnull = open(os.devnull,'wb')
             for name in to_install:
                 #-- break up fortran filepath in file and directory name
                 direc,pname = os.path.dirname(name),os.path.basename(name)
@@ -107,10 +105,7 @@ if __name__=="__main__":
                     if answer.lower()=='n':
                         continue
                     #-- call the compiling command
-                    p = subprocess.Popen(cmd,shell=True,stdout=devnull)
-                    #-- wait for the file to be written to the disk and move
-                    #   it to the right subdirectory
-                    time.sleep(3)
+                    p = subprocess.check_output(cmd,shell=True)#,stdout=devnull)
                     #-- check if compilation went fine
                     if os.path.isfile(pname+'.so'):
                         shutil.move(pname+'.so',name+'.so')
@@ -119,4 +114,3 @@ if __name__=="__main__":
                         logger.error('FAILED')
                 else:
                     logger.info('%s already compiled'%(pname.upper()))
-            devnull.close()

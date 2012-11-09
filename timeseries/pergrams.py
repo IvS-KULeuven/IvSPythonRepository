@@ -27,6 +27,10 @@ B{Warning}: the timeseries must be B{sorted in time} and B{cannot contain the
 same timepoint twice}. Otherwise, a 'ValueError, concatenation problem' can
 occur.
 
+If something goes wrong in the periodogram computation, be sure to run
+L{check_input} on your input data. This will print out some basic diagnostics
+to see if your data are valid.
+
 Section 2. Nyquist frequency
 ============================
 
@@ -504,16 +508,12 @@ def schwarzenberg_czerny(times, signal, f0=None, fn=None, df=None, nh=2, mode=1)
     # th *= 0.5 seemed necessary to fit the F-distribution
         
     return frequencies,th
-
-
-
-
-
     
-def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
+def DFTpower(time, signal, f0=None, fn=None, df=None, full_output=False):
 
     """
     Computes the modulus square of the fourier transform. 
+    
     Unit: square of the unit of signal. Time points need not be equidistant.
     The normalisation is such that a signal A*sin(2*pi*nu_0*t)
     gives power A^2 at nu=nu_0
@@ -522,16 +522,16 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
     @type time: ndarray
     @param signal: signal [0..Ntime-1]
     @type signal: ndarray
-    @param f0: the power is computed for the frequencies
-                      freq = arange(startfreq,stopfreq,stepfreq)
+    @param f0: the power is computed for the frequencies freq = arange(f0,fn,df)
     @type f0: float
-    @param fn: see startfreq
+    @param fn: see f0
     @type fn: float
-    @param df: see startfreq
+    @param df: see f0
     @type df: float
     @return: power spectrum of the signal
     @rtype: array 
     """
+
     freqs = np.arange(f0,fn,df)
     Ntime = len(time)
     Nfreq = int(np.ceil((fn-f0)/df))
@@ -540,9 +540,7 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
     B = np.exp(1j*2.*pi*df*time)
     ft = np.zeros(Nfreq, complex) 
     ft[0] = A.sum()
-    print Nfreq
     for k in range(1,Nfreq):
-        if k%10000==0: print k,Nfreq
         A *= B
         ft[k] = np.sum(A)
     
@@ -550,6 +548,36 @@ def DFTpower(time, signal, f0=None, fn=None, df=None,full_output=False):
         return freqs,ft**2*4.0/Ntime**2
     else:
         return freqs,(ft.real**2 + ft.imag**2) * 4.0 / Ntime**2    
+
+
+def DFTpower2(time, signal, freqs):
+
+    """
+    Computes the power spectrum of a signal using a discrete Fourier transform.
+
+    The main difference between DFTpower and DFTpower2, is that the latter allows for non-equidistant
+    frequencies for which the power spectrum will be computed.
+
+    @param time: time points, not necessarily equidistant
+    @type time: ndarray
+    @param signal: signal corresponding to the given time points
+    @type signal: ndarray
+    @param freqs: frequencies for which the power spectrum will be computed. Unit: inverse of 'time'.
+    @type freqs: ndarray
+    @return: power spectrum. Unit: square of unit of 'signal'
+    @rtype: ndarray
+    """
+    
+    powerSpectrum = np.zeros(len(freqs))
+
+    for i, freq in enumerate(freqs):
+        arg = 2.0 * np.pi * freq * time
+        powerSpectrum[i] = np.sum(signal * np.cos(arg))**2 + np.sum(signal * np.sin(arg))**2
+
+    powerSpectrum = powerSpectrum * 4.0 / len(time)**2
+    return(powerSpectrum)
+
+
     
 def DFTscargle(times, signal,f0,fn,df):
     
@@ -1372,6 +1400,15 @@ def check_input(times,signal,**kwargs):
     else:
         print(termtools.green("OK: time array is sorted"))
     print(termtools.green("No inconsistencies found or inconsistencies are fixed"))
+    
+    #-- check keyword arguments:
+    fnyq = getNyquist(times,nyq_stat=np.min)
+    print("Default Nyquist frequency: {}".format(fnyq))
+    if 'nyq_stat' in kwargs:
+        fnyq = getNyquist(times,nyq_stat=kwargs['nyq_stat'])
+        print("Nyquist value manually set to {}".format(fnyq))
+    if 'fn' in kwargs and kwargs['fn']>fnyq:
+        print(termtools.red("Final frequency 'fn' is larger than the Nyquist frequency"))
     return times,signal
 
 
