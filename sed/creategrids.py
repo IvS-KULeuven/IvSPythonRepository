@@ -11,6 +11,7 @@ Examples::
     $:> python creategrids.py calc_limbdark_grid 'responses=["OPEN.BOL","MOST.V","GENEVA"]' ebvs=[0.05] outfile=mygrid.fits
 
 """
+import sys
 import pyfits
 import logging
 import numpy as np
