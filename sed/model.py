@@ -284,6 +284,7 @@ And make a nice plot
 ]include figure]]ivs_sed_model_example.png]
 
 """
+import re
 import os
 import sys
 import glob
@@ -644,7 +645,17 @@ def get_file(integrated=False,**kwargs):
     elif grid=='heberb':
          basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
-         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        
+    elif grid=='tmaptest':
+        """ Grids exclusively for testing purposes"""
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity          
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -672,7 +683,8 @@ def get_file(integrated=False,**kwargs):
                 grid = config.glob(basedir,'i'+basename)
             else:
                 grid = config.glob(basedir,basename)   
-                
+    
+    #grid.sort()
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
@@ -1181,7 +1193,7 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
         return flux,Labs
 
 
-def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
+def get_itable_single_pix(teff=None,logg=None,ebv=None,z=None,rv=None,vrad=None,photbands=None,
                wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Super fast grid interpolator.
@@ -1219,6 +1231,13 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
     Thanks to Steven Bloemen for the core implementation of the interpolation
     algorithm.
     """
+    
+    #-- setup some standard values when they are not provided
+    ebv = np.array([0 for i in teff]) if z == None else z
+    z = np.array([0.for i in teff]) if z == None else z
+    rv = np.array([3.1 for i in teff]) if rv == None else rv
+    vrad = np.array([0 for i in teff]) if vrad == None else vrad
+    
     clear_memory = kwargs.pop('clear_memory',False)
     for var in ['teff','logg','ebv','z','rv','vrad']:
         if not hasattr(locals()[var],'__iter__'):
@@ -1237,6 +1256,10 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
     
     flux,Labs = pars[:-1],pars[-1]
     
+    #-- Take radius into account when provided
+    if 'rad' in kwargs:
+        flux,Labs = flux*kwargs['rad']**2, Labs*kwargs['rad']**2
+    
     #-- change flux and wavelength units if needed
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
@@ -1248,8 +1271,57 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
         return wave,flux,Labs
     else:
         return flux,Labs
-
     
+def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
+                grids=None, **kwargs):
+    """
+    Super fast grid interpolator for multiple tables, completely based on get_itable_pix.
+    """
+    
+    #-- Find the parameters provided and store them separately.
+    values, parameters, components = {}, set(), set()
+    for key in kwargs.keys():
+        if re.search("^(teff|logg|ebv|z|rv|vrad|rad)\d?$", key):
+            par, comp = re.findall("^(teff|logg|ebv|z|rv|vrad|rad)(\d?)$", key)[0]
+            values[key] = kwargs.pop(key)
+            parameters.add(par)
+            components.add(comp)
+    
+    #-- If there is only one component, we can directly return the result
+    if len(components) == 1:
+        kwargs.update(values)
+        return get_itable_single_pix(photbands=photbands,wave_units=wave_units,
+                                     flux_units=flux_units,**kwargs)
+    
+    #-- run over all fluxes and sum them, we do not need to multiply with the radius
+    #   as the radius is provided as an argument to itable_single_pix.
+    fluxes, Labs = [],[]                                
+    for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
+        trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
+        kwargs_ = kwargs
+        kwargs_.update(grid)
+        for par in parameters:
+            kwargs_[par] = values[par+comp] if par+comp in values else values[par]
+        
+        f,L = get_itable_single_pix(photbands=photbands,wave_units=None,**kwargs_)
+                                     
+        fluxes.append(f)
+        Labs.append(L)
+        
+    fluxes = np.sum(fluxes,axis=0)
+    Labs = np.sum(Labs,axis=0)
+    
+    if flux_units!='erg/s/cm2/AA/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+    
+    if wave_units is not None:
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave)
+        return wave,fluxes,Labs
+    
+    return fluxes,Labs   
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,

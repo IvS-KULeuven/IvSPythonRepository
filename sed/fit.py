@@ -255,8 +255,6 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
-            
-    print ranges, parameters
        
     #-- report on the received grid
     if not kwargs:
@@ -347,28 +345,41 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
     
 def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs): 
     """
-    Generate a grid of parameters for 2 or more stars. Based on the generate_grid_single_pix
+    Generate a grid of parameters for 1 or more stars. Based on the generate_grid_single_pix
     method. The radius of the components is based on the masses if given, otherwise on the 
-    radiusrange argument.
+    radrange arguments. If masses are given the radrange arguments are ignored, meaning that 
+    the returned radius can be outside those limits. If only 1 component is provided no radius
+    will be returned.
     
-    returns a dictionary with for each parameter that changes an array of values.
+    This function can handle multiple components in the same way as a single component. 
+    parameter ranges are provided as <parname><component>range=(...,...). fx: 
+    teffrange = (5000, 10000), loggrange = (3.5, 4.5), teff2range = (10000, 20000),
+    logg2range = (5.5, 6.0)
+    
+    For the first (or only) component both no component number (teffrange) or 1 as component
+    number (teff1range) can be used.
+    
+    Returns a dictionary with for each parameter that has a range provided, an array of values.
+    In the case of multiple components, the radius will be returned even is no radius ranges
+    are provided.
     """
     
     #-- Find all ranges and the number of components
-    radiusrange = kwargs.pop('radiusrange', None)
+    radiusrange = []
     ranges, parameters, components = {}, set(), set()
     for key in kwargs.keys():
-        if re.search('range$', key):
+        if re.search('range$', key) and not re.search('^rad\d?',key):
             ranges[key] = kwargs.pop(key)
             name, comp = re.findall('(.*?)(\d?)range$', key)[0]
             parameters.add(name)
             components.add(comp)
+        elif re.search('range$', key) and re.search('^rad\d?',key):
+            radiusrange.append(kwargs.pop(key))
     
     #-- If only one component we can directly return the grid
     if len(components) == 1:
-        kwargs_ = kwargs
-        kwargs_.update(ranges)
-        return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
+        kwargs.update(ranges)
+        return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs)
     
     #-- For each component get the grid from grid_single_pix
     pars, npoints = {}, +inf
@@ -377,10 +388,9 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         for par in parameters:
             ranges_[par+'range'] = ranges[par+comp+'range'] if par+comp+'range' in ranges else ranges[par+'range']
         
-        kwargs_ = kwargs
-        kwargs_.update(ranges_)
-        kwargs_.update(grid)
-        grid_ = generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
+        kwargs.update(ranges_)
+        kwargs.update(grid)
+        grid_ = generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs)
         
         #-- prepare a permutation so different blocks are not clustered together
         permutation = np.random.permutation(len(grid_['teff']))
@@ -401,17 +411,15 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         if 'rv' in parameters: pars['rv'+comp] = pars['rv']
         
     #-- Check if we are dealing with a binary or not and set the radii accordingly
-    if 'masses' in kwargs:
+    if 'masses' in kwargs and kwargs['masses'] != None:
         #-- The radius of the stars is calculated based on logg and the provided masses
         masses = kwargs['masses']
-        G = constants.GG_cgs
-        Msol = constants.Msol_cgs
-        Rsol = constants.Rsol_cgs
+        G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.sqrt(G*masses[i]*Msol/10**pars['logg'+comp])/Rsol
     else:
         #-- We have random different radii for the stars
-        if radiusrange == None: radiusrange = [(0.1,10) for i in components]
+        if radiusrange == []: radiusrange = [(0.1,10) for i in components]
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
             
