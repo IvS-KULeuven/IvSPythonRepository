@@ -847,8 +847,8 @@ def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         @keyword stat_func: function to evaluate the fit
         @type stat_func: function
         @return: (chi squares, scale factors, error on scale factors, absolute
-        luminosities (R=1Rsol), index
-        @rtype: 4/5X1d array
+        luminosities (R=1Rsol)
+        @rtype: array
         """
         model_func = kwargs.pop('model_func',model.get_itable_pix)
         stat_func = kwargs.pop('stat_func',stat_chi2)
