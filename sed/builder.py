@@ -1617,7 +1617,7 @@ class SED(object):
         
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
-            df = self.calculateDF(**ranges)
+            df,df_info = self.calculateDF(**ranges)
         elif df == None:
             logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
             df = 5
