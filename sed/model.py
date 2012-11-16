@@ -655,7 +655,19 @@ def get_file(integrated=False,**kwargs):
             postfix+= Rv
         else:
             postfix = ''
-        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity          
+        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity  
+    
+    elif grid=='kurucztest':
+        """ Grids exclusively for testing purposes"""
+        if not isinstance(z,str): z = '%.1f'%(z)
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'kurucz_SEDtest_z%s%s.fits'%(z,postfix) #only available for 1 metalicity 
+    
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -1237,7 +1249,7 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=None,rv=None,vrad=None,
     """
     
     #-- setup some standard values when they are not provided
-    ebv = np.array([0 for i in teff]) if z == None else z
+    ebv = np.array([0 for i in teff]) if ebv == None else ebv
     z = np.array([0.for i in teff]) if z == None else z
     rv = np.array([3.1 for i in teff]) if rv == None else rv
     vrad = np.array([0 for i in teff]) if vrad == None else vrad
