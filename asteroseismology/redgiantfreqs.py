@@ -80,18 +80,12 @@ from scipy import stats
 import logging
 
 #-- define formats
+
 format  = ''
 datefmt = ''
 
 logging.basicConfig(level=logging.INFO,format=format,datefmt=datefmt)
 logger = logging.getLogger('IVS.RG')
-
-
-
-def trunctatedData(inputData,startFreq,endFreq):
-    if len(scipy.shape(inputData)) == 1:    truncData = inputData[:, (inputData > startFreq) & (inputData < endFreq)]
-    if len(scipy.shape(inputData)) > 1:    truncData = inputData[:, (inputData[0] > startFreq) & (inputData[0] < endFreq)]
-    return truncData 
 
 
 

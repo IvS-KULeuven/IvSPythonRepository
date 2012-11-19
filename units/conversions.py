@@ -917,7 +917,7 @@ def convert(_from,_to,*args,**kwargs):
             #-- nonlinear conversions need a little tweak
             try:
                 key = '%s_to_%s'%(only_from,only_to)
-                logger.debug('Switching from %s to %s'%(only_from,only_to))
+                logger.debug('Switching from {} to {} via {:s}'.format(only_from,only_to,_switch[key].__name__))
                 if isinstance(fac_from,NonLinearConverter):
                     ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
                 #-- linear conversions are easy
@@ -1089,7 +1089,7 @@ def set_convention(units='SI',values='standard',frequency='rad'):
         constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
     elif to_return[2]!=frequency and 'rad' in frequency.lower():
-        _switch['rad1_to_'] = do_nothing
+        _switch['rad1_to_'] =  do_nothing
         _switch['rad-1_to_'] = do_nothing
         constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
@@ -1796,7 +1796,10 @@ def fnu2flambda(arg,**kwargs):
         flambda = freq**2/constants.cc * arg
     else:
         raise ValueError('reference wave/freq not given')
-    return flambda*(2*np.pi)
+    #if constants._current_frequency=='rad':
+    return flambda*2*np.pi
+    #else:
+    #    return flambda
 
 def flambda2fnu(arg,**kwargs):
     """
@@ -1828,7 +1831,10 @@ def flambda2fnu(arg,**kwargs):
         fnu = constants.cc/freq**2 * arg
     else:
         raise ValueError('reference wave/freq not given')
+    #if constants._current_frequency=='rad':
     return fnu/(2*np.pi)
+    #else:
+    #    return fnu
 
 def fnu2nufnu(arg,**kwargs):
     """

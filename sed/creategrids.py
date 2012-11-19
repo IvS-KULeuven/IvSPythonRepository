@@ -77,8 +77,8 @@ def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
                 responses_ += filters.list_response(resp)
         responses = responses_
     #-- get information on the responses
-    filter_info = filters.get_info(responses)
-    responses = filter_info['photband']
+    #filter_info = filters.get_info(responses)
+    #responses = filter_info['photband']
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
     
     logger.info('Selected response curves: {}'.format(', '.join(responses)))
@@ -91,18 +91,32 @@ def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
 
 def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
          ld_law='claret',fitmethod='equidist_r_leastsq',
-         outfile=None,**kwargs):
+         outfile=None,force=False,**kwargs):
     """
     Calculate a grid of limb-darkening coefficients.
     
     You  need to specify a list of response curves, and a grid of radial velocity
     (C{vrads}), metallicity (C{z}) and reddening (C{ebvs}) points. You can
-    choose which C{law} to fit adn with which C{fitmethod}. Extra kwargs specify
+    choose which C{law} to fit and with which C{fitmethod}. Extra kwargs specify
     the properties of the atmosphere grid to be used.
     
     If you give a gridfile that already exists, the current file is simply
     updated with the new passbands, i.e. all overlapping response curves will not
-    be recomputed.
+    be recomputed. Unless you set C{force=True}, in which case previous calculations
+    will be overwritten. You'd probably only want to update or overwrite existing
+    files if you use the same C{vrads}, C{ebvs}, C{zs} etc...
+    
+    The generated FITS file has the following structure:
+        
+        1. The primary HDU is empty. The primary header contains only the fit
+           routine (FIT), LD law (LAW) and used grid (GRID)
+        2. Each table extension has the name of the photometric passband (e.g.
+        "GENEVA.V". Each record in the table extension has the following columns:
+        Teff, logg, ebv, vrad, z (the grid points) and a1, a2, a3, a4 (the limb
+        darkening coefficients) and Imu1 (the intensity in the center of the disk)
+        and SRS, dint (fit evaluation parameters, see L{ivs.sed.limbdark}).
+        Although the system and filter can be derived from the extension name, 
+        there are also separate entries in the header for "SYSTEM" and "FILTER".
     
     Example usage:
     
@@ -133,7 +147,7 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
     
     #-- cycle through all the bands and compute the limb darkening coefficients
     for i,photband in enumerate(photbands):
-        if photband in existing_bands:
+        if photband in existing_bands and not force:
             logger.info('BAND {} already exists: skipping'.format(photband))
             continue
         logger.info('Calculating photband {} ({}/{})'.format(photband,i+1,len(photbands)))
@@ -156,7 +170,11 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
         newtable.header.update('EXTNAME', photband, "SYSTEM.FILTER")
         newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
         newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
-        hdulist.append(newtable)
+        if photband in existing_bands and force:
+            hdulist[hdulist.index_of(photband)] = newtable
+            logger.info("Forced overwrite of {}".format(photband))
+        else:
+            hdulist.append(newtable)
     
     #-- clean up
     if os.path.isfile(outfile):

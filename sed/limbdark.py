@@ -805,9 +805,10 @@ def fit_law_to_grid(photband,vrads=[0],ebvs=[0],zs=[0],
     grid_pars = []
     grid_coeffs = []
     Imu1s = []
+    logger.info('Fitting photband {}'.format(photband))
     for teff_, logg_ in zip(teffs, loggs):
         for ebv_,vrad_,z_ in itertools.product(ebvs,vrads,zs):
-            print teff_, logg_,ebv_,vrad_,z_
+            logger.info('teff={}, logg={}, ebv={}, vrad={}, z={}'.format(teff_, logg_,ebv_,vrad_,z_))
             mu, Imu = get_limbdarkening(teff=teff_, logg=logg_, ebv=ebv_,vrad=vrad_,z=z_,photbands=[photband],**kwargs)
             Imu1 = Imu.max()
             Imu = Imu[:,0]/Imu1

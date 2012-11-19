@@ -474,7 +474,7 @@ fitting routine via:
 Note that this model is retrieved after fitting, and was not in any way used
 during the fitting. As a consequence, there could be small differences between
 synthetic photometry calculated from this returned model and the synthetic
-fluxes stored in C{mysed.results['igrid_search']['synflux'], which is the
+fluxes stored in C{mysed.results['igrid_search']['synflux']}, which is the
 synthetic photometry coming from the interpolation of the grid of pre-interpolated
 photometry. See the documentation of L{SED.get_model} for more information.
 
@@ -1620,7 +1620,7 @@ class SED(object):
         
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
-            df = self.calculateDF(**ranges)[0]
+            df,df_info = self.calculateDF(**ranges)
         elif df == None:
             logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
             df = 5
@@ -3354,6 +3354,7 @@ class BinarySED(SED):
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
+
         #-- build the grid, run over the grid and calculate the CHI2         
         pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges) 
                    
