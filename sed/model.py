@@ -371,7 +371,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch(z=None):
+def copy2scratch(**kwargs):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -383,8 +383,8 @@ def copy2scratch(z=None):
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
     
-    It is possible to give z='*' as an option; when you do that, the grids
-    with all z values are copied. Don't forget to add that option to clean_scratch too!
+    It is possible to give z='*' and Rv='*' as an option; when you do that, the grids
+    with all z, Rv values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -403,9 +403,12 @@ def copy2scratch(z=None):
         default['use_scratch'] = False
         #-- set the z with the starred version '*' if asked for, but remember
         #   the original value to reset it after the loop is done.
-        if z is not None:
-            previous_z = default['z']
-            default['z']
+        originalDefaults = {}
+        for key in kwargs:
+            if key in default:
+                originalDefaults[key] = default[key]
+                default[key] = kwargs[key]
+                logger.debug('Using provided value for {0:s}={1:s} when copying to scratch'.format(key,str(kwargs[key])))
         #grid
         fname = get_file(integrated=False,**default)
         #-- we could have received a list (multiple files) or a string (single file)
@@ -428,10 +431,11 @@ def copy2scratch(z=None):
             else:
                 logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
-        if z is not None:
-            default['z'] = previous_z
+        for key in kwargs:
+            if key in default:
+                default[key] = originalDefaults[key]
 
-def clean_scratch(z=None):
+def clean_scratch(**kwargs):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -445,9 +449,16 @@ def clean_scratch(z=None):
     
     for default in defaults_:
         if default['use_scratch']:
-            if z is not None:
-                previous_z = default['z']
-                default['z']
+            originalDefaults = {}
+            for key in kwargs:
+                if key in default:
+                    originalDefaults[key] = default[key]
+                    default[key] = kwargs[key]
+                    logger.debug('Using provided value for {0:s}={1:s} when deleting from scratch'.format(key,str(kwargs[key])))
+            
+            #if z is not None:
+                #previous_z = default['z']
+                #default['z']
             fname = get_file(integrated=False,**default)
             if isinstance(fname,str):
                 fname = [fname]
@@ -464,8 +475,11 @@ def clean_scratch(z=None):
                     logger.info('Removed file: %s'%(ifname))
                     os.remove(ifname)    
             default['use_scratch'] = False
-            if z is not None:
-                default['z'] = previous_z
+            for key in kwargs:
+                if key in default:
+                    default[key] = originalDefaults[key]
+            #if z is not None:
+                #default['z'] = previous_z
 
 def defaults2str():
     """
@@ -641,9 +655,15 @@ def get_file(integrated=False,**kwargs):
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
-        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_lowres%s.fits'%(postfix) #only available for 1 metalicity
     elif grid=='heberb':
-         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
         
@@ -743,10 +763,8 @@ def _blackbody_input(fctn):
         if x_unit_type=='frequency':
             x /= (2*np.pi)
             to_kwargs['freq'] = (x,'Hz')
-        elif x_unit_type=='length':
-            to_kwargs['wave'] = (x,conversions._conventions[curr_conv]['length'])
         else:
-            raise NotImplementedError(flux_units,y_unit_type)
+            to_kwargs['wave'] = (x,conversions._conventions[curr_conv]['length'])
         #-- run function
         I = fctn((x,x_unit_type),T)        
         
@@ -772,8 +790,6 @@ def _blackbody_input(fctn):
 def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
-    
-    Warning: C{this function only works for flambda}. Don't start using fnu!!!
     
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
     multiplied by sqrt(2*pi) (set C{disc_integrated=True}).
@@ -1995,13 +2011,11 @@ def synthetic_flux(wave,flux,photbands,units=None):
             logger.debug('%10s: Interpolating model to integrate over response curve'%(photband))
             wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
             flux_ = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
-            flux_[np.isnan(flux_)] = 0.
         else:
             wave_ = wave[region]
             flux_ = flux[region]
         if not len(wave_):
             energys[i] = np.nan
-            logger.warning('Unable to integrate passband {}: inadequate wavelength range'.format(photband))
             continue
         #-- perhaps the entire response curve falls in between model points (happends with
         #   narrowband UV filters), or there's very few model points covering it
@@ -2101,11 +2115,6 @@ def luminosity(wave,flux,radius=1.):
     Labs = Lint*4*np.pi/constants.Lsol_cgs*(radius*constants.Rsol_cgs)**2
     return Labs
 
-
-
-
-
-
 #}
 
 @memoized
@@ -2191,6 +2200,10 @@ def _get_pix_grid(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
+        
+    #-- remove Rv and z from the grid keywords
+    trash = kwargs.pop('Rv', 0.0)
+    trash = kwargs.pop('z', 0.0)
     gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
