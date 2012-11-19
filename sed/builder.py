@@ -1589,6 +1589,8 @@ class SED(object):
         grid_results = grid_results[sa]
         
         self.results[mtype]['grid'] = grid_results
+        
+        logger.info('Total of %s grid points, best chisq=%s'%(len(grid_results[selfact]), grid_results[selfact][-1]))
     
     def calculateDF(self, **ranges):
         """ Calculates the degrees of freedom from the given ranges"""
@@ -1601,6 +1603,7 @@ class SED(object):
                     df_info.append('ebv')
                 else:
                     continue
+            
             elif not np.allclose(ranges[range_name][0],ranges[range_name][1]):
                 df += 1
                 df_info.append(range_name[0:-5])
@@ -1611,13 +1614,13 @@ class SED(object):
     
     def calculate_statistics(self, df=None, ranges=None, mtype='igrid_search', selfact='chisq'):
         """
-        Calculates the Chi2 and reduced Chi2 based on #observations and degrees of
+        Calculates the Chi2 and reduced Chi2 based on nr of observations and degrees of
         freedom. If df is not provided, tries to calculate df from the fitting ranges.
         """
         
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
-            df = self.calculateDF(**ranges)
+            df = self.calculateDF(**ranges)[0]
         elif df == None:
             logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
             df = 5
@@ -1654,8 +1657,6 @@ class SED(object):
         """
         #-- get some info
         grid_results = self.results[mtype]['grid']
-        if not 'CI' in self.results[mtype]:
-            self.results['igrid_search']['CI'] = {}
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
         #-- the chi2 grid is ordered: where is the value closest to the CI limit?
@@ -1663,13 +1664,30 @@ class SED(object):
         if sum(region)==0:
             raise ValueError("No models in the sample have a chi2_{} below the limit {}. Try increasing the number of models, increasing the CI_limit or choose different photometry.".format(chi2_type,CI_limit))
         #-- now compute the confidence intervals
+        cilow, cihigh, value = [],[],[]
         for name in grid_results.dtype.names:
-            self.results[mtype]['CI'][name+'_l'] = grid_results[name][region].min()
-            self.results[mtype]['CI'][name] = grid_results[name][-1]
-            self.results[mtype]['CI'][name+'_u'] = grid_results[name][region].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results[mtype]['CI'][name+'_l'],
-                                                           self.results[mtype]['CI'][name],
-                                                           self.results[mtype]['CI'][name+'_u']))
+            cilow.append(grid_results[name][region].min())
+            value.append(grid_results[name][-1])
+            cihigh.append(grid_results[name][region].max())
+        
+        return dict(name=grid_results.dtype.names, value=value, cilow=cilow, cihigh=cihigh)
+    
+    def store_confidence_intervals(self, mtype='igrid_search', name=None, value=None, cilow=None, \
+                                   cihigh=None, **kwargs):
+        """
+        Saves the provided confidence intervals in the result dictionary of self.
+        """
+        if not 'CI' in self.results[mtype]:
+            self.results[mtype]['CI'] = {}
+        for name, val, cil, cih in zip(name, value, cilow, cihigh):
+            self.results[mtype]['CI'][name+'_l'] = cil
+            self.results[mtype]['CI'][name] = val
+            self.results[mtype]['CI'][name+'_u'] = cih
+            try:
+                logger.info('CI %s: %g <= %g <= %g'%(name,cil,val,cih))
+            except Exception:
+                logger.info('CI %s: nan <= %g <= nan'%(name,val))
+    
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=(0,0),rvrange=(3.1,3.1),vradrange=(0,0),
@@ -1709,22 +1727,50 @@ class SED(object):
         self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
         
         #-- compute the confidence intervals
-        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        self.store_confidence_intervals(mtype='igrid_search', **ci)
         
         #-- remember the best model
         if set_model: self.set_best_model()
     
-    def iminimize(self, teff=None, logg=None, ebv=None, z=None, radius=None, teffrange=None,
-                     loggrange=None, ebvrange=None, zrange=None, radiusrange=None, points=1, 
+    def generate_fit_param(self, start_from='igrid_search', **pars):
+        """ 
+        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        result = dict()
+        for key in pars.keys():
+            if re.search("range$", key):
+                result[key[0:-5]+"_min"] =  pars[key][0]
+                result[key[0:-5]+"_max"] =  pars[key][1]
+                #-- if min == max: fix the parameter and force value = min
+                if np.allclose([pars[key][0]], [pars[key][1]]):
+                    result[key[0:-5]+"_vary"] = False
+                    result[key[0:-5]+"_value"] = pars[key][0]
+                else:
+                    result[key[0:-5]+"_vary"] = True
+            else:
+                #-- Store the startvalue. If None, look in start_from for a new startvalue.
+                if pars[key] != None and not key+"_value" in result:
+                    result[key+"_value"] = pars[key]
+                elif pars[key] == None and not key+"_value" in result:
+                    result[key+"_value"] = self.results[start_from]['CI'][key]
+                    
+        return result    
+    
+    def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
+                     loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None, points=1, distance=None,
                      start_from='igrid_search',df=None,CI_limit=None, set_model=True, **kwargs):
         """ 
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
         """
         
-        #-- set defaults limits
-        ranges = self.generate_ranges(teffrange=teffrange,\
-                             loggrange=loggrange,ebvrange=ebvrange,\
-                             zrange=zrange,rvrange=rvrange,vradrange=vradrange)
+        #-- set defaults limits and starting values
+        ranges = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
+                             ebvrange=ebvrange,zrange=zrange,rvrange=rvrange,\
+                             vradrange=vradrange, start_from=start_from)
+        pars = self.generate_fit_param(teff=teff, logg=logg, ebv=ebv, z=z, \
+                            rv=rv, vrad=vrad, start_from=start_from, **ranges)
+        fitkws = dict(distance=distance) if distance != None else dict()
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
@@ -1732,14 +1778,25 @@ class SED(object):
         (photometry2str(self.master[include_grid])))
         
         #-- pass all ranges and starting values to the fitter
-        
-        
+        param, grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             fitkws=fitkws, CI_limit=CI_limit, points=points,**pars)
+                             
+        logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
+        fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
+        self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
+        
+        #-- Do the statistics
+        self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
+        
+        #-- Store the confidence intervals
+        self.store_confidence_intervals(mtype='iminimize', **param)
         
         #-- remember the best model
-        if set_model: self.set_best_model()
+        if set_model: self.set_best_model(mtype='iminimize')
         
-        raise NotImplementedError
         
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='imc',\
                  distribution='uniform',points=None,fitmethod='fmin',disturb=True):
@@ -3266,7 +3323,7 @@ class SED(object):
 class BinarySED(SED):
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
-                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
+                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=[(None,None),(None,None)],
                           masses=None,compare=True,df=None,CI_limit=None,
                           primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
         """
@@ -3312,10 +3369,81 @@ class BinarySED(SED):
         self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
         
         #-- compute the confidence intervals
-        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        self.store_confidence_intervals(mtype='igrid_search', **ci)
         
         #-- remember the best model
         if set_model: self.set_best_model()
+    
+    def generate_fit_param(self, start_from='igrid_search', **pars):
+        """ 
+        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        masses = pars.pop('masses', None)
+        result = super(BinarySED, self).generate_fit_param(start_from=start_from, **pars)
+        
+        result['ebv2_expr'] = 'ebv'
+        result['rv2_expr'] = 'rv'
+        
+        if masses != None:
+            G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
+            result['rad_value'] = np.sqrt(G*masses[0]*Msol/10**result['logg_value'])
+            result['rad2_value'] = np.sqrt(G*masses[1]*Msol/10**result['logg2_value'])
+            result['rad_expr'] = 'sqrt(%0.5f/10**logg) * 165.63560394542122'%(masses[0])
+            result['rad2_expr'] = 'sqrt(%0.5f/10**logg2) * 165.63560394542122'%(masses[1])
+            result['rad_min'], result['rad_max'] = None, None
+            result['rad2_min'], result['rad2_max'] = None, None
+            result['rad_vary'], result['rad2_vary'] = False, False
+        
+        return result
+    
+    def iminimize(self, teff=(None,None), logg=(None,None), ebv=(None,None), z=(None,None),
+                  rv=(None,None), vrad=(None,None), teffrange=(None,None), loggrange=(None,None),
+                  ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
+                  vradrange=(None,None), radrange=(None,None), masses=(None,None), compare=True,
+                  df=None, distance=None, start_from='igrid_search', CI_limit=None, 
+                  set_model=True, **kwargs):
+        """ Binary minimizer """ 
+        
+        ranges = self.generate_ranges(teffrange=teffrange[0],\
+                        loggrange=loggrange[0],ebvrange=ebvrange[0],\
+                        zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
+                        radrange=radrange[0],teff2range=teffrange[1],\
+                        logg2range=loggrange[1],ebv2range=ebvrange[1],\
+                        z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
+                        rad2range=radrange[1])
+        pars = self.generate_fit_param(teff=teff[0],logg=logg[0],ebv=ebv[0],z=z[0],\
+                            rv=rv[0], vrad=vrad[0],teff2=teff[1],logg2=logg[1],\
+                            ebv2=ebv[1],z2=z[1],rv2=rv[1],vrad2=vrad[1], \
+                            start_from=start_from, masses=masses, **ranges)
+        fitkws = dict(distance=distance) if distance != None else dict()
+        
+        #-- grid search on all include data: extract the best CHI2
+        include_grid = self.master['include']
+        logger.info('The following measurements are included in the fitting process:\n%s'% \
+        (photometry2str(self.master[include_grid])))
+        
+        #-- pass all ranges and starting values to the fitter
+        param, grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             fitkws=fitkws, CI_limit=CI_limit, points=None,**pars)
+        
+        logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
+        #-- handle the results
+        fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
+        self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
+        
+        #-- Do the statistics
+        self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
+        
+        #-- Store the confidence intervals
+        self.store_confidence_intervals(mtype='iminimize', **param)
+        
+        #-- remember the best model
+        if set_model: self.set_best_model(mtype='iminimize')
+        
+        
         
     
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
