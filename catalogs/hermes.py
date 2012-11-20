@@ -311,7 +311,11 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     #   not calculated, ra and dec are not in the header).
     for obs in data:
         if info:
-            jd  = _timestamp2jd(obs['date-avg'])
+            try:
+                jd  = _timestamp2jd(obs['date-avg'])
+            except ValueError:
+                logger.info('Header probably corrupted for unseq {}: no info on time or barycentric correction'.format(obs['unseq']))
+                jd = np.nan
             # the previous line is equivalent to:
             # day = dateutil.parser.parse(header['DATE-AVG'])
             # BJD = ephem.julian_date(day)
