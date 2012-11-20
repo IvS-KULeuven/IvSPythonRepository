@@ -471,6 +471,7 @@ class XIntegrationTestCase(SEDTestCase):
             grid1 = dict(grid='kurucztest')
             grid2 = dict(grid='tmaptest')
             model.set_defaults_multiple(grid1,grid2)
+            model.clean_scratch(z='*', Rv='*')
             model.copy2scratch(z='*', Rv='*')
             
             G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
@@ -504,7 +505,7 @@ class XIntegrationTestCase(SEDTestCase):
         np.random.seed(111)
         sed.igrid_search(points=100000,teffrange=(5000, 7000),loggrange=(3.5, 4.5), 
                          ebvrange=(0.005, 0.015),zrange=(-0.5,0.0),rvrange=(2.1,3.1),
-                         vradrange=(0,0),df=None,CI_limit=0.95,set_model=False)
+                         vradrange=(0,0),df=None,CI_limit=0.95,set_model=True)
         
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['teff'], 6000, delta=50)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['logg'], 3.98, delta=0.1)
@@ -521,6 +522,14 @@ class XIntegrationTestCase(SEDTestCase):
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['ebv_u'], 0.015, delta=0.02)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['rv_u'], 3.1, delta=0.1)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['z_u'], -0.05, delta=0.1)
+        
+        # check that the best model is stored
+        self.assertTrue('model' in sed.results['igrid_search'])
+        self.assertTrue('synflux' in sed.results['igrid_search'])
+        self.assertTrue('chi2' in sed.results['igrid_search'])
+        self.assertEqual(len(sed.results['igrid_search']['model']), 3, msg='stored model has wrong number of collumns (should be 3)')
+        self.assertEqual(len(sed.results['igrid_search']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
+        
         
     @unittest.skipIf(noIntegration, "Integration tests are skipped.")    
     def testiGrid_searchSingleHot(self):
@@ -539,7 +548,7 @@ class XIntegrationTestCase(SEDTestCase):
         np.random.seed(111)
         sed.igrid_search(points=100000,teffrange=(25000, 35000),loggrange=(5.0, 6.0), 
                          ebvrange=(0.005, 0.015),zrange=(0,0),rvrange=(3.1,3.1),
-                         vradrange=(0,0),df=None,CI_limit=0.95,set_model=False)
+                         vradrange=(0,0),df=None,CI_limit=0.95,set_model=True)
         
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['teff'], 30200, delta=250)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['logg'], 5.67, delta=0.1)
@@ -550,6 +559,13 @@ class XIntegrationTestCase(SEDTestCase):
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['teff_u'], 31623, delta=250)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['logg_u'], 6.0, delta=0.1)
         self.assertAlmostEqual(sed.results['igrid_search']['CI']['ebv_u'], 0.015, delta=0.02)
+        
+        # check that the best model is stored
+        self.assertTrue('model' in sed.results['igrid_search'])
+        self.assertTrue('synflux' in sed.results['igrid_search'])
+        self.assertTrue('chi2' in sed.results['igrid_search'])
+        self.assertEqual(len(sed.results['igrid_search']['model']), 3, msg='stored model has wrong number of collumns (should be 3)')
+        self.assertEqual(len(sed.results['igrid_search']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
         
     @unittest.skipIf(noIntegration, "Integration tests are skipped.")    
     def testiGrid_searchBinary(self):
@@ -619,16 +635,33 @@ class XIntegrationTestCase(SEDTestCase):
         sed.iminimize(teff=6000, logg=4.0, ebv=0.007, z=-0.3, rv=2.4, vrad=0,
                       teffrange=(5000, 7000),loggrange=(3.5, 4.5),zrange=(-0.5,0.0),
                       ebvrange=(0.005, 0.015), rvrange=(2.1,3.1),vradrange=(0,0),
-                      points=None,df=None,CI_limit=0.60,set_model=False)
-        
+                      points=None,df=None,CI_limit=0.60,calc_ci=True, set_model=True)
         
         self.assertAlmostEqual(sed.results['iminimize']['CI']['teff'], 6036, delta=50)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['logg'], 4.19, delta=0.1)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['ebv'], 0.015, delta=0.02)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['z'], -0.21, delta=0.1)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['rv'], 2.1, delta=0.3)
-        #self.assertAlmostEqual(sed.results['iminimize']['grid']['nfev'][0], 76, delta=5)
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['scale'], 1, delta=0.5)
+        
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['teff_l'], 6025, delta=50)
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['teff_u'], 6036, delta=50)
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['scale_l'], 1, delta=0.5)
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['scale_u'], 1, delta=0.5)
+        
+        self.assertEqual(sed.results['iminimize']['grid']['teffstart'][0], 6000)
+        self.assertEqual(sed.results['iminimize']['grid']['loggstart'][0], 4.0)
+        self.assertEqual(sed.results['iminimize']['grid']['ebvstart'][0], 0.007)
+        self.assertEqual(sed.results['iminimize']['grid']['zstart'][0], -0.3)
+        self.assertEqual(sed.results['iminimize']['grid']['rvstart'][0], 2.4)
         self.assertAlmostEqual(sed.results['iminimize']['grid']['chisq'][0], 3.9, delta=1)
+        
+        self.assertTrue('model' in sed.results['iminimize'])
+        self.assertTrue('synflux' in sed.results['iminimize'])
+        self.assertTrue('chi2' in sed.results['iminimize'])
+        self.assertEqual(len(sed.results['iminimize']['model']), 3, msg='stored model has wrong number of collumns (should be 3)')
+        self.assertEqual(len(sed.results['iminimize']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
+        
     
     @unittest.skipIf(noIntegration, "Integration tests are skipped.")
     def testiMinimizeSingleHot(self):
@@ -653,8 +686,8 @@ class XIntegrationTestCase(SEDTestCase):
         self.assertAlmostEqual(sed.results['iminimize']['CI']['teff'], 30250, delta=100)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['logg'], 5.66, delta=0.1)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['ebv'], 0.008, delta=0.02)
-        #self.assertAlmostEqual(sed.results['iminimize']['grid']['nfev'][0], 33, delta=4)
         self.assertAlmostEqual(sed.results['iminimize']['grid']['chisq'][0], 3.8, delta=1)
+        
 
     @unittest.skipIf(noIntegration, "Integration tests are skipped.")
     def testiMinimizeBinary(self):
@@ -673,14 +706,20 @@ class XIntegrationTestCase(SEDTestCase):
                     vrad=(0,0),teffrange=[(5000,7000),(25000, 35000)],loggrange=[(3.5,4.5), 
                     (5.0, 6.0)], ebvrange=[(0.01,0.01),(0.01, 0.01)] ,zrange=[(0,0),(0,0)],
                     rvrange=[(3.1,3.1),(3.1,3.1)], vradrange=[(0,0),(0,0)], df=2,
-                    CI_limit=None, masses = self.masses, set_model=False)
+                    CI_limit=None, masses = self.masses,calc_ci=False, set_model=True)
         
-        #self.assertFalse(True)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['teff'], 6023, delta=100)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['logg'], 3.95, delta=0.1)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['ebv'], 0.01, delta=0.02)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['teff2'], 30506, delta=100)
         self.assertAlmostEqual(sed.results['iminimize']['CI']['logg2'], 5.47, delta=0.1)
+        self.assertAlmostEqual(sed.results['iminimize']['CI']['scale'], 0.9, delta=0.5)
+        
+        self.assertTrue('model' in sed.results['iminimize'])
+        self.assertTrue('synflux' in sed.results['iminimize'])
+        self.assertTrue('chi2' in sed.results['iminimize'])
+        self.assertEqual(len(sed.results['iminimize']['model']), 3, msg='stored model has wrong number of collumns (should be 3)')
+        self.assertEqual(len(sed.results['iminimize']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
 
 
 

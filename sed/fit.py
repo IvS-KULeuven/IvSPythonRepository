@@ -7,9 +7,11 @@ import sys
 import pyfits
 import itertools
 import re
+import copy
 
 import numpy as np
 from numpy import inf
+import scipy
 from scipy.interpolate import Rbf
 from scipy.optimize import fmin,fmin_powell
 from ivs.statistics import pca
@@ -811,6 +813,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     
     return teffs,loggs,ebvs,zs,radii                     
 
+#{ Fitting: grid search
 
 def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         """
@@ -862,7 +865,6 @@ def igrid_search_pix(meas,e_meas,photbands,**kwargs):
                                            colors,syn_flux)
         #-- return results
         return chisqs,scales,e_scales,lumis
-
 
 @parallel_gridsearch
 @make_parallel
@@ -931,6 +933,10 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
     else:
         return chisqs,scales,e_scales,lumis
 
+#}
+
+#{ Fitting: minimizer
+
 def create_parameter_dict(**pars):
     
     #-- Find all the parameters first
@@ -954,40 +960,19 @@ def create_parameter_dict(**pars):
     
     return result
 
-def calculate_ci(minimizer, sigma):
-    """ 
-    Calculate the confidence intervalls for every parameter.
-    When ci fails, the boundaries are returned as ci.
-    """
-    val, err, vary, min, max, expr = minimizer.model.get_parameters(full_output=True)
-    pnames = minimizer.model.par_names
-    pars = [i for i in pnames if vary[pnames == i]]
-    ci = {}
-    for p in pars:
-        try:
-            ci_ = minimizer.calculate_CI(parameters = [p], sigma=sigma, short_output=True, maxiter=10)
-            ci[p] = ci_
-            logger.info('Calculated ci for parameter %s: %s'%(p,ci_) )
-        except Exception:
-            logger.warning('Failed to calculate CI for parameter: %s'%(p))
-    cilow, cihigh = min.copy(), max.copy()
-    for key in ci.keys():
-        if ci[key][0] != None: cilow[pnames == key] = ci[key][0]
-        if ci[key][1] != None: cihigh[pnames == key] = ci[key][1]
-        
-    return cilow, cihigh
-
-def get_info_from_minimizer(minimizers, photbands, meas, e_meas, **fitkws):
+def _get_info_from_minimizer(minimizers, startpars, photbands, meas, e_meas, **fitkws):
     scales, lumis, chisqrs, nfevs, allpars = [], [], [], [], {}
     for n in fitkws['pnames']:
         allpars[n] = np.array([])
-    for mini in minimizers:
+        allpars[n+'start'] = np.array([])
+    for mini, start in zip(minimizers, startpars):
         chisqrs.append(mini.chisqr)
         nfevs.append(mini.nfev)
         
         val, err = mini.model.get_parameters(full_output=False)
         for n, v in zip(fitkws['pnames'], val):
             allpars[n] = np.append(allpars[n], [v])
+            allpars[n+'start'] = np.append(allpars[n+'start'], [start[n].value])
         
         synth, lum = mini.model.evaluate(photbands, **fitkws)
         distance = fitkws['distance'] if 'distance' in fitkws else None
@@ -999,18 +984,18 @@ def get_info_from_minimizer(minimizers, photbands, meas, e_meas, **fitkws):
             scale = np.average(ratio,weights=weights)
         lumis.append(lum[0])
         scales.append(scale)
+    
     return np.array(chisqrs), np.array(nfevs), np.array(scales), np.array(lumis), allpars
 
-def iminimize_model(varlist, x, *args, **kws):
+def _iminimize_model(varlist, x, *args, **kws):
     pnames = kws.pop('pnames')
     pars = {}
     for n, v in zip(pnames, varlist):
         pars[n] = np.array([v])
     pars.update(kws)
-    print varlist
     return model.get_itable_pix(wave_units=None, photbands=x, **pars)
     
-def iminimize_residuals(synth, meas, weights=None, **kwargs):
+def _iminimize_residuals(synth, meas, weights=None, **kwargs):
     synth = synth[0][:,0] #select the flux.
     e_meas = 1 / weights
     if 'distance' in kwargs:
@@ -1019,10 +1004,9 @@ def iminimize_residuals(synth, meas, weights=None, **kwargs):
         ratio = (meas/synth)
         weights = (meas/e_meas)
         scale = np.average(ratio,weights=weights)
-    print sum(((meas - synth*scale)/e_meas)**2)
     return (meas - synth*scale)/e_meas
  
-def iminimize(meas,e_meas,photbands, points=None, CI_limit=None,**kwargs):
+def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwargs):
     """
     minimizer based on the sigproc.fit lmfit minimizer.
     provide the observed data, the fitting model, residual function and parameter
@@ -1036,8 +1020,8 @@ def iminimize(meas,e_meas,photbands, points=None, CI_limit=None,**kwargs):
     
     kick_list = kwargs.pop('kick_list', None)
     fitkws = kwargs.pop('fitkws', dict())
-    fitmodel = kwargs.pop('model_func',iminimize_model)
-    residuals = kwargs.pop('res_func',iminimize_residuals)
+    fitmodel = kwargs.pop('model_func',_iminimize_model)
+    residuals = kwargs.pop('res_func',_iminimize_residuals)
     epsfcn = kwargs.pop('epsfcn', 0.001)# using 10% step to derive jacobian.
     
     #-- get the parameters
@@ -1048,11 +1032,10 @@ def iminimize(meas,e_meas,photbands, points=None, CI_limit=None,**kwargs):
     fmodel = sfit.Function(function=fitmodel, par_names=pnames)
     fmodel.setup_parameters(**parameters)  
     
-    #print fmodel.param2str(full_output=True)
-    
     #-- fit the model to the data
     fitkws.update(dict(pnames=pnames))
     if points == None:
+        startpars = [copy.deepcopy(fmodel.parameters)]
         minimizer = sfit.minimize(photbands,meas, fmodel, weights=1/e_meas, kws=fitkws, \
                                       resfunc=residuals, engine='leastsq', epsfcn=epsfcn)
         minimizer = [minimizer]
@@ -1061,21 +1044,93 @@ def iminimize(meas,e_meas,photbands, points=None, CI_limit=None,**kwargs):
                            weights=1/e_meas, kws=fitkws, resfunc=residuals, engine='leastsq', \
                            epsfcn=epsfcn, points=points, parameters=kick_list, return_all=True)
     
-    print 'chisqr= ', minimizer[0].chisqr
-    print fmodel.param2str(full_output=True)
-    chisqr, nfev, scale, lumis, allpars = get_info_from_minimizer(minimizer, photbands,\
-                                                                meas, e_meas, **fitkws)
-    #-- collect all parameter info
-    val, err, vary, min, max, expr = fmodel.get_parameters(full_output=True)
-    
-    #-- calculate ci
-    if CI_limit != None:
-        cilow, cihigh = calculate_ci(minimizer[0], CI_limit)
+    if return_minimizer:
+        #-- return the actual minimizer used by the calculate ci methods
+        return minimizer[0]
     else:
-        cilow, cihigh = min, max
-    parameters = dict(name=pnames, value=val, error=err, vary=vary, min=min, max=max, expr=expr, cilow=cilow, cihigh=cihigh)
+        #-- for all other users return the actual results
+        chisqr, nfev, scale, lumis, grid = _get_info_from_minimizer(minimizer, startpars,\
+                                                        photbands, meas, e_meas, **fitkws)
+        ##-- collect all parameter info
+        #val, err, vary, min, max, expr = fmodel.get_parameters(full_output=True)
+        #pars = dict(name=pnames, value=val, cilow=min, cihigh=max)
+        
+        return grid, chisqr, nfev, scale, lumis
+
+def calculate_iminimize_CI(meas,e_meas,photbands, CI_limit=0.66, **kwargs):
+    """ 
+    Calculate the confidence intervalls for every parameter.
+    When ci fails, the boundaries are returned as ci.
+    """
     
-    return parameters, allpars, chisqr, nfev, scale, lumis
+    maxiter = kwargs.pop('maxiter', 25)
+    
+    mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
+    val, err, vary, min, max, expr = mini.model.get_parameters(full_output=True)
+    pnames = mini.model.par_names
+    
+    cilow, cihigh = min.copy(), max.copy()
+    for i,p in enumerate(pnames):
+        try:
+            ci = mini.calculate_CI(parameters=[p], short_output=True,\
+                                      sigma=CI_limit, maxiter=maxiter)
+            logger.info('Calculated ci for parameter %s: %s'%(p,ci) )
+            if ci[0] != None:  cilow[i] = ci[0]
+            if ci[1] != None:  cihigh[i] = ci[1]
+        except Exception:
+            logger.warning('Failed to calculate CI for parameter: %s'%(p))
+        
+    return dict(name=pnames, value=val, cilow=cilow, cihigh=cihigh)
+
+def calculate_iminimize_CI2D(meas,e_meas,photbands, xpar, ypar, df=None, **kwargs):
+    """
+    Calculate a 2D confidence grid for the given parameters.
+    You can provide limits on the parameters yourself, if none are 
+    provided, the function will take care of it, but it might crash 
+    if the limits are outside the model range.
+    returns: x vals, y vals, ci values
+    """
+    maxiter = kwargs.pop('maxiter', 25)
+    res = kwargs.pop('res', (10,10))
+    if type(res) == int: res = (res,res)
+    limits = kwargs.pop('limits', None)
+    citype = kwargs.pop('type', 'prob')
+    
+    mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
+    val, err, vary, low, high, expr = mini.model.get_parameters(full_output=True)
+    name = mini.model.par_names
+    xval, yval = val[name==xpar], val[name==ypar]
+    
+    #-- if not provided choose own limits
+    if limits != None:
+        xmin, xmax = limits[0]
+        ymin, ymax = limits[1]
+    else:
+        xmin = low[name==xpar] if low[name==xpar] != None else xval - 5*err[name==xpar]
+        xmax = high[name==xpar] if high[name==xpar] != None else xval + 5*err[name==xpar]
+        ymin = low[name==ypar] if low[name==ypar] != None else yval - 5*err[name==ypar]
+        ymax = high[name==ypar] if high[name==ypar] != None else yval + 5*err[name==ypar]
+        
+    #-- fix limits to include best fit in CI
+    xstep = (xmax - xmin) / float(res[0])
+    ystep = (ymax - ymin) / float(res[1])
+    xmin = xval - np.floor((xval - xmin) / xstep) * xstep
+    xmax = xval + (res[0] - 1 - np.floor((xval - xmin) / xstep)) * xstep
+    ymin = yval - np.floor((yval - ymin) / ystep) * ystep
+    ymax = yval + (res[1] - 1 - np.floor((yval - ymin) / ystep)) * ystep
+    limits = [(xmin, xmax), (ymin, ymax)]
+    
+    x,y,ci_chi2 = mini.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res, limits=limits, type='chi2')
+    
+    #-- do the statistics
+    N = mini.ndata
+    if df == None: df = mini.nvarys
+    k = N-df
+    factor = max(mini.chisqr/k,1)
+    ci_raw = scipy.stats.distributions.chi2.cdf(ci_chi2,k)
+    ci_red = scipy.stats.distributions.chi2.cdf(ci_chi2/factor,k)
+    
+    return x, y, ci_chi2, ci_raw, ci_red
 
 def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     model_func = kwargs.pop('model_func',model.get_itable)
