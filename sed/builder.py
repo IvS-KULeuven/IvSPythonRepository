@@ -3370,7 +3370,7 @@ class SED(object):
             self.results[mtype]['synflux'] = np.array(ff['synflux_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff['synflux_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
             
                 
-        for mtype in ['igrid_search','imc']:
+        for mtype in ['igrid_search','iminimize','imc']:
             try:
                 fields = ff[mtype].columns.names
                 master = np.rec.fromarrays([ff[mtype].data.field(field) for field in fields],names=','.join(fields))
