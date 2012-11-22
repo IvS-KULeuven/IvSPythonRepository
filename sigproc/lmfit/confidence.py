@@ -163,12 +163,12 @@ def conf_interval(minimizer, p_names=None, sigmas=(0.674, 0.95, 0.997),
         if para.stderr > 0:
             step = para.stderr
         else:
-            step = max(para.value * 0.05, 0.01)
-
+            step = max(para.value * 0.01, 0.01)
+        
         para.vary = False
         start_val = para.value
 
-        def calc_prob(val, offset=0., restore=False):
+        def calc_prob(val, offset=0., restore=True):
             '''Returns the probability for given Value.'''
 
             if restore:
@@ -221,14 +221,20 @@ def conf_interval(minimizer, p_names=None, sigmas=(0.674, 0.95, 0.997),
 
         if trace:
             trace_dict[para.name] = p_trace_to_dict(p_trace, minimizer.params)
-
+        
+        #-- Following is not very elegant but it works
         para.vary = True
         out={}
         for i,sigma in enumerate(sigmas):
+            out[sigma]=[None, None]
             try:
-                out[sigma]=(lower_err[i],upper_err[i])
+                out[sigma][0] = lower_err[i]
             except:
-                out[sigma]=(None,None)
+                out[sigma][0]=None     
+            try:
+                out[sigma][1] = upper_err[i]
+            except:
+                out[sigma][1]=None
         output[pname]= out
 
     restore_vals(org, minimizer.params)
