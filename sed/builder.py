@@ -1783,6 +1783,8 @@ class SED(object):
         ci['cilow'] = np.append(ci['cilow'], min(self.results[mtype]['grid']['scale']))
         ci['cihigh'] = np.append(ci['cihigh'], max(self.results[mtype]['grid']['scale']))
         
+        logger.info('Calculated %s%% confidence intervalls for all parameters'%(CI_limit))
+        
         self.store_confidence_intervals(mtype='iminimize', **ci)
     
     def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None):
@@ -3617,12 +3619,11 @@ class BinarySED(SED):
                                       radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                       law=law)
             #-- get synthetic photometry
-            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
-                              logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
-                              ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
-                              z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z2']),
-                              radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
-                              photbands=self.master['photband'][keep])
+            kwargs = {}
+            for key in self.results[mtype]['CI'].keys():
+                if not key[-2:] == '_u' and not key[-2:] == '_l':
+                    kwargs['key'] = self.results[mtype]['CI'][key]
+            synflux_,Labs = model.get_itable(photbands=self.master['photband'][keep], **kwargs)
             flux,flux_ur = flux*scale,flux_ur*scale
                 
             synflux[keep] = synflux_
