@@ -1594,7 +1594,6 @@ class SED(object):
  
         df, df_info = 1, ['theta']
         for range_name in ranges:
-            print range_name, ranges[range_name]
             if re.search('ebv\d?range$', range_name):
                 if not 'ebv' in df_info:
                     df += 1
@@ -1828,7 +1827,7 @@ class SED(object):
     
     def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
                      loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
-                     points=1, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
+                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
                      calc_ci=True, set_model=True, **kwargs):
         """ 
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
@@ -3541,7 +3540,7 @@ class BinarySED(SED):
                   rv=(None,None), vrad=(None,None), teffrange=(None,None), loggrange=(None,None),
                   ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
                   vradrange=(None,None), radrange=(None,None), masses=(None,None), compare=True,
-                  df=None, distance=None, start_from='igrid_search', CI_limit=None,
+                  df=None, distance=None, start_from='igrid_search', points=None, CI_limit=None,
                    calc_ci=True, set_model=True, **kwargs):
         """ Binary minimizer """ 
         
@@ -3567,7 +3566,7 @@ class BinarySED(SED):
         grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
-                             fitkws=fitkws, points=None,**pars)
+                             fitkws=fitkws, points=points,**pars)
         
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
@@ -3616,11 +3615,11 @@ class BinarySED(SED):
                                       radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                       law=law)
             #-- get synthetic photometry
-            kwargs = {}
+            pars = {}
             for key in self.results[mtype]['CI'].keys():
                 if not key[-2:] == '_u' and not key[-2:] == '_l':
-                    kwargs['key'] = self.results[mtype]['CI'][key]
-            synflux_,Labs = model.get_itable(photbands=self.master['photband'][keep], **kwargs)
+                    pars[key] = self.results[mtype]['CI'][key]
+            synflux_,pars = model.get_itable(photbands=self.master['photband'][keep], **pars)
             flux,flux_ur = flux*scale,flux_ur*scale
                 
             synflux[keep] = synflux_
