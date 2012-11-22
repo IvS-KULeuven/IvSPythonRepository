@@ -1756,10 +1756,81 @@ class SED(object):
                     result[key+"_value"] = self.results[start_from]['CI'][key]
                     
         return result    
+                                                                  
+    def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66):
+        
+        #-- Get the best fit parameters and ranges
+        pars = {}
+        skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
+        for name in self.results[mtype]['CI'].keys():
+            name = re.sub('_[u|l]$', '', name)
+            if not name in pars and not name in skip:
+                pars[name] = self.results[mtype]['CI'][name]
+                pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
+                                       self.results[mtype]['CI'][name+"_u"]]
+        pars = self.generate_fit_param(**pars)        
+        
+        #-- calculate the confidence intervalls
+        include_grid = self.master['include']
+        ci = fit.calculate_iminimize_CI(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             CI_limit=CI_limit, **pars)
+        
+        #-- Add the scale factor
+        ci['name'] = np.append(ci['name'], 'scale')
+        ci['value'] = np.append(ci['value'], self.results[mtype]['grid']['scale'][-1])
+        ci['cilow'] = np.append(ci['cilow'], min(self.results[mtype]['grid']['scale']))
+        ci['cihigh'] = np.append(ci['cihigh'], max(self.results[mtype]['grid']['scale']))
+        
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+    
+    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None):
+        
+        #-- get the best fitting parameters
+        pars = {}
+        skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
+        for name in self.results[mtype]['CI'].keys():
+            name = re.sub('_[u|l]$', '', name)
+            if not name in pars and not name in skip:
+                pars[name] = self.results[mtype]['CI'][name]
+                pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
+                                       self.results[mtype]['CI'][name+"_u"]]
+        pars = self.generate_fit_param(**pars)  
+        
+        #-- calculate the confidence intervalls
+        include_grid = self.master['include']
+        x,y,chi2, raw, red = fit.calculate_iminimize_CI2D(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             xpar, ypar, limits=limits, **pars)
+        
+        #-- store the CI
+        if not 'CI2D' in self.results[mtype]: self.results[mtype]['CI2D'] = {}
+        self.results[mtype]['CI2D'][xpar+"-"+ypar] = dict(x=x, y=y, ci_chi2=chi2,\
+                                                           ci_raw=raw, ci_red=red)
+        
+        logger.info('Calculated 2D confidence intervalls for %s--%s'%(xpar,ypar))
+    
+    def _get_imin_ci(self, mtype='iminimize',**ranges):
+        """ returns ci information for store_confidence_intervals """
+        names, values, cil, cih = [],[],[],[]
+        for key in ranges.keys():
+            name = key[0:-5]
+            names.append(name)
+            values.append(self.results[mtype]['grid'][name][-1])
+            cil.append(ranges[key][0])
+            cih.append(ranges[key][1])
+        names.append('scale')
+        values.append(self.results[mtype]['grid']['scale'][-1])
+        cil.append(min(self.results[mtype]['grid']['scale']))
+        cih.append(max(self.results[mtype]['grid']['scale']))
+        return dict(name=names, value=values, cilow=cil, cihigh=cih)    
     
     def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
-                     loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None, points=1, distance=None,
-                     start_from='igrid_search',df=None,CI_limit=None, set_model=True, **kwargs):
+                     loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
+                     points=1, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
+                     calc_ci=True, set_model=True, **kwargs):
         """ 
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
         """
@@ -1778,11 +1849,11 @@ class SED(object):
         (photometry2str(self.master[include_grid])))
         
         #-- pass all ranges and starting values to the fitter
-        param, grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
-                             self.master['e_cmeas'][include_grid],
-                             self.master['photband'][include_grid],
-                             fitkws=fitkws, CI_limit=CI_limit, points=points,**pars)
-                             
+        grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+                                            self.master['e_cmeas'][include_grid],
+                                            self.master['photband'][include_grid],
+                                            fitkws=fitkws, points=points,**pars)
+        
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
         fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
@@ -1792,7 +1863,10 @@ class SED(object):
         self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
         
         #-- Store the confidence intervals
-        self.store_confidence_intervals(mtype='iminimize', **param)
+        ci = self._get_imin_ci(mtype='iminimize',**ranges)
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+        if calc_ci:
+            self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
         
         #-- remember the best model
         if set_model: self.set_best_model(mtype='iminimize')
@@ -1902,9 +1976,10 @@ class SED(object):
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
         
-        if mtype in ['igrid_search']:
+        if mtype in ['igrid_search', 'iminimize']:
             #-- get the metallicity right
             files = model.get_file(z='*')
+            if type(files) == str: files = [files] #files needs to be a list!
             metals = np.array([pyfits.getheader(ff)['Z'] for ff in files])
             metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
             scale = self.results[mtype]['CI']['scale']
@@ -2379,6 +2454,28 @@ class SED(object):
     #}
     
     #{ Plotting routines
+    
+    def label_dict(self, param):
+        """ returns the label belonging to a certain parameter """
+        ldict = dict(teff='Effective temperature [K]',\
+                    z='log (Metallicity Z [$Z_\odot$]) [dex]',\
+                    logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
+                    ebv='E(B-V) [mag]',\
+                    ci_raw='Raw probability [%]',\
+                    ci_red='Reduced probability [%]',\
+                    #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                    labs=r'Absolute Luminosity [$L_\odot$]',\
+                    radius=r'Radius [$R_\odot$]',\
+                    mass=r'Mass [$M_\odot$]',
+                    mc=r'MC [Nr. points in hexagonal bin]',
+                    rv=r'Extinction parameter $R_v$')
+        if re.search('\d$', param):
+            component = " - " + str(re.find_all('.*?(\d?)$', param)[0][0])
+        else:
+            component = ''
+        
+        return ldict[param]+component
+    
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
         """
@@ -2521,7 +2618,50 @@ class SED(object):
             cbar.set_label(ptype)
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
-
+    
+    @standalone_figure
+    def plot_CI2D(self,xpar='teff',ypar='logg',mtype='iminimize', ptype='ci_red',**kwargs):
+        """
+        Plot a 2D confidence intervall calculated using the CI2D computation 
+        from calculate_iminimize_CI2D. Make sure you first calculate the grid
+        you want using the calculate_iminimize_CI2D function.
+        """
+        
+        grid = self.results[mtype]['CI2D'][xpar+"-"+ypar][ptype]
+        x = self.results[mtype]['CI2D'][xpar+"-"+ypar]['x']
+        y = self.results[mtype]['CI2D'][xpar+"-"+ypar]['y']
+        
+        if ptype == 'ci_red' or ptype == 'ci_raw':
+            grid = grid*100.0
+            levels = np.linspace(0,100,25)
+            ticks = [0,20,40,60,80,100]
+        elif ptype == 'ci_chi2':
+            grid = np.log10(grid)
+            levels = np.linspace(np.min(grid), np.max(grid), 25)
+            ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
+        
+        #label_dict = dict(teff='Effective temperature [K]',\
+                          #z='log (Metallicity Z [$Z_\odot$]) [dex]',\
+                          #logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
+                          #ebv='E(B-V) [mag]',\
+                          #ci_raw='Raw probability [%]',\
+                          #ci_red='Reduced probability [%]',\
+                          ##labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                          #labs=r'Absolute Luminosity [$L_\odot$]',\
+                          #radius=r'Radius [$R_\odot$]',\
+                          #mass=r'Mass [$M_\odot$]',
+                          #mc=r'MC [Nr. points in hexagonal bin]',
+                          #rv=r'Extinction parameter $R_v$')
+        
+        pl.contourf(x,y,grid,levels,**kwargs)
+        pl.xlabel(self.label_dict(xpar))
+        pl.ylabel(self.label_dict(ypar))
+        cbar = pl.colorbar(fraction=0.08,ticks=ticks)
+        cbar.set_label(ptype!='ci_chi2' and r'Probability' or r'$^{10}$log($\chi^2$)')
+        
+        
+        
+        
 
     @standalone_figure
     def plot_data(self,colors=False, plot_unselected=True,
@@ -3402,8 +3542,8 @@ class BinarySED(SED):
                   rv=(None,None), vrad=(None,None), teffrange=(None,None), loggrange=(None,None),
                   ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
                   vradrange=(None,None), radrange=(None,None), masses=(None,None), compare=True,
-                  df=None, distance=None, start_from='igrid_search', CI_limit=None, 
-                  set_model=True, **kwargs):
+                  df=None, distance=None, start_from='igrid_search', CI_limit=None,
+                   calc_ci=True, set_model=True, **kwargs):
         """ Binary minimizer """ 
         
         ranges = self.generate_ranges(teffrange=teffrange[0],\
@@ -3425,10 +3565,10 @@ class BinarySED(SED):
         (photometry2str(self.master[include_grid])))
         
         #-- pass all ranges and starting values to the fitter
-        param, grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+        grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
-                             fitkws=fitkws, CI_limit=CI_limit, points=None,**pars)
+                             fitkws=fitkws, points=None,**pars)
         
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
@@ -3439,7 +3579,10 @@ class BinarySED(SED):
         self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
         
         #-- Store the confidence intervals
-        self.store_confidence_intervals(mtype='iminimize', **param)
+        ci = self._get_imin_ci(mtype='iminimize',**ranges)
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+        if calc_ci:
+            self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
         
         #-- remember the best model
         if set_model: self.set_best_model(mtype='iminimize')
@@ -3459,7 +3602,7 @@ class BinarySED(SED):
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
         
-        if mtype in ['igrid_search']:
+        if mtype in ['igrid_search', 'iminimize']:
             scale = self.results[mtype]['CI']['scale']
             
             #-- get (approximated) reddened and unreddened model
