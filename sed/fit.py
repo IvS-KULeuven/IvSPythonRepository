@@ -1063,18 +1063,24 @@ def calculate_iminimize_CI(meas,e_meas,photbands, CI_limit=0.66, **kwargs):
     When ci fails, the boundaries are returned as ci.
     """
     
-    maxiter = kwargs.pop('maxiter', 25)
+    maxiter = kwargs.pop('maxiter', 100)
     
     mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
-    val, err, vary, min, max, expr = mini.model.get_parameters(full_output=True)
+    val, err, vary, low, high, expr = mini.model.get_parameters(full_output=True)
     pnames = mini.model.par_names
     
-    cilow, cihigh = min.copy(), max.copy()
+    #-- setup stat function
+    def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
+        k = Ndata-Nparas
+        factor = max(best_chi/k,1)
+        return scipy.stats.distributions.chi2.cdf(new_chi/factor,k)
+    
+    cilow, cihigh = low.copy(), high.copy()
     for i,p in enumerate(pnames):
         try:
             ci = mini.calculate_CI(parameters=[p], short_output=True,\
-                                      sigma=CI_limit, maxiter=maxiter)
-            logger.info('Calculated ci for parameter %s: %s'%(p,ci) )
+                    sigma=CI_limit, maxiter=maxiter, prob_func=prob_func)
+            logger.debug('Calculated ci for parameter %s: %s'%(p,ci) )
             if ci[0] != None:  cilow[i] = ci[0]
             if ci[1] != None:  cihigh[i] = ci[1]
         except Exception:

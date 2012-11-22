@@ -1507,18 +1507,16 @@ class SED(object):
             parrange = kwargs.get(par_range_name,None)
             #-- the three cases described above:
             if exist_previous and parrange is None:
-                parrange = []
-                for postfix in postfixes:
-                    lkey = parname+postfix+'_l'
-                    ukey = parname+postfix+'_u'
-                    #-- if the parameters was not used in the fit, stick to the
-                    #   default given value
-                    if not lkey in self.results[start_from]['CI']:
-                        parrange.append(kwargs[par_range_name])
-                    #-- else we can derive a better parameter range
-                    else:
-                        parrange.append((self.results[start_from]['CI'][lkey],
-                                         self.results[start_from]['CI'][ukey]))
+                lkey = parname+'_l'
+                ukey = parname+'_u'
+                #-- if the parameters was not used in the fit, stick to the
+                #   default given value
+                if not lkey in self.results[start_from]['CI']:
+                    parrange = kwargs[par_range_name]
+                #-- else we can derive a better parameter range
+                else:
+                    parrange = (self.results[start_from]['CI'][lkey],
+                                        self.results[start_from]['CI'][ukey])                      
             elif parrange is None:
                 parrange = (-np.inf,np.inf)
 
@@ -1528,7 +1526,6 @@ class SED(object):
                 parrange = ((i[1]-i[0])/2.,(i[1]-i[0])/6.)
             elif distribution!='uniform':
                 raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
- 
             limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
@@ -1597,13 +1594,13 @@ class SED(object):
  
         df, df_info = 1, ['theta']
         for range_name in ranges:
+            print range_name, ranges[range_name]
             if re.search('ebv\d?range$', range_name):
                 if not 'ebv' in df_info:
                     df += 1
                     df_info.append('ebv')
                 else:
                     continue
-            
             elif not np.allclose(ranges[range_name][0],ranges[range_name][1]):
                 df += 1
                 df_info.append(range_name[0:-5])
@@ -1782,6 +1779,8 @@ class SED(object):
         ci['value'] = np.append(ci['value'], self.results[mtype]['grid']['scale'][-1])
         ci['cilow'] = np.append(ci['cilow'], min(self.results[mtype]['grid']['scale']))
         ci['cihigh'] = np.append(ci['cihigh'], max(self.results[mtype]['grid']['scale']))
+        
+        logger.info('Calculated %s%% confidence intervalls for all parameters'%(CI_limit))
         
         self.store_confidence_intervals(mtype='iminimize', **ci)
     
@@ -3368,7 +3367,7 @@ class SED(object):
             self.results[mtype]['synflux'] = np.array(ff['synflux_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff['synflux_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
             
                 
-        for mtype in ['igrid_search','imc']:
+        for mtype in ['igrid_search','iminimize','imc']:
             try:
                 fields = ff[mtype].columns.names
                 master = np.rec.fromarrays([ff[mtype].data.field(field) for field in fields],names=','.join(fields))
@@ -3463,7 +3462,7 @@ class SED(object):
 class BinarySED(SED):
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
-                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=[(None,None),(None,None)],
+                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
                           masses=None,compare=True,df=None,CI_limit=None,
                           primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
         """
@@ -3617,12 +3616,11 @@ class BinarySED(SED):
                                       radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                       law=law)
             #-- get synthetic photometry
-            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
-                              logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
-                              ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
-                              z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z2']),
-                              radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
-                              photbands=self.master['photband'][keep])
+            kwargs = {}
+            for key in self.results[mtype]['CI'].keys():
+                if not key[-2:] == '_u' and not key[-2:] == '_l':
+                    kwargs['key'] = self.results[mtype]['CI'][key]
+            synflux_,Labs = model.get_itable(photbands=self.master['photband'][keep], **kwargs)
             flux,flux_ur = flux*scale,flux_ur*scale
                 
             synflux[keep] = synflux_

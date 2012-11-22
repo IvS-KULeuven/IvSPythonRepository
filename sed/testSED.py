@@ -5,6 +5,7 @@ Unit test covering sed.fit.py
 """
 import numpy as np
 from numpy import inf, array
+from ivs import sigproc
 from ivs.sed import fit, model, builder, filters
 from ivs.units import constants
 from ivs.catalogs import sesame
@@ -32,6 +33,14 @@ class SEDTestCase(unittest.TestCase):
         self.addCleanup(patcher.stop)
         return thing
     
+    def assertArrayEqual(self, l1, l2, msg=None):
+        msg_ = "Array is not equal to expected array: %s != %s"%(l1,l2)
+        if msg != None: msg_ = msg
+        self.assertEqual(len(l1), len(l2), msg=msg_)
+        self.assertEqual(l1.dtype, l2.dtype, msg=msg_)
+        for f1, f2 in zip(l1,l2):
+            self.assertEqual(f1,f2, msg=msg_)
+        
     def assertArrayAlmostEqual(self, l1,l2,places=None,delta=None, msg=None):
             msg_ = "assertArrayAlmostEqual Failed: %s != %s"%(str(l1),str(l2))
             if msg != None: msg_ = msg_ + msg 
@@ -48,13 +57,24 @@ class SEDTestCase(unittest.TestCase):
         lr = np.round(l, decimals=places)
         self.assertTrue(len(np.unique(lr)) > 1, msg="All elements are equal: %s"%(l))
     
+    def assertInList(self, el, lst, msg=None):
+        msg_ = "The given element %s is not in list %s"%(el, lst)
+        if msg != None: msg_=msg
+        res = []
+        for l in lst:
+            try:
+                res.append(all(el == l))
+            except Exception:
+                res.append(el == l)
+        self.assertTrue(any(res), msg=msg_)
+    
     def assert_mock_args_in_last_call(self, mck, args=None, kwargs=None, msg=None):
         args_, kwargs_ = mck.call_args
         if args != None:
             for arg in args:
                 msg_ = msg if msg != None else \
                 'Argument %s was not in call to %s (called with args: %s)'%(arg, mck, args_)
-                self.assertTrue(arg in args_, msg_)
+                self.assertInList(arg, args_, msg=msg_)
         if kwargs != None:
             for key in kwargs.keys():
                 msg_ = msg if msg != None else \
@@ -67,7 +87,7 @@ class SEDTestCase(unittest.TestCase):
                     self.assertArrayAlmostEqual(kwargs[key], kwargs_[key], places=5)
         
 
-class PixModelTestCase(SEDTestCase):
+class ModelTestCase(SEDTestCase):
     
     @classmethod
     def setUpClass(PixFitTestCase):
@@ -120,7 +140,32 @@ class PixModelTestCase(SEDTestCase):
         self.assertArrayAlmostEqual(flux_[0],flux[0],delta=0.01e+11)
         self.assertArrayAlmostEqual(flux_[1],flux[1],delta=0.01e+09)
         self.assertArrayAlmostEqual(Labs_,Labs,places=3)
-         
+        
+    def testGetItableSingle(self):
+        """ model.get_itable() single case """
+                                
+        flux_,Labs_ = model.get_itable(photbands=self.photbands, teff=6874, logg=4.21,
+                                                                   ebv=0.0077, z=-0.2)
+        flux = [13428649.32576484, 1271090.21316342]
+        Labs = 1.99865981674
+
+        self.assertAlmostEqual(flux_[0],flux[0], delta=100)
+        self.assertAlmostEqual(flux_[1],flux[1], delta=100)
+        self.assertAlmostEqual(Labs_,Labs, delta=100)
+
+        
+    def testGetItableBinary(self):
+        """ model.get_itable() multiple case """
+                            
+        flux_,Labs_ = model.get_itable(photbands=self.photbands, teff=25000,
+                        logg=5.12, ebv=0.001, teff2=33240, logg2=5.86, ebv2=0.001)
+        
+        flux = [3.31834622e+09, 1.25032866e+07]
+        Labs = 1277.54498257
+        
+        self.assertAlmostEqual(flux_[0],flux[0], delta=100)
+        self.assertAlmostEqual(flux_[1],flux[1], delta=100)
+        self.assertAlmostEqual(Labs_,Labs, delta=100)
 
 class PixFitTestCase(SEDTestCase):
     
@@ -302,14 +347,92 @@ class PixFitTestCase(SEDTestCase):
         self.assertEqual(parameters['vary'][names == 'ebv'], False)
         self.assertEqual(parameters['expr'][names == 'rad'], 'G*sqrt(2*logg)/m')
     
+    
+        
+
+class MinimizeFitTestCase(SEDTestCase):
+    
+    def testCreateParameterDict(self):
+        """ fit.create_parameter_dict() """
+        pars = {'logg_value': 4.0, 'vrad_vary': False, 'z_value': -0.3, 'vrad_value': 0,
+                'logg_vary': True, 'rv_min': 2.1, 'vrad_min': 0, 'vrad_max': 0, 'z_max': 0.0,
+                'ebv_max': 0.015, 'teff_value': 6000, 'z_vary': True, 'rv_value': 2.4,
+                'teff_vary': True, 'logg_min': 3.5, 'rv_max': 3.1, 'z_min': -0.5, 
+                'ebv_min': 0.005, 'teff_min': 5000, 'logg_max': 4.5, 'ebv_value': 0.007,
+                'teff_max': 7000, 'rv_vary': True, 'ebv_vary': True}
+        exp = {'max': array([3.1, 7000, 4.5, 0.015, 0, 0.0], dtype=object), 
+               'vary': array([True, True, True, True, False, True], dtype=object), 
+               'names': array(['rv', 'teff', 'logg', 'ebv', 'vrad', 'z'], dtype='|S4'), 
+               'value': array([2.4, 6000, 4.0, 0.007, 0, -0.3], dtype=object),
+               'min': array([2.1, 5000, 3.5, 0.005, 0, -0.5], dtype=object)}
+               
+        res = fit.create_parameter_dict(**pars)
+        
+        self.assertArrayEqual(res['max'], exp['max'])
+        self.assertArrayEqual(res['vary'], exp['vary'])
+        self.assertArrayEqual(res['min'], exp['min'])
+        self.assertArrayEqual(res['names'], exp['names'])
+        self.assertArrayEqual(res['value'], exp['value'])
+        
     @unittest.skipIf(noMock, "Mock not installed")
     def testiMinimize(self):
-        """ fit.iminimize() """
+        """ fit.iminimize() normal mocked """
         
-        #mock_model = self.create_patch(model, 'get_itable_pix', return_value=(syn_flux, lumis))
-        pass
+        gm_return = (['minimizer'], ['startpars'], ['newmodels'], ['chisqrs'])
+        gifm_return = (['chisqr'], ['nfev'], ['scale'], ['labs'], ['grid'])
+        cpd_return = dict(names=['teff'], value=[5000], min=[4000], max=[6000], vary=[True])
         
+        mock_sfit_m = self.create_patch(sigproc.fit, 'minimize', return_value='minimizer')
+        mock_sfit_gm = self.create_patch(sigproc.fit, 'grid_minimize', return_value=gm_return)
+        mock_sfit_sp = self.create_patch(sigproc.fit.Function, 'setup_parameters')
+        mock_fit_gifm = self.create_patch(fit, '_get_info_from_minimizer', return_value=gifm_return)
+        mock_fit_cpd = self.create_patch(fit, 'create_parameter_dict', return_value=cpd_return)
         
+        meas = array([1.25e9, 2.34e8])
+        emeas = array([1.25e7, 2.34e6])
+        photbands = array(['J', 'C'])
+        
+        #-- 1 point
+        grid, chisqr, nfev, scale, lumis = fit.iminimize(meas,emeas,photbands, points=None, epsfcn=0.01 )
+        
+        self.assert_mock_args_in_last_call(mock_sfit_sp, kwargs=cpd_return)
+        self.assert_mock_args_in_last_call(mock_sfit_m, args=[photbands, meas], kwargs=dict(epsfcn=0.01, weights=1/emeas))
+        self.assert_mock_args_in_last_call(mock_fit_gifm, args=[['minimizer'], photbands, meas, emeas])
+        self.assertListEqual(grid,['grid'])
+        self.assertListEqual(chisqr,['chisqr'])
+        self.assertListEqual(nfev,['nfev'])
+        self.assertListEqual(scale,['scale'])
+        self.assertListEqual(lumis,['labs'])
+        
+    @unittest.skipIf(noMock, "Mock not installed")
+    def testiMinimizeGrid(self):
+        """ fit.iminimize() grid mocked """
+        gm_return = (['minimizer'], ['startpars'], ['newmodels'], ['chisqrs'])
+        gifm_return = (['chisqr'], ['nfev'], ['scale'], ['labs'], ['grid'])
+        cpd_return = dict(names=['teff'], value=[5000], min=[4000], max=[6000], vary=[True])
+        
+        mock_sfit_m = self.create_patch(sigproc.fit, 'minimize', return_value='minimizer')
+        mock_sfit_gm = self.create_patch(sigproc.fit, 'grid_minimize', return_value=gm_return)
+        mock_sfit_sp = self.create_patch(sigproc.fit.Function, 'setup_parameters')
+        mock_fit_gifm = self.create_patch(fit, '_get_info_from_minimizer', return_value=gifm_return)
+        mock_fit_cpd = self.create_patch(fit, 'create_parameter_dict', return_value=cpd_return)
+        
+        meas = array([1.25e9, 2.34e8])
+        emeas = array([1.25e7, 2.34e6])
+        photbands = array(['J', 'C'])
+    
+        #-- 10 point
+        grid, chisqr, nfev, scale, lumis = fit.iminimize(meas,emeas,photbands, points=10, epsfcn=0.01 )
+        
+        self.assert_mock_args_in_last_call(mock_sfit_sp, kwargs=cpd_return)
+        self.assert_mock_args_in_last_call(mock_sfit_gm, args=[photbands, meas], kwargs=dict(epsfcn=0.01, weights=1/emeas, points=10))
+        self.assert_mock_args_in_last_call(mock_fit_gifm, args=[['minimizer'], photbands, meas, emeas])
+        self.assertListEqual(grid,['grid'])
+        self.assertListEqual(chisqr,['chisqr'])
+        self.assertListEqual(nfev,['nfev'])
+        self.assertListEqual(scale,['scale'])
+        self.assertListEqual(lumis,['labs'])
+    
 
 class BuilderTestCase(SEDTestCase):
     
