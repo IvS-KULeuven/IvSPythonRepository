@@ -1507,18 +1507,16 @@ class SED(object):
             parrange = kwargs.get(par_range_name,None)
             #-- the three cases described above:
             if exist_previous and parrange is None:
-                parrange = []
-                for postfix in postfixes:
-                    lkey = parname+postfix+'_l'
-                    ukey = parname+postfix+'_u'
-                    #-- if the parameters was not used in the fit, stick to the
-                    #   default given value
-                    if not lkey in self.results[start_from]['CI']:
-                        parrange.append(kwargs[par_range_name])
-                    #-- else we can derive a better parameter range
-                    else:
-                        parrange.append((self.results[start_from]['CI'][lkey],
-                                         self.results[start_from]['CI'][ukey]))
+                lkey = parname+'_l'
+                ukey = parname+'_u'
+                #-- if the parameters was not used in the fit, stick to the
+                #   default given value
+                if not lkey in self.results[start_from]['CI']:
+                    parrange = kwargs[par_range_name]
+                #-- else we can derive a better parameter range
+                else:
+                    parrange = (self.results[start_from]['CI'][lkey],
+                                        self.results[start_from]['CI'][ukey])                      
             elif parrange is None:
                 parrange = (-np.inf,np.inf)
 
@@ -1528,7 +1526,6 @@ class SED(object):
                 parrange = ((i[1]-i[0])/2.,(i[1]-i[0])/6.)
             elif distribution!='uniform':
                 raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
- 
             limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
@@ -1597,13 +1594,13 @@ class SED(object):
  
         df, df_info = 1, ['theta']
         for range_name in ranges:
+            print range_name, ranges[range_name]
             if re.search('ebv\d?range$', range_name):
                 if not 'ebv' in df_info:
                     df += 1
                     df_info.append('ebv')
                 else:
                     continue
-            
             elif not np.allclose(ranges[range_name][0],ranges[range_name][1]):
                 df += 1
                 df_info.append(range_name[0:-5])
@@ -3465,7 +3462,7 @@ class SED(object):
 class BinarySED(SED):
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
-                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=[(None,None),(None,None)],
+                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
                           masses=None,compare=True,df=None,CI_limit=None,
                           primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
         """
