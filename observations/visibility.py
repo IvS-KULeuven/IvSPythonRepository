@@ -572,13 +572,19 @@ class Ephemeris(object):
             
             for prevset,prevrise,nextset,nextrise in zip(self._sun_prevset[indices],self._sun_prevrise[indices],self._sun_nextset[indices],self._sun_nextrise[indices]):
                 if prevset<prevrise:
-                    pl.fill([prevset,prevset,prevrise,prevrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
-                    pl.fill([prevrise,prevrise,nextset,nextset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
-                    pl.fill([nextset,nextset,nextrise,nextrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
+                    #pl.fill([prevset,prevset,prevrise,prevrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
+                    #pl.fill([prevrise,prevrise,nextset,nextset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
+                    #pl.fill([nextset,nextset,nextrise,nextrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
+                    pl.axvspan(prevset,prevrise,color='k',alpha=0.35)
+                    pl.axvspan(prevrise,nextset,color='y',alpha=0.25)
+                    pl.axvspan(nextset,nextrise,color='k',alpha=0.35)
                 else:
-                    pl.fill([prevrise,prevrise,prevset,prevset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
-                    pl.fill([prevset,prevset,nextrise,nextrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
-                    pl.fill([nextrise,nextrise,nextset,nextset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
+                    #pl.fill([prevrise,prevrise,prevset,prevset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
+                    #pl.fill([prevset,prevset,nextrise,nextrise],[ymin,ymax,ymax,ymin],'k',alpha=0.35)
+                    #pl.fill([nextrise,nextrise,nextset,nextset],[ymin,ymax,ymax,ymin],'y',alpha=0.25)
+                    pl.axvspan(prevrise,prevset,color='y',alpha=0.25)
+                    pl.axvspan(prevset,nextrise,color='k',alpha=0.35)
+                    pl.axvspan(nextrise,nextset,color='y',alpha=0.25)
 
         #-- add a grid and legend
         pl.grid()
