@@ -570,6 +570,7 @@ import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
 import pyfits
+import h5py
 
 from ivs import config
 from ivs.aux import numpy_ext
@@ -1753,7 +1754,7 @@ class SED(object):
                     
         return result    
                                                                   
-    def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66):
+    def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
         
         #-- Get the best fit parameters and ranges
         pars = {}
@@ -1764,6 +1765,7 @@ class SED(object):
                 pars[name] = self.results[mtype]['CI'][name]
                 pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
                                        self.results[mtype]['CI'][name+"_u"]]
+        pars.update(kwargs)
         pars = self.generate_fit_param(**pars)        
         
         #-- calculate the confidence intervalls
@@ -1783,7 +1785,7 @@ class SED(object):
         
         self.store_confidence_intervals(mtype='iminimize', **ci)
     
-    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None):
+    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, **kwargs):
         
         #-- get the best fitting parameters
         pars = {}
@@ -1794,7 +1796,9 @@ class SED(object):
                 pars[name] = self.results[mtype]['CI'][name]
                 pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
                                        self.results[mtype]['CI'][name+"_u"]]
+        pars.update(kwargs)
         pars = self.generate_fit_param(**pars)  
+        
         
         #-- calculate the confidence intervalls
         include_grid = self.master['include']
@@ -2453,8 +2457,11 @@ class SED(object):
     
     #{ Plotting routines
     
-    def label_dict(self, param):
+    def _label_dict(self, param):
         """ returns the label belonging to a certain parameter """
+        #split parameter in param name and componentent number
+        param, component = re.findall('(.*?)(\d?$)', param)[0]
+        
         ldict = dict(teff='Effective temperature [K]',\
                     z='log (Metallicity Z [$Z_\odot$]) [dex]',\
                     logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
@@ -2467,12 +2474,11 @@ class SED(object):
                     mass=r'Mass [$M_\odot$]',
                     mc=r'MC [Nr. points in hexagonal bin]',
                     rv=r'Extinction parameter $R_v$')
-        if re.search('\d$', param):
-            component = " - " + str(re.find_all('.*?(\d?)$', param)[0][0])
+                    
+        if component != '':
+            return ldict[param] + " - " + component
         else:
-            component = ''
-        
-        return ldict[param]+component
+            return ldict[param]
     
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
@@ -2553,20 +2559,6 @@ class SED(object):
         else:
             Y = locals()[y]
         
-        #-- for setting the x/y/color labels
-        label_dict = dict(teff='Effective temperature [K]',\
-                          z='log (Metallicity Z [$Z_\odot$]) [dex]',\
-                          logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
-                          ebv='E(B-V) [mag]',\
-                          ci_raw='Raw probability [%]',\
-                          ci_red='Reduced probability [%]',\
-                          #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
-                          labs=r'Absolute Luminosity [$L_\odot$]',\
-                          radius=r'Radius [$R_\odot$]',\
-                          mass=r'Mass [$M_\odot$]',
-                          mc=r'MC [Nr. points in hexagonal bin]',
-                          rv=r'Extinction parameter $R_v$')
-        
         #-- make the plot
         if mtype == 'imc':
             pl.hexbin(X,Y,mincnt=1,cmap=pl.cm.spectral)  #bins='log'
@@ -2608,8 +2600,8 @@ class SED(object):
         #-- mark best value
         pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
         
-        pl.xlabel(label_dict[x.rstrip('-2')])
-        pl.ylabel(label_dict[y.rstrip('-2')])
+        pl.xlabel(self._label_dict(x))
+        pl.ylabel(self._label_dict(y))
         if ptype in label_dict:
             cbar.set_label(label_dict[ptype])
         else:
@@ -2638,22 +2630,9 @@ class SED(object):
             levels = np.linspace(np.min(grid), np.max(grid), 25)
             ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
         
-        #label_dict = dict(teff='Effective temperature [K]',\
-                          #z='log (Metallicity Z [$Z_\odot$]) [dex]',\
-                          #logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
-                          #ebv='E(B-V) [mag]',\
-                          #ci_raw='Raw probability [%]',\
-                          #ci_red='Reduced probability [%]',\
-                          ##labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
-                          #labs=r'Absolute Luminosity [$L_\odot$]',\
-                          #radius=r'Radius [$R_\odot$]',\
-                          #mass=r'Mass [$M_\odot$]',
-                          #mc=r'MC [Nr. points in hexagonal bin]',
-                          #rv=r'Extinction parameter $R_v$')
-        
         pl.contourf(x,y,grid,levels,**kwargs)
-        pl.xlabel(self.label_dict(xpar))
-        pl.ylabel(self.label_dict(ypar))
+        pl.xlabel(self._label_dict(xpar))
+        pl.ylabel(self._label_dict(ypar))
         cbar = pl.colorbar(fraction=0.08,ticks=ticks)
         cbar.set_label(ptype!='ci_chi2' and r'Probability' or r'$^{10}$log($\chi^2$)')
         
@@ -3284,32 +3263,31 @@ class SED(object):
         
         #-- write the rest
         for mtype in self.results:#['igrid_search','imc']:
-            if mtype in self.results:
-                eff_waves,synflux,photbands = self.results[mtype]['synflux']
-                chi2 = self.results[mtype]['chi2']
-                
-                results_modeldict = dict(extname='model_'+mtype)
-                results_griddict = dict(extname=mtype)
-                keys = sorted(self.results[mtype])
-                for key in keys:
-                    if 'CI' in key:
-                        for ikey in self.results[mtype][key]:
-                            if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
-                                results_modeldict[ikey] = self.results[mtype][key][ikey]
-                            results_griddict[ikey] = self.results[mtype][key][ikey]    
-                    if key=='factor':
-                        results_griddict[key] = self.results[mtype][key]
+            eff_waves,synflux,photbands = self.results[mtype]['synflux']
+            chi2 = self.results[mtype]['chi2']
             
-                fits.write_array(list(self.results[mtype]['model']),filename,
-                                names=('wave','flux','dered_flux'),
-                                units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
-                                header_dict=results_modeldict)
-                if 'grid' in self.results[mtype]:
-                    fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
-                
-                results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
-                
-                fits.write_recarray(results,filename,header_dict=dict(extname='synflux_'+mtype))
+            results_modeldict = dict(extname='model_'+mtype)
+            results_griddict = dict(extname=mtype)
+            keys = sorted(self.results[mtype])
+            for key in keys:
+                if 'CI' in key:
+                    for ikey in self.results[mtype][key]:
+                        if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
+                            results_modeldict[ikey] = self.results[mtype][key][ikey]
+                        results_griddict[ikey] = self.results[mtype][key][ikey]    
+                if key=='factor':
+                    results_griddict[key] = self.results[mtype][key]
+        
+            fits.write_array(list(self.results[mtype]['model']),filename,
+                            names=('wave','flux','dered_flux'),
+                            units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
+                            header_dict=results_modeldict)
+            if 'grid' in self.results[mtype]:
+                fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
+            
+            results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
+            
+            fits.write_recarray(results,filename,header_dict=dict(extname='synflux_'+mtype))
         
         logger.info('Results saved to FITS file: %s'%(filename))
         
@@ -3404,6 +3382,102 @@ class SED(object):
         logger.info('Loaded previous results from FITS')
         return filename
     
+    def save_hdf5(self, filename=None):
+        """
+        Save content of SED object to a HDF5 file. (HDF5 is the successor of FITS files, 
+        providing a clearer structure of the saved content.)
+        Information that is stored is everything that is stored using save_fits, and 
+        the 2D confidence intervalls calculated with calculate_iminimize_CI2D().
+        
+        @param filename: name of SED FITS file
+        @type filename: string
+        @return: the name of the output HDF5 file.
+        @rtype: string
+        """
+        
+        if filename is None:
+            filename = str(os.path.splitext(self.photfile)[0]+'.hdf5')
+            
+        if os.path.isfile(filename):
+            os.remove(filename)
+                
+        hdf = h5py.File(filename)
+        
+        #-- store the photometry
+        hdf.create_group('master')
+        hdf['master'].create_dataset("master", data=self.master)
+        
+        #-- store the results
+        for mtype in self.results.keys():
+            hdf.create_group(mtype)
+            hdf[mtype].create_dataset("synflux", data=self.results[mtype]['synflux'])
+            hdf[mtype].create_dataset("model", data=self.results[mtype]['model'])
+            hdf[mtype].create_dataset("chi2", data=self.results[mtype]['chi2'])
+            hdf[mtype].create_dataset("grid", data=self.results[mtype]['grid'])
+            
+            hdf[mtype].attrs["factor"] = self.results[mtype]['factor']
+            
+            hdf[mtype].create_group('CI')
+            for cikey in self.results[mtype]['CI'].keys():
+                hdf[mtype]['CI'].attrs[cikey] = self.results[mtype]['CI'][cikey]
+            
+            if 'CI2D' in self.results[mtype]:
+                hdf[mtype].create_group('CI2D')
+                for cikey in self.results[mtype]['CI2D'].keys():
+                    hdf[mtype]['CI2D'].create_group(cikey)
+                    for key in self.results[mtype]['CI2D'][cikey].keys():
+                        hdf[mtype]['CI2D'][cikey].attrs[key] = self.results[mtype]['CI2D'][cikey][key]
+            
+        hdf.close()
+        return filename    
+                
+    def load_hdf5(self,filename=None):
+        """
+        Load a previously made SED from HDF5 file.
+        
+        @param filename: name of SED FITS file
+        @type filename: string
+        @return: True if HDF5 file could be loaded
+        @rtype: bool
+        """
+        if filename is None:
+            filename = os.path.splitext(self.photfile)[0]+'.hdf5'
+        if not os.path.isfile(filename):
+            logger.warning('No previous results saved to HFD5 file {:s}'.format(filename))
+            return False
+            
+        hdf = h5py.File(filename, 'r')
+        
+        #-- load photometry
+        self.master = hdf['master']['master'][:]
+        
+        mtypes = hdf.keys()
+        mtypes.remove('master')
+        
+        self.results = {}
+        for mtype in mtypes:
+            self.results[mtype] = {}
+            for key in ['synflux', 'model', 'chi2', 'grid']:
+                if key in hdf[mtype]:
+                    self.results[mtype][key] = hdf[mtype][key][:]
+            
+            if 'factor' in hdf[mtype]: self.results['factor'] = hdf[mtype].attrs['factor']
+            
+            if 'CI' in hdf[mtype]:
+                self.results[mtype]['CI'] = {}
+                for key in hdf[mtype]['CI'].attrs:
+                    self.results[mtype]['CI'][key] = hdf[mtype]['CI'].attrs[key]
+            
+            if 'CI2D' in hdf[mtype]:
+                self.results[mtype]['CI2D'] = {}
+                for cikey in hdf[mtype]['CI2D']:
+                    self.results[mtype]['CI2D'][cikey] = {}
+                    for key in hdf[mtype]['CI2D'][cikey].attrs:
+                        self.results[mtype]['CI2D'][cikey][key] = hdf[mtype]['CI2D'][cikey].attrs[key]
+        
+        hdf.close()3
+        return True
+            
     def save_bibtex(self):
         """
         Convert the bibcodes in a phot file to a bibtex file.
