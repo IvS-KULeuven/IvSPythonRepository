@@ -3475,7 +3475,7 @@ class SED(object):
                     for key in hdf[mtype]['CI2D'][cikey].attrs:
                         self.results[mtype]['CI2D'][cikey][key] = hdf[mtype]['CI2D'][cikey].attrs[key]
         
-        hdf.close()3
+        hdf.close()
         return True
             
     def save_bibtex(self):
