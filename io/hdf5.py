@@ -33,7 +33,6 @@ def read2dict(filename):
         """ recusively read the hdf5 file """
         res = {}
         for name,grp in hdf.items():
-            print name, grp
             #-- read the subgroups and datasets
             if hasattr(grp, 'items'):
                 # in case of a group, read the group into a new dictionary key
