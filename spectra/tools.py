@@ -39,7 +39,7 @@ Add some noise
 Calculate the vsini with the Fourier transform method. To compare the results,
 first compute the FT of the synthetic broadened spectrum without noise:
 
->>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)
+>>> pergram,minima,vsinis,error = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 
 Make a plot of what we already have:
 
@@ -62,7 +62,7 @@ Now compute the vsini of the noisy spectrum, assuming different limb darkening
 parameters
 
 >>> for epsilon in np.linspace(0.0,1.0,10):
-...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
+...   pergram,minima,vsinis,error = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 ...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f: vsini = %.1f km/s'%(epsilon,vsinis[0]))
 
 Set the xticks to vsini values for clarity:
@@ -157,6 +157,8 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     
     where f1 is the first minimum of the Fourier transform.
     
+    The error is estimated as the Rayleigh limit of the Fourier Transform
+    
     Example usage and tests: Generate some data. We need a central wavelength (A),
     the speed of light in angstrom/s, limb darkening coefficients and test
     vsinis:
@@ -239,8 +241,8 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     @type wave: ndarray
     @param flux: normalised flux of the profile
     @type flux: ndarray
-    @rtype: (array,array),(array,array),array
-    @return: periodogram, extrema, vsini values
+    @rtype: (array,array),(array,array),array,float
+    @return: periodogram (freqs in s/km), extrema (weird units), vsini values (km/s), error (km/s)
     """
     cc = conversions.convert('m/s','AA/s',constants.cc)
     #-- clip the wavelength and flux region if needed:
@@ -256,6 +258,7 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     #flux = flux / (np.median(np.sort(flux)[-5:]))
     freqs,ampls = pergrams.deeming(wave,(1-flux),**kwargs)
     ampls = ampls/max(ampls)
+    error = 1./wave.ptp()
     #-- get all the peaks
     rise = np.diff(ampls[1:])>=0
     fall = np.diff(ampls[:-1])<=0
@@ -265,9 +268,11 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     freqs = freqs*clam/q1/cc
     freqs = conversions.convert('s/AA','s/km',freqs,wave=(clam,'AA'))
     vsini_values = cc/clam*q1/minima
-    vsini_values = conversions.convert('AA/s','km/s',vsini_values,wave=(clam,'AA'))
-    
-    return (freqs,ampls),(minima,minvals),vsini_values
+    vsini_values = conversions.convert('AA/s','km/s',vsini_values)#,wave=(clam,'AA'))
+    #-- determine the error as the rayleigh limit
+    error = error*clam/q1/cc
+    error = conversions.convert('s/AA','s/km',error,wave=(clam,'AA'))
+    return (freqs,ampls),(minima,minvals),vsini_values,error
 
 
 
