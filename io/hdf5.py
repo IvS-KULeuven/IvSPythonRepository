@@ -12,6 +12,11 @@ http://alfven.org/wp/hdf5-for-python/
 
 import os
 import h5py
+import logging
+from ivs.aux import loggers
+
+logger = logging.getLogger("IO.HDF5")
+logger.addHandler(loggers.NullHandler())
 
 #{ Input
 
