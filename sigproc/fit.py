@@ -1291,6 +1291,8 @@ class Function(object):
             value = kwargs['values'] if 'values' in kwargs else [0 for i in range(nrpars)]
         if bounds == None:
             bounds = np.array([[None,None] for i in range(nrpars)])
+        else:
+            bounds = np.array(bounds)
         if vary == None:
             vary = [True for i in range(nrpars)]
         if expr == None:
