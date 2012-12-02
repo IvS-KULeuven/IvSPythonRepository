@@ -2458,7 +2458,11 @@ class SED(object):
     #{ Plotting routines
     
     def _label_dict(self, param):
-        """ returns the label belonging to a certain parameter """
+        """
+        Returns the label belonging to a certain parameter
+        
+        If the label is not present, the function will just return param.
+        """
         #split parameter in param name and componentent number
         param, component = re.findall('(.*?)(\d?$)', param)[0]
         
@@ -2474,11 +2478,12 @@ class SED(object):
                     mass=r'Mass [$M_\odot$]',
                     mc=r'MC [Nr. points in hexagonal bin]',
                     rv=r'Extinction parameter $R_v$')
-                    
+        if param in ldict:
+            param = ldict[param]
         if component != '':
-            return ldict[param] + " - " + component
+            return param + " - " + component
         else:
-            return ldict[param]
+            return param
     
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
@@ -2602,10 +2607,7 @@ class SED(object):
         
         pl.xlabel(self._label_dict(x))
         pl.ylabel(self._label_dict(y))
-        if ptype in self._label_dict:
-            cbar.set_label(self._label_dict[ptype])
-        else:
-            cbar.set_label(ptype)
+        cbar.set_label(self._label_dict[ptype])
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
     
