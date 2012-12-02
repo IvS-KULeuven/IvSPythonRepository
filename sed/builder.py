@@ -2607,7 +2607,7 @@ class SED(object):
         
         pl.xlabel(self._label_dict(x))
         pl.ylabel(self._label_dict(y))
-        cbar.set_label(self._label_dict[ptype])
+        cbar.set_label(self._label_dict(ptype))
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
     
