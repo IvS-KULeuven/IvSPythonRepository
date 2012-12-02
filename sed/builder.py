@@ -2602,8 +2602,8 @@ class SED(object):
         
         pl.xlabel(self._label_dict(x))
         pl.ylabel(self._label_dict(y))
-        if ptype in label_dict:
-            cbar.set_label(label_dict[ptype])
+        if ptype in self._label_dict:
+            cbar.set_label(self._label_dict[ptype])
         else:
             cbar.set_label(ptype)
         
