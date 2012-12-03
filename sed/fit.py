@@ -7,15 +7,18 @@ import sys
 import pyfits
 import itertools
 import re
+import copy
 
 import numpy as np
 from numpy import inf
+import scipy
 from scipy.interpolate import Rbf
 from scipy.optimize import fmin,fmin_powell
 from ivs.statistics import pca
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed.decorators import iterate_gridsearch,parallel_gridsearch
+from ivs.sigproc import fit as sfit
 from ivs.aux import numpy_ext
 from ivs.aux import progressMeter
 from ivs.aux.decorators import make_parallel
@@ -255,8 +258,6 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
-            
-    print ranges, parameters
        
     #-- report on the received grid
     if not kwargs:
@@ -347,28 +348,41 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
     
 def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs): 
     """
-    Generate a grid of parameters for 2 or more stars. Based on the generate_grid_single_pix
+    Generate a grid of parameters for 1 or more stars. Based on the generate_grid_single_pix
     method. The radius of the components is based on the masses if given, otherwise on the 
-    radiusrange argument.
+    radrange arguments. If masses are given the radrange arguments are ignored, meaning that 
+    the returned radius can be outside those limits. If only 1 component is provided no radius
+    will be returned.
     
-    returns a dictionary with for each parameter that changes an array of values.
+    This function can handle multiple components in the same way as a single component. 
+    parameter ranges are provided as <parname><component>range=(...,...). fx: 
+    teffrange = (5000, 10000), loggrange = (3.5, 4.5), teff2range = (10000, 20000),
+    logg2range = (5.5, 6.0)
+    
+    For the first (or only) component both no component number (teffrange) or 1 as component
+    number (teff1range) can be used.
+    
+    Returns a dictionary with for each parameter that has a range provided, an array of values.
+    In the case of multiple components, the radius will be returned even is no radius ranges
+    are provided.
     """
     
     #-- Find all ranges and the number of components
-    radiusrange = kwargs.pop('radiusrange', None)
+    radiusrange = []
     ranges, parameters, components = {}, set(), set()
     for key in kwargs.keys():
-        if re.search('range$', key):
+        if re.search('range$', key) and not re.search('^rad\d?',key):
             ranges[key] = kwargs.pop(key)
             name, comp = re.findall('(.*?)(\d?)range$', key)[0]
             parameters.add(name)
             components.add(comp)
+        elif re.search('range$', key) and re.search('^rad\d?',key):
+            radiusrange.append(kwargs.pop(key))
     
     #-- If only one component we can directly return the grid
     if len(components) == 1:
-        kwargs_ = kwargs
-        kwargs_.update(ranges)
-        return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
+        kwargs.update(ranges)
+        return generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs)
     
     #-- For each component get the grid from grid_single_pix
     pars, npoints = {}, +inf
@@ -377,10 +391,9 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         for par in parameters:
             ranges_[par+'range'] = ranges[par+comp+'range'] if par+comp+'range' in ranges else ranges[par+'range']
         
-        kwargs_ = kwargs
-        kwargs_.update(ranges_)
-        kwargs_.update(grid)
-        grid_ = generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs_)
+        kwargs.update(ranges_)
+        kwargs.update(grid)
+        grid_ = generate_grid_single_pix(photbands, points=points, clear_memory=clear_memory, **kwargs)
         
         #-- prepare a permutation so different blocks are not clustered together
         permutation = np.random.permutation(len(grid_['teff']))
@@ -401,17 +414,15 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         if 'rv' in parameters: pars['rv'+comp] = pars['rv']
         
     #-- Check if we are dealing with a binary or not and set the radii accordingly
-    if 'masses' in kwargs:
+    if 'masses' in kwargs and kwargs['masses'] != None:
         #-- The radius of the stars is calculated based on logg and the provided masses
         masses = kwargs['masses']
-        G = constants.GG_cgs
-        Msol = constants.Msol_cgs
-        Rsol = constants.Rsol_cgs
+        G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.sqrt(G*masses[i]*Msol/10**pars['logg'+comp])/Rsol
     else:
         #-- We have random different radii for the stars
-        if radiusrange == None: radiusrange = [(0.1,10) for i in components]
+        if radiusrange == []: radiusrange = [(0.1,10) for i in components]
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
             
@@ -802,6 +813,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
     
     return teffs,loggs,ebvs,zs,radii                     
 
+#{ Fitting: grid search
 
 def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         """
@@ -839,8 +851,8 @@ def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         @keyword stat_func: function to evaluate the fit
         @type stat_func: function
         @return: (chi squares, scale factors, error on scale factors, absolute
-        luminosities (R=1Rsol), index
-        @rtype: 4/5X1d array
+        luminosities (R=1Rsol)
+        @rtype: array
         """
         model_func = kwargs.pop('model_func',model.get_itable_pix)
         stat_func = kwargs.pop('stat_func',stat_chi2)
@@ -854,188 +866,277 @@ def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         #-- return results
         return chisqs,scales,e_scales,lumis
 
-
 @parallel_gridsearch
 @make_parallel
 def igrid_search(meas,e_meas,photbands,*args,**kwargs):
-        """
-        Run over gridpoints and evaluate model C{model_func} via C{stat_func}.
-        
-        The measurements are defined via C{meas, e_meas, photbands, colors} and
-        should be 1d arrays of equal length. C{colors} should be a boolean
-        array, C{photbands} should be a string array.
-        
-        The grid points are defined via C{args}. C{args} should be a tuple of 
-        1x? dimensional arrays of equal length. For single stars, this is
-        typically effective temperatures, loggs, reddenings and metallicities.
-        For multiple systems, (at least some of the) previously mentioned
-        parameters are typically doubled, and radius ratios are added. Remember
-        to specify the C{model_func} to match single or multiple systems.
-        
-        At each grid point, the pre-calculated photometry will be retrieved via
-        the keyword C{model_func} and compared to the measurements via the function
-        definded via C{stat_func}. This function should be of the same form as
-        L{stat_chi2}.
-        
-        Extra arguments are passed to L{parallel_gridsearch} for parallelization
-        and to {model_func} for further specification of grids etc.
-        
-        The index array is returned to trace the results after parallelization.
-        
-        @param meas: the measurements that have to be compared with the models
-        @type meas: 1D numpy array of floats
-        @param e_meas: errors on the measurements
-        @type e_meas: 1D numpy array of floats
-        @param photbands: names of the photometric passbands
-        @type photbands: 1D numpy array of strings
-        @keyword model_func: function to translate parameters to synthetic (model) data
-        @type model_func: function
-        @keyword stat_func: function to evaluate the fit
-        @type stat_func: function
-        @return: (chi squares, scale factors, error on scale factors, absolute
-        luminosities (R=1Rsol), index
-        @rtype: 4/5X1d array
-        """
-        model_func = kwargs.pop('model_func',model.get_itable)
-        stat_func = kwargs.pop('stat_func',stat_chi2)
-        index = kwargs.pop('index',None)
-        N = len(args[0])
-        #-- prepare output arrays
-        chisqs = np.zeros(N)
-        scales = np.zeros(N)
-        e_scales = np.zeros(N)
-        lumis = np.zeros(N)
-        colors = np.array([filters.is_color(photband) for photband in photbands],bool)
-        #-- show a progressMeter when not parallelized
-        if index is None:
-            p = progressMeter.ProgressMeter(total=N)
-        #-- run over the grid, retrieve synthetic fluces and compare with
-        #   observations.
-        for n,pars in enumerate(itertools.izip(*args)):
-            if index is None: p.update(1)
-            syn_flux,Labs = model_func(*pars,photbands=photbands,**kwargs)
-            chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux)
-            lumis[n] = Labs
-        #-- return results
-        if index is not None:
-            return chisqs,scales,e_scales,lumis,index
-        else:
-            return chisqs,scales,e_scales,lumis
-
-def residual_single(params, meas, photbands, kwargs):
-    teff = params['teff'].value
-    logg = params['logg'].value
-    ebv = params['ebv'].value
-    z = params['z'].value
-
-    iflux, Labs = model.get_itable(teff=teff, logg=logg, ebv=ebv, z=z, photbands=photbands, **kwargs)
-    scale = np.average( meas / iflux )
-    
-    print np.array(meas-iflux*scale).shape
-    return (meas-iflux*scale)#**2 / e_meas**2
-        
-def residual_multiple(params, meas, e_meas, photbands, kwargs):
-    teff = params['teff'].value
-    logg = params['logg'].value
-    rad = params['rad'].value
-    teff2 = params['teff2'].value
-    logg2 = params['logg2'].value
-    rad2 = params['rad2'].value
-    ebv = params['ebv'].value
-    z = params['z'].value
-    
-    print teff,logg,rad,teff2,logg2,rad2
-    
-    if logg > 5.00: logg=5.00
-    if logg2 > 6.00: logg2=6.00
-    if logg2 < 5.00: logg2=5.00
-
-    iflux, Labs = model.get_itable_multiple(teff=(teff,teff2), logg=(logg,logg2), ebv=(ebv,ebv),
-                                      z=(z,z), radius=(rad,rad2), photbands=photbands, **kwargs)
-    scale = np.average( meas / iflux )
-    
-    return (meas-iflux*scale)**2 / e_meas**2
-
-def residual_binary(params, meas, e_meas, photbands, kwargs):
-    teff = params['teff'].value
-    logg = params['logg'].value
-    rad = params['rad'].value
-    teff2 = params['teff2'].value
-    logg2 = params['logg2'].value
-    rad2 = params['rad2'].value
-    ebv = params['ebv'].value
-    z = params['z'].value
-
-    iflux, Labs = model.get_itable_multiple(teff=(teff,teff2), logg=(logg,logg2), ebv=(ebv,ebv),
-                                      z=(z,z), radius=(rad,rad2), photbands=photbands, **kwargs)
-    scale = np.average( meas / iflux )
-    
-    return (meas-iflux*scale)**2 / e_meas**2
-
-def dfun(params, meas, photbands, kwargs):
-    dt = (model.get_itable(teff=5200, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] - 
-            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (5200-5000)
-            
-    dg = (model.get_itable(teff=5000, logg=4.50, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] - 
-            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (4.50-4.25)
-            
-    de = (model.get_itable(teff=5000, logg=4.25, ebv=0.1, z=0.0, photbands=photbands, **kwargs)[0] - 
-            model.get_itable(teff=5000, logg=4.25, ebv=0.0, z=0.0, photbands=photbands, **kwargs)[0] ) / (0.1-0.0)
-            
-    dz = np.ones(len(meas))
-    
-    print np.array([dt,dg,de,dz]).shape
-    
-    return [dt,dg,de,dz]
-
-def iminimize(meas,e_meas,photbands,**kwargs):
     """
-    Using http://newville.github.com/lmfit-py/
+    Run over gridpoints and evaluate model C{model_func} via C{stat_func}.
+    
+    The measurements are defined via C{meas, e_meas, photbands, colors} and
+    should be 1d arrays of equal length. C{colors} should be a boolean
+    array, C{photbands} should be a string array.
+    
+    The grid points are defined via C{args}. C{args} should be a tuple of 
+    1x? dimensional arrays of equal length. For single stars, this is
+    typically effective temperatures, loggs, reddenings and metallicities.
+    For multiple systems, (at least some of the) previously mentioned
+    parameters are typically doubled, and radius ratios are added. Remember
+    to specify the C{model_func} to match single or multiple systems.
+    
+    At each grid point, the pre-calculated photometry will be retrieved via
+    the keyword C{model_func} and compared to the measurements via the function
+    definded via C{stat_func}. This function should be of the same form as
+    L{stat_chi2}.
+    
+    Extra arguments are passed to L{parallel_gridsearch} for parallelization
+    and to {model_func} for further specification of grids etc.
+    
+    The index array is returned to trace the results after parallelization.
+    
+    @param meas: the measurements that have to be compared with the models
+    @type meas: 1D numpy array of floats
+    @param e_meas: errors on the measurements
+    @type e_meas: 1D numpy array of floats
+    @param photbands: names of the photometric passbands
+    @type photbands: 1D numpy array of strings
+    @keyword model_func: function to translate parameters to synthetic (model) data
+    @type model_func: function
+    @keyword stat_func: function to evaluate the fit
+    @type stat_func: function
+    @return: (chi squares, scale factors, error on scale factors, absolute
+    luminosities (R=1Rsol), index
+    @rtype: 4/5X1d array
     """
-    from ivs.lmfit import minimize, Parameters
     model_func = kwargs.pop('model_func',model.get_itable)
-    engine = kwargs.pop('engine','leastsq')
-    type = kwargs.pop('type','single')
-    
-    if type == 'single':
-        residual = residual_single
-        
-        params = Parameters()
-        params.add('teff', value=kwargs.pop('teff'), min=15000, max=25000)
-        params.add('logg', value=kwargs.pop('logg'), min=4.0, max=4.99)
-        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.2, vary=False)
-        params.add('z', value=kwargs.pop('z'), vary=False)
-    
-    if type == 'multiple':
-        residual = residual_multiple
-        params = Parameters()
-        params.add('teff', value=kwargs['teff'][0], min=5000, max=7000)
-        params.add('logg', value=kwargs['logg'][0], min=4.0, max=4.99)
-        params.add('rad', value=kwargs['rad'][0], min=0.5, max=2.0, vary=False)
-        params.add('teff2', value=kwargs.pop('teff')[1], min=20000, max=40000)
-        params.add('logg2', value=kwargs.pop('logg')[1], min=5.0, max=6.0)
-        params.add('rad2', value=kwargs.pop('rad')[1], min=0.05, max=0.5, vary=False)
-        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.01, vary=False)
-        params.add('z', value=kwargs.pop('z'), vary=False)
-        
-    if type == 'binary':
-        residual = residual_binary
-        params = Parameters()
-        params.add('mass', value=kwargs['masses'][0], vary=False)
-        params.add('mass2', value=kwargs.pop('masses')[1], vary=False)
-        params.add('teff', value=kwargs['teff'][0], min=5000, max=7000)
-        params.add('logg', value=kwargs['logg'][0], min=4.0, max=4.99)
-        params.add('rad', expr='sqrt(mass / 10**logg)')
-        params.add('teff2', value=kwargs.pop('teff')[1], min=20000, max=40000)
-        params.add('logg2', value=kwargs.pop('logg')[1], min=5.0, max=6.0)
-        params.add('rad2', expr='sqrt(mass2 / 10**logg2)')
-        params.add('ebv', value=kwargs.pop('ebv'), min=0.0, max=0.01, vary=True)
-        params.add('z', value=kwargs.pop('z'), vary=False)
-    
-    out = minimize(residual, params, args=(meas, photbands, kwargs), engine=engine, Dfun=dfun, col_deriv=1)#, ftol=0.0005)#, diag=(500,0.5,0.01,0.01), factor=1/5.0)
-    
-    return out, params
+    stat_func = kwargs.pop('stat_func',stat_chi2)
+    index = kwargs.pop('index',None)
+    N = len(args[0])
+    #-- prepare output arrays
+    chisqs = np.zeros(N)
+    scales = np.zeros(N)
+    e_scales = np.zeros(N)
+    lumis = np.zeros(N)
+    colors = np.array([filters.is_color(photband) for photband in photbands],bool)
+    #-- show a progressMeter when not parallelized
+    if index is None:
+        p = progressMeter.ProgressMeter(total=N)
+    #-- run over the grid, retrieve synthetic fluces and compare with
+    #   observations.
+    for n,pars in enumerate(itertools.izip(*args)):
+        if index is None: p.update(1)
+        syn_flux,Labs = model_func(*pars,photbands=photbands,**kwargs)
+        chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux)
+        lumis[n] = Labs
+    #-- return results
+    if index is not None:
+        return chisqs,scales,e_scales,lumis,index
+    else:
+        return chisqs,scales,e_scales,lumis
 
+#}
+
+#{ Fitting: minimizer
+
+def create_parameter_dict(**pars):
+    
+    #-- Find all the parameters first
+    parnames = set()
+    atributes = set()
+    for key in pars.keys():
+        name, att = re.findall("(.*)_([a-zA-Z]+)$", key)[0]
+        parnames.add(name)
+        atributes.add(att)
+    
+    #-- create dictionary with the attributes
+    parnames = np.array(list(parnames))
+    result = dict(names=parnames)
+    for att in atributes:
+        result[att] = np.array([None for i in parnames])
+    
+    #-- read the attributes
+    for key in pars.keys():
+        name, att = re.findall("(.*)_([a-zA-Z]+)$", key)[0]
+        result[att][parnames == name] = pars[key]
+    
+    return result
+
+def _get_info_from_minimizer(minimizers, startpars, photbands, meas, e_meas, **fitkws):
+    scales, lumis, chisqrs, nfevs, allpars = [], [], [], [], {}
+    for n in fitkws['pnames']:
+        allpars[n] = np.array([])
+        allpars[n+'start'] = np.array([])
+    for mini, start in zip(minimizers, startpars):
+        chisqrs.append(mini.chisqr)
+        nfevs.append(mini.nfev)
+        
+        val, err = mini.model.get_parameters(full_output=False)
+        for n, v in zip(fitkws['pnames'], val):
+            allpars[n] = np.append(allpars[n], [v])
+            allpars[n+'start'] = np.append(allpars[n+'start'], [start[n].value])
+        
+        synth, lum = mini.model.evaluate(photbands, **fitkws)
+        distance = fitkws['distance'] if 'distance' in fitkws else None
+        if distance != None:
+            scale = 1/distance**2
+        else:
+            ratio = (meas/synth[:,0])
+            weights = (meas/e_meas)
+            scale = np.average(ratio,weights=weights)
+        lumis.append(lum[0])
+        scales.append(scale)
+    
+    return np.array(chisqrs), np.array(nfevs), np.array(scales), np.array(lumis), allpars
+
+def _iminimize_model(varlist, x, *args, **kws):
+    pnames = kws.pop('pnames')
+    pars = {}
+    for n, v in zip(pnames, varlist):
+        pars[n] = np.array([v])
+    pars.update(kws)
+    return model.get_itable_pix(wave_units=None, photbands=x, **pars)
+    
+def _iminimize_residuals(synth, meas, weights=None, **kwargs):
+    synth = synth[0][:,0] #select the flux.
+    e_meas = 1 / weights
+    if 'distance' in kwargs:
+        scale = 1/kwargs['distance']**2
+    else:
+        ratio = (meas/synth)
+        weights = (meas/e_meas)
+        scale = np.average(ratio,weights=weights)
+    return (meas - synth*scale)/e_meas
+ 
+def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwargs):
+    """
+    minimizer based on the sigproc.fit lmfit minimizer.
+    provide the observed data, the fitting model, residual function and parameter
+    information about the variables, and this function will return the best fit
+    parameters together with extra information about the fit.
+    
+    if the fitkws keyword is supplied, this dict will be made available to the 
+    model_func (fit model) during the fitting process. The order of the parameters
+    will also be made available as the 'pnames' keyword.
+    """
+    
+    kick_list = kwargs.pop('kick_list', None)
+    fitkws = kwargs.pop('fitkws', dict())
+    fitmodel = kwargs.pop('model_func',_iminimize_model)
+    residuals = kwargs.pop('res_func',_iminimize_residuals)
+    epsfcn = kwargs.pop('epsfcn', 0.001)# using 10% step to derive jacobian.
+    
+    #-- get the parameters
+    parameters = create_parameter_dict(**kwargs)
+        
+    #-- setup the fitting model
+    pnames = parameters.pop('names')
+    fmodel = sfit.Function(function=fitmodel, par_names=pnames)
+    fmodel.setup_parameters(**parameters)  
+    
+    #-- fit the model to the data
+    fitkws.update(dict(pnames=pnames))
+    if points == None:
+        startpars = [copy.deepcopy(fmodel.parameters)]
+        minimizer = sfit.minimize(photbands,meas, fmodel, weights=1/e_meas, kws=fitkws, \
+                                      resfunc=residuals, engine='leastsq', epsfcn=epsfcn)
+        minimizer = [minimizer]
+    else:
+        minimizer, startpars, newmodels, chisqr = sfit.grid_minimize(photbands, meas, fmodel, \
+                           weights=1/e_meas, kws=fitkws, resfunc=residuals, engine='leastsq', \
+                           epsfcn=epsfcn, points=points, parameters=kick_list, return_all=True)
+    
+    if return_minimizer:
+        #-- return the actual minimizer used by the calculate ci methods
+        return minimizer[0]
+    else:
+        #-- for all other users return the actual results
+        chisqr, nfev, scale, lumis, grid = _get_info_from_minimizer(minimizer, startpars,\
+                                                        photbands, meas, e_meas, **fitkws)
+        ##-- collect all parameter info
+        #val, err, vary, min, max, expr = fmodel.get_parameters(full_output=True)
+        #pars = dict(name=pnames, value=val, cilow=min, cihigh=max)
+        
+        return grid, chisqr, nfev, scale, lumis
+
+def calculate_iminimize_CI(meas,e_meas,photbands, CI_limit=0.66, **kwargs):
+    """ 
+    Calculate the confidence intervalls for every parameter.
+    When ci fails, the boundaries are returned as ci.
+    """
+    
+    maxiter = kwargs.pop('maxiter', 100)
+    
+    mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
+    val, err, vary, low, high, expr = mini.model.get_parameters(full_output=True)
+    pnames = mini.model.par_names
+    
+    #-- setup stat function
+    def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
+        k = Ndata-Nparas
+        factor = max(best_chi/k,1)
+        return scipy.stats.distributions.chi2.cdf(new_chi/factor,k)
+    
+    cilow, cihigh = low.copy(), high.copy()
+    for i,p in enumerate(pnames):
+        try:
+            ci = mini.calculate_CI(parameters=[p], short_output=True,\
+                    sigma=CI_limit, maxiter=maxiter, prob_func=prob_func)
+            logger.debug('Calculated ci for parameter %s: %s'%(p,ci) )
+            if ci[0] != None:  cilow[i] = ci[0]
+            if ci[1] != None:  cihigh[i] = ci[1]
+        except Exception:
+            logger.warning('Failed to calculate CI for parameter: %s'%(p))
+        
+    return dict(name=pnames, value=val, cilow=cilow, cihigh=cihigh)
+
+def calculate_iminimize_CI2D(meas,e_meas,photbands, xpar, ypar, df=None, **kwargs):
+    """
+    Calculate a 2D confidence grid for the given parameters.
+    You can provide limits on the parameters yourself, if none are 
+    provided, the function will take care of it, but it might crash 
+    if the limits are outside the model range.
+    returns: x vals, y vals, ci values
+    """
+    maxiter = kwargs.pop('maxiter', 25)
+    res = kwargs.pop('res', (10,10))
+    if type(res) == int: res = (res,res)
+    limits = kwargs.pop('limits', None)
+    citype = kwargs.pop('type', 'prob')
+    
+    mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
+    val, err, vary, low, high, expr = mini.model.get_parameters(full_output=True)
+    name = mini.model.par_names
+    xval, yval = val[name==xpar], val[name==ypar]
+    
+    #-- if not provided choose own limits
+    if limits != None:
+        xmin, xmax = limits[0]
+        ymin, ymax = limits[1]
+    else:
+        xmin = low[name==xpar] if low[name==xpar] != None else xval - 5*err[name==xpar]
+        xmax = high[name==xpar] if high[name==xpar] != None else xval + 5*err[name==xpar]
+        ymin = low[name==ypar] if low[name==ypar] != None else yval - 5*err[name==ypar]
+        ymax = high[name==ypar] if high[name==ypar] != None else yval + 5*err[name==ypar]
+        
+    #-- fix limits to include best fit in CI
+    xstep = (xmax - xmin) / float(res[0])
+    ystep = (ymax - ymin) / float(res[1])
+    xmin = xval - np.floor((xval - xmin) / xstep) * xstep
+    xmax = xval + (res[0] - 1 - np.floor((xval - xmin) / xstep)) * xstep
+    ymin = yval - np.floor((yval - ymin) / ystep) * ystep
+    ymax = yval + (res[1] - 1 - np.floor((yval - ymin) / ystep)) * ystep
+    limits = [(xmin, xmax), (ymin, ymax)]
+    
+    x,y,ci_chi2 = mini.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res, limits=limits, type='chi2')
+    
+    #-- do the statistics
+    N = mini.ndata
+    if df == None: df = mini.nvarys
+    k = N-df
+    factor = max(mini.chisqr/k,1)
+    ci_raw = scipy.stats.distributions.chi2.cdf(ci_chi2,k)
+    ci_red = scipy.stats.distributions.chi2.cdf(ci_chi2/factor,k)
+    
+    return x, y, ci_chi2, ci_raw, ci_red
 
 def iminimize2(meas,e_meas,photbands,*args,**kwargs):
     model_func = kwargs.pop('model_func',model.get_itable)

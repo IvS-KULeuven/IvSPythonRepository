@@ -284,6 +284,7 @@ And make a nice plot
 ]include figure]]ivs_sed_model_example.png]
 
 """
+import re
 import os
 import sys
 import glob
@@ -370,7 +371,7 @@ def set_defaults_multiple(*args):
                 defaults_multiple[i][key] = arg[key]
                 logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
 
-def copy2scratch(z=None):
+def copy2scratch(**kwargs):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
@@ -382,8 +383,8 @@ def copy2scratch(z=None):
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
     
-    It is possible to give z='*' as an option; when you do that, the grids
-    with all z values are copied. Don't forget to add that option to clean_scratch too!
+    It is possible to give z='*' and Rv='*' as an option; when you do that, the grids
+    with all z, Rv values are copied. Don't forget to add that option to clean_scratch too!
     """
     global scratchdir
     uname = getpass.getuser()
@@ -402,9 +403,12 @@ def copy2scratch(z=None):
         default['use_scratch'] = False
         #-- set the z with the starred version '*' if asked for, but remember
         #   the original value to reset it after the loop is done.
-        if z is not None:
-            previous_z = default['z']
-            default['z']
+        originalDefaults = {}
+        for key in kwargs:
+            if key in default:
+                originalDefaults[key] = default[key]
+                default[key] = kwargs[key]
+                logger.debug('Using provided value for {0:s}={1:s} when copying to scratch'.format(key,str(kwargs[key])))
         #grid
         fname = get_file(integrated=False,**default)
         #-- we could have received a list (multiple files) or a string (single file)
@@ -427,10 +431,11 @@ def copy2scratch(z=None):
             else:
                 logger.info('Using existing grid: %s from scratch'%(os.path.basename(ifname)))
         default['use_scratch'] = True
-        if z is not None:
-            default['z'] = previous_z
+        for key in kwargs:
+            if key in default:
+                default[key] = originalDefaults[key]
 
-def clean_scratch(z=None):
+def clean_scratch(**kwargs):
     """
     Remove the grids that were copied to the scratch directory by using the
     function copy2scratch(). Be carefull with this function, as it doesn't check
@@ -444,9 +449,16 @@ def clean_scratch(z=None):
     
     for default in defaults_:
         if default['use_scratch']:
-            if z is not None:
-                previous_z = default['z']
-                default['z']
+            originalDefaults = {}
+            for key in kwargs:
+                if key in default:
+                    originalDefaults[key] = default[key]
+                    default[key] = kwargs[key]
+                    logger.debug('Using provided value for {0:s}={1:s} when deleting from scratch'.format(key,str(kwargs[key])))
+            
+            #if z is not None:
+                #previous_z = default['z']
+                #default['z']
             fname = get_file(integrated=False,**default)
             if isinstance(fname,str):
                 fname = [fname]
@@ -463,8 +475,11 @@ def clean_scratch(z=None):
                     logger.info('Removed file: %s'%(ifname))
                     os.remove(ifname)    
             default['use_scratch'] = False
-            if z is not None:
-                default['z'] = previous_z
+            for key in kwargs:
+                if key in default:
+                    default[key] = originalDefaults[key]
+            #if z is not None:
+                #default['z'] = previous_z
 
 def defaults2str():
     """
@@ -640,11 +655,39 @@ def get_file(integrated=False,**kwargs):
         else: ct = ct+'288'
         basename = 'nemo_%s_z%.2f_v%d.fits'%(ct,z,vturb)
     elif grid=='tmap':
-        basename = 'SED_TMAP_extended.fits' #only available for 1 metalicity
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_lowres%s.fits'%(postfix) #only available for 1 metalicity
     elif grid=='heberb':
-         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
-         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
+        
+    elif grid=='tmaptest':
+        """ Grids exclusively for testing purposes"""
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity  
+    
+    elif grid=='kurucztest':
+        """ Grids exclusively for testing purposes"""
+        if not isinstance(z,str): z = '%.1f'%(z)
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'kurucz_SEDtest_z%s%s.fits'%(z,postfix) #only available for 1 metalicity 
+    
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
@@ -672,7 +715,8 @@ def get_file(integrated=False,**kwargs):
                 grid = config.glob(basedir,'i'+basename)
             else:
                 grid = config.glob(basedir,basename)   
-                
+    
+    #grid.sort()
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
 
@@ -986,7 +1030,7 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
     return wave,flux
 
 
-def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
+def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
                wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere in
@@ -1026,6 +1070,11 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     @return: (wave,) flux, absolute luminosity
     @rtype: (ndarray,)ndarray,float
     """
+    if 'vrad' in kwargs:
+        logger.debug('vrad is NOT taken into account when interpolating in get_itable()')
+    if 'rv' in kwargs:
+        logger.debug('Rv is NOT taken into account when interpolating in get_itable()')
+    
     if photbands is None:
         raise ValueError('no photometric passbands given')
     ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
@@ -1167,6 +1216,10 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     #   absolute luminosity
     flux,Labs = np.array(flux[:-1],float),flux[-1]
     
+    #-- Take radius into account when provided
+    if rad != None:
+        flux,Labs = flux*rad**2, Labs*rad**2
+    
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
     
@@ -1180,8 +1233,131 @@ def get_itable(teff=None,logg=None,ebv=0,z=0,photbands=None,
     else:
         return flux,Labs
 
+def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
+                                                        grids=None, **kwargs):
+    """
+    Retrieve the integrated spectral energy distribution of a combined model
+    atmosphere.
+    
+    >>> teff1,teff2 = 20200,5100
+    >>> logg1,logg2 = 4.35,2.00
+    >>> ebv = 0.2,0.2
+    >>> photbands = ['JOHNSON.U','JOHNSON.V','2MASS.J','2MASS.H','2MASS.KS']
+    
+    >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=ebv[0])
+    >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
+    >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])
+    
+    >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='AA')
+    >>> iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
+    >>> iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)
+    
+    >>> p = pl.figure()
+    >>> p = pl.gcf().canvas.set_window_title('Test of <get_itable_multiple>')
+    >>> p = pl.loglog(wave1,flux1,'r-')
+    >>> p = pl.loglog(iwave1,iflux1,'ro',ms=10)
+    >>> p = pl.loglog(wave2,flux2*20**2,'b-')
+    >>> p = pl.loglog(iwave1,iflux2*20**2,'bo',ms=10)
+    >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
+    >>> p = pl.loglog(iwave1,iflux3,'kx',ms=10,mew=2)
+    
+    @param teff: effective temperature
+    @type teff: tuple floats
+    @param logg: logarithmic gravity (cgs)
+    @type logg: tuple floats
+    @param ebv: reddening coefficient
+    @type ebv: tuple floats
+    @param z: metallicity
+    @type z: tuple floats
+    @param radius: ratio of R_i/(R_{i-1})
+    @type radius: tuple of floats
+    @param photbands: photometric passbands
+    @type photbands: list
+    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
+    @type flux_units: str
+    @param grids: specifications for grid1
+    @type grids: list of dict
+    @param full_output: return all individual SEDs
+    @type full_output: boolean
+    @return: wavelength,flux
+    @rtype: (ndarray,ndarray)
+    """
+    #-- Find the parameters provided and store them separately.
+    values, parameters, components = {}, set(), set()
+    for key in kwargs.keys():
+        if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
+            par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
+            values[key] = kwargs.pop(key)
+            parameters.add(par)
+            components.add(comp)
+    
+    #-- If there is only one component, we can directly return the result
+    if len(components) == 1:
+        kwargs.update(values)
+        return get_itable_single(photbands=photbands,wave_units=wave_units,
+                                     flux_units=flux_units,**kwargs)
+    
+    #-- run over all fluxes and sum them, we do not need to multiply with the radius
+    #   as the radius is provided as an argument to itable_single_pix.
+    fluxes, Labs = [],[]                                
+    for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
+        trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
+        kwargs_ = kwargs
+        kwargs_.update(grid)
+        for par in parameters:
+            kwargs_[par] = values[par+comp] if par+comp in values else values[par]
+        
+        f,L = get_itable_single(photbands=photbands,wave_units=None,**kwargs_)
+                                     
+        fluxes.append(f)
+        Labs.append(L)
+        
+    fluxes = np.sum(fluxes,axis=0)
+    Labs = np.sum(Labs,axis=0)
+    
+    if flux_units!='erg/s/cm2/AA/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+    
+    if wave_units is not None:
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave)
+        return wave,fluxes,Labs
+    
+    return fluxes,Labs
+    
+    
+    ##-- set default parameters
+    #if grids is None:
+        #grids = [defaults_multiple[i] for i in range(len(teff))]
+    #if radius is None:
+        #radius = tuple([1. for i in teff])
+    ##-- gather all the SEDs from the individual components
+    #fluxes,Labs = [],[]
+    #for i in range(len(teff)):
+        #iteff,ilogg,iz,irrad,iebv = teff[i],logg[i],z[i],radius[i],ebv[0]
+        #mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
+        #if 'z' in mykwargs:
+            #thrash = mykwargs.pop('z')
+        ##mykwargs = dict(list(kwargs.items()))
+        #iflux,iLabs = get_itable(teff=iteff,logg=ilogg,ebv=iebv,z=iz,photbands=photbands,clear_memory=False,**mykwargs)
+        #fluxes.append(iflux*irrad**2)
+        #Labs.append(iLabs*irrad**2)
+    #fluxes = np.sum(fluxes,axis=0)
+    #Labs = np.sum(Labs)
+    #if flux_units!='erg/s/cm2/AA/sr':
+        #fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+        
+    #if wave_units is not None:
+        #model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
+        #wave = filters.eff_wave(photbands,model=model)
+        #if wave_units !='AA':
+            #wave = wave = conversions.convert('AA',wave_units,wave)
+        #return wave,fluxes,Labs
+    #return fluxes,Labs
 
-def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
+def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photbands=None,
                wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Super fast grid interpolator.
@@ -1219,12 +1395,27 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
     Thanks to Steven Bloemen for the core implementation of the interpolation
     algorithm.
     """
+    
+    #-- setup some standard values when they are not provided
+    ebv = np.array([0 for i in teff]) if ebv == None else ebv
+    z = np.array([0.for i in teff]) if z == None else z
+    rv = np.array([3.1 for i in teff]) if rv == None else rv
+    vrad = np.array([0 for i in teff]) if vrad == None else vrad
+    
+    #for var in ['teff','logg','ebv','z','rv','vrad']:
+        #if not hasattr(locals()[var],'__iter__'):
+            #print var, locals()[var]
+            #locals()[var] = np.array([ locals()[var] ])
+    #print locals()
+    vrad = 0
+    N = 1
     clear_memory = kwargs.pop('clear_memory',False)
     for var in ['teff','logg','ebv','z','rv','vrad']:
         if not hasattr(locals()[var],'__iter__'):
             kwargs.setdefault(var+'range',(locals()[var],locals()[var]))
         else:
             N = len(locals()[var])
+            
     #-- retrieve structured information on the grid (memoized)
     axis_values,gridpnts,pixelgrid,cols = _get_pix_grid(photbands,
                             include_Labs=True,clear_memory=clear_memory,**kwargs)
@@ -1237,6 +1428,10 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
     
     flux,Labs = pars[:-1],pars[-1]
     
+    #-- Take radius into account when provided
+    if 'rad' in kwargs:
+        flux,Labs = flux*kwargs['rad']**2, Labs*kwargs['rad']**2
+    
     #-- change flux and wavelength units if needed
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
@@ -1248,8 +1443,57 @@ def get_itable_pix(teff=None,logg=None,ebv=0,z=0,rv=3.1,vrad=0,photbands=None,
         return wave,flux,Labs
     else:
         return flux,Labs
-
     
+def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
+                grids=None, **kwargs):
+    """
+    Super fast grid interpolator for multiple tables, completely based on get_itable_pix.
+    """
+    
+    #-- Find the parameters provided and store them separately.
+    values, parameters, components = {}, set(), set()
+    for key in kwargs.keys():
+        if re.search("^(teff|logg|ebv|z|rv|vrad|rad)\d?$", key):
+            par, comp = re.findall("^(teff|logg|ebv|z|rv|vrad|rad)(\d?)$", key)[0]
+            values[key] = kwargs.pop(key)
+            parameters.add(par)
+            components.add(comp)
+    
+    #-- If there is only one component, we can directly return the result
+    if len(components) == 1:
+        kwargs.update(values)
+        return get_itable_single_pix(photbands=photbands,wave_units=wave_units,
+                                     flux_units=flux_units,**kwargs)
+    
+    #-- run over all fluxes and sum them, we do not need to multiply with the radius
+    #   as the radius is provided as an argument to itable_single_pix.
+    fluxes, Labs = [],[]                                
+    for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
+        trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
+        kwargs_ = kwargs
+        kwargs_.update(grid)
+        for par in parameters:
+            kwargs_[par] = values[par+comp] if par+comp in values else values[par]
+        
+        f,L = get_itable_single_pix(photbands=photbands,wave_units=None,**kwargs_)
+                                     
+        fluxes.append(f)
+        Labs.append(L)
+        
+    fluxes = np.sum(fluxes,axis=0)
+    Labs = np.sum(Labs,axis=0)
+    
+    if flux_units!='erg/s/cm2/AA/sr':
+        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
+    
+    if wave_units is not None:
+        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
+        wave = filters.eff_wave(photbands,model=model)
+        if wave_units !='AA':
+            wave = wave = conversions.convert('AA',wave_units,wave)
+        return wave,fluxes,Labs
+    
+    return fluxes,Labs   
 
 
 def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
@@ -1338,84 +1582,6 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
         waves_ = waves_[keep]
         fluxes_ = fluxes_[keep]
     return waves_,fluxes_
-    
-def get_itable_multiple(teff=None,logg=None,ebv=None,z=None,radius=None,
-              photbands=None,wave_units=None,flux_units='erg/s/cm2/AA/sr',grids=None,**kwargs):
-    """
-    Retrieve the integrated spectral energy distribution of a combined model
-    atmosphere.
-    
-    >>> teff1,teff2 = 20200,5100
-    >>> logg1,logg2 = 4.35,2.00
-    >>> ebv = 0.2,0.2
-    >>> photbands = ['JOHNSON.U','JOHNSON.V','2MASS.J','2MASS.H','2MASS.KS']
-    
-    >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=ebv[0])
-    >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
-    >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])
-    
-    >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='AA')
-    >>> iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
-    >>> iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)
-    
-    >>> p = pl.figure()
-    >>> p = pl.gcf().canvas.set_window_title('Test of <get_itable_multiple>')
-    >>> p = pl.loglog(wave1,flux1,'r-')
-    >>> p = pl.loglog(iwave1,iflux1,'ro',ms=10)
-    >>> p = pl.loglog(wave2,flux2*20**2,'b-')
-    >>> p = pl.loglog(iwave1,iflux2*20**2,'bo',ms=10)
-    >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
-    >>> p = pl.loglog(iwave1,iflux3,'kx',ms=10,mew=2)
-    
-    @param teff: effective temperature
-    @type teff: tuple floats
-    @param logg: logarithmic gravity (cgs)
-    @type logg: tuple floats
-    @param ebv: reddening coefficient
-    @type ebv: tuple floats
-    @param z: metallicity
-    @type z: tuple floats
-    @param radius: ratio of R_i/(R_{i-1})
-    @type radius: tuple of floats
-    @param photbands: photometric passbands
-    @type photbands: list
-    @param flux_units: units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)
-    @type flux_units: str
-    @param grids: specifications for grid1
-    @type grids: list of dict
-    @param full_output: return all individual SEDs
-    @type full_output: boolean
-    @return: wavelength,flux
-    @rtype: (ndarray,ndarray)
-    """
-    #-- set default parameters
-    if grids is None:
-        grids = [defaults_multiple[i] for i in range(len(teff))]
-    if radius is None:
-        radius = tuple([1. for i in teff])
-    #-- gather all the SEDs from the individual components
-    fluxes,Labs = [],[]
-    for i in range(len(teff)):
-        iteff,ilogg,iz,irrad,iebv = teff[i],logg[i],z[i],radius[i],ebv[0]
-        mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
-        if 'z' in mykwargs:
-            thrash = mykwargs.pop('z')
-        #mykwargs = dict(list(kwargs.items()))
-        iflux,iLabs = get_itable(teff=iteff,logg=ilogg,ebv=iebv,z=iz,photbands=photbands,clear_memory=False,**mykwargs)
-        fluxes.append(iflux*irrad**2)
-        Labs.append(iLabs*irrad**2)
-    fluxes = np.sum(fluxes,axis=0)
-    Labs = np.sum(Labs)
-    if flux_units!='erg/s/cm2/AA/sr':
-        fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
-        
-    if wave_units is not None:
-        model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
-        wave = filters.eff_wave(photbands,model=model)
-        if wave_units !='AA':
-            wave = wave = conversions.convert('AA',wave_units,wave)
-        return wave,fluxes,Labs
-    return fluxes,Labs
 
 
 def get_grid_dimensions(**kwargs):
@@ -1907,13 +2073,11 @@ def synthetic_flux(wave,flux,photbands,units=None):
             logger.debug('%10s: Interpolating model to integrate over response curve'%(photband))
             wave_ = np.logspace(np.log10(wave[region][0]),np.log10(wave[region][-1]),1e5)
             flux_ = 10**np.interp(np.log10(wave_),np.log10(wave[region]),np.log10(flux[region]),)
-            flux_[np.isnan(flux_)] = 0.
         else:
             wave_ = wave[region]
             flux_ = flux[region]
         if not len(wave_):
             energys[i] = np.nan
-            logger.warning('Unable to integrate passband {}: inadequate wavelength range'.format(photband))
             continue
         #-- perhaps the entire response curve falls in between model points (happends with
         #   narrowband UV filters), or there's very few model points covering it
@@ -2013,11 +2177,6 @@ def luminosity(wave,flux,radius=1.):
     Labs = Lint*4*np.pi/constants.Lsol_cgs*(radius*constants.Rsol_cgs)**2
     return Labs
 
-
-
-
-
-
 #}
 
 @memoized
@@ -2103,6 +2262,10 @@ def _get_pix_grid(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
+        
+    #-- remove Rv and z from the grid keywords
+    trash = kwargs.pop('Rv', 0.0)
+    trash = kwargs.pop('z', 0.0)
     gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
@@ -2114,13 +2277,20 @@ def _get_pix_grid(photbands,
         with pyfits.open(gridfile) as ff:
             #-- make an alias for further reference
             ext = ff[1]
-            #-- we already cut the grid here, in order to take to much memory
+            #-- we already cut the grid here, in order not to take too much memory
             keep = np.ones(len(ext.data),bool)
             for name in variables:
                 #-- we need to be carefull for rounding errors
                 low,high = locals()[name+'range']
                 in_range = (low<=ext.data.field(name)) & (ext.data.field(name)<=high)
                 on_edge  = np.allclose(ext.data.field(name),low) | np.allclose(ext.data.field(name),high)
+                #on_edge_low = np.less_equal(np.abs(ext.data.field(name)-low),1e-8 + 1e-5*np.abs(low))
+                #on_edge_high = np.less_equal(np.abs(ext.data.field(name)-high),1e-8 + 1e-5*np.abs(high))
+                #keep_this = (in_range | on_edge_low | on_edge_high)
+                #if not sum(keep_this):
+                    #logger.warning("_get_pix_grid: No selection done in axis {}".format(name))
+                    #continue
+                #keep = keep & keep_this
                 keep = keep & (in_range | on_edge)
             partial_grid = np.vstack([ext.data.field(name)[keep] for name in variables])
             if sum(keep):

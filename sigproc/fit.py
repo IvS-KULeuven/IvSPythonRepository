@@ -1267,7 +1267,7 @@ class Function(object):
                 
             return self.jacobian(pars,x)
             
-    def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
+    def setup_parameters(self, value=None, bounds=None, vary=None, expr=None, **kwargs):
         """
         Create or adjust a parameter object based on the parameter names and if provided
         the values, bounds, vary and expressions. Basic checking if the parameter boundaries
@@ -1287,14 +1287,19 @@ class Function(object):
         @type exprs: array
         """
         nrpars = len(self.par_names)
-        if values == None:
-            values = [0 for i in range(nrpars)]
+        if value == None:
+            value = kwargs['values'] if 'values' in kwargs else [0 for i in range(nrpars)]
         if bounds == None:
-            bounds = [(None,None) for i in range(nrpars)]
+            bounds = np.array([[None,None] for i in range(nrpars)])
+        else:
+            bounds = np.array(bounds)
         if vary == None:
             vary = [True for i in range(nrpars)]
-        if exprs == None:
-            exprs = [None for i in range(nrpars)]
+        if expr == None:
+            expr = kwargs['exprs'] if 'exprs' in kwargs else [None for i in range(nrpars)]
+        
+        min = kwargs['min'] if 'min' in kwargs else bounds[:,0]
+        max = kwargs['max'] if 'max' in kwargs else bounds[:,1]
         
         def check_boundaries(min, max, value, name):
             #-- Check if boundaries are consistent
@@ -1313,17 +1318,17 @@ class Function(object):
             #-- Create a new parameter object
             self.parameters = lmfit.Parameters()
             for i,name in enumerate(self.par_names):
-                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
-                self.parameters.add(name, value=values[i], vary=vary[i], min=min, max=max, expr=exprs[i])
+                min_, max_ = check_boundaries(min[i], max[i], value[i], name)
+                self.parameters.add(name, value=value[i], vary=vary[i], min=min_, max=max_, expr=expr[i])
         else:
             #-- Adjust an existing parameter object
             for i,name in enumerate(self.par_names):
-                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
-                self.parameters[name].value = values[i]
-                self.parameters[name].vary = vary[i]
-                self.parameters[name].min = min
-                self.parameters[name].max = max
-                self.parameters[name].expr = exprs[i]
+                min_, max_ = check_boundaries(min[i], max[i], value[i], name)
+                self.parameters[name].value = value[i]
+                self.parameters[name].vary = vary[i] if vary[i] != None else True
+                self.parameters[name].min = min_
+                self.parameters[name].max = max_
+                self.parameters[name].expr = expr[i]
     
     def update_parameter(self, parameter=None, **kwargs):
         """

@@ -554,6 +554,7 @@ reddening maps available: Drimmel, Marshall and Arenou::
 
 
 """
+import re
 import sys
 import time
 import os
@@ -569,6 +570,7 @@ import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
 import pyfits
+import h5py
 
 from ivs import config
 from ivs.aux import numpy_ext
@@ -1489,19 +1491,7 @@ class SED(object):
         """
         limits = {}
         exist_previous = (start_from in self.results and 'CI' in self.results[start_from])
-        #-- how many stellar components do we have? It has to be given when no
-        #   ranges are given. Otherwise, we can derive it from the ranges.
-        components = 1
-        if type is None:
-            components = max([(isinstance(kwargs[key][0],tuple) and len(kwargs[key]) or 1) for key in kwargs if (kwargs[key] is not None)])
-            type = (components==1) and 'single' or 'multiple-{0:d}'.format(components)
-        elif type=='binary':
-            components = 2
-        elif 'multiple' in type:
-            components = int(type.split('-')[-1])
-        #-- the field names are 'teff', 'logg' etc for the primary component, all
-        #   others have a postfix '-n' with n the number of the component
-        postfixes = [''] + ['-{0:d}'.format(i) for i in range(2,components+1)]
+        
         #-- run over all parnames, and generate the parameters ranges for each
         #   component:
         #   (1) if a previous parameter search is done and the user has not set
@@ -1518,46 +1508,30 @@ class SED(object):
             parrange = kwargs.get(par_range_name,None)
             #-- the three cases described above:
             if exist_previous and parrange is None:
-                parrange = []
-                for postfix in postfixes:
-                    lkey = parname+postfix+'_l'
-                    ukey = parname+postfix+'_u'
-                    #-- if the parameters was not used in the fit, stick to the
-                    #   default given value
-                    if not lkey in self.results[start_from]['CI']:
-                        parrange.append(kwargs[par_range_name])
-                    #-- else we can derive a better parameter range
-                    else:
-                        parrange.append((self.results[start_from]['CI'][lkey],
-                                         self.results[start_from]['CI'][ukey]))
+                lkey = parname+'_l'
+                ukey = parname+'_u'
+                #-- if the parameters was not used in the fit, stick to the
+                #   default given value
+                if not lkey in self.results[start_from]['CI']:
+                    parrange = kwargs[par_range_name]
+                #-- else we can derive a better parameter range
+                else:
+                    parrange = (self.results[start_from]['CI'][lkey],
+                                        self.results[start_from]['CI'][ukey])                      
             elif parrange is None:
-                parrange = [(-np.inf,np.inf) for i in range(components)]
-            else:
-                if components>1:
-                    print parrange,postfixes
-                    parrange = [(iparrange is not None) and iparrange or \
-                              (exist_previous and (self.results[start_from]['CI'][parname+postfix+'_l'],\
-                                                   self.results[start_from]['CI'][parname+postfix+'_u'])\
-                                              or (-np.inf,np.inf))\
-                               for iparrange,postfix in zip(parrange,postfixes)]
-            #-- if there is only one component, make sure the range is a tuple of a tuple
-            if not isinstance(parrange[0],tuple):
-                parrange = (parrange,)
+                parrange = (-np.inf,np.inf)
+
             #-- now, the ranges are (lower,upper) for the uniform distribution,
             #   and (mu,scale) for the normal distribution
             if distribution=='normal':
-                parrange = [((i[1]-i[0])/2.,(i[1]-i[0])/6.) for i in parrange]
+                parrange = ((i[1]-i[0])/2.,(i[1]-i[0])/6.)
             elif distribution!='uniform':
                 raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
-            #-- now we *don't* want a tuple if there is only one component:
-            if components==1:
-                limits[par_range_name] = parrange[0]
-            else:
-                limits[par_range_name] = parrange
+            limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
-        logger.info('Parameter ranges calculated for type {0:s}, starting from {1:s} and using distribution {2:s}.'.format(type,start_from,distribution))
-        return limits,type
+        logger.info('Parameter ranges calculated starting from {0:s} and using distribution {1:s}.'.format(start_from,distribution))
+        return limits
     
     #{ Fitting routines
     
@@ -1577,6 +1551,96 @@ class SED(object):
         self.results[mtype]['grid'] = new_grid
         logger.info("Clipped grid at {:.6f}%".format(CI_limit*100))
     
+    def collect_results(self, grid=None, fitresults=None, mtype='igrid_search', selfact='chisq', **kwargs):
+        """creates a record array of all fit results and removes the failurs"""
+        
+        gridnames = sorted(grid.keys())
+        fitnames = sorted(fitresults.keys())
+        pardtypes = [(name,'f8') for name in gridnames]+[(name,'f8') for name in fitnames]
+        pararrays = [grid[name] for name in gridnames]+[fitresults[name] for name in fitnames]
+
+        grid_results = np.rec.fromarrays(pararrays,dtype=pardtypes)
+        
+        #-- exclude failures
+        failures = np.isnan(grid_results[selfact])
+        if sum(failures):
+            logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
+            grid_results = grid_results[-failures]
+        
+        #-- make room for chi2 statistics
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
+        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
+        
+        #-- take the previous results into account if they exist:
+        if not mtype in self.results:
+            self.results[mtype] = {}
+        elif 'grid' in self.results['igrid_search']:
+            logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results[mtype]['grid']),len(grid_results)))
+            ex_names = grid_results.dtype.names
+            ex_grid = np.rec.fromarrays([self.results[mtype]['grid'][exname] for exname in ex_names],
+                                        names=ex_names)
+            grid_results = np.hstack([ex_grid,grid_results])
+            
+        #-- inverse sort according to chisq: this means the best models are at the end 
+        #   (mainly for plotting reasons, so that the best models are on top).
+        sa = np.argsort(grid_results[selfact])[::-1]
+        grid_results = grid_results[sa]
+        
+        self.results[mtype]['grid'] = grid_results
+        
+        logger.info('Total of %s grid points, best chisq=%s'%(len(grid_results[selfact]), grid_results[selfact][-1]))
+    
+    def calculateDF(self, **ranges):
+        """ Calculates the degrees of freedom from the given ranges"""
+ 
+        df, df_info = 1, ['theta']
+        for range_name in ranges:
+            if re.search('ebv\d?range$', range_name):
+                if not 'ebv' in df_info:
+                    df += 1
+                    df_info.append('ebv')
+                else:
+                    continue
+            elif not np.allclose(ranges[range_name][0],ranges[range_name][1]):
+                df += 1
+                df_info.append(range_name[0:-5])
+        df_info.sort()
+        logger.info('Degrees of freedom = {} ({})'.format(df,', '.join(df_info)))
+        
+        return df, df_info 
+    
+    def calculate_statistics(self, df=None, ranges=None, mtype='igrid_search', selfact='chisq'):
+        """
+        Calculates the Chi2 and reduced Chi2 based on nr of observations and degrees of
+        freedom. If df is not provided, tries to calculate df from the fitting ranges.
+        """
+        
+        #-- If nessessary calculate degrees of freedom from the ranges
+        if df == None and ranges != None:
+            df,df_info = self.calculateDF(**ranges)
+        elif df == None:
+            logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
+            df = 5
+        
+        #-- Do the statistics
+        N = sum(self.master['include'])
+        k = N-df
+        if k<=0:
+            logger.warning('Not enough data to compute CHI2: it will not make sense')
+            k = 1
+        logger.info('Calculated statistics based on df={0} and Nobs={1}'.format(df,N))
+            
+        #-- Rescale if needed and compute confidence intervals
+        results = self.results[mtype]['grid']
+        factor = max(results[selfact][-1]/k,1)
+        logger.warning('CHI2 rescaling factor equals %g'%(factor))
+        results['ci_raw'] = scipy.stats.distributions.chi2.cdf(results[selfact],k)
+        results['ci_red'] = scipy.stats.distributions.chi2.cdf(results[selfact]/factor,k)
+        
+        #-- Store the results
+        self.results[mtype]['grid'] = results
+        self.results[mtype]['factor'] = factor
+    
     def calculate_confidence_intervals(self,mtype='igrid_search',chi2_type='red',CI_limit=None):
         """
         Compute confidence interval of all columns in the results grid.
@@ -1590,8 +1654,6 @@ class SED(object):
         """
         #-- get some info
         grid_results = self.results[mtype]['grid']
-        if not 'CI' in self.results[mtype]:
-            self.results['igrid_search']['CI'] = {}
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
         #-- the chi2 grid is ordered: where is the value closest to the CI limit?
@@ -1599,19 +1661,34 @@ class SED(object):
         if sum(region)==0:
             raise ValueError("No models in the sample have a chi2_{} below the limit {}. Try increasing the number of models, increasing the CI_limit or choose different photometry.".format(chi2_type,CI_limit))
         #-- now compute the confidence intervals
+        cilow, cihigh, value = [],[],[]
         for name in grid_results.dtype.names:
-            self.results['igrid_search']['CI'][name+'_l'] = grid_results[name][region].min()
-            self.results['igrid_search']['CI'][name] = grid_results[name][-1]
-            self.results['igrid_search']['CI'][name+'_u'] = grid_results[name][region].max()
-            logger.info('%i%% CI %s: %g <= %g <= %g'%(CI_limit*100,name,self.results['igrid_search']['CI'][name+'_l'],
-                                                           self.results['igrid_search']['CI'][name],
-                                                           self.results['igrid_search']['CI'][name+'_u']))
+            cilow.append(grid_results[name][region].min())
+            value.append(grid_results[name][-1])
+            cihigh.append(grid_results[name][region].max())
+        
+        return dict(name=grid_results.dtype.names, value=value, cilow=cilow, cihigh=cihigh)
     
+    def store_confidence_intervals(self, mtype='igrid_search', name=None, value=None, cilow=None, \
+                                   cihigh=None, **kwargs):
+        """
+        Saves the provided confidence intervals in the result dictionary of self.
+        """
+        if not 'CI' in self.results[mtype]:
+            self.results[mtype]['CI'] = {}
+        for name, val, cil, cih in zip(name, value, cilow, cihigh):
+            self.results[mtype]['CI'][name+'_l'] = cil
+            self.results[mtype]['CI'][name] = val
+            self.results[mtype]['CI'][name+'_u'] = cih
+            try:
+                logger.info('CI %s: %g <= %g <= %g'%(name,cil,val,cih))
+            except Exception:
+                logger.info('CI %s: nan <= %g <= nan'%(name,val))
     
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
-                          zrange=(0,0),radiusrange=None,rvrange=(3.1,3.1),vradrange=(0,0),
-                          compare=True,df=None,CI_limit=None,set_model=True,**kwargs):
+                          zrange=(0,0),rvrange=(3.1,3.1),vradrange=(0,0),
+                          df=None,CI_limit=None,set_model=True,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -1625,91 +1702,177 @@ class SED(object):
             CI_limit = self.CI_limit
         
         #-- set defaults limits
-        ranges,rtype = self.generate_ranges(teffrange=teffrange,\
+        ranges = self.generate_ranges(teffrange=teffrange,\
                              loggrange=loggrange,ebvrange=ebvrange,\
                              zrange=zrange,rvrange=rvrange,vradrange=vradrange)
-        #-- compute the degrees of freedom
-        if df is None:
-            df = 1
-            df_info = ['theta']
-            for range_name in ranges:
-                if not np.allclose(ranges[range_name][0],ranges[range_name][1]):
-                    df += 1
-                    df_info.append(range_name)
-            logger.info('Degrees of freedom = {} ({})'.format(df,', '.join(df_info)))
         
-                #-- grid search on all include data: extract the best CHI2
+        #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
         #-- build the grid, run over the grid and calculate the CHI2
-        pars = fit.generate_grid_single_pix(self.master['photband'][include_grid],points=points,**ranges) 
-        chisqs,scales,escales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
+        pars = fit.generate_grid_pix(self.master['photband'][include_grid],points=points,**ranges) 
+        chisqs,scales,e_scales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],**pars)
-        parnames = sorted(pars.keys())
-        pardtypes = [(name,'f8') for name in parnames]+[('chisq','f8'),('scale','f8'),('escale','f8'),('labs','f8')]
-        pararrays = [pars[name] for name in parnames]+[chisqs,scales,escales,lumis]
-        grid_results = np.rec.fromarrays(pararrays,dtype=pardtypes)
-                  
-        #-- exclude failures
-        failures = np.isnan(grid_results['chisq'])
-        if sum(failures):
-            logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
-            grid_results = grid_results[-failures]
+        fitres = dict(chisq=chisqs, scale=scales, escale=e_scales, labs=lumis)
         
-        #-- make room for chi2 statistics
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
-        
-        #-- take the previous results into account if they exist:
-        if not 'igrid_search' in self.results:
-            self.results['igrid_search'] = {}
-        elif 'grid' in self.results['igrid_search']:
-            logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results['igrid_search']['grid']),len(grid_results)))
-            ex_names = grid_results.dtype.names
-            ex_grid = np.rec.fromarrays([self.results['igrid_search']['grid'][exname] for exname in ex_names],
-                                        names=ex_names)
-            grid_results = np.hstack([ex_grid,grid_results])
-        
-        #-- inverse sort according to chisq: this means the best models are at
-        #   the end (mainly for plotting reasons, so that the best models
-        #   are on top).
-        sa = np.argsort(grid_results['chisq'])[::-1]
-        grid_results = grid_results[sa]
-        
+        #-- collect all the results in a record array
+        self.collect_results(grid=pars, fitresults=fitres, mtype='igrid_search')
+                   
         #-- do the statistics
-        #   degrees of freedom: teff,logg,E(B-V),theta,Z
-        N = sum(include_grid)
-        k = N-df
-        if k<=0:
-            logger.warning('Not enough data to compute CHI2: it will not make sense')
-            k = 1
-        #-- rescale if needed and compute confidence intervals
-        factor = max(grid_results['chisq'][-1]/k,1)
-        logger.warning('CHI2 rescaling factor equals %g'%(factor))
-        CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
-        CI_red = scipy.stats.distributions.chi2.cdf(grid_results['chisq']/factor,k)
-        
-        #-- add the results to the record array and to the results dictionary
-        grid_results['ci_raw'] = CI_raw
-        grid_results['ci_red'] = CI_red
-        self.results['igrid_search']['grid'] = grid_results
-        self.results['igrid_search']['factor'] = factor
+        self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
         
         #-- compute the confidence intervals
-        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        self.store_confidence_intervals(mtype='igrid_search', **ci)
         
         #-- remember the best model
-        if set_model: self.set_best_model(type=type)
+        if set_model: self.set_best_model()
     
-    def iminimize(self, teff=None, logg=None, ebv=None, z=None, radius=None, teffrange=None,
-                     loggrange=None, ebvrange=None, zrange=None, radiusrange=None, points=1, 
-                     start_from='igrid_search',df=None,CI_limit=None, set_model=True, **kwargs):
+    def generate_fit_param(self, start_from='igrid_search', **pars):
+        """ 
+        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        result = dict()
+        for key in pars.keys():
+            if re.search("range$", key):
+                result[key[0:-5]+"_min"] =  pars[key][0]
+                result[key[0:-5]+"_max"] =  pars[key][1]
+                #-- if min == max: fix the parameter and force value = min
+                if np.allclose([pars[key][0]], [pars[key][1]]):
+                    result[key[0:-5]+"_vary"] = False
+                    result[key[0:-5]+"_value"] = pars[key][0]
+                else:
+                    result[key[0:-5]+"_vary"] = True
+            else:
+                #-- Store the startvalue. If None, look in start_from for a new startvalue.
+                if pars[key] != None and not key+"_value" in result:
+                    result[key+"_value"] = pars[key]
+                elif pars[key] == None and not key+"_value" in result:
+                    result[key+"_value"] = self.results[start_from]['CI'][key]
+                    
+        return result    
+                                                                  
+    def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
+        
+        #-- Get the best fit parameters and ranges
+        pars = {}
+        skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
+        for name in self.results[mtype]['CI'].keys():
+            name = re.sub('_[u|l]$', '', name)
+            if not name in pars and not name in skip:
+                pars[name] = self.results[mtype]['CI'][name]
+                pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
+                                       self.results[mtype]['CI'][name+"_u"]]
+        pars.update(kwargs)
+        pars = self.generate_fit_param(**pars)        
+        
+        #-- calculate the confidence intervalls
+        include_grid = self.master['include']
+        ci = fit.calculate_iminimize_CI(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             CI_limit=CI_limit, **pars)
+        
+        #-- Add the scale factor
+        ci['name'] = np.append(ci['name'], 'scale')
+        ci['value'] = np.append(ci['value'], self.results[mtype]['grid']['scale'][-1])
+        ci['cilow'] = np.append(ci['cilow'], min(self.results[mtype]['grid']['scale']))
+        ci['cihigh'] = np.append(ci['cihigh'], max(self.results[mtype]['grid']['scale']))
+        
+        logger.info('Calculated %s%% confidence intervalls for all parameters'%(CI_limit))
+        
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+    
+    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, **kwargs):
+        
+        #-- get the best fitting parameters
+        pars = {}
+        skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
+        for name in self.results[mtype]['CI'].keys():
+            name = re.sub('_[u|l]$', '', name)
+            if not name in pars and not name in skip:
+                pars[name] = self.results[mtype]['CI'][name]
+                pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
+                                       self.results[mtype]['CI'][name+"_u"]]
+        pars.update(kwargs)
+        pars = self.generate_fit_param(**pars)  
+        
+        
+        #-- calculate the confidence intervalls
+        include_grid = self.master['include']
+        x,y,chi2, raw, red = fit.calculate_iminimize_CI2D(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             xpar, ypar, limits=limits, **pars)
+        
+        #-- store the CI
+        if not 'CI2D' in self.results[mtype]: self.results[mtype]['CI2D'] = {}
+        self.results[mtype]['CI2D'][xpar+"-"+ypar] = dict(x=x, y=y, ci_chi2=chi2,\
+                                                           ci_raw=raw, ci_red=red)
+        
+        logger.info('Calculated 2D confidence intervalls for %s--%s'%(xpar,ypar))
+    
+    def _get_imin_ci(self, mtype='iminimize',**ranges):
+        """ returns ci information for store_confidence_intervals """
+        names, values, cil, cih = [],[],[],[]
+        for key in ranges.keys():
+            name = key[0:-5]
+            names.append(name)
+            values.append(self.results[mtype]['grid'][name][-1])
+            cil.append(ranges[key][0])
+            cih.append(ranges[key][1])
+        names.append('scale')
+        values.append(self.results[mtype]['grid']['scale'][-1])
+        cil.append(min(self.results[mtype]['grid']['scale']))
+        cih.append(max(self.results[mtype]['grid']['scale']))
+        return dict(name=names, value=values, cilow=cil, cihigh=cih)    
+    
+    def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
+                     loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
+                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
+                     calc_ci=True, set_model=True, **kwargs):
         """ 
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
         """
-        raise NotImplementedError
+        
+        #-- set defaults limits and starting values
+        ranges = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
+                             ebvrange=ebvrange,zrange=zrange,rvrange=rvrange,\
+                             vradrange=vradrange, start_from=start_from)
+        pars = self.generate_fit_param(teff=teff, logg=logg, ebv=ebv, z=z, \
+                            rv=rv, vrad=vrad, start_from=start_from, **ranges)
+        fitkws = dict(distance=distance) if distance != None else dict()
+        
+        #-- grid search on all include data: extract the best CHI2
+        include_grid = self.master['include']
+        logger.info('The following measurements are included in the fitting process:\n%s'% \
+        (photometry2str(self.master[include_grid])))
+        
+        #-- pass all ranges and starting values to the fitter
+        grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+                                            self.master['e_cmeas'][include_grid],
+                                            self.master['photband'][include_grid],
+                                            fitkws=fitkws, points=points,**pars)
+        
+        logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
+        #-- handle the results
+        fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
+        self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
+        
+        #-- Do the statistics
+        self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
+        
+        #-- Store the confidence intervals
+        ci = self._get_imin_ci(mtype='iminimize',**ranges)
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+        if calc_ci:
+            self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
+        
+        #-- remember the best model
+        if set_model: self.set_best_model(mtype='iminimize')
+        
         
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='imc',\
                  distribution='uniform',points=None,fitmethod='fmin',disturb=True):
@@ -1803,7 +1966,7 @@ class SED(object):
         """
         self.results = {}
     
-    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',type='single'):
+    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',**kwargs):
         """
         Get reddenend and unreddened model
         """
@@ -1815,9 +1978,10 @@ class SED(object):
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
         
-        if mtype in ['igrid_search']:
+        if mtype in ['igrid_search', 'iminimize']:
             #-- get the metallicity right
             files = model.get_file(z='*')
+            if type(files) == str: files = [files] #files needs to be a list!
             metals = np.array([pyfits.getheader(ff)['Z'] for ff in files])
             metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
             scale = self.results[mtype]['CI']['scale']
@@ -2292,6 +2456,35 @@ class SED(object):
     #}
     
     #{ Plotting routines
+    
+    def _label_dict(self, param):
+        """
+        Returns the label belonging to a certain parameter
+        
+        If the label is not present, the function will just return param.
+        """
+        #split parameter in param name and componentent number
+        param, component = re.findall('(.*?)(\d?$)', param)[0]
+        
+        ldict = dict(teff='Effective temperature [K]',\
+                    z='log (Metallicity Z [$Z_\odot$]) [dex]',\
+                    logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
+                    ebv='E(B-V) [mag]',\
+                    ci_raw='Raw probability [%]',\
+                    ci_red='Reduced probability [%]',\
+                    #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
+                    labs=r'Absolute Luminosity [$L_\odot$]',\
+                    radius=r'Radius [$R_\odot$]',\
+                    mass=r'Mass [$M_\odot$]',
+                    mc=r'MC [Nr. points in hexagonal bin]',
+                    rv=r'Extinction parameter $R_v$')
+        if param in ldict:
+            param = ldict[param]
+        if component != '':
+            return param + " - " + component
+        else:
+            return param
+    
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
         """
@@ -2371,20 +2564,6 @@ class SED(object):
         else:
             Y = locals()[y]
         
-        #-- for setting the x/y/color labels
-        label_dict = dict(teff='Effective temperature [K]',\
-                          z='log (Metallicity Z [$Z_\odot$]) [dex]',\
-                          logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
-                          ebv='E(B-V) [mag]',\
-                          ci_raw='Raw probability [%]',\
-                          ci_red='Reduced probability [%]',\
-                          #labs=r'log (Absolute Luminosity [$L_\odot$]) [dex]',\
-                          labs=r'Absolute Luminosity [$L_\odot$]',\
-                          radius=r'Radius [$R_\odot$]',\
-                          mass=r'Mass [$M_\odot$]',
-                          mc=r'MC [Nr. points in hexagonal bin]',
-                          rv=r'Extinction parameter $R_v$')
-        
         #-- make the plot
         if mtype == 'imc':
             pl.hexbin(X,Y,mincnt=1,cmap=pl.cm.spectral)  #bins='log'
@@ -2426,15 +2605,42 @@ class SED(object):
         #-- mark best value
         pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
         
-        pl.xlabel(label_dict[x.rstrip('-2')])
-        pl.ylabel(label_dict[y.rstrip('-2')])
-        if ptype in label_dict:
-            cbar.set_label(label_dict[ptype])
-        else:
-            cbar.set_label(ptype)
+        pl.xlabel(self._label_dict(x))
+        pl.ylabel(self._label_dict(y))
+        cbar.set_label(self._label_dict(ptype))
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
-
+    
+    @standalone_figure
+    def plot_CI2D(self,xpar='teff',ypar='logg',mtype='iminimize', ptype='ci_red',**kwargs):
+        """
+        Plot a 2D confidence intervall calculated using the CI2D computation 
+        from calculate_iminimize_CI2D. Make sure you first calculate the grid
+        you want using the calculate_iminimize_CI2D function.
+        """
+        
+        grid = self.results[mtype]['CI2D'][xpar+"-"+ypar][ptype]
+        x = self.results[mtype]['CI2D'][xpar+"-"+ypar]['x']
+        y = self.results[mtype]['CI2D'][xpar+"-"+ypar]['y']
+        
+        if ptype == 'ci_red' or ptype == 'ci_raw':
+            grid = grid*100.0
+            levels = np.linspace(0,100,25)
+            ticks = [0,20,40,60,80,100]
+        elif ptype == 'ci_chi2':
+            grid = np.log10(grid)
+            levels = np.linspace(np.min(grid), np.max(grid), 25)
+            ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
+        
+        pl.contourf(x,y,grid,levels,**kwargs)
+        pl.xlabel(self._label_dict(xpar))
+        pl.ylabel(self._label_dict(ypar))
+        cbar = pl.colorbar(fraction=0.08,ticks=ticks)
+        cbar.set_label(ptype!='ci_chi2' and r'Probability' or r'$^{10}$log($\chi^2$)')
+        
+        
+        
+        
 
     @standalone_figure
     def plot_data(self,colors=False, plot_unselected=True,
@@ -2668,9 +2874,9 @@ class SED(object):
             scale = self.results[mtype]['grid']['scale'][-1]
             angdiam = 2*conversions.convert('sr','mas',scale)
             try:
-                teff2 = self.results[mtype]['CI']['teff-2']
-                logg2 = self.results[mtype]['CI']['logg-2']
-                radii = self.results[mtype]['CI']['rad-2']/self.results[mtype]['CI']['rad']
+                teff2 = self.results[mtype]['CI']['teff2']
+                logg2 = self.results[mtype]['CI']['logg2']
+                radii = self.results[mtype]['CI']['rad2']/self.results[mtype]['CI']['rad']
                 pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
                         loc,xycoords='axes fraction')
             except:
@@ -3059,32 +3265,31 @@ class SED(object):
         
         #-- write the rest
         for mtype in self.results:#['igrid_search','imc']:
-            if mtype in self.results:
-                eff_waves,synflux,photbands = self.results[mtype]['synflux']
-                chi2 = self.results[mtype]['chi2']
-                
-                results_modeldict = dict(extname='model_'+mtype)
-                results_griddict = dict(extname=mtype)
-                keys = sorted(self.results[mtype])
-                for key in keys:
-                    if 'CI' in key:
-                        for ikey in self.results[mtype][key]:
-                            if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
-                                results_modeldict[ikey] = self.results[mtype][key][ikey]
-                            results_griddict[ikey] = self.results[mtype][key][ikey]    
-                    if key=='factor':
-                        results_griddict[key] = self.results[mtype][key]
+            eff_waves,synflux,photbands = self.results[mtype]['synflux']
+            chi2 = self.results[mtype]['chi2']
             
-                fits.write_array(list(self.results[mtype]['model']),filename,
-                                names=('wave','flux','dered_flux'),
-                                units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
-                                header_dict=results_modeldict)
-                if 'grid' in self.results[mtype]:
-                    fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
-                
-                results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
-                
-                fits.write_recarray(results,filename,header_dict=dict(extname='synflux_'+mtype))
+            results_modeldict = dict(extname='model_'+mtype)
+            results_griddict = dict(extname=mtype)
+            keys = sorted(self.results[mtype])
+            for key in keys:
+                if 'CI' in key:
+                    for ikey in self.results[mtype][key]:
+                        if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
+                            results_modeldict[ikey] = self.results[mtype][key][ikey]
+                        results_griddict[ikey] = self.results[mtype][key][ikey]    
+                if key=='factor':
+                    results_griddict[key] = self.results[mtype][key]
+        
+            fits.write_array(list(self.results[mtype]['model']),filename,
+                            names=('wave','flux','dered_flux'),
+                            units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
+                            header_dict=results_modeldict)
+            if 'grid' in self.results[mtype]:
+                fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
+            
+            results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
+            
+            fits.write_recarray(results,filename,header_dict=dict(extname='synflux_'+mtype))
         
         logger.info('Results saved to FITS file: %s'%(filename))
         
@@ -3141,7 +3346,7 @@ class SED(object):
             self.results[mtype]['synflux'] = np.array(ff['synflux_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff['synflux_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
             
                 
-        for mtype in ['igrid_search','imc']:
+        for mtype in ['igrid_search','iminimize','imc']:
             try:
                 fields = ff[mtype].columns.names
                 master = np.rec.fromarrays([ff[mtype].data.field(field) for field in fields],names=','.join(fields))
@@ -3179,6 +3384,102 @@ class SED(object):
         logger.info('Loaded previous results from FITS')
         return filename
     
+    def save_hdf5(self, filename=None):
+        """
+        Save content of SED object to a HDF5 file. (HDF5 is the successor of FITS files, 
+        providing a clearer structure of the saved content.)
+        Information that is stored is everything that is stored using save_fits, and 
+        the 2D confidence intervalls calculated with calculate_iminimize_CI2D().
+        
+        @param filename: name of SED FITS file
+        @type filename: string
+        @return: the name of the output HDF5 file.
+        @rtype: string
+        """
+        
+        if filename is None:
+            filename = str(os.path.splitext(self.photfile)[0]+'.hdf5')
+            
+        if os.path.isfile(filename):
+            os.remove(filename)
+                
+        hdf = h5py.File(filename)
+        
+        #-- store the photometry
+        hdf.create_group('master')
+        hdf['master'].create_dataset("master", data=self.master)
+        
+        #-- store the results
+        for mtype in self.results.keys():
+            hdf.create_group(mtype)
+            hdf[mtype].create_dataset("synflux", data=self.results[mtype]['synflux'])
+            hdf[mtype].create_dataset("model", data=self.results[mtype]['model'])
+            hdf[mtype].create_dataset("chi2", data=self.results[mtype]['chi2'])
+            hdf[mtype].create_dataset("grid", data=self.results[mtype]['grid'])
+            
+            hdf[mtype].attrs["factor"] = self.results[mtype]['factor']
+            
+            hdf[mtype].create_group('CI')
+            for cikey in self.results[mtype]['CI'].keys():
+                hdf[mtype]['CI'].attrs[cikey] = self.results[mtype]['CI'][cikey]
+            
+            if 'CI2D' in self.results[mtype]:
+                hdf[mtype].create_group('CI2D')
+                for cikey in self.results[mtype]['CI2D'].keys():
+                    hdf[mtype]['CI2D'].create_group(cikey)
+                    for key in self.results[mtype]['CI2D'][cikey].keys():
+                        hdf[mtype]['CI2D'][cikey].attrs[key] = self.results[mtype]['CI2D'][cikey][key]
+            
+        hdf.close()
+        return filename    
+                
+    def load_hdf5(self,filename=None):
+        """
+        Load a previously made SED from HDF5 file.
+        
+        @param filename: name of SED FITS file
+        @type filename: string
+        @return: True if HDF5 file could be loaded
+        @rtype: bool
+        """
+        if filename is None:
+            filename = os.path.splitext(self.photfile)[0]+'.hdf5'
+        if not os.path.isfile(filename):
+            logger.warning('No previous results saved to HFD5 file {:s}'.format(filename))
+            return False
+            
+        hdf = h5py.File(filename, 'r')
+        
+        #-- load photometry
+        self.master = hdf['master']['master'][:]
+        
+        mtypes = hdf.keys()
+        mtypes.remove('master')
+        
+        self.results = {}
+        for mtype in mtypes:
+            self.results[mtype] = {}
+            for key in ['synflux', 'model', 'chi2', 'grid']:
+                if key in hdf[mtype]:
+                    self.results[mtype][key] = hdf[mtype][key][:]
+            
+            if 'factor' in hdf[mtype]: self.results['factor'] = hdf[mtype].attrs['factor']
+            
+            if 'CI' in hdf[mtype]:
+                self.results[mtype]['CI'] = {}
+                for key in hdf[mtype]['CI'].attrs:
+                    self.results[mtype]['CI'][key] = hdf[mtype]['CI'].attrs[key]
+            
+            if 'CI2D' in hdf[mtype]:
+                self.results[mtype]['CI2D'] = {}
+                for cikey in hdf[mtype]['CI2D']:
+                    self.results[mtype]['CI2D'][cikey] = {}
+                    for key in hdf[mtype]['CI2D'][cikey].attrs:
+                        self.results[mtype]['CI2D'][cikey][key] = hdf[mtype]['CI2D'][cikey].attrs[key]
+        
+        hdf.close()
+        return True
+            
     def save_bibtex(self):
         """
         Convert the bibcodes in a phot file to a bibtex file.
@@ -3235,10 +3536,10 @@ class SED(object):
 
 class BinarySED(SED):
     
-    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
-                          zrange=None,radiusrange=None,rvrange=None,vradrange=(0,0),
-                          masses=None,compare=True,df=5,CI_limit=None,
-                          primary_hottest=False, gr_diff=None,set_model=True,**kwargs):
+    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
+                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
+                          masses=None,compare=True,df=None,CI_limit=None,
+                          primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -3250,88 +3551,120 @@ class BinarySED(SED):
         """
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
+            
         #-- set defaults limits
-        ranges,rtype = self.generate_ranges(teffrange=teffrange,\
-                             loggrange=loggrange,ebvrange=ebvrange,\
-                             zrange=zrange,rvrange=rvrange,vradrange=vradrange)
+        ranges = self.generate_ranges(teffrange=teffrange[0],\
+                        loggrange=loggrange[0],ebvrange=ebvrange[0],\
+                        zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
+                        radrange=radrange[0],teff2range=teffrange[1],\
+                        logg2range=loggrange[1],ebv2range=ebvrange[1],\
+                        z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
+                        rad2range=radrange[1])
         
-        if masses is None:
-            # if masses are not given it doesn`t make much sense to use a binary grid...
-            logger.warning('Using igridsearch with type binary, but no masses are provided for the components! Using masses=(1,1)')
-            masses = (1,1)
+        if masses is None: 
+            logger.info('No masses are provided, the radii of the components will NOT be coupled to logg.')
         
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         
-        #-- build the grid, run over the grid and calculate the CHI2
-        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include_grid],teffrange=teffrange,
-                   loggrange=loggrange,ebvrange=ebvrange, zrange=zrange, radiusrange=radiusrange, masses=masses,
-                   points=points,res=res, type=type,primary_hottest=primary_hottest, gr_diff=gr_diff) 
-        chisqs,scales,escales,lumis = fit.igrid_search(self.master['cmeas'][include_grid],
-                            self.master['e_cmeas'][include_grid],
-                            self.master['photband'][include_grid],
-                            teffs,loggs,ebvs,zs,radii,threads=threads,model_func=model.get_itable_multiple)
-        grid_results = np.rec.fromarrays([teffs[:,0],loggs[:,0],ebvs[:,0],zs[:,0],radii[:,0],
-                                         teffs[:,1],loggs[:,1],ebvs[:,1],zs[:,1],radii[:,1],
-                                         chisqs,scales,escales,lumis],
-                                         dtype=[('teff','f8'),('logg','f8'),('ebv','f8'),('z','f8'),('rad','f8'),
-                                         ('teff-2','f8'),('logg-2','f8'),('ebv-2','f8'),('z-2','f8'),('rad-2','f8') ,
-                                         ('chisq','f8'),('scale','f8'),('escale','f8'),('labs','f8')])
+
+        #-- build the grid, run over the grid and calculate the CHI2         
+        pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges) 
+                   
+        chisqs,scales,escales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid], model_func=model.get_itable_pix, **pars)
+        fitres = dict(chisq=chisqs, scale=scales, escale=escales, labs=lumis)
         
-        #-- exclude failures
-        failures = np.isnan(grid_results['chisq'])
-        if sum(failures):
-            logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
-            grid_results = grid_results[-failures]
-        
-        #-- make room for chi2 statistics
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
-        
-        #-- take the previous results into account if they exist:
-        if not 'igrid_search' in self.results:
-            self.results['igrid_search'] = {}
-        elif 'grid' in self.results['igrid_search']:
-            logger.info('Appending previous results ({:d}+{:d})'.format(len(self.results['igrid_search']['grid']),len(grid_results)))
-            ex_names = grid_results.dtype.names
-            ex_grid = np.rec.fromarrays([self.results['igrid_search']['grid'][exname] for exname in ex_names],
-                                        names=ex_names)
-            grid_results = np.hstack([ex_grid,grid_results])
-        
-        #-- inverse sort according to chisq: this means the best models are at
-        #   the end (mainly for plotting reasons, so that the best models
-        #   are on top).
-        sa = np.argsort(grid_results['chisq'])[::-1]
-        grid_results = grid_results[sa]
-        
+        #-- collect all the results in a record array
+        self.collect_results(grid=pars, fitresults=fitres, mtype='igrid_search')
+                   
         #-- do the statistics
-        #   degrees of freedom: teff,logg,E(B-V),theta,Z
-        N = sum(include_grid)
-        k = N-df
-        if k<=0:
-            logger.warning('Not enough data to compute CHI2: it will not make sense')
-            k = 1
-        #-- rescale if needed and compute confidence intervals
-        factor = max(grid_results['chisq'][-1]/k,1)
-        logger.warning('CHI2 rescaling factor equals %g'%(factor))
-        CI_raw = scipy.stats.distributions.chi2.cdf(grid_results['chisq'],k)
-        CI_red = scipy.stats.distributions.chi2.cdf(grid_results['chisq']/factor,k)
-        
-        #-- add the results to the record array and to the results dictionary
-        grid_results['ci_raw'] = CI_raw
-        grid_results['ci_red'] = CI_red
-        self.results['igrid_search']['grid'] = grid_results
-        self.results['igrid_search']['factor'] = factor
+        self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
         
         #-- compute the confidence intervals
-        self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        self.store_confidence_intervals(mtype='igrid_search', **ci)
         
         #-- remember the best model
-        if set_model: self.set_best_model(type=type)
+        if set_model: self.set_best_model()
     
+    def generate_fit_param(self, start_from='igrid_search', **pars):
+        """ 
+        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        masses = pars.pop('masses', None)
+        result = super(BinarySED, self).generate_fit_param(start_from=start_from, **pars)
+        
+        result['ebv2_expr'] = 'ebv'
+        result['rv2_expr'] = 'rv'
+        
+        if masses != None:
+            G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
+            result['rad_value'] = np.sqrt(G*masses[0]*Msol/10**result['logg_value'])
+            result['rad2_value'] = np.sqrt(G*masses[1]*Msol/10**result['logg2_value'])
+            result['rad_expr'] = 'sqrt(%0.5f/10**logg) * 165.63560394542122'%(masses[0])
+            result['rad2_expr'] = 'sqrt(%0.5f/10**logg2) * 165.63560394542122'%(masses[1])
+            result['rad_min'], result['rad_max'] = None, None
+            result['rad2_min'], result['rad2_max'] = None, None
+            result['rad_vary'], result['rad2_vary'] = False, False
+        
+        return result
     
-    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',type='single'):
+    def iminimize(self, teff=(None,None), logg=(None,None), ebv=(None,None), z=(None,None),
+                  rv=(None,None), vrad=(None,None), teffrange=(None,None), loggrange=(None,None),
+                  ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
+                  vradrange=(None,None), radrange=(None,None), masses=(None,None), compare=True,
+                  df=None, distance=None, start_from='igrid_search', points=None, CI_limit=None,
+                   calc_ci=True, set_model=True, **kwargs):
+        """ Binary minimizer """ 
+        
+        ranges = self.generate_ranges(teffrange=teffrange[0],\
+                        loggrange=loggrange[0],ebvrange=ebvrange[0],\
+                        zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
+                        radrange=radrange[0],teff2range=teffrange[1],\
+                        logg2range=loggrange[1],ebv2range=ebvrange[1],\
+                        z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
+                        rad2range=radrange[1])
+        pars = self.generate_fit_param(teff=teff[0],logg=logg[0],ebv=ebv[0],z=z[0],\
+                            rv=rv[0], vrad=vrad[0],teff2=teff[1],logg2=logg[1],\
+                            ebv2=ebv[1],z2=z[1],rv2=rv[1],vrad2=vrad[1], \
+                            start_from=start_from, masses=masses, **ranges)
+        fitkws = dict(distance=distance) if distance != None else dict()
+        
+        #-- grid search on all include data: extract the best CHI2
+        include_grid = self.master['include']
+        logger.info('The following measurements are included in the fitting process:\n%s'% \
+        (photometry2str(self.master[include_grid])))
+        
+        #-- pass all ranges and starting values to the fitter
+        grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
+                             self.master['e_cmeas'][include_grid],
+                             self.master['photband'][include_grid],
+                             fitkws=fitkws, points=points,**pars)
+        
+        logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
+        #-- handle the results
+        fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
+        self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
+        
+        #-- Do the statistics
+        self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
+        
+        #-- Store the confidence intervals
+        ci = self._get_imin_ci(mtype='iminimize',**ranges)
+        self.store_confidence_intervals(mtype='iminimize', **ci)
+        if calc_ci:
+            self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
+        
+        #-- remember the best model
+        if set_model: self.set_best_model(mtype='iminimize')
+        
+        
+        
+    
+    def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
         """
         Get reddenend and unreddened model
         """
@@ -3343,35 +3676,30 @@ class BinarySED(SED):
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
         
-        if mtype in ['igrid_search']:
+        if mtype in ['igrid_search', 'iminimize']:
             scale = self.results[mtype]['CI']['scale']
             
             #-- get (approximated) reddened and unreddened model
-            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
-                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
-                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
+                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
+                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
+                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                     law=law)
-            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                                      logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
+            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
+                                      logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
                                       ebv=(0,0),
-                                      radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
+                                      radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
                                       law=law)
             #-- get synthetic photometry
-            synflux_,Labs = model.get_itable_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff-2']),
-                              logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg-2']),
-                              ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv-2']),
-                              z=(self.results[mtype]['CI']['z'],self.results[mtype]['CI']['z-2']),
-                              radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad-2']),
-                              photbands=self.master['photband'][keep])
+            pars = {}
+            for key in self.results[mtype]['CI'].keys():
+                if not key[-2:] == '_u' and not key[-2:] == '_l':
+                    pars[key] = self.results[mtype]['CI'][key]
+            synflux_,pars = model.get_itable(photbands=self.master['photband'][keep], **pars)
             flux,flux_ur = flux*scale,flux_ur*scale
                 
             synflux[keep] = synflux_
         
-            #synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
-            #                          logg=self.results[mtype]['CI']['logg'],
-            #                          ebv=self.results[mtype]['CI']['ebv'],
-            #                          photbands=self.master['photband'])
             synflux[-self.master['color']] *= scale
             chi2 = (self.master['cmeas']-synflux)**2/self.master['e_cmeas']**2
             #-- calculate effective wavelengths of the photometric bands via the model

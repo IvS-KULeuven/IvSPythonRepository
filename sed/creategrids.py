@@ -11,6 +11,7 @@ Examples::
     $:> python creategrids.py calc_limbdark_grid 'responses=["OPEN.BOL","MOST.V","GENEVA"]' ebvs=[0.05] outfile=mygrid.fits
 
 """
+import sys
 import pyfits
 import logging
 import numpy as np
@@ -321,9 +322,9 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     #-- make FITS extension and write grid/reddening specifications to header
     table = pyfits.new_table(pyfits.ColDefs(cols))
     table.header.update('gridfile',os.path.basename(gridfile))
-    for key in sorted(defaults.keys()):
+    for key in sorted(model.defaults.keys()):
         key_ = (len(key)>8) and 'HIERARCH '+key or key
-        table.header.update(key_,defaults[key])
+        table.header.update(key_,model.defaults[key])
     for key in sorted(kwargs.keys()):
         key_ = (len(key)>8) and 'HIERARCH '+key or key
         table.header.update(key_,kwargs[key])
