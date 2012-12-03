@@ -1324,8 +1324,8 @@ class Function(object):
             #-- Adjust an existing parameter object
             for i,name in enumerate(self.par_names):
                 min_, max_ = check_boundaries(min[i], max[i], value[i], name)
-                self.parameters[name].value = value[i]
-                self.parameters[name].vary = vary[i] if vary[i] != None else True
+                self.parameters[name].value = float(value[i])
+                self.parameters[name].vary = bool(vary[i]) if vary[i] != None else True
                 self.parameters[name].min = min_
                 self.parameters[name].max = max_
                 self.parameters[name].expr = expr[i]
@@ -1396,7 +1396,7 @@ class Function(object):
                 val, err, vary, min, max, expr = val[0],err[0],vary[0],min[0],max[0],expr[0]
         
         if full_output:
-            return val,err,vary,min,max,expr
+            return np.array(val), np.array(err), np.array(vary), np.array(min), np.array(max), np.array(expr)
         else:
             return np.array(val),np.array(err)
     
@@ -1844,6 +1844,9 @@ class Minimizer(lmfit.Minimizer):
         @return: A dictionary with for each parameter the lower and upper limit.
         @rtype: dict
         """
+        #-- check if a special probability function is provided.
+        prob_func = kwargs.pop('prob_func', None)
+        
         if parameters == None:
             parameters = self.model.par_names
         
@@ -1852,7 +1855,7 @@ class Minimizer(lmfit.Minimizer):
         
         # Use the adjusted conf_interval() function of the lmfit package.
         ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter,\
-                                 prob_func=None, trace=False, verbose=False)
+                                 prob_func=prob_func, trace=False, verbose=False)
         
         # Prepare the output
         if len(parameters) == 1 and short_output:
@@ -2320,9 +2323,9 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
         else:
             try:
-                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ' '
+                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ''
             except:
-                lim = ' '
+                lim = ''
             if par.min != None and par.max != None:
                 bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
             elif par.max != None:
@@ -2331,9 +2334,13 @@ def parameters2string(parameters, accuracy=2, full_output=False):
                 bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
             else:
                 bounds = 'None <-> None'
-            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary} {limit}\n'
+            if par.expr != None:
+                expr = "= {expr}".format(expr=par.expr)
+            else:
+                expr = ""
+            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
             template = template.format(name=name, value=value, vlim=max_value, bounds=bounds, blim=max_bounds,\
-                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim)
+                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim, expr=expr)
         out += template
     return out.rstrip()
 

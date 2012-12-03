@@ -12,6 +12,11 @@ http://alfven.org/wp/hdf5-for-python/
 
 import os
 import h5py
+import logging
+from ivs.aux import loggers
+
+logger = logging.getLogger("IO.HDF5")
+logger.addHandler(loggers.NullHandler())
 
 #{ Input
 
@@ -33,7 +38,6 @@ def read2dict(filename):
         """ recusively read the hdf5 file """
         res = {}
         for name,grp in hdf.items():
-            print name, grp
             #-- read the subgroups and datasets
             if hasattr(grp, 'items'):
                 # in case of a group, read the group into a new dictionary key
