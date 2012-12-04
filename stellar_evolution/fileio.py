@@ -568,27 +568,27 @@ def write_gyre(starg,starl,filename):
     
     #-- local parameters
     
-    gyre['r'] = conversions.convert('cm','SI',starl['radius'])
-    gyre['w'] =  -starl['mass']/(starl['mass']-starg['star_mass'])
-    gyre['L_r'] = conversions.convert('erg/s','SI',starl['luminosity'])
-    gyre['T'] = starl['temperature']
-    gyre['p'] = conversions.convert('ba','Pa',starl['pressure'])
-    gyre['c_V'] = conversions.convert('erg/s/g/K','SI',starl['cv'])
-    gyre['c_p'] = conversions.convert('erg/s/g/K','SI',starl['cp'])
-    gyre['X'] = starl['h1']
-    gyre['rho'] = conversions.convert('g/cm3','SI',starl['Rho'])
-    gyre['chi_rho'] = starl['chiRho']
-    gyre['chi_T'] = starl['chiT']
-    gyre['N2'] = starl['brunt_N2']
-    gyre['nabla'] = starl['grad_temperature']
-    gyre['kappa'] = conversions.convert('cm2/g','SI',starl['opacity'])
-    gyre['kappa_rho'] = starl['dkap_dlnrho']/starl['opacity']
-    gyre['kappa_T'] = starl['dkap_dlnT']/starl['opacity']
-    gyre['epsilon'] = np.zeros(len(starl))
-    gyre['epsilon_rho'] = np.zeros(len(starl))
-    gyre['epsilon_T'] = np.zeros(len(starl))
+    gyre_model['r'] = conversions.convert('cm','SI',starl['radius'])
+    gyre_model['w'] =  -starl['mass']/(starl['mass']-starg['star_mass'])
+    gyre_model['L_r'] = conversions.convert('erg/s','SI',starl['luminosity'])
+    gyre_model['T'] = starl['temperature']
+    gyre_model['p'] = conversions.convert('ba','Pa',starl['pressure'])
+    gyre_model['c_V'] = conversions.convert('erg/s/g/K','SI',starl['cv'])
+    gyre_model['c_p'] = conversions.convert('erg/s/g/K','SI',starl['cp'])
+    gyre_model['X'] = starl['h1']
+    gyre_model['rho'] = conversions.convert('g/cm3','SI',starl['Rho'])
+    gyre_model['chi_rho'] = starl['chiRho']
+    gyre_model['chi_T'] = starl['chiT']
+    gyre_model['N2'] = starl['brunt_N2']
+    gyre_model['nabla'] = starl['grad_temperature']
+    gyre_model['kappa'] = conversions.convert('cm2/g','SI',starl['opacity'])
+    gyre_model['kappa_rho'] = starl['dkap_dlnrho']/starl['opacity']
+    gyre_model['kappa_T'] = starl['dkap_dlnT']/starl['opacity']
+    gyre_model['epsilon'] = np.zeros(len(starl))
+    gyre_model['epsilon_rho'] = np.zeros(len(starl))
+    gyre_model['epsilon_T'] = np.zeros(len(starl))
     
-    hdf5.write_dict(gyre,filename,update=False)
+    hdf5.write_dict(gyre_model,filename,update=False)
 #}
 #{ General
 
