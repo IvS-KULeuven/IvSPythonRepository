@@ -6,14 +6,17 @@ import os
 import logging
 import subprocess
 import itertools
+import glob
 
 try:
     import pyosclib
 except:
     print "LOSC is not available"
 from ivs.io import ascii
+from ivs.io import hdf5
 from ivs.stellar_evolution import fileio
 from ivs.stellar_evolution import adipls
+from ivs.stellar_evolution import gyre
 from ivs.units import constants
 from ivs.units import conversions
 from ivs.sigproc import filtering
@@ -611,9 +614,11 @@ class StellarModel:
         
     
     def plot_frequencies(self,master='losc',degree=0,graph_type='frequency',
-              x=None,**kwargs):
+              x=None,outfile=None,**kwargs):
         """
         Plot of computed frequencies.
+        
+        if C{outfile} is a string, the period spacings will be written to a file
         
         graph_type: 'frequency', 'period', 'period spacing'
         """
@@ -630,8 +635,10 @@ class StellarModel:
                 x_ = period[0][:-1]
                 xlabel = 'Period [d]'
             pl.plot(x_,spacing,**kwargs)
+            if outfile:
+                ascii.write_array([x_,spacing],outfile,axis0='col')
             nkwargs = kwargs.copy()
-            thrash = nkwargs.pop('label')
+            thrash = nkwargs.pop('label','default')
             pl.plot([x_.min(),x_.max()],[spacing.mean(),spacing.mean()],lw=2,**nkwargs)
             pl.xlabel(xlabel)
             pl.ylabel('Period spacing [s]')
@@ -660,7 +667,7 @@ class StellarModel:
     
         rows,cols = 2,2
         
-        color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0,1,len(self.eigenfuncs[master]['l0']))])
+        #color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0,1,len(self.eigenfuncs[master]['l0']))])
         color_cycle_degrees = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0,1,len(self.eigenfreqs[master]))])
         
         #-- make some plots
@@ -716,7 +723,7 @@ class StellarModel:
         
         pl.axes(ax1)
         pl.xlabel('Frequency [muHz]')
-        pl.ylabel('$f_\mathrm{losc}-f_\mathrm{adipls}/f_\mathrm{losc}$ [%]')
+        pl.ylabel('$f_\mathrm{{{master}}}-f_\mathrm{{comp}}/f_\mathrm{{{master}}}$ [%]'.format(master=master))
         pl.grid()
         pl.legend(loc='best',numpoints=1)
         
@@ -726,7 +733,7 @@ class StellarModel:
         
         pl.axes(ax3)
         pl.xlabel('Period [1/muHz]')
-        pl.ylabel('$P_\mathrm{losc}-P_\mathrm{adipls}/P_\mathrm{losc}$ [%]')
+        pl.ylabel('$P_\mathrm{{{master}}}-P_\mathrm{{comp}}/P_\mathrm{{{master}}}$ [%]'.format(master=master))
         pl.grid()
         pl.legend(loc='best',numpoints=1)
         
@@ -856,7 +863,7 @@ class StellarModel:
                 pl.close()
   
     def plot_density_temperature_profile(self):
-        return None
+        fileio.plot_logRho_logT(self.starl)
     #}
     
     
@@ -921,6 +928,7 @@ class StellarModel:
             freqinfo = [np.array(i,dtype) for i,dtype in zip(freqinfo.T,dtypes)]
             freqinfo = np.rec.fromarrays(freqinfo,names=modekeys)
             #-- put the frequencies in cy/d in the array
+            print freqinfo['sigma']
             freqcd = conversions.convert('rad/s',self.unit,freqinfo['sigma'])
             freqinfo['frequency'] = freqcd
             self.eigenfreqs['losc']['l%d'%(l)] = freqinfo
@@ -1257,6 +1265,60 @@ class StellarModel:
         #raise SystemExit
         logger.info('ADIPLS: computed eigenfunctions for l=%d modes %s'%(degree,modes))
         
+    def compute_eigenfreqs_gyre(self,degrees,f0=(1.,'d-1'),fn=(12,'d-1'),nf=500,verbose=False,adiabatic=True):
+        """
+        Compute eigenfrequencies with GYRE.
+        """
+        #-- prepare to store the results
+        codename = 'gyre'
+        if not codename in self.eigenfreqs:
+            self.eigenfreqs[codename] = {}
+        if not codename in self.eigenfuncs:
+            self.eigenfuncs[codename] = {}
+        
+        #-- prepare the input for GYRE
+        model = 'gyre.h5'
+        fileio.write_gyre(self.starg,self.starl,model)
+        
+        #-- convert frequency to dimensionless angular frequencies for GYRE
+        f0 = conversions.convert(f0[1],'rad/s',f0[0])
+        fn = conversions.convert(fn[1],'rad/s',fn[0])
+        R = self.starg['photosphere_r']
+        M = self.starg['star_mass']
+        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
+        f0 = f0*t_dynamic
+        fn = fn*t_dynamic
+        
+        program = adiabatic and 'gyre_ad' or 'gyre_nad'
+        for degree in degrees:
+            #-- construct adipls control file
+            control_file = gyre.make_gyre_inputfile(model_name=model,degree=degree,\
+                  omega_min=f0,omega_max=fn,n_omega=nf,G=self.constants['GG'])
+            #-- call adipls, perhaps with throwing away the output
+            if not verbose:
+                stdout = open('/dev/null', 'w')
+            else:
+                stdout = None
+            subprocess.call('{} < {}'.format(program,control_file),stdout=stdout,shell=True)
+            eigfunc_files = sorted(glob.glob('eigfunc*.h5'))
+            eigvals = hdf5.read2dict('eigvals.h5')
+            omega = np.array(eigvals['omega'],float)
+            freqcd = conversions.convert('rad/s',self.unit,omega/t_dynamic)
+            starl = np.array([degree*np.ones(len(eigvals['n_g'])),-eigvals['n_g']+eigvals['n_p'],omega**2,freqcd])
+            starl = np.rec.fromarrays(starl,names=['l','n','sigma2','frequency'])
+            #-- read files and add contents to output
+            self.eigenfreqs[codename]['l%d'%(degree)] = starl
+            logger.info('{}: found {} frequencies (l={}) between {:.3g}{} and {:.3g}{}'.format(program.upper(),len(starl),degree,starl['frequency'].min(),self.unit,starl['frequency'].max(),self.unit))
+            for ff in eigfunc_files:
+                os.unlink(ff)
+            os.unlink('eigvals.h5')
+                
+        #os.unlink(model+'.amdl')
+        #os.unlink(model+'.gong')
+        #mymod = self._get_current_losc_model()
+        #ascii.write_array(mymod,model+'.tosc')
+        #raise SystemExit
+        
     #}
 
               
@@ -1348,8 +1410,12 @@ def generate_newx(xx,bruntA,n_new=None,type_mode='g',
     if type_mode is not None and 'g' in type_mode:
         pos = bruntA>0
         minweight = np.log10(bruntA[pos].min())
-        weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
-        weight = weight/xx**2
+        weight = np.zeros(len(bruntA))
+        weight[-pos] = minweight
+        weight[pos] = np.log10(bruntA[pos])
+        weight -= minweight
+        #weight = np.where(-pos,minweight,np.log10(bruntA))-minweight
+        weight[1:] = weight[1:]/xx[1:]**2
         weight[0] = 0
     else:
         weight = np.ones(len(xx))*5.
