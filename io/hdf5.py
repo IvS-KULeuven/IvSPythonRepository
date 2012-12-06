@@ -48,7 +48,6 @@ def read2dict(filename):
                 
         #-- read all the attributes
         for name, atr in hdf.attrs.iteritems():
-            print name, atr
             res[name] = atr
                 
         return res

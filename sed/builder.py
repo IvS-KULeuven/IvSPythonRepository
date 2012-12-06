@@ -1350,7 +1350,7 @@ class SED(object):
         
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
-        self.master = fix_master(np.hstack([self.master,extra_master]))
+        self.master = fix_master(np.hstack([self.master,extra_master]),e_default=0.1)
         #self.master = np.hstack([self.master,extra_array])
         logger.info('Final measurements:\n%s'%(photometry2str(self.master)))
 
@@ -2462,7 +2462,11 @@ class SED(object):
     #{ Plotting routines
     
     def _label_dict(self, param):
-        """ returns the label belonging to a certain parameter """
+        """
+        Returns the label belonging to a certain parameter
+        
+        If the label is not present, the function will just return param.
+        """
         #split parameter in param name and componentent number
         param, component = re.findall('(.*?)(\d?$)', param)[0]
         
@@ -2478,11 +2482,12 @@ class SED(object):
                     mass=r'Mass [$M_\odot$]',
                     mc=r'MC [Nr. points in hexagonal bin]',
                     rv=r'Extinction parameter $R_v$')
-                    
+        if param in ldict:
+            param = ldict[param]
         if component != '':
-            return ldict[param] + " - " + component
+            return param + " - " + component
         else:
-            return ldict[param]
+            return param
     
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
@@ -2606,10 +2611,7 @@ class SED(object):
         
         pl.xlabel(self._label_dict(x))
         pl.ylabel(self._label_dict(y))
-        if ptype in label_dict:
-            cbar.set_label(label_dict[ptype])
-        else:
-            cbar.set_label(ptype)
+        cbar.set_label(self._label_dict(ptype))
         
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
     
@@ -2937,7 +2939,7 @@ class SED(object):
             pl.legend(loc='upper right',prop=dict(size='x-small'))
             pl.grid()
             pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.59,0.120),xycoords='axes fraction',color='r')
-            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2)),(0.59,0.075),xycoords='axes fraction',color='r')
+            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2[include_grid][keep])),(0.59,0.075),xycoords='axes fraction',color='r')
             if 'factor' in self.results[mtype]:
                 pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.59,0.030),xycoords='axes fraction',color='k')
             xlims = pl.xlim()

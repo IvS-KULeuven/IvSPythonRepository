@@ -14,6 +14,7 @@ import pylab as pl
 #import pycles
 from ivs.io import ascii
 from ivs.io import fits
+from ivs.io import hdf5
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import numpy_ext as ne
@@ -186,7 +187,7 @@ def read_cles_dat(filename,do_standardize=False):
     @param do_standardize: standardize output
     @type do_standardize: bool
     @return: global parameters, local parameters
-    @rtype: dict, rec array
+    @rtype: dict, recarray
     """
     #-- definition of the local columns
     cols_local = ['r','m','rho','T','L','P','Cv','G1','G3-1',\
@@ -248,7 +249,7 @@ def read_cles_sum(sumfile):
         mass = float(os.path.basename(sumfile).split('_')[0][1:])
         data_[:,0] = mass
         radi = conversions.derive_radius((data[:,c[t]['logL']],'[Lsol]'),\
-                                         (data[:,c[t]['logTeff']],'[K]'),unit='Rsol')
+                                         (data[:,c[t]['logTeff']],'[K]'),units='Rsol')[0]
         data_[:,1] = radi
         logg_ = conversions.derive_logg((float(mass),'Msol'),(data_[:,1],'Rsol'))
         data_[:,2] = logg_
@@ -547,6 +548,49 @@ def write_gong(adig,adil,filename):
             ff.write('%20.13e'%(contents[i]))
 
 
+def write_gyre(starg,starl,filename):
+    """
+    Write a file to the GYRE format.
+    """
+    gyre_model = {}
+    #-- global parameters
+    gyre_model['L_star'] = float(conversions.convert('erg/s',"SI",starg['photosphere_L']))
+    gyre_model['R_star'] = float(conversions.convert('cm',"SI",starg['photosphere_r']))
+    gyre_model['X_star'] = -1.00
+    gyre_model['Z_star'] = float(starg['initial_z'])
+    gyre_model['M_star'] = float(conversions.convert('g','SI',starg['star_mass']))
+    gyre_model['t_star'] = float(starg['star_age'])
+    gyre_model['n_shells'] = len(starl)
+    gyre_model['B3_VERSION'] = 1.0
+    gyre_model['B3_SUBCLASS'] = ''
+    gyre_model['B3_CLASS'] = 'STAR'
+    gyre_model['B3_DATE'] = ''
+    
+    #-- local parameters
+    inner = starl['mass']<starg['star_mass']
+    gyre_model['r'] = conversions.convert('cm','SI',starl['radius'])
+    gyre_model['w'] =  np.hstack([-starl['mass'][inner]/(starl['mass'][inner]-starg['star_mass']),1e16])
+    gyre_model['L_r'] = conversions.convert('erg/s','SI',starl['luminosity'])
+    gyre_model['L_r'][0] = 0.
+    gyre_model['T'] = starl['temperature']
+    gyre_model['p'] = conversions.convert('ba','Pa',starl['pressure'])
+    gyre_model['c_V'] = conversions.convert('erg/s/g/K','SI',starl['cv'])
+    gyre_model['c_p'] = conversions.convert('erg/s/g/K','SI',starl['cp'])
+    gyre_model['X'] = starl['h1']
+    gyre_model['rho'] = conversions.convert('g/cm3','SI',starl['Rho'])
+    gyre_model['chi_rho'] = starl['chiRho']
+    gyre_model['chi_T'] = starl['chiT']
+    gyre_model['N2'] = starl['brunt_N2']
+    gyre_model['nabla'] = starl['grad_temperature']
+    gyre_model['kappa'] = conversions.convert('cm2/g','SI',starl['opacity'])
+    gyre_model['kappa_rho'] = starl['dkap_dlnrho']/starl['opacity']
+    gyre_model['kappa_T'] = starl['dkap_dlnT']/starl['opacity']
+    gyre_model['epsilon'] = np.zeros(len(starl))
+    gyre_model['epsilon_rho'] = np.zeros(len(starl))
+    gyre_model['epsilon_T'] = np.zeros(len(starl))
+    
+    hdf5.write_dict(gyre_model,filename,update=False,attr_types=[float,int,str,unicode])
+    
 #}
 #{ General
 

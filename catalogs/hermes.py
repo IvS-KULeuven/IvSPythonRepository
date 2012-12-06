@@ -632,7 +632,8 @@ def _timestamp2datetime(timestamp):
     """
     if timestamp=='nan':
         timestamp = '1000-01-01T00:00:00'
-    timestamp = [float(i) for i in ' '.join(' '.join(' '.join(timestamp.split('-')).split('T')).split(':')).split()]
+    
+    timestamp = [int(i) for i in ' '.join(' '.join(' '.join(' '.join(timestamp.split('-')).split('T')).split(':')).split('.')).split()]
     #-- only the day is given, make sure to switch it to mid-day
     if len(timestamp)==3:
         timestamp += [12,0,0]
