@@ -82,6 +82,8 @@ class StellarModel:
         self.eigenfreqs = {}
         self.eigenfuncs = {}
         self.unit = unit
+        
+        self.__ran_init_losc = False
     
     def __len__(self):
         return len(self.starl)
@@ -95,6 +97,8 @@ class StellarModel:
         
         This effectively initiates LOSC, except for calling the meshing
         """
+        if self.__ran_init_losc:
+            return 0
         output,R,M = star2losc(self.starg,self.starl,G=self.constants['GG'])
         shapenow = output.shape[1]
         if shapenow>=np0max:
@@ -112,6 +116,7 @@ class StellarModel:
         if rc!=0:
             raise IOError('Error in reading stellar model for estimating frequencies (%s)'%(rc))
         pyosclib.setboundary(2,rc)
+        self.__ran_init_losc = True
         return rc
     
     def _get_current_losc_model(self):
@@ -542,8 +547,11 @@ class StellarModel:
         if 'losc' in codes and not np.all(star[0]==0):
             if not star.shape[1]==starl.shape[0]:
                 pl.figure()
-                pl.plot(star[0],star[1],'+-')
-                pl.plot(starl['x'],starl['q_x3'],'x-')
+                pl.plot(star[0],star[1],'+-',label='LOSC')
+                pl.plot(starl['x'],starl['q_x3'],'x-',label='ADIPLS')
+                pl.legend(loc='best')
+                plt.ylabel('q/x3')
+                plt.xlabel('q')
                 pl.show()
                 raise ValueError,'sanity check failed (LOSC (%d) and ADIPLS (%d) model have unequal number of mesh points)'%(star.shape[1],starl.shape[0])
             if not np.allclose(star[0],starl['x']):
@@ -892,6 +900,7 @@ class StellarModel:
         recommended, and type=2 if convergence is difficult to obtain.
         @parameter unit: units to put in the 'frequency' output column
         """
+        self._init_losc()
         old_settings = np.seterr(invalid='ignore')
         modekeys = ['l','nz','mode','modeLee','parity','sigma','beta','ev','xm',
                 'delta','boundary','frequency','freqinit']
@@ -1292,6 +1301,7 @@ class StellarModel:
         t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
         f0 = f0*t_dynamic
         fn = fn*t_dynamic
+        logger.info("Dynamic freqs: {}-{}".format(f0,fn))
         
         program = adiabatic and 'gyre_ad' or 'gyre_nad'
         for degree in degrees:
@@ -1323,8 +1333,23 @@ class StellarModel:
         #mymod = self._get_current_losc_model()
         #ascii.write_array(mymod,model+'.tosc')
         #raise SystemExit
+    
+    def compute_eigenfuncs_gyre():
+        """The eigenfunctions y_1 ... y_6 produced by GYRE have the following meanings:
+
+        y_1 = (xi_r/r) x^{-lambda_0}
+        y_2 = (p'/[rho g r] + Phi'/gr) x^{-lambda_0}
+        y_3 = Phi'/gr x^{-lambda_0}
+        y_4 = 1/g dPhi'/dr x^{-lambda_0}
+        y_5 = delta S/c_p x^{-lambda_0-2}
+        y_6 = delta L_rad/L_* x^{-lambda_0-3}
         
+        Here, x = r/R_*, while lambda_0 = 0 for radial modes and lambda_0 = l-2 for non-radial modes.
+        """
+        return None
+
     #}
+    
 
               
 #{ General
