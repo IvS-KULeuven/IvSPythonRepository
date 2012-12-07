@@ -6,6 +6,7 @@ from scipy import ndimage
 import pyfits as pf
 import time
 import itertools
+import pyfinterpol
 
 def __df_dx(oldx,oldy,index,sharp=False):
     """
@@ -63,9 +64,11 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     @return: interpolated array(, discontinuities)
     @rtype: ndarray(,ndarray)
     """
+    if not full_output:
+        return pyfinterpol.local_interpolation(newx,oldx,oldy)
     #-- extend axis to be able to interpolate last point
     lastx = 2*oldx[-1]-oldx[-2]
-    lasty = (oldy[-1]-oldy[-2])/(oldx[-1],oldx[-2])*(oldx[-1]-lastx) + oldy[-1]
+    lasty = (oldy[-1]-oldy[-2])/(oldx[-1]-oldx[-2])*(oldx[-1]-lastx) + oldy[-1]
     oldy = np.hstack([oldy,lasty])
     oldx = np.hstack([oldx,lastx])
     #-- prepare new y array
@@ -83,7 +86,14 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
         x2,f2 = oldx[index-2],oldy[index-2]
         
         #-- check sharpness of feature
-        sharpness = 1./((f1-f0)/(x1-x0)*(x1-x2)/(f1-f2))
+        
+        #sharpness_ = 1./((f1-f0)/(x1-x0)*(x1-x2)/(f1-f2))
+        numerator = ((x1-x0)*(f1-f2))
+        denominator = ((f1-f0)*(x1-x2))
+        if denominator==0:
+            sharpness = 0.
+        else:
+            sharpness = numerator/denominator
         sharp = (0.2<=sharpness<=0.5) 
         if full_output:
             disconts[i] = sharp#ness#sharp
@@ -206,7 +216,8 @@ def interpolate(p, axis_values, pixelgrid):
 
 if __name__=='__main__':
     import pylab as pl
+    import time
     from doctest import testmod
     testmod()
-    pl.show()
     
+    pl.show()
