@@ -52,17 +52,17 @@ Cf2py intent(out) newy
      
       df_dx = 0.0
 C     extend axis to be able to interpolate last point
-      oldxn(+1) = 2*oldx(M)-oldx(M-1)
+      oldxn(M+1) = 2*oldx(M)-oldx(M-1)
       oldyn(M+1) = (oldy(M)-oldy(M-1))/(oldx(M)-oldx(M-1))*
-     &             (oldx(M)-lastx) + oldy(M)
+     &             (oldx(M)-oldxn(M+1)) + oldy(M)
       do 10, i=1,M
         oldxn(i) = oldx(i)
         oldyn(i) = oldy(i)
    10 continue 
       
-      myindex = 0
+      myindex = 2
       do 20, i=1,N
-   90   if (oldxn(myindex).LE.newx(i)) then
+   90   if (oldxn(myindex).LT.newx(i)) then
           myindex = myindex + 1
           goto 90
         endif
@@ -74,7 +74,10 @@ C     extend axis to be able to interpolate last point
       f2 = oldyn(myindex+1)
       numerator = ((x1-x0)*(f1-f2))
       denominator = ((f1-f0)*(x1-x2))
-      
+      if (i.lt.50) then
+        write(*,*) i,myindex,oldyn(myindex-1),oldyn(myindex),
+     &       oldyn(myindex+1)
+      endif
       if (denominator.eq.0.0) then
         sharpness = 0
       else

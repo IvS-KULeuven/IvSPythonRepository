@@ -43,6 +43,7 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     >>> oldy[5:] = -oldx[5:]**2
     >>> newx = np.linspace(oldx.min(),oldx.max(),1000)
     >>> newy,disconts = local_interpolation(newx,oldx,oldy,full_output=True)
+    >>> newy_ = local_interpolation(newx,oldx,oldy)
     
     >>> sharpy = newy.copy()
     >>> sharpy[disconts] = np.nan
@@ -52,6 +53,7 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     >>> p = pl.plot(oldx,oldy,'ks-',ms=10)
     >>> p = pl.plot(newx,smoothy,'go-',lw=2,ms=2,mec='g')
     >>> p = pl.plot(newx,sharpy,'ro-',lw=2,ms=2,mec='r')
+    >>> p = pl.plot(newx,newy_,'bo--',lw=2,ms=2,mec='b')
     
     @param newx: new x-array to interpolate on
     @type newx: ndarray
@@ -64,8 +66,8 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     @return: interpolated array(, discontinuities)
     @rtype: ndarray(,ndarray)
     """
-    if not full_output:
-        return pyfinterpol.local_interpolation(newx,oldx,oldy)
+    #if not full_output:
+    #    return pyfinterpol.local_interpolation(newx,oldx,oldy)
     #-- extend axis to be able to interpolate last point
     lastx = 2*oldx[-1]-oldx[-2]
     lasty = (oldy[-1]-oldy[-2])/(oldx[-1]-oldx[-2])*(oldx[-1]-lastx) + oldy[-1]
@@ -78,18 +80,20 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
         disconts = np.zeros(len(newx),bool)
         #disconts = np.zeros(len(newx))
     
+    index = -1
     for i,x in enumerate(newx):
         index = oldx.searchsorted(x)
+        
         #if index>=(len(oldx)-1): continue
         x0,f0 = oldx[index-1],oldy[index-1]
         x1,f1 = oldx[index],oldy[index]
         x2,f2 = oldx[index-2],oldy[index-2]
         
-        #-- check sharpness of feature
-        
+        #-- check sharpness of feature    
         #sharpness_ = 1./((f1-f0)/(x1-x0)*(x1-x2)/(f1-f2))
         numerator = ((x1-x0)*(f1-f2))
         denominator = ((f1-f0)*(x1-x2))
+        #print 'p',numerator,denominator
         if denominator==0:
             sharpness = 0.
         else:
@@ -216,8 +220,26 @@ def interpolate(p, axis_values, pixelgrid):
 
 if __name__=='__main__':
     import pylab as pl
-    import time
-    from doctest import testmod
-    testmod()
+    #import time
+    #from doctest import testmod
+    #testmod()
+    
+    np.random.seed(1114)
+    oldx = np.sort(np.random.uniform(size=10))
+    oldy = oldx**2#np.random.uniform(size=10)
+    oldy[5:] = -oldx[5:]**2
+    newx = np.linspace(oldx.min(),oldx.max(),1000)
+    newy,disconts = local_interpolation(newx,oldx,oldy,full_output=True)
+    newy_ = local_interpolation(newx,oldx,oldy)
+    
+    sharpy = newy.copy()
+    sharpy[disconts] = np.nan
+    smoothy = newy.copy()
+    smoothy[-disconts] = np.nan
+    p = pl.figure()
+    p = pl.plot(oldx,oldy,'ks-',ms=10)
+    p = pl.plot(newx,smoothy,'go-',lw=2,ms=2,mec='g')
+    p = pl.plot(newx,sharpy,'ro-',lw=2,ms=2,mec='r')
+    p = pl.plot(newx,newy_,'bo--',lw=2,ms=2,mec='b')
     
     pl.show()
