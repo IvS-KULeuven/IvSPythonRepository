@@ -85,7 +85,7 @@ if __name__=="__main__":
                   'timeseries/deeming','timeseries/eebls','timeseries/multih',
                   'timeseries/pyclean','timeseries/pyKEP','timeseries/pyscargle',
                   'timeseries/pyGLS','timeseries/pyfasper_single','timeseries/pyfasper',
-                  'timeseries/pyscargle_single','timeseries/pydft']
+                  'timeseries/pyscargle_single','timeseries/pydft','sigproc/pyfinterpol']
     main_dir = os.getcwd()
     if len(sys.argv)>1:
         if len(sys.argv)>=3:
@@ -93,6 +93,7 @@ if __name__=="__main__":
         else:
             compiler = 'gfortran'
         if sys.argv[1]=='compile':
+            answer = 'y'
             for name in to_install:
                 #-- break up fortran filepath in file and directory name
                 direc,pname = os.path.dirname(name),os.path.basename(name)
@@ -101,9 +102,10 @@ if __name__=="__main__":
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
-                    answer = raw_input('Continue? [Y/n] ')
-                    if answer.lower()=='n':
-                        continue
+                    if answer!='Y':
+                        answer = raw_input('Continue? [Y/n] ')
+                        if answer.lower()=='n':
+                            continue
                     #-- call the compiling command
                     p = subprocess.check_output(cmd,shell=True)#,stdout=devnull)
                     #-- check if compilation went fine
