@@ -152,7 +152,7 @@ class StellarModel:
     
     def compute_eigenfreqs(self,degrees,codes=None,
                            f0=(1.,'d-1'),fn=(12.,'d-1'),nscan=1000,
-                           fspacing='p',boundary=0):
+                           fspacing='p',boundary=0,adiabatic=True):
         """
         Compute eigenfrequencies for all available methods.
         
@@ -163,6 +163,7 @@ class StellarModel:
             codes = self.codes
         self.kwargs_losc = {}
         self.kwargs_adip = {}
+        self.kwargs_gyre = {}
         self.kwargs_losc['ires'] = [None,'p','g'].index(fspacing)
         self.kwargs_losc['n'] = nscan
         self.kwargs_adip['fspacing'] = fspacing
@@ -174,6 +175,8 @@ class StellarModel:
         self.kwargs_adip['eps'] = 1e-9
         self.kwargs_adip['itmax'] = 15
         self.kwargs_adip['mdintg'] = 1
+        self.kwargs_gyre['nf'] = nscan
+        self.kwargs_gyre['adiabatic'] = adiabatic
         
         #-- translate boundary condition for LOSC to 1, 2 or raise ValueError
         # translate boundary condition for ADIPLS to istbc
@@ -188,6 +191,8 @@ class StellarModel:
             self.compute_eigenfreqs_losc(degrees,f0=f0,fn=fn,**self.kwargs_losc)
         if 'adipls' in codes:
             self.compute_eigenfreqs_adipls(degrees,f0=f0,fn=fn,**self.kwargs_adip)
+        if 'gyre' in codes:
+            self.compute_eigenfreqs_gyre(degrees,f0=f0,fn=fn,**self.kwargs_gyre)
     
     def compute_eigenfuncs(self,degrees,modes=None,codes=None):
         """
@@ -928,7 +933,6 @@ class StellarModel:
             freqinfo = [np.array(i,dtype) for i,dtype in zip(freqinfo.T,dtypes)]
             freqinfo = np.rec.fromarrays(freqinfo,names=modekeys)
             #-- put the frequencies in cy/d in the array
-            print freqinfo['sigma']
             freqcd = conversions.convert('rad/s',self.unit,freqinfo['sigma'])
             freqinfo['frequency'] = freqcd
             self.eigenfreqs['losc']['l%d'%(l)] = freqinfo
@@ -1310,6 +1314,7 @@ class StellarModel:
             self.eigenfreqs[codename]['l%d'%(degree)] = starl
             logger.info('{}: found {} frequencies (l={}) between {:.3g}{} and {:.3g}{}'.format(program.upper(),len(starl),degree,starl['frequency'].min(),self.unit,starl['frequency'].max(),self.unit))
             for ff in eigfunc_files:
+                #eigfunc = ['
                 os.unlink(ff)
             os.unlink('eigvals.h5')
                 
