@@ -88,7 +88,7 @@ def list_mesa_data(filename='profiles.index'):
     Return a chronological list of *.data files in a MESA LOG directory
     """
     number,priority,lognr = ascii.read2array(filename,skip_lines=1).T
-    logfiles = [os.path.join(os.path.dirname(filename),'log%d.data'%(nr)) for nr in lognr]
+    logfiles = [os.path.join(os.path.dirname(filename),'profile%d.data'%(nr)) for nr in lognr]
     return number,logfiles
             
 
@@ -553,7 +553,7 @@ def write_gyre(starg,starl,filename):
     Write a file to the GYRE format.
     """
     gyre_model = {}
-    #-- global parameters
+    
     gyre_model['L_star'] = float(conversions.convert('erg/s',"SI",starg['photosphere_L']))
     gyre_model['R_star'] = float(conversions.convert('cm',"SI",starg['photosphere_r']))
     gyre_model['X_star'] = -1.00
@@ -565,11 +565,16 @@ def write_gyre(starg,starl,filename):
     gyre_model['B3_SUBCLASS'] = ''
     gyre_model['B3_CLASS'] = 'STAR'
     gyre_model['B3_DATE'] = ''
+    #for key in gyre_model:
+        #print key,gyre_model[key]
     
     #-- local parameters
-    inner = starl['mass']<starg['star_mass']
+    #inner = starl['mass']<starg['star_mass']
+    #w = -starl['mass'][inner]/(starl['mass'][inner]-starg['star_mass'])
+    inner = starl['mass']<starl['mass'].max()
+    w = -starl['mass'][inner]/(starl['mass'][inner]-starl['mass'].max())
     gyre_model['r'] = conversions.convert('cm','SI',starl['radius'])
-    gyre_model['w'] =  np.hstack([-starl['mass'][inner]/(starl['mass'][inner]-starg['star_mass']),1e16])
+    gyre_model['w'] =  np.hstack([w,1e16*np.ones(sum(-inner))])
     gyre_model['L_r'] = conversions.convert('erg/s','SI',starl['luminosity'])
     gyre_model['L_r'][0] = 0.
     gyre_model['T'] = starl['temperature']
@@ -588,6 +593,28 @@ def write_gyre(starg,starl,filename):
     gyre_model['epsilon'] = np.zeros(len(starl))
     gyre_model['epsilon_rho'] = np.zeros(len(starl))
     gyre_model['epsilon_T'] = np.zeros(len(starl))
+    
+    #-- global parameters
+    gyre_model['L_star'] = float(gyre_model['L_r'].max())
+    gyre_model['R_star'] = float(gyre_model['r'].max())
+    gyre_model['M_star'] = float(starl['mass'].max()/1000.)
+    #gyre_model['L_star'] = float(gyre_model['L_r'].max())#float(conversions.convert('erg/s',"SI",starg['photosphere_L']))
+    #gyre_model['R_star'] = float(gyre_model['r'].max())#float(conversions.convert('cm',"SI",starg['photosphere_r']))
+    #gyre_model['X_star'] = -1.00
+    #gyre_model['Z_star'] = float(starg['initial_z'])
+    #gyre_model['M_star'] = float(starl['mass'].max())#float(conversions.convert('g','SI',starg['star_mass']))
+    #gyre_model['t_star'] = float(starg['star_age'])
+    #gyre_model['n_shells'] = len(starl)
+    #gyre_model['B3_VERSION'] = 1.0
+    #gyre_model['B3_SUBCLASS'] = ''
+    #gyre_model['B3_CLASS'] = 'STAR'
+    #gyre_model['B3_DATE'] = ''
+    
+    #keys = ['w','L_r','T','p','c_V','c_p','X','rho','chi_rho','chi_T','N2',\
+            #'nabla','kappa','kappa_rho','kappa_T','epsilon','epsilon_rho','epsilon_T']
+    ##for key in keys:
+        #gyre_model[key] = np.array(gyre_model[key],np.float32)
+        #print key,gyre_model[key].min(),gyre_model[key].max()
     
     hdf5.write_dict(gyre_model,filename,update=False,attr_types=[float,int,str,unicode])
     

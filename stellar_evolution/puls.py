@@ -45,7 +45,7 @@ class StellarModel:
     routines.
     """
     #{ Built-in functions
-    def __init__(self,star_model,unit='d-1',codes=('losc','adipls'),**kwargs):
+    def __init__(self,star_model,unit='cy d-1',codes=('losc','adipls'),**kwargs):
         """
         Read in the stellar model.
         
@@ -72,6 +72,8 @@ class StellarModel:
         #-- read the stellar model and keep a proper list of fundamental
         #   constants
         starg,starl,mtype = fileio.read_starmodel(star_model,do_standardize=True,**kwargs)
+        #self.__values = 'mesa'
+        #self.__units = 'cgs'
         self.constants = conversions.get_constants(units='cgs',values='standard')
         #-- global properties
         model = 'model'
@@ -154,6 +156,27 @@ class StellarModel:
     #}
     
     #{ Code-independent interface
+    
+    def validate_model(self):
+        
+        rho = self.starl['Rho']
+        GG = self.constants['GG']
+        dP_dr = self.starl['dP_dr']
+        pressure = self.starl['pressure']
+        mass = self.starl['mass']
+        radius = self.starl['radius']
+        dP_dr_num = ne.deriv(radius,pressure)
+        
+        pl.figure()
+        pl.plot(radius,dP_dr,'bo-',label='Hydrostatic equilibrium')
+        pl.plot(radius,dP_dr_num,'ro-',label='Numerical derivatives')
+        pl.legend()
+        pl.xlabel("radius")
+        pl.ylabel("dP/dr")
+        
+        keep = dP_dr!=0
+        diffr = ((dP_dr[keep]-dP_dr_num[keep])/dP_dr[keep]-1)*100
+        logger.info('Validation: hydrostatic equilibrium = {}+/-{}%'.format(diffr.mean(),diffr.std()))
     
     def compute_eigenfreqs(self,degrees,codes=None,
                            f0=(1.,'d-1'),fn=(12.,'d-1'),nscan=1000,
@@ -265,7 +288,16 @@ class StellarModel:
         #-- that's it!
         return DeltaP,x0,Pi_0
                 
-                
+    def gmode_cutoff(self,ell=1,unit='rad/s'):
+        """
+        Calculate the gmode cut-off frequency.
+        
+        See e.g. Hansen et al. 1985, ApJ, 297, 544
+        """
+        #Vg = 3*g*mu*R/(5*Na*k*teff)
+        Vg = self.starl['Vg'][-1]
+        L2 = ell*(ell+1.)
+        return conversions.convert('rad/s',unit,np.sqrt(self['csound'][-1]**2/self['radius'][-1]**2*L2))
                 
     def match(self,template='losc',tol=1.):
         """
@@ -882,7 +914,7 @@ class StellarModel:
     
     
     #{ Code-dependent interface
-    def compute_eigenfreqs_losc(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
+    def compute_eigenfreqs_losc(self,degrees,f0=(1.,'cy d-1'),fn=(12.,'cy d-1'),
                                      ires=0,n=500,ind=1,mmax=50,
                                      typecomp=1):
         """
@@ -1102,7 +1134,7 @@ class StellarModel:
         logger.info('LOSC: computed eigenfunctions for l=%d modes %s'%(degree,modes))
                 
     
-    def compute_eigenfreqs_adipls(self,degrees,f0=(1.,'d-1'),fn=(12.,'d-1'),
+    def compute_eigenfreqs_adipls(self,degrees,f0=(1.,'cy d-1'),fn=(12.,'cy d-1'),
                                   nf=1000,verbose=False,**kwargs):
         """
         Compute eigenfrequencies with ADIPLS.
@@ -1278,7 +1310,7 @@ class StellarModel:
         #raise SystemExit
         logger.info('ADIPLS: computed eigenfunctions for l=%d modes %s'%(degree,modes))
         
-    def compute_eigenfreqs_gyre(self,degrees,f0=(1.,'d-1'),fn=(12,'d-1'),nf=500,verbose=False,adiabatic=True):
+    def compute_eigenfreqs_gyre(self,degrees,f0=(1.,'cy d-1'),fn=(12,'cy d-1'),nf=500,verbose=False,adiabatic=True):
         """
         Compute eigenfrequencies with GYRE.
         """
@@ -1304,10 +1336,11 @@ class StellarModel:
         logger.info("Dynamic freqs: {}-{}".format(f0,fn))
         
         program = adiabatic and 'gyre_ad' or 'gyre_nad'
+        G = self.constants['GG']#conversions.convert(self.__units,'cm3 g-1 s-2',self.constants['GG'])
         for degree in degrees:
             #-- construct adipls control file
             control_file = gyre.make_gyre_inputfile(model_name=model,degree=degree,\
-                  omega_min=f0,omega_max=fn,n_omega=nf,G=self.constants['GG'])
+                  omega_min=f0,omega_max=fn,n_omega=nf,G=G)
             #-- call adipls, perhaps with throwing away the output
             if not verbose:
                 stdout = open('/dev/null', 'w')
@@ -1323,9 +1356,9 @@ class StellarModel:
             #-- read files and add contents to output
             self.eigenfreqs[codename]['l%d'%(degree)] = starl
             logger.info('{}: found {} frequencies (l={}) between {:.3g}{} and {:.3g}{}'.format(program.upper(),len(starl),degree,starl['frequency'].min(),self.unit,starl['frequency'].max(),self.unit))
-            for ff in eigfunc_files:
+            #for ff in eigfunc_files:
                 #eigfunc = ['
-                os.unlink(ff)
+            #    os.unlink(ff)
             os.unlink('eigvals.h5')
                 
         #os.unlink(model+'.amdl')
@@ -1334,7 +1367,7 @@ class StellarModel:
         #ascii.write_array(mymod,model+'.tosc')
         #raise SystemExit
     
-    def compute_eigenfuncs_gyre():
+    def compute_eigenfuncs_gyre(self,degree):
         """The eigenfunctions y_1 ... y_6 produced by GYRE have the following meanings:
 
         y_1 = (xi_r/r) x^{-lambda_0}
@@ -1346,6 +1379,25 @@ class StellarModel:
         
         Here, x = r/R_*, while lambda_0 = 0 for radial modes and lambda_0 = l-2 for non-radial modes.
         """
+        if modes is None:
+            modes = range(len(self.eigenfreqs['gyre']['l%d'%(degree)]))
+            
+        R = self.starg['photosphere_r']
+        M = self.starg['star_mass']
+        #-- below, we will need the dynamical time scale, the radial position
+        #   in the star, the mass position and the density
+        t_dynamic = np.sqrt(R**3/(self.constants['GG']*M))
+        x_ = self.starl['radius']/R
+        q_ = self.starl['mass']/M
+        rho_ = self.starl['Rho']
+        P_ = self.starl['pressure']
+        G1_= self.starl['gamma1']
+        dP_dr_ = self.starl['dP_dr']
+        l = degree    
+            
+        #-- run over all the degrees
+        for mode in modes:   
+            continue
         return None
 
     #}
