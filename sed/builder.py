@@ -1676,6 +1676,20 @@ class SED(object):
                                    cihigh=None, **kwargs):
         """
         Saves the provided confidence intervals in the result dictionary of self.
+        The provided confidence intervals will be saved in a dictionary: 
+        self.results[mtype]['CI'] with as key for the value the name, for cilow:
+        name_l and for cihigh: name_u.
+        
+        @param mtype: the search type
+        @type mtype: str
+        @param name: names of the parameters
+        @type name: array
+        @param value: best fit values
+        @type value: array
+        @param cilow: lower CI limit
+        @type cilow: array
+        @param cihigh: upper CI limit
+        @type cihigh: array
         """
         if not 'CI' in self.results[mtype]:
             self.results[mtype]['CI'] = {}
@@ -1683,11 +1697,9 @@ class SED(object):
             self.results[mtype]['CI'][name+'_l'] = cil
             self.results[mtype]['CI'][name] = val
             self.results[mtype]['CI'][name+'_u'] = cih
-            try:
-                logger.info('CI %s: %g <= %g <= %g'%(name,cil,val,cih))
-            except Exception:
-                logger.info('CI %s: nan <= %g <= nan'%(name,val))
-    
+        
+        # Send the stored CI to logger
+        logger.info(self.ci2str(mtype=mtype))
     
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=(0,0),rvrange=(3.1,3.1),vradrange=(0,0),
@@ -3496,7 +3508,32 @@ class SED(object):
         
         logger.info('Saved summary to {0}'.format(filename))
         
+    def ci2str(self, mtype='igrid_search'):
+        """
+        Prints the stored confidence intervals of the given mtype, the confidence intervals
+        are sorted alfabetically.
         
+        @param mtype: the search type for which to show the ci
+        @type mtype: str
+        @return: The confidence intervals in a string
+        @rtype: str
+        """
+        if not 'CI' in self.results[mtype]:
+            res = "No confidence intervals saved for type: %s"%(mtype)
+            return res
+        else:
+            res = "Stored confidence intervals for type: %s \n"%(mtype)
+        
+        ci = self.results[mtype]['CI']
+        keys = [ key for key in ci.keys() if not '_' in key ]
+        keys.sort()
+        for key in keys:
+            try:
+                res += "%15s : %g <= %g <= %g\n"%(key, ci[key+'_l'], ci[key], ci[key+'_u'])
+            except Exception:
+                res += "%15s : nan <= %g <= nan\n"%(key, ci[key])
+        
+        return res.rstrip()   
     
     #}
 
@@ -3522,11 +3559,9 @@ class BinarySED(SED):
             - distance (in Rsol)
         TODO: This function should in the future accept Units.
         """
-        
-        if 'masses' in kwargs:
-            self.constraints['masses'] = kwargs['masses']
-        if 'distance' in kwargs:
-            self.constraints['distance'] = kwargs['distance']
+        for key in kwargs.keys():
+            if kwargs[key] != None:
+                self.constraints[key] = kwargs[key]
     
     def constraints2str(self):
         """
