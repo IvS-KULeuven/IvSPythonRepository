@@ -570,7 +570,6 @@ import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
 import pyfits
-import h5py
 
 from ivs import config
 from ivs.aux import numpy_ext
@@ -578,6 +577,7 @@ from ivs.aux import termtools
 from ivs.aux.decorators import memoized,clear_memoization
 from ivs.io import ascii
 from ivs.io import fits
+from ivs.io import hdf5
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import fit
@@ -968,7 +968,7 @@ class SED(object):
     closely matching them, see the documentation).
         
     """
-    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,label=''):
+    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,load_hdf5=True,label=''):
         """
         Initialize SED class.
         
@@ -1037,8 +1037,11 @@ class SED(object):
                 self.ID = os.path.splitext(os.path.basename(self.photfile))[0]#self.info['oname']
         #--load information from the FITS file if it exists
         self.results = {}
+        self.constraints = {}
         if load_fits:
             self.load_fits()
+        if load_hdf5:
+            self.load_hdf5()
             
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
@@ -1773,7 +1776,7 @@ class SED(object):
         ci = fit.calculate_iminimize_CI(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
-                             CI_limit=CI_limit, **pars)
+                             CI_limit=CI_limit,constraints=self.constraints, **pars)
         
         #-- Add the scale factor
         ci['name'] = np.append(ci['name'], 'scale')
@@ -1785,7 +1788,7 @@ class SED(object):
         
         self.store_confidence_intervals(mtype='iminimize', **ci)
     
-    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, **kwargs):
+    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, res=10, **kwargs):
         
         #-- get the best fitting parameters
         pars = {}
@@ -1799,20 +1802,21 @@ class SED(object):
         pars.update(kwargs)
         pars = self.generate_fit_param(**pars)  
         
+        logger.info('Calculating 2D confidence intervalls for %s--%s'%(xpar,ypar))
         
         #-- calculate the confidence intervalls
         include_grid = self.master['include']
         x,y,chi2, raw, red = fit.calculate_iminimize_CI2D(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
-                             xpar, ypar, limits=limits, **pars)
+                             xpar, ypar, limits=limits, res=res, 
+                             constraints=self.constraints, **pars)
         
         #-- store the CI
         if not 'CI2D' in self.results[mtype]: self.results[mtype]['CI2D'] = {}
         self.results[mtype]['CI2D'][xpar+"-"+ypar] = dict(x=x, y=y, ci_chi2=chi2,\
                                                            ci_raw=raw, ci_red=red)
         
-        logger.info('Calculated 2D confidence intervalls for %s--%s'%(xpar,ypar))
     
     def _get_imin_ci(self, mtype='iminimize',**ranges):
         """ returns ci information for store_confidence_intervals """
@@ -1832,7 +1836,7 @@ class SED(object):
     def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
                      loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
                      points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
-                     calc_ci=True, set_model=True, **kwargs):
+                     calc_ci=False, set_model=True, **kwargs):
         """ 
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
         """
@@ -3381,56 +3385,40 @@ class SED(object):
                 
         ff.close()
         
-        logger.info('Loaded previous results from FITS')
+        logger.info('Loaded previous results from FITS file: %s'%(filename))
         return filename
     
-    def save_hdf5(self, filename=None):
+    def save_hdf5(self, filename=None, update=True):
         """
         Save content of SED object to a HDF5 file. (HDF5 is the successor of FITS files, 
         providing a clearer structure of the saved content.)
-        Information that is stored is everything that is stored using save_fits, and 
-        the 2D confidence intervalls calculated with calculate_iminimize_CI2D().
+        This way of saving is more thorough that save_fits(), fx. the CI2D confidence
+        intervals are not save to a fits file, but are saved to a hdf5 file.
+        Currently the following data is saved to HDF5 file:
+            - sed.master (photometry)
+            - sed.results (results from all fitting methods)
+            - sed.constraints (extra constraints on the fits)
         
         @param filename: name of SED FITS file
         @type filename: string
+        @param update: if True, an existing file will be updated with the current information, if
+                       False, an existing fill be overwritten
+        @type update: bool
         @return: the name of the output HDF5 file.
         @rtype: string
         """
         
         if filename is None:
             filename = str(os.path.splitext(self.photfile)[0]+'.hdf5')
-            
-        if os.path.isfile(filename):
-            os.remove(filename)
-                
-        hdf = h5py.File(filename)
         
-        #-- store the photometry
-        hdf.create_group('master')
-        hdf['master'].create_dataset("master", data=self.master)
+        data = dict()
+        data['master'] = self.master
+        data['results'] = self.results
+        data['constraints'] = self.constraints
         
-        #-- store the results
-        for mtype in self.results.keys():
-            hdf.create_group(mtype)
-            hdf[mtype].create_dataset("synflux", data=self.results[mtype]['synflux'])
-            hdf[mtype].create_dataset("model", data=self.results[mtype]['model'])
-            hdf[mtype].create_dataset("chi2", data=self.results[mtype]['chi2'])
-            hdf[mtype].create_dataset("grid", data=self.results[mtype]['grid'])
-            
-            hdf[mtype].attrs["factor"] = self.results[mtype]['factor']
-            
-            hdf[mtype].create_group('CI')
-            for cikey in self.results[mtype]['CI'].keys():
-                hdf[mtype]['CI'].attrs[cikey] = self.results[mtype]['CI'][cikey]
-            
-            if 'CI2D' in self.results[mtype]:
-                hdf[mtype].create_group('CI2D')
-                for cikey in self.results[mtype]['CI2D'].keys():
-                    hdf[mtype]['CI2D'].create_group(cikey)
-                    for key in self.results[mtype]['CI2D'][cikey].keys():
-                        hdf[mtype]['CI2D'][cikey].attrs[key] = self.results[mtype]['CI2D'][cikey][key]
-            
-        hdf.close()
+        hdf5.write_dict(data, filename, update=update)
+        
+        logger.info('Results saved to HDF5 file: %s'%(filename))
         return filename    
                 
     def load_hdf5(self,filename=None):
@@ -3448,36 +3436,14 @@ class SED(object):
             logger.warning('No previous results saved to HFD5 file {:s}'.format(filename))
             return False
             
-        hdf = h5py.File(filename, 'r')
+        data = hdf5.read2dict(filename)
         
-        #-- load photometry
-        self.master = hdf['master']['master'][:]
+        self.master = data.get('master', {})
+        self.results = data.get('results', {})
+        self.constraints = data.get('constraints', {})
         
-        mtypes = hdf.keys()
-        mtypes.remove('master')
-        
-        self.results = {}
-        for mtype in mtypes:
-            self.results[mtype] = {}
-            for key in ['synflux', 'model', 'chi2', 'grid']:
-                if key in hdf[mtype]:
-                    self.results[mtype][key] = hdf[mtype][key][:]
-            
-            if 'factor' in hdf[mtype]: self.results['factor'] = hdf[mtype].attrs['factor']
-            
-            if 'CI' in hdf[mtype]:
-                self.results[mtype]['CI'] = {}
-                for key in hdf[mtype]['CI'].attrs:
-                    self.results[mtype]['CI'][key] = hdf[mtype]['CI'].attrs[key]
-            
-            if 'CI2D' in hdf[mtype]:
-                self.results[mtype]['CI2D'] = {}
-                for cikey in hdf[mtype]['CI2D']:
-                    self.results[mtype]['CI2D'][cikey] = {}
-                    for key in hdf[mtype]['CI2D'][cikey].attrs:
-                        self.results[mtype]['CI2D'][cikey][key] = hdf[mtype]['CI2D'][cikey].attrs[key]
-        
-        hdf.close()
+        logger.info('Loaded previous results from HDF5 file: %s'%(filename))
+        logger.debug('Loaded following datasets from HDF5 file:\n %s'%(data.keys()))
         return True
             
     def save_bibtex(self):
@@ -3536,10 +3502,46 @@ class SED(object):
 
 class BinarySED(SED):
     
-    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,zrange=None,
-                          rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),radrange=(None,None),
-                          masses=None,compare=True,df=None,CI_limit=None,
-                          primary_hottest=False,gr_diff=None,set_model=True,**kwargs):
+    def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,load_hdf5=True,label='', **kwargs):
+        """
+        Setup the Binary sed in the same way as a normal SED.
+        The masses of both components can be provided, and will then be used in igrid_search,
+        iminimize, and while calculating CI and CI2D confidence intervalls
+        """
+        super(BinarySED, self).__init__(ID=ID,photfile=photfile,plx=plx,label=label,\
+                                             load_fits=load_fits,load_hdf5=load_hdf5)
+        
+        self.set_constraints(**kwargs)
+        
+    
+    def set_constraints(self, **kwargs):
+        """
+        Add constraints that are used when fitting the Binary SED. Up till now the following
+        contraints are supported:
+            - masses (in Msol)
+            - distance (in Rsol)
+        TODO: This function should in the future accept Units.
+        """
+        
+        if 'masses' in kwargs:
+            self.constraints['masses'] = kwargs['masses']
+        if 'distance' in kwargs:
+            self.constraints['distance'] = kwargs['distance']
+    
+    def constraints2str(self):
+        """
+        Summarizes all constraints in a string.
+        """
+        res = ""
+        for key in self.constraints.keys():
+            res += "Using constraint: %s = %s\n"%(key, self.constraints[key])
+        res = res[:-1]
+        return res
+    
+    def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,\
+                    zrange=None,rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),\
+                    radrange=(None,None),compare=True,df=None,CI_limit=None,\
+                    set_model=True, distance=None,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
         
@@ -3549,6 +3551,7 @@ class BinarySED(SED):
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
         """
+        
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
             
@@ -3561,20 +3564,23 @@ class BinarySED(SED):
                         z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
                         rad2range=radrange[1])
         
-        if masses is None: 
-            logger.info('No masses are provided, the radii of the components will NOT be coupled to logg.')
-        
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
-        logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
+        logger.info('The following measurements are included in the fitting process:\n%s'%\
+                   (photometry2str(self.master[include_grid])))
         
+        logger.info('The following constraints are included in the fitting process:\n%s'%\
+                   (self.constraints2str()))
 
-        #-- build the grid, run over the grid and calculate the CHI2         
+        #-- build the grid, run over the grid and calculate the CHI2
+        masses = self.constraints.get('masses', None)
         pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges) 
-                   
+        
         chisqs,scales,escales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
-                             self.master['photband'][include_grid], model_func=model.get_itable_pix, **pars)
+                             self.master['photband'][include_grid], 
+                             model_func=model.get_itable_pix,constraints=self.constraints,
+                             **pars)
         fitres = dict(chisq=chisqs, scale=scales, escale=escales, labs=lumis)
         
         #-- collect all the results in a record array
@@ -3584,7 +3590,8 @@ class BinarySED(SED):
         self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
         
         #-- compute the confidence intervals
-        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
+        ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',\
+                                                                     CI_limit=CI_limit)
         self.store_confidence_intervals(mtype='igrid_search', **ci)
         
         #-- remember the best model
@@ -3594,13 +3601,15 @@ class BinarySED(SED):
         """ 
         generates a dictionary with parameter information that can be handled by fit.iminimize 
         """
-        masses = pars.pop('masses', None)
+        masses = self.constraints.get('masses', None)
         result = super(BinarySED, self).generate_fit_param(start_from=start_from, **pars)
         
+        #-- Couple ebv and rv of both components
         result['ebv2_expr'] = 'ebv'
         result['rv2_expr'] = 'rv'
         
         if masses != None:
+            #-- Couple the radii to the masses
             G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
             result['rad_value'] = np.sqrt(G*masses[0]*Msol/10**result['logg_value'])
             result['rad2_value'] = np.sqrt(G*masses[1]*Msol/10**result['logg2_value'])
@@ -3609,15 +3618,18 @@ class BinarySED(SED):
             result['rad_min'], result['rad_max'] = None, None
             result['rad2_min'], result['rad2_max'] = None, None
             result['rad_vary'], result['rad2_vary'] = False, False
+        else:
+            result['rad_value'] = self.results[start_from]['CI']['rad']
+            result['rad2_value'] = self.results[start_from]['CI']['rad2']
         
         return result
     
     def iminimize(self, teff=(None,None), logg=(None,None), ebv=(None,None), z=(None,None),
-                  rv=(None,None), vrad=(None,None), teffrange=(None,None), loggrange=(None,None),
+                  rv=(None,None), vrad=(0,0), teffrange=(None,None), loggrange=(None,None),
                   ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
-                  vradrange=(None,None), radrange=(None,None), masses=(None,None), compare=True,
-                  df=None, distance=None, start_from='igrid_search', points=None, CI_limit=None,
-                   calc_ci=True, set_model=True, **kwargs):
+                  vradrange=(None,None), radrange=(None,None), compare=True, df=None, 
+                  distance=None, start_from='igrid_search', points=None, CI_limit=None,
+                  calc_ci=True, set_model=True, **kwargs):
         """ Binary minimizer """ 
         
         ranges = self.generate_ranges(teffrange=teffrange[0],\
@@ -3630,19 +3642,20 @@ class BinarySED(SED):
         pars = self.generate_fit_param(teff=teff[0],logg=logg[0],ebv=ebv[0],z=z[0],\
                             rv=rv[0], vrad=vrad[0],teff2=teff[1],logg2=logg[1],\
                             ebv2=ebv[1],z2=z[1],rv2=rv[1],vrad2=vrad[1], \
-                            start_from=start_from, masses=masses, **ranges)
-        fitkws = dict(distance=distance) if distance != None else dict()
+                            start_from=start_from, **ranges)
         
-        #-- grid search on all include data: extract the best CHI2
+        #-- Print the used data and constraints
         include_grid = self.master['include']
-        logger.info('The following measurements are included in the fitting process:\n%s'% \
-        (photometry2str(self.master[include_grid])))
+        logger.info('The following measurements are included in the fitting process:\n%s'%\
+                   (photometry2str(self.master[include_grid])))
+        logger.info('The following constraints are included in the fitting process:\n%s'%\
+                   (self.constraints2str()))
         
         #-- pass all ranges and starting values to the fitter
+        kick_list = ['teff', 'logg', 'teff2', 'logg2', 'ebv']
         grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
-                             self.master['e_cmeas'][include_grid],
-                             self.master['photband'][include_grid],
-                             fitkws=fitkws, points=points,**pars)
+               self.master['e_cmeas'][include_grid], self.master['photband'][include_grid],
+               points=points, kick_list=kick_list, constraints=self.constraints, **pars)
         
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
@@ -3659,10 +3672,40 @@ class BinarySED(SED):
             self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
         
         #-- remember the best model
-        if set_model: self.set_best_model(mtype='iminimize')
+        if set_model: self.set_best_model(mtype='iminimize') 
+    
+    
+    def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
+        """
+        Calculate the confidence intervals for each parameter using the lmfit
+        calculate confidence interval method. 
         
+        The calculated confidence intervals are stored in the results['CI'] 
+        dictionary. If the method fails, or if the asked CI is outside the 
+        provided ranges, those ranges will be set as CI.
         
+        This method works in the same way as for a single SED, but it adds
+        the mass as an extra constraint if the mass of both components is stored.
+        """
+        masses = self.constraints.get('masses',None)
+        super(BinarySED, self).calculate_iminimize_CI(mtype=mtype, CI_limit=CI_limit,\
+                                         masses=masses, constraints=self.constraints,\
+                                         **kwargs)
+    
+    def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, res=10, **kwargs):
+        """
+        Calculated 2 dimentional confidence intervals for the given parameters,
+        using lmfit methods. 
         
+        The calculated confidence intervals are stored in the results['CI2D'] 
+        dictionary.
+        
+        This method works in the same way as for a single SED, but it adds
+        the mass as an extra constraint if the mass of both components is stored.
+        """
+        masses = self.constraints.get('masses',None)
+        super(BinarySED, self).calculate_iminimize_CI2D(xpar, ypar, mtype=mtype,\
+                                 limits=limits, res=res, masses=masses, **kwargs)
     
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
         """

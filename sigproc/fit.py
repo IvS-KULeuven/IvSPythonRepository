@@ -2082,7 +2082,8 @@ def minimize(x, y, model, err=None, weights=None, resfunc=None,
 
 
 def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False, **fit_kws):
+                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False,
+                  verbose=True, **fit_kws):
     """                  
     Grid minimizer. Offers the posibility to start minimizing from a grid of starting parameters defined by the used.
     The number of starting points can be specified, as well as the parameters that are varried. For each parameter 
@@ -2106,6 +2107,8 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
     @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
     @rtype: Minimizer object or array of [Minimizer, Parameters, Model, float]
     """
+    from ivs.aux import progressMeter as progress
+    
     if parameters == None:
         parameters = model.get_par_names()
     
@@ -2141,8 +2144,10 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
         startpars[i] = copy.deepcopy(mod_.parameters)
     
     #-- minimize every model.
+    if verbose: Pmeter = progress.ProgressMeter(total=points)
     for i,mod_ in enumerate(newmodels):
         # refit and store the results
+        if verbose: Pmeter.update(1)
         fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
                             kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
         fitters[i] = fitter
