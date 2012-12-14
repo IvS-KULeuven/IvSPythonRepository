@@ -27,13 +27,17 @@ Mendelev's Table::
 
 """
 import os
-
+import logging
 import numpy as np
 import pylab as pl
 from numpy import inf
 
 from ivs import config
 from ivs.io import ascii
+from ivs.aux import loggers
+
+logger = logging.getLogger("SPEC.LINELIST")
+logger.addHandler(loggers.NullHandler)
 
 atomcode = ['X', 'H','He','Li','Be', 'B', 'C', 'N', 'O', 'F','Ne',
                 'Na','Mg','Al','Si', 'P', 'S','Cl','Ar', 'K','Ca',
@@ -89,7 +93,7 @@ def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
     elif len(lines):
       all_lines.append(lines)
     else:
-      logger.info('No lines of ' + str(elem[i]) + ' in given wavelength range')
+      logger.debug('No lines of ' + str(elem[i]) + ' in given wavelength range')
   return np.hstack(all_lines)
 
 def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
