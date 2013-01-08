@@ -1591,7 +1591,7 @@ class SED(object):
         
         self.results[mtype]['grid'] = grid_results
         
-        logger.info('Total of %s grid points, best chisq=%s'%(len(grid_results[selfact]), grid_results[selfact][-1]))
+        logger.info('Total of %d grid points, best chisq=%s'%(len(grid_results), grid_results[-1]))
     
     def calculateDF(self, **ranges):
         """ Calculates the degrees of freedom from the given ranges"""
