@@ -2079,7 +2079,7 @@ class SED(object):
         wave,flux,urflux = self.results[label]['model']
         return wave,flux,urflux
     
-    def sample_gridsearch(self,NrSamples,df=None,selfact='chisq'):
+    def sample_gridsearch(self,NrSamples=1,df=None,selfact='chisq'):
         """
         Retrieve an element from the results of a grid search according to the derived probability.
         
@@ -2089,7 +2089,8 @@ class SED(object):
         @param NrSamples: the number of samples you wish to draw
         @type NrSamples: int
         """
-        ranges = self.generate_ranges(start_from='igrid_search')
+        ranges = self.generate_ranges(teffrange=None,loggrange=None,ebvrange=None,\
+                            zrange=None,rvrange=None,vradrange=None,start_from='igrid_search')
         
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
