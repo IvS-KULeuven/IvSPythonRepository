@@ -2079,7 +2079,7 @@ class SED(object):
         wave,flux,urflux = self.results[label]['model']
         return wave,flux,urflux
     
-    def sample_gridsearch(self,NrSamples,df==None):
+    def sample_gridsearch(self,NrSamples,df=None,selfact='chisq'):
         """
         Retrieve an element from the results of a grid search according to the derived probability.
         
@@ -2107,7 +2107,7 @@ class SED(object):
         logger.info('Statistics based on df={0} and Nobs={1}'.format(df,N))
         
         #-- Compute the pdf and cdf
-        probdensfunc = scipy.stats.distributions.chi2.pdf(results[selfact],k)
+        probdensfunc = scipy.stats.distributions.chi2.pdf(self.results['igrid_search']['grid'][selfact],k)
         cumuldensfunc = probdensfunc.cumsum()
         
         #-- Uniformly sample the cdf, to get a sampling according to the pdf
