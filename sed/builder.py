@@ -2079,6 +2079,44 @@ class SED(object):
         wave,flux,urflux = self.results[label]['model']
         return wave,flux,urflux
     
+    def sample_gridsearch(self,NrSamples,df==None):
+        """
+        Retrieve an element from the results of a grid search according to the derived probability.
+        
+        An array of length "NrSamples" containing 'grid-indices' is returned, so the actual parameter values
+        of the corresponding model can be retrieved from the results dictionary.
+        
+        @param NrSamples: the number of samples you wish to draw
+        @type NrSamples: int
+        """
+        ranges = self.generate_ranges(start_from='igrid_search')
+        
+        #-- If nessessary calculate degrees of freedom from the ranges
+        if df == None and ranges != None:
+            df,df_info = self.calculateDF(**ranges)
+        elif df == None:
+            logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
+            df = 5
+        
+        #-- Do the statistics
+        N = sum(self.master['include'])
+        k = N-df
+        if k<=0:
+            logger.warning('Not enough data to compute CHI2: it will not make sense')
+            k = 1
+        logger.info('Statistics based on df={0} and Nobs={1}'.format(df,N))
+        
+        #-- Compute the pdf and cdf
+        probdensfunc = scipy.stats.distributions.chi2.pdf(results[selfact],k)
+        cumuldensfunc = probdensfunc.cumsum()
+        
+        #-- Uniformly sample the cdf, to get a sampling according to the pdf
+        sample = pl.uniform(cumuldensfunc[0],cumuldensfunc[-1],NrSamples)
+        indices = np.zeros(NrSamples,int)
+        for i in xrange(NrSamples):
+            indices[i] = (abs(cumuldensfunc-sample[i])).argmin()
+        return indices
+    
     def chi2(self,select=None,reduced=False,label='igrid_search'):
         """
         Calculate chi2 of best model.
@@ -3935,7 +3973,7 @@ class SampleSEDs(object):
             sed.clear()
         return values
         
-
+        
 
 
 if __name__ == "__main__":
