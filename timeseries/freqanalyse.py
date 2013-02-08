@@ -165,7 +165,7 @@ logger = logging.getLogger("TS.FREQANAL")
 
 def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
             optimize=0,max_loops=20, scale_region=0.1, scale_df=0.20, model_kwargs=None,
-            **kwargs):
+            correlation_correction=True,**kwargs):
     """
     Find one frequency, automatically going to maximum precision and return
     parameters & error estimates.
@@ -264,7 +264,7 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
         #-- estimate parameters and calculate a fit, errors and residuals
         params = getattr(fit,model)(times,signal,frequency,**model_kwargs)
         if hasattr(fit,'e_'+model):
-            errors = getattr(fit,'e_'+model)(times,signal,params)
+            errors = getattr(fit,'e_'+model)(times,signal,params,correlation_correction=correlation_correction)
             e_f = errors['e_freq'][-1]
         #-- possibly there are not errors defined for this fitting functions
         else:
@@ -319,7 +319,7 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
 
 
 def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle',
-    model='sine',full_output=False,stopcrit=None,**kwargs):
+    model='sine',full_output=False,stopcrit=None,correlation_correction=True,**kwargs):
     """
     Fit one or more functions to a timeseries via iterative prewhitening.
     
@@ -348,7 +348,9 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
     stop_criteria = []
     while maxiter:
         #-- compute the next frequency from the residuals
-        params,pergram,this_fit = find_frequency(times,residuals,full_output=True,**kwargs)
+        params,pergram,this_fit = find_frequency(times,residuals,method=method,
+                full_output=True,correlation_correction=correlation_correction,
+                **kwargs)
         
         #-- do the fit including all frequencies
         frequencies.append(params['freq'][-1])
@@ -385,7 +387,7 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
                 break
         
     #-- calculate the errors
-    e_allparams = getattr(fit,'e_'+model)(times,signal,allparams)
+    e_allparams = getattr(fit,'e_'+model)(times,signal,allparams,correlation_correction=correlation_correction)
     
     allparams = numpy_ext.recarr_join(allparams,e_allparams)
     if stopcrit is not None:
@@ -399,20 +401,35 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
 
     
     
-def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,outputfile=None,
+def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,
                 subs_av=True,full_output=False,**kwargs):
     """
     Compute a 2D periodogram.
     
     Rows (first axis) should be spectra chronologically
     
-    x are time points
-    y are second axis units (e.g. wavelengths)
+    x are time points (length N)
+    y are second axis units (e.g. wavelengths) (length NxM)
     
-    If the periodgram/wavelength combination has a large range, please
-    supply an 'outputfile' argument, since this script will produce a ValueError.
+    If the periodogram/wavelength combination has a large range, this script
+    can produce a B{ValueError} or B{MemoryError}. To solve this, you could
+    iterate this function over a subset of wavelength bins yourself, and write
+    the results to a file.
     
-    Example usage: first we generate some variable line profiles. In this case,
+    This function also outputs a model, which you can use to subtract from the
+    data (probably together with the average profile, which is also returned)
+    and look further for any frequencies::
+    
+        output = spectrum_2D(x,y,matrix,subs_av=True)
+        new_matrix = matrix - output['avprof'] - output['model'
+        output2 = spectrum_2D(x,y,new_matrix,subs_av=False)
+        
+    If you want to prewhiten a model, you'd probably want to use the same
+    frequency across the whole line profile. You can hack this by setting
+    C{f0=frequency} and C{fn=frequency+df} with C{df} the size of the frequency
+    step.
+    
+    B{Example usage}: first we generate some variable line profiles. In this case,
     this is just a radial velocity variation
     
     >>> times = np.linspace(0,150,100)
@@ -458,12 +475,13 @@ def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,outputfile=None,
     @rtype: dict
     """
     #-- compute average profile
-    matrix_av = np.outer(np.ones(len(matrix)),matrix.mean(axis=0))
     if subs_av:
+        matrix_av = np.outer(np.ones(len(matrix)),matrix.mean(axis=0))
         matrix = matrix - matrix_av
+    else:
+        matrix_av = 0.
     
     #-- prepare output of sine-parameters
-    residuals = np.zeros_like(matrix)
     params = []
     freq_spectrum = []
     mymodel = []
@@ -473,23 +491,18 @@ def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,outputfile=None,
         if weights_2d is not None:
             weights = weights_2d[:,iwave]
             kwargs['weights'] = weights
-            
+                
         #-- make sure output is always a tuple, in case full output was asked
         #   we don't want iterative zoom in so set scale_df=0
         out = find_frequency(x,signal,full_output=full_output,scale_df=0,**kwargs)
-        #-- add the parameters of this wavelength bin to the list
         
+        #-- add the parameters of this wavelength bin to the list
         if full_output:
             params.append(out[0])
             freq_spectrum.append(out[1][1])
             mymodel.append(out[2])
         else:
             params.append(out)
-        
-        #-- most of the time, we cannot output the whole periodogram for every
-        #   wavelength bin (2GB internal memory limit). We could either select
-        #   certain wavelengths, or output to a file. We choose the latter
-        #   approach
     
     #-- prepare output
     output = {}
@@ -513,10 +526,11 @@ def time_frequency(times,signal,window_width=None,n_windows=100,
     It is best to fix explicitly C{f0}, C{fn} and C{df}, to limit the computation
     time!
     
+    Extra kwargs go to L{find_frequency}
     
     @param n_windows: number of slices
     @type n_windows: integer
-    @param window_width: width of each slice
+    @param window_width: width of each slice (defaults to T/20)
     @type window_width: float
     @param detrend: detrending function, accepting times and signal as args
     @type detrend: callable
@@ -581,6 +595,7 @@ def stopcrit_scargle_prob(times,signal,modelfunc,allparams,pergram,crit_value):
     Stop criterium based on probability.
     """
     value = pergrams.scargle_probability(pergram[1].max(),times,pergram[0])
+    print value
     return value>crit_value,value
 
 def stopcrit_scargle_snr(times,signal,modelfunc,allparams,pergram,crit_value,width=6.):

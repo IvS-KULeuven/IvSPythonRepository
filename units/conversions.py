@@ -858,6 +858,7 @@ def convert(_from,_to,*args,**kwargs):
     
     #-- conversion is easy if same units
     ret_value = 1.
+    
     if uni_from==uni_to:
         #-- if nonlinear conversions from or to:
         if isinstance(fac_from,NonLinearConverter):
@@ -867,7 +868,7 @@ def convert(_from,_to,*args,**kwargs):
                 ret_value *= fac_from*start_value
             except TypeError:
                 raise TypeError('Cannot multiply value with a float; probably argument is a tuple (value,error), please expand with *(value,error)')
-            
+    
     #-- otherwise a little bit more complicated
     else:
         #-- first check where the unit differences are
@@ -916,7 +917,7 @@ def convert(_from,_to,*args,**kwargs):
             #-- nonlinear conversions need a little tweak
             try:
                 key = '%s_to_%s'%(only_from,only_to)
-                logger.debug('Switching from %s to %s'%(only_from,only_to))
+                logger.debug('Switching from {} to {} via {:s}'.format(only_from,only_to,_switch[key].__name__))
                 if isinstance(fac_from,NonLinearConverter):
                     ret_value *= _switch[key](fac_from(start_value,**kwargs_SI),**kwargs_SI)
                 #-- linear conversions are easy
@@ -943,7 +944,7 @@ def convert(_from,_to,*args,**kwargs):
     #-- logarithmicize
     if m_out is not None:
         ret_value = log10(ret_value)
-    
+        
     #-- unpack the uncertainties if: 
     #    1. the input was not given as an uncertainty
     #    2. the input was without uncertainties, but extra keywords had uncertainties
@@ -955,7 +956,7 @@ def convert(_from,_to,*args,**kwargs):
         ret_value = unumpy.nominal_values(ret_value),unumpy.std_devs(ret_value)
         #-- convert to real floats if real floats were given
         if not ret_value[0].shape:
-            ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])
+            ret_value = np.asscalar(ret_value[0]),np.asscalar(ret_value[1])    
     
     return ret_value
 
@@ -1085,10 +1086,12 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     if to_return[2]!=frequency and 'cy' in frequency.lower():
         _switch['rad1_to_'] = per_cy
         _switch['rad-1_to_'] = times_cy
+        constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
     elif to_return[2]!=frequency and 'rad' in frequency.lower():
-        _switch['rad1_to_'] = do_nothing
+        _switch['rad1_to_'] =  do_nothing
         _switch['rad-1_to_'] = do_nothing
+        constants._current_frequency = frequency.lower()
         logger.debug('Changed frequency convention to {0}'.format(frequency))
         
     if to_return[:2]==(units,values):
@@ -1793,7 +1796,10 @@ def fnu2flambda(arg,**kwargs):
         flambda = freq**2/constants.cc * arg
     else:
         raise ValueError('reference wave/freq not given')
-    return flambda*(2*np.pi)
+    #if constants._current_frequency=='rad':
+    return flambda*2*np.pi
+    #else:
+    #    return flambda
 
 def flambda2fnu(arg,**kwargs):
     """
@@ -1825,7 +1831,10 @@ def flambda2fnu(arg,**kwargs):
         fnu = constants.cc/freq**2 * arg
     else:
         raise ValueError('reference wave/freq not given')
+    #if constants._current_frequency=='rad':
     return fnu/(2*np.pi)
+    #else:
+    #    return fnu
 
 def fnu2nufnu(arg,**kwargs):
     """
@@ -3203,6 +3212,9 @@ class Unit(object):
         """
         self.unit = compress(self.unit)
         return self
+    
+    def as_tuple(self):
+        return self[0],self[1]
     
     def get_value(self):
         """

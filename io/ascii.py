@@ -117,7 +117,7 @@ def read2recarray(filename,**kwargs):
     
     For a list of extra keyword arguments, see C{<read2list>}.
     
-    FI dtypes is None, we have some room to automatically detect the contents
+    IF dtypes is None, we have some room to automatically detect the contents
     of the columns. This is not implemented yet.
     
     the keyword 'dtype' should be equal to a list of tuples, e.g.

@@ -1267,7 +1267,7 @@ class Function(object):
                 
             return self.jacobian(pars,x)
             
-    def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
+    def setup_parameters(self, value=None, bounds=None, vary=None, expr=None, **kwargs):
         """
         Create or adjust a parameter object based on the parameter names and if provided
         the values, bounds, vary and expressions. Basic checking if the parameter boundaries
@@ -1287,14 +1287,19 @@ class Function(object):
         @type exprs: array
         """
         nrpars = len(self.par_names)
-        if values == None:
-            values = [0 for i in range(nrpars)]
+        if value == None:
+            value = kwargs['values'] if 'values' in kwargs else [0 for i in range(nrpars)]
         if bounds == None:
-            bounds = [(None,None) for i in range(nrpars)]
+            bounds = np.array([[None,None] for i in range(nrpars)])
+        else:
+            bounds = np.asarray(bounds)
         if vary == None:
             vary = [True for i in range(nrpars)]
-        if exprs == None:
-            exprs = [None for i in range(nrpars)]
+        if expr == None:
+            expr = kwargs['exprs'] if 'exprs' in kwargs else [None for i in range(nrpars)]
+        
+        min = kwargs['min'] if 'min' in kwargs else bounds[:,0]
+        max = kwargs['max'] if 'max' in kwargs else bounds[:,1]
         
         def check_boundaries(min, max, value, name):
             #-- Check if boundaries are consistent
@@ -1313,17 +1318,17 @@ class Function(object):
             #-- Create a new parameter object
             self.parameters = lmfit.Parameters()
             for i,name in enumerate(self.par_names):
-                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
-                self.parameters.add(name, value=values[i], vary=vary[i], min=min, max=max, expr=exprs[i])
+                min_, max_ = check_boundaries(min[i], max[i], value[i], name)
+                self.parameters.add(name, value=value[i], vary=vary[i], min=min_, max=max_, expr=expr[i])
         else:
             #-- Adjust an existing parameter object
             for i,name in enumerate(self.par_names):
-                min, max = check_boundaries(bounds[i][0], bounds[i][1], values[i], name)
-                self.parameters[name].value = values[i]
-                self.parameters[name].vary = vary[i]
-                self.parameters[name].min = min
-                self.parameters[name].max = max
-                self.parameters[name].expr = exprs[i]
+                min_, max_ = check_boundaries(min[i], max[i], value[i], name)
+                self.parameters[name].value = float(value[i])
+                self.parameters[name].vary = bool(vary[i]) if vary[i] != None else True
+                self.parameters[name].min = min_
+                self.parameters[name].max = max_
+                self.parameters[name].expr = expr[i]
     
     def update_parameter(self, parameter=None, **kwargs):
         """
@@ -1390,7 +1395,7 @@ class Function(object):
                 val, err, vary, min, max, expr = val[0],err[0],vary[0],min[0],max[0],expr[0]
         
         if full_output:
-            return val,err,vary,min,max,expr
+            return np.array(val), np.array(err), np.array(vary), np.array(min), np.array(max), np.array(expr)
         else:
             return np.array(val),np.array(err)
     
@@ -1771,6 +1776,8 @@ class Minimizer(lmfit.Minimizer):
             self.anneal()
         elif engine == 'lbfgsb':
             self.lbfgsb()
+        elif engine == 'fmin':
+            self.fmin()
         else:
             self.leastsq(Dfun=jacobian)
             
@@ -1836,6 +1843,9 @@ class Minimizer(lmfit.Minimizer):
         @return: A dictionary with for each parameter the lower and upper limit.
         @rtype: dict
         """
+        #-- check if a special probability function is provided.
+        prob_func = kwargs.pop('prob_func', None)
+        
         if parameters == None:
             parameters = self.model.par_names
         
@@ -1844,7 +1854,7 @@ class Minimizer(lmfit.Minimizer):
         
         # Use the adjusted conf_interval() function of the lmfit package.
         ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter,\
-                                 prob_func=None, trace=False, verbose=False)
+                                 prob_func=prob_func, trace=False, verbose=False)
         
         # Prepare the output
         if len(parameters) == 1 and short_output:
@@ -2064,7 +2074,8 @@ def minimize(x, y, model, err=None, weights=None, resfunc=None,
 
 
 def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False, **fit_kws):
+                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False,
+                  verbose=True, **fit_kws):
     """                  
     Grid minimizer. Offers the posibility to start minimizing from a grid of starting parameters defined by the used.
     The number of starting points can be specified, as well as the parameters that are varried. For each parameter 
@@ -2088,6 +2099,8 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
     @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
     @rtype: Minimizer object or array of [Minimizer, Parameters, Model, float]
     """
+    from ivs.aux import progressMeter as progress
+    
     if parameters == None:
         parameters = model.get_par_names()
     
@@ -2123,8 +2136,10 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
         startpars[i] = copy.deepcopy(mod_.parameters)
     
     #-- minimize every model.
+    if verbose: Pmeter = progress.ProgressMeter(total=points)
     for i,mod_ in enumerate(newmodels):
         # refit and store the results
+        if verbose: Pmeter.update(1)
         fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
                             kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
         fitters[i] = fitter
@@ -2305,9 +2320,9 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
         else:
             try:
-                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ' '
+                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ''
             except:
-                lim = ' '
+                lim = ''
             if par.min != None and par.max != None:
                 bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
             elif par.max != None:
@@ -2316,9 +2331,13 @@ def parameters2string(parameters, accuracy=2, full_output=False):
                 bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
             else:
                 bounds = 'None <-> None'
-            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary} {limit}\n'
+            if par.expr != None:
+                expr = "= {expr}".format(expr=par.expr)
+            else:
+                expr = ""
+            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
             template = template.format(name=name, value=value, vlim=max_value, bounds=bounds, blim=max_bounds,\
-                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim)
+                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim, expr=expr)
         out += template
     return out.rstrip()
 

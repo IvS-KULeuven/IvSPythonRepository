@@ -8,6 +8,7 @@ Table of contents:
     2. Adding filters on the fly
         - Defining a new filter
         - Temporarily modifying an existing filter
+    3. Adding filters permanently
 
 Section 1. Available response functions
 =======================================
@@ -302,6 +303,18 @@ To reset and use the original definitions again, do
 
 >>> set_prefer_file(True)
 
+Section 3.: Adding filters permanently
+--------------------------------------
+
+Add a new response curve file to the ivs/sed/filters directory. The file should
+contain two columns, the first column is the wavelength in angstrom, the second
+column is the transmission curve. The units of the later are not important.
+
+Then, call L{update_info}. The contents of C{zeropoints.dat} will automatically
+be updated. Make sure to add any additional information on the new filters
+manually in that file (e.g. is t a CCD or bolometer, what are the zeropoint
+magnitudes etc).
+
 """
 import os
 import glob
@@ -447,7 +460,7 @@ def set_prefer_file(prefer_file=True):
     @type prefer_file: bool
     """
     custom_filters['_prefer_file'] = prefer_file
-    logger.info("Preffering {}".format(prefer_file and 'files' or 'custom filters'))
+    logger.info("Prefering {}".format(prefer_file and 'files' or 'custom filters'))
 
 
 def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
@@ -594,6 +607,8 @@ def eff_wave(photband,model=None,det_type=None):
     
     #-- if photband is a string, it's the name of a photband: put it in a container
     #   but unwrap afterwards
+    if isinstance(photband,unicode):
+        photband = str(photband)
     if isinstance(photband,str):
         single_band = True
         photband = [photband]
@@ -683,7 +698,7 @@ def get_info(photbands=None):
 
 
 
-def update_info(zp):
+def update_info(zp=None):
     """
     Update information in zeropoint file, e.g. after calibration.
     
@@ -695,7 +710,34 @@ def update_info(zp):
     """
     zp_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'zeropoints.dat')
     zp_,comms = ascii.read2recarray(zp_file,return_comments=True)
-    ascii.write_array(zp,'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]],use_float='%g')
+    existing = [str(i.strip()) for i in zp_['photband']]
+    resp_files = sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'filters/*')))
+    resp_files = [os.path.basename(ff) for ff in resp_files if not os.path.basename(ff) in existing]
+    resp_files.remove('HUMAN.EYE')
+    resp_files.remove('HUMAN.CONES')
+    resp_files.remove('CONES.EYE')
+    if zp is None:
+        zp = zp_
+        logger.info('No new calibrations; previous information on existing response curves is copied')
+    else:
+        logger.info('Received new calibrations contents of zeropoints.dat will be updated')
+    
+    #-- update info on previously non existing response curves
+    new_zp = np.zeros(len(resp_files),dtype=zp.dtype)
+    logger.info('Found {} new response curves, adding them with default information'.format(len(resp_files)))
+    for i,respfile in enumerate(resp_files):
+        new_zp[i]['photband'] = respfile
+        new_zp[i]['eff_wave'] = float(eff_wave(respfile))
+        new_zp[i]['type'] = 'CCD'
+        new_zp[i]['vegamag'] = np.nan
+        new_zp[i]['ABmag'] = np.nan
+        new_zp[i]['STmag'] = np.nan
+        new_zp[i]['Flam0_units'] = 'erg/s/cm2/AA'
+        new_zp[i]['Fnu0_units'] = 'erg/s/cm2/AA'
+        new_zp[i]['source'] = 'nan'
+    zp = np.hstack([zp,new_zp])
+    sa = np.argsort(zp['photband'])
+    ascii.write_array(zp[sa],'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]],use_float='%g')
     
 
 

@@ -39,7 +39,7 @@ Add some noise
 Calculate the vsini with the Fourier transform method. To compare the results,
 first compute the FT of the synthetic broadened spectrum without noise:
 
->>> pergram,minima,vsinis = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)
+>>> pergram,minima,vsinis,error = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 
 Make a plot of what we already have:
 
@@ -62,7 +62,7 @@ Now compute the vsini of the noisy spectrum, assuming different limb darkening
 parameters
 
 >>> for epsilon in np.linspace(0.0,1.0,10):
-...   pergram,minima,vsinis = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
+...   pergram,minima,vsinis,error = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
 ...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f: vsini = %.1f km/s'%(epsilon,vsinis[0]))
 
 Set the xticks to vsini values for clarity:
@@ -83,6 +83,7 @@ import numpy as np
 import logging
 from numpy import pi,sin,cos,sqrt
 import scipy.stats
+from scipy.signal import fftconvolve
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
@@ -156,6 +157,8 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     vsini = q1 * c/ (lambda*f1)
     
     where f1 is the first minimum of the Fourier transform.
+    
+    The error is estimated as the Rayleigh limit of the Fourier Transform
     
     Example usage and tests: Generate some data. We need a central wavelength (A),
     the speed of light in angstrom/s, limb darkening coefficients and test
@@ -235,8 +238,12 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     
     Extra keyword arguments are passed to L{pergrams.deeming}
     
-    @rtype: (array,array),(array,array),array
-    @return: periodogram, extrema, vsini values
+    @param wave: wavelength array in Angstrom
+    @type wave: ndarray
+    @param flux: normalised flux of the profile
+    @type flux: ndarray
+    @rtype: (array,array),(array,array),array,float
+    @return: periodogram (freqs in s/km), extrema (weird units), vsini values (km/s), error (km/s)
     """
     cc = conversions.convert('m/s','AA/s',constants.cc)
     #-- clip the wavelength and flux region if needed:
@@ -252,6 +259,7 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     #flux = flux / (np.median(np.sort(flux)[-5:]))
     freqs,ampls = pergrams.deeming(wave,(1-flux),**kwargs)
     ampls = ampls/max(ampls)
+    error = 1./wave.ptp()
     #-- get all the peaks
     rise = np.diff(ampls[1:])>=0
     fall = np.diff(ampls[:-1])<=0
@@ -261,16 +269,18 @@ def vsini(wave,flux,epsilon=0.6,clam=None,window=None,**kwargs):
     freqs = freqs*clam/q1/cc
     freqs = conversions.convert('s/AA','s/km',freqs,wave=(clam,'AA'))
     vsini_values = cc/clam*q1/minima
-    vsini_values = conversions.convert('AA/s','km/s',vsini_values,wave=(clam,'AA'))
-    
-    return (freqs,ampls),(minima,minvals),vsini_values
+    vsini_values = conversions.convert('AA/s','km/s',vsini_values)#,wave=(clam,'AA'))
+    #-- determine the error as the rayleigh limit
+    error = error*clam/q1/cc
+    error = conversions.convert('s/AA','s/km',error,wave=(clam,'AA'))
+    return (freqs,ampls),(minima,minvals),vsini_values,error
 
 
 
 
 def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
                          chard=None,stepr=0,stepi=0,alam0=None,alam1=None,
-                         irel=0,cont=None):
+                         irel=0,cont=None,method='fortran'):
     """
     Apply rotational broadening to a spectrum assuming a linear limb darkening
     law.
@@ -281,6 +291,8 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     Limb darkening law is linear, default value is epsilon=0.6
     
     Possibility to normalize as well by giving continuum in 'cont' parameter.
+    
+    B{Warning}: C{method='python'} is still experimental, but should work.
     
     Section 1. Parameters for rotational convolution 
     ================================================
@@ -315,7 +327,8 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     Section 2. parameters for instrumental convolution
     ==================================================
 
-    C{FWHM}: full width at half maximum for Gaussian instrumental profile
+    C{FWHM}: WARNING: this is not the full width at half maximum for Gaussian
+    instrumental profile, but the sigma (FWHM = 2.3548 sigma).
     
     C{STEPI}: wavelength step for evaluating instrumental convolution
           - if =0, the program sets up default (FWHM/10.)
@@ -335,20 +348,60 @@ def rotational_broadening(wave_spec,flux_spec,vrot,fwhm=0.25,epsilon=0.6,
     @return: wavelength,flux
     @rtype: array, array
     """
-    #-- set arguments
-    if alam0 is None: alam0 = wave_spec[0]
-    if alam1 is None: alam1 = wave_spec[-1]
-    if cont is None: cont = (np.ones(1),np.ones(1))
-    contw,contf = cont
-    if chard is None:
-        chard = np.diff(wave_spec).mean()
-    
-    #-- apply broadening
-    w3,f3,ind = pyrotin4.pyrotin(wave_spec,flux_spec,contw,contf,
-                  vrot,chard,stepr,fwhm,stepi,alam0,alam1,irel,epsilon)
-    logger.info('ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'%(vrot,epsilon))
-    
-    return w3[:ind],f3[:ind]
+    if method=='fortran':
+        #-- set arguments
+        if alam0 is None: alam0 = wave_spec[0]
+        if alam1 is None: alam1 = wave_spec[-1]
+        if cont is None: cont = (np.ones(1),np.ones(1))
+        contw,contf = cont
+        if chard is None:
+            chard = np.diff(wave_spec).mean()
+        
+        #-- apply broadening
+        logger.info('ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'%(vrot,epsilon))
+        w3,f3,ind = pyrotin4.pyrotin(wave_spec,flux_spec,contw,contf,
+                    vrot,chard,stepr,fwhm,stepi,alam0,alam1,irel,epsilon)
+        
+        return w3[:ind],f3[:ind]
+    elif method=='python':
+        logger.info("PYTHON rot.broad with vrot=%.3f (epsilon=%.2f)"%(vrot,epsilon))
+        #-- first a wavelength Gaussian convolution:
+        if fwhm>0:
+            fwhm /= 2.3548
+            #-- make sure it's equidistant
+            wave_ = np.linspace(wave_spec[0],wave_spec[-1],len(wave_spec))
+            flux_ = np.interp(wave_,wave_spec,flux_spec)
+            dwave = wave_[1]-wave_[0]
+            n = int(2*4*fwhm/dwave)
+            wave_k = np.arange(n)*dwave
+            wave_k-= wave_k[-1]/2.
+            kernel = np.exp(- (wave_k)**2/(2*fwhm**2))
+            kernel /= sum(kernel)
+            flux_conv = fftconvolve(1-flux_,kernel,mode='same')
+            flux_spec = np.interp(wave_spec+dwave/2,wave_,1-flux_conv,left=1,right=1)
+        if vrot>0:    
+            #-- convert wavelength array into velocity space, this is easier
+            #   we also need to make it equidistant!
+            wave_ = np.log(wave_spec)
+            velo_ = np.linspace(wave_[0],wave_[-1],len(wave_))
+            flux_ = np.interp(velo_,wave_,flux_spec)
+            dvelo = velo_[1]-velo_[0]
+            vrot = vrot/(constants.cc*1e-3)
+            #-- compute the convolution kernel and normalise it
+            n = int(2*vrot/dvelo)
+            velo_k = np.arange(n)*dvelo
+            velo_k -= velo_k[-1]/2.
+            y = 1 - (velo_k/vrot)**2 # transformation of velocity
+            G = (2*(1-epsilon)*sqrt(y)+pi*epsilon/2.*y)/(pi*vrot*(1-epsilon/3.0))  # the kernel
+            G /= G.sum()
+            #-- convolve the flux with the kernel
+            flux_conv = fftconvolve(1-flux_,G,mode='same')
+            velo_ = np.arange(len(flux_conv))*dvelo+velo_[0]
+            wave_conv = np.exp(velo_)
+            return wave_conv,1-flux_conv
+        return wave_spec,flux_spec
+    else:
+        raise ValueError("don't understand method {}".format(method))
 
 def combine(list_of_spectra,R=200.,lambda0=(950.,'AA'),lambdan=(3350.,'AA')):
     """

@@ -58,7 +58,7 @@
    logE             !   logE             !            !  log10(specific internal energy) at center of zone
    grada            !   grada            !            !  dlnT_dlnP at constant S
    dE_dRho          !   dE_dRho          !            !  at constant T
-   cv               !   cv               !erg/s/mol/K !  specific heat at constant volume
+   cv               !   cv               !erg/s/g/K   !  specific heat at constant volume
    cp               !   cp               !erg/s/g/K   !  specific heat at constant total pressure
    logS             !   logS             !            !  log10(specific entropy)
    gamma1           !   gamma1           !            !  dlnP_dlnRho at constant S
@@ -114,7 +114,9 @@
    brunt_N_dimensionless  ! brunt_N_dimensionless  !  !  N in units of sqrt(3GM/R^3)
    dP_dr            !   dP_dr            ! g/cm2/s2   !  Pressure gradient
    stability_type   !   stability_type   !            !  0 if both sch_stable and ledoux_stable, 1 if neither sch_stable and ledoux_stable, 3 if ledoux_stable but not sch_stable, 4 if sch_stable but not ledoux_stable
-!   
+   dkap_dlnrho ! dkap_dlnrho_at_face !        ! bla
+   dkap_dlnT   ! dkap_dlnt_at_face   !        ! bla
+!      
 
    
 !   ! properties at the outermost zone of the model

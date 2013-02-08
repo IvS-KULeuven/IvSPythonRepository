@@ -155,7 +155,7 @@ logger.addHandler(loggers.NullHandler())
 
 #{ User functions
 
-def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,filename=None):
+def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',radius=1.,filename=None):
     """
     Retrieve datafiles from the Hermes catalogue.
     
@@ -168,6 +168,14 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     range. If you only give one day, the search is confined to the observations
     made during the night starting at that day. If C{ID} is not given, all
     observations will be returned of the given datatype.
+    
+    B{If C{prog_ID} is given}: The search is performed to match the number of
+    the program. Individual stars are not queried in SIMBAD, so any information
+    that is missing in the header will not be corrected.
+    
+    If you don't give either ID or time_range, the info on all data will be
+    returned. This is a huge amount of data, so it can take a while before it
+    is returned. Remember that the header of each spectrum is read in and checked.
     
     Data type can be any of:
         1. cosmicsremoved_log: return log merged without cosmics
@@ -187,7 +195,8 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     
     The columns in the returned record array are listed in L{make_data_overview},
     but are repeated here (capital letters are directly retrieved from the
-    fits header, small letters are calculated values):
+    fits header, small letters are calculated values. The real header strings
+    are all small capitals):
         
         1.  UNSEQ
         2.  PROG_ID
@@ -285,7 +294,10 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
             ra,dec = info['jradeg'],info['jdedeg']
             keep_id = keep_id | (np.sqrt((data['ra']-ra)**2 + (data['dec']-dec)**2) < radius/60.)
         keep = keep & keep_id
-        
+    
+    if prog_ID is not None:
+        keep = keep & (data['prog_id']==prog_ID)
+    
     #-- if some data is found, we check if the C{data_type} string is contained
     #   with the file's name. If not, we remove it.
     if np.any(keep):
@@ -300,7 +312,7 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
                 existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
                 data = data[existing_files]
             seqs = sorted(set(data['unseq']))
-        logger.info('%s: Found %d spectra (data type=%s with unique unseqs)'%(ID,len(seqs),data_type))
+        logger.info('ID={}/prog_ID={}: Found {:d} spectra (data type={} with unique unseqs)'.format(ID,prog_ID,len(seqs),data_type))
     else:
         data = data[:0]
         logger.info('%s: Found no spectra'%(ID))
@@ -310,8 +322,12 @@ def search(ID=None,time_range=None,data_type='cosmicsremoved_log',radius=1.,file
     #   SIMBAD. Else, we have no information on the ra and dec (if bvcorr was
     #   not calculated, ra and dec are not in the header).
     for obs in data:
-        if info:
-            jd  = _timestamp2jd(obs['date-avg'])
+        if ID is not None and info:
+            try:
+                jd  = _timestamp2jd(obs['date-avg'])
+            except ValueError:
+                logger.info('Header probably corrupted for unseq {}: no info on time or barycentric correction'.format(obs['unseq']))
+                jd = np.nan
             # the previous line is equivalent to:
             # day = dateutil.parser.parse(header['DATE-AVG'])
             # BJD = ephem.julian_date(day)
@@ -616,7 +632,8 @@ def _timestamp2datetime(timestamp):
     """
     if timestamp=='nan':
         timestamp = '1000-01-01T00:00:00'
-    timestamp = [float(i) for i in ' '.join(' '.join(' '.join(timestamp.split('-')).split('T')).split(':')).split()]
+    
+    timestamp = [int(i) for i in ' '.join(' '.join(' '.join(' '.join(timestamp.split('-')).split('T')).split(':')).split('.')).split()]
     #-- only the day is given, make sure to switch it to mid-day
     if len(timestamp)==3:
         timestamp += [12,0,0]
