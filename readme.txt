@@ -66,7 +66,9 @@ Warning: don't put ~/python/ivs in your Python path, but just ~/python.
 
     $ python makedoc.py
 
-  in the repository's root folder. 
+  in the repository's root folder. This assumes that 'epydoc' is available which is 
+  already installed on all IvS computers. On your own laptop, you can get it from 
+  http://epydoc.sourceforge.net.
  
 Open "/doc/html/index.html" in your favorite browser and start browsing!
 Whenever you change something yourself in your local branch or you pull changes
