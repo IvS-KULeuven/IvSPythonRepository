@@ -238,7 +238,7 @@ class LinearModel(object):
             elif covMatrix.shape[0] != self._nObservations:
                 raise TypeError, "Size of covariance matrix not compatible with number of observations"
             elif covMatrix.shape[1] != covMatrix.shape[0]:
-                raise TypeError, "Covariance matris is not a square matrix"
+                raise TypeError, "Covariance matrix is not a square matrix"
             else:
                 self._covMatrixObserv = covMatrix
 
