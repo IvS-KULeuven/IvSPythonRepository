@@ -1976,7 +1976,7 @@ class LinearFit(object):
         if regressorNames[0] == "1":
             outputStream.write("Model: y = a_0")
         else:
-            outputStream.write(" + a_0 * %s" % regressorNames[0])
+            outputStream.write("Model: y = a_0 * %s" % regressorNames[0])
         for n in range(1, self._nParameters):
             if regressorNames[n] == "1":
                 outputStream.write(" + a_%d" % n)
