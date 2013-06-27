@@ -1383,8 +1383,7 @@ class Function(object):
             parameters  = self.par_names
         
         val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name in parameters:
-            par = self.parameters[name]
+        for name, par in self.parameters.items():
             val.append(par.value)
             err.append(par.stderr)
             vary.append(par.vary)
@@ -1992,44 +1991,37 @@ class Minimizer(lmfit.Minimizer):
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
     
-    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, type='prob', filled=True, **kwargs):
+
+    def plot_confidence_interval(self,xname=None,yname=None, res=10, filled=True, limits=None, **kwargs):
         """
-        Plot the confidence interval for 2 given parameters. Both the  confidence interval calculated
-        using the F-test method from the I{estimate_error} method, and the normal chi squares can be 
-        plotted using the I{type} keyword. In case of chi2, the log10 of the chi squares is plotted to
-        improve the clarity of the plot.
+        Plot the confidence interval for 2 given parameters. The confidence interval is calculated
+        using the F-test method from the I{estimate_error} method.
         
         Extra kwargs are passed to C{confourf} or C{contour}.
         
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
         @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
-        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare plot. 
         @param filled: True for filled contour plot, False for normal contour plot
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
         """
         
-        x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  limits=limits, type=type)
+        xn = hasattr(res,'__iter__') and res[0] or res
+        yn = hasattr(res,'__iter__') and res[1] or res
         
-        if type=='prob':
-            levels = np.linspace(0,100,25)
-            ticks = [0,20,40,60,80,100]
-        elif type=='chi2':
-            grid = np.log10(grid)
-            levels = np.linspace(np.min(grid), np.max(grid), 25)
-            ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
+        x, y, grid = lmfit.conf_interval2d(self,xname,yname,xn,yn, limits=limits)
+        grid *= 100.
         
         if filled:
-            pl.contourf(x,y,grid,levels,**kwargs)
-            cbar = pl.colorbar(fraction=0.08,ticks=ticks)
-            cbar.set_label(type=='prob' and r'Probability' or r'log($\chi^2$)')
+            pl.contourf(x,y,grid,np.linspace(0,100,25),**kwargs)
+            pl.colorbar(fraction=0.08,ticks=[0,20,40,60,80,100])
         else:
             cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
             cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
-        pl.plot(self.params[xpar].value, self.params[ypar].value, '+r', ms=10, mew=2)
-        pl.xlabel(xpar)
-        pl.ylabel(ypar)
+        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
+        pl.xlabel(xname)
+        pl.ylabel(yname)
     
     #}
 
