@@ -219,16 +219,21 @@ def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',
     """
     if photbands is not None:
         wave = filters.get_info(photbands)['eff_wave']
-    
-    old_settings =  np.seterr(all='ignore')
-    wave,mag = get_law(law,wave=wave,**kwargs)
-    if rtype=='flux':
-        flux_dered = flux / 10**(mag*ebv/2.5)
         
+    old_settings =  np.seterr(all='ignore')
+    wave, reddeningMagnitude = get_law(law,wave=wave,**kwargs)
+
+    if rtype=='flux':
+        # In this case flux means really flux
+        flux_reddened = flux / 10**(reddeningMagnitude*ebv/2.5)
+        np.seterr(**old_settings)
+        return flux_reddened
     elif rtype=='mag':
-        flux_dered = flux - mag*ebv
-    np.seterr(**old_settings)
-    return flux_dered
+        # In this case flux means actually a magnitude
+        magnitude = flux
+        magnitude_reddened = magnitude + reddeningMagnitude*ebv
+        np.seterr(**old_settings)
+        return magnitude_reddened
 
 def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
     """

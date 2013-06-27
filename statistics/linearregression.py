@@ -238,7 +238,7 @@ class LinearModel(object):
             elif covMatrix.shape[0] != self._nObservations:
                 raise TypeError, "Size of covariance matrix not compatible with number of observations"
             elif covMatrix.shape[1] != covMatrix.shape[0]:
-                raise TypeError, "Covariance matris is not a square matrix"
+                raise TypeError, "Covariance matrix is not a square matrix"
             else:
                 self._covMatrixObserv = covMatrix
 
@@ -1976,7 +1976,7 @@ class LinearFit(object):
         if regressorNames[0] == "1":
             outputStream.write("Model: y = a_0")
         else:
-            outputStream.write(" + a_0 * %s" % regressorNames[0])
+            outputStream.write("Model: y = a_0 * %s" % regressorNames[0])
         for n in range(1, self._nParameters):
             if regressorNames[n] == "1":
                 outputStream.write(" + a_%d" % n)
