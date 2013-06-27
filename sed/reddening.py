@@ -224,13 +224,13 @@ def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',
 
     if rtype=='flux':
         # In this case flux means really flux
-        flux_dered = flux / 10**(reddeningMagnitude*ebv/2.5)
-        return flux_dered
+        flux_reddened = flux / 10**(reddeningMagnitude*ebv/2.5)
+        return flux_reddened
     elif rtype=='mag':
         # In this case flux means actually a magnitude
         magnitude = flux
-        magnitude_dered = magnitude - reddeningMagnitude*ebv
-        return magnitude_dered
+        magnitude_reddened = magnitude + reddeningMagnitude*ebv
+        return magnitude_reddened
 
 def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
     """
