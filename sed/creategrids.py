@@ -263,7 +263,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
         
         #-- get model SED and absolute luminosity
-        wave,flux = model.get_table(teff,logg)
+        wave,flux = model.get_table(teff=teff,logg=logg)
         Labs = model.luminosity(wave,flux)
         
         #-- threaded calculation over all E(B-V)s
