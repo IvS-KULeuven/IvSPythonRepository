@@ -83,7 +83,7 @@ import numpy as np
 import logging
 from numpy import pi,sin,cos,sqrt
 import scipy.stats
-from scipy.signal import fftconvolve
+from scipy.signal import fftconvolve, medfilt
 from ivs.timeseries import pergrams
 from ivs.units import conversions
 from ivs.units import constants
@@ -465,6 +465,88 @@ def combine(list_of_spectra,R=200.,lambda0=(950.,'AA'),lambdan=(3350.,'AA')):
     
     #-- that's it!
     return x[:-1],totalflux,totalerr,totalspec
+
+def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=2.0, 
+                          window=51, runs=2, full_output=False, **kwargs):
+    """
+    Method to combine a set of spectra while removing cosmic rays by comparing the
+    spectra with each other and removing the outliers.
+    
+    Algorithm:
+    
+    For each spectrum a very rough continuum is determined by using a median filter.
+    Then there are multiple passes through the spectra. In one pass, outliers are 
+    identified by compairing the flux point with the median of all normalized spectra
+    plus sigma times the standard deviation of all points. The standard deviation is
+    the median of the std for all flux points in 1 spectrum (spec_std) plus the std
+    of all fluxes of a given wavelength point over all spectra.
+    
+    C{spec_std = np.median( np.std(fluxes) )}
+    C{fn > np.median(fn) + sigma * (np.std(fn) + spec_std)}
+    
+    Where fn are the roughly normalized spectra, NOT the original spectra.
+    In the next passes those outliers are not used to calculat the median and std
+    of the spectrum. After the last pass, the flux points that were rejected are
+    replaced by the rough continuum value, and they are summed to get the final 
+    flux.
+    
+    Returns the wavelengths and fluxes of the merged spectra, and if full_output
+    is True, also a list of accepted and rejected points, produced by np.where()
+    
+    @param waves: list of wavelengths
+    @param fluxes: list of fluxes
+    @param vrads: list of radial velocities (optional)
+    @param vrad_units: units of the radial velocities
+    @param sigma: value used for sigma clipping
+    @param window: window size used in median filter
+    @param runs: number of iterations through the spectra
+    
+    @return: wavelenght and flux of merged spectrum (, accepted and rejected points)
+    @rtype: array, array (, tuple, tuple)
+    """
+    
+    # If vrads are given, shift the spectra to zero velocity
+    if vrads != None:
+        for i, (wave, rv) in enumerate(zip(waves, vrads)):
+            waves[i] = doppler_shift(wave, -rv, vrad_units=vrad_units)
+    
+    # define a rough continuum for each spectrum by using median smoothing
+    continuum = []
+    for wave, flux in zip(waves, fluxes):
+        fc = medfilt(flux, window)
+        continuum.append(interp1d(wave,fc, bounds_error=False, fill_value=fc[-1]))
+    
+    # setup output arrays
+    wave = waves[0]
+    flux = np.zeros_like(waves[0])
+    
+    # convert all spectra to same wavelength scale and calc normalized spectra
+    spectra = [interp1d(w, f, bounds_error=False, fill_value=f[-1]) for (w,f) in zip(waves, fluxes) ]
+    
+    fo = np.array([f(wave) for f in spectra])   # original flux
+    fc = np.array([c(wave) for c in continuum]) # continuum flux
+    fn = np.array([f(wave)/c(wave) for f, c in zip(spectra, continuum)])    # normalized flux
+    
+    for i in range(runs):
+        # calculate average and standard deviation for each wavelength bin
+        a = np.median(fn, axis=0)
+        s = np.std(fn, axis=0) + np.median(np.std(fn, axis=1))
+        
+        # perform sigma clipping
+        fn = np.where((fn > a-sigma*s) & (fn < a+sigma*s), fn, a)
+    
+    
+    # sum the original flux over all spectra
+    fn = np.array([f(wave)/c(wave) for f, c in zip(spectra, continuum)])
+    flux = np.sum( np.where((fn > a-sigma*s) & (fn < a+sigma*s), fo, fc), axis=0)
+    
+    rejected = np.where((fn < a-sigma*s) | (fn > a+sigma*s))
+    accepted = np.where((fn > a-sigma*s) & (fn < a+sigma*s))
+    
+    if full_output:
+        return wave, flux, accepted, rejected
+    else:
+        return wave, flux
 
 def get_response(instrument='hermes'):
     """
