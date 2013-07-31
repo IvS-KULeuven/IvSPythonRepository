@@ -466,8 +466,9 @@ def combine(list_of_spectra,R=200.,lambda0=(950.,'AA'),lambdan=(3350.,'AA')):
     #-- that's it!
     return x[:-1],totalflux,totalerr,totalspec
 
-def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=2.0, 
-                          window=51, runs=2, full_output=False, **kwargs):
+def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=3.0, 
+                          base='average', offset='std', window=51, runs=2,
+                          full_output=False, **kwargs):
     """
     Method to combine a set of spectra while removing cosmic rays by comparing the
     spectra with each other and removing the outliers.
@@ -490,6 +491,11 @@ def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=2.
     replaced by the rough continuum value, and they are summed to get the final 
     flux.
     
+    The value for sigma strongly depends on the number of spectra and the quality
+    of the spectra. General, the more spectra, the higher sigma should be. Using
+    a too low value for sigma will throw away to much information. The effect of
+    the window size and the number of runs is limited.
+    
     Returns the wavelengths and fluxes of the merged spectra, and if full_output
     is True, also a list of accepted and rejected points, produced by np.where()
     
@@ -500,59 +506,61 @@ def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=2.
     @param sigma: value used for sigma clipping
     @param window: window size used in median filter
     @param runs: number of iterations through the spectra
+    @param full_output: True is need to return accepted and rejected
     
     @return: wavelenght and flux of merged spectrum (, accepted and rejected points)
     @rtype: array, array (, tuple, tuple)
     """
+    
+    # Get the correct function for base from numpy masked arrays
+    base = getattr(np.ma, base)
     
     # If vrads are given, shift the spectra to zero velocity
     if vrads != None:
         for i, (wave, rv) in enumerate(zip(waves, vrads)):
             waves[i] = doppler_shift(wave, -rv, vrad_units=vrad_units)
     
-    # define a rough continuum for each spectrum by using median smoothing
-    continuum = []
-    for wave, flux in zip(waves, fluxes):
-        fc = medfilt(flux, window)
-        continuum.append(interp1d(wave,fc, bounds_error=False, fill_value=fc[-1]))
-    
     # setup output arrays
     wave = waves[0]
     flux = np.zeros_like(waves[0])
     
-    # convert all spectra to same wavelength scale and calc normalized spectra
-    spectra = [interp1d(w, f, bounds_error=False, fill_value=f[-1]) for (w,f) in zip(waves, fluxes) ]
+    # define a rough continuum for each spectrum by using median smoothing
+    fc = np.array([np.interp(wave, w_, medfilt(f_, window)) for w_, f_ in zip(waves, fluxes)])
+    fc = np.ma.masked_array( fc, mask = fc == 0. )
     
-    fo = np.array([f(wave) for f in spectra])   # original flux
-    fc = np.array([c(wave) for c in continuum]) # continuum flux
-    fn = np.array([f(wave)/c(wave) for f, c in zip(spectra, continuum)])    # normalized flux
+    # convert all spectra to same wavelength scale and calc normalized spectra
+    fo = np.array([np.interp(wave, w_, f_) for w_, f_ in zip(waves, fluxes)])
+    fo = np.ma.masked_array( fo, mask=np.isfinite(fo) == False )
+    
+    # calculate normalized flux from fc and fo
+    fn = np.array([f_/c_ for f_, c_ in zip(fo, fc)])
+    fn = np.ma.masked_array( fn, mask=np.isfinite(fn) == False )
     
     for i in range(runs):
         # calculate average and standard deviation for each wavelength bin
-        a = np.median(fn, axis=0)
-        s = np.std(fn, axis=0) + np.median(np.std(fn, axis=1))
+        a = base(fn, axis=0)
+        if offset == 'std': a += np.median(np.ma.std(fn, axis=1))
+        s = np.ma.std(fn, axis=0)
         
         # perform sigma clipping
-        fn = np.where((fn > a-sigma*s) & (fn < a+sigma*s), fn, a)
-    
+        fn.mask = np.ma.mask_or( fn.mask, np.ma.make_mask(fn > a+sigma*s) )
     
     # sum the original flux over all spectra
-    fn = np.array([f(wave)/c(wave) for f, c in zip(spectra, continuum)])
-    flux = np.sum( np.where((fn > a-sigma*s) & (fn < a+sigma*s), fo, fc), axis=0)
-    
-    rejected = np.where((fn < a-sigma*s) | (fn > a+sigma*s))
-    accepted = np.where((fn > a-sigma*s) & (fn < a+sigma*s))
+    flux = np.sum( np.where(fn.mask, fc, fo), axis=0)
+    logger.debug('Merged %i spectra with sigma = %f and base = %s'%(len(waves), sigma, base))
     
     if full_output:
+        rejected = np.where(fn.mask)
+        accepted = np.where(fn.mask == False)
         return wave, flux, accepted, rejected
     else:
         return wave, flux
 
 def get_response(instrument='hermes'):
     """
-    Returns the response curve of the given instrument. Up till now only a HERMES response cruve is
-    available. This response curve is based on 25 spectra of the single sdB star Feige 66, and has
-    a wavelenght range of 3800 to 8000 A.
+    Returns the response curve of the given instrument. Up till now only a HERMES 
+    response cruve is available. This response curve is based on 25 spectra of the 
+    single sdB star Feige 66, and has a wavelenght range of 3800 to 8000 A.
     
     @param instrument: the instrument of which you want the response curve
     @type instrument: string
@@ -599,7 +607,70 @@ def remove_response(wave, flux, instrument='hermes'):
     
 
 if __name__=="__main__":
-    import doctest
+    
     import pylab as pl
-    doctest.testmod()
+    from ivs.io import fits
+    import time
+    
+    temp = '/STER/mercator/hermes/%s/reduced/%s_HRF_OBJ_ext_CosmicsRemoved_log_merged_c.fits'
+    objlist = [('20090619','237033'), ('20090701','240226'),
+                ('20090712','241334'), ('20090712','241335'),
+                ('20100107','00268012'), ('20100120','00272619'),
+                ('20100120','00272620'), ('20100203','00273577'),
+                ('20100203','00273578'), ('20100303','00275671'),
+                ('20100303','00275672'), ('20100410','00281505'),
+                ('20100519','00284636'), ('20110222','00334558'),
+                ('20110319','00336547'), ('20110324','00339848'),
+                ('20110401','00342273'), ('20110402','00342363'),
+                ('20110406','00342699'), ('20110408','00342896'),
+                ('20120107','00391289'), ('20120110','00391633'),
+                ('20120116','00392217'), ('20120127','00393151'),
+                ('20120209','00394175'), ('20120330','00399697'),
+                ('20120420','00404769'), ('20120506','00406531'),
+                ('20130106','00445346'), ('20130215','00452556'),
+                ('20130406','00457718'), ('20130530','00474128')]
+    mergeList = [temp%o for o in objlist]
+    
+    t1 = time.time()
+    waves, fluxes = [], []
+    wtotal, ftotal = fits.read_spectrum(mergeList[0])
+    wtotal = wtotal[(wtotal>5000) & (wtotal<7000)] 
+    ftotal = np.zeros_like(wtotal)
+    for ifile in mergeList:
+        w, f = fits.read_spectrum(ifile)
+        f = f[(w>5000) & (w<7000)]
+        w = w[(w>5000) & (w<7000)]
+        waves.append(w)
+        fluxes.append(f)
+        ftotal += np.interp(wtotal,w,f)
+    t1 = time.time() - t1
+        
+    t2 = time.time()
+    wave, flux, accepted, rejected = merge_cosmic_clipping(waves, fluxes, sigma=5.0,
+                          window=21, offset='std', base='average', full_output=True)
+    t2 = time.time() - t2
+    
+    print 'reading ', t1
+    print 'processing ', t2
+    
+    wrej = wtotal[rejected[1]]
+    frej = ftotal[rejected[1]]
+    print len(wrej)
+    
+    
+    ftotal = ftotal[(wtotal>5000) & (wtotal<7000)]
+    wtotal = wtotal[(wtotal>5000) & (wtotal<7000)] 
+    flux = flux[(wave>5000) & (wave<7000)]
+    wave = wave[(wave>5000) & (wave<7000)]
+    
+    pl.plot(wtotal, ftotal)
+    pl.plot(wave, flux)
+    pl.plot(wrej, frej, '.r')
     pl.show()
+    
+    
+    
+    #import doctest
+    #import pylab as pl
+    #doctest.testmod()
+    #pl.show()
