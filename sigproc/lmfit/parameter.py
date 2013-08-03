@@ -77,16 +77,6 @@ class Parameters(OrderedDict):
         """
         for para in parlist:
             self.add(*para)
-            
-    def kick(self,pnames=None):
-        """
-        Kicks the given parameters to a new value chosen by from the uniform 
-        distribution between max and min value.
-        """
-        if pnames == None:
-            pnames = self.keys()
-        for key in pnames:
-            self[key].kick()
 
 class Parameter(object):
     """A Parameter is the basic Parameter going
@@ -194,13 +184,6 @@ class Parameter(object):
         except(TypeError, ValueError):
             self._val = nan
         return self._val
-    
-    def kick(self):
-        """Kick the starting value to a random value between min and max"""
-        value = random.uniform(low=self.min, high=self.max)
-        self._val = value
-        self.user_value = value
-        self.init_value = value
     
     @property
     def value(self):

@@ -179,15 +179,9 @@ class ConfidenceInterval(object):
         """
         out = {}
         for p in self.p_names:
-            
-            lower = self.calc_ci(p, -1)
-            upper = self.calc_ci(p, 1)
-            
-            o = {}
-            for s, l, u in zip(self.sigmas, lower, upper):
-                o[s] = (l[1], u[1])
-            out[p] = o
-        
+            out[p] = (self.calc_ci(p, -1)[::-1] +
+                      [(0., self.params[p].value)]  +
+                      self.calc_ci(p, 1))
         if self.trace:
             self.trace_dict = map_trace_to_names(self.trace_dict,
                                                  self.minimizer.params)
