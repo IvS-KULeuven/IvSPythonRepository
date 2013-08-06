@@ -4,10 +4,17 @@ Unit test covering sigproc.fit.py and sigproc.funclib.py
 @author: Joris Vos
 """
 import copy
-import unittest
-from mock import patch
 import numpy as np
+from ivs.sigproc.lmfit import Minimizer
 from ivs.sigproc import fit, lmfit, funclib
+
+import unittest
+try:
+    import mock
+    from mock import patch
+    noMock = False
+except Exception:
+    noMock = True
 
 class FitTestCase(unittest.TestCase):
     
@@ -323,8 +330,85 @@ class TestCase2Model(unittest.TestCase):
             self.model.update_parameter(parameter='p1_0', value=2.5)
         mock.assert_called_once()
 
+class TestCase3Minimizer(FitTestCase):
+    @classmethod  
+    def setUpClass(cls):
+        
+        parameters = lmfit.Parameters()
+        parameters.add('ampl', value=10)
+        parameters.add('freq', value=1.)
+        parameters.add('phase', value=3.14)
+        parameters.add('const', value=-1.)
+        
+        model = funclib.sine()
+        
+        x = np.linspace(0,10, num=100)
+        y = model.evaluate(x, parameters)
+        
+        cls.parameters = parameters
+        cls.model = model
+        cls.x = x
+        cls.y = y
+        cls.weights = np.ones_like(y)
+        cls.errors = np.ones_like(y)
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    @patch('ivs.sigproc.lmfit.Minimizer')
+    def test1setupResiduals(self, mocked_class):
+        """ sigproc.fit.Minimizer _setup_residual_function """
+        
+        result = fit.minimize(self.x, self.y, self.model)
+        
+        msg = 'attr residuals is not set'
+        self.assertTrue(hasattr(result, 'residuals'), msg=msg)
+        
+        msg = 'residuals are not correctly calculated'
+        residuals = result.residuals(self.parameters, self.x, self.y, 
+                                     weights=self.weights)
+        self.assertTrue(np.all(np.abs(residuals) < 1.0), msg=msg)
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    @patch('ivs.sigproc.lmfit.Minimizer')
+    def test2setupJacobian(self, mocked_class):
+        """ sigproc.fit.Minimizer _setup_jacobian_function """
+        result = fit.minimize(self.x, self.y, self.model, err=self.errors)
+        
+        msg = 'attr jacobian is not set'
+        self.assertTrue(hasattr(result, 'jacobian'), msg=msg)
+        
+        msg = 'jacobian should be None in this case'
+        self.assertTrue(result.jacobian == None, msg=msg)
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    @patch('ivs.sigproc.lmfit.Minimizer')
+    def test3perturbdata(self, mocked_class):
+        """ sigproc.fit.Minimizer _perturb_input_data """
+        result = fit.minimize(self.x, self.y, self.model, errors=self.errors)
+        
+        result.y = self.y.reshape(2,50)
+        result.errors = result.errors.reshape(2,50)
+        
+        np.random.seed(11)
+        y_ = result._perturb_input_data()
+        dy = np.abs(np.ravel(y_) - self.y)
+        
+        msg = 'Perturbed data has wrong shape'
+        self.assertEqual(y_.shape, result.y.shape, msg=msg)
+        
+        msg = 'Perturbed data is NOT perturbed'
+        self.assertTrue(np.all(dy > 0.), msg=msg)
+        
+        msg = 'Perturbed data is to strongly perturbed'
+        self.assertTrue(np.all(dy < 3.), msg=msg)
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    @patch('ivs.sigproc.lmfit.Minimizer')
+    def test4mcErrorFromParameters(self, mocked_class):
+        """ sigproc.fit.Minimizer _mc_error_from_parameters """
+        pass
+        
 
-class TestCase3FittingFunction(FitTestCase):
+class TestCase4FittingFunction(FitTestCase):
     """
     Integration test testing the fitting of a simple Function
     """
@@ -423,6 +507,13 @@ class TestCase3FittingFunction(FitTestCase):
         self.assertArrayAlmostEqual(ci1[1], ci2['freq'], places=2, msg=msg)
         self.assertArrayAlmostEqual(ci1[2], ci2['phase'], places=2, msg=msg)
         
+        msg = 'Reruning calculate_CI fails and raises an exception!'
+        try:
+            result.calculate_CI(parameters=None, sigma=0.85, maxiter=200, short_output=True)
+            result.calculate_CI(parameters=None, sigma=0.95, maxiter=200, short_output=True)
+        except Exception:
+            self.fail(msg)
+        
     def test4CI2dInterval(self):
         """ I sigproc.fit.Minimizer Function calculate_CI_2D """
         model = self.model
@@ -459,8 +550,38 @@ class TestCase3FittingFunction(FitTestCase):
                 25.6436, 77.8194, 98.0628, 99.9496, 99.9996]
         self.assertArrayAlmostEqual(ci[4], exp1, places=2, msg=msg)
         self.assertArrayAlmostEqual(ci[:,4], exp2, places=2, msg=msg)
-
-class TestCase4FittingModel(FitTestCase):
+    
+    def test5MCerror(self):
+        """ I sigproc.fit.Minimizer Function calculate_MC_error """
+        result = fit.minimize(self.x, self.y, self.model)
+        
+        np.random.seed(11)
+        mcerrors = result.calculate_MC_error(errors=0.5, points=100, short_output=True)
+        
+        msg = 'Short output returned wrong type (array expected)'
+        self.assertEqual(np.shape(mcerrors), (3,), msg=msg)
+        
+        msg = 'Calculated MC errors are wrong'
+        self.assertArrayAlmostEqual(mcerrors, [0.01805, 0.00109, 0.00607], places=3, msg=msg)
+        
+        np.random.seed(11)
+        mcerrors = result.calculate_MC_error(errors=0.5, points=50, short_output=False)
+        
+        msg = 'Long output returned wrong type (dict expected)'
+        self.assertEqual(type(mcerrors), dict, msg=msg)
+        
+        msg = 'Not all parameters are included in output'
+        self.assertTrue('ampl' in mcerrors, msg=msg)
+        self.assertTrue('freq' in mcerrors, msg=msg)
+        self.assertTrue('phase' in mcerrors, msg=msg)
+        
+        msg = 'MC error is not stored in the parameters object'
+        params = self.model.parameters
+        self.assertEqual(params['ampl'].mcerr, mcerrors['ampl'], msg=msg)
+        self.assertEqual(params['freq'].mcerr, mcerrors['freq'], msg=msg)
+        self.assertEqual(params['phase'].mcerr, mcerrors['phase'], msg=msg)
+    
+class TestCase5FittingModel(FitTestCase):
     """
     Integration test testing the fitting of a simple Model
     """
@@ -500,7 +621,7 @@ class TestCase4FittingModel(FitTestCase):
         model = self.fitModel
         
         result = fit.minimize(self.x, self.y, model)
-        functions = model.get_model_functions()
+        functions = model.functions
         values1 = functions[0].get_parameters()[0]
         values2 = functions[1].get_parameters()[0]
         

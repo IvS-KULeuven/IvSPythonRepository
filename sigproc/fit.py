@@ -433,6 +433,7 @@ import numpy.linalg as la
 from scipy.interpolate import splrep
 import scipy.optimize
 
+from ivs.aux import progressMeter as progress
 from ivs.aux import loggers
 from ivs.sigproc import evaluate
 from ivs.timeseries import pyKEP
@@ -1175,7 +1176,7 @@ class Function(object):
     <http://cars9.uchicago.edu/software/python/lmfit/index.html>} package. No knowledge of this
     repersentation is required as methods for direct interaction with the parameter values and
     other settings are provided. If wanted, the parameters object itself can be obtained with
-    L{get_parameters_object}.
+    the L{parameters} attribute.
     """
     
     def __init__(self, function=None, par_names=None, jacobian=None, resfunc=None):
@@ -1352,55 +1353,51 @@ class Function(object):
             kwargs['min'] = kwargs['bounds'][0]
             kwargs['max'] = kwargs['bounds'][1]
         
-        for key in vars(parameter).keys():
+        for key in ['value', 'min', 'max', 'vary', 'expr']:
             if key in kwargs:
-                vars(parameter)[key] = kwargs[key]
+                setattr(parameter, key, kwargs[key])
     
-    def get_parameters(self,parameters=None,full_output=False):
+    def get_parameters(self, parameters=None, error='stderr', full_output=False):
         """
-        Returns the parameter values together with the errors if they exist. If No fitting
-        has been done, or the errors could not be calculated, None is returned for the error.
+        Returns the parameter values together with the errors if they exist. If No
+        fitting has been done, or the errors could not be calculated, None is returned
+        for the error.
         
-        The parameters of which the settings should be returned can be given in I{parameters}.
-        If None is given, all parameters are returned. If only one parameter name is given as
-        a string, the setup of this parameter is returned as an array of floating points. When
-        the parameter name is given as an array, and array of arrays is returned.
+        The parameters of which the settings should be returned can be given in
+        I{parameters}. If None is given, all parameters are returned.
         
-        @param parameters: A list of which parameters the values should be returned. If None,
-        the values of all parameters are returned
+        @param parameters: Parameters to be returned or None for all parameters.
         @type parameters: array
+        @param error: Which error to return ('stderr', 'mcerr')
+        @type error: string
         @param full_output: When True, also vary, the boundaries and expression are returned
-        @type full_output: bool        
-        @return: the parameter values and there errors value, err, [vary, min, max, expr]
+        @type full_output: bool
+        
+        @return: the parameter values and there errors: value, err, [vary, min, max, expr]
         @rtype: numpy arrays
         """
-        reduced_output = False
         if type(parameters) == str:
             parameters = [parameters]
-            reduced_output = True # return the values directly, not in a list
         
-        if parameters == None:
-            parameters  = self.par_names
+        pnames = parameters if parameters != None else self.par_names
         
-        val,err,vary,min,max,expr = [],[],[],[],[],[]
-        for name in parameters:
+        out = []
+        for name in pnames:
             par = self.parameters[name]
-            val.append(par.value)
-            err.append(par.stderr)
-            vary.append(par.vary)
-            min.append(par.min)
-            max.append(par.max)
-            expr.append(par.expr)
-        
-        if reduced_output:
-                val, err, vary, min, max, expr = val[0],err[0],vary[0],min[0],max[0],expr[0]
+            out.append([par.value,getattr(par, error), par.vary,  par.min, 
+                        par.max, par.expr])
+        out = np.array(out)
         
         if full_output:
-            return np.array(val), np.array(err), np.array(vary), np.array(min), np.array(max), np.array(expr)
+            return out.T
         else:
-            return np.array(val),np.array(err)
+            return out[:,0], out[:,1]
     
-    def param2str(self, full_output=False, accuracy=2):
+    #}
+    
+    #{ Print functions
+    
+    def param2str(self, **kwargs):
         """
         Converts the parameter object of this function to an easy printable string, including
         the value, error, boundaries, if the parameter is varied, and if in the fitting process
@@ -1409,38 +1406,52 @@ class Function(object):
         The accuracy with which the parameters are printed can be set with the accuracy keyword.
         And the amount of information that is printed is determined by full_output. If False, 
         only parameter value and error are printed, if True also boundaries and vary are shown.
-        """
-        return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
         
+        @param accuracy: number of decimal places to print
+        @type accuracy: int
+        @param error: Which error type to print ('stderr' or 'mcerr')
+        @type error: string
+        @param full_output: Amount of information to print
+        @type full_output: bool
+        
+        @return: parameters in string format
+        @rtype: string
+        """
+        return parameters2string(self.parameters, **kwargs)
+    
+    def correl2str(self, **kwargs):
+        """
+        Convert the correlations between the different parameters of this function to an
+        easy printable string. The correlations are only printed if they are larger than
+        a certain provided limit. And the accuracy keyword sets the amount of decimals
+        to print
+        
+        @param accuracy: number of decimal places to print
+        @param limit: minimum correlation value to print
+        
+        @return: correlation in string format
+        @rtype: string
+        """
+        return correlation2string(self.parameters, **kwargs)
+    
+    def ci2str(self, **kwargs):
+        """
+        Convert the confidence intervals of the parameters of this model to an easy
+        printable string. 
+        
+        The accuracy with wich the CIs should be printed can be set with the accuracy
+        keyword.
+        
+        @param accuracy: Number of decimal places to print
+        @type accuracy: int
+        
+        @return: confidence intervals in string format
+        @rtype: string
+        """
+        return confidence2string(self.parameters, **kwargs)
+    
     #}
     
-    #{ Getters and setters
-    
-    def get_model_function(self):
-        """
-        Returns the function that can be evaluated using function(parameters, x)
-        """
-        return self.function
-        
-    def get_parameters_object(self):
-        """
-        Return the parameter object belonging to the function
-        """
-        return self.parameters
-        
-    def get_par_names(self):
-        """
-        returns the names of the different parameters
-        """
-        return self.par_names
-    
-    def get_jacobian(self):
-        """
-        returns the names of the different parameters
-        """
-        return self.jacobian
-    
-    #}
 
 class Model(object):
     """
@@ -1474,7 +1485,7 @@ class Model(object):
     <http://cars9.uchicago.edu/software/python/lmfit/index.html>} package. No knowledge of this
     repersentation is required as methods for direct interaction with the parameter values and
     other settings are provided. If wanted, the parameters object itself can be obtained with
-    L{get_parameters_object}.
+    the L{parameters} attribute.
     
     At the moment the use of a jacobian is not supported at the Model level as it is not possible
     to derive a symbolic jacobian from the provided functions. If you want to use a jacobian you
@@ -1499,7 +1510,7 @@ class Model(object):
         self.expr = expr
         self.resfunc = resfunc
         self.jacobian = None
-        self.par_names = None
+        self._par_names = None
         self.parameters = None
         
         #-- Combine the parameters
@@ -1513,8 +1524,8 @@ class Model(object):
         If no parameter object is given then the parameter object belonging to the model
         is used.
         
-        >>> #evaluate(x, parameters)
-        >>> #evaluate(x)
+        >>> evaluate(x, parameters)
+        >>> evaluate(x)
         
         @param x: the independant values for which to evaluate the model.
         @type x: array
@@ -1547,14 +1558,15 @@ class Model(object):
         
     def evaluate_jacobian(self, x, *args):
         """
-        Not implemented
+        Not implemented!
         """
         return [0.0 for p in self.parameters]
         
     def setup_parameters(self,values=None, bounds=None, vary=None, exprs=None):
         """
-        Not implemented yet, use the L{setup_parameters} method of the Functions themselfs, or for 
-        adjustments of a single parameter use the L{update_parameter} function
+        Not implemented yet, use the L{setup_parameters} method of the Functions 
+        themselfs, or for adjustments of a single parameter use the L{update_parameter} 
+        function
         
         Please provide feedback on redmine on how you would like to use this function!!!
         """
@@ -1570,10 +1582,11 @@ class Model(object):
         
     def update_parameter(self, parameter=None, **kwargs):
         """
-        Updates a specified parameter. The parameter can be given by name or by index. However, you
-        have to be carefull when using the names. The model class changes the names of the parameters
-        of the underlying functions based on the order in which the functions are provided 
-        (See introduction). This method also supports the use of kwargs min and max to set the lower
+        Updates a specified parameter. The parameter can be given by name or by index.
+        However, you have to be carefull when using the names. The model class changes
+        the names of the parameters of the underlying functions based on the order in 
+        which the functions are provided (See introduction). This method also supports
+        the use of kwargs min and max to set the lower
         and upper boundary separatly.
         
         Example use:
@@ -1583,7 +1596,7 @@ class Model(object):
         """
         
         if type(parameter) == int:
-            parameter = self.parameters[self.par_names[parameter]]
+            parameter = self.parameters[self._par_names[parameter]]
         elif type(parameter) == str:
             parameter = self.parameters[parameter]
         
@@ -1592,70 +1605,122 @@ class Model(object):
             kwargs['min'] = kwargs['bounds'][0]
             kwargs['max'] = kwargs['bounds'][1]
         
-        for key in vars(parameter).keys():
+        for key in ['value', 'min', 'max', 'vary', 'expr']:
             if key in kwargs:
-                vars(parameter)[key] = kwargs[key]
+                setattr(parameter, key, kwargs[key])
         
         self.push_parameters()
     
-    def get_parameters(self, full_output=False):
+    def get_parameters(self, parameters=None, error='stderr', full_output=False):
         """
-        Returns the parameter values together with the errors if they exist. If No fitting
-        has been done, or the errors could not be calculated, None is returned for the error.
+        Returns the parameter values together with the errors if they exist. If No
+        fitting has been done, or the errors could not be calculated, None is returned
+        for the error.
         
-        @param full_output: When True, also vary, the boundaries and expr are returned
+        The parameters of which the settings should be returned can be given in
+        I{parameters}. If None is given, all parameters are returned.
+        
+        @param parameters: Parameters to be returned or None for all parameters.
+        @type parameters: array
+        @param error: Which error to return ('stderr', 'mcerr')
+        @type error: string
+        @param full_output: When True, also vary, the boundaries and expression are returned
         @type full_output: bool
         
-        @return: the parameter values and there errors [(value, err, vary, min, max, expr),...]
-        @rtype: array of tupples
+        @return: the parameter values and there errors: value, err, [vary, min, max, expr]
+        @rtype: numpy arrays
         """
+        if type(parameters) == str:
+            parameters = [parameters]
+        pnames = parameters if parameters != None else self.parameters.keys()
+        
         out = []
-        for name, par in self.parameters.items():
-            out.append([par.value,par.stderr, par.vary,  par.min, par.max, par.expr])
+        for name in pnames:
+            par = self.parameters[name]
+            out.append([par.value,getattr(par, error), par.vary,  par.min, 
+                        par.max, par.expr])
         out = np.array(out)
             
         if full_output:
             return out.T
         else:
             return out[:,0], out[:,1]  
-            
-    def param2str(self, full_output=False, accuracy=2):
+    
+    #}
+    
+    #{ Print functions
+    
+    def param2str(self, **kwargs):
         """
-        Converts the parameter object of this function to an easy printable string, including
+        Converts the parameter object of this model to an easy printable string, including
         the value, error, boundaries, if the parameter is varied, and if in the fitting process
         on of the boundaries was reached. 
         
         The accuracy with which the parameters are printed can be set with the accuracy keyword.
         And the amount of information that is printed is determined by full_output. If False, 
         only parameter value and error are printed, if True also boundaries and vary are shown.
-        """
-        return parameters2string(self.parameters, accuracy=accuracy, full_output=full_output)
         
-    #}   
+        @param accuracy: Number of decimal places to print
+        @type accuracy: int
+        @param error: Which error type to print ('stderr' or 'mcerr')
+        @type error: string
+        @param full_output: Amount of information to print
+        @type full_output: bool
+        
+        @return: parameters in string format
+        @rtype: string
+        """
+        return parameters2string(self.parameters, **kwargs)
     
-    #{ Getters and Setters
+    def correl2str(self, **kwargs):
+        """
+        Convert the correlations between the different parameters of this model to an
+        easy printable string. The correlations are only printed if they are larger than
+        a certain provided limit. And the accuracy keyword sets the amount of decimals
+        to print
+        
+        @param accuracy: number of decimal places to print
+        @param limit: minimum correlation value to print
+        
+        @return: correlation in string format
+        @rtype: string
+        """
+        return correlation2string(self.parameters, **kwargs)
     
-    def get_model_functions(self):
+    def ci2str(self, **kwargs):
         """
-        Returns an array of all functions that can be evaluated using function(parameters, x)
-        """
-        return self.functions
+        Convert the confidence intervals of the parameters of this model to an easy
+        printable string. 
         
-    def get_parameters_object(self):
-        """
-        Return the parameter object belonging to the function
-        """
-        return self.parameters
+        The accuracy with wich the CIs should be printed can be set with the accuracy
+        keyword.
         
-    def get_par_names(self):
+        @param accuracy: Number of decimal places to print
+        @type accuracy: int
+        
+        @return: confidence intervals in string format
+        @rtype: string
         """
-        returns the names of the different parameters
-        """
-        return self.par_names
-
-    #}   
+        return confidence2string(self.parameters, **kwargs)
+    
+    #}
+    
+    #{ Advanced attributes
+    
+    @property
+    def par_names(self):
+        'get par_names'
+        return [val for sublist in self._par_names for val in sublist]
+    
+    #@par_names.setter
+    #def par_names(self, val):
+        #'set par_names'
+        #self._par_names = val
+    
+    #}
     
     #{ Internal
+    
     def pull_parameters(self):
         """
         Pulls the parameter objects from the underlying functions, and combines it to 1 parameter object.
@@ -1675,7 +1740,7 @@ class Model(object):
                 new_params.add(n+'_%i'%(i), value=par.value, vary=par.vary, min=par.min, max=par.max, expr=par.expr)
             pnames.append(pname)
                 
-        self.par_names = pnames
+        self._par_names = pnames
         self.parameters = new_params
         
     def push_parameters(self, parameters=None):
@@ -1685,7 +1750,7 @@ class Model(object):
         """
         if parameters == None:
             parameters = self.parameters
-        for pnames,function in zip(self.par_names, self.functions):
+        for pnames,function in zip(self._par_names, self.functions):
             old_parameters = function.parameters
             for name in pnames:
                 old_name = re.sub('_[0123456789]*$','',name)
@@ -1694,7 +1759,7 @@ class Model(object):
     #}
     
     
-class Minimizer(lmfit.Minimizer): 
+class Minimizer(object): 
     """
     A minimizer class on the U{lmfit <http://cars9.uchicago.edu/software/python/lmfit/index.html>}
     Python package, which provides a simple, flexible interface to non-linear least-squares 
@@ -1742,15 +1807,19 @@ class Minimizer(lmfit.Minimizer):
 
     """
 
-    def __init__(self, x, y, model, err=None, weights=None, resfunc=None,
-             engine='leastsq', args=None, kws=None, scale_covar=True, iter_cb=None, **kwargs):
+    def __init__(self, x, y, model, errors=None, weights=None, resfunc=None,
+             engine='leastsq', args=None, kws=None, **kwargs):
         
         self.x = x
         self.y = y
         self.model = model
-        self.errors = err
+        self.errors = errors
         self.weights = weights
+        self.model_kws = kws
+        self.fit_kws = kwargs #fx: iter_cb, scale_covar
         self.resfunc = model.resfunc
+        self.engine = engine
+        self._minimizers = [None]
         
         if weights == None:
             self.weights = np.ones(len(y)) # if no weigths definded set them all at one.
@@ -1758,51 +1827,22 @@ class Minimizer(lmfit.Minimizer):
         if resfunc != None: 
             self.resfunc = resfunc # if residual function is provided, use that one.
         
-        params = model.get_parameters_object()
+        params = model.parameters
         
         #-- Setup the residual function and the lmfit.minimizer object
-        residuals = self.setup_residual_function()
-        jacobian = self.setup_jacobian_function()
+        self._setup_residual_function()
+        self._setup_jacobian_function()
         fcn_args = (self.x, self.y)
         fcn_kws = dict(weights=self.weights, errors=self.errors)
-        if kws != None:
-            fcn_kws.update(kws)
+        if self.model_kws != None:
+            fcn_kws.update(self.model_kws)
         
         #-- Setup the Minimizer object
-        lmfit.Minimizer.__init__(self,residuals, params, fcn_args=fcn_args, fcn_kws=fcn_kws,
-                             iter_cb=iter_cb, scale_covar=scale_covar, **kwargs)
+        self.minimizer = lmfit.Minimizer(self.residuals, params, fcn_args=fcn_args,
+                                         fcn_kws=fcn_kws, **self.fit_kws)
         
         #-- Actual fitting
-        if engine == 'anneal':
-            self.anneal()
-        elif engine == 'lbfgsb':
-            self.lbfgsb()
-        elif engine == 'fmin':
-            self.fmin()
-        else:
-            self.leastsq(Dfun=jacobian)
-            
-    def setup_residual_function(self):
-        """Internal function to setup the residual function for the minimizer."""
-        
-        if self.resfunc != None:
-            def residuals(params, x, y, weights=None, errors=None, **kwargs):
-                synth = self.model.evaluate(x, params, **kwargs)
-                return self.resfunc(synth, y, weights=weights, errors=errors, **kwargs)
-        else:
-            def residuals(params, x, y, weights=None, errors=None, **kwargs):
-                return ( y - self.model.evaluate(x, params, **kwargs) ) * weights
-                
-        return residuals
-    
-    def setup_jacobian_function(self):
-        """Internal function to setup the jacobian function for the minimizer."""
-        if self.model.jacobian != None:
-            def jacobian(params, x, y, weights=None, errors=None, **kwargs):
-                return self.model.evaluate_jacobian(x, params, **kwargs)
-            return jacobian
-        else:
-            return None
+        self.minimizer.start_minimize(engine, Dfun=self.jacobian)
     
     #{ Error determination
     
@@ -1817,6 +1857,9 @@ class Minimizer(lmfit.Minimizer):
         boundary of the asked confidence level. If short_output is True, an array of
         tupples is returned instead. When only one parameter is given, and short_output
         is True, only a tupple of the lower and upper boundary is returned.
+        
+        The confidence intervalls calculated with this function are stored in the 
+        Model or Function as well.
         
         F-test
         ======
@@ -1840,9 +1883,11 @@ class Minimizer(lmfit.Minimizer):
         @type parameters: array of strings
         @param sigma: The probability level used to calculate the CI
         @type sigma: float
+        @param short_output: type of output you want
+        @type short_output: bool
         
-        @return: A dictionary with for each parameter the lower and upper limit.
-        @rtype: dict
+        @return: the confidence intervals.
+        @rtype: array or dict
         """
         #-- check if a special probability function is provided.
         prob_func = kwargs.pop('prob_func', None)
@@ -1853,9 +1898,21 @@ class Minimizer(lmfit.Minimizer):
         if type(parameters) == str:
             parameters = [parameters]
         
-        # Use the adjusted conf_interval() function of the lmfit package.
-        ci = lmfit.conf_interval(self, p_names=parameters, sigmas=[sigma], maxiter=maxiter,\
-                                 prob_func=prob_func, trace=False, verbose=False)
+        #-- Use the adjusted conf_interval() function of the lmfit package.
+        #   We need to work on a copy of the minimizer and make a backup of
+        #   the parameter object cause lmfit messes up the minimizer when
+        #   running conf_interval
+        mini = copy.copy(self.minimizer)
+        backup = copy.deepcopy(self.model.parameters)
+        ci = lmfit.conf_interval(mini, p_names=parameters, sigmas=[sigma],
+                                 maxiter=maxiter, prob_func=prob_func, trace=False, 
+                                 verbose=False)
+        self.model.parameters = backup
+        
+        #-- store the CI values in the parameter object
+        params = self.model.parameters
+        for key, value in ci.items():
+            params[key].cierr.update(value)
         
         # Prepare the output
         if len(parameters) == 1 and short_output:
@@ -1884,10 +1941,9 @@ class Minimizer(lmfit.Minimizer):
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
         @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall
-                       is calculated. If None, 5 times the stderr is used.
-        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare plot. 
-        @param filled: True for filled contour plot, False for normal contour plot
+        @param limits: The upper and lower limit on the parameters for which the confidence
+                       intervall is calculated. If None, 5 times the stderr is used.
+        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chi-squares. 
         
         @return: the x values, y values and confidence values
         @rtype: (array, array, 2d array)
@@ -1901,7 +1957,8 @@ class Minimizer(lmfit.Minimizer):
             def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
                 return new_chi
         old = np.seterr(divide='ignore') #turn division errors off temporary
-        x, y, grid = lmfit.conf_interval2d(self,xpar,ypar,xn,yn, limits=limits, prob_func=prob_func)
+        x, y, grid = lmfit.conf_interval2d(self.minimizer, xpar, ypar, xn, yn, limits=limits,
+                                           prob_func=prob_func)
         np.seterr(divide=old['divide'])
         
         if type=='prob':
@@ -1909,48 +1966,73 @@ class Minimizer(lmfit.Minimizer):
  
         return x, y, grid
     
-    def estimate_error(self, p_names=None, sigmas=[0.65,0.95,0.99], maxiter=200,\
-             prob_func=None, method='F-test', output='error', **kwargs):
+    def calculate_MC_error(self, points=100, errors=None, distribution='gauss', 
+                           short_output=True, verbose=True, **kwargs):
         """
-        DEPRECATED
+        Use Monte-Carlo simulations to estimate the error of each parameter. In this
+        approach each datapoint is perturbed by its error, and for each new dataset 
+        best fitting parameters are calculated. The MC error of a parameter is its 
+        deviation over all iterations (points).
         
-        Returns the confidence intervalls of the given parameters. 
-        Two different methods can be used, Monte Carlo simulation and F-test method. 
+        The errors supplied to this function will overwrite the errors already stored
+        in this Minimizer. If however no errors are supplied, the already stored ones
+        will be used. For now only symetric errors are supported.
         
-        Monte Carlo
-        ===========
-        Not yet implemented
+        Currently all datapoints are considered to have a symetric gaussian distribution,
+        but in future version more distributions will be supported.
         
-        F-test
-        ======
-        The F-test is used to compare the null model, which is the best fit
-        found by the minimizer, with an alternate model, where on of the
-        parameters is fixed to a specific value. The value is changed util the
-        differnce between chi2_0 and chi2_f can't be explained by the loss of a
-        degree of freedom with a certain confidence.
+        The MC errors are saved in the Model or Function supplied to this fitter, and
+        can be returned as an array (short_output=True), or as a dictionary
+        (short_output=False).
         
-        M{F = (chi2_f / chi2_0 - 1) * (N-P)/P_fix}
+        @param points: The number of itterations
+        @type points: int
+        @param errors: Possible new errors on the input data.
+        @type errors: array or float
+        @param distribution: Not yet supported
+        @type distribution: str
+        @param short_output: True if you want array, False if you want dictionary
+        @type short_output: bool
         
-        N is the number of data-points, P the number of parameter of the null model. P_fix is the number of fixed parameters (or to be more clear, the difference of number of parameters betweeen the null model and the alternate model).
-        
-        @param p_names: Names of the parameters to calculate the CIs from (if None, all parameters are used)
-        @param sigmas: the different probability levels you want the conficence intervalls from
-        @param method: Method to use, 'F-test' or 'MC' (monte carlo simulation)
-        @param output: Output type, error or ci (confidence intervall)
+        @return: The MC errors of all parameters.
+        @rtype: array or dict
         """
-        logger.warning("DEPRECATED: estimate_error is replaced by calculate_CI")
+        if errors != None:
+            self.errors = errors
         
-        # if only 1 confidence intervall is asked, the output can be tupple instead of dict.
-        short_output = (type(p_names)==str and type(sigmas)==float) and True or False
-        if type(p_names)==str: p_names = [p_names]
-        if type(sigmas)==float: sigmas = [sigmas]
+        perturb_args = dict(distribution=distribution)
+        perturb_args.update(kwargs)
+        params = np.empty(shape=(points), dtype=object)
         
-        #Use the adjusted conf_interval() function of the lmfit package.
-        out = lmfit.conf_interval(self, p_names=p_names, sigmas=sigmas, maxiter=maxiter, prob_func=prob_func, trace=False, verbose=False)
+        if verbose: print "MC simulations:"
+        if verbose: Pmeter = progress.ProgressMeter(total=points)
+        for i in range(points):
+            if verbose: Pmeter.update(1)
+            #-- perturb the data
+            y_ = self._perturb_input_data(**perturb_args)
+        
+            #-- setup the fit
+            pars = copy.deepcopy(self.model.parameters)
+            fcn_args = (self.x, y_)
+            fcn_kws = dict(weights=self.weights, errors=self.errors)
+            if self.model_kws != None:
+                fcn_kws.update(self.model_kws)
+            result = lmfit.Minimizer(self.residuals, pars, fcn_args=fcn_args,
+                                         fcn_kws=fcn_kws, **self.fit_kws)
+            
+            #-- run the fit and save the results
+            result.start_minimize(self.engine, Dfun=self.jacobian)
+            params[i] = pars
+        
+        pnames, mcerrors = self._mc_error_from_parameters(params)
         
         if short_output:
-            out = out[p_names[0]][sigmas[0]]
-        return out
+            return mcerrors
+        else:
+            out = dict()
+            for name, err in zip(pnames, mcerrors):
+                out[name] = err
+            return out
     
     #}
     
@@ -1973,7 +2055,7 @@ class Minimizer(lmfit.Minimizer):
         if self.errors == None:
             pl.plot(self.x,self.y,'+b')
         else:
-            pl.errorbar(self.x,self.y, yerr=self.err, ls='', marker='+', color='b')
+            pl.errorbar(self.x,self.y, yerr=self.errors, ls='', marker='+', color='b')
         pl.plot(xf,yf,'-r')
         xlim = pl.xlim([min(self.x)-0.05*(max(self.x)-min(self.x)), max(self.x)+0.05*(max(self.x)-min(self.x))])
         pl.ylim([min(self.y)-0.05*(max(self.y)-min(self.y)), max(self.y)+0.05*(max(self.y)-min(self.y))])
@@ -1986,13 +2068,14 @@ class Minimizer(lmfit.Minimizer):
         if self.errors == None:
             pl.plot(self.x,self.y-self.model.evaluate(self.x), '+b')
         else:
-            pl.errorbar(self.x,self.y-self.model.evaluate(self.x), yerr=self.err, ls='', marker='+', color='b')
+            pl.errorbar(self.x,self.y-self.model.evaluate(self.x), yerr=self.errors, ls='', marker='+', color='b')
         pl.axhline(y=0, ls=':', color='r')
         pl.xlim(xlim)
         pl.ylabel('$O-C$')
         pl.xlabel('$x$')
     
-    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, type='prob', filled=True, **kwargs):
+    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, type='prob',
+                                 filled=True, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. Both the  confidence interval calculated
         using the F-test method from the I{estimate_error} method, and the normal chi squares can be 
@@ -2032,8 +2115,97 @@ class Minimizer(lmfit.Minimizer):
         pl.ylabel(ypar)
     
     #}
+    
+    #{ Advanced attributes
+    @property
+    def minimizer(self):
+        'get minimizer'
+        return self._minimizers[0]
+    
+    @minimizer.setter
+    def minimizer(self, val):
+        'set minimizer'
+        self._minimizers[0] = val
+        
+    @property
+    def error(self):
+        'get error'
+        return self._error
+    
+    @error.setter
+    def error(self, val):
+        'set error'
+        if np.shape(val) == ():
+            self._error = np.ones_like(self.x) * val
+        if np.shape(val) == np.shape(self.x):
+            self._error = val
+        else:
+            self._error = np.ones_like(self.x) * val[0]
+    #}
+    
+    #{ Internal Functions
+    
+    def __getattr__(self, name):
+        "allow to reach the attributes of the best fitting minimizer directly"
+        if hasattr(self.minimizer, name):
+            return  getattr(self.minimizer, name)
+        else:
+            raise AttributeError
+    
+    def _setup_residual_function(self):
+        "Internal function to setup the residual function for the minimizer."
+        if self.resfunc != None:
+            def residuals(params, x, y, weights=None, errors=None, **kwargs):
+                synth = self.model.evaluate(x, params, **kwargs)
+                return self.resfunc(synth, y, weights=weights, errors=errors, **kwargs)
+        else:
+            def residuals(params, x, y, weights=None, errors=None, **kwargs):
+                return ( y - self.model.evaluate(x, params, **kwargs) ) * weights
+                
+        self.residuals = residuals
+    
+    def _setup_jacobian_function(self):
+        "Internal function to setup the jacobian function for the minimizer."
+        if self.model.jacobian != None:
+            def jacobian(params, x, y, weights=None, errors=None, **kwargs):
+                return self.model.evaluate_jacobian(x, params, **kwargs)
+            self.jacobian = jacobian
+        else:
+            self.jacobian = None
+    
+    def _perturb_input_data(self, **kwargs):
+        "Internal function to perturb the input data for MC simulations"
+        #-- create iterator for the data points
+        y_ = np.empty_like(self.y)
+        it = np.nditer([self.y, self.errors, y_], [],
+                        [['readonly'], ['readonly'], ['writeonly','allocate']])
+        
+        #-- perturb the data
+        for (a, b, c) in it:
+            c[...] = np.random.normal(loc=a, scale=b)
+            
+        return y_
+    
+    def _mc_error_from_parameters(self, params):
+        " Use standard deviation to get the error on a parameter "
+        #-- calculate the 
+        pnames = params[0].keys()
+        errors = np.zeros((len(params), len(pnames)))
+        for i, pars in enumerate(params):
+            values = np.array([pars[pname].value for pname in pnames])
+            errors[i] = values
+        errors = np.std(errors, axis=0)
+        
+        #-- store the error in the original parameter object
+        params = self.model.parameters
+        for name, error in zip(pnames, errors):
+            params[name].mcerr = error
+        
+        return pnames, errors
+        
+    #}
 
-def minimize(x, y, model, err=None, weights=None, resfunc=None,
+def minimize(x, y, model, errors=None, weights=None, resfunc=None,
              engine='leastsq', args=None, kws=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
     """
     Basic minimizer function using the L{Minimizer} class, find values for the parameters so that the
@@ -2074,16 +2246,17 @@ def minimize(x, y, model, err=None, weights=None, resfunc=None,
     
     """
     
-    fitter = Minimizer(x, y, model, err=err, weights=weights, resfunc=resfunc,
-             engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
+    fitter = Minimizer(x, y, model, errors=errors, weights=weights, resfunc=resfunc,
+                       engine=engine, args=args, kws=kws,  scale_covar=scale_covar,
+                       iter_cb=iter_cb, **fit_kws)
     if fitter.message and verbose:
         logger.warning(fitter.message)
     return fitter    
 
 
-def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  scale_covar=True, iter_cb=None, points=100, parameters=None, return_all=False,
-                  verbose=True, **fit_kws):
+def grid_minimize(x, y, model, errors=None, weights=None, engine='leastsq', args=None, 
+                  kws=None, scale_covar=True, iter_cb=None, points=100, parameters=None,
+                  return_all=False, verbose=True, **fit_kws):
     """                  
     Grid minimizer. Offers the posibility to start minimizing from a grid of starting parameters defined by the used.
     The number of starting points can be specified, as well as the parameters that are varried. For each parameter 
@@ -2107,10 +2280,8 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
     @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
     @rtype: Minimizer object or array of [Minimizer, Parameters, Model, float]
     """
-    from ivs.aux import progressMeter as progress
-    
     if parameters == None:
-        parameters = model.get_par_names()
+        parameters = model.par_names
     
     #-- check if all grid parameters actually have boundaries.
     kick_parameters = []
@@ -2123,7 +2294,7 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
     if len(parameters) == 0:
         logging.warning('No parameters provided to kick, grid minimize will not be performed!')
         startpar = copy.deepcopy(model.parameters)
-        result = minimize(x, y, model, err=err, weights=weights, engine=engine, args=args,
+        result = minimize(x, y, model, errors=errors, weights=weights, engine=engine, args=args,
                                kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
         if not return_all:
             return result
@@ -2144,11 +2315,12 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
         startpars[i] = copy.deepcopy(mod_.parameters)
     
     #-- minimize every model.
+    if verbose: print "Grid minimizer:"
     if verbose: Pmeter = progress.ProgressMeter(total=points)
     for i,mod_ in enumerate(newmodels):
         # refit and store the results
         if verbose: Pmeter.update(1)
-        fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
+        fitter = Minimizer(x, y, mod_, errors=errors, weights=weights, engine=engine, args=args,
                             kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
         fitters[i] = fitter
         chisqrs[i] = fitter.chisqr
@@ -2167,84 +2339,6 @@ def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=No
     else:
         return fitters[0]
                       
-#def grid_minimize(x, y, model, err=None, weights=None, engine='leastsq', args=None, kws=None,
-                  #scale_covar=True, iter_cb=None, threads=8, points=100, parameters=None, return_all=False, **fit_kws):
-    #"""
-    #Grid minimizer
-    #"""
-    #from multiprocessing import Process, Pipe
-    #import sys
-    ##-- select number of threads
-    #if threads=='max':
-        #threads = cpu_count()
-    #elif threads=='half':
-        #threads = cpu_count()/2
-    #elif threads=='safe':
-        #threads = cpu_count()-1
-    #threads = int(threads)
-    
-    ##-- setup result arrays
-    #newmodels = np.zeros(points, dtype=Model)
-    #startpars = np.zeros(points, dtype=lmfit.Parameters)
-    #fitters = np.zeros(points, dtype=Minimizer)
-    #chisqrs = np.zeros(points, dtype=float)
-    
-    ##-- create new models
-    #for i in range(points):
-        #mod_ = copy.deepcopy(model)
-        #mod_.parameters.kick(pnames=parameters)
-        #newmodels[i] = mod_
-        #startpars[i] = copy.deepcopy(mod_.parameters)
-           
-    #def fit_models(models, results):
-        #fitters, chisqrs = [], []
-        #for mod_ in models:
-            ## refit and store the results
-            #fitter = Minimizer(x, y, mod_, err=err, weights=weights, engine=engine, args=args,
-                               #kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-            #results.append([fitter, mod_, fitter.chisqr])
-            
-    #def spawn(f):
-        #def fun(pipe,mod, res):
-            #pipe.send(f(mod, res))
-            #pipe.close()
-        #return fun
-    
-    ##-- multiprocess fitting
-    #processes = []
-    #manager = Manager()
-    #results = manager.list([])
-    #all_processes = []
-    #pipe = [Pipe() for x in range(threads)]
-    #for j in range(threads):
-    ##for j,(p,c) in izip(range(threads),pipe):
-        #proc = Process(target=spawn(fit_models), args=(pipe[j][1],newmodels[j::threads],results))
-        #all_processes.append(proc)
-        ##all_processes.append(Process(target=fit_models,args=(newmodels[j::threads],results)))
-        #all_processes[-1].start()
-    #for p in all_processes:
-        #p.join()
-        
-    #print results
-
-#def grid_minimize(x, y, model, err=None, weights=None,
-             #engine='leastsq', args=None, kws=None,scale_covar=True,iter_cb=None, grid=100, parameters=None, **fit_kws):
-    
-    #oldpar = model.parameters.copy()
-    #results = []
-    #chi2s = []
-    #for i in range(grid):
-        #model.parameters.kick()
-        #fitter = Minimizer(x, y, model, err=err, weights=weights,
-             #engine=engine, args=args, kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        #results.append(fitter)
-        #chi2s.append(fitter.chisqr)
-    
-    #print chi2s
-        
-        
-    
-
 #}
 
 #{ General purpose
@@ -2288,41 +2382,49 @@ def get_correlation_factor(residus, full_output=False):
 
 def _calc_length(par, accuracy):
     """ helper function to calculate the length of the given parameters for parameters2string """
-    if par == None or par == np.nan:
+    if par == None or par == np.nan or np.isinf(par):
         return 3
     else:
         try:
+            old = np.seterr(divide='ignore') #turn division errors off temporary
             length = np.floor(np.log10(abs(par))) > 0 and np.floor(np.log10(abs(par))) + 1 or 1
             length = par < 0 and length + 1 or length # 1 for the minus sign
             length = length + accuracy + 1 # 1 for the decimal point
+            np.seterr(divide=old['divide'])
             return length
         except:
             return 0
 
-def parameters2string(parameters, accuracy=2, full_output=False):
+def parameters2string(parameters, accuracy=2, error='stderr', full_output=False):
     """ Converts a parameter object to string """
-    out = ""
+    old = np.seterr(divide='ignore')
+    out = "Parameters ({:s})\n".format(error)
     fmt = '{{:.{0}f}}'.format(accuracy)
     
     #-- run over the parameters to calculate the nessessary space
     max_value = 0
     max_bounds = 0
     for name, par in parameters.items():
-        current = _calc_length(par.value, accuracy) + _calc_length(par.stderr, accuracy)
+        current = _calc_length(par.value, accuracy) + \
+                  _calc_length(getattr(par, error), accuracy) + \
+                  _calc_length(np.array(getattr(par, error)) / np.array(par.value) * 100.,
+                                        accuracy)
         max_value = current > max_value and current or max_value
         current = _calc_length(par.min, accuracy) + _calc_length(par.max, accuracy)
         max_bounds = current > max_bounds and current or max_bounds
-    max_value = int(max_value + 5)
+    max_value = int(max_value + 9)
     max_bounds = int(max_bounds + 5)
     
     #-- format the output
     for name, par in parameters.items():
-        if par.stderr == None:
+        if getattr(par, error) == None:
             stderr = np.nan
+            prcerr = np.nan
         else:
-            stderr = par.stderr
+            stderr = getattr(par, error)
+            prcerr = abs(float(np.array(stderr) / np.array(par.value) * 100.))
         
-        value = '{fmt} +/- {fmt}'.format(fmt=fmt).format(par.value, stderr)
+        value = "{fmt} +/- {fmt} ({fmt}%)".format(fmt=fmt).format(par.value, stderr, prcerr)
         
         if not full_output:
             template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
@@ -2344,37 +2446,98 @@ def parameters2string(parameters, accuracy=2, full_output=False):
             else:
                 expr = ""
             template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
-            template = template.format(name=name, value=value, vlim=max_value, bounds=bounds, blim=max_bounds,\
-                                       vary=(par.vary and '(fit)' or '(fixed)'), limit=lim, expr=expr)
+            template = template.format(name=name, value=value, vlim=max_value, bounds=bounds,
+                                       blim=max_bounds, vary=(par.vary and '(fit)' or '(fixed)'),
+                                       limit=lim, expr=expr)
         out += template
+        
+    np.seterr(divide=old['divide'])
     return out.rstrip()
 
-def confidence2string(ci, accuracy=2):
-    #Converts confidence intervall dictionary to string
-    out=""
-    for par in ci.keys():
-        out += "{0:20s}\n  ".format(par)
-        sigmas = ci[par].keys()
-        sigmas.sort()
-        for sigma in sigmas:
-            out += '{0:20.2f} %'.format(np.round(sigma*100, decimals=1))
-        out += '\n -'
-        for sigma in sigmas:
-            #-- when something went wrong in the fitting process, we have a None:
-            if ci[par][sigma][0] is None:
-                val = ci[par][sigma][0]
+def correlation2string(parameters, accuracy=3, limit=0.100):
+    """ Converts the correlation of different parameters to string """
+    out = "Correlations (shown if larger as {{:.{0}f}})\n".format(accuracy).format(limit)
+    
+    #-- first select all correlations we want
+    cor_name, cor_value = [],[]
+    for name1,par  in parameters.items():
+        for name2, corr in par.correl.items():
+            n1 = name1 + ' - ' + name2
+            n2 = name2 + ' - ' + name1
+            if corr >=limit and not n1 in cor_name and not n2 in cor_name:
+                cor_name.append(n1)
+                cor_value.append(corr)
+    cor_name, cor_value = np.array(cor_name, dtype=str),np.array(cor_value, dtype=float)
+    ind = cor_value.argsort()
+    cor_name, cor_value = cor_name[ind][::-1], cor_value[ind][::-1]
+                
+    #-- calculate nessessary space
+    max_name = 0
+    max_value = 0
+    for name, value in zip(cor_name, cor_value):
+        max_name = len(name) if len(name) > max_name else max_name
+        current = _calc_length(value, accuracy)
+        max_value = current if current > max_value else max_value
+    
+    #-- print correlations
+    template = '    {{name:<{0}s}} = {{value:.{1}f}}\n'.format(max_name, accuracy)
+    for name, value in zip(cor_name, cor_value):
+        out += template.format(name=name, value=value)
+        
+    return out.rstrip()
+    
+
+def confidence2string(parameters, accuracy=4):
+    """ Converts the confidence intervals to string """
+    out="Confidence Intervals\n"
+    
+    #-- find all calculated cis and the nessessary space 
+    max_name = 0
+    max_value = 6
+    sigmas = []
+    for name, par in parameters.items():
+        if len(name) > max_name: max_name = len(name)
+        for ci in par.cierr.keys():
+            if not ci in sigmas: sigmas.append(ci)
+            current = _calc_length(par.cierr[ci][0], accuracy)
+            if current > max_value: max_value = current
+            current = _calc_length(par.cierr[ci][1], accuracy)
+            if current > max_value: max_value = current
+    sigmas.sort()
+    sigmas.reverse()
+    
+    #-- create the output values
+    template =  "{{:.{0}f}}".format(accuracy)
+    cis = np.empty(shape=(len(parameters.keys()), 2*len(sigmas)+1), 
+                   dtype="|S{:.0f}".format(max_value))
+    for i, (name, par) in enumerate(parameters.items()):     #cis
+        for j, sigma in enumerate(sigmas):
+            if sigma in par.cierr.keys():
+                cis[i,j] = template.format(par.cierr[sigma][0])
+                cis[i,-j-1] = template.format(par.cierr[sigma][1])
             else:
-                val = np.round(ci[par][sigma][0], decimals=accuracy)
-            out += "{0:20}  ".format(val)
-        out += '\n +'
-        for sigma in sigmas:
-            #-- when something went wrong in the fitting process, we have a None:
-            if ci[par][sigma][1] is None:
-                val = ci[par][sigma][1]
-            else:
-                val = np.round(ci[par][sigma][1], decimals=accuracy)
-            out += "{0:20}  ".format(val)
-        out += '\n'
+                cis[i,j] = '-'*max_value
+                cis[i,-j-1] = '-'*max_value
+    for i, (name, par) in enumerate(parameters.items()):     #values
+        cis[i,len(sigmas)] = template.format(par.value)
+    
+    template = "{:.2f}"
+    header = np.empty(shape=2*len(sigmas)+1, dtype="|S{:.0f}".format(max_value))
+    for i, sigma in enumerate(sigmas):
+        header[i] = template.format(sigma*100)
+        header[-i-1] = template.format(sigma*100)
+    header[len(sigmas)] = template.format(0)
+    
+    #-- create the output
+    template = "{{:>{0}s}}%  ".format(max_value-1) * (2*len(sigmas)+1)
+    template = "    {{:>{0}s}}   ".format(max_name) + template +"\n"
+    out += template.format('', *header)
+    
+    template = "{{:>{0}s}}  ".format(max_value) * (2*len(sigmas)+1)
+    template = "    {{:>{0}s}}:  ".format(max_name) + template +"\n"
+    for name, ci in zip(parameters.keys(), cis):
+        out += template.format(name, *ci)
+    
     return out.rstrip() 
     
 def plot_convergence(startpars, models, chi2s, xpar=None, ypar=None, clim=None):
