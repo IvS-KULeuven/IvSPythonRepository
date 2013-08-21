@@ -50,7 +50,8 @@ from .uncertainties import ufloat, correlated_values
 #======================================================
 #{ Add nessessary methods to several classes from lmfit
 
-from numpy import random
+import re
+import numpy as np
 from ivs.aux import decorators
 
 @decorators.extend(Parameters)
@@ -91,9 +92,35 @@ def kick(self):
     """
     Kick the starting value to a random value between min and max
     """
-    value = random.uniform(low=self.min, high=self.max)
+    value = np.random.uniform(low=self.min, high=self.max)
     self._val = value
     self.user_value = value
+
+@decorators.extend(Parameter)
+def __getattr__(self, name):
+    """
+    Allow to reach any cierr directly with coded attribute name (fx. ci95),
+    Allow to get min and max with the bounds attribute
+    Allow to obtain procentual error
+    """
+    ciexpr = r"^ci(\d\d+?)$"
+    errexpr = r"(stderr|mcerr)pc"
+    if name == 'bounds':
+        return (self.min, self.max)
+    if re.match(ciexpr, name):
+        ci = '0.' + str(re.findall(ciexpr, name)[0])
+        if ci in self.cierr:
+            return self.cierr[ci]
+        else:
+            return (np.nan, np.nan)
+    if re.match(errexpr, name):
+        error = getattr( self, str(re.findall(errexpr, name)[0]) )
+        if error == None:
+            return np.nan
+        else:
+            return abs(error / self.value * 100.)
+    else:
+        raise AttributeError('%s not assigned'%(name))
 
 @decorators.extend(Minimizer)
 def start_minimize(self, engine, **kwargs):

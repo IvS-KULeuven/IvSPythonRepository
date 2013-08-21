@@ -1399,17 +1399,22 @@ class Function(object):
     
     def param2str(self, **kwargs):
         """
-        Converts the parameter object of this function to an easy printable string, including
+        Converts the parameter object of this model to an easy printable string, including
         the value, error, boundaries, if the parameter is varied, and if in the fitting process
         on of the boundaries was reached. 
+        
+        The error to be printed can be set with the error keyword. You can chose from the
+        standard error: 'stderr', the monte carlo error: 'mcerr', or any of the confidence
+        intervalls that you have calculated by coding them like: 'ci###'. Fx: 95% (sigma = 0.95)
+        use 'ci95', for 99.7% (sigma = 0.997) use 'ci997'. Don't put decimal signs in the ci!
         
         The accuracy with which the parameters are printed can be set with the accuracy keyword.
         And the amount of information that is printed is determined by full_output. If False, 
         only parameter value and error are printed, if True also boundaries and vary are shown.
         
-        @param accuracy: number of decimal places to print
+        @param accuracy: Number of decimal places to print
         @type accuracy: int
-        @param error: Which error type to print ('stderr' or 'mcerr')
+        @param error: Which error type to print ('stderr', 'mcerr' or 'ci###')
         @type error: string
         @param full_output: Amount of information to print
         @type full_output: bool
@@ -1656,13 +1661,18 @@ class Model(object):
         the value, error, boundaries, if the parameter is varied, and if in the fitting process
         on of the boundaries was reached. 
         
+        The error to be printed can be set with the error keyword. You can chose from the
+        standard error: 'stderr', the monte carlo error: 'mcerr', or any of the confidence
+        intervalls that you have calculated by coding them like: 'ci###'. Fx: 95% (sigma = 0.95)
+        use 'ci95', for 99.7% (sigma = 0.997) use 'ci997'. Don't put decimal signs in the ci!
+        
         The accuracy with which the parameters are printed can be set with the accuracy keyword.
         And the amount of information that is printed is determined by full_output. If False, 
         only parameter value and error are printed, if True also boundaries and vary are shown.
         
         @param accuracy: Number of decimal places to print
         @type accuracy: int
-        @param error: Which error type to print ('stderr' or 'mcerr')
+        @param error: Which error type to print ('stderr', 'mcerr' or 'ci###')
         @type error: string
         @param full_output: Amount of information to print
         @type full_output: bool
@@ -1954,7 +1964,7 @@ class Minimizer(object):
         
         prob_func = None
         if type == 'chi2':
-            def prob_func(Ndata, Nparas, new_chi, best_chi, Nfix=1.):
+            def prob_func(Ndata, Nparas, new_chi, best_chi, nfix=1.):
                 return new_chi
         old = np.seterr(divide='ignore') #turn division errors off temporary
         x, y, grid = lmfit.conf_interval2d(self.minimizer, xpar, ypar, xn, yn, limits=limits,
@@ -2003,6 +2013,9 @@ class Minimizer(object):
         perturb_args = dict(distribution=distribution)
         perturb_args.update(kwargs)
         params = np.empty(shape=(points), dtype=object)
+        
+        #-- create perturbed data
+        #y_perturbed = self._perturb_input_data(points, **perturb_args)
         
         if verbose: print "MC simulations:"
         if verbose: Pmeter = progress.ProgressMeter(total=points)
@@ -2128,16 +2141,18 @@ class Minimizer(object):
         self._minimizers[0] = val
         
     @property
-    def error(self):
+    def errors(self):
         'get error'
         return self._error
     
-    @error.setter
-    def error(self, val):
+    @errors.setter
+    def errors(self, val):
         'set error'
-        if np.shape(val) == ():
+        if val == None:
+            self._error = None
+        elif np.shape(val) == ():
             self._error = np.ones_like(self.x) * val
-        if np.shape(val) == np.shape(self.x):
+        elif np.shape(val) == np.shape(self.x):
             self._error = val
         else:
             self._error = np.ones_like(self.x) * val[0]
@@ -2175,6 +2190,10 @@ class Minimizer(object):
     
     def _perturb_input_data(self, **kwargs):
         "Internal function to perturb the input data for MC simulations"
+        #-- Creating all perturbed points at once would be faster, but I
+        #   Haven't found a way to do that which allows for higher dimentional
+        #   input arrays.
+        
         #-- create iterator for the data points
         y_ = np.empty_like(self.y)
         it = np.nditer([self.y, self.errors, y_], [],
@@ -2205,29 +2224,35 @@ class Minimizer(object):
         
     #}
 
-def minimize(x, y, model, errors=None, weights=None, resfunc=None,
-             engine='leastsq', args=None, kws=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
+def minimize(x, y, model, errors=None, weights=None, resfunc=None, engine='leastsq', 
+             args=None, kws=None, scale_covar=True, iter_cb=None, verbose=True, **fit_kws):
     """
-    Basic minimizer function using the L{Minimizer} class, find values for the parameters so that the
-    sum-of-squares of M{(y-model(x))} is minimized. When the fitting process is completed, the 
-    parameters of the L{Model} are updated with the results. If the I{leastsq} engine is used, estimated
-    uncertainties and correlations will be saved to the L{Model} as well. Returns a I{Minimizer} object.
+    Basic minimizer function using the L{Minimizer} class, find values for the parameters
+    so that the sum-of-squares of M{(y-model(x))} is minimized. When the fitting process 
+    is completed, the parameters of the L{Model} are updated with the results. If the 
+    I{leastsq} engine is used, estimated uncertainties and correlations will be saved to 
+    the L{Model} as well. Returns a I{Minimizer} object.
     
     Fitting engines
     ===============
-    By default, the Levenberg-Marquardt algorithm is used for fitting. While often criticized, including
-    the fact it finds a local minima, this approach has some distinct advantages. These include being 
-    fast, and well-behaved for most curve-fitting needs, and making it easy to estimate uncertainties
-    for and correlations between pairs of fit variables. 
-    Alternative fitting algoritms are at least partially implemented, but not all functions will work
-    with them.
+    By default, the Levenberg-Marquardt algorithm is used for fitting. While often 
+    criticized, including the fact it finds a local minima, this approach has some 
+    distinct advantages. These include being fast, and well-behaved for most curve-
+    fitting needs, and making it easy to estimate uncertainties for and correlations 
+    between pairs of fit variables. Alternative fitting algoritms are at least partially
+    implemented, but not all functions will work with them.
     
-        - leastsq: U{Levenberg-Marquardt <http://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm>}, 
-        U{scipy.optimize.leastsq <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html>}
+        - leastsq: U{Levenberg-Marquardt 
+        <http://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm>}, 
+        U{scipy.optimize.leastsq
+        <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html>}
         - anneal: U{Simulated Annealing <http://en.wikipedia.org/wiki/Simulated_annealing.>},
-        U{scipy.optimize.anneal < http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.anneal.html>}
-        - lbfgsb: U{quasi-Newton optimization  <http://en.wikipedia.org/wiki/Limited-memory_BFGS>}, 
-        U{scipy.optimize.fmin_l_bfgs_b <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html>}
+        U{scipy.optimize.anneal
+        <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.anneal.html>}
+        - lbfgsb: U{quasi-Newton optimization  
+        <http://en.wikipedia.org/wiki/Limited-memory_BFGS>}, 
+        U{scipy.optimize.fmin_l_bfgs_b
+        <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html>}
     
     
     @param x: the independent data array (x data)
@@ -2237,7 +2262,8 @@ def minimize(x, y, model, errors=None, weights=None, resfunc=None,
     @param model: The I{Model} to fit to the data
     @param err: The errors on the y data, same dimentions as y
     @param weights: The weights given to the different y data
-    @param resfunc: A function to calculate the residuals, if not provided standard residual function is used.
+    @param resfunc: A function to calculate the residuals, if not provided standard 
+                    residual function is used.
     @param engine: Which fitting engine to use: 'leastsq', 'anneal', 'lbfgsb'
     @param kws: Extra keyword arguments to be passed to the model
     @param fit_kws: Extra keyword arguments to be passed to the fitter function
@@ -2258,23 +2284,26 @@ def grid_minimize(x, y, model, errors=None, weights=None, engine='leastsq', args
                   kws=None, scale_covar=True, iter_cb=None, points=100, parameters=None,
                   return_all=False, verbose=True, **fit_kws):
     """                  
-    Grid minimizer. Offers the posibility to start minimizing from a grid of starting parameters defined by the used.
-    The number of starting points can be specified, as well as the parameters that are varried. For each parameter 
-    for which the start value should be varied, a minimum and maximum value should be provided when setting up that
-    parameter. The starting values are chosen randomly in the range [min,max]. The other arguments are the same as 
-    for the normal L{minimize} function.
+    Grid minimizer. Offers the posibility to start minimizing from a grid of starting
+    parameters defined by the used. The number of starting points can be specified, as 
+    well as the parameters that are varried. For each parameter for which the start 
+    value should be varied, a minimum and maximum value should be provided when setting
+    up that parameter. The starting values are chosen randomly in the range [min,max].
+    The other arguments are the same as for the normal L{minimize} function.
     
-    If parameters are provided that can not be kicked (starting value can not be varried), they will be removed from
-    the parameters array automaticaly. If no parameters can be kicked, only one minimize will be performed independently
-    from the number of points provided. Pay attention with the vary function of the parameters, even if a parameter has
-    vary = False, it will be kicked by the grid minimizer if it appears in parameters. This parameter will then be fixed
-    at its new starting value.
+    If parameters are provided that can not be kicked (starting value can not be varried), 
+    they will be removed from the parameters array automaticaly. If no parameters can be 
+    kicked, only one minimize will be performed independently from the number of points 
+    provided. Pay attention with the vary function of the parameters, even if a parameter 
+    has vary = False, it will be kicked by the grid minimizer if it appears in parameters.
+    This parameter will then be fixed at its new starting value.
     
     @param parameters: The parameters that you want to randomly chose in the fitting process
     @type parameters: array of strings
     @param points: The number of starting points
     @type points: int
-    @param return_all: if True, the results of all fits are returned, if False, only the best fit is returned.
+    @param return_all: if True, the results of all fits are returned, if False, only the 
+                       best fit is returned.
     @type return_all: Boolean
     
     @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
@@ -2380,79 +2409,185 @@ def get_correlation_factor(residus, full_output=False):
 
 #{ Print and plot functions
 
-def _calc_length(par, accuracy):
+def _calc_length(par, accuracy, field=None):
     """ helper function to calculate the length of the given parameters for parameters2string """
-    if par == None or par == np.nan or np.isinf(par):
-        return 3
-    else:
+    extralen = {'name':1,
+                'value':0,
+                'user_value':0,
+                'init_value':0,
+                'stderr':4,
+                'mcerr':4,
+                'cierr':5,
+                'stderrpc':3,
+                'mcerrpc':3,
+                'cierrpc':3,
+                'bounds':14}
+    
+    def calculate_length(par):
         try:
-            old = np.seterr(divide='ignore') #turn division errors off temporary
-            length = np.floor(np.log10(abs(par))) > 0 and np.floor(np.log10(abs(par))) + 1 or 1
-            length = par < 0 and length + 1 or length # 1 for the minus sign
-            length = length + accuracy + 1 # 1 for the decimal point
-            np.seterr(divide=old['divide'])
-            return length
-        except:
-            return 0
+            if type(par) == str:
+                out = len(par)
+            elif par == None or par == np.nan or np.isposinf(par):
+                out = 3
+            elif np.isneginf(par):
+                out = 4
+            else:
+                old = np.seterr(divide='ignore') #turn division errors off temporary
+                length = np.floor(np.log10(abs(par))) > 0 and np.floor(np.log10(abs(par))) + 1 or 1
+                length = par < 0 and length + 1 or length # 1 for the minus sign
+                length = length + accuracy + 1 # 1 for the decimal point
+                np.seterr(divide=old['divide'])
+                out = int(length)
+        except Exception, e:
+            logging.warning(
+                'Could not calculate length of %s (field = %s)\nerror: %s'%(par, field, e))
+            out = 0
+        return out
+    
+    if type(par) == tuple:
+        out = 0
+        for p in par:
+            out += calculate_length(p)
+    else:
+        out = calculate_length(par)
+            
+    if field != None and field in extralen:
+        return out + extralen[field]
+    else:
+        return out
 
-def parameters2string(parameters, accuracy=2, error='stderr', full_output=False):
-    """ Converts a parameter object to string """
-    old = np.seterr(divide='ignore')
-    out = "Parameters ({:s})\n".format(error)
+def _format_field(par, field, maxlen=10,  accuracy=2):
     fmt = '{{:.{0}f}}'.format(accuracy)
     
-    #-- run over the parameters to calculate the nessessary space
-    max_value = 0
-    max_bounds = 0
-    for name, par in parameters.items():
-        current = _calc_length(par.value, accuracy) + \
-                  _calc_length(getattr(par, error), accuracy) + \
-                  _calc_length(np.array(getattr(par, error)) / np.array(par.value) * 100.,
-                                        accuracy)
-        max_value = current > max_value and current or max_value
-        current = _calc_length(par.min, accuracy) + _calc_length(par.max, accuracy)
-        max_bounds = current > max_bounds and current or max_bounds
-    max_value = int(max_value + 9)
-    max_bounds = int(max_bounds + 5)
+    if field == 'name':
+        temp = '{{:>{0}s}} ='.format(maxlen)
+        return temp.format(par.name)
+    elif field in ['value', 'user_value', 'init_value']:
+        return fmt.format(getattr(par, field))
+    elif field in ['stderr', 'mcerr']:
+        return '+/- ' + fmt.format(getattr(par, field))
+    elif re.match(r"^ci(\d\d+?)$", field):
+        temp = '+ ' + fmt + ' - ' + fmt
+        return temp.format(*getattr(par, field))
+    elif field == 'stderrpc':
+        return '('+fmt.format( getattr(par, field) ) + '%)'
+    elif field == 'bounds':
+        temp = ' bounds = ' + fmt + ' <-> ' + fmt
+        return temp.format(*getattr(par, field))
+    elif field == 'vary':
+        return '(vary)' if getattr(par, field) else '(fixed)'
+    elif field == 'expr':
+        expr = getattr(par, field)
+        return 'expr = %s'%(expr) if expr != None else ''
+    else:
+        return ''
     
-    #-- format the output
-    for name, par in parameters.items():
-        if getattr(par, error) == None:
-            stderr = np.nan
-            prcerr = np.nan
+
+def parameters2string(parameters, accuracy=2, error='stderr', output='result', **kwargs):
+    """ Converts a parameter object to string """
+    out = "Parameters ({:s})\n".format(error)
+    
+    if not hasattr(output, '__itter__'):
+        if output == 'start': 
+            output = ['name', 'init_value', 'bounds', 'vary', 'expr']
+            out = "Parameters (initial)\n"
+        elif output == 'result': 
+            output = ['name', 'value', error, error + 'pc']
+            out = "Parameters ({:s})\n".format(error)
+        elif output == 'full': 
+            output = ['name', 'value', error, error + 'pc', 'bounds', 'vary', 'expr']
+            out = "Parameters ({:s})\n".format(error)
         else:
-            stderr = getattr(par, error)
-            prcerr = abs(float(np.array(stderr) / np.array(par.value) * 100.))
+            output = ['name', 'value']
+            out = "Parameters \n"
+    
+    #-- calculate the nessessary space
+    maxlen = np.zeros(len(output), dtype=int)
+    for i, field in enumerate(output):
+        max_value = 0
+        for name, par in parameters.items():
+            current = _calc_length(getattr(par, field), accuracy, field=field)
+            if current > max_value: max_value = current
+        maxlen[i] = max_value
+    
+    #-- create matrix with all values in requered accuracy as string
+    roundedvals = np.empty(shape=(len(parameters.keys()), len(output)), 
+                          dtype="|S{:.0f}".format(np.max(maxlen)))
+    for i, (name, par) in enumerate(parameters.items()):
+        for j, field in enumerate(output):
+            roundedvals[i,j] = _format_field(par, field, maxlen[j], accuracy)
+    
+    #-- create the template
+    template = '    '
+    for max_value in maxlen:
+        template += "{{:<{0}s}} ".format(max_value)
+    template += '\n'
         
-        value = "{fmt} +/- {fmt} ({fmt}%)".format(fmt=fmt).format(par.value, stderr, prcerr)
+    #-- create the output string
+    for line in roundedvals:
+        out += template.format(*line)
         
-        if not full_output:
-            template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
-        else:
-            try:
-                lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ''
-            except:
-                lim = ''
-            if par.min != None and par.max != None:
-                bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
-            elif par.max != None:
-                bounds = 'None <-> {{:.{0}f}}'.format(accuracy).format(par.max)
-            elif par.min != None:
-                bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
-            else:
-                bounds = 'None <-> None'
-            if par.expr != None:
-                expr = "= {expr}".format(expr=par.expr)
-            else:
-                expr = ""
-            template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
-            template = template.format(name=name, value=value, vlim=max_value, bounds=bounds,
-                                       blim=max_bounds, vary=(par.vary and '(fit)' or '(fixed)'),
-                                       limit=lim, expr=expr)
-        out += template
-        
-    np.seterr(divide=old['divide'])
     return out.rstrip()
+    
+
+#def parameters2string(parameters, accuracy=2, error='stderr', full_output=False):
+    #""" Converts a parameter object to string """
+    #old = np.seterr(divide='ignore')
+    #out = "Parameters ({:s})\n".format(error)
+    #fmt = '{{:.{0}f}}'.format(accuracy)
+    
+    ##-- run over the parameters to calculate the nessessary space
+    #max_value = 0
+    #max_bounds = 0
+    #for name, par in parameters.items():
+        #current = _calc_length(par.value, accuracy) + \
+                  #_calc_length(getattr(par, error), accuracy) + \
+                  #_calc_length(np.array(getattr(par, error)) / np.array(par.value) * 100.,
+                                        #accuracy)
+        #max_value = current > max_value and current or max_value
+        #current = _calc_length(par.min, accuracy) + _calc_length(par.max, accuracy)
+        #max_bounds = current > max_bounds and current or max_bounds
+    #max_value = int(max_value + 9)
+    #max_bounds = int(max_bounds + 5)
+    
+    ##-- format the output
+    #for name, par in parameters.items():
+        #if getattr(par, error) == None:
+            #stderr = np.nan
+            #prcerr = np.nan
+        #else:
+            #stderr = getattr(par, error)
+            #prcerr = abs(float(np.array(stderr) / np.array(par.value) * 100.))
+        
+        #value = "{fmt} +/- {fmt} ({fmt}%)".format(fmt=fmt).format(par.value, stderr, prcerr)
+        
+        #if not full_output:
+            #template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
+        #else:
+            #try:
+                #lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ''
+            #except:
+                #lim = ''
+            #if par.min != None and par.max != None:
+                #bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
+            #elif par.max != None:
+                #bounds = 'None <-> {{:.{0}f}}'.format(accuracy).format(par.max)
+            #elif par.min != None:
+                #bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
+            #else:
+                #bounds = 'None <-> None'
+            #if par.expr != None:
+                #expr = "= {expr}".format(expr=par.expr)
+            #else:
+                #expr = ""
+            #template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
+            #template = template.format(name=name, value=value, vlim=max_value, bounds=bounds,
+                                       #blim=max_bounds, vary=(par.vary and '(fit)' or '(fixed)'),
+                                       #limit=lim, expr=expr)
+        #out += template
+        
+    #np.seterr(divide=old['divide'])
+    #return out.rstrip()
 
 def correlation2string(parameters, accuracy=3, limit=0.100):
     """ Converts the correlation of different parameters to string """

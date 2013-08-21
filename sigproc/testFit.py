@@ -140,7 +140,22 @@ class TestCase0LMFit(FitTestCase):
         self.assertTrue(hasattr(par, 'cierr'), msg='Parameters does not have var cierr')
         self.assertTrue(hasattr(par, 'mcerr'), msg='Parameters does not have var mcerr')
     
-    def test4ParameterKicking(self):
+    def test4CIerrAttr(self):
+        """ sigproc.lmfit Parameter: direct reach of cierr """
+        par = self.pars['test1']
+        
+        par.cierr = {'0.95':(10., 20.), '0.997':(8.7, 22.6)}
+        
+        msg = 'Can not reach the ci errors with their shorthand ci95 and ci997'
+        self.assertArrayEqual(par.ci95, (10., 20.), msg=msg)
+        self.assertArrayEqual(par.ci997, (8.7, 22.6), msg=msg)
+        
+        msg = 'Not calculated ci does not return (nan, nan)'
+        ci = par.ci654
+        self.assertTrue(np.isnan(ci[0]), msg=msg)
+        self.assertTrue(np.isnan(ci[1]), msg=msg)
+    
+    def test5ParameterKicking(self):
         """ sigproc.lmfit Parameter: kicking """
         par = self.pars['test1']
         
@@ -157,7 +172,7 @@ class TestCase0LMFit(FitTestCase):
         self.assertGreaterEqual(par.value, par.min, msg=msg)
         self.assertLessEqual(par.value, par.max, msg=msg)
         
-    def test5ParametersKicking(self):
+    def test6ParametersKicking(self):
         """ sigproc.lmfit Parameters: kicking """
         pars = self.pars
         
@@ -176,7 +191,7 @@ class TestCase0LMFit(FitTestCase):
         self.assertLessEqual(pars['test1'].value, pars['test1'].max, msg=msg)
         self.assertLessEqual(pars['test2'].value, pars['test2'].max, msg=msg)
         
-    def test6ConfidenceIntervallOutputFormat(self):
+    def test7ConfidenceIntervallOutputFormat(self):
         """ sigproc.lmfit conf_interval: format """
         self.assertTrue('amp' in self.ci, msg='parameters not correct in ci dictionary')
         self.assertTrue('decay' in self.ci, msg='parameters not correct in ci dictionary')
@@ -189,7 +204,7 @@ class TestCase0LMFit(FitTestCase):
         
         self.assertEqual(len(self.ci['amp'][0.95]), 2, msg='number of ci values not correct')
         
-    def test7ConfidenceIntervallOutputValues(self):
+    def test8ConfidenceIntervallOutputValues(self):
         """ sigproc.lmfit conf_interval: values """
         ci = self.ci
         
@@ -385,10 +400,12 @@ class TestCase3Minimizer(FitTestCase):
         """ sigproc.fit.Minimizer _perturb_input_data """
         result = fit.minimize(self.x, self.y, self.model, errors=self.errors)
         
+        result.x = self.x.reshape(2,50)
         result.y = self.y.reshape(2,50)
         result.errors = result.errors.reshape(2,50)
         
         np.random.seed(11)
+        npoints = 100
         y_ = result._perturb_input_data()
         dy = np.abs(np.ravel(y_) - self.y)
         
