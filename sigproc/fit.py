@@ -2014,15 +2014,15 @@ class Minimizer(object):
         perturb_args.update(kwargs)
         params = np.empty(shape=(points), dtype=object)
         
-        #-- create perturbed data
-        #y_perturbed = self._perturb_input_data(points, **perturb_args)
+        #-- perturb the data
+        y_perturbed = self._perturb_input_data(points, **perturb_args)
         
         if verbose: print "MC simulations:"
         if verbose: Pmeter = progress.ProgressMeter(total=points)
-        for i in range(points):
+        for i, y_ in enumerate(y_perturbed):
             if verbose: Pmeter.update(1)
-            #-- perturb the data
-            y_ = self._perturb_input_data(**perturb_args)
+            ##-- perturb the data
+            #y_ = self._perturb_input_data(**perturb_args)
         
             #-- setup the fit
             pars = copy.deepcopy(self.model.parameters)
@@ -2188,20 +2188,18 @@ class Minimizer(object):
         else:
             self.jacobian = None
     
-    def _perturb_input_data(self, **kwargs):
+    def _perturb_input_data(self, points, **kwargs):
         "Internal function to perturb the input data for MC simulations"
-        #-- Creating all perturbed points at once would be faster, but I
-        #   Haven't found a way to do that which allows for higher dimentional
-        #   input arrays.
         
         #-- create iterator for the data points
-        y_ = np.empty_like(self.y)
-        it = np.nditer([self.y, self.errors, y_], [],
-                        [['readonly'], ['readonly'], ['writeonly','allocate']])
+        y_ = np.empty( (points,)+self.y.shape, dtype=float)
+        it = np.nditer([self.y, self.errors], ['multi_index'], [['readonly'], ['readonly']])
         
         #-- perturb the data
-        for (a, b, c) in it:
-            c[...] = np.random.normal(loc=a, scale=b)
+        while not it.finished:
+            index = (slice(0,points),) + it.multi_index
+            y_[index] = np.random.normal(loc=it[0], scale=it[1], size=points)
+            it.iternext()
             
         return y_
     
