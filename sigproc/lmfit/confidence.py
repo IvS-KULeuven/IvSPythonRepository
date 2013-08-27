@@ -348,7 +348,7 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
     x.vary = False
     y.vary = False
 
-    def calc_prob(vals, restore=False):
+    def calc_prob(vals, restore=True):
         if restore:
             restore_vals(org, minimizer.params)
         x.value = vals[0]

@@ -55,6 +55,19 @@ import numpy as np
 from ivs.aux import decorators
 
 @decorators.extend(Parameters)
+def can_kick(self,pnames=None):
+    """
+    Checks if the given parameters can be kicked and returns the good ones in a list.
+    """
+    if pnames == None:
+        pnames = self.keys()
+    kick_pars = []
+    for key in pnames:
+        if self[key].can_kick():
+            kick_pars.append(key)
+    return kick_pars
+
+@decorators.extend(Parameters)
 def kick(self,pnames=None):
     """
     Kicks the given parameters to a new value chosen from the uniform 
@@ -64,6 +77,18 @@ def kick(self,pnames=None):
         pnames = self.keys()
     for key in pnames:
         self[key].kick()
+
+@decorators.extend(Parameters)
+def __getattr__(self, name):
+    """
+    Allow easy access to the parameter attributes like value ect.
+    fx. all values can be reached with Parameters.value
+    """
+    if name in ['name', 'value', 'min', 'max', 'vary', 'expr',
+                'stderr', 'mcerr', 'cierr']:
+        return [getattr(p, name) for n, p in self.items()]
+    else:
+        raise AttributeError
 
 @decorators.extend(Parameter)
 def __init__(self, name=None, value=None, vary=True,
@@ -86,6 +111,14 @@ def __init__(self, name=None, value=None, vary=True,
     if self.min is not None and value < self.min:
         self._val = self.min
     self.from_internal = lambda val: val
+
+@decorators.extend(Parameter)
+def can_kick(self):
+    """
+    Returns True is the parameter can be kicked (has defined min and max)
+    """
+    return self.min != None and self.max != None and \
+           np.isfinite(self.min) and np.isfinite(self.max)
 
 @decorators.extend(Parameter)
 def kick(self):
@@ -118,7 +151,10 @@ def __getattr__(self, name):
         if error == None:
             return np.nan
         else:
-            return abs(error / self.value * 100.)
+            old = np.seterr(divide='ignore')
+            pc = abs(np.array(error) / np.array(self.value * 100.))
+            np.seterr(divide=old['divide'])
+            return pc
     else:
         raise AttributeError('%s not assigned'%(name))
 

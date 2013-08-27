@@ -190,8 +190,27 @@ class TestCase0LMFit(FitTestCase):
         self.assertGreaterEqual(pars['test2'].value, pars['test2'].min, msg=msg)
         self.assertLessEqual(pars['test1'].value, pars['test1'].max, msg=msg)
         self.assertLessEqual(pars['test2'].value, pars['test2'].max, msg=msg)
+    
+    def test7ReachParamAttrThroughParams(self):
+        """ sigproc.lmfit Parameters: reach Parameter attributes """
+        self.pars = lmfit.Parameters()
+        self.pars.add('test1', value=15, min=10, max=20)
+        self.pars.add('test2', value=2.39, min=-4.5, max=4.5)
         
-    def test7ConfidenceIntervallOutputFormat(self):
+        pars = self.pars
+        
+        msg = 'Cannot reach names, values,... through the Parameters object'
+        for val in ['name', 'value', 'min', 'max', 'vary', 'expr', 'stderr', 'mcerr', 'cierr']:
+            self.assertTrue(hasattr(pars, val), msg=msg)
+        
+        msg = 'name, value, min or max return the wrong values'
+        self.assertArrayEqual(pars.name, ['test1', 'test2'], msg=msg)
+        self.assertArrayEqual(pars.value, [15, 2.39], msg=msg)
+        self.assertArrayEqual(pars.min, [10, -4.5], msg=msg)
+        self.assertArrayEqual(pars.max, [20, 4.5], msg=msg)
+        
+    
+    def test8ConfidenceIntervallOutputFormat(self):
         """ sigproc.lmfit conf_interval: format """
         self.assertTrue('amp' in self.ci, msg='parameters not correct in ci dictionary')
         self.assertTrue('decay' in self.ci, msg='parameters not correct in ci dictionary')
@@ -204,7 +223,7 @@ class TestCase0LMFit(FitTestCase):
         
         self.assertEqual(len(self.ci['amp'][0.95]), 2, msg='number of ci values not correct')
         
-    def test8ConfidenceIntervallOutputValues(self):
+    def test9ConfidenceIntervallOutputValues(self):
         """ sigproc.lmfit conf_interval: values """
         ci = self.ci
         
@@ -214,7 +233,9 @@ class TestCase0LMFit(FitTestCase):
                                     msg='CI values not correct')
         self.assertArrayAlmostEqual(ci['shift'][0.997], (0.1059, 0.1351), places=2,
                                     msg='CI values not correct')
-
+    
+    
+    
 class TestCase1Function(FitTestCase):
     
     def setUp(self):
@@ -406,11 +427,13 @@ class TestCase3Minimizer(FitTestCase):
         
         np.random.seed(11)
         npoints = 100
-        y_ = result._perturb_input_data()
-        dy = np.abs(np.ravel(y_) - self.y)
+        y_ = result._perturb_input_data(100)
+        dy = np.abs(np.ravel(y_[0]) - np.ravel(result.y))
+        
+        print dy
         
         msg = 'Perturbed data has wrong shape'
-        self.assertEqual(y_.shape, result.y.shape, msg=msg)
+        self.assertEqual(y_.shape, (100,) + result.y.shape, msg=msg)
         
         msg = 'Perturbed data is NOT perturbed'
         self.assertTrue(np.all(dy > 0.), msg=msg)
@@ -477,15 +500,14 @@ class TestCase4FittingFunction(FitTestCase):
         """ I sigproc.fit.Minimizer Function grid_minimize """
         model = self.model
         points = 100
-        fitters, startpars, newmodels, chisqrs = fit.grid_minimize(self.x, self.y, model,
-                                                    parameters=self.pnames, points=points, 
-                                                    return_all=True, verbose=False)
+        fitters, newmodels, chisqrs = fit.grid_minimize(self.x, self.y, model,
+                                            parameters=self.pnames, points=points, 
+                                            return_all=True, verbose=False)
         values = newmodels[0].get_parameters()[0]
-        pars1 = [p['ampl'] for p in startpars]
+        pars1 = [mod_.parameters['ampl'] for mod_ in newmodels]
         
         msg = 'Not correct amount of fitting points'
         self.assertEqual(len(fitters), points, msg=msg)
-        self.assertEqual(len(startpars), points, msg=msg)
         self.assertEqual(len(newmodels), points, msg=msg)
         self.assertEqual(len(chisqrs), points, msg=msg)
         
@@ -573,16 +595,18 @@ class TestCase4FittingFunction(FitTestCase):
         result = fit.minimize(self.x, self.y, self.model)
         
         np.random.seed(11)
-        mcerrors = result.calculate_MC_error(errors=0.5, points=100, short_output=True)
+        mcerrors = result.calculate_MC_error(errors=0.5, points=100, short_output=True,
+                                             verbose=False)
         
         msg = 'Short output returned wrong type (array expected)'
         self.assertEqual(np.shape(mcerrors), (3,), msg=msg)
         
         msg = 'Calculated MC errors are wrong'
-        self.assertArrayAlmostEqual(mcerrors, [0.01805, 0.00109, 0.00607], places=3, msg=msg)
+        self.assertArrayAlmostEqual(mcerrors, [0.02156, 0.00108, 0.00607], places=3, msg=msg)
         
         np.random.seed(11)
-        mcerrors = result.calculate_MC_error(errors=0.5, points=50, short_output=False)
+        mcerrors = result.calculate_MC_error(errors=0.5, points=50, short_output=False, 
+                                             verbose=False)
         
         msg = 'Long output returned wrong type (dict expected)'
         self.assertEqual(type(mcerrors), dict, msg=msg)

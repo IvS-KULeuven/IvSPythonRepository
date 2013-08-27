@@ -1772,53 +1772,58 @@ class Model(object):
 class Minimizer(object): 
     """
     A minimizer class on the U{lmfit <http://cars9.uchicago.edu/software/python/lmfit/index.html>}
-    Python package, which provides a simple, flexible interface to non-linear least-squares 
-    optimization, or curve fitting. The package is build around the Levenberg-Marquardt algorithm of 
-    scipy, but 2 other minimizers: limited memory Broyden-Fletcher-Goldfarb-Shanno and simulated
-    annealing are partly supported as well. For the Levenberg-Marquardt algorithm, the estimated 
-    uncertainties and correlation between fitted variables are calculated as well.
+    Python package, which provides a simple, flexible interface to non-linear 
+    least-squares optimization, or curve fitting. The package is build around the 
+    Levenberg-Marquardt algorithm of scipy, but 2 other minimizers: limited memory 
+    Broyden-Fletcher-Goldfarb-Shanno and simulated annealing are partly supported as 
+    well. For the Levenberg-Marquardt algorithm, the estimated uncertainties and 
+    correlation between fitted variables are calculated as well.
     
-    This minimizer finds the best parameters to fit a given L{Model} or L{Function} to a set of
-    data. You only need to provide the Model and data. Weighted fitting is supported.
+    This minimizer finds the best parameters to fit a given L{Model} or L{Function} to a
+    set of data. You only need to provide the Model and data. Weighted fitting is 
+    supported.
     
     This minimizer uses the basic residual function::
     
         residuals = ( data - model(x) ) * weights
         
-    If a more advanced residual functions is required, fx when working with multi dimentional data,
-    the used can specify its own residual function in the provided Function or Model, or by setting
-    the I{resfunc} keyword. This residual function needs to be of the following call sign::
+    If a more advanced residual functions is required, fx when working with multi 
+    dimentional data, the used can specify its own residual function in the provided
+    Function or Model, or by setting the I{resfunc} keyword. This residual function needs
+    to be of the following call sign::
     
         resfunc(synth, data, weights=None, errors=None, **kwargs)
     
     Functions
     =========
     
-    A L{Function} is basicaly a function together with a list of the parameters that is needs. In
-    the internal representation the parameters are represented as a Parameters object. However, 
-    the user does not need to now how to handle this, and can just provided or retrieve the parameter
-    values using arrays. Every fitting parameter are extensions of simple numerical variables with
-    the following properties:
+    A L{Function} is basicaly a function together with a list of the parameters that is 
+    needs. In the internal representation the parameters are represented as a Parameters 
+    object. However, the user does not need to now how to handle this, and can just 
+    provided or retrieve the parameter values using arrays. Every fitting parameter are
+    extensions of simple numerical variables with the following properties:
 
         - Parameters can be fixed or floated in the fit.
         - Parameters can be bounded with a minimum and/or maximum value.
-        - Parameters can be written as simple mathematical expressions of other Parameters, using the
-        U{asteval module <http://newville.github.com/asteval/>}. These values will be re-evaluated at
-        each step in the fit, so that the expression is satisfied. This gives a simple but flexible
-        approach to constraining fit variables. 
+        - Parameters can be written as simple mathematical expressions of other 
+          Parameters, using the U{asteval module <http://newville.github.com/asteval/>}.
+          These values will be re-evaluated at each step in the fit, so that the 
+          expression is satisfied. This gives a simple but flexible approach to 
+          constraining fit variables. 
     
     Models
     ======
     
-    A L{Model} is a combination of Functions with its own parameter set. The Functions are provided 
-    as a list, and a gamma function can be given to describe how the functions are combined. Methods
-    to handle the parameters in a model are provided, but the user is recommended handle the parameters
-    at Function level as the naming of the parameters changes at Model level. 
-
+    A L{Model} is a combination of Functions with its own parameter set. The Functions
+    are provided as a list, and a gamma function can be given to describe how the 
+    functions are combined. Methods to handle the parameters in a model are provided, but
+    the user is recommended handle the parameters at Function level as the naming of the 
+    parameters changes at Model level. 
     """
 
     def __init__(self, x, y, model, errors=None, weights=None, resfunc=None,
-             engine='leastsq', args=None, kws=None, **kwargs):
+             engine='leastsq', args=None, kws=None, grid_points=1, grid_params=None,
+             verbose=False, **kwargs):
         
         self.x = x
         self.y = y
@@ -1848,11 +1853,10 @@ class Minimizer(object):
             fcn_kws.update(self.model_kws)
         
         #-- Setup the Minimizer object
-        self.minimizer = lmfit.Minimizer(self.residuals, params, fcn_args=fcn_args,
-                                         fcn_kws=fcn_kws, **self.fit_kws)
+        self._prepare_minimizer(fcn_args, fcn_kws, grid_points, grid_params)
         
         #-- Actual fitting
-        self.minimizer.start_minimize(engine, Dfun=self.jacobian)
+        self._start_minimize(engine, verbose=verbose, Dfun=self.jacobian)
     
     #{ Error determination
     
@@ -2021,8 +2025,6 @@ class Minimizer(object):
         if verbose: Pmeter = progress.ProgressMeter(total=points)
         for i, y_ in enumerate(y_perturbed):
             if verbose: Pmeter.update(1)
-            ##-- perturb the data
-            #y_ = self._perturb_input_data(**perturb_args)
         
             #-- setup the fit
             pars = copy.deepcopy(self.model.parameters)
@@ -2031,7 +2033,7 @@ class Minimizer(object):
             if self.model_kws != None:
                 fcn_kws.update(self.model_kws)
             result = lmfit.Minimizer(self.residuals, pars, fcn_args=fcn_args,
-                                         fcn_kws=fcn_kws, **self.fit_kws)
+                                     fcn_kws=fcn_kws, **self.fit_kws)
             
             #-- run the fit and save the results
             result.start_minimize(self.engine, Dfun=self.jacobian)
@@ -2051,61 +2053,81 @@ class Minimizer(object):
     
     #{ Plotting Functions
     
-    def plot_results(self, eval_points=1000):
+    def plot_results(self, points=1000, axis=0, **kwargs):
         """
         Creates a basic plot with the fit results and corresponding residuals.
         
-        @param eval_points: Number of points to use when plotting the best fit model.
-        @type eval_points: int
+        @param points: Number of points to use when plotting the best fit model.
+        @type points: int
+        @param axis: In case of multi-dim input along which axis to split (0 or 1)
+        @type axis: int
         """
         
-        xf = np.linspace(min(self.x),max(self.x),eval_points)
-        yf = self.model.evaluate(xf)
+        #-- transform to 2D if nessessary
+        res = np.atleast_2d(self.y - self.model.evaluate(self.x))
+        x, y = np.atleast_2d(self.x), np.atleast_2d(self.y)
+        if axis == 1: x, y, res = x.T, y.T, res.T
+        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(x)
         
-        pl.subplots_adjust(left=0.10, bottom=0.1, right=0.97, top=0.95,wspace=0.0, hspace=0.0)
+        #-- create synthetic x-data
+        xf = np.empty((len(x), points), dtype=float)
+        for i, x_ in enumerate(x):
+            xf[i] = np.linspace(np.min(x_), np.max(x_), points)
         
+        #-- calculate the synthetic y-data
+        yf = np.atleast_2d(self.model.evaluate(np.squeeze(xf)))
+        
+        #-- setup a colorMap
+        cmap = cm = pl.get_cmap('gist_rainbow') 
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(x))
+        scalarMap = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+        
+        #-- plot fit everything
+        pl.subplots_adjust(wspace=0.0, hspace=0.0)
         ax = pl.subplot2grid((3,4), (0,0), rowspan=2, colspan=4)
-        if self.errors == None:
-            pl.plot(self.x,self.y,'+b')
-        else:
-            pl.errorbar(self.x,self.y, yerr=self.errors, ls='', marker='+', color='b')
-        pl.plot(xf,yf,'-r')
-        xlim = pl.xlim([min(self.x)-0.05*(max(self.x)-min(self.x)), max(self.x)+0.05*(max(self.x)-min(self.x))])
-        pl.ylim([min(self.y)-0.05*(max(self.y)-min(self.y)), max(self.y)+0.05*(max(self.y)-min(self.y))])
-        pl.ylabel('$y$')
+        for i, (x_, y_, e_, xf_, yf_) in enumerate(zip(x, y, err, xf, yf)):
+            color = scalarMap.to_rgba(i)
+            pl.errorbar(x_, y_, yerr=e_, marker='+', ms=5, ls='', color=color)
+            pl.plot(xf_, yf_, ls='--', color=color)
+        pl.ylabel('$Y$')
         for tick in ax.axes.get_xticklabels():
             tick.set_visible(False)
             tick.set_fontsize(0.0)
             
+        #-- plot residuals
         ax = pl.subplot2grid((3,4), (2,0), colspan=4)
-        if self.errors == None:
-            pl.plot(self.x,self.y-self.model.evaluate(self.x), '+b')
-        else:
-            pl.errorbar(self.x,self.y-self.model.evaluate(self.x), yerr=self.errors, ls='', marker='+', color='b')
+        for i, (x_, res_) in enumerate(zip(x,res)):
+            color = scalarMap.to_rgba(i)
+            pl.errorbar(x_, res_, yerr=e_, marker='+', ms=5, ls='', color=color)
         pl.axhline(y=0, ls=':', color='r')
-        pl.xlim(xlim)
         pl.ylabel('$O-C$')
-        pl.xlabel('$x$')
-    
-    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, type='prob',
-                                 filled=True, **kwargs):
+        pl.xlabel('$X$')
+
+    def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, 
+                                 type='prob', filled=True, **kwargs):
         """
-        Plot the confidence interval for 2 given parameters. Both the  confidence interval calculated
-        using the F-test method from the I{estimate_error} method, and the normal chi squares can be 
-        plotted using the I{type} keyword. In case of chi2, the log10 of the chi squares is plotted to
-        improve the clarity of the plot.
+        Plot the confidence interval for 2 given parameters. Both the  confidence
+        interval calculated using the F-test method from the I{estimate_error} method,
+        and the normal chi squares can be  plotted using the I{type} keyword. In case
+        of chi2, the log10 of the chi squares is plotted to improve the clarity of the
+        plot.
         
         Extra kwargs are passed to C{confourf} or C{contour}.
         
         @param xname: The parameter on the x axis
         @param yname: The parameter on the y axis
-        @param res: The resolution of the grid over which the confidence intervall is calculated
-        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
-        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare plot. 
+        @param res: The resolution of the grid over which the confidence intervall
+                    is calculated
+        @param limits: The upper and lower limit on the parameters for which the 
+                       confidence intervall is calculated. If None, 5 times the stderr
+                       is used.
+        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare
+                     plot. 
         @param filled: True for filled contour plot, False for normal contour plot
         """
         
-        x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  limits=limits, type=type)
+        x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  
+                                          limits=limits, type=type)
         
         if type=='prob':
             levels = np.linspace(0,100,25)
@@ -2124,6 +2146,57 @@ class Minimizer(object):
             cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
         pl.plot(self.params[xpar].value, self.params[ypar].value, '+r', ms=10, mew=2)
+        pl.xlabel(xpar)
+        pl.ylabel(ypar)
+    
+    def plot_grid_convergence(self, xpar=None, ypar=None, chi2lim=None, **kwargs):
+        """
+        Plot the convergence path of the results from grid_minimize stored in this
+        minimizer. The start values of the two selected parameters are plotted
+        conected to there final best fit values, while using a color coding for the
+        chisqr value of the fit result.
+        
+        @param xpar: The parameter on the x axis
+        @param ypar: The parameter on the y axis
+        @param chi2lim: Optional limit on the chi2 value (in % of the maximum chi2)
+        """
+        
+        #-- Get the minimizer grid
+        minis, models, chisqrs = self.grid
+        
+        if chi2lim != None:
+            selected = np.where(chisqrs <= chi2lim*max(chisqrs))
+            models = models[selected]
+            chisqrs = chisqrs[selected]
+        models, chisqrs = models[::-1], chisqrs[::-1]
+        
+        #-- read the requested parameter values
+        x1 = np.empty_like(chisqrs)
+        y1 = np.empty_like(chisqrs)
+        x2 = np.empty_like(chisqrs)
+        y2 = np.empty_like(chisqrs)
+        for i, mod in enumerate(models):
+            x1[i] = mod.parameters[xpar].user_value
+            y1[i] = mod.parameters[ypar].user_value
+            x2[i] = mod.parameters[xpar].value
+            y2[i] = mod.parameters[ypar].value
+
+        #-- set the colors
+        jet = cm = pl.get_cmap('jet') 
+        cNorm = mpl.colors.Normalize(vmin=0, vmax=max(chisqrs))
+        scalarMap = mpl.cm.ScalarMappable(norm=cNorm, cmap=jet)
+
+        #-- plot the arrows
+        ax=pl.gca()
+        for x1_, y1_, x2_, y2_, chi2 in zip(x1,y1,x2,y2, chisqrs):
+            colorVal = scalarMap.to_rgba(chi2)
+            ax.add_patch(mpl.patches.FancyArrowPatch((x1_,y1_),(x2_,y2_),
+                         arrowstyle='->',mutation_scale=30, color=colorVal))
+        pl.scatter(x2, y2, s=30, c=chisqrs, cmap=mpl.cm.jet, edgecolors=None, lw=0)
+        pl.plot(x2[-1],y2[-1], '+r', ms=12, mew=3)
+        pl.colorbar(fraction=0.08)
+        pl.xlim(min([min(x1),min(x2)]), max([max(x1),max(x2)]))
+        pl.ylim(min([min(y1),min(y2)]), max([max(y1),max(y2)]))
         pl.xlabel(xpar)
         pl.ylabel(ypar)
     
@@ -2156,6 +2229,18 @@ class Minimizer(object):
             self._error = val
         else:
             self._error = np.ones_like(self.x) * val[0]
+        
+    @property
+    def grid(self):
+        'get minimizer grid'
+        models = np.empty(len(self._minimizers), dtype=Model)
+        chisqrs = np.empty(len(self._minimizers), dtype=float)
+        for i, mini in enumerate(self._minimizers):
+            models[i] = copy.deepcopy(self.model)
+            models[i].parameters = mini.params
+            chisqrs[i] = mini.chisqr
+        return self._minimizers, models, chisqrs
+        
     #}
     
     #{ Internal Functions
@@ -2188,6 +2273,49 @@ class Minimizer(object):
         else:
             self.jacobian = None
     
+    def _prepare_minimizer(self, fcn_args, fcn_kws, grid_points=1, grid_params=None,
+                           append=False):
+        "Internal function to prepare the minimizer"
+        
+        params = self.model.parameters
+        grid_params = params.can_kick(pnames=grid_params)
+        minimizers = np.empty(grid_points, dtype=Minimizer)
+        
+        if grid_points == 1 or len(grid_params) == 0:
+            #-- just one fit
+            minimizers[0] = lmfit.Minimizer(self.residuals, params, fcn_args=fcn_args,
+                                         fcn_kws=fcn_kws, **self.fit_kws)
+        else:
+            #-- create the minimizer grid
+            for i in range(grid_points):
+                params_ = copy.deepcopy(params)
+                params_.kick(pnames=grid_params)
+                minimizers[i] = lmfit.Minimizer(self.residuals, params_, fcn_args=fcn_args,
+                                            fcn_kws=fcn_kws, **self.fit_kws)
+        if append:
+            self._minimizers.append(minimizers)
+        else:
+            self._minimizers = minimizers
+        
+    def _start_minimize(self, engine, verbose=False, **kwargs):
+        "Internal function that starts all minimizers one by one"
+        #-- Possible termial output
+        if len(self._minimizers) <= 1: verbose = False
+        if verbose: print "Grid Minimizer:"
+        if verbose: Pmeter = progress.ProgressMeter(total=len(self._minimizers))
+        
+        #-- Start all minimizers
+        chisqrs = np.empty_like(self._minimizers, dtype=float)
+        for i, mini in enumerate(self._minimizers):
+            if verbose: Pmeter.update(1)
+            mini.start_minimize(engine, **kwargs)
+            chisqrs[i] = mini.chisqr
+            
+        #-- Sort on chisqr
+        inds = chisqrs.argsort()
+        self._minimizers = self._minimizers[inds]
+        self.model.parameters = self._minimizers[0].params
+    
     def _perturb_input_data(self, points, **kwargs):
         "Internal function to perturb the input data for MC simulations"
         
@@ -2205,12 +2333,11 @@ class Minimizer(object):
     
     def _mc_error_from_parameters(self, params):
         " Use standard deviation to get the error on a parameter "
-        #-- calculate the 
+        #-- calculate the std
         pnames = params[0].keys()
         errors = np.zeros((len(params), len(pnames)))
         for i, pars in enumerate(params):
-            values = np.array([pars[pname].value for pname in pnames])
-            errors[i] = values
+            errors[i] = np.array(pars.value)
         errors = np.std(errors, axis=0)
         
         #-- store the error in the original parameter object
@@ -2272,15 +2399,15 @@ def minimize(x, y, model, errors=None, weights=None, resfunc=None, engine='least
     
     fitter = Minimizer(x, y, model, errors=errors, weights=weights, resfunc=resfunc,
                        engine=engine, args=args, kws=kws,  scale_covar=scale_covar,
-                       iter_cb=iter_cb, **fit_kws)
+                       iter_cb=iter_cb, verbose=verbose, **fit_kws)
     if fitter.message and verbose:
         logger.warning(fitter.message)
     return fitter    
 
 
-def grid_minimize(x, y, model, errors=None, weights=None, engine='leastsq', args=None, 
-                  kws=None, scale_covar=True, iter_cb=None, points=100, parameters=None,
-                  return_all=False, verbose=True, **fit_kws):
+def grid_minimize(x, y, model, errors=None, weights=None, resfunc=None, engine='leastsq',
+                  args=None, kws=None, scale_covar=True, iter_cb=None, points=100, 
+                  parameters=None, return_all=False, verbose=True, **fit_kws):
     """                  
     Grid minimizer. Offers the posibility to start minimizing from a grid of starting
     parameters defined by the used. The number of starting points can be specified, as 
@@ -2304,67 +2431,21 @@ def grid_minimize(x, y, model, errors=None, weights=None, engine='leastsq', args
                        best fit is returned.
     @type return_all: Boolean
     
-    @return: The best fitter, or all fitters as [fitters, startpars, newmodels, chisqrs]
-    @rtype: Minimizer object or array of [Minimizer, Parameters, Model, float]
+    @return: The best minimizer, or all minimizers as [minimizers, newmodels, chisqrs]
+    @rtype: Minimizer object or array of [Minimizer, Model, float]
     """
-    if parameters == None:
-        parameters = model.par_names
     
-    #-- check if all grid parameters actually have boundaries.
-    kick_parameters = []
-    for name in parameters:
-        if model.parameters[name].min == None or model.parameters[name].max == None:
-            logging.warning('Parameter %s has no boundaries defined and will not be kicked by the grid minimizer!'%(name))
-        else:
-            kick_parameters.append(name)
-    parameters = kick_parameters
-    if len(parameters) == 0:
-        logging.warning('No parameters provided to kick, grid minimize will not be performed!')
-        startpar = copy.deepcopy(model.parameters)
-        result = minimize(x, y, model, errors=errors, weights=weights, engine=engine, args=args,
-                               kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        if not return_all:
-            return result
-        else:
-            return [result], [startpar], [model], [result.chisqr]
-    
-    #-- setup result arrays
-    newmodels = np.zeros(points, dtype=Model)
-    startpars = np.zeros(points, dtype=lmfit.Parameters)
-    fitters = np.zeros(points, dtype=Minimizer)
-    chisqrs = np.zeros(points, dtype=float)
-    
-    #-- create new models
-    for i in range(points):
-        mod_ = copy.deepcopy(model)
-        mod_.parameters.kick(pnames=parameters)
-        newmodels[i] = mod_
-        startpars[i] = copy.deepcopy(mod_.parameters)
-    
-    #-- minimize every model.
-    if verbose: print "Grid minimizer:"
-    if verbose: Pmeter = progress.ProgressMeter(total=points)
-    for i,mod_ in enumerate(newmodels):
-        # refit and store the results
-        if verbose: Pmeter.update(1)
-        fitter = Minimizer(x, y, mod_, errors=errors, weights=weights, engine=engine, args=args,
-                            kws=kws, scale_covar=scale_covar,iter_cb=iter_cb, **fit_kws)
-        fitters[i] = fitter
-        chisqrs[i] = fitter.chisqr
-    
-    #-- sort the results on increasing chisqr so best fit is on top
-    inds = chisqrs.argsort()
-    fitters = fitters[inds]
-    startpars = startpars[inds]
-    newmodels = newmodels[inds]
-    chisqrs = chisqrs[inds]
-    
-    #store the best fitting model in the given model and return the results
-    model.parameters = newmodels[0].parameters
+    fitter = Minimizer(x, y, model, errors=errors, weights=weights, resfunc=resfunc,
+                       engine=engine, args=args, kws=kws,  scale_covar=scale_covar,
+                       iter_cb=iter_cb, grid_points=points, grid_params=parameters,
+                       verbose=verbose, **fit_kws)
+    if fitter.message and verbose:
+        logger.warning(fitter.message)
+        
     if return_all:
-        return fitters, startpars, newmodels, chisqrs
+        return fitter.grid
     else:
-        return fitters[0]
+        return fitter
                       
 #}
 
@@ -2527,66 +2608,6 @@ def parameters2string(parameters, accuracy=2, error='stderr', output='result', *
         
     return out.rstrip()
     
-
-#def parameters2string(parameters, accuracy=2, error='stderr', full_output=False):
-    #""" Converts a parameter object to string """
-    #old = np.seterr(divide='ignore')
-    #out = "Parameters ({:s})\n".format(error)
-    #fmt = '{{:.{0}f}}'.format(accuracy)
-    
-    ##-- run over the parameters to calculate the nessessary space
-    #max_value = 0
-    #max_bounds = 0
-    #for name, par in parameters.items():
-        #current = _calc_length(par.value, accuracy) + \
-                  #_calc_length(getattr(par, error), accuracy) + \
-                  #_calc_length(np.array(getattr(par, error)) / np.array(par.value) * 100.,
-                                        #accuracy)
-        #max_value = current > max_value and current or max_value
-        #current = _calc_length(par.min, accuracy) + _calc_length(par.max, accuracy)
-        #max_bounds = current > max_bounds and current or max_bounds
-    #max_value = int(max_value + 9)
-    #max_bounds = int(max_bounds + 5)
-    
-    ##-- format the output
-    #for name, par in parameters.items():
-        #if getattr(par, error) == None:
-            #stderr = np.nan
-            #prcerr = np.nan
-        #else:
-            #stderr = getattr(par, error)
-            #prcerr = abs(float(np.array(stderr) / np.array(par.value) * 100.))
-        
-        #value = "{fmt} +/- {fmt} ({fmt}%)".format(fmt=fmt).format(par.value, stderr, prcerr)
-        
-        #if not full_output:
-            #template = '{name:>10s} = {value:>{vlim}s} \n'.format(name=name,value=value, vlim=max_value)
-        #else:
-            #try:
-                #lim = ( abs(float(par.value) - par.min)/(par.max-par.min) <= 0.001 or abs(par.max - float(par.value))/(par.max-par.min) <= 0.001 ) and 'reached limit' or ''
-            #except:
-                #lim = ''
-            #if par.min != None and par.max != None:
-                #bounds = '{{:.{0}f}} <-> {{:.{0}f}}'.format(accuracy).format(par.min,par.max)
-            #elif par.max != None:
-                #bounds = 'None <-> {{:.{0}f}}'.format(accuracy).format(par.max)
-            #elif par.min != None:
-                #bounds = '{{:.{0}f}} <-> None'.format(accuracy).format(par.min)
-            #else:
-                #bounds = 'None <-> None'
-            #if par.expr != None:
-                #expr = "= {expr}".format(expr=par.expr)
-            #else:
-                #expr = ""
-            #template = '{name:>10s} = {value:>{vlim}s}   bounds = {bounds:>{blim}s} {vary:>8s} {limit} {expr}\n'
-            #template = template.format(name=name, value=value, vlim=max_value, bounds=bounds,
-                                       #blim=max_bounds, vary=(par.vary and '(fit)' or '(fixed)'),
-                                       #limit=lim, expr=expr)
-        #out += template
-        
-    #np.seterr(divide=old['divide'])
-    #return out.rstrip()
-
 def correlation2string(parameters, accuracy=3, limit=0.100):
     """ Converts the correlation of different parameters to string """
     out = "Correlations (shown if larger as {{:.{0}f}})\n".format(accuracy).format(limit)
