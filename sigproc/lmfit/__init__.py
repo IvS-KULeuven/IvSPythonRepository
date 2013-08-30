@@ -74,7 +74,7 @@ def kick(self,pnames=None):
     distribution between max and min value.
     """
     if pnames == None:
-        pnames = self.keys()
+        pnames = self.can_kick()
     for key in pnames:
         self[key].kick()
 
@@ -85,7 +85,7 @@ def __getattr__(self, name):
     fx. all values can be reached with Parameters.value
     """
     if name in ['name', 'value', 'min', 'max', 'vary', 'expr',
-                'stderr', 'mcerr', 'cierr']:
+                'stderr', 'mcerr', 'cierr', 'correl']:
         return [getattr(p, name) for n, p in self.items()]
     else:
         raise AttributeError
@@ -152,7 +152,7 @@ def __getattr__(self, name):
             return np.nan
         else:
             old = np.seterr(divide='ignore')
-            pc = abs(np.array(error) / np.array(self.value * 100.))
+            pc = abs(np.array(error) / np.array(self.value) * 100.)
             np.seterr(divide=old['divide'])
             return pc
     else:
