@@ -263,7 +263,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
         
         #-- get model SED and absolute luminosity
-        wave,flux = model.get_table(teff,logg)
+        wave,flux = model.get_table(teff=teff,logg=logg)
         Labs = model.luminosity(wave,flux)
         
         #-- threaded calculation over all E(B-V)s
@@ -478,6 +478,7 @@ def fix_grid(grid):
     if fix_rv:
         table.data.field('rv')[:] = rv
     fake_keys = [key.lower() for key in table.header.keys()]
+    fake_keys.append('use_scratch') # Don't know why this is nessessary but it doesn't work otherwise (JV 23.7.13) !!!
     for key in hdulist[1].header.keys():
         if not key.lower() in fake_keys:
             if len(key)>8:

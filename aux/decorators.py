@@ -9,6 +9,7 @@ Various decorator functions
     - Timing function calls
     - Redirecting print statements to logger
     - Disable-decorator decorator
+    - Extend/Reopen an existing class (like in Ruby)
 """
 import functools
 import cPickle
@@ -286,4 +287,38 @@ def disabled(func):
         >>> @state
     """
     return func
+#}
+
+#{ Extend/Reopen class decorator
+
+def extend(cls):
+    """
+    Decorator that allows you to add methods or attributes to an already
+    existing class. Inspired on the reopening of classes in Ruby
+    
+    Example:
+    
+    >>> @extend(SomeClassThatAlreadyExists)
+    >>> def some_method():
+    >>>     do stuff
+    
+    Will add the method some_method to SomeClassThatAlreadyExists
+    """
+    def decorator(f):
+        setattr(cls, f.__name__, f)
+        return cls
+    return decorator
+
+def class_extend(cls):
+    """
+    Similar as extend(cls), but instead of decorating a function, you use
+    it to decorate a class. All attributes of that class will be added to
+    cls. Use at own risk, results may vary!!!
+    """
+    def decorator(nclf):
+        for at in nclf.__dict__.keys():
+            setattr(cls, at, getattr(nclf, at))
+        return cls
+    return decorator
+
 #}

@@ -3,38 +3,71 @@
 Created on Fri Apr 20 19:24:21 2012
 
 @author: Tillsten
+
+Changes:
+  -  13-Feb-2013 M Newville
+     complemented  "report_errors" and "report_ci" with
+     "error_report" and "ci_report" (respectively) which
+     return the text of the report.  Thus report_errors()
+     is simply:
+        def report_errors(params, modelpars=None, show_correl=True):
+            print error_report(params, modelpars=modelpars,
+                               show_correl=show_correl)
+     and similar for report_ci() / ci_report()
+
 """
 
 from __future__ import print_function
 
-def report_errors(params, modelpars=None, show_correl=True):
-    """write report for fitted params"""
-    parnames = sorted(params)
-    #print('   -------------------------------------')
-    #print( '  Best Fit Values and Standard Errors:')
-    namelen = max([len(n) for n in parnames])
 
+def fit_report(params, modelpars=None, show_correl=True, min_correl=0.1):
+    """return text of a report for fitted params best-fit values,
+    uncertainties and correlations
+
+    arguments
+    ----------
+       params       Parameters from fit
+       modelpars    Optional Known Model Parameters [None]
+       show_correl  whether to show list of sorted correlations [True]
+       min_correl   smallest correlation absolute value to show [0.1]
+
+    """
+    parnames = sorted(params)
+    buff = []
+    add = buff.append
+    namelen = max([len(n) for n in parnames])
+    add("[[Variables]]")
     for name in parnames:
         par = params[name]
         space = ' '*(namelen+2 - len(name))
         nout = " %s: %s" % (name, space)
-        initval = 'inital= ?'
+        initval = 'inital = ?'
         if par.init_value is not None:
-            initval = 'inital= % .6f' % par.init_value
+            initval = 'initial = % .6f' % par.init_value
         if modelpars is not None and name in modelpars:
-            initval = '%s, model_value=% .6f' % (initval, modelpars[name].value)
-        if par.vary:
-            print(" %s % .5f+/- %.5f (%s)" % (nout, par.value,
-                                               par.stderr, initval))
+            initval = '%s, model_value =% .6f' % (initval, modelpars[name].value)
 
+        try:
+            sval = '% .6f' % par.value
+        except (TypeError, ValueError):
+            sval = 'Non Numeric Value?'
+
+        if par.stderr is not None:
+            sval = '% .6f +/- %.6f' % (par.value, par.stderr)
+            try:
+                sval = '%s (%.2f%%)' % (sval, abs(par.stderr/par.value)*100)
+            except ZeroDivisionError:
+                pass
+
+        if par.vary:
+            add("    %s %s %s" % (nout, sval, initval))
         elif par.expr is not None:
-            print(" %s % .5f == '%s'" % (nout, par.value,
-                                                par.expr))
+            add("    %s %s == '%s'" % (nout, sval, par.expr))
         else:
-            print(" %s fixed" % (nout))
+            add("    %s fixed" % (nout))
 
     if show_correl:
-        print( 'Correlations:')
+        add('[[Correlations]] (unreported correlations are < % .3f)' % min_correl)
         correls = {}
         for i, name in enumerate(parnames):
             par = params[name]
@@ -48,24 +81,38 @@ def report_errors(params, modelpars=None, show_correl=True):
         sort_correl = sorted(correls.items(), key=lambda it: abs(it[1]))
         sort_correl.reverse()
         for name, val in sort_correl:
+            if abs(val) < min_correl:
+                break
             lspace = max(1, 25 - len(name))
-            print('    C(%s)%s = % .3f ' % (name, (' '*30)[:lspace], val))
-    #print('-------------------------------------')
+            add('    C(%s)%s = % .3f ' % (name, (' '*30)[:lspace], val))
+    return '\n'.join(buff)
 
+def report_errors(params, **kws):
+    """print a report for fitted params:  see error_report()"""
+    print(fit_report(params, **kws))
 
-def report_ci(ci):    
-    max_name_length=max([len(i[0]) for i in ci])
-    for name in ci:            
-        convp=lambda x: ("%.2f" % (x[0]*100))+'%'
-        conv=lambda x: "%.5f" % x[1]
-        row=ci[name]
-        print("".join([''.rjust(max_name_length)]+[i.rjust(10) for i in map(convp,row)]))
-        print("".join([name.rjust(max_name_length)]+[i.rjust(10) for i in map(conv,row)]))
+def report_fit(params, **kws):
+    """print a report for fitted params:  see error_report()"""
+    print(fit_report(params, **kws))
 
+def ci_report(ci):
+    """return text of a report for confidence intervals"""
+    maxlen = max([len(i) for i in ci])
+    buff = []
+    add = buff.append
+    convp = lambda x: ("%.2f" % (x[0]*100))+'%'
+    conv = lambda x: "%.5f" % x[1]
+    title_shown = False
+    for name, row in ci.items():
+        if not title_shown:
+            add("".join([''.rjust(maxlen)]+[i.rjust(10)   for i in map(convp, row)]))
+            title_shown = True
+        add("".join([name.rjust(maxlen)]+[i.rjust(10) for i in map(conv,  row)]))
+    return '\n'.join(buff)
 
-#
-
-        
+def report_ci(ci):
+    """print a report for confidence intervals"""
+    print(ci_report(ci))
 
 
 
