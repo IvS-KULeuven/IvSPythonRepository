@@ -269,6 +269,7 @@ def filter_kwargs(fctn):
                 thrash = kwargs.pop(key)
         return fctn(*args,**kwargs)
     return do_filter
+    
 #}
 
 #{ Disable decorator
