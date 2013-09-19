@@ -274,11 +274,12 @@ class TestCase4FittingFunction(FitTestCase):
         cls.pnames = pnames
         cls.value = value
         cls.fitFunc = fitFunc
+        cls.dFunc = Dfunction
     
     def setUp(self):
         self.model = copy.copy(self.fitFunc)
     
-    def test1Minimize(self):
+    def test1minimize(self):
         """ I sigproc.fit.Minimizer Function minimize """
         model = self.model
         
@@ -290,7 +291,7 @@ class TestCase4FittingFunction(FitTestCase):
         self.assertAlmostEqual(values[1], self.value[1], places=2, msg=msg)
         self.assertAlmostEqual(values[2], self.value[2], places=2, msg=msg)
         
-    def test2GridMinimize(self):
+    def test2grid_minimize(self):
         """ I sigproc.fit.Minimizer Function grid_minimize """
         model = self.model
         points = 100
@@ -317,28 +318,40 @@ class TestCase4FittingFunction(FitTestCase):
         msg = 'Fit did not converge to the correct values'
         self.assertArrayAlmostEqual(values[0:2], self.value[0:2], places=2, msg=msg)
     
-    def test3CIInterval(self):
+    def test3ci_interval(self):
         """ I sigproc.fit.Minimizer Function calculate_CI """
         model = self.model
         
         result = fit.minimize(self.x, self.y, model)
-        ci1 = result.calculate_CI(parameters=None, sigma=0.674, maxiter=200, short_output=True)
-        ci2 = result.calculate_CI(parameters=None, sigma=0.674, maxiter=200, short_output=False)
+        ci = result.calculate_CI(parameters=None, sigmas=[0.674, 0.997])
         
-        msg = 'ci results are not correct'
-        self.assertArrayAlmostEqual(ci1[0], [1.4955, 1.5036], places=2, msg=msg)
-        self.assertArrayAlmostEqual(ci1[1], [0.1202, 0.1206], places=2, msg=msg)
-        self.assertArrayAlmostEqual(ci1[2], [3.1372, 3.1394], places=2, msg=msg)
+        expected_ci = "\n\t{'ampl': {0.674: (1.4955, 1.5036), 0.997: (1.4873, 1.5117)}"\
+                     +"\n\t'phase': {0.674: (3.1372, 3.1394), 0.997: (3.1349, 3.1417)},"\
+                     +"\n\t'freq': {0.674: (0.1202, 0.1206), 0.997: (0.1197, 0.1210)}}"
         
-        msg = 'dict output is not correct'
-        self.assertTrue('ampl' in ci2, msg=msg)
-        self.assertTrue('phase' in ci2, msg=msg)
-        self.assertTrue('freq' in ci2, msg=msg)
         
-        msg = 'ci results in dict and array are not the same'
-        self.assertArrayAlmostEqual(ci1[0], ci2['ampl'], places=2, msg=msg)
-        self.assertArrayAlmostEqual(ci1[1], ci2['freq'], places=2, msg=msg)
-        self.assertArrayAlmostEqual(ci1[2], ci2['phase'], places=2, msg=msg)
+        msg = 'dict output format is not correct:\nexpected: '+expected_ci+\
+              '\nreceived: \n\t'+str(ci)
+        self.assertTrue('ampl' in ci, msg=msg)
+        self.assertTrue('phase' in ci, msg=msg)
+        self.assertTrue('freq' in ci, msg=msg)
+        
+        self.assertTrue(0.674 in ci['ampl'] and 0.997 in ci['ampl'], msg=msg)
+        self.assertTrue(0.674 in ci['phase'] and 0.997 in ci['phase'], msg=msg)
+        self.assertTrue(0.674 in ci['freq'] and 0.997 in ci['freq'], msg=msg)
+        
+        msg = 'ci results are not correct, expected: \n' + expected_ci
+        self.assertArrayAlmostEqual(ci['ampl'][0.674], [1.4955, 1.5036], places=2, msg=msg)
+        self.assertArrayAlmostEqual(ci['ampl'][0.997], [1.4873, 1.5117], places=2, msg=msg)
+        self.assertArrayAlmostEqual(ci['phase'][0.674], [3.1372, 3.1394], places=2, msg=msg)
+        self.assertArrayAlmostEqual(ci['phase'][0.997], [3.1349, 3.1417], places=2, msg=msg)
+        self.assertArrayAlmostEqual(ci['freq'][0.674], [0.1202, 0.1206], places=2, msg=msg)
+        self.assertArrayAlmostEqual(ci['freq'][0.997], [0.1197, 0.1210], places=2, msg=msg)
+        
+        msg = 'ci intervals are not stored in the parameter object'
+        for name, param in model.parameters.items():
+            self.assertTrue(0.674 in param.cierr, msg=msg)
+            self.assertTrue(0.997 in param.cierr, msg=msg)
         
         msg = 'Reruning calculate_CI fails and raises an exception!'
         try:
@@ -347,13 +360,13 @@ class TestCase4FittingFunction(FitTestCase):
         except Exception:
             self.fail(msg)
         
-    def test4CI2dInterval(self):
+    def test4ci2d_interval(self):
         """ I sigproc.fit.Minimizer Function calculate_CI_2D """
         model = self.model
         
         result = fit.minimize(self.x, self.y, model)
         x, y, ci = result.calculate_CI_2D(xpar='ampl', ypar='freq', res=10, limits=None,
-                                          type='prob')
+                                          ctype='prob')
         values, errors = model.get_parameters()
         
         msg = 'Auto limits are not value +- 5 * stderr'
@@ -384,7 +397,7 @@ class TestCase4FittingFunction(FitTestCase):
         self.assertArrayAlmostEqual(ci[4], exp1, places=2, msg=msg)
         self.assertArrayAlmostEqual(ci[:,4], exp2, places=2, msg=msg)
     
-    def test5MCerror(self):
+    def test5mc_error(self):
         """ I sigproc.fit.Minimizer Function calculate_MC_error """
         result = fit.minimize(self.x, self.y, self.model)
         
@@ -415,8 +428,149 @@ class TestCase4FittingFunction(FitTestCase):
         self.assertEqual(params['ampl'].mcerr, mcerrors['ampl'], msg=msg)
         self.assertEqual(params['freq'].mcerr, mcerrors['freq'], msg=msg)
         self.assertEqual(params['phase'].mcerr, mcerrors['phase'], msg=msg)
+
+class TestCase5IntegrationJacobian(FitTestCase):
+    """
+    Integration test testing the fitting of a Function with Jacobian
+    """
+    @classmethod  
+    def setUpClass(cls):
+        "===Exponential_decay_Jacobian==="
+        
+        pnames = ['p1', 'p2', 'p3'] 
+
+        def func(var, x): 
+            return var[0]*np.exp(-var[1]*x)+var[2]
+
+        def dfunc(var,x):
+            v = np.exp(-var[1]*x)
+            return np.array([-v,+var[0]*x*v,-np.ones(len(x))]).T
+            
+        cls.function = func
+        cls.jacobian = dfunc
+        
+        model = fit.Function(function=func, par_names=pnames, jacobian=dfunc)
+        pars = [10, 10, 10]
+        bounds = [(0, 20), (0, 20), (0, 20)]
+        vary = [True, True, True]
+        model.setup_parameters(values=pars, bounds=bounds, vary=vary)
+        cls._model = model
+        
+        #-- Creating data to fit
+        xs = np.linspace(0,4,50)
+        ys = func([2.5,1.3,0.5],xs)
+        np.random.seed(3333)
+        err = 0.1*np.random.normal(size=len(xs))
+        yn = ys + err
+        
+        cls.x = xs
+        cls.y = yn
+        cls.err = np.abs(err)
     
-class TestCase5FittingModel(FitTestCase):
+    def setUp(self):
+        self.model = copy.deepcopy(self._model)
+    
+    def test1minimize(self):
+        """ I sigproc.fit.Minimizer Jacobian minimize """
+        
+        self.model.setup_parameters(value=[3.0, 1.0, 1.0])
+        result = fit.minimize(self.x, self.y, self.model)
+        names = self.model.parameters.name
+        val = self.model.parameters.value
+        err = self.model.parameters.stderr
+        valr = [2.4272, 1.2912, 0.4928]
+        errr = [0.0665, 0.0772, 0.0297]
+        
+        print self.model.param2str(accuracy=4, output='result')
+        
+        msg = 'Resulting value for {:s} is not correct within {:.0f}\%'
+        pc = 0.05 # 5% difference is allowed
+        for i in range(3):
+            self.assertAlmostEqual(val[i], valr[i], delta = pc*valr[i], 
+                                   msg=msg.format(names[i], pc*100))
+                                   
+        msg = 'Resulting std-error for {:s} is not correct within {:.0f}\%'
+        pc = 0.1 # 10% difference is allowed
+        for i in range(3):
+            self.assertAlmostEqual(err[i], errr[i], delta = pc*errr[i],
+                                   msg=msg.format(names[i], pc*100))
+                                   
+    def test2grid_minimize(self):
+        """ I sigproc.fit.Minimizer Jacobian grid_minimize """
+        
+        result = fit.grid_minimize(self.x, self.y, self.model, points=100)
+        names = self.model.parameters.name
+        val = self.model.parameters.value
+        err = self.model.parameters.stderr
+        valr = [2.4272, 1.2912, 0.4928]
+        errr = [0.4345, 0.3796, 0.0921]
+        
+        print self.model.param2str(accuracy=4, output='result')
+        
+        msg = 'Resulting value for {:s} is not correct within {:.0f}\%'
+        pc = 0.05 # 5% difference is allowed
+        for i in range(3):
+            self.assertAlmostEqual(val[i], valr[i], delta = pc*valr[i], 
+                                   msg=msg.format(names[i], pc*100))
+                                   
+        msg = 'Resulting std-error for {:s} is not correct within {:.0f}\%'
+        pc = 0.1 # 10% difference is allowed
+        for i in range(3):
+            self.assertAlmostEqual(err[i], errr[i], delta = pc*errr[i],
+                                   msg=msg.format(names[i], pc*100))
+    
+    def test3ci_interval(self):
+        """ I sigproc.fit.Minimizer Jacobian calculate_CI """
+        self.model.setup_parameters(value=[3.0, 1.0, 1.0])
+        
+        result = fit.minimize(self.x, self.y, self.model)
+        ci = result.calculate_CI(parameters=None, sigmas=[0.994])
+        cir = [[2.2378,2.6210],[1.0807,1.5276],[0.4015,0.5740]]
+        val = self.model.parameters.value
+        names = self.model.parameters.name
+        
+        msg = 'The 99.4\% CI interval for {:s} is not correct within {:.0f}\%'
+        pc = 0.05
+        for i,p in enumerate(names):
+            self.assertArrayAlmostEqual(ci[p][0.994], cir[i], delta = pc*val[i],
+                                   msg=msg.format(p, pc*100))
+                                   
+    def test4ci2d_interval(self):
+        """ I sigproc.fit.Minimizer Jacobian calculate_CI_2D """
+        self.model.setup_parameters(value=[3.0, 1.0, 1.0])
+        
+        result = fit.minimize(self.x, self.y, self.model)
+        x, y, ci = result.calculate_CI_2D(xpar='p1', ypar='p2', res=10, limits=None,
+                                          ctype='prob')
+        
+        cir = [99.9977, 99.9019, 97.5451, 74.5012, 20.5787,
+               38.3632, 87.5572, 99.1614, 99.9734, 99.9994]
+               
+        msg = 'The 2D CI values are not correct within 2\%'
+        pc = 0.05
+        for i in range(3):
+            self.assertArrayAlmostEqual(ci[4], cir, delta = 2, msg = msg)
+    
+    def test5mc_error(self):
+        """ I sigproc.fit.Minimizer Jacobian calculate_MC_error """
+        self.model.setup_parameters(value=[3.0, 1.0, 1.0])
+        result = fit.minimize(self.x, self.y, self.model)
+        result.calculate_MC_error(errors=self.err, points=100, short_output=True,
+                                  verbose=False)
+        
+        names = self.model.parameters.name
+        err = self.model.parameters.mcerr
+        errr = [0.0795, 0.0688, 0.0281]
+        
+        msg = 'Resulting MC-error for {:s} is not correct within {:.0f}\%'
+        pc = 0.05 # 10% difference is allowed
+        for i in range(3):
+            self.assertAlmostEqual(err[i], errr[i], delta = pc*errr[i],
+                                   msg=msg.format(names[i], pc*100))
+        
+        
+
+class TestCase6FittingModel(FitTestCase):
     """
     Integration test testing the fitting of a simple Model
     """
@@ -463,7 +617,7 @@ class TestCase5FittingModel(FitTestCase):
         self.assertArrayAlmostEqual(values1, self.value1, places=2)
         self.assertArrayAlmostEqual(values2, self.value2, places=2)
 
-class TestCase5Funclib(unittest.TestCase):
+class TestCase7Funclib(unittest.TestCase):
     
     def testFunclibFunctions(self):
         """ sigproc.funclib: all functions """

@@ -1326,6 +1326,7 @@ class Function(object):
             for i,name in enumerate(self.par_names):
                 min_, max_ = check_boundaries(min[i], max[i], value[i], name)
                 self.parameters[name].value = float(value[i])
+                self.parameters[name].user_value = float(value[i])
                 self.parameters[name].vary = bool(vary[i]) if vary[i] != None else True
                 self.parameters[name].min = min_
                 self.parameters[name].max = max_
@@ -1352,6 +1353,9 @@ class Function(object):
         if 'bounds' in kwargs:
             kwargs['min'] = kwargs['bounds'][0]
             kwargs['max'] = kwargs['bounds'][1]
+            
+        if 'value' in kwargs:
+            kwargs['user_value'] = kwargs['value']
         
         for key in ['value', 'min', 'max', 'vary', 'expr']:
             if key in kwargs:
@@ -1454,6 +1458,16 @@ class Function(object):
         @rtype: string
         """
         return confidence2string(self.parameters, **kwargs)
+    
+    #}
+    
+    #{ Internal
+    
+    def __str__(self):
+        """ String representation of the Function object """
+        pnames = ", ".join(self.par_names)
+        name = "<Function: '{:s}' with parameters: {:s}>".format(self.function.__name__, pnames)
+        return name
     
     #}
     
@@ -1766,6 +1780,13 @@ class Model(object):
                 old_name = re.sub('_[0123456789]*$','',name)
                 old_parameters[old_name] = parameters[name]
     
+    def __str__(self):
+        """ String representation of the Model object """
+        fnames = ", ".join([f.function.__name__ for f in self.functions])
+        expr = self.expr if self.expr != None else "Sum()"
+        name = "<Model with functions: [{:s}] combined by: {:s}>"
+        return name.format(fnames, expr)
+    
     #}
     
     
@@ -1860,12 +1881,14 @@ class Minimizer(object):
     
     #{ Error determination
     
-    def calculate_CI(self, parameters=None, sigma=0.99, maxiter=200, short_output=True, **kwargs):
+    def calculate_CI(self, parameters=None, sigmas=[0.654, 0.95, 0.997], maxiter=200,
+                     **kwargs):
         """
         Returns the confidence intervalls of the given parameters. This function uses
         the F-test method described below to calculate confidence intervalls. The
         I{sigma} parameter describes which confidence level is required in percentage: 
-        sigma=0.65 corresponds with the standard 1 sigma level.
+        sigma=0.654 corresponds with the standard 1 sigma level, 0.95 with 2 sigma and
+        0.997 with 3 sigma.
         
         The output is a dictionary containing for each parameter the lower and upper
         boundary of the asked confidence level. If short_output is True, an array of
@@ -1895,22 +1918,25 @@ class Minimizer(object):
         @param parameters: Names of the parameters to calculate the CIs from (if None,
                            all parameters are used)
         @type parameters: array of strings
-        @param sigma: The probability level used to calculate the CI
-        @type sigma: float
-        @param short_output: type of output you want
-        @type short_output: bool
+        @param sigmas: The probability levels used to calculate the CI
+        @type sigmas: array or float
         
         @return: the confidence intervals.
-        @rtype: array or dict
+        @rtype: dict
         """
         #-- check if a special probability function is provided.
         prob_func = kwargs.pop('prob_func', None)
         
         if parameters == None:
             parameters = self.model.par_names
-        
-        if type(parameters) == str:
+        elif type(parameters) == str:
             parameters = [parameters]
+            
+        if not hasattr(sigmas, "__iter__"):
+            sigmas = [sigmas]
+        if 'sigma' in kwargs:
+            sigmas = [kwargs['sigma']]
+            print 'WARNING: sigma is depricated, use sigmas'
         
         #-- Use the adjusted conf_interval() function of the lmfit package.
         #   We need to work on a copy of the minimizer and make a backup of
@@ -1918,36 +1944,22 @@ class Minimizer(object):
         #   running conf_interval
         mini = copy.copy(self.minimizer)
         backup = copy.deepcopy(self.model.parameters)
-        ci = lmfit.conf_interval(mini, p_names=parameters, sigmas=[sigma],
+        ci = lmfit.conf_interval(mini, p_names=parameters, sigmas=sigmas,
                                  maxiter=maxiter, prob_func=prob_func, trace=False, 
                                  verbose=False)
         self.model.parameters = backup
         
         #-- store the CI values in the parameter object
-        params = self.model.parameters
         for key, value in ci.items():
-            params[key].cierr.update(value)
+            self.model.parameters[key].cierr.update(value)
         
-        # Prepare the output
-        if len(parameters) == 1 and short_output:
-            out = np.array(ci[parameters[0]][sigma])
-        elif short_output:
-            out = []
-            for p in parameters:
-                out.append(ci[p][sigma])
-            out = np.array(out)
-        else:
-            out = {}
-            for p in parameters:
-                out[p] = ci[p][sigma]
-        
-        return out
+        return ci
     
-    def calculate_CI_2D(self, xpar=None, ypar=None, res=10,  limits=None, type='prob'):
+    def calculate_CI_2D(self, xpar=None, ypar=None, res=10,  limits=None, ctype='prob'):
         """
         Calculates the confidence interval for 2 given parameters. Both the  confidence interval
         calculated using the F-test method from the I{estimate_error} method, and the normal chi 
-        squares can be obtained using the I{type} keyword. 
+        squares can be obtained using the I{ctype} keyword. 
         
         The confidence intervall is returned as a grid, together with the x and y distribution of
         the parameters: (x-values, y-values, grid)
@@ -1957,7 +1969,7 @@ class Minimizer(object):
         @param res: The resolution of the grid over which the confidence intervall is calculated
         @param limits: The upper and lower limit on the parameters for which the confidence
                        intervall is calculated. If None, 5 times the stderr is used.
-        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chi-squares. 
+        @param ctype: 'prob' for probabilities plot (using F-test), 'chi2' for chi-squares. 
         
         @return: the x values, y values and confidence values
         @rtype: (array, array, 2d array)
@@ -1967,7 +1979,7 @@ class Minimizer(object):
         yn = hasattr(res,'__iter__') and res[1] or res
         
         prob_func = None
-        if type == 'chi2':
+        if ctype == 'chi2':
             def prob_func(Ndata, Nparas, new_chi, best_chi, nfix=1.):
                 return new_chi
         old = np.seterr(divide='ignore') #turn division errors off temporary
@@ -1975,7 +1987,7 @@ class Minimizer(object):
                                            prob_func=prob_func)
         np.seterr(divide=old['divide'])
         
-        if type=='prob':
+        if ctype=='prob':
             grid *= 100.
  
         return x, y, grid
@@ -2021,7 +2033,7 @@ class Minimizer(object):
         #-- perturb the data
         y_perturbed = self._perturb_input_data(points, **perturb_args)
         
-        if verbose: print "MC simulations:"
+        if verbose: print "MC simulations ({:.0f} points):".format(points)
         if verbose: Pmeter = progress.ProgressMeter(total=points)
         for i, y_ in enumerate(y_perturbed):
             if verbose: Pmeter.update(1)
@@ -2053,21 +2065,27 @@ class Minimizer(object):
     
     #{ Plotting Functions
     
-    def plot_results(self, points=1000, axis=0, **kwargs):
+    def plot_fit(self, points=1000, axis=0, legend=False, **kwargs):
         """
-        Creates a basic plot with the fit results and corresponding residuals.
+        Plot the original data together with the best fit results. This method has some
+        functionality to plot multi-dimensional data, but is limited to 2D data which it
+        will plot consecutively allong the specified axis. 
         
         @param points: Number of points to use when plotting the best fit model.
         @type points: int
         @param axis: In case of multi-dim input along which axis to split (0 or 1)
         @type axis: int
+        @param legend: Display legend on plot
+        @type legend: bool
         """
         
         #-- transform to 2D if nessessary
         res = np.atleast_2d(self.y - self.model.evaluate(self.x))
         x, y = np.atleast_2d(self.x), np.atleast_2d(self.y)
-        if axis == 1: x, y, res = x.T, y.T, res.T
-        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(x)
+        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(self.x)
+        
+        #-- transpose if the axis is 1
+        if axis == 1: x, y, res, err = x.T, y.T, res.T, err.T
         
         #-- create synthetic x-data
         xf = np.empty((len(x), points), dtype=float)
@@ -2078,33 +2096,94 @@ class Minimizer(object):
         yf = np.atleast_2d(self.model.evaluate(np.squeeze(xf)))
         
         #-- setup a colorMap
-        cmap = cm = pl.get_cmap('gist_rainbow') 
-        norm = mpl.colors.Normalize(vmin=0, vmax=len(x))
-        scalarMap = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+        cmap = cm = pl.get_cmap('spectral') 
+        norm = mpl.colors.Normalize(vmin=-len(x)-1, vmax=len(x)+1)
+        color = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
         
-        #-- plot fit everything
+        #-- plot the data and fit
+        for i, (x_, y_, e_) in enumerate(zip(x, y, err)):
+            pl.errorbar(x_, y_, yerr=e_, marker='+', ms=5, ls='', color=color.to_rgba(-i-1),
+                        label='data %i'%(i+1))
+        for i, (xf_, yf_) in enumerate(zip(xf, yf)):
+            pl.plot(xf_, yf_, ls='-', color=color.to_rgba(i+1), label='fit %i'%(i+1))
+        
+        if legend:
+            pl.legend()
+            
+    def plot_residuals(self, axis=0, legend=False, **kwargs):
+        """
+        Plot the residuals of the best fit. This method has some functionality to plot
+        multi-dimensional data, but is limited to 2D data which it will plot 
+        consecutively allong the specified axis. 
+        
+        @param axis: In case of multi-dim input along which axis to split (0 or 1)
+        @type axis: int
+        @param legend: Display legend on plot
+        @type legend: bool
+        """
+        
+        #-- transform to 2D if nessessary
+        res = np.atleast_2d(self.y - self.model.evaluate(self.x))
+        x = np.atleast_2d(self.x)
+        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(self.x)
+        if axis == 1: x, res, err = x.T, res.T, err.T
+        
+        #-- setup a colorMap
+        cmap = cm = pl.get_cmap('spectral') 
+        norm = mpl.colors.Normalize(vmin=-len(x)-1, vmax=len(x)+1)
+        color = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+            
+        #-- plot residuals
+        for i, (x_, res_, e_) in enumerate(zip(x,res, err)):
+            pl.errorbar(x_, res_, yerr=e_, marker='+', ms=5, ls='', color=color.to_rgba(-i-1),
+                        label='data %i'%(i+1))
+        pl.axhline(y=0, ls=':', color='r')
+        
+        if legend:
+            pl.legend()
+    
+    def plot_results(self, points=1000, axis=0, legend=False, **kwargs):
+        """
+        Creates a basic plot with the fit results and corresponding residuals. This 
+        method has some functionality to plot multi-dimensional data, but is up till
+        now limited to 2D data which it will plot consecutively allong the specified
+        axis. Based on the plot_fit and plot_residuals functions
+        
+        @param points: Number of points to use when plotting the best fit model.
+        @type points: int
+        @param axis: In case of multi-dim input along which axis to split (0 or 1)
+        @type axis: int
+        @param legend: Display legend on plot
+        @type legend: bool
+        @param xlabel: label for the x-axis
+        @type xlabel: str
+        @param ylabel: label for the y-axis
+        @type ylabel: str
+        @param title: title of the plot
+        @type title: str
+        """
+        
+        xlabel = kwargs.pop('xlabel', '$X$')
+        ylabel = kwargs.pop('ylabel', '$Y$')
+        title = kwargs.pop('title', 'Fit Results')
+        
         pl.subplots_adjust(wspace=0.0, hspace=0.0)
         ax = pl.subplot2grid((3,4), (0,0), rowspan=2, colspan=4)
-        for i, (x_, y_, e_, xf_, yf_) in enumerate(zip(x, y, err, xf, yf)):
-            color = scalarMap.to_rgba(i)
-            pl.errorbar(x_, y_, yerr=e_, marker='+', ms=5, ls='', color=color)
-            pl.plot(xf_, yf_, ls='--', color=color)
-        pl.ylabel('$Y$')
+        self.plot_fit(points=points, axis=axis, legend=legend, **kwargs)
+        pl.ylabel(ylabel)
+        pl.title(title)
         for tick in ax.axes.get_xticklabels():
             tick.set_visible(False)
             tick.set_fontsize(0.0)
             
-        #-- plot residuals
         ax = pl.subplot2grid((3,4), (2,0), colspan=4)
-        for i, (x_, res_) in enumerate(zip(x,res)):
-            color = scalarMap.to_rgba(i)
-            pl.errorbar(x_, res_, yerr=e_, marker='+', ms=5, ls='', color=color)
-        pl.axhline(y=0, ls=':', color='r')
+        self.plot_residuals(axis=axis, legend=False, **kwargs)
         pl.ylabel('$O-C$')
-        pl.xlabel('$X$')
+        pl.xlabel(xlabel)
+        
 
     def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, 
-                                 type='prob', filled=True, **kwargs):
+                                 ctype='prob', filled=True, **kwargs):
         """
         Plot the confidence interval for 2 given parameters. Both the  confidence
         interval calculated using the F-test method from the I{estimate_error} method,
@@ -2121,26 +2200,32 @@ class Minimizer(object):
         @param limits: The upper and lower limit on the parameters for which the 
                        confidence intervall is calculated. If None, 5 times the stderr
                        is used.
-        @param type: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare
+        @param ctype: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare
                      plot. 
         @param filled: True for filled contour plot, False for normal contour plot
         """
         
         x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  
-                                          limits=limits, type=type)
+                                          limits=limits, ctype=ctype)
         
-        if type=='prob':
+        if ctype=='prob':
             levels = np.linspace(0,100,25)
             ticks = [0,20,40,60,80,100]
-        elif type=='chi2':
+            def func(x, pos=None):
+                return "%0.0f"%(x)
+            fmtr = mpl.ticker.FuncFormatter(func)
+        elif ctype=='chi2':
             grid = np.log10(grid)
             levels = np.linspace(np.min(grid), np.max(grid), 25)
-            ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
+            ticks = np.round(np.linspace(np.min(grid), np.max(grid), 6), 2)
+            def func(x, pos=None):
+                return "%0.1f"%(10**x)
+            fmtr = mpl.ticker.FuncFormatter(func)
         
         if filled:
             pl.contourf(x,y,grid,levels,**kwargs)
-            cbar = pl.colorbar(fraction=0.08,ticks=ticks)
-            cbar.set_label(type=='prob' and r'Probability' or r'log($\chi^2$)')
+            cbar = pl.colorbar(fraction=0.08, format=fmtr, ticks=ticks)
+            cbar.set_label(ctype=='prob' and r'Probability' or r'$\chi^2$')
         else:
             cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
             cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
@@ -2149,7 +2234,8 @@ class Minimizer(object):
         pl.xlabel(xpar)
         pl.ylabel(ypar)
     
-    def plot_grid_convergence(self, xpar=None, ypar=None, chi2lim=None, **kwargs):
+    def plot_grid_convergence(self, xpar=None, ypar=None, chi2lim=None, chi2scale='log',
+                              show_colorbar='True', **kwargs):
         """
         Plot the convergence path of the results from grid_minimize stored in this
         minimizer. The start values of the two selected parameters are plotted
@@ -2159,6 +2245,7 @@ class Minimizer(object):
         @param xpar: The parameter on the x axis
         @param ypar: The parameter on the y axis
         @param chi2lim: Optional limit on the chi2 value (in % of the maximum chi2)
+        @param chi2scale: Scale for the chi2 values: 'log' or 'linear'
         """
         
         #-- Get the minimizer grid
@@ -2167,8 +2254,10 @@ class Minimizer(object):
         if chi2lim != None:
             selected = np.where(chisqrs <= chi2lim*max(chisqrs))
             models = models[selected]
-            chisqrs = chisqrs[selected]
+            chisqrs = np.abs(chisqrs[selected])
         models, chisqrs = models[::-1], chisqrs[::-1]
+        if chi2scale == 'log':
+            chisqrs = np.log10(chisqrs)
         
         #-- read the requested parameter values
         x1 = np.empty_like(chisqrs)
@@ -2183,7 +2272,7 @@ class Minimizer(object):
 
         #-- set the colors
         jet = cm = pl.get_cmap('jet') 
-        cNorm = mpl.colors.Normalize(vmin=0, vmax=max(chisqrs))
+        cNorm = mpl.colors.Normalize(vmin=min(chisqrs), vmax=max(chisqrs))
         scalarMap = mpl.cm.ScalarMappable(norm=cNorm, cmap=jet)
 
         #-- plot the arrows
@@ -2192,9 +2281,20 @@ class Minimizer(object):
             colorVal = scalarMap.to_rgba(chi2)
             ax.add_patch(mpl.patches.FancyArrowPatch((x1_,y1_),(x2_,y2_),
                          arrowstyle='->',mutation_scale=30, color=colorVal))
-        pl.scatter(x2, y2, s=30, c=chisqrs, cmap=mpl.cm.jet, edgecolors=None, lw=0)
+        scatter = pl.scatter(x2, y2, s=30, c=chisqrs, cmap=mpl.cm.jet, norm=cNorm,
+                             edgecolors=None, lw=0)
         pl.plot(x2[-1],y2[-1], '+r', ms=12, mew=3)
-        pl.colorbar(fraction=0.08)
+        
+        #-- colorbar
+        if show_colorbar:
+            if chi2scale == 'log':
+                def func(x, pos=None):
+                    return "%0.0f"%(10**x)
+                fmtr = mpl.ticker.FuncFormatter(func)
+            else:
+                fmtr = None
+            pl.colorbar(scatter, fraction=0.08, format=fmtr)
+        
         pl.xlim(min([min(x1),min(x2)]), max([max(x1),max(x2)]))
         pl.ylim(min([min(y1),min(y2)]), max([max(y1),max(y2)]))
         pl.xlabel(xpar)
@@ -2301,7 +2401,7 @@ class Minimizer(object):
         "Internal function that starts all minimizers one by one"
         #-- Possible termial output
         if len(self._minimizers) <= 1: verbose = False
-        if verbose: print "Grid Minimizer:"
+        if verbose: print "Grid Minimizer ({:.0f} points):".format(len(self._minimizers))
         if verbose: Pmeter = progress.ProgressMeter(total=len(self._minimizers))
         
         #-- Start all minimizers
@@ -2346,7 +2446,24 @@ class Minimizer(object):
             params[name].mcerr = error
         
         return pnames, errors
-        
+    
+    def __str__(self):
+        " String representation of the Minimizer object "
+        out = []
+        out.append( ('Model', str(self.model)) )
+        out.append( ('Data shape', str(np.array(self.x).shape)) )
+        out.append( ('Errors', 'Provided' if self._error != None else 'Not Provided') )
+        out.append( ('Weights', 'Provided' if self.weights != None else 'Not Provided') )
+        out.append( ('Residuals', 'Standard' if self.resfunc == None else 'Custom') )
+        out.append( ('Jacobian', 'Provided' if self.jacobian != None else 'Not Provided') )
+        out.append( ('Engine', str(self.engine)) )
+        out.append( ("Grid points", "{:.0f}".format(len(self._minimizers))) )
+        temp = "{:<12s}: {:s}\n"
+        outstr = "<Minimizer object>\n"
+        for s in out:
+            outstr += temp.format(*s)
+        return outstr.rstrip()
+    
     #}
 
 def minimize(x, y, model, errors=None, weights=None, resfunc=None, engine='leastsq', 
@@ -2490,6 +2607,8 @@ def get_correlation_factor(residus, full_output=False):
 
 def _calc_length(par, accuracy, field=None):
     """ helper function to calculate the length of the given parameters for parameters2string """
+    if field == 'name':
+        par = str(par)
     extralen = {'name':1,
                 'value':0,
                 'user_value':0,
@@ -2519,7 +2638,7 @@ def _calc_length(par, accuracy, field=None):
                 out = int(length)
         except Exception, e:
             logging.warning(
-                'Could not calculate length of %s (field = %s)\nerror: %s'%(par, field, e))
+                'Could not calculate length of: %s, type = %s, field = %s\nerror: %s'%(par, type(par), field, e))
             out = 0
         return out
     
@@ -2568,7 +2687,7 @@ def parameters2string(parameters, accuracy=2, error='stderr', output='result', *
     
     if not hasattr(output, '__itter__'):
         if output == 'start': 
-            output = ['name', 'init_value', 'bounds', 'vary', 'expr']
+            output = ['name', 'user_value', 'bounds', 'vary', 'expr']
             out = "Parameters (initial)\n"
         elif output == 'result': 
             output = ['name', 'value', error, error + 'pc']

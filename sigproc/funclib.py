@@ -141,6 +141,7 @@ def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     function = lambda p, x: p[1]*sed_model.blackbody(x, p[0], wave_units=wave_units,\
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
+    function.__name__ = 'blackbody'
     
     return Function(function=function, par_names=pnames)
     
@@ -159,6 +160,7 @@ def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=Tru
     function = lambda p, x: p[1]*sed_model.rayleigh_jeans(x, p[0], wave_units=wave_units,\
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
+    function.__name__ = 'rayleigh_jeans'
     
     return Function(function=function, par_names=pnames)
     
@@ -177,6 +179,7 @@ def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     function = lambda p, x: p[1]*sed_model.wien(x, p[0], wave_units=wave_units,\
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
+    function.__name__ = 'wien'
     
     return Function(function=function, par_names=pnames)
 
@@ -192,17 +195,19 @@ def kepler_orbit(type='single'):
     Warning: This function uses 2d input and output!
     """
     if type == 'single':
-        function = lambda p, x: kepler.radial_velocity(p, times=x, itermax=8)
         pnames = ['p','t0','e','omega','k','v0']
+        function = lambda p, x: kepler.radial_velocity(p, times=x, itermax=8)
+        function.__name__ = 'kepler_orbit_single'
     
         return Function(function=function, par_names=pnames)
         
     elif type == 'double':
+        pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
         function = lambda p, x: [kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
                                  kepler.radial_velocity([p[0],p[1],p[2],p[3],p[6],p[7]], times=x[1], itermax=8)]
         def residuals(syn, data, weights=None, errors=None, **kwargs):
             return np.hstack( [( data[0] - syn[0] ) * weights[0],  ( data[1] - syn[1] ) * weights[1] ] )
-        pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
+        function.__name__ = 'kepler_orbit_double'
     
         return Function(function=function, par_names=pnames, resfunc=residuals)
 
@@ -222,6 +227,7 @@ def box_transit(t0=0.):
         transit_place = (ingress<=phase) & (phase<=egress)
         model = np.where(transit_place,model-depth,model)
         return model
+    function.__name__ = 'box_transit'
     return Function(function=function, par_names=pnames)
 
 
@@ -236,6 +242,7 @@ def polynomial(d=1):
     """
     pnames = ['a{:d}'.format(i) for i in range(d,0,-1)]+['a0']
     function = lambda p, x: np.polyval(p,x)
+    function.__name__ = 'polynomial'
     
     return Function(function=function, par_names=pnames)
 
@@ -255,6 +262,7 @@ def soft_parabola():
         if p[3]<=0: y[np.abs(term)>=1] = 0
         y[np.isnan(y)] = 0
         return y
+    function.__name__ = 'soft_parabola'
     
     return Function(function=function, par_names=pnames)
 
@@ -267,6 +275,7 @@ def gauss(use_jacobian=True):
     """
     pnames = ['a', 'mu', 'sigma', 'c']
     function = lambda p, x: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2)) + p[3]
+    function.__name__ = 'gauss'
     
     if not use_jacobian:
         return Function(function=function, par_names=pnames)
@@ -284,6 +293,7 @@ def sine():
     """
     pnames = ['ampl', 'freq', 'phase', 'const']
     function = lambda p, x: p[0] * sin(2*pi*(p[1]*x + p[2])) + p[3]
+    function.__name__ = 'sine'
     
     return Function(function=function, par_names=pnames)
 
@@ -302,6 +312,7 @@ def sine_linfreqshift(t0=0.):
     def function(p,x):
         freq = (p[1] + p[4]/2.*(x-t0))*(x-t0)
         return p[0] * sin(2*pi*(freq + p[2])) + p[3]
+    function.__name__ = 'sine_linfreqshift'
     return Function(function=function, par_names=pnames)
     
 def sine_expfreqshift(t0=0.):
@@ -322,6 +333,7 @@ def sine_expfreqshift(t0=0.):
     def function(p,x):
         freq = p[1] / np.log(p[4]) * (p[4]**(x-t0)-1.)
         return p[0] * sin(2*pi*(freq + p[2])) + p[3]
+    function.__name__ = 'sine_expfreqshift'
     return Function(function=function, par_names=pnames)
 
     
@@ -361,6 +373,7 @@ def sine_orbit(t0=0.,nmax=10):
             frequency = freq*(x-t0) + \
                alpha*(np.sum(np.array([ksins[i]*sin(2*pi*ns[i]*forb*(x-t0)+thns[i]) for i in range(nmax)]),axis=0)+tau)
         return ampl * sin(2*pi*(frequency + phase)) + const
+    function.__name__ = 'sine_orbit'
     return Function(function=function, par_names=pnames)
 
 #def generic(func_name):
@@ -375,6 +388,7 @@ def power_law():
     """
     pnames = ['ampl','b','c','f0','const']
     function = lambda p, x: p[0] / (1 + (p[1]*(x-p[3]))**p[2]) + p[4]
+    function.__name__ = 'power_law'
     return Function(function=function, par_names=pnames)
 
 
@@ -386,6 +400,7 @@ def lorentz():
     """
     pnames = ['ampl','mu','gamma','const']
     function = lambda p,x: p[0] / ((x-p[1])**2 + p[2]**2) + p[3]
+    function.__name__ = 'lorentz'
     return Function(function=function, par_names=pnames)
 
 def voigt():
@@ -400,6 +415,7 @@ def voigt():
         x = x-p[1]
         z = (x+1j*p[3])/(p[2]*sqrt(2))
         return p[0]*_complex_error_function(z).real/(p[2]*sqrt(2*pi))+p[4]
+    function.__name__ = 'voigt'
     return Function(function=function, par_names=pnames)
 
 #}

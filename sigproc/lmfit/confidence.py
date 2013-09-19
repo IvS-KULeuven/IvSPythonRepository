@@ -8,6 +8,7 @@ import numpy as np
 from scipy.stats import f
 from scipy.optimize import brentq
 from .minimizer import MinimizerException
+from ivs.aux import progressMeter as progress
 
 def f_compare(ndata, nparas, new_chi, best_chi, nfix=1.):
     """
@@ -255,7 +256,7 @@ class ConfidenceInterval(object):
         self.reset_vals()
         return limit
 
-    def calc_prob(self, para, val, offset=0., restore=False):
+    def calc_prob(self, para, val, offset=0., restore=True):
         """Returns the probability for given Value."""
         if restore:
             restore_vals(self.org, self.minimizer.params)
@@ -274,7 +275,7 @@ class ConfidenceInterval(object):
 
 
 def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
-                    prob_func=None):
+                    prob_func=None, verbose=True):
     r"""Calculates confidence regions for two fixed parameters.
 
     The method is explained in *conf_interval*: here we are fixing
@@ -348,7 +349,9 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
     x.vary = False
     y.vary = False
 
-    def calc_prob(vals, restore=True):
+    def calc_prob(vals, restore=False):
+        if verbose:
+            pmeter.update(1)
         if restore:
             restore_vals(org, minimizer.params)
         x.value = vals[0]
@@ -361,7 +364,8 @@ def conf_interval2d(minimizer, x_name, y_name, nx=10, ny=10, limits=None,
         prob = prob_func(out.ndata, out.ndata - out.nfree, out.chisqr,
                          best_chi, nfix=2.)
         return prob
-
+    
+    if verbose: pmeter = progress.ProgressMeter(total=len(x_points) * len(y_points))
     out = x_points, y_points, np.apply_along_axis(calc_prob, -1, grid)
 
     x.vary, y.vary = True, True
