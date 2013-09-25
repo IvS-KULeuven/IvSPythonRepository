@@ -1660,7 +1660,7 @@ def unit2texlabel(unit,full=False):
                  'cy-1 kg1 s-2':r'$F_\nu$ [{0}]'.format(unit_),
                  'kg1 s-3':r'$\lambda F_\lambda$ [{0}]'.format(unit_),
                 }
-    translate = {}
+    #translate = {}
     #-- translate
     if base in translate:
         label = translate[base]
@@ -2844,17 +2844,32 @@ class JulianDay(NonLinearConverter):
     """
     def __call__(self,meas,inv=False,**kwargs):
         if inv:
-            L= meas+68569
-            N= 4*L//146097
-            L= L-(146097*N+3)//4
-            I= 4000*(L+1)//1461001
-            L= L-1461*I//4+31
-            J= 80*L//2447
-            day = L-2447*J//80+0.5
-            L= J//11
-            month = J+2-12*L
-            year = 100*(N-49)+I+L
+            #L= meas+68569
+            #N= 4*L//146097
+            #L= L-(146097*N+3)//4
+            #I= 4000*(L+1)//1461001
+            #L= L-1461*I//4+31
+            #J= 80*L//2447
+            #day = L-2447*J//80+0.5
+            #L= J//11
+            #month = J+2-12*L
+            #year = 100*(N-49)+I+L
             
+            j = meas + 0.5 + 32044
+            g = np.floor(j/146097)
+            dg = np.fmod(j,146097)
+            c = np.floor((np.floor(dg/36524) + 1)*3/4)
+            dc = dg - c * 36524
+            b = np.floor(dc/1461)
+            db = np.fmod(dc,1461)
+            a = np.floor((np.floor(db/365) + 1)*3/4)
+            da = db - a * 365
+            y = g*400+c*100+b*4+a
+            m = np.floor((da*5+308)/153)-2
+            d = da - np.floor((m+4)*153/5) + 124
+            year = y - 4800 + np.floor((m+2)/12)
+            month = np.fmod(m+2,12)+1
+            day = d - 1
             return year,month,day
         else:
             year,month,day = meas[:3]

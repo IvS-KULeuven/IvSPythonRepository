@@ -1385,6 +1385,7 @@ class Function(object):
         
         pnames = parameters if parameters != None else self.par_names
         
+
         out = []
         for name in pnames:
             par = self.parameters[name]
@@ -2183,7 +2184,6 @@ class Minimizer(object):
         self.plot_residuals(axis=axis, legend=False, **kwargs)
         pl.ylabel('$O-C$')
         pl.xlabel(xlabel)
-        
 
     def plot_confidence_interval(self, xpar=None, ypar=None, res=10,  limits=None, 
                                  ctype='prob', filled=True, **kwargs):
@@ -2206,6 +2206,7 @@ class Minimizer(object):
         @param ctype: 'prob' for probabilities plot (using F-test), 'chi2' for chisquare
                      plot. 
         @param filled: True for filled contour plot, False for normal contour plot
+        @param limits: The upper and lower limit on the parameters for which the confidence intervall is calculated. If None, 5 times the stderr is used.
         """
         
         x, y, grid = self.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res,  
@@ -2233,9 +2234,9 @@ class Minimizer(object):
             cs = pl.contour(x,y,grid,np.linspace(0,100,11),**kwargs)
             cs = pl.contour(x,y,grid,[20,40,60,80,95],**kwargs)
             pl.clabel(cs, inline=1, fontsize=10)
-        pl.plot(self.params[xpar].value, self.params[ypar].value, '+r', ms=10, mew=2)
-        pl.xlabel(xpar)
-        pl.ylabel(ypar)
+        pl.plot(self.params[xname].value, self.params[yname].value, '+r', ms=10, mew=2)
+        pl.xlabel(xname)
+        pl.ylabel(yname)
     
     def plot_grid_convergence(self, xpar=None, ypar=None, chi2lim=None, chi2scale='log',
                               show_colorbar='True', **kwargs):

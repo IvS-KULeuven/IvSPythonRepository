@@ -326,6 +326,9 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
                 data['filename'] = [_derive_filelocation_from_raw(ff,data_type) for ff in data['filename']]
                 existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
                 data = data[existing_files]
+            else:
+                keep = np.array([(not (ff.split(os.sep)[-2]=='reduced')) for ff in data['filename']])
+                data = data[keep]
             seqs = sorted(set(data['unseq']))
         logger.info('ID={}/prog_ID={}: Found {:d} spectra (data type={} with unique unseqs)'.format(ID,prog_ID,len(seqs),data_type))
     else:
