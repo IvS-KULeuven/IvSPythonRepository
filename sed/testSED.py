@@ -90,7 +90,7 @@ class SEDTestCase(unittest.TestCase):
 class ModelTestCase(SEDTestCase):
     
     @classmethod
-    def setUpClass(PixFitTestCase):
+    def setUpClass(ModelTestCase):
         """ Setup the tmap grid as it is smaller and thus faster as kurucz"""
         model.set_defaults(grid='kurucztest')
         grid1 = dict(grid='tmaptest')
@@ -167,6 +167,40 @@ class ModelTestCase(SEDTestCase):
         self.assertAlmostEqual(flux_[1],flux[1], delta=100)
         self.assertAlmostEqual(Labs_,Labs, delta=100)
 
+    def testGetTable(self):
+        """ model.get_table() single case """
+        
+        wave, flux = model.get_table(teff=6874, logg=4.21, ebv=0.0)
+        
+        self.assertEqual(len(wave), len(flux))
+        self.assertEqual(len(wave), 1221)
+        self.assertAlmostEqual(wave[0], 90.9, delta=0.1)
+        self.assertAlmostEqual(wave[-1], 1600000.0, delta=0.1)
+        self.assertAlmostEqual(wave[400], 4370.0, delta=0.1)
+        self.assertAlmostEqual(wave[800], 15925.0, delta=0.1)
+        self.assertAlmostEqual(flux[0], 0.0, delta=0.0001)
+        self.assertAlmostEqual(flux[-1], 0.020199, delta=0.0001)
+        self.assertAlmostEqual(flux[400], 24828659.5845, delta=0.0001)
+        self.assertAlmostEqual(flux[800], 1435461.60457, delta=0.0001)
+        
+    def testGetTableBinary(self):
+        """ model.get_table() multiple case """
+                            
+        wave,flux = model.get_table(teff=25000, logg=5.12, ebv=0.001, 
+                                    teff2=33240, logg2=5.86, ebv2=0.001)
+        
+        
+        self.assertEqual(len(wave), len(flux))
+        self.assertEqual(len(wave), 123104)
+        self.assertAlmostEqual(wave[0], 1000, delta=0.1)
+        self.assertAlmostEqual(wave[-1], 24999.8, delta=0.1)
+        self.assertAlmostEqual(wave[40000], 8671.20117188, delta=0.001)
+        self.assertAlmostEqual(wave[80000], 16509.4003906, delta=0.001)
+        self.assertAlmostEqual(flux[0], 170415154318.0, delta=0.5)
+        self.assertAlmostEqual(flux[-1], 2457826.26898, delta=0.0001)
+        self.assertAlmostEqual(flux[40000], 141915936.111, delta=0.001)
+        self.assertAlmostEqual(flux[80000], 12450102.801, delta=0.001)
+    
 class PixFitTestCase(SEDTestCase):
     
     @classmethod

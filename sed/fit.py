@@ -189,7 +189,7 @@ def get_PCA_parameters(obsT,calib,P,means,stds,e_obsT=None,mc=None):
 
 #{ Grid search
 
-def stat_chi2(meas,e_meas,colors,syn,full_output=False):
+def stat_chi2(meas,e_meas,colors,syn,full_output=False, **kwargs):
     """
     Calculate Chi2 and compute angular diameter.
     
@@ -213,12 +213,16 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     #-- if syn represents only one measurement
     if len(syn.shape)==1:
         if sum(-colors) > 0:
-            ratio = (meas/syn)[-colors]
-            weights = (meas/e_meas)[-colors]
-            #-- weighted average and standard deviation
-            scale = np.average(ratio,weights=weights)
-            #print 'bla',weights.shape,ratio.shape,scale
-            e_scale = np.sqrt(np.dot(weights, (ratio-scale)**2)/weights.sum())
+            if 'distance' in kwargs:
+                scale = 1/kwargs['distance']**2
+                e_scale = scale / 100
+            else:
+                ratio = (meas/syn)[-colors]
+                weights = (meas/e_meas)[-colors]
+                #-- weighted average and standard deviation
+                scale = np.average(ratio,weights=weights)
+                #print 'bla',weights.shape,ratio.shape,scale
+                e_scale = np.sqrt(np.dot(weights, (ratio-scale)**2)/weights.sum())
         else:
             scale,e_scale = 0,0
         #-- we don't need to scale the colors, only the absolute fluxes
@@ -230,13 +234,18 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False):
     #-- if syn is many measurements, we need to vectorize this:
     else:
         if sum(-colors) > 0:
-            ratio = (meas/syn)[-colors]
-            weights = (meas/e_meas)[-colors]
-            #-- weighted average and standard deviation
-            scale = np.average(ratio,weights=weights.reshape(-1),axis=0)
-            e_scale = np.sqrt(np.dot(weights.T, (ratio-scale)**2)/weights.sum(axis=0))[0]
-            #scale = np.average(ratio,axis=0)
-            #e_scale = np.zeros_like(scale)
+            if 'distance' in kwargs:
+                scale = 1/kwargs['distance']**2
+                scale = np.ones_like(syn[-colors][0,:]) * scale
+                e_scale = scale / 100
+            else:
+                ratio = (meas/syn)[-colors]
+                weights = (meas/e_meas)[-colors]
+                #-- weighted average and standard deviation
+                scale = np.average(ratio,weights=weights.reshape(-1),axis=0)
+                e_scale = np.sqrt(np.dot(weights.T, (ratio-scale)**2)/weights.sum(axis=0))[0]
+                #scale = np.average(ratio,axis=0)
+                #e_scale = np.zeros_like(scale)
         else:
             scale,e_scale = np.zeros(syn.shape[1]),np.zeros(syn.shape[1])
         #-- we don't need to scale the colors, only the absolute fluxes
@@ -815,7 +824,7 @@ def generate_grid(photbands,teffrange=((-inf,inf),(-inf,inf)),
 
 #{ Fitting: grid search
 
-def igrid_search_pix(meas,e_meas,photbands,**kwargs):
+def igrid_search_pix(meas,e_meas,photbands, constraints={},**kwargs):
         """
         Run over gridpoints and evaluate model C{model_func} via C{stat_func}.
         
@@ -862,7 +871,7 @@ def igrid_search_pix(meas,e_meas,photbands,**kwargs):
         syn_flux,lumis = model_func(photbands=photbands,**kwargs)
         chisqs,scales,e_scales = stat_func(meas.reshape(-1,1),\
                                            e_meas.reshape(-1,1),\
-                                           colors,syn_flux)
+                                           colors,syn_flux, **constraints)
         #-- return results
         return chisqs,scales,e_scales,lumis
 
@@ -910,6 +919,9 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
     model_func = kwargs.pop('model_func',model.get_itable)
     stat_func = kwargs.pop('stat_func',stat_chi2)
     index = kwargs.pop('index',None)
+    fitkws = {}
+    if 'distance' in kwargs and kwargs['distance'] != None: 
+        fitkws = {'distance':kwargs['distance']}
     N = len(args[0])
     #-- prepare output arrays
     chisqs = np.zeros(N)
@@ -925,7 +937,7 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
     for n,pars in enumerate(itertools.izip(*args)):
         if index is None: p.update(1)
         syn_flux,Labs = model_func(*pars,photbands=photbands,**kwargs)
-        chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux)
+        chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux, **fitkws)
         lumis[n] = Labs
     #-- return results
     if index is not None:
@@ -993,6 +1005,7 @@ def _iminimize_model(varlist, x, *args, **kws):
     for n, v in zip(pnames, varlist):
         pars[n] = np.array([v])
     pars.update(kws)
+    #print pars
     return model.get_itable_pix(wave_units=None, photbands=x, **pars)
     
 def _iminimize_residuals(synth, meas, weights=None, **kwargs):
@@ -1019,10 +1032,10 @@ def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwarg
     """
     
     kick_list = kwargs.pop('kick_list', None)
-    fitkws = kwargs.pop('fitkws', dict())
+    constraints = kwargs.pop('constraints', dict())
     fitmodel = kwargs.pop('model_func',_iminimize_model)
     residuals = kwargs.pop('res_func',_iminimize_residuals)
-    epsfcn = kwargs.pop('epsfcn', 0.001)# using 10% step to derive jacobian.
+    epsfcn = kwargs.pop('epsfcn', 0.0005)# using ~3% step to derive jacobian.
     
     #-- get the parameters
     parameters = create_parameter_dict(**kwargs)
@@ -1033,11 +1046,13 @@ def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwarg
     fmodel.setup_parameters(**parameters)  
     
     #-- fit the model to the data
-    fitkws.update(dict(pnames=pnames))
+    fitkws = dict(pnames=pnames)
+    fitkws.update(constraints)
     if points == None:
         startpars = [copy.deepcopy(fmodel.parameters)]
         minimizer = sfit.minimize(photbands,meas, fmodel, weights=1/e_meas, kws=fitkws, \
-                                      resfunc=residuals, engine='leastsq', epsfcn=epsfcn)
+                                      resfunc=residuals, engine='leastsq', epsfcn=epsfcn,\
+                                      ftol=0.001, xtol=0.001)
         minimizer = [minimizer]
     else:
         minimizer, startpars, newmodels, chisqr = sfit.grid_minimize(photbands, meas, fmodel, \
@@ -1104,8 +1119,17 @@ def calculate_iminimize_CI2D(meas,e_meas,photbands, xpar, ypar, df=None, **kwarg
     
     mini = iminimize(meas,e_meas,photbands, return_minimizer=True, **kwargs)
     val, err, vary, low, high, expr = mini.model.get_parameters(full_output=True)
+    val, low, high = np.array(val, dtype=float), np.array(low, dtype=float), np.array(high, dtype=float)
+    
+    #-- set some keywords so the process speeds up a bit:
+    mini.userkws.update({'epsfcn':0.001, 'xtol':0.005, 'ftol':0.005})
+    
+    
     name = mini.model.par_names
     xval, yval = val[name==xpar], val[name==ypar]
+    
+    logger.debug('Starting calculations of CI2D with parameters:\n%s'%\
+                               (mini.model.param2str(full_output=True)))
     
     #-- if not provided choose own limits
     if limits != None:
@@ -1126,7 +1150,11 @@ def calculate_iminimize_CI2D(meas,e_meas,photbands, xpar, ypar, df=None, **kwarg
     ymax = yval + (res[1] - 1 - np.floor((yval - ymin) / ystep)) * ystep
     limits = [(xmin, xmax), (ymin, ymax)]
     
-    x,y,ci_chi2 = mini.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res, limits=limits, type='chi2')
+    logger.debug('Recalculated grid limits to: \n\t%s: %s <-> %s \n\t%s %s <-> %s'%(xpar,
+                 limits[0][0], limits[0][1], ypar, limits[1][0], limits[1][1]))
+    
+    x,y,ci_chi2 = mini.calculate_CI_2D(xpar=xpar, ypar=ypar, res=res, limits=limits,
+                                       ctype='chi2')
     
     #-- do the statistics
     N = mini.ndata

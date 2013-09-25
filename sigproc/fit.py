@@ -2170,6 +2170,9 @@ class Minimizer(object):
         pl.subplots_adjust(wspace=0.0, hspace=0.0)
         ax = pl.subplot2grid((3,4), (0,0), rowspan=2, colspan=4)
         self.plot_fit(points=points, axis=axis, legend=legend, **kwargs)
+        xlim, ylim = pl.xlim(), pl.ylim()
+        x, y = xlim[1] - 0.02 * ( xlim[1]-xlim[0] ), ylim[0] + 0.05 * ( ylim[1]-ylim[0] )
+        pl.text(x, y, r'$\chi^2 =$ {:0.2f}'.format(self.minimizer.chisqr), ha='right')
         pl.ylabel(ylabel)
         pl.title(title)
         for tick in ax.axes.get_xticklabels():
