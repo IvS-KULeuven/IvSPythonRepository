@@ -1,4 +1,5 @@
 import os
+import nose
 import shutil
 import getpass
 import numpy as np
@@ -19,6 +20,7 @@ class HermesTestCase(unittest.TestCase):
     """Add some extra usefull assertion methods to the testcase class"""
     
     test_data_dir = '/home/jorisv/IVS_python/ivs_test_data/'
+    testdirectories = []
     
     def assertNoCosmic(self, wave, flux, wrange, sigma=3, msg=None):
         flux = flux[(wave>=wrange[0]-0.5) & (wave<=wrange[1]+0.5)]
@@ -49,6 +51,25 @@ class HermesTestCase(unittest.TestCase):
                 msg_ = "Array not equal on: %i, %s != %s"%(i, str(f1), str(f2))
                 if msg != None: msg_ = msg_ + ", " + msg 
                 self.assertAlmostEqual(f1,f2,places=places, delta=delta, msg=msg_)
+    
+    @nose.tools.nottest
+    def make_testDir(self):
+        
+        testdir = '/home/{:}/{:.0f}/'.format(getpass.getuser(), np.random.uniform()*10**6)
+        while os.path.exists(testdir):
+            testdir = '/home/{:}/{:.0f}/'.format(getpass.getuser(), np.random.uniform()*10**6)
+            
+        os.makedirs(testdir)
+        
+        self.testdirectories.append(testdir)
+        
+        return testdir
+    
+    @nose.tools.nottest
+    def delete_testDir(self):
+        
+        for dirname in self.testdirectories:
+            os.rmdir(dirname)
                 
 class TestCase1MergeHermesSpectra(HermesTestCase):
     
@@ -550,7 +571,123 @@ class TestCase5HermesCCF(HermesTestCase):
         msg = "invalid orders (<40 or >94) should raise IndexError"
         self.assertRaises(IndexError, ccf.combine_ccf, '39:45,75,76')
         self.assertRaises(IndexError, ccf.combine_ccf, '45:75,80:95')
+
+class TestCase6RunHermesVR(HermesTestCase):
+    """
+    Integration Tests regarding run_hermesVR in catalogs.hermes
+    """
+    
+    @classmethod
+    def setUpClass(self):
+        """ Mock all methods used by run_hermesVR """
+        self.testfile = '/home/jorisv/IVS_python/ivs_test_data/catalogs_hermes_spectrum.fits'
+        self.wvl_file = '/STER/mercator/hermes/20091130/reduced/00262831'
         
+        hermes._subprocess_execute = mock.Mock(return_value=('', None, 0))
+        hermes.write_hermesConfig = mock.Mock(return_value=dict(AnalysesResults='/home/'))
+        os.remove = mock.Mock(return_value=None)
+        os.mkdir = mock.Mock(return_value=None)
+        os.rmdir = mock.Mock(return_value=None)
+        shutil.copyfile = mock.Mock(return_value=None)
+    
+    def setUp(self):
+        """ Create temporary directory """
+        hermes.tempDir = self.make_testDir()
+        
+    def tearDown(self):
+        """ Delete temporary directory """
+        self.delete_testDir()
+    
+    @classmethod
+    def tearDownClass(self):
+        """ restore all mocked methods """
+        reload(os)
+        reload(shutil)
+        reload(hermes)
+        
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    def test1create_delete_dir(self):
+        """catalogs.hermes run_hermesVR creating/deleting temp directory"""
+        
+        
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='release',
+                                                     unseq=500)
+        
+        #-- create temp directories
+        os.mkdir.assert_any_call(hermes.tempDir+'hermesvr/')
+        os.mkdir.assert_any_call(hermes.tempDir+'hermesvr/reduced/')
+        
+        
+        
+        #-- delete temp directories
+        os.rmdir.assert_any_call(hermes.tempDir+'hermesvr/')
+        os.rmdir.assert_any_call(hermes.tempDir+'hermesvr/reduced/')        
+        
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    def test2copy_input(self):
+        """catalogs.hermes run_hermesVR copy input files"""
+        
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='release',
+                                                     unseq=500)
+        
+        #-- copy the input file
+        shutil.copyfile.assert_called_with(self.testfile, 
+                                           hermes.tempDir + 'hermesvr/reduced/500_HRF_OBJ_ext.fits')
+        
+        #-- delete the file again
+        os.remove.assert_called_with(hermes.tempDir+'hermesvr/reduced/500_HRF_OBJ_ext.fits')
+    
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    def test3hermes_config(self):
+        """catalogs.hermes run_hermesVR write correct hermesConfig"""
+        
+        #-- release version
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='release',
+                                                     unseq=500)
+        
+        hermes.write_hermesConfig.assert_any_call(Nights = hermes.tempDir, 
+                                            CurrentNight = hermes.tempDir + 'hermesvr/',
+                                            Reduced = hermes.tempDir)
+        
+        #-- trunk version
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='trunk',
+                                                     unseq=500)
+        
+        hermes.write_hermesConfig.assert_any_call(Nights = hermes.tempDir + 'hermesvr/', 
+                                            CurrentNight = hermes.tempDir + 'hermesvr/',
+                                            Reduced = hermes.tempDir)
+    
+    @unittest.skipIf(noMock, "Mock not installed")
+    def test2defaults(self):
+        """catalogs.hermes run_hermesVR correct hermesVR command"""
+        
+        #-- release version
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='release')
+        
+        cmd = ['python', '/STER/mercator/mercator/Hermes/releases/hermes5/pipeline/run/hermesVR.py',
+               '-i', '262834', '-w', '/STER/mercator/hermes/20091130/reduced/00262831']
+        hermes._subprocess_execute.assert_called_with(cmd, 500)
+        
+        #-- trunk version
+        unseq, out, returncode = hermes.run_hermesVR(self.testfile, wvl_file=self.wvl_file, version='trunk',
+                                                     timeout=150)
+        
+        cmd = ['python', '/STER/mercator/mercator/Hermes/trunk/hermes/pipeline/run/hermesVR.py',
+               '-i', '262834', '-w', '/STER/mercator/hermes/20091130/reduced/00262831', '-f']
+        hermes._subprocess_execute.assert_called_with(cmd, 150)
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

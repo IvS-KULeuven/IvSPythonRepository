@@ -134,12 +134,19 @@ and everything should be fine.
 @var hermesDir: Path to the directory in which the hermes folders (hermesAnalysis, 
                 hermesRun, hermesDebug) are located. By default this is set to 
                 '/home/user/'.
+                
+@var tempDir: Path to temporary directory where files nessessary for hermesVR to run
+              can be copied to. You need write permission in this directory. The 
+              default is set to '/scratch/user/'
 """
 import re
+import os
 import sys
 import glob
-import os
+import time
+import shutil
 import logging
+import getpass
 import datetime
 import subprocess
 import numpy as np
@@ -161,6 +168,7 @@ from ivs.spectra import tools as sptools
 
 
 hermesDir = os.path.expanduser('~/')
+tempDir = '/scratch/%s/'%(getpass.getuser())
 
 logger = logging.getLogger("CAT.HERMES")
 logger.addHandler(loggers.NullHandler())
@@ -326,9 +334,6 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
                 data['filename'] = [_derive_filelocation_from_raw(ff,data_type) for ff in data['filename']]
                 existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
                 data = data[existing_files]
-            else:
-                keep = np.array([(not (ff.split(os.sep)[-2]=='reduced')) for ff in data['filename']])
-                data = data[keep]
             seqs = sorted(set(data['unseq']))
         logger.info('ID={}/prog_ID={}: Found {:d} spectra (data type={} with unique unseqs)'.format(ID,prog_ID,len(seqs),data_type))
     else:
@@ -551,6 +556,9 @@ def read_hermesVR_velocities(unique=True, return_latest=True, unseq=None, object
     
     #-- read data from velocities.data
     velocity_file = kwargs.pop('filename', hermesDir + 'hermesAnalyses/velocities.data')
+    if not os.path.isfile(velocity_file):
+        logger.warning('velocities.data file not found!')
+        return []
     rawdata = ascii.read2list(velocity_file)[0]
     
     #-- parse the data and store in rec array
@@ -678,6 +686,155 @@ def write_hermesConfig(**kwargs):
 #}
 
 #{ Hermes DRS wrappers
+
+def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
+                 flatfield=False, vrange='default', vrot=False, version='release',
+                 verbose=False, timeout=500, **kwargs):
+    """
+    Wrapper around hermesVR that will run hermesVR on any given filename. Thus not on
+    sequence number. This can be usefull if you first merge together 2 back-to-back 
+    spectra and then want to calculate the radial velocity of the merged spectrum.
+    
+    The original file will not be modified, it is coppied to the tempDir, and the name
+    will be changed according to the supplied flags. During the process hermesConfig.xml
+    is adapted, but after hermesVR is finished, it is restored to its old state.
+    
+    When providing a wavelength scale file, provide the full path, but cut off the 
+    '_HRF_TH_ext_wavelengthScale.fits' part of the filename. Thus if you want to use:
+    '/folder/2451577_HRF_TH_ext_wavelengthScale.fits', use:
+    
+    >>> run_hermesVR(filename, wvl_file = '/folder/2451577')
+    
+    The results of hermesVR are saved to the standard paths, as provided in the
+    hermesConfig file. This method only returns the unseq number of the filename
+    so you can find the corresponding output file, the output of hermesVR as a 
+    string, and a unix return signal of running hermesVR. 
+    The returncode is 0 if no errors are found. Any negative number means hermesVR
+    failed (codes can be consulted here:  U{unix signals 
+    <http://people.cs.pitt.edu/~alanjawi/cs449/code/shell/UnixSignals.htm>}).
+    If returncode = -35, then hermesVR completed but didn't write any output. In
+    this case consult the logs or string output to find out what went wrong.
+    
+    @param filename: complete path to the input spectrum for hermesVR
+    @type filename: str
+    @param mask_file: complete path to the mask file to use or None
+    @type mask_file: str
+    @param wvl_file: path to wavelengthscale file or None
+    @type wvl_file: str
+    @param cosmic_clipping: Doesn't do anything for now
+    @type cosmic_clipping: bool
+    @param flatfield: Use flatfield devision or not
+    @type flatfield: bool
+    @param vrange: Size of velocity window ('default', 'large' (x2), 'xlarge' (x5))
+    @type vrange: str
+    @param vrot: Fit CCF with rotationaly broadend profile instead of gaussian
+    @type vrot: bool
+    @param version: which version of the pipeline to use: 'release' or 'trunk'
+    @type version: str
+    @param verbose: print output of hermesVR
+    @type verbose: bool
+    @param timeout: Maximum time hermesVR is allowed to run in seconds
+    @type timeout: int
+    
+    @return: unseq used, text output of hermesVR, unix return code
+    @rtype: (int, str, int)
+    
+    """
+    #-- Create running directory
+    vrDir = tempDir + 'hermesvr/'
+    redDir = tempDir + 'hermesvr/reduced/'
+    delRedDir, delVrDir = False, False
+    if not os.path.isdir(vrDir):
+        delVrDir = True
+        os.mkdir(vrDir)
+    if not os.path.isdir(redDir):
+        delRedDir = True
+        os.mkdir(redDir)
+    
+    #-- Get unseq.
+    header = pyfits.getheader(filename)
+    if 'unseq' in kwargs:
+        unseq = kwargs.pop('unseq')
+        logger.debug('Using provided sequence number: {:}'.format(unseq))
+    elif 'unseq' in header:
+        unseq = header['unseq']
+        logger.debug('Using sequence number from fits header: {:}'.format(unseq))
+    else:
+        unseq = 1
+        logger.debug('Using default sequence number: {:}'.format(unseq))
+    
+    #-- Construct filename and copy
+    vrFile = redDir+ '{:.0f}_HRF_OBJ_ext.fits'.format(unseq)
+    shutil.copyfile(filename, vrFile )
+    logger.debug('Coppied input file to: {:}'.format(vrFile))
+    
+    #-- Which version to use and update hermesConfig:
+    if version == 'release':
+        cmd = 'python /STER/mercator/mercator/Hermes/releases/hermes5/pipeline/run/hermesVR.py'
+        oldConfig = write_hermesConfig(Nights=tempDir, CurrentNight=vrDir, Reduced=tempDir)
+    else:
+        cmd = 'python /STER/mercator/mercator/Hermes/trunk/hermes/pipeline/run/hermesVR.py'
+        oldConfig = write_hermesConfig(Nights=vrDir, CurrentNight=vrDir, Reduced=tempDir)
+    
+    #-- Delete old hermesVR results so it is possible to check if hermesVR completed
+    hermesOutput = oldConfig['AnalysesResults'] + "/{:.0f}_AllCCF.data".format(unseq)
+    if os.path.isfile(hermesOutput):
+        os.remove(hermesOutput)
+        logger.debug('Removing existing hermesRV result: {:}'.format(hermesOutput))
+    
+    #-- Create command and run hermesVR
+    runError = None
+    try:
+        cmd += " -i {:.0f}".format(unseq)
+        
+        if mask_file:
+            cmd += " -m {:}".format(mask_file)
+            
+        if wvl_file:
+            cmd += " -w {:}".format(wvl_file)
+            
+        if flatfield and version=='release' or not flatfield and version=='trunk':
+            cmd += " -f"
+        
+        if vrange == 'large':
+            cmd += " -L"
+        elif vrange == 'xlarge':
+            cmd += " -LL"
+        
+        if vrot and version == 'trunk':
+            cmd += " -ROT"
+        
+        # RUN
+        logger.info('running hermesVR {:} version, with command:\n\t{:}'.format(version, cmd))
+        out, err, returncode = _subprocess_execute(cmd.split(), timeout)
+        
+        # Error Handling
+        if returncode == -1:
+            logger.warning('Timeout, hermesVR was terminated after' \
+                           +' {:.0f}s'.format(timeout))
+        elif returncode < 0:
+            logger.warning('hermesVR terminated with signal: ' \
+                           +' {:.0f}s'.format(abs(returncode)))
+        elif not os.path.isfile(hermesOutput):
+            logger.warning('hermesVR finished but did not succeed, check log for details')
+            returncode = -35
+            logger.debug(out)
+            
+        if verbose: print out
+    
+    except Exception, e:
+        runError = e
+    
+    #-- restore hermesConfig and delete coppied files
+    write_hermesConfig(**oldConfig)
+    os.remove(vrFile)
+    if delRedDir: os.rmdir(redDir)
+    if delVrDir: os.rmdir(vrDir)
+    
+    #-- Now raise possible errors
+    if runError: raise runError
+    
+    return unseq, out, returncode
 
 def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,flatfield=False):
     """
@@ -1067,6 +1224,33 @@ def _etree_to_dict(t):
             d[t.tag] = text
     return d
 
+def _subprocess_execute(command, time_out=100):
+    """executing the command with a watchdog"""
+
+    # launching the command
+    c = subprocess.Popen(command, stdout=subprocess.PIPE)
+
+    # now waiting for the command to complete
+    t = 0
+    while t < time_out and c.poll() is None:
+        time.sleep(1)  # (comment 1)
+        t += 1
+
+    # there are two possibilities for the while to have stopped:
+    if c.poll() is None:
+        # in the case the process did not complete, we kill it
+        c.terminate()
+        # and fill the return code with some error value
+        out, err = c.communicate()
+        returncode = -1
+
+    else:                 
+        # in the case the process completed normally
+        out, err = c.communicate()
+        returncode = c.poll()
+
+    return out, err, returncode
+
 #}
 
 if __name__=="__main__":
@@ -1074,8 +1258,14 @@ if __name__=="__main__":
     from ivs.aux import loggers
     logger = loggers.get_basic_logger(clevel='debug')
     
-    read_hermesVR_velocities()
+    filename = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451576_HRF_OBJ_ext_CosmicsRemoved.fits'
+    wvl_file = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451577'
     
+    unseq,output, error = run_hermesVR(filename, wvl_file=wvl_file, verbose=False, version='trunk', timeout=500)
+    
+    data = read_hermesVR_velocities(unseq=[unseq])
+    
+    print data['vrad'], ' +- ', data['vraderr']
     
     #import time
     #import sys
