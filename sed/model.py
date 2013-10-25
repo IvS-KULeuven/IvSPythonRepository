@@ -549,6 +549,8 @@ def get_file(integrated=False,**kwargs):
         - grid='tkachenko': metallicity z
         - grid='nemo': convection theory and metallicity (CM=Canuto and Mazzitelli 1991),
         (CGM=Canuto,Goldman,Mazzitelli 1996), (MLT=mixinglengththeory a=0.5)
+        - grid='marcsjorissensp': high resolution spectra from 4000 to 25000 A of (online available) MARCS grid computed by A. Jorissen 
+        with turbospectrum v12.1.1 in late 2012, then converted to the Kurucz wavelength grid (by S. Bloemen and M. Hillen).
     
     @param integrated: choose integrated version of the grid
     @type integrated: boolean
@@ -687,7 +689,11 @@ def get_file(integrated=False,**kwargs):
         else:
             postfix = ''
         basename = 'kurucz_SEDtest_z%s%s.fits'%(z,postfix) #only available for 1 metalicity 
-    
+    elif grid=='marcsjorissensp':
+        if not isinstance(z,str): z = '%.2f'%(z)
+        if not isinstance(a,str): a = '%.2f'%(a)
+        if not isinstance(m,str): m = '%.1f'%(m)
+        basename = 'MARCSJorissenSp_m%s_z%s_a%s_sed.fits'%(m,z,a)
     else:
         raise ValueError("Grid {} is not recognized: either give valid descriptive arguments, or give an absolute filepath".format(grid))
     #-- retrieve the absolute path of the file and check if it exists:
