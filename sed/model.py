@@ -2275,6 +2275,13 @@ def _get_pix_grid(photbands,
     #-- collect information from all the grid files
     for gridfile in gridfiles:
         with pyfits.open(gridfile) as ff:
+            # Fix duplicate column names
+            had_columns = []
+            for key in ff[1].header.keys():
+                if key[:5]=='TTYPE' and not ff[1].header[key] in had_columns:
+                    had_columns.append(ff[1].header[key])
+                elif key[:5]=='TTYPE':
+                    ff[1].header[key] += '-1'
             #-- make an alias for further reference
             ext = ff[1]
             #-- we already cut the grid here, in order not to take too much memory
