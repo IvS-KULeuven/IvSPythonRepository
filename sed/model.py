@@ -621,7 +621,13 @@ def get_file(integrated=False,**kwargs):
     elif grid=='wd_boris':
         basename = 'SED_WD_Gaensicke.fits'
     elif grid=='wd_da':
-        basename = 'SED_WD_Koester_DA.fits'
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'SED_WD_Koester_DA%s.fits'%(postfix)
     elif grid=='wd_db':
         basename = 'SED_WD_Koester_DB.fits'        
     elif grid=='marcs':
@@ -668,7 +674,27 @@ def get_file(integrated=False,**kwargs):
         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
-        
+    
+    elif grid=='tmapsdb':
+        # grids for sdB star fitting (JorisV)
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'TMAP2012_sdB_extended%s.fits'%(postfix)
+    elif grid=='kuruczsdb':
+        # grids for sdB star fitting (JorisV)
+        if not isinstance(z,str): z = '%.1f'%(z)
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'kurucz_z%s_sdB%s.fits'%(z,postfix)
+    
     elif grid=='tmaptest':
         """ Grids exclusively for testing purposes"""
         if integrated:
@@ -921,7 +947,7 @@ def wien(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_
     return I
 
 
-def get_table(teff=None,logg=None,ebv=None,star=None,
+def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
               wave_units='AA',flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere.
@@ -1032,6 +1058,9 @@ def get_table(teff=None,logg=None,ebv=None,star=None,
         wave = conversions.convert('AA',wave_units,wave,**kwargs)
     
     ff.close()
+    
+    if rad != None:
+        flux = rad**2 * flux
     
     return wave,flux
 
@@ -1304,7 +1333,7 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
                                      flux_units=flux_units,**kwargs)
     
     #-- run over all fluxes and sum them, we do not need to multiply with the radius
-    #   as the radius is provided as an argument to itable_single_pix.
+    #   as the radius is provided as an argument to get_itable_single.
     fluxes, Labs = [],[]                                
     for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
         trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
@@ -1485,7 +1514,7 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
                                      
         fluxes.append(f)
         Labs.append(L)
-        
+    
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs,axis=0)
     
@@ -1502,8 +1531,9 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
     return fluxes,Labs   
 
 
-def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
-              wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_output=False,**kwargs):
+#def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
+              #wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_output=False,**kwargs):
+def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_output=False,**kwargs):
     """
     Retrieve the spectral energy distribution of a combined model atmosphere.
     
@@ -1541,19 +1571,49 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-    #-- set default parameters
-    if grids is None:
-        grids = [defaults_multiple[i] for i in range(len(teff))]
-    if radius is None:
-        radius = tuple([1. for i in teff])
-    #-- gather all the SEDs from the individual components
-    waves,fluxes = [],[]
-    for i in range(len(teff)):
-        iteff,ilogg,iebv = teff[i],logg[i],ebv[i]
-        mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
-        iwave,iflux = get_table(teff=iteff,logg=ilogg,ebv=iebv,**mykwargs)
-        waves.append(iwave)
-        fluxes.append(iflux)
+    values, parameters, components = {}, set(), set()
+    for key in kwargs.keys():
+        if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
+            par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
+            values[key] = kwargs.pop(key)
+            parameters.add(par)
+            components.add(comp)
+    
+    #-- If there is only one components we can directly return the result
+    if len(components) == 1:
+        kwargs.update(values)
+        return get_table_single(wave_units=wave_units, flux_units=flux_units,
+                                     full_output=full_output,**kwargs)
+                                     
+    #-- Run over all fluxes and sum them, we do not need to multiply with the radius
+    #   as the radius is provided as an argument to get_table_single.
+    waves, fluxes = [],[]                                
+    for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
+        trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
+        kwargs_ = kwargs.copy()
+        kwargs_.update(grid)
+        for par in parameters:
+            kwargs_[par] = values[par+comp] if par+comp in values else values[par]
+        
+        w,f = get_table_single(**kwargs_)
+        
+        waves.append(w)
+        fluxes.append(f)
+    
+    ##-- set default parameters
+    #if grids is None:
+        #grids = [defaults_multiple[i] for i in range(len(teff))]
+    #if radius is None:
+        #radius = tuple([1. for i in teff])
+    ##-- gather all the SEDs from the individual components
+    #waves,fluxes = [],[]
+    #for i in range(len(teff)):
+        #iteff,ilogg,iebv = teff[i],logg[i],ebv[i]
+        #mykwargs = dict(list(grids[i].items()) + list(kwargs.items()))
+        #iwave,iflux = get_table(teff=iteff,logg=ilogg,ebv=iebv,**mykwargs)
+        #waves.append(iwave)
+        #fluxes.append(iflux)
+        
     #-- what's the total wavelength range? Merge all wavelength arrays and
     #   remove double points
     waves_ = np.sort(np.hstack(waves))
@@ -1566,13 +1626,22 @@ def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
         fluxes_ = []
     else:
         fluxes_ = 0.
+        
+    ##-- interpolate onto common grid in log!
+    #for i,(wave,flux) in enumerate(zip(waves,fluxes)):
+        #intf = interp1d(np.log10(wave),np.log10(flux),kind='linear')
+        #if full_output:
+            #fluxes_.append(radius[i]**2*10**intf(np.log10(waves_)))
+        #else:
+            #fluxes_ += radius[i]**2*10**intf(np.log10(waves_))
     #-- interpolate onto common grid in log!
     for i,(wave,flux) in enumerate(zip(waves,fluxes)):
         intf = interp1d(np.log10(wave),np.log10(flux),kind='linear')
         if full_output:
-            fluxes_.append(radius[i]**2*10**intf(np.log10(waves_)))
+            fluxes_.append(10**intf(np.log10(waves_)))
         else:
-            fluxes_ += radius[i]**2*10**intf(np.log10(waves_))
+            fluxes_ += 10**intf(np.log10(waves_))
+            
     if flux_units!='erg/cm2/s/AA/sr':
         fluxes_ = conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes_,wave=(waves_,'AA'),**kwargs)
     if wave_units!='AA':

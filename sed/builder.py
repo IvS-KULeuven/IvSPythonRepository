@@ -2990,7 +2990,7 @@ class SED(object):
             pl.legend(loc='upper right',prop=dict(size='x-small'))
             pl.grid()
             pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.59,0.120),xycoords='axes fraction',color='r')
-            pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2[include_grid][keep])),(0.59,0.075),xycoords='axes fraction',color='r')
+            #pl.annotate('Total Reduced $\chi^2$ = %0.2f'%(sum(chi2[include_grid][keep])),(0.59,0.075),xycoords='axes fraction',color='r')
             if 'factor' in self.results[mtype]:
                 pl.annotate('Error scale = %.2f'%(np.sqrt(self.results[mtype]['factor'])),(0.59,0.030),xycoords='axes fraction',color='k')
             xlims = pl.xlim()
@@ -3779,7 +3779,7 @@ class BinarySED(SED):
         """
         masses = self.constraints.get('masses',None)
         super(BinarySED, self).calculate_iminimize_CI2D(xpar, ypar, mtype=mtype,\
-                                 limits=limits, res=res, masses=masses, **kwargs)
+                                 limits=limits, res=res, **kwargs) #,masses=masses)
     
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
         """
@@ -3796,22 +3796,21 @@ class BinarySED(SED):
         if mtype in ['igrid_search', 'iminimize']:
             scale = self.results[mtype]['CI']['scale']
             
-            #-- get (approximated) reddened and unreddened model
-            wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
-                                    logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
-                                    ebv=(self.results[mtype]['CI']['ebv'],self.results[mtype]['CI']['ebv2']),
-                                    radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
-                                    law=law)
-            wave_ur,flux_ur = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
-                                      logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
-                                      ebv=(0,0),
-                                      radius=(self.results[mtype]['CI']['rad'],self.results[mtype]['CI']['rad2']),
-                                      law=law)
-            #-- get synthetic photometry
-            pars = {}
+            #-- get parameters
+            pars, pars_ur = {}, {}
             for key in self.results[mtype]['CI'].keys():
                 if not key[-2:] == '_u' and not key[-2:] == '_l':
                     pars[key] = self.results[mtype]['CI'][key]
+                    if not re.search('ebv\d?', key):
+                        pars_ur[key] = self.results[mtype]['CI'][key]
+                    else:
+                        pars_ur[key] = 0.0
+            
+            #-- get (approximated) reddened and unreddened model
+            wave,flux = model.get_table(**pars)
+            wave_ur,flux_ur = model.get_table(**pars_ur)
+
+            #-- get synthetic photometry
             synflux_,pars = model.get_itable(photbands=self.master['photband'][keep], **pars)
             flux,flux_ur = flux*scale,flux_ur*scale
                 

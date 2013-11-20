@@ -131,31 +131,52 @@ again. If a computer does stop running, just restart again with::
     
 and everything should be fine.
 
+@var hermesDir: Path to the directory in which the hermes folders (hermesAnalysis, 
+                hermesRun, hermesDebug) are located. By default this is set to 
+                '/home/user/'.
+                
+@var tempDir: Path to temporary directory where files nessessary for hermesVR to run
+              can be copied to. You need write permission in this directory. The 
+              default is set to '/scratch/user/'
 """
 import re
+import os
 import sys
 import glob
-import os
+import time
+import shutil
 import logging
+import getpass
 import datetime
 import subprocess
 import numpy as np
 import pyfits
 
+import copy
+from lxml import etree
+from xml.etree import ElementTree as ET
+from collections import defaultdict
+
 from ivs.catalogs import sesame
-from ivs.io import ascii
+from ivs.io import ascii, fits
 from ivs.aux import loggers
 from ivs.observations import airmass
 from ivs.observations.barycentric_correction import helcorr
 from ivs.units import conversions
 from ivs import config
+from ivs.spectra import tools as sptools
+
+
+hermesDir = os.path.expanduser('~/')
+tempDir = '/scratch/%s/'%(getpass.getuser())
 
 logger = logging.getLogger("CAT.HERMES")
 logger.addHandler(loggers.NullHandler())
 
 #{ User functions
 
-def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',radius=1.,filename=None):
+def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
+           radius=1.,filename=None):
     """
     Retrieve datafiles from the Hermes catalogue.
     
@@ -267,7 +288,9 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',r
     """
     #-- read in the data from the overview file, and get SIMBAD information
     #   of the star
-    data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv'),splitchar='\t')
+    ctlFile = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
+    data = ascii.read2recarray(ctlFile, splitchar='\t')
+    #data = ascii.read2recarray(config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv'),splitchar='\t')
     keep = np.array(np.ones(len(data)),bool)
     #-- confined search within given time range
     if time_range is not None:
@@ -311,9 +334,6 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',r
                 data['filename'] = [_derive_filelocation_from_raw(ff,data_type) for ff in data['filename']]
                 existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
                 data = data[existing_files]
-            else:
-                keep = np.array([(not (ff.split(os.sep)[-2]=='reduced')) for ff in data['filename']])
-                data = data[keep]
             seqs = sorted(set(data['unseq']))
         logger.info('ID={}/prog_ID={}: Found {:d} spectra (data type={} with unique unseqs)'.format(ID,prog_ID,len(seqs),data_type))
     else:
@@ -350,7 +370,73 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',r
         ascii.write_array(data,filename,auto_width=True,header=True)
     else:
         return data
+
+def merge_hermes_spectra(objlist, wscalelist=None, **kwargs):
+    """
+    Combines HERMES spectra with sigma clipping to remove cosmics. The input spectra
+    are given as a list of filenames for the objects and for the wavelength scales. 
+    The output is the wavelength scale of the first object, the merged and sigma clipped 
+    flux, and the adapted header of the object. In this adapted header, the exposure
+    time is the sum of all individual exposure times, and the observing time is averaged.
+    Uses the L{ivs.spectra.tools.merge_cosmic_clipping} method to merge the spectra.
     
+    >>> data = search('KIC9540226')
+    >>> objlist = data['filename']
+    >>> wave, flux, header = merge_hermes_spectra(objlist, wscalelist=None)
+    
+    @param objlist: list of OBJ or order merged filenames
+    @param wscalelist: list of wavelengthscale filenames
+    @param vrads: list of radial velocities (optional)
+    @param vrad_units: units of the radial velocities
+    @param sigma: value used for sigma clipping
+    @param window: window size used in median filter
+    @param runs: number of iterations through the spectra
+    
+    @return: The combined spectrum, cosmic clipped. (wave, flux, header)
+    @rtype: [array, array, dict]
+    """
+    kwargs['full_output'] = False
+    
+    if wscalelist == None:
+        #-- Order Merged spectra are straight forward
+        exptime, bjd = 0, np.zeros(len(objlist))
+        waves, fluxes = [],[]
+        for i, ofile in enumerate(objlist):
+            w, f, h = fits.read_spectrum(ofile, return_header=True)
+            waves.append(w)
+            fluxes.append(f)
+            exptime += h['exptime']
+            #bjd[i] = h['bjd']
+        
+        waves, fluxes = np.array(waves), np.array(fluxes)
+        mwave, mflux = sptools.merge_cosmic_clipping(waves, fluxes, **kwargs)
+        
+    else:
+        #-- The OBJ spectra need to be merged order per order
+        # read all spectra
+        exptime, bjd = 0, np.zeros(len(objlist))
+        waves, fluxes = np.zeros((55,4608, len(objlist))), np.zeros((55,4608, len(wscalelist)))
+        for i, (ofile, wfile) in enumerate(zip(objlist, wscalelist)):
+            odata = pyfits.getdata(ofile, 0).T # The flux has format (4608, 55) thus is transposed
+            oheader = pyfits.getheader(ofile, 0)
+            wdata = pyfits.getdata(wfile, 0)
+            fluxes[:,:,i] = odata
+            waves[:,:,i] = wdata
+            exptime += oheader['exptime']
+            #bjd[i] = oheader['bjd']
+        
+        # merge the spectra
+        mwave, mflux = waves[:,:,0], np.zeros((55, 4608))
+        for i in range(55):
+            wave, flux = sptools.merge_cosmic_clipping(waves[i,:,:].T, fluxes[i,:,:].T, **kwargs)
+            mflux[i] = flux
+        
+    header = pyfits.getheader(objlist[0], 0)
+    header['exptime'] = exptime
+    #header['bjd'] = np.average(bjd)
+    
+    return mwave, mflux, header
+
 def make_list_star(ID,direc=None):
     """
     Mimics HermesTool MakeListStar.
@@ -412,15 +498,351 @@ def calibrate(wave,flux,header=None):
     return wave[keep],flux[keep]/iflux,iflux
 #}
 
+#{ Read / Write
+
+def read_hermesVR_velocities(unique=True, return_latest=True, unseq=None, object=None, **kwargs):
+    """
+    Read the velocities.data file with the resuls from hermesVR. The results are
+    returned as a numpy record array. By setting unique to True, the method will 
+    only return a unique set of sequence numbers. When return_latest is True it will 
+    pick the latest added version, otherwise the first added is picked.
+    
+    You can supply a list of unseq numbers, and then only those will be returned,
+    same goes for object. In both cases the output is ordered in the same way as 
+    the list of unseq or object that you provided. These lists can be used together
+    with the unique option.
+    
+    This method will search for 'velocities.data' in 'hermesDir/hermesAnalyses/'.
+    You can provide another file location by using the keyword filename.
+    
+    The field in the recored array are:
+    
+        - unseq: unique number 
+        - object: object name 
+        - hjd: HJD 
+        - exptime: exposure time 
+        - bvcorr: bary_corr 
+        - rvdrift: RV drift (2F frames only) 
+        - telloff: telluric offset 
+        - tellofferr: error on telluric offset 
+        - telloffwidth: width telluric fit  
+        - vrad: Vrad(55-74) (bvcorr applied)
+        - vraderr: err on Vrad 
+        - nlines: number of lines used 
+        - ccfdepth: depth_CCF
+        - ccfdeptherr: error on depth_CCF 
+        - ccfsigma: sigma_CCF
+        - ccfsigmaerr: err on sigma_CCF
+        - sn: signal to noise in spectrum (orders 55-74) 
+        - gaussoc: O-C of Gaussian fit 
+        - wvlfile: wavelength calibration file 
+        - maskfile: mask file 
+        - fffile: Flatfield file 
+        
+    @param unique: True is only return unique sequence numbers
+    @type unique: bool
+    @param return_latest: True to pick the last added file
+    @type return_latest: bool
+    @param unseq: list of sequence numbers to return
+    @type unseq: list
+    @param object: list of object names to return
+    @type object: list
+    @param filename: Path to the velocities.data file
+    @type filename: str
+    
+    @return: array with the requested result
+    @rtype: record array
+    """
+    
+    #-- read data from velocities.data
+    velocity_file = kwargs.pop('filename', hermesDir + 'hermesAnalyses/velocities.data')
+    if not os.path.isfile(velocity_file):
+        logger.warning('velocities.data file not found!')
+        return []
+    rawdata = ascii.read2list(velocity_file)[0]
+    
+    #-- parse the data and store in rec array
+    for i, line in enumerate(rawdata):
+        # here are some options to catch problems before creating the recarray.
+        if len(line) > 21: 
+            line[20] = " ".join(line[20:])
+            rawdata[i] = tuple(line[0:21])
+            
+    dtype = [('unseq','int'),('object','a20'),('hjd','f8'),('exptime','f8'),('bvcor','f8'),
+             ('rvdrift','f8'),('telloff','f8'),('tellofferr','f8'),('telloffwidth','f8'),
+             ('vrad','f8'),('vraderr','f8'),('nlines','int'),('ccfdepth','f8'),
+             ('ccfdeptherr','f8'), ('ccfsigma','f8'),('ccfsigmaerr','f8'),('sn','f8'),
+             ('gaussoc','f8'),('wvlfile','a80'),('maskfile','a80'),('fffile','a80')]
+    data = np.rec.array(rawdata, dtype=dtype) 
+    
+    #-- select which lines to keep
+    if unique:
+        unique_sequence = set(data['unseq'])
+        order = -1 if return_latest else 0
+        select = []
+        for seq in unique_sequence:
+            select.append(np.where(data['unseq']==seq)[0][order])
+        data = data[(select,)]
+    
+    if unseq != None:
+        # also keep the order in which unseq is provided
+        select = np.ravel(np.hstack([np.where(data['unseq']==sq) for sq in unseq]))
+        data = data[(select,)]
+        
+        
+    if object != None:
+        select = np.ravel(np.hstack([np.where(data['object']==ob) for ob in object]))
+        data = data[select]
+    
+    return data
+
+def read_hermesVR_AllCCF(unseq):
+    """
+    Read the AllCCF.fits files written by hermesVR with the individual cross
+    correlation functions of each order. The cross-correlation functions are stored
+    in a HermesCCF object from which they can be requested.
+    
+    You can read *_AllCCF.fits file by providing only the unique sequence number as
+    an integer. In this case the file will be searched in the hermesDir/hermesAnalyses/ 
+    folder. You can also provide the complete filename instead as a string fx.
+    
+    >>> read_hermesVR_AllCCF(457640)
+    >>> read_hermesVR_AllCCF('/home/jorisv/hermesAnalysis/00457640_AllCCF.fits')
+    
+    @param unseq: unique sequence number or filename to read
+    @type unseq: int or str
+    
+    @return: The cross correlation functions
+    @rtype: HermesCCF object
+    """
+    
+    if type(unseq) == int:
+        filename = hermesDir + 'hermesAnalyses/*{:.0f}_AllCCF.fits'.format(unseq)
+        files = glob.glob( filename )
+        if len(files) > 0:
+            filename = files[0]
+    else:
+        filename = unseq
+        
+    if not os.path.isfile(filename):
+        logger.warning("Filename ''{:}'' is NOT valid!, returning empty object".format(filename))
+        return HermesCCF(filename=None)
+    
+    return HermesCCF(filename=filename)
+
+def write_hermesConfig(**kwargs):
+    """
+    Update the hermesConfig.xml file with the specified keywords. This method will
+    return the original content of the file as a dictionary. You can use that dict
+    as an argument to this function if you want to restore the hermesConfig file to
+    the original state.
+    
+    write_hermesConfig will search for hermesConfig.xml in hermesDir/hermesRun/ 
+    unless a path is specified in the kwarg filename.
+    
+    example use:
+    
+    >>> old = write_hermesConfig(CurrentNight="/STER/mercator/hermes/20101214")
+    >>> " Do some stuff "
+    >>> write_hermesConfig(**old)
+   
+    @attention: This function does not check the validity of the keywords that you
+    provide, that is your own responsibility. 
+    
+    @param filename: complete path to the hermesConfig.xml file
+    @type filename: str
+    
+    @return: The original content of hermesConfig.xml before modification.
+    @rtype: dict
+    """
+    
+    config_file = kwargs.pop('filename', hermesDir + 'hermesRun/hermesConfig.xml')
+    
+    #-- read current config file to dictionary
+    old_config = _etree_to_dict( ET.parse(config_file).getroot() )['hermes']
+    
+    if len(kwargs.keys()) == 0.0:
+        logger.debug('Nothing written to hermesConfig.xml, returning current config.')
+        return old_config
+    
+    #-- update the config dictionary
+    new_config = copy.deepcopy(old_config)
+    new_config.update(kwargs)
+    
+    hermes = etree.Element("hermes")
+    for key in new_config.keys():
+        child = etree.SubElement(hermes, key)
+        child.text = new_config[key]
+    
+    #-- write to file
+    out = etree.ElementTree(element=hermes)
+    out.write(config_file, pretty_print=True)
+    
+    logger.debug('Written new hermesConfig to file:\n'+etree.tostring(hermes, pretty_print=True))
+    
+    return old_config
+            
+
+#}
+
 #{ Hermes DRS wrappers
+
+def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
+                 flatfield=False, vrange='default', vrot=False, version='release',
+                 verbose=False, timeout=500, **kwargs):
+    """
+    Wrapper around hermesVR that will run hermesVR on any given filename. Thus not on
+    sequence number. This can be usefull if you first merge together 2 back-to-back 
+    spectra and then want to calculate the radial velocity of the merged spectrum.
+    
+    The original file will not be modified, it is coppied to the tempDir, and the name
+    will be changed according to the supplied flags. During the process hermesConfig.xml
+    is adapted, but after hermesVR is finished, it is restored to its old state.
+    
+    When providing a wavelength scale file, provide the full path, but cut off the 
+    '_HRF_TH_ext_wavelengthScale.fits' part of the filename. Thus if you want to use:
+    '/folder/2451577_HRF_TH_ext_wavelengthScale.fits', use:
+    
+    >>> run_hermesVR(filename, wvl_file = '/folder/2451577')
+    
+    The results of hermesVR are saved to the standard paths, as provided in the
+    hermesConfig file. This method only returns the unseq number of the filename
+    so you can find the corresponding output file, the output of hermesVR as a 
+    string, and a unix return signal of running hermesVR. 
+    The returncode is 0 if no errors are found. Any negative number means hermesVR
+    failed (codes can be consulted here:  U{unix signals 
+    <http://people.cs.pitt.edu/~alanjawi/cs449/code/shell/UnixSignals.htm>}).
+    If returncode = -35, then hermesVR completed but didn't write any output. In
+    this case consult the logs or string output to find out what went wrong.
+    
+    @param filename: complete path to the input spectrum for hermesVR
+    @type filename: str
+    @param mask_file: complete path to the mask file to use or None
+    @type mask_file: str
+    @param wvl_file: path to wavelengthscale file or None
+    @type wvl_file: str
+    @param cosmic_clipping: Doesn't do anything for now
+    @type cosmic_clipping: bool
+    @param flatfield: Use flatfield devision or not
+    @type flatfield: bool
+    @param vrange: Size of velocity window ('default', 'large' (x2), 'xlarge' (x5))
+    @type vrange: str
+    @param vrot: Fit CCF with rotationaly broadend profile instead of gaussian
+    @type vrot: bool
+    @param version: which version of the pipeline to use: 'release' or 'trunk'
+    @type version: str
+    @param verbose: print output of hermesVR
+    @type verbose: bool
+    @param timeout: Maximum time hermesVR is allowed to run in seconds
+    @type timeout: int
+    
+    @return: unseq used, text output of hermesVR, unix return code
+    @rtype: (int, str, int)
+    
+    """
+    #-- Create running directory
+    vrDir = tempDir + 'hermesvr/'
+    redDir = tempDir + 'hermesvr/reduced/'
+    delRedDir, delVrDir = False, False
+    if not os.path.isdir(vrDir):
+        delVrDir = True
+        os.mkdir(vrDir)
+    if not os.path.isdir(redDir):
+        delRedDir = True
+        os.mkdir(redDir)
+    
+    #-- Get unseq.
+    header = pyfits.getheader(filename)
+    if 'unseq' in kwargs:
+        unseq = kwargs.pop('unseq')
+        logger.debug('Using provided sequence number: {:}'.format(unseq))
+    elif 'unseq' in header:
+        unseq = header['unseq']
+        logger.debug('Using sequence number from fits header: {:}'.format(unseq))
+    else:
+        unseq = 1
+        logger.debug('Using default sequence number: {:}'.format(unseq))
+    
+    #-- Construct filename and copy
+    vrFile = redDir+ '{:.0f}_HRF_OBJ_ext.fits'.format(unseq)
+    shutil.copyfile(filename, vrFile )
+    logger.debug('Coppied input file to: {:}'.format(vrFile))
+    
+    #-- Which version to use and update hermesConfig:
+    if version == 'release':
+        cmd = 'python /STER/mercator/mercator/Hermes/releases/hermes5/pipeline/run/hermesVR.py'
+        oldConfig = write_hermesConfig(Nights=tempDir, CurrentNight=vrDir, Reduced=tempDir)
+    else:
+        cmd = 'python /STER/mercator/mercator/Hermes/trunk/hermes/pipeline/run/hermesVR.py'
+        oldConfig = write_hermesConfig(Nights=vrDir, CurrentNight=vrDir, Reduced=tempDir)
+    
+    #-- Delete old hermesVR results so it is possible to check if hermesVR completed
+    hermesOutput = oldConfig['AnalysesResults'] + "/{:.0f}_AllCCF.data".format(unseq)
+    if os.path.isfile(hermesOutput):
+        os.remove(hermesOutput)
+        logger.debug('Removing existing hermesRV result: {:}'.format(hermesOutput))
+    
+    #-- Create command and run hermesVR
+    runError = None
+    try:
+        cmd += " -i {:.0f}".format(unseq)
+        
+        if mask_file:
+            cmd += " -m {:}".format(mask_file)
+            
+        if wvl_file:
+            cmd += " -w {:}".format(wvl_file)
+            
+        if flatfield and version=='release' or not flatfield and version=='trunk':
+            cmd += " -f"
+        
+        if vrange == 'large':
+            cmd += " -L"
+        elif vrange == 'xlarge':
+            cmd += " -LL"
+        
+        if vrot and version == 'trunk':
+            cmd += " -ROT"
+        
+        # RUN
+        logger.info('running hermesVR {:} version, with command:\n\t{:}'.format(version, cmd))
+        out, err, returncode = _subprocess_execute(cmd.split(), timeout)
+        
+        # Error Handling
+        if returncode == -1:
+            logger.warning('Timeout, hermesVR was terminated after' \
+                           +' {:.0f}s'.format(timeout))
+        elif returncode < 0:
+            logger.warning('hermesVR terminated with signal: ' \
+                           +' {:.0f}s'.format(abs(returncode)))
+        elif not os.path.isfile(hermesOutput):
+            logger.warning('hermesVR finished but did not succeed, check log for details')
+            returncode = -35
+            logger.debug(out)
+            
+        if verbose: print out
+    
+    except Exception, e:
+        runError = e
+    
+    #-- restore hermesConfig and delete coppied files
+    write_hermesConfig(**oldConfig)
+    os.remove(vrFile)
+    if delRedDir: os.rmdir(redDir)
+    if delVrDir: os.rmdir(vrDir)
+    
+    #-- Now raise possible errors
+    if runError: raise runError
+    
+    return unseq, out, returncode
 
 def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,flatfield=False):
     """
     Calculate radial velocities for Hermes stars.
     
-    WARNING: you have to have the DRS installed locally!
+    @warning: you have to have the DRS installed locally!
     
-    WARNING: this function changes your hermesConfig.xml file, you'd better
+    @warning: this function changes your hermesConfig.xml file, you'd better
     backup it before use
     """
     #-- build the command
@@ -474,6 +896,137 @@ def CCFList(ID,config_dir=None,out_dir=None,mask_file=None,cosmic_clipping=True,
 
 
 #}
+
+class HermesCCF(object):
+    """
+    Object that holds all information stored in the *_AllCCF.fits files written by hermesVR.
+    The original information is stored in the following variables that can be accessed
+    directly:
+        
+        - filename: The path to the *_AllCCF.fits file
+        - header: The header of the original spectra that was the input to hermesVR
+        - groups: The summary that hermesVR prints of the 5 preset order groups stored
+                  as a rec array
+        - ccfs: All cross-correlation functions stored as a array (index 0-54)
+        - vr: the velocity scale of the cross correlation functions (array)
+        
+    Appart from these attributes, two functions allow you to read the ccf by order or
+    a list of orders where the order numbers are the original hermes orders (40-94).
+    """
+    
+    def __init__(self, filename=None):
+        """
+        Read the provided file and store all information.
+        
+        @param filename: The complete path to the AllCCF.fits file to read.
+        @type filename: string
+        """
+        self.header = None
+        self.vr = None
+        self.ccfs = None
+        self.groups = None
+        
+        if filename != None:
+            self._read_file(filename)
+        else:
+            filename = None
+    
+    #{ Interaction
+    
+    def ccf(self, order):
+        """
+        Return the ccf function belonging to the requested order. The order number 
+        is the real order number (40 <= order <= 94).
+        
+        @param order: The hermes order of which you want the ccf
+        @type order: int
+        
+        @return: The cross correlation function of the requested order
+        @rtype: array
+        
+        @raise IndexError: When the order is out of bounds.
+        """
+        order = 94 - order
+        
+        if order < 0 or order > 54:
+            raise IndexError('Order {:.0f} is out of bounds (40 - 94)'.format(94 - order))
+        
+        return self.ccfs[order]
+    
+    def combine_ccf(self, orders):
+        """
+        Sum the ccf function belonging to the requested order numbers. The order 
+        numbers can be given as a list of integers or in a string representation.
+        When using the string representation, you can use the ':' sign to give a
+        range of order which will include the starting and ending order. Fx the 
+        following two commands will return the same summed ccf:
+        
+        >>> combine_ccf([54,55,56,57,75,76])
+        >>> combine_ccf('54:57,75,76')
+        
+        @param orders: The hermes orders of which you want the summed ccf
+        @type orders: list or string
+        
+        @return: The summed cross correlation function of the requested orders
+        @rtype: array
+        
+        @raise IndexError: When an order is out of bounds.
+        """
+        
+        if type(orders) == str:
+            orders = orders.split(',')
+            o_list = []
+            for o in orders:
+                if ':' in o:
+                    o = o.split(':')
+                    o_list.extend( range( int(o[0]), int(o[1])+1 ) )
+                else:
+                    o_list.append( int(o) )
+            logger.debug("converted order string: ''{:}'' to list: {:}".format(orders, o_list))
+            orders = o_list
+        
+        if np.any([(o<40) | (o>94) for o in orders]):
+            raise IndexError('Some/All orders {:} are out of bounds (40 - 94)'.format(orders))
+        
+        ccf = np.zeros_like(self.vr)
+        for o in orders:
+            ccf += self.ccf(o)
+            
+        return ccf
+    
+    #}
+    
+    #{ Internal
+    
+    def _read_file(self, filename):
+        "Read the *_AllCCF.fits file "
+        self.filename = filename
+        
+        hdu = pyfits.open(filename)
+        
+        #-- header of original observation
+        self.header = hdu[0].header
+        
+        #-- individual ccfs
+        self.ccfs = hdu[0].data.T
+        self.vr = hdu[2].data.field('VR')
+        
+        #-- data of preselected groups
+        self.groups = np.array(hdu[1].data, dtype = hdu[1].data.dtype)
+        
+        logger.debug('Read ccf file: {:}'.format(filename))
+        
+        return
+    
+    def __str__(self):
+        "String representation of this object "
+        if self.header == None:
+            return "< empty Hermes CCF object >"
+        else:
+            obj, sq = self.header['object'], self.header['unseq']
+            return "< CCF of {:} with unseq {:.0f} >".format(obj, sq)
+    
+    #}
 
 #{ Administrator functions
 
@@ -642,57 +1195,126 @@ def _timestamp2datetime(timestamp):
         timestamp += [12,0,0]
     return datetime.datetime(*timestamp)
 
+def _etree_to_dict(t):
+    """
+    Convert a xml tree to a dictionary.
+    
+    @param t: the xml tree
+    @type t: ElementTree root
+    
+    @return: the xml tree as a dictionary
+    @rtype: dict
+    """
+    d = {t.tag: {} if t.attrib else None}
+    children = list(t)
+    if children:
+        dd = defaultdict(list)
+        for dc in map(_etree_to_dict, children):
+            for k, v in dc.iteritems():
+                dd[k].append(v)
+        d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+    if t.attrib:
+        d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+    if t.text:
+        text = t.text.strip()
+        if children or t.attrib:
+            if text:
+              d[t.tag]['#text'] = text
+        else:
+            d[t.tag] = text
+    return d
+
+def _subprocess_execute(command, time_out=100):
+    """executing the command with a watchdog"""
+
+    # launching the command
+    c = subprocess.Popen(command, stdout=subprocess.PIPE)
+
+    # now waiting for the command to complete
+    t = 0
+    while t < time_out and c.poll() is None:
+        time.sleep(1)  # (comment 1)
+        t += 1
+
+    # there are two possibilities for the while to have stopped:
+    if c.poll() is None:
+        # in the case the process did not complete, we kill it
+        c.terminate()
+        # and fill the return code with some error value
+        out, err = c.communicate()
+        returncode = -1
+
+    else:                 
+        # in the case the process completed normally
+        out, err = c.communicate()
+        returncode = c.poll()
+
+    return out, err, returncode
+
 #}
 
 if __name__=="__main__":
-    import time
-    import sys
-    import doctest
-    import shutil
-    import pylab as pl
     
-    if len(sys.argv[1:])==0:
-        doctest.testmod()
-        pl.show()
+    from ivs.aux import loggers
+    logger = loggers.get_basic_logger(clevel='debug')
     
-    elif sys.argv[1].lower()=='update':
-        logger = loggers.get_basic_logger()
+    filename = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451576_HRF_OBJ_ext_CosmicsRemoved.fits'
+    wvl_file = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451577'
+    
+    unseq,output, error = run_hermesVR(filename, wvl_file=wvl_file, verbose=False, version='trunk', timeout=500)
+    
+    data = read_hermesVR_velocities(unseq=[unseq])
+    
+    print data['vrad'], ' +- ', data['vraderr']
+    
+    #import time
+    #import sys
+    #import doctest
+    #import shutil
+    #import pylab as pl
+    
+    #if len(sys.argv[1:])==0:
+        #doctest.testmod()
+        #pl.show()
+    
+    #elif sys.argv[1].lower()=='update':
+        #logger = loggers.get_basic_logger()
         
-        while 1:
-            source = make_data_overview()
-            destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
-            if os.path.isfile(destination):
-                original_size = os.path.getsize(destination)
-                logger.info("Original file size: %.6f MB"%(original_size/1.0e6))
-            else:
-                logger.info('New file will be created')
-            new_size = os.path.getsize(source)
-            logger.info("New file size: %.6f MB"%(new_size/1.0e6))
-            os.system('cp %s %s'%(source,destination))
-            logger.info('Copied %s to %s'%(source,destination))
+        #while 1:
+            #source = make_data_overview()
+            #destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
+            #if os.path.isfile(destination):
+                #original_size = os.path.getsize(destination)
+                #logger.info("Original file size: %.6f MB"%(original_size/1.0e6))
+            #else:
+                #logger.info('New file will be created')
+            #new_size = os.path.getsize(source)
+            #logger.info("New file size: %.6f MB"%(new_size/1.0e6))
+            #os.system('cp %s %s'%(source,destination))
+            #logger.info('Copied %s to %s'%(source,destination))
             
-            logger.info('Going to bed know... see you tomorrow!')
-            time.sleep(24*3600)
-            logger.info('Rise and shine!')
+            #logger.info('Going to bed know... see you tomorrow!')
+            #time.sleep(24*3600)
+            #logger.info('Rise and shine!')
             
             
-    elif sys.argv[1].lower()=='copy':
-        while 1:
-            source = '/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
-            destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
-            if os.path.isfile(destination):
-                original_size = os.path.getsize(destination)
-                logger.info("Original file size: %.5f kB"%(original_size/1000.))
-            else:
-                logger.info('New file will be created')
-            new_size = os.path.getsize(source)
-            logger.info("New file size: %.5f kB"%(new_size/1000.))
-            shutil.copy(source,destination)
-            logger.info('Copied %s to %s'%(source,destination))
-            time.sleep(24*3600)
+    #elif sys.argv[1].lower()=='copy':
+        #while 1:
+            #source = '/STER/pieterd/IVSDATA/catalogs/hermes/HermesFullDataOverview.tsv'
+            #destination = '/STER/mercator/hermes/HermesFullDataOverview.tsv'
+            #if os.path.isfile(destination):
+                #original_size = os.path.getsize(destination)
+                #logger.info("Original file size: %.5f kB"%(original_size/1000.))
+            #else:
+                #logger.info('New file will be created')
+            #new_size = os.path.getsize(source)
+            #logger.info("New file size: %.5f kB"%(new_size/1000.))
+            #shutil.copy(source,destination)
+            #logger.info('Copied %s to %s'%(source,destination))
+            #time.sleep(24*3600)
             
-    else:
-        logger = loggers.get_basic_logger()
-        for target in sys.argv[1:]:
-            make_list_star(target)
+    #else:
+        #logger = loggers.get_basic_logger()
+        #for target in sys.argv[1:]:
+            #make_list_star(target)
     

@@ -148,13 +148,10 @@ def __getattr__(self, name):
             return (np.nan, np.nan)
     if re.match(errexpr, name):
         error = getattr( self, str(re.findall(errexpr, name)[0]) )
-        if error == None:
+        if error == None or self.value == 0. or np.isnan(self.value):
             return np.nan
         else:
-            old = np.seterr(divide='ignore')
-            pc = abs(np.array(error) / np.array(self.value) * 100.)
-            np.seterr(divide=old['divide'])
-            return pc
+            return abs(error/self.value * 100.)
     else:
         raise AttributeError('%s not assigned'%(name))
 

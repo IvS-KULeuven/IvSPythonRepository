@@ -556,6 +556,41 @@ def merge_cosmic_clipping(waves, fluxes, vrads=None, vrad_units='km/s', sigma=3.
     else:
         return wave, flux
 
+def cross_correlate(obj_wave, obj_flux, temp_wave, temp_flux, step=0.3, nsteps=500,
+                    start_dev=0.0, two_step=False, verbose=False, **kwargs):
+    """
+    Cross correlate a spectrum with a template, working in velocity space. The velocity
+    range is controlled by using step, nsteps and start_dev as:
+    
+    velocity = np.arange(start_dev - nsteps * step , start_dev + nsteps * step , step)
+    
+    If two_step is set to True, then it will run twice, and in the second run focus on 
+    the velocity where the correlation is at its maximum.
+    
+    Returns the velocity and the normalized correlation function
+    """
+    
+    def correlate(dvel):
+        rebin_flux = interp1d(temp_wave * ( 1 + 1000. * dvel / constants.cc ), temp_flux)(obj_wave)
+        s2 = np.sqrt(np.sum(rebin_flux**2)/len(rebin_flux)) #RMS uncertainty
+        return 1. / ( len(obj_flux) * s1 * s2 ) * np.sum( obj_flux * rebin_flux )
+    
+    #-- First correlation
+    s1 = np.sqrt(sum(obj_flux**2)/len(obj_flux)) #RMS uncertainty
+    velocity = np.arange(start_dev - nsteps * step , start_dev + nsteps * step , step)
+    correlation = np.array([correlate(dvel) for dvel in velocity])
+    
+    #-- Possible second correlation
+    if two_step:
+        start_dev = velocity[correlation == np.max(correlation)]
+        velocity = np.arange(start_dev - nsteps * step , start_dev + nsteps * step , step)
+        correlation = np.array([correlate(dvel) for dvel in velocity])
+    
+    #-- 'normalize' the correlation function
+    correlation = correlation / correlation[0]
+    
+    return velocity, correlation
+
 def get_response(instrument='hermes'):
     """
     Returns the response curve of the given instrument. Up till now only a HERMES 
