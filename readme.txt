@@ -5,7 +5,7 @@
 
   If you're using a Desktop computer of the IvS, the easiest way to clone is:
   
-    git clone /home/pieterd/python/ivs/ivs ivs
+    git clone /home/joris/python/ivs/ivs/proj.git ivs
   
   which will clone the entiry repository into the ~/python/ivs folder. It's important to choose 'ivs'
   as folder name, because all importing in python is done like
