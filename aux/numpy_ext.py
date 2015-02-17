@@ -358,7 +358,7 @@ def recarr_addcols(x,cols,dtypes_ext):
     dtypes += dtypes_ext
     rows = []
     for i in range(len(x)):
-        rows.append(list(x[i]) + [col[i] for col in cols])
+        rows.append(tuple(list(x[i]) + [col[i] for col in cols]))
     x = np.core.records.fromrecords(rows,dtype=dtypes)
     return x
 
