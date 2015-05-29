@@ -165,7 +165,8 @@ logger = logging.getLogger("TS.FREQANAL")
 
 def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
             optimize=0,max_loops=20, scale_region=0.1, scale_df=0.20, model_kwargs=None,
-            correlation_correction=True,**kwargs):
+            correlation_correction=True,prewhiteningorder_snr=False,
+            prewhiteningorder_snr_window=1.,**kwargs):
     """
     Find one frequency, automatically going to maximum precision and return
     parameters & error estimates.
@@ -186,7 +187,11 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     Extra keywords for the model functions should go in C{model_kwargs}. If
     C{method} is a tuple, the first method will be used for the first frequency
     search only. This could be useful to take advantage of such methods as
-    fasper which do not allow for iterative zoom-ins.
+    fasper which do not allow for iterative zoom-ins. By default, the function looks 
+    for the highest (or deepest in the case of the pdm method) peak, but instead it is 
+    possible to go for the peak having the highest SNR before prewhitening by setting 
+    C{prewhiteningorder_snr} to True. In this case, the noise spectrum is calculated 
+    using a convolution with a C{prewhiteningorder_snr_window} wide box.
     
     Possible extra keywords: see definition of the used periodogram function.
     
@@ -257,6 +262,19 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
         #   it will do:
         if method in ['pdm']:
             frequency = freqs[np.argmin(ampls)]
+        #-- instead of going for the highest peak, let's get the most significant one
+        if prewhiteningorder_snr:
+            if counter == 0: #we calculate a noise spectrum with a convolution in a 1 d-1 window
+                windowlength = float(prewhiteningorder_snr_window)/(freqs[1]-freqs[0])
+                window = np.ones(int(windowlength))/float(windowlength)
+                ampls_ = np.concatenate((ampls[::-1],ampls,ampls[::-1])) #we mirror the amplitude spectrum on both ends so the convolution will be better near the edges
+                noises_ = np.convolve(ampls_, window, 'same')
+                noises = np.split(noises_,3)[1] #and we recut the resulted convolution to match the original frequency range
+                freqs_old = np.copy(freqs)
+                noises_old = np.copy(noises)
+            else:
+                noises = np.interp(freqs,freqs_old,noises_old) #we use the original noise spectrum in this narrower windows too, which should save some time, and avoid the problem of having a wider window for the SNR calculation than the width of the zoom-in window
+            frequency = freqs[np.argmax(ampls/noises)]
         else:
             frequency = freqs[np.argmax(ampls)]
         if full_output and counter==0:
@@ -319,7 +337,8 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
 
 
 def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle',
-    model='sine',full_output=False,stopcrit=None,correlation_correction=True,**kwargs):
+    model='sine',full_output=False,stopcrit=None,correlation_correction=True,
+    prewhiteningorder_snr=False,prewhiteningorder_snr_window=1.,**kwargs):
     """
     Fit one or more functions to a timeseries via iterative prewhitening.
     
@@ -340,6 +359,13 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
     modelfunc,allparams,pergram}. See L{stopcrit_scargle_snr} for an example of
     such a function.
     
+    By default, the function looks for the highest (or deepest in the case of the pdm 
+    method) peak, but instead it is possible to go for the peak having the highest 
+    SNR before prewhitening by setting C{prewhiteningorder_snr} to True. In this case, 
+    the noise spectrum is calculated using a convolution with a 
+    C{prewhiteningorder_snr_window} wide box. Usage of this is strongly encouraged, 
+    especially combined with L{stopcrit_scargle_snr} as C{stopcrit}.
+    
     @return: parameters, model(, model function)
     @rtype: rec array(, ndarray)
     """
@@ -350,7 +376,8 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
         #-- compute the next frequency from the residuals
         params,pergram,this_fit = find_frequency(times,residuals,method=method,
                 full_output=True,correlation_correction=correlation_correction,
-                **kwargs)
+                prewhiteningorder_snr=prewhiteningorder_snr,
+                prewhiteningorder_snr_window=prewhiteningorder_snr_window,**kwargs)
         
         #-- do the fit including all frequencies
         frequencies.append(params['freq'][-1])
@@ -759,20 +786,4 @@ if __name__=="__main__":
         
         pl.show()
         
-    
-
-
-
-
-
-
-
-
-
-
-
-
   
-
-
-    
