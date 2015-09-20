@@ -290,7 +290,10 @@ import sys
 import glob
 import logging
 import copy
-import pyfits
+try:
+    import pyfits as pf
+except:
+    import astropy.io.fits as pf
 import time
 import numpy as np
 try:

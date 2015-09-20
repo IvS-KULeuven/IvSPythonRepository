@@ -3,7 +3,10 @@ Non-standard interpolation methods.
 """
 import numpy as np
 from scipy import ndimage
-import pyfits as pf
+try:
+    import pyfits as pf
+except:
+    import astropy.io.fits as pf
 import time
 import itertools
 import pyfinterpol
