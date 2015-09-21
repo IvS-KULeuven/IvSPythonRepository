@@ -112,7 +112,10 @@ Author: Pieter Degroote, with thanks to Steven Bloemen.
 import logging
 import os
 import itertools
-import pyfits
+try:
+    import pyfits as pf
+except:
+    import astropy.io.fits as pf
 import numpy as np
 from scipy.optimize import leastsq,fmin
 from scipy.interpolate import splrep, splev
