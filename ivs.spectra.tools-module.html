@@ -1,0 +1,899 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.spectra.tools</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.spectra-module.html">Package&nbsp;spectra</a> ::
+        Module&nbsp;tools
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.spectra.tools-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module tools</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.spectra.tools-pysrc.html">source&nbsp;code</a></span></p>
+<p>Manipulate or extract information from spectra.</p>
+  <h1 class="heading">Subsection 1. Example usage</h1>
+    <p>In this example, we:</p>
+    <ol start="1">
+      <li>
+        retrieve a synthetic spectrum
+      </li>
+      <li>
+        apply a doppler shift of 20 km/s
+      </li>
+      <li>
+        rotationally broaden the synthetic spectrum according to a vsini of
+        66 km/s, a solar-like limb darkening, and an instrumental profile 
+        with FWHM=0.25 angstrom
+      </li>
+      <li>
+        add noise to the synthetic spectrum
+      </li>
+      <li>
+        calculate the vsini with the Fourier Transform Method and check the
+        influence of the limb darkening coefficients
+      </li>
+    </ol>
+    <p>Retrieve a synthetic spectrum with effective temperature and surface
+    gravity resembling a main sequence star of spectral type A0. For this 
+    purpose, we do not need the whole spectrum but just cut out a piece</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.spectra <span class="py-keyword">import</span> model
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.linspace(4570,4574,300)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux,cont = model.get_table(teff=10000,logg=4.0,wave=wave)
+<span class="py-prompt">&gt;&gt;&gt; </span>clam = wave[np.argmin(flux)]</pre>
+    <p>Apply a doppler shift of 20 km/s (the star travels away from us)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_ = doppler_shift(wave,20.)
+<span class="py-prompt">&gt;&gt;&gt; </span>clam_shift = doppler_shift(clam,20.)</pre>
+    <p>Rotationally broaden the spectrum and convolve with an instrumental 
+    profile</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_,flux_ = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=0.6)</pre>
+    <p>Add some noise</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>fluxn_ = flux_ + np.random.normal(size=len(flux_),scale=0.01)</pre>
+    <p>Calculate the vsini with the Fourier transform method. To compare 
+    the results, first compute the FT of the synthetic broadened spectrum 
+    without noise:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pergram,minima,vsinis,error = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)</pre>
+    <p>Make a plot of what we already have:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave,flux,<span class="py-string">'k-'</span>,label=<span class="py-string">'Original template'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_,fluxn_,<span class="py-string">'b-'</span>,label=<span class="py-string">'Spectrum + noise'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_,flux_,<span class="py-string">'r-'</span>,lw=2,label=<span class="py-string">'Broadened'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>,prop=dict(size=<span class="py-string">'small'</span>))</pre>
+    <p>Set the color cycle of the Fourier Transform plot to spectral</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>color_cycle = [pl.cm.spectral(j) <span class="py-keyword">for</span> j <span class="py-keyword">in</span> np.linspace(0, 1.0, 10)]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_color_cycle(color_cycle)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(pergram[0],pergram[1],<span class="py-string">'r-'</span>,lw=2,label=<span class="py-string">'Correct'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)</pre>
+    <p>Now compute the vsini of the noisy spectrum, assuming different limb
+    darkening parameters</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> epsilon <span class="py-keyword">in</span> np.linspace(0.0,1.0,10):
+<span class="py-more">... </span>  pergram,minima,vsinis,error = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)
+<span class="py-more">... </span>  p = pl.plot(pergram[0],pergram[1],label=<span class="py-string">'$\epsilon$=%.2f: vsini = %.1f km/s'</span>%(epsilon,vsinis[0]))</pre>
+    <p>Set the xticks to vsini values for clarity:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>xticks = np.array([25,35,50.,66,80,100,500][::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xticks(1/xticks,[<span class="py-string">'%.0f'</span>%(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> xticks])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(0,0.04);p = pl.grid()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(5e-4,1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower left'</span>,prop=dict(size=<span class="py-string">'small'</span>))</pre>
+<center><img src='../images/ivs_spectra_tools_vsini01.png' alt='[image example]' width='75%'/></center>
+
+
+
+<center><img src='../images/ivs_spectra_tools_vsini02.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#doppler_shift" class="summary-sig-name">doppler_shift</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">vrad</span>,
+        <span class="summary-sig-arg">vrad_units</span>=<span class="summary-sig-default">'km/s'</span>,
+        <span class="summary-sig-arg">flux</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Shift a spectrum with towards the red or blue side with some radial 
+      velocity.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#doppler_shift">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(array,array),(array,array),array,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#vsini" class="summary-sig-name">vsini</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">epsilon</span>=<span class="summary-sig-default">0.6</span>,
+        <span class="summary-sig-arg">clam</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">window</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Deterimine vsini of an observed spectrum via the Fourier transform 
+      method.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#vsini">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#rotational_broadening" class="summary-sig-name">rotational_broadening</a>(<span class="summary-sig-arg">wave_spec</span>,
+        <span class="summary-sig-arg">flux_spec</span>,
+        <span class="summary-sig-arg">vrot</span>,
+        <span class="summary-sig-arg">fwhm</span>=<span class="summary-sig-default">0.25</span>,
+        <span class="summary-sig-arg">epsilon</span>=<span class="summary-sig-default">0.6</span>,
+        <span class="summary-sig-arg">chard</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">stepr</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">stepi</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">alam0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">alam1</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">irel</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">cont</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'fortran'</span>)</span><br />
+      Apply rotational broadening to a spectrum assuming a linear limb 
+      darkening law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#rotational_broadening">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array, array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#combine" class="summary-sig-name">combine</a>(<span class="summary-sig-arg">list_of_spectra</span>,
+        <span class="summary-sig-arg">R</span>=<span class="summary-sig-default">200.</span>,
+        <span class="summary-sig-arg">lambda0</span>=<span class="summary-sig-default">(950.,'AA')</span>,
+        <span class="summary-sig-arg">lambdan</span>=<span class="summary-sig-default">(3350.,'AA')</span>)</span><br />
+      Combine and weight-average spectra on a common wavelength grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#combine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array (, tuple, tuple)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#merge_cosmic_clipping" class="summary-sig-name">merge_cosmic_clipping</a>(<span class="summary-sig-arg">waves</span>,
+        <span class="summary-sig-arg">fluxes</span>,
+        <span class="summary-sig-arg">vrads</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrad_units</span>=<span class="summary-sig-default">'km/s'</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">3.0</span>,
+        <span class="summary-sig-arg">base</span>=<span class="summary-sig-default">'average'</span>,
+        <span class="summary-sig-arg">offset</span>=<span class="summary-sig-default">'std'</span>,
+        <span class="summary-sig-arg">window</span>=<span class="summary-sig-default">51</span>,
+        <span class="summary-sig-arg">runs</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Method to combine a set of spectra while removing cosmic rays by 
+      comparing the spectra with each other and removing the outliers.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#merge_cosmic_clipping">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#cross_correlate" class="summary-sig-name">cross_correlate</a>(<span class="summary-sig-arg">obj_wave</span>,
+        <span class="summary-sig-arg">obj_flux</span>,
+        <span class="summary-sig-arg">temp_wave</span>,
+        <span class="summary-sig-arg">temp_flux</span>,
+        <span class="summary-sig-arg">step</span>=<span class="summary-sig-default">0.3</span>,
+        <span class="summary-sig-arg">nsteps</span>=<span class="summary-sig-default">500</span>,
+        <span class="summary-sig-arg">start_dev</span>=<span class="summary-sig-default">0.0</span>,
+        <span class="summary-sig-arg">two_step</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Cross correlate a spectrum with a template, working in velocity 
+      space.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#cross_correlate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#get_response" class="summary-sig-name">get_response</a>(<span class="summary-sig-arg">instrument</span>=<span class="summary-sig-default">'hermes'</span>)</span><br />
+      Returns the response curve of the given instrument.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#get_response">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(array, array)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.tools-module.html#remove_response" class="summary-sig-name">remove_response</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">instrument</span>=<span class="summary-sig-default">'hermes'</span>)</span><br />
+      Divides the provided spectrum by the response curve of the given 
+      instrument.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.tools-pysrc.html#remove_response">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SPEC.TOOLS&quot;)">logging.getLogger(&quot;SPEC.TOOLS&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="doppler_shift"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">doppler_shift</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">vrad</span>,
+        <span class="sig-arg">vrad_units</span>=<span class="sig-default">'km/s'</span>,
+        <span class="sig-arg">flux</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#doppler_shift">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Shift a spectrum with towards the red or blue side with some radial 
+  velocity.</p>
+  <p>You can give units with the extra keywords <code>vrad_units</code> 
+  (units of wavelengths are not important). The shifted wavelengths will be
+  in the same units as the input wave array.</p>
+  <p>If units are not supplied, the radial velocity is assumed to be in 
+  km/s.</p>
+  <p>If you want to apply a barycentric (or orbital) correction, you'd 
+  probabl want to reverse the sign of the radial velocity!</p>
+  <p>When the keyword <code>flux</code> is set, the spectrum will be 
+  interpolated onto the original wavelength grid (so the original 
+  wavelength grid will not change). When the keyword <code>flux</code> is 
+  not set, the wavelength array will be changed (but the fluxes not, 
+  obviously).</p>
+  <p>When <code>flux</code> is set, fluxes will be returned.</p>
+  <p>When <code>flux</code> is not set, wavelengths will be returned.</p>
+  <p>Example usage: shift a spectrum to the blue ('left') with 20 km/s.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.linspace(3000,8000,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_shift1 = doppler_shift(wave,20.)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_shift2 = doppler_shift(wave,20000.,vrad_units=<span class="py-string">'m/s'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(wave_shift1[0],wave_shift1[-1])
+<span class="py-output">(3000.200138457119, 8000.5337025523177)</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(wave_shift2[0],wave_shift2[-1])
+<span class="py-output">(3000.200138457119, 8000.5337025523177)</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength array</li>
+        <li><strong class="pname"><code>vrad</code></strong> (float (units: km/s) or tuple (float,'units')) - radial velocity (negative shifts towards blue, positive towards 
+          red)</li>
+        <li><strong class="pname"><code>vrad_units</code></strong> (str (interpretable for <code>units.conversions.convert</code>)) - units of radial velocity (default: km/s)</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>shifted wavelength array/shifted flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="vsini"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">vsini</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">epsilon</span>=<span class="sig-default">0.6</span>,
+        <span class="sig-arg">clam</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">window</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#vsini">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Deterimine vsini of an observed spectrum via the Fourier transform 
+  method.</p>
+  <p>According to Simon-Diaz (2006) and Carroll (1933):</p>
+  <p>vsini = 0.660 * c/ (lambda * f1)</p>
+  <p>But more general (see Reiners 2001, Dravins 1990)</p>
+  <p>vsini = q1 * c/ (lambda*f1)</p>
+  <p>where f1 is the first minimum of the Fourier transform.</p>
+  <p>The error is estimated as the Rayleigh limit of the Fourier 
+  Transform</p>
+  <p>Example usage and tests: Generate some data. We need a central 
+  wavelength (A), the speed of light in angstrom/s, limb darkening 
+  coefficients and test vsinis:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>clam = 4480.
+<span class="py-prompt">&gt;&gt;&gt; </span>c = conversions.convert(<span class="py-string">'m/s'</span>,<span class="py-string">'A/s'</span>,constants.cc)
+<span class="py-prompt">&gt;&gt;&gt; </span>epsilons = np.linspace(0.,1.0,10)
+<span class="py-prompt">&gt;&gt;&gt; </span>vsinis = np.linspace(50,300,10)</pre>
+  <p>We analytically compute the shape of the Fourier transform in the 
+  following domain (and need the <code>scipy.special.j1</code> for 
+  this)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,30,1000)[1:]
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> scipy.special <span class="py-keyword">import</span> j1</pre>
+  <p>Keep track of the calculated and predicted q1 values:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>q1s = np.zeros((len(epsilons),len(vsinis)))
+<span class="py-prompt">&gt;&gt;&gt; </span>q1s_pred = np.zeros((len(epsilons),len(vsinis)))</pre>
+  <p>Start a figure and set the color cycle</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.subplot(131)
+<span class="py-prompt">&gt;&gt;&gt; </span>color_cycle = [pl.cm.spectral(j) <span class="py-keyword">for</span> j <span class="py-keyword">in</span> np.linspace(0, 1.0, len(epsilons))]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_color_cycle(color_cycle)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.subplot(133);p=pl.title(<span class="py-string">'Broadening kernel'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_color_cycle(color_cycle)</pre>
+  <p>Now run over all epsilons and vsinis and determine the q1 
+  constant:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> j,epsilon <span class="py-keyword">in</span> enumerate(epsilons):
+<span class="py-more">... </span>   <span class="py-keyword">for</span> i,vsini <span class="py-keyword">in</span> enumerate(vsinis):
+<span class="py-more">... </span>      vsini = conversions.convert(<span class="py-string">'km/s'</span>,<span class="py-string">'A/s'</span>,vsini)
+<span class="py-more">... </span>      delta = clam*vsini/c
+<span class="py-more">... </span>      lambdas = np.linspace(-5.,+5.,20000)
+<span class="py-more">... </span>      <span class="py-comment">#-- analytical rotational broadening kernel</span>
+<span class="py-more">... </span>      y = 1-(lambdas/delta)**2
+<span class="py-more">... </span>      G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))
+<span class="py-more">... </span>      lambdas = lambdas[-np.isnan(G)]
+<span class="py-more">... </span>      G = G[-np.isnan(G)]
+<span class="py-more">... </span>      G /= max(G)
+<span class="py-more">... </span>      <span class="py-comment">#-- analytical FT of rotational broadening kernel</span>
+<span class="py-more">... </span>      g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))
+<span class="py-more">... </span>      <span class="py-comment">#-- numerical FT of rotational broadening kernel</span>
+<span class="py-more">... </span>      sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm=<span class="py-string">'power'</span>)
+<span class="py-more">... </span>      myx = 2*pi*delta*sigma
+<span class="py-more">... </span>      <span class="py-comment">#-- get the minima</span>
+<span class="py-more">... </span>      rise = np.diff(g_[1:])&gt;=0
+<span class="py-more">... </span>      fall = np.diff(g_[:-1])&lt;=0
+<span class="py-more">... </span>      minima = sigma[1:-1][rise &amp; fall]
+<span class="py-more">... </span>      minvals = g_[1:-1][rise &amp; fall]
+<span class="py-more">... </span>      q1s[j,i] =  vsini / (c/clam/minima[0])
+<span class="py-more">... </span>      q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4
+<span class="py-more">... </span>   p= pl.subplot(131)
+<span class="py-more">... </span>   p= pl.plot(vsinis,q1s[j],<span class="py-string">'o'</span>,label=<span class="py-string">'$\epsilon$=%.2f'</span>%(epsilon));pl.gca()._get_lines.count -= 1
+<span class="py-more">... </span>   p= pl.plot(vsinis,q1s_pred[j],<span class="py-string">'-'</span>)
+<span class="py-more">... </span>   p= pl.subplot(133)
+<span class="py-more">... </span>   p= pl.plot(lambdas,G,<span class="py-string">'-'</span>)</pre>
+  <p>And plot the results:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.subplot(131)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.xlabel(<span class="py-string">'v sini [km/s]'</span>);p = pl.ylabel(<span class="py-string">'q1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.legend(prop=dict(size=<span class="py-string">'small'</span>))</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.subplot(132);p=pl.title(<span class="py-string">'Fourier transform'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.plot(x,g**2,<span class="py-string">'k-'</span>,label=<span class="py-string">'Analytical FT'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.plot(myx,g_/max(g_),<span class="py-string">'r-'</span>,label=<span class="py-string">'Computed FT'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.plot(minima*2*pi*delta,minvals/max(g_),<span class="py-string">'bo'</span>,label=<span class="py-string">'Minima'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.legend(prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p= pl.gca().set_yscale(<span class="py-string">'log'</span>)</pre>
+<center><img src='../images/ivs_spectra_tools_vsini_kernel.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <p>Extra keyword arguments are passed to <code 
+  class="link">pergrams.deeming</code></p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength array in Angstrom</li>
+        <li><strong class="pname"><code>flux</code></strong> (ndarray) - normalised flux of the profile</li>
+    </ul></dd>
+    <dt>Returns: (array,array),(array,array),array,float</dt>
+        <dd>periodogram (freqs in s/km), extrema (weird units), vsini values 
+          (km/s), error (km/s)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="rotational_broadening"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">rotational_broadening</span>(<span class="sig-arg">wave_spec</span>,
+        <span class="sig-arg">flux_spec</span>,
+        <span class="sig-arg">vrot</span>,
+        <span class="sig-arg">fwhm</span>=<span class="sig-default">0.25</span>,
+        <span class="sig-arg">epsilon</span>=<span class="sig-default">0.6</span>,
+        <span class="sig-arg">chard</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">stepr</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">stepi</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">alam0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">alam1</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">irel</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">cont</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default">'fortran'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#rotational_broadening">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Apply rotational broadening to a spectrum assuming a linear limb 
+  darkening law.</p>
+  <p>This function is based on the ROTIN program. See Fortran file for 
+  explanations of parameters.</p>
+  <p>Limb darkening law is linear, default value is epsilon=0.6</p>
+  <p>Possibility to normalize as well by giving continuum in 'cont' 
+  parameter.</p>
+  <p><b>Warning</b>: <code>method='python'</code> is still experimental, 
+  but should work.</p>
+  <h1 class="heading">Section 1. Parameters for rotational convolution</h1>
+    <p><code>VROT</code>: v sin i (in km/s):</p>
+    <ul>
+      <li>
+        if VROT=0 - rotational convolution is a) either not calculated, b) 
+        or, if simultaneously FWHM is rather large (vrot/c*lambda &lt; 
+        FWHM/20.), vrot is set to  FWHM/20*c/lambda;
+      </li>
+      <li>
+        if VROT &gt;0 but the previous condition b) applies, the value of 
+        VROT is changed as  in the previous case
+      </li>
+      <li>
+        if VROT&lt;0 - the value of abs(VROT) is used regardless of how 
+        small compared to FWHM it is
+      </li>
+    </ul>
+    <p><code>CHARD</code>: characteristic scale of the variations of 
+    unconvolved stellar spectrum (basically, characteristic distance 
+    between two neighbouring wavelength points) - in A:</p>
+    <ul>
+      <li>
+        if =0 - program sets up default (0.01 A)
+      </li>
+    </ul>
+    <p><code>STEPR</code>: wavelength step for evaluation rotational 
+    convolution;</p>
+    <ul>
+      <li>
+        if =0, the program sets up default (the wavelength interval 
+        corresponding to the rotational velocity devided by 3.)
+      </li>
+      <li>
+        if &lt;0, convolved spectrum calculated on the original (detailed) 
+        SYNSPEC wavelength mesh
+      </li>
+    </ul>
+  <h1 class="heading">Section 2. parameters for instrumental convolution</h1>
+    <p><code>FWHM</code>: WARNING: this is not the full width at half 
+    maximum for Gaussian instrumental profile, but the sigma (FWHM = 2.3548
+    sigma).</p>
+    <p><code>STEPI</code>: wavelength step for evaluating instrumental 
+    convolution</p>
+    <ul>
+      <li>
+        if =0, the program sets up default (FWHM/10.)
+      </li>
+      <li>
+        if &lt;0, convolved spectrum calculated with the previous 
+        wavelength mesh: either the original (SYNSPEC) one if vrot=0, or 
+        the one used in rotational convolution (vrot &gt; 0)
+      </li>
+    </ul>
+  <h1 class="heading">Section 3. wavelength interval and normalization of spectra</h1>
+    <p><code>ALAM0</code>: initial wavelength <code>ALAM1</code>: final 
+    wavelength <code>IREL</code>: for =1 relative spectrum, =0 absolute 
+    spectrum</p>
+  <dl class="fields">
+    <dt>Returns: array, array</dt>
+        <dd>wavelength,flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="combine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">combine</span>(<span class="sig-arg">list_of_spectra</span>,
+        <span class="sig-arg">R</span>=<span class="sig-default">200.</span>,
+        <span class="sig-arg">lambda0</span>=<span class="sig-default">(950.,'AA')</span>,
+        <span class="sig-arg">lambdan</span>=<span class="sig-default">(3350.,'AA')</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#combine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Combine and weight-average spectra on a common wavelength grid.</p>
+  <p><code>list_of_spectra</code> should be a list of lists/arrays. Each 
+  element in the main list should be (wavelength,flux,error).</p>
+  <p>If you have FUSE fits files, use <code 
+  class="link">ivs.fits.read_fuse</code>. If you have IUE FITS files, use 
+  <code class="link">ivs.fits.read_iue</code>.</p>
+  <p>After Peter Woitke.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>R</code></strong> (float) - resolution</li>
+        <li><strong class="pname"><code>lambda0</code></strong> (tuple (float,str)) - start wavelength, unit</li>
+        <li><strong class="pname"><code>lambdan</code></strong> (tuple (float,str)) - end wavelength, unit</li>
+    </ul></dd>
+    <dt>Returns: array, array, array</dt>
+        <dd>binned spectrum (wavelengths,flux, error)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="merge_cosmic_clipping"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">merge_cosmic_clipping</span>(<span class="sig-arg">waves</span>,
+        <span class="sig-arg">fluxes</span>,
+        <span class="sig-arg">vrads</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrad_units</span>=<span class="sig-default">'km/s'</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">3.0</span>,
+        <span class="sig-arg">base</span>=<span class="sig-default">'average'</span>,
+        <span class="sig-arg">offset</span>=<span class="sig-default">'std'</span>,
+        <span class="sig-arg">window</span>=<span class="sig-default">51</span>,
+        <span class="sig-arg">runs</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#merge_cosmic_clipping">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Method to combine a set of spectra while removing cosmic rays by 
+  comparing the spectra with each other and removing the outliers.</p>
+  <p>Algorithm:</p>
+  <p>For each spectrum a very rough continuum is determined by using a 
+  median filter. Then there are multiple passes through the spectra. In one
+  pass, outliers are identified by compairing the flux point with the 
+  median of all normalized spectra plus sigma times the standard deviation 
+  of all points. The standard deviation is the median of the std for all 
+  flux points in 1 spectrum (spec_std) plus the std of all fluxes of a 
+  given wavelength point over all spectra.</p>
+  <p><code>spec_std = np.median( np.std(fluxes) )</code> <code>fn &gt; 
+  np.median(fn) + sigma * (np.std(fn) + spec_std)</code></p>
+  <p>Where fn are the roughly normalized spectra, NOT the original spectra.
+  In the next passes those outliers are not used to calculat the median and
+  std of the spectrum. After the last pass, the flux points that were 
+  rejected are replaced by the rough continuum value, and they are summed 
+  to get the final flux.</p>
+  <p>The value for sigma strongly depends on the number of spectra and the 
+  quality of the spectra. General, the more spectra, the higher sigma 
+  should be. Using a too low value for sigma will throw away to much 
+  information. The effect of the window size and the number of runs is 
+  limited.</p>
+  <p>Returns the wavelengths and fluxes of the merged spectra, and if 
+  full_output is True, also a list of accepted and rejected points, 
+  produced by np.where()</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>waves</code></strong> - list of wavelengths</li>
+        <li><strong class="pname"><code>fluxes</code></strong> - list of fluxes</li>
+        <li><strong class="pname"><code>vrads</code></strong> - list of radial velocities (optional)</li>
+        <li><strong class="pname"><code>vrad_units</code></strong> - units of the radial velocities</li>
+        <li><strong class="pname"><code>sigma</code></strong> - value used for sigma clipping</li>
+        <li><strong class="pname"><code>window</code></strong> - window size used in median filter</li>
+        <li><strong class="pname"><code>runs</code></strong> - number of iterations through the spectra</li>
+        <li><strong class="pname"><code>full_output</code></strong> - True is need to return accepted and rejected</li>
+    </ul></dd>
+    <dt>Returns: array, array (, tuple, tuple)</dt>
+        <dd>wavelenght and flux of merged spectrum (, accepted and rejected 
+          points)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="cross_correlate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">cross_correlate</span>(<span class="sig-arg">obj_wave</span>,
+        <span class="sig-arg">obj_flux</span>,
+        <span class="sig-arg">temp_wave</span>,
+        <span class="sig-arg">temp_flux</span>,
+        <span class="sig-arg">step</span>=<span class="sig-default">0.3</span>,
+        <span class="sig-arg">nsteps</span>=<span class="sig-default">500</span>,
+        <span class="sig-arg">start_dev</span>=<span class="sig-default">0.0</span>,
+        <span class="sig-arg">two_step</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#cross_correlate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Cross correlate a spectrum with a template, working in velocity space.
+  The velocity range is controlled by using step, nsteps and start_dev 
+  as:</p>
+  <p>velocity = np.arange(start_dev - nsteps * step , start_dev + nsteps * 
+  step , step)</p>
+  <p>If two_step is set to True, then it will run twice, and in the second 
+  run focus on the velocity where the correlation is at its maximum.</p>
+  <p>Returns the velocity and the normalized correlation function</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_response"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_response</span>(<span class="sig-arg">instrument</span>=<span class="sig-default">'hermes'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#get_response">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the response curve of the given instrument. Up till now only a
+  HERMES response cruve is available. This response curve is based on 25 
+  spectra of the single sdB star Feige 66, and has a wavelenght range of 
+  3800 to 8000 A.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>instrument</code></strong> (string) - the instrument of which you want the response curve</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="remove_response"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">remove_response</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">instrument</span>=<span class="sig-default">'hermes'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.tools-pysrc.html#remove_response">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Divides the provided spectrum by the response curve of the given 
+  instrument. Up till now only a HERMES response curve is available.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (numpy array) - wavelenght array</li>
+        <li><strong class="pname"><code>flux</code></strong> (numpy array) - flux array</li>
+        <li><strong class="pname"><code>instrument</code></strong> (string) - the instrument of which you want the response curve</li>
+    </ul></dd>
+    <dt>Returns: (array, array)</dt>
+        <dd>the new spectrum (wave, flux)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

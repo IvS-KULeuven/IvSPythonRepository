@@ -1,0 +1,1343 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.catalogs.vizier</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.catalogs-module.html">Package&nbsp;catalogs</a> ::
+        Module&nbsp;vizier
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.catalogs.vizier-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module vizier</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface to the VizieR website.</p>
+  <p>Download or retrieve VizieR catalogs.</p>
+  <p>The basic interface <code>search</code> lets you download <b>entire 
+  catalogs or parts</b> of them. The structure array containts then one row
+  per target, the columns denoting the different columns of the catalogs. 
+  You can also specify two catalogs in <code>xmatch</code>; the second will
+  then be cross-matched against the first.</p>
+  <p>The convenience functions (<code>get_photometry</code>,...) aim to 
+  collect information from different catalogs on <b>one target</b> in one 
+  array. Each row represents one measurement from one catalog (typically 
+  you'll have many rows both from one catalog but also from different 
+  catalogs). The columns then denote the contents of each row (e.g. the 
+  magnitude, photometric passband etc).</p>
+  <h1 class="heading">Section 1. Download catalogs</h1>
+    <h2 class="heading">Section 1.1. To a file</h2>
+      <p>Download the entire Van Leeuwen Hipparcos New Reduction catalog to
+      a file. The filename is returned as a check for success.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>filename = search(<span class="py-string">'I/311/hip2'</span>,filename=<span class="py-string">'vanleeuwen.tsv'</span>)</pre>
+      <p>Download a 60 arcsec circular area from the catalog around the 
+      coordinates ra=237.1, dec=-10.10</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>filename = search(<span class="py-string">'I/311/hip2'</span>,ra=237.1,dec=-10.10,radius=60.,filename=<span class="py-string">'vanleeuwen.tsv'</span>)</pre>
+      <p>Search for the presence of a target in the catalog. The downloaded
+      file will contain no rows if the target is not in the catalog. If 
+      more than one target are in the search radius around the target, 
+      there will be more than one row. They are ordered via distance to the
+      target, so it's probably the first one you need.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>filename = search(<span class="py-string">'I/311/hip2'</span>,ID=<span class="py-string">'vega'</span>,filename=<span class="py-string">'vanleeuwen.tsv'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>filename = search(<span class="py-string">'I/311/hip2'</span>,ID=<span class="py-string">'vega'</span>,filename=<span class="py-string">'vanleeuwen.tsv'</span>,radius=60.)</pre>
+    <h2 class="heading">Section 1.2 To a RecordArray</h2>
+      <p>Instead of downloading to a file and then reading in the file for 
+      further analysis, you can download the contents of the file directly 
+      to a record array, retrieving the units and comments from the catalog
+      in one go. The equivalent of the third example above becomes</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rec_arr,unit_dict,comment_str = search(<span class="py-string">'I/311/hip2'</span>,ID=<span class="py-string">'vega'</span>)</pre>
+      <p>With these record arrays, its very easy to select targets based on
+      criteria. For example, if you want to extract 2MASS targets in a 
+      certain area with a negative H-K index, you can do</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = search(<span class="py-string">'II/246/out'</span>,ra=237.1,dec=-10.10,radius=600.)
+<span class="py-prompt">&gt;&gt;&gt; </span>selection = (data[<span class="py-string">'Hmag'</span>] - data[<span class="py-string">'Kmag'</span>]) &lt; 0
+<span class="py-prompt">&gt;&gt;&gt; </span>data = data[selection]</pre>
+      <p>You can also read in a data file you've previously downloaded 
+      via</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = tsv2recarray(<span class="py-string">'vanleeuwen.tsv'</span>)</pre>
+    <h2 class="heading">Section 1.3 List relevant catalogs</h2>
+      <p>To know in which catalogs your target is present, list them all 
+      via</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>my_cats = list_catalogs(<span class="py-string">'vega'</span>)</pre>
+      <p>Now you could iterate over them and download them to a file or 
+      whatever.</p>
+  <h1 class="heading">Section 2. Convenience functions</h1>
+    <p>You can define 'standard' photometric catalogs in the 
+    <code>vizier_cats.cfg</code> file. This file is basically a translator 
+    for VizieR column headers to photometric passbands (and colors). For 
+    examples, see the file itself.</p>
+    <p>You can add catalogs on the fly via</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>cat_info.add_section(<span class="py-string">'my_new_catalog'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>cat_info.set(<span class="py-string">'my_new_catalog'</span>,<span class="py-string">'Bmag'</span>,<span class="py-string">'JOHNSON.B'</span>)</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Basic interfaces</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="change_mirror"></a><span class="summary-sig-name">change_mirror</span>()</span><br />
+      Cycle through the mirrors of ViZieR.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#change_mirror">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str/ record array, dict, list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#search" class="summary-sig-name">search</a>(<span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">filetype</span>=<span class="summary-sig-default">'tsv'</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Search and retrieve information from a VizieR catalog.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dictionary</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#list_catalogs" class="summary-sig-name">list_catalogs</a>(<span class="summary-sig-arg">ID</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">filetype</span>=<span class="summary-sig-default">'tsv'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Print and return all catalogs containing information on the star.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#list_catalogs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#xmatch" class="summary-sig-name">xmatch</a>(<span class="summary-sig-arg">source1</span>,
+        <span class="summary-sig-arg">source2</span>,
+        <span class="summary-sig-arg">output_file</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">tol</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Crossmatch two vizier catalogs via a fast KDTree.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#xmatch">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Interface to specific catalogs</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#get_IUE_spectra" class="summary-sig-name">get_IUE_spectra</a>(<span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">directory</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">unzip</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">cat_info</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">select</span>=<span class="summary-sig-default">'low'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Download IUE spectra.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_IUE_spectra">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#get_UVSST_spectrum" class="summary-sig-name">get_UVSST_spectrum</a>(<span class="summary-sig-arg">units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Get a spectrum from the UVSST spectrograph onboard TD1.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_UVSST_spectrum">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convenience functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#get_photometry" class="summary-sig-name">get_photometry</a>(<span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">['_r','_RAJ2000','_DEJ2000']</span>,
+        <span class="summary-sig-arg">take_mean</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Download all available photometry from a star to a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#quality_check" class="summary-sig-name">quality_check</a>(<span class="summary-sig-arg">master</span>,
+        <span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">return_master</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Perform quality checks on downloaded data.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#quality_check">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array, dict, list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#tsv2recarray" class="summary-sig-name">tsv2recarray</a>(<span class="summary-sig-arg">filename</span>)</span><br />
+      Read a Vizier tsv (tab-sep) file into a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#tsv2recarray">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#vizier2phot" class="summary-sig-name">vizier2phot</a>(<span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">results</span>,
+        <span class="summary-sig-arg">units</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e_flag</span>=<span class="summary-sig-default">'e_'</span>,
+        <span class="summary-sig-arg">q_flag</span>=<span class="summary-sig-default">'q_'</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">take_mean</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Convert/combine VizieR record arrays to measurement record arrays.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#vizier2phot">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#vizier2fund" class="summary-sig-name">vizier2fund</a>(<span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">results</span>,
+        <span class="summary-sig-arg">units</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e_flag</span>=<span class="summary-sig-default">'e_'</span>,
+        <span class="summary-sig-arg">q_flag</span>=<span class="summary-sig-default">'q_'</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert/combine VizieR record arrays to measurement record arrays.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#vizier2fund">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#catalog2bibcode" class="summary-sig-name">catalog2bibcode</a>(<span class="summary-sig-arg">catalog</span>)</span><br />
+      Retrieve the ADS bibcode of a ViZieR catalog.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#catalog2bibcode">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#bibcode2bibtex" class="summary-sig-name">bibcode2bibtex</a>(<span class="summary-sig-arg">bibcode</span>)</span><br />
+      Retrieve the bibtex entry of an ADS bibcode.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#bibcode2bibtex">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#catalog2bibtex" class="summary-sig-name">catalog2bibtex</a>(<span class="summary-sig-arg">catalog</span>)</span><br />
+      Retrieve the bibtex entry of a catalog.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#catalog2bibtex">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal helper functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#_get_URI" class="summary-sig-name" onclick="show_private();">_get_URI</a>(<span class="summary-sig-arg">name</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ra</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">dec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">20.</span>,
+        <span class="summary-sig-arg">oc</span>=<span class="summary-sig-default">'deg'</span>,
+        <span class="summary-sig-arg">oc_eq</span>=<span class="summary-sig-default">'J2000'</span>,
+        <span class="summary-sig-arg">out_all</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">out_max</span>=<span class="summary-sig-default">1000000</span>,
+        <span class="summary-sig-arg">filetype</span>=<span class="summary-sig-default">'tsv'</span>,
+        <span class="summary-sig-arg">sort</span>=<span class="summary-sig-default">'_r'</span>,
+        <span class="summary-sig-arg">constraints</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Build Vizier URI from available options.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#_get_URI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#_breakup_colours" class="summary-sig-name" onclick="show_private();">_breakup_colours</a>(<span class="summary-sig-arg">master</span>)</span><br />
+      From colors and one magnitude measurement, derive the other 
+      magnitudes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#_breakup_colours">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.vizier-module.html#test" class="summary-sig-name">test</a>()</span><br />
+      Execute all docstrings.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#test">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;CAT.VIZIER&quot;)">logging.getLogger(&quot;CAT.VIZIER&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basedir"></a><span class="summary-name">basedir</span> = <code title="os.path.dirname(os.path.abspath(__file__))">os.path.dirname(os.path.abspath(__file__))</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cat_info"></a><span class="summary-name">cat_info</span> = <code title="ConfigParser.ConfigParser()">ConfigParser.ConfigParser()</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cat_info_fund"></a><span class="summary-name">cat_info_fund</span> = <code title="ConfigParser.ConfigParser()">ConfigParser.ConfigParser()</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.catalogs.vizier-module.html#mirrors" class="summary-name">mirrors</a> = <code title="{'cycle': itertools.cycle(['vizier.u-strasbg.fr', 'vizier.nao.ac.jp', \
+'vizier.hia.nrc.ca', 'vizier.ast.cam.ac.uk', 'vizier.cfa.harvard.edu',\
+ 'www.ukirt.jach.hawaii.edu', 'vizier.inasan.ru', 'vizier.iucaa.ernet.\
+in', 'data.bao.ac.cn'])}">{'cycle': itertools.cycle(['vizier.u-strasbg.fr', 'v<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">search</span>(<span class="sig-arg">name</span>,
+        <span class="sig-arg">filetype</span>=<span class="sig-default">'tsv'</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Search and retrieve information from a VizieR catalog.</p>
+  <p>Two ways to search for data within a catalog <code>name</code>:</p>
+  <ol start="1">
+    <li>
+      You're looking for info on <b>one target</b>, then give the target's 
+      <code>ID</code> or coordinates (<code>ra</code> and 
+      <code>dec</code>), and a search <code>radius</code>.
+    </li>
+    <li>
+      You're looking for information of <b>a whole field</b>, then give the
+      field's coordinates (<code>ra</code> and <code>dec</code>), and 
+      <code>radius</code>.
+    </li>
+  </ol>
+  <p>If you have a list of targets, you need to loop this function.</p>
+  <p>If you supply a filename, the results will be saved to that path, and 
+  you will get the filename back as received from urllib.URLopener (should 
+  be the same as the input name, unless something went wrong).</p>
+  <p>If you don't supply a filename, you should leave <code>filetype</code>
+  to the default <code>tsv</code>, and the results will be saved to a 
+  temporary file and deleted after the function is finished. The content of
+  the file will be read into a dictionary, as well as the units (two 
+  separate dictionaries with the same keys, depending on the column names 
+  in the catalog). The entries in the dictionary are of type 
+  <code>ndarray</code>, and will be converted to a float-array (no 
+  integers, we need to support nans) if possible. If not, the array will 
+  consist of strings. The comments are also returned as a list of 
+  strings.</p>
+  <p>WARNING: when retrieving a FITS file, ViZieR sometimes puts weird 
+  formats into the header ('3F10.6E' in the 2MASS catalog), which cannot be
+  read by the <code>pyfits</code> module. These columns are actually 
+  multi-dimensional vectors. One option is to download to another format, 
+  or to restrict the columns with <code>out_all=None</code>.</p>
+  <p>Example usage:</p>
+  <ol start="1">
+    <li>
+      Look for the Geneva V magnitude and coordinates of Vega in the GENEVA
+      catalog of Rufener.
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>results,units,comms = search(<span class="py-string">'II/169/main'</span>,ID=<span class="py-string">'vega'</span>,radius=60.)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> <span class="py-string">&quot;Vega: Vmag = %.3f %s, RA = %.2f %s, DEC = %.2f %s&quot;</span>%(results[<span class="py-string">'Vmag'</span>],units[<span class="py-string">'Vmag'</span>],results[<span class="py-string">'_RAJ2000'</span>],units[<span class="py-string">'_RAJ2000'</span>],results[<span class="py-string">'_DEJ2000'</span>],units[<span class="py-string">'_DEJ2000'</span>])
+<span class="py-output">Vega: Vmag = 0.061 mag, RA = 279.24 deg, DEC = 38.77 deg</span></pre>
+    </li>
+    <li>
+      Search for all targets in the 2MASS catalog in a particular field. 
+      Download the results to a FITS file, read the file, and plot the 
+      results to the screen.
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,filetype='fits',filename='2mass_test',out_all=None)</span></pre>
+      <p>Now read in the FITS-file and plot the contents</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#import pyfits,pylab</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#ff = pyfits.open('2mass_test.fits')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = pylab.gcf().canvas.set_window_title('test of &lt;search&gt;')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = pylab.colorbar()</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = p.set_label('Jmag')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p,q = pylab.xlabel('RA [deg]'),pylab.ylabel('DEC [deg]')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#ff.close()</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#os.remove('2mass_test.fits')</span></pre>
+    </li>
+  </ol>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str) - name of a ViZieR catalog (e.g. 'II/246/out')</li>
+        <li><strong class="pname"><code>filetype</code></strong> (string (one of 'tsv','fits','ascii','csv'...) - type of the file to write the results to ('tsv' if no file 
+          desired)</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - name of the file to write the results to (no extension)</li>
+    </ul></dd>
+    <dt>Returns: str/ record array, dict, list of str</dt>
+        <dd>filename / catalog data columns, units, comments</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="list_catalogs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">list_catalogs</span>(<span class="sig-arg">ID</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">filetype</span>=<span class="sig-default">'tsv'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#list_catalogs">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Print and return all catalogs containing information on the star.</p>
+  <p>If you give <code>filetype</code> and <code>filename</code>, all 
+  information will be downloaded to that file.</p>
+  <p>Extra kwargs: see <a href="ivs.catalogs.vizier-module.html#_get_URI" 
+  class="link" onclick="show_private();">_get_URI</a>.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>ID</code></strong> (str) - identification of the star</li>
+        <li><strong class="pname"><code>filetype</code></strong> (str) - type of the output file ('fits','tsv','csv'...)</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - name of the output file</li>
+    </ul></dd>
+    <dt>Returns: dictionary</dt>
+        <dd>dictionary with keys the catalog ID from VizieR and entries the 
+          names of the catalogs</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="xmatch"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">xmatch</span>(<span class="sig-arg">source1</span>,
+        <span class="sig-arg">source2</span>,
+        <span class="sig-arg">output_file</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">tol</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#xmatch">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Crossmatch two vizier catalogs via a fast KDTree.</p>
+  <p>The limit for these catalogs is probably somewhere between ~100000 
+  entries, so make sure your catalogs do not contain to many targets. You 
+  can always do a subselection via the keyword arguments (e.g. give ra, dec
+  and radius).</p>
+  <p>An output tsv file will be written (by default named 
+  'source1__source2', which can be read in via <code>tsv2recarray</code> 
+  for further analysis.</p>
+  <p>tolerance is in arcseconds.</p>
+  <p>Extra keyword arguments are passed to <code>search</code>. Column 
+  names of second source will be appended with postfix '_2', to avoid 
+  clashes of double-defined column headers.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_IUE_spectra"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_IUE_spectra</span>(<span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">directory</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">unzip</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">cat_info</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">select</span>=<span class="sig-default">'low'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_IUE_spectra">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Download IUE spectra.</p>
+  <p>If you want to download all the spectral files, set 
+  <code>directory='/home/user/'</code> or whatever. All the tarfiles will 
+  be downloaded to this directory, they will be untarred, science data 
+  extracted and all unnecessary files and directories will be deleted. If 
+  you don't set a directory, it will default to the CWD.</p>
+  <p>If you don't wish to unzip them, set unzip=False</p>
+  <p>DEPRECATED: If you don't give a directory, the function will return a 
+  list of all extracted spectra (no data files are kept).</p>
+  <p>You can retrieve the contents of the vizier catalog via 
+  {cat_info=True}. The files will not be downloaded in this case.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_UVSST_spectrum"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_UVSST_spectrum</span>(<span class="sig-arg">units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_UVSST_spectrum">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get a spectrum from the UVSST spectrograph onboard TD1.</p>
+  <p>From vizier catalog III/39A.</p>
+  <p>Also have a look at II/86/suppl.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_photometry</span>(<span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">['_r','_RAJ2000','_DEJ2000']</span>,
+        <span class="sig-arg">take_mean</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#get_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Download all available photometry from a star to a record array.</p>
+  <p>For extra kwargs, see <a 
+  href="ivs.catalogs.vizier-module.html#_get_URI" class="link" 
+  onclick="show_private();">_get_URI</a> and <a 
+  href="ivs.catalogs.vizier-module.html#vizier2phot" 
+  class="link">vizier2phot</a></p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="quality_check"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">quality_check</span>(<span class="sig-arg">master</span>,
+        <span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">return_master</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#quality_check">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Perform quality checks on downloaded data.</p>
+  <p>This function translates flags in to words, and looks up additional 
+  information in selected catalogs.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="tsv2recarray"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">tsv2recarray</span>(<span class="sig-arg">filename</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#tsv2recarray">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read a Vizier tsv (tab-sep) file into a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - name of the TSV file</li>
+    </ul></dd>
+    <dt>Returns: record array, dict, list of str</dt>
+        <dd>catalog data columns, units, comments</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="vizier2phot"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">vizier2phot</span>(<span class="sig-arg">source</span>,
+        <span class="sig-arg">results</span>,
+        <span class="sig-arg">units</span>,
+        <span class="sig-arg">master</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e_flag</span>=<span class="sig-default">'e_'</span>,
+        <span class="sig-arg">q_flag</span>=<span class="sig-default">'q_'</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">take_mean</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#vizier2phot">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert/combine VizieR record arrays to measurement record arrays.</p>
+  <p>Every line in the combined array represents a measurement in a certain
+  band.</p>
+  <p>This is probably only useful if <code>results</code> contains only 
+  information on one target (or you have to give 'ID' as an extra field, 
+  maybe).</p>
+  <p>The standard columns are:</p>
+  <ol start="1">
+    <li>
+      <code>meas</code>: containing the photometric measurement
+    </li>
+    <li>
+      <code>e_meas</code>: the error on the photometric measurement
+    </li>
+    <li>
+      <code>flag</code>: an optional quality flag
+    </li>
+    <li>
+      <code>unit</code>: the unit of the measurement
+    </li>
+    <li>
+      <code>photband</code>: the photometric passband (FILTER.BAND)
+    </li>
+    <li>
+      <code>source</code>: name of the source catalog
+    </li>
+  </ol>
+  <p>You can add extra information from the VizieR catalog via the list of 
+  keys <code>extra_fields</code>.</p>
+  <p>If you give a <code>master</code>, the information will be added to a 
+  previous record array. If not, a new master will be created.</p>
+  <p>Colors will be expanded, derived from the other columns and added to 
+  the master.</p>
+  <p>The result is a record array with each row a measurement.</p>
+  <p>Example usage:</p>
+  <p>First look for all photometry of Vega in all VizieR catalogs:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.sed <span class="py-keyword">import</span> filters
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab
+<span class="py-prompt">&gt;&gt;&gt; </span>master = None
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> source <span class="py-keyword">in</span> cat_info.sections():
+<span class="py-more">... </span>    results,units,comms = search(source,ID=<span class="py-string">'vega'</span>,radius=60.)
+<span class="py-more">... </span>    <span class="py-keyword">if</span> results <span class="py-keyword">is</span> <span class="py-keyword">not</span> None:
+<span class="py-more">... </span>        master = vizier2phot(source,results,units,master,extra_fields=[<span class="py-string">'_r'</span>,<span class="py-string">'_RAJ2000'</span>,<span class="py-string">'_DEJ2000'</span>])</pre>
+  <p>Keep only observations we have an measurement and error of, convert 
+  every observation to 'Jy' and keep track of the results to plot.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>master = master[(-np.isnan(master[<span class="py-string">'e_meas'</span>])) &amp; (-np.isnan(master[<span class="py-string">'meas'</span>]))]
+<span class="py-prompt">&gt;&gt;&gt; </span>eff_waves = filters.eff_wave(master[<span class="py-string">'photband'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>myvalue,e_myvalue = conversions.nconvert(master[<span class="py-string">'unit'</span>],<span class="py-string">'erg/s/cm2/AA'</span>,master[<span class="py-string">'meas'</span>],master[<span class="py-string">'e_meas'</span>],photband=master[<span class="py-string">'photband'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(master)):
+<span class="py-more">... </span>   <span class="py-keyword">print</span> <span class="py-string">'%15s %10.3e+/-%10.3e %11s %10.3e %3s %6.2f %6.2f %6.3f %23s'</span>%(master[i][<span class="py-string">'photband'</span>],master[i][<span class="py-string">'meas'</span>],master[i][<span class="py-string">'e_meas'</span>],master[i][<span class="py-string">'unit'</span>],myvalue[i],<span class="py-string">'Jy'</span>,master[i][<span class="py-string">'_RAJ2000'</span>],master[i][<span class="py-string">'_DEJ2000'</span>],master[i][<span class="py-string">'_r'</span>],master[i][<span class="py-string">'source'</span>])
+<span class="py-output">       GENEVA.V  6.100e-02+/- 2.500e-02         mag  3.620e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">       GENEVA.B -8.980e-01+/- 2.500e-02         mag  6.518e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">       GENEVA.U  6.070e-01+/- 2.500e-02         mag  3.223e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">      GENEVA.V1  7.640e-01+/- 2.500e-02         mag  3.782e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">      GENEVA.B1  2.000e-03+/- 2.500e-02         mag  6.584e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">      GENEVA.B2  6.120e-01+/- 2.500e-02         mag  6.208e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">       GENEVA.G  1.270e+00+/- 2.500e-02         mag  3.111e-09  Jy 279.24  38.77 56.000             II/169/main</span>
+<span class="py-output">        2MASS.J -1.770e-01+/- 2.060e-01         mag  3.591e-10  Jy 279.23  38.78  0.034              II/246/out</span>
+<span class="py-output">        2MASS.H -2.900e-02+/- 1.460e-01         mag  1.176e-10  Jy 279.23  38.78  0.034              II/246/out</span>
+<span class="py-output">       2MASS.KS  1.290e-01+/- 1.860e-01         mag  3.799e-11  Jy 279.23  38.78  0.034              II/246/out</span>
+<span class="py-output">       IRAS.F12  4.160e+01+/- 1.664e+00          Jy  1.024e-13  Jy 279.23  38.78  9.400             II/125/main</span>
+<span class="py-output">       IRAS.F25  1.100e+01+/- 5.500e-01          Jy  6.195e-15  Jy 279.23  38.78  9.400             II/125/main</span>
+<span class="py-output">       IRAS.F60  9.510e+00+/- 7.608e-01          Jy  8.420e-16  Jy 279.23  38.78  9.400             II/125/main</span>
+<span class="py-output">      IRAS.F100  7.760e+00+/- 6.984e-01          Jy  2.349e-16  Jy 279.23  38.78  9.400             II/125/main</span>
+<span class="py-output">       TD1.1565  5.689e-09+/- 1.700e-11  10mW/m2/nm  5.689e-09  Jy 279.23  38.78 18.510          II/59B/catalog</span>
+<span class="py-output">       TD1.1965  4.928e-09+/- 1.300e-11  10mW/m2/nm  4.928e-09  Jy 279.23  38.78 18.510          II/59B/catalog</span>
+<span class="py-output">       TD1.2365  3.700e-09+/- 1.000e-11  10mW/m2/nm  3.700e-09  Jy 279.23  38.78 18.510          II/59B/catalog</span>
+<span class="py-output">       TD1.2740  3.123e-09+/- 9.000e-12  10mW/m2/nm  3.123e-09  Jy 279.23  38.78 18.510          II/59B/catalog</span>
+<span class="py-output">        ANS.15N -4.910e-01+/- 1.000e-03         mag  5.707e-09  Jy 279.23  38.78 14.000               II/97/ans</span>
+<span class="py-output">        ANS.15W -4.410e-01+/- 1.200e-02         mag  5.450e-09  Jy 279.23  38.78 14.000               II/97/ans</span>
+<span class="py-output">         ANS.18 -4.620e-01+/- 3.000e-03         mag  5.556e-09  Jy 279.23  38.78 14.000               II/97/ans</span>
+<span class="py-output">         ANS.25  4.600e-02+/- 4.000e-03         mag  3.480e-09  Jy 279.23  38.78 14.000               II/97/ans</span>
+<span class="py-output">         ANS.33  1.910e-01+/- 3.000e-03         mag  3.045e-09  Jy 279.23  38.78 14.000               II/97/ans</span>
+<span class="py-output">   HIPPARCOS.HP  8.680e-02+/- 2.100e-03         mag  3.840e-09  Jy 279.23  38.78  3.060          I/239/hip_main</span>
+<span class="py-output">        MIPS.24  8.900e+03+/- 8.900e+01         mJy  4.628e-15  Jy 279.23  38.78  0.010    J/ApJ/653/675/table1</span>
+<span class="py-output">        MIPS.70  1.142e+04+/- 2.283e+03         mJy  7.075e-16  Jy 279.23  38.78  0.010    J/ApJ/653/675/table1</span>
+<span class="py-output">      JOHNSON.B  1.900e-02+/- 1.000e-02         mag  6.216e-09  Jy 279.23  38.78  3.060             I/280B/ascc</span>
+<span class="py-output">      JOHNSON.V  7.400e-02+/- 2.000e-03         mag  3.428e-09  Jy 279.23  38.78  3.060             I/280B/ascc</span>
+<span class="py-output">      JOHNSON.V  3.300e-02+/- 1.200e-02         mag  3.560e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans</span>
+<span class="py-output">    JOHNSON.B-V -1.000e-03+/- 5.000e-03         mag        nan  Jy 279.23  38.78  0.010         II/168/ubvmeans</span>
+<span class="py-output">    JOHNSON.U-B -6.000e-03+/- 6.000e-03         mag        nan  Jy 279.23  38.78  0.010         II/168/ubvmeans</span>
+<span class="py-output">      JOHNSON.B  3.200e-02+/- 1.300e-02         mag  6.142e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans</span>
+<span class="py-output">      JOHNSON.U  2.600e-02+/- 1.432e-02         mag  4.086e-09  Jy 279.23  38.78  0.010         II/168/ubvmeans</span>
+<span class="py-output">      JOHNSON.K  1.300e-01+/- 1.900e-01         mag  3.764e-11  Jy 279.23  38.78  0.010 J/PASP/120/1128/catalog</span>
+<span class="py-output">      AKARI.N60  6.582e+00+/- 2.090e-01          Jy  4.614e-16  Jy 279.23  38.78  3.400              II/298/fis</span>
+<span class="py-output">    AKARI.WIDES  6.201e+00+/- 1.650e-01          Jy  2.566e-16  Jy 279.23  38.78  3.400              II/298/fis</span>
+<span class="py-output">    AKARI.WIDEL  4.047e+00+/- 3.500e-01          Jy  5.658e-17  Jy 279.23  38.78  3.400              II/298/fis</span>
+<span class="py-output">     AKARI.N160  3.221e+00+/- 2.550e-01          Jy  3.695e-17  Jy 279.23  38.78  3.400              II/298/fis</span>
+<span class="py-output">      AKARI.S9W  5.670e+01+/- 4.010e-01          Jy  2.169e-13  Jy 279.24  38.78  2.550              II/297/irc</span>
+<span class="py-output">     AKARI.L18W  1.254e+01+/- 7.770e-02          Jy  1.050e-14  Jy 279.24  38.78  2.550              II/297/irc</span>
+<span class="py-output">  STROMGREN.B-Y  3.000e-03+/- 3.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog</span>
+<span class="py-output">   STROMGREN.M1  1.570e-01+/- 3.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog</span>
+<span class="py-output">   STROMGREN.C1  1.088e+00+/- 4.000e-03         mag        nan  Jy 279.23  38.78 22.000          II/215/catalog</span>
+<span class="py-output">    STROMGREN.B  4.300e-02+/- 3.000e-03         mag  5.604e-09  Jy 279.23  38.78 22.000          II/215/catalog</span>
+<span class="py-output">     DIRBE.F2_2  6.217e+02+/- 9.500e+00          Jy  3.791e-11  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">     DIRBE.F3_5  2.704e+02+/- 1.400e+01          Jy  6.534e-12  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">     DIRBE.F4_9  1.504e+02+/- 6.200e+00          Jy  1.895e-12  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">      DIRBE.F12  2.910e+01+/- 1.570e+01          Jy  6.014e-14  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">      DIRBE.F25  1.630e+01+/- 3.120e+01          Jy  1.153e-14  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">      DIRBE.F60  1.220e+01+/- 5.610e+01          Jy  1.195e-15  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">     DIRBE.F100 -7.000e-01+/- 7.790e+01          Jy -2.238e-17  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">     DIRBE.F140  2.557e+02+/- 5.223e+03          Jy  3.577e-15  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">     DIRBE.F240  8.290e+01+/- 2.881e+03          Jy  4.152e-16  Jy 279.23  38.78  0.110    J/ApJS/154/673/DIRBE</span>
+<span class="py-output">        WISE.W2  1.143e+00+/- 1.900e-02         mag  8.428e-13  Jy 279.24  38.78  3.276             II/311/wise</span>
+<span class="py-output">        WISE.W3 -6.700e-02+/- 8.000e-03         mag  6.930e-14  Jy 279.24  38.78  3.276             II/311/wise</span>
+<span class="py-output">        WISE.W4 -1.270e-01+/- 6.000e-03         mag  5.722e-15  Jy 279.24  38.78  3.276             II/311/wise</span></pre>
+  <p>Make a quick plot:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.loglog(eff_waves,myvalue,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.show()</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>source</code></strong> (str) - name of the VizieR source</li>
+        <li><strong class="pname"><code>results</code></strong> (record array) - results from VizieR <code>search</code></li>
+        <li><strong class="pname"><code>units</code></strong> (dict) - header of Vizier catalog with key name the column name and key 
+          value the units of that column</li>
+        <li><strong class="pname"><code>master</code></strong> (record array) - master record array to add information to</li>
+        <li><strong class="pname"><code>e_flag</code></strong> (str) - flag denoting the error on a column</li>
+        <li><strong class="pname"><code>q_flag</code></strong> (str) - flag denoting the quality of a measurement</li>
+        <li><strong class="pname"><code>extra_fields</code></strong> (list of str) - any extra columns you want to add information from</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>array with each row a measurement</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="vizier2fund"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">vizier2fund</span>(<span class="sig-arg">source</span>,
+        <span class="sig-arg">results</span>,
+        <span class="sig-arg">units</span>,
+        <span class="sig-arg">master</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e_flag</span>=<span class="sig-default">'e_'</span>,
+        <span class="sig-arg">q_flag</span>=<span class="sig-default">'q_'</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#vizier2fund">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert/combine VizieR record arrays to measurement record arrays.</p>
+  <p>This is probably only useful if <code>results</code> contains only 
+  information on one target (or you have to give 'ID' as an extra field, 
+  maybe).</p>
+  <p>The standard columns are:</p>
+  <ol start="1">
+    <li>
+      <code>meas</code>: containing the measurement of a fundamental 
+      parameter
+    </li>
+    <li>
+      <code>e_meas</code>: the error on the measurement of a fundamental 
+      parameter
+    </li>
+    <li>
+      <code>flag</code>: an optional quality flag
+    </li>
+    <li>
+      <code>unit</code>: the unit of the measurement
+    </li>
+    <li>
+      <code>source</code>: name of the source catalog
+    </li>
+  </ol>
+  <p>If a target appears more than once in a catalog, only the first match 
+  will be added.</p>
+  <p>The result is a record array with each row a measurement.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>master = None
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> source <span class="py-keyword">in</span> cat_info_fund.sections():
+<span class="py-more">... </span>    results,units,comms = search(source,ID=<span class="py-string">'AzV 79'</span>,radius=60.)
+<span class="py-more">... </span>    <span class="py-keyword">if</span> results <span class="py-keyword">is</span> <span class="py-keyword">not</span> None:
+<span class="py-more">... </span>        master = vizier2fund(source,results,units,master,extra_fields=[<span class="py-string">'_r'</span>,<span class="py-string">'_RAJ2000'</span>,<span class="py-string">'_DEJ2000'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>master = master[-np.isnan(master[<span class="py-string">'meas'</span>])]
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(master)):
+<span class="py-more">... </span>    <span class="py-keyword">print</span> <span class="py-string">'%10s %10.3e+/-%10.3e %11s %6.2f %6.2f %6.3f %23s'</span>%(master[i][<span class="py-string">'name'</span>],master[i][<span class="py-string">'meas'</span>],master[i][<span class="py-string">'e_meas'</span>],master[i][<span class="py-string">'unit'</span>],master[i][<span class="py-string">'_RAJ2000'</span>],master[i][<span class="py-string">'_DEJ2000'</span>],master[i][<span class="py-string">'_r'</span>],master[i][<span class="py-string">'source'</span>])
+<span class="py-output">      Teff  7.304e+03+/-       nan           K  12.67 -72.83  0.002         B/pastel/pastel</span>
+<span class="py-output">      logg  2.000e+00+/-       nan     [cm/s2]  12.67 -72.83  0.002         B/pastel/pastel</span>
+<span class="py-output">    [Fe/H] -8.700e-01+/-       nan       [Sun]  12.67 -72.83  0.002         B/pastel/pastel</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>source</code></strong> (str) - name of the VizieR source</li>
+        <li><strong class="pname"><code>results</code></strong> (record array) - results from VizieR <code>search</code></li>
+        <li><strong class="pname"><code>units</code></strong> (dict) - header of Vizier catalog with key name the column name and key 
+          value the units of that column</li>
+        <li><strong class="pname"><code>master</code></strong> (record array) - master record array to add information to</li>
+        <li><strong class="pname"><code>e_flag</code></strong> (str) - flag denoting the error on a column</li>
+        <li><strong class="pname"><code>q_flag</code></strong> (str) - flag denoting the quality of a measurement</li>
+        <li><strong class="pname"><code>extra_fields</code></strong> (list of str) - any extra columns you want to add information from</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>array with each row a measurement</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="catalog2bibcode"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">catalog2bibcode</span>(<span class="sig-arg">catalog</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#catalog2bibcode">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the ADS bibcode of a ViZieR catalog.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>catalog</code></strong> (str) - name of the catalog (e.g. II/306/sdss8)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>bibtex code</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="bibcode2bibtex"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">bibcode2bibtex</span>(<span class="sig-arg">bibcode</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#bibcode2bibtex">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the bibtex entry of an ADS bibcode.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>bibcode</code></strong> (str) - bibcode (e.g. <code>2011yCat.2306....0A</code>)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>bibtex entry</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="catalog2bibtex"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">catalog2bibtex</span>(<span class="sig-arg">catalog</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#catalog2bibtex">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the bibtex entry of a catalog.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>catalog</code></strong> (str) - name of the catalog (e.g. II/306/sdss8)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>bibtex entry</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_URI"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_URI</span>(<span class="sig-arg">name</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ra</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">dec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">radius</span>=<span class="sig-default">20.</span>,
+        <span class="sig-arg">oc</span>=<span class="sig-default">'deg'</span>,
+        <span class="sig-arg">oc_eq</span>=<span class="sig-default">'J2000'</span>,
+        <span class="sig-arg">out_all</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">out_max</span>=<span class="sig-default">1000000</span>,
+        <span class="sig-arg">filetype</span>=<span class="sig-default">'tsv'</span>,
+        <span class="sig-arg">sort</span>=<span class="sig-default">'_r'</span>,
+        <span class="sig-arg">constraints</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#_get_URI">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Build Vizier URI from available options.</p>
+  <p>kwargs are to catch unused arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str) - name of a ViZieR catalog (e.g. 'II/246/out')</li>
+        <li><strong class="pname"><code>filetype</code></strong> (str (one of 'tsv','csv','ascii'... see ViZieR site)) - type of the retrieved file</li>
+        <li><strong class="pname"><code>oc</code></strong> (str (one of 'deg'...)) - coordinates</li>
+        <li><strong class="pname"><code>out_all</code></strong> (boolean (True = all, None = basic)) - retrieve all or basic information</li>
+        <li><strong class="pname"><code>out_max</code></strong> (integer) - maximum number of rows</li>
+        <li><strong class="pname"><code>ID</code></strong> (str) - target name</li>
+        <li><strong class="pname"><code>ra</code></strong> (float) - target's right ascension</li>
+        <li><strong class="pname"><code>dec</code></strong> (float) - target's declination</li>
+        <li><strong class="pname"><code>radius</code></strong> (float) - search radius (arcseconds)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>url</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_breakup_colours"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_breakup_colours</span>(<span class="sig-arg">master</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#_breakup_colours">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>From colors and one magnitude measurement, derive the other 
+  magnitudes.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>master</code></strong> (record array) - master record array from vizier2phot.</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>master with added magnitudes</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="test"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">test</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.vizier-pysrc.html#test">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Execute all docstrings.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.show()</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="mirrors"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">mirrors</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+{'cycle': itertools.cycle(['vizier.u-strasbg.fr', 'vizier.nao.ac.jp', <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+'vizier.hia.nrc.ca', 'vizier.ast.cam.ac.uk', 'vizier.cfa.harvard.edu',<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ 'www.ukirt.jach.hawaii.edu', 'vizier.inasan.ru', 'vizier.iucaa.ernet.<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+in', 'data.bao.ac.cn'])}
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

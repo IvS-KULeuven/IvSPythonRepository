@@ -1,0 +1,1887 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.timeseries.pergrams</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.timeseries-module.html">Package&nbsp;timeseries</a> ::
+        Module&nbsp;pergrams
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.timeseries.pergrams-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module pergrams</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html">source&nbsp;code</a></span></p>
+<p>Contains many different periodogram calculations</p>
+  <h1 class="heading">Section 1. Basic usage</h1>
+    <p>Given a time series of the form</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,1,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = np.sin(times)</pre>
+    <p>The basic interface is</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freq,ampl = scargle(times,signal)</pre>
+    <p>If you give no extra information, default values for the start, end 
+    and step frequency will be chosen. See the 'defaults_pergram' decorator
+    for a list of keywords common to all periodogram calculations.</p>
+    <p>Many periodograms can be computed in parallel, by supplying an extra
+    keyword 'threads':</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freq,ampl = scargle(times,signal,threads=2)</pre>
+    <p><b>Warning</b>: the timeseries must be <b>sorted in time</b> and 
+    <b>cannot contain the same timepoint twice</b>. Otherwise, a 
+    'ValueError, concatenation problem' can occur.</p>
+    <p>If something goes wrong in the periodogram computation, be sure to 
+    run <a href="ivs.timeseries.pergrams-module.html#check_input" 
+    class="link">check_input</a> on your input data. This will print out 
+    some basic diagnostics to see if your data are valid.</p>
+  <h1 class="heading">Section 2. Nyquist frequency</h1>
+    <p>The periodogram functions are written such that they never exceed 
+    the value of the Nyquist frequency. This behaviour can be changed.</p>
+    <p>By default, the Nyquist frequency is defined as half of the inverse 
+    of the smallest time step in the data. That is, the 
+    <code>nyq_stat</code> variable is set to the function 
+    <code>np.min</code>. If you prefer the Nyquist to be defined as the 
+    median, set the <code>nyq_stat</code> variable for any periodogram to 
+    <code>np.median</code>. If you want a more complex or self-defined 
+    function, that is also acceptable. If you give a number to 
+    <code>nyq_stat</code>, nothing will be computed but that value will be 
+    considered the nyquist frequency.</p>
+  <h1 class="heading">Section 3. Speed comparison</h1>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> time</pre>
+    <p>The timeseries is generated for 
+    N=500,1000,2000,5000,10000,20000,50000</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>techniques = [<span class="py-string">'scargle'</span>,<span class="py-string">'deeming'</span>,<span class="py-string">'gls'</span>,<span class="py-string">'fasper'</span>,
+<span class="py-more">... </span>              <span class="py-string">'schwarzenberg_czerny'</span>,<span class="py-string">'pdm'</span>,<span class="py-string">'box'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>Ns = [1000,2000,5000,10000,20000,30000]
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> tech <span class="py-keyword">in</span> techniques[:0]:
+<span class="py-more">... </span>    freqs = []
+<span class="py-more">... </span>    clock = []
+<span class="py-more">... </span>    <span class="py-keyword">for</span> N <span class="py-keyword">in</span> Ns:
+<span class="py-more">... </span>        times = np.linspace(0,1,N)
+<span class="py-more">... </span>        signal = np.sin(times) + np.random.normal(size=N)
+<span class="py-more">... </span>        c0 = time.time()
+<span class="py-more">... </span>        freq,ampl = locals()[tech](times,signal)
+<span class="py-more">... </span>        clock.append(time.time()-c0)
+<span class="py-more">... </span>        freqs.append(len(freq))
+<span class="py-more">... </span>    p = pl.plot(freqs,clock,<span class="py-string">'o-'</span>,label=tech)
+<span class="py-more">... </span>    <span class="py-keyword">print</span> tech,np.polyfit(np.log10(np.array(freqs)),np.log10(np.array(clock)),1)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = pl.legend(loc='best',fancybox=True)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#q = p.get_frame().set_alpha(0.5)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')</span></pre>
+<center><img src='../images/ivs_timeseries_pergram_speeds.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Periodogram comparison</h1>
+    <p>We generate a sinusoidal signal, add some noise and compute the 
+    periodogram with the different methods.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.sort(np.random.uniform(size=500,low=0,high=100))
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = np.sin(2*np.pi/10.*times)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal += np.random.normal(size=500)</pre>
+    <p>Fourier based periodgrams suited for unequidistant data: <a 
+    href="ivs.timeseries.pergrams-module.html#scargle" 
+    class="link">scargle</a>, <a 
+    href="ivs.timeseries.pergrams-module.html#deeming" 
+    class="link">deeming</a>, <a 
+    href="ivs.timeseries.pergrams-module.html#fasper" 
+    class="link">fasper</a> and <a 
+    href="ivs.timeseries.pergrams-module.html#schwarzenberg_czerny" 
+    class="link">schwarzenberg_czerny</a>.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>f1,a1 = scargle(times,signal,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f2,a2 = fasper(times,signal,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f3,a3 = deeming(times,signal,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f4,a4 = scargle(times,signal,norm=<span class="py-string">'power'</span>,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f5,a5 = schwarzenberg_czerny(times,signal,fn=0.35,nh=1,mode=2)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f1,a1,<span class="py-string">'k-'</span>,lw=4,label=<span class="py-string">'scargle'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f2,a2,<span class="py-string">'r--'</span>,lw=4,label=<span class="py-string">'fasper'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f3,a3,<span class="py-string">'b-'</span>,lw=2,label=<span class="py-string">'deeming'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(f1[0],f1[-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = pl.legend(fancybox=True,loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f4,a4,<span class="py-string">'k-'</span>,lw=2,label=<span class="py-string">'scargle'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f5,a5/2.,<span class="py-string">'r--'</span>,lw=2,label=<span class="py-string">'schwarzenberg-czerny'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(f1[0],f1[-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = pl.legend(fancybox=True,loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_timeseries_pergrams_fourier.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Least-square fitting: <a 
+    href="ivs.timeseries.pergrams-module.html#gls" class="link">gls</a> and
+    <a href="ivs.timeseries.pergrams-module.html#kepler" 
+    class="link">kepler</a>.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>f1,a1 = gls(times,signal,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f2,a2 = kepler(times,signal,fn=0.35)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f1,a1,<span class="py-string">'k-'</span>,lw=2,label=<span class="py-string">'gls'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f2,a2,<span class="py-string">'r--'</span>,lw=2,label=<span class="py-string">'kepler'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(f1[0],f1[-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = pl.legend(fancybox=True,loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_timeseries_pergrams_lsq.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Phase folding techniques: <a 
+    href="ivs.timeseries.pergrams-module.html#box" class="link">box</a> and
+    <a href="ivs.timeseries.pergrams-module.html#pdm" 
+    class="link">pdm</a></p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>f1,a1 = box(times,signal,fn=0.35)
+<span class="py-prompt">&gt;&gt;&gt; </span>f2,a2 = pdm(times,signal,fn=0.35)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f1,a1,<span class="py-string">'k-'</span>,lw=2,label=<span class="py-string">'box'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(f2,a2,<span class="py-string">'r--'</span>,lw=2,label=<span class="py-string">'pdm'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(f1[0],f1[-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = pl.legend(fancybox=True,loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_timeseries_pergrams_phase.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Periodograms</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#scargle" class="summary-sig-name">scargle</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">'amplitude'</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">single</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Scargle periodogram of Scargle (1982).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#scargle">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#fasper" class="summary-sig-name">fasper</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">single</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">'amplitude'</span>)</span><br />
+      Fasper periodogram from Numerical Recipes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#fasper">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#deeming" class="summary-sig-name">deeming</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">'amplitude'</span>)</span><br />
+      Deeming periodogram of Deeming et al (1975).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#deeming">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#gls" class="summary-sig-name">gls</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wexp</span>=<span class="summary-sig-default">2</span>)</span><br />
+      Generalised Least Squares periodogram of Zucher et al (2010).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#gls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#clean" class="summary-sig-name">clean</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">freqbins</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">niter</span>=<span class="summary-sig-default">10.</span>,
+        <span class="summary-sig-arg">gain</span>=<span class="summary-sig-default">1.0</span>)</span><br />
+      Cleaned Fourier periodogram of Roberts et al (1987)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#clean">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#schwarzenberg_czerny" class="summary-sig-name">schwarzenberg_czerny</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">nh</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Multi harmonic periodogram of Schwarzenberg-Czerny (1996).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#schwarzenberg_czerny">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#DFTpower" class="summary-sig-name">DFTpower</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Computes the modulus square of the fourier transform.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTpower">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#DFTpower2" class="summary-sig-name">DFTpower2</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freqs</span>)</span><br />
+      Computes the power spectrum of a signal using a discrete Fourier 
+      transform.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTpower2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#DFTscargle" class="summary-sig-name">DFTscargle</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>,
+        <span class="summary-sig-arg">fn</span>,
+        <span class="summary-sig-arg">df</span>)</span><br />
+      Compute Discrete Fourier Transform for unevenly spaced data ( 
+      Scargle, 1989).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTscargle">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#FFTpower" class="summary-sig-name">FFTpower</a>(<span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">timestep</span>)</span><br />
+      Computes power spectrum of an equidistant time series 'signal' using 
+      the FFT algorithm.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#FFTpower">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#FFTpowerdensity" class="summary-sig-name">FFTpowerdensity</a>(<span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">timestep</span>)</span><br />
+      Computes the power density of an equidistant time series 'signal', 
+      using the FFT algorithm.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#FFTpowerdensity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#weightedpower" class="summary-sig-name">weightedpower</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">weight</span>,
+        <span class="summary-sig-arg">freq</span>)</span><br />
+      Compute the weighted power spectrum of a time signal.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#weightedpower">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#pdm" class="summary-sig-name">pdm</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">Nbin</span>=<span class="summary-sig-default">5</span>,
+        <span class="summary-sig-arg">Ncover</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">D</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">forbit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">asini</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">omega</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">nmax</span>=<span class="summary-sig-default">10</span>)</span><br />
+      Phase Dispersion Minimization of Jurkevich-Stellingwerf (1978)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#pdm">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#box" class="summary-sig-name">box</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">Nbin</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">qmi</span>=<span class="summary-sig-default">0.005</span>,
+        <span class="summary-sig-arg">qma</span>=<span class="summary-sig-default">0.75</span>)</span><br />
+      Box-Least-Squares spectrum of Kovacs et al (2002).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#box">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array,array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#kepler" class="summary-sig-name">kepler</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e0</span>=<span class="summary-sig-default">0.</span>,
+        <span class="summary-sig-arg">en</span>=<span class="summary-sig-default">0.91</span>,
+        <span class="summary-sig-arg">de</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wexp</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">x00</span>=<span class="summary-sig-default">0.</span>,
+        <span class="summary-sig-arg">x0n</span>=<span class="summary-sig-default">359.9</span>)</span><br />
+      Keplerian periodogram of Zucker et al (2010).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#kepler">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#Zwavelet" class="summary-sig-name">Zwavelet</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freq</span>,
+        <span class="summary-sig-arg">position</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">10.0</span>)</span><br />
+      Weighted Wavelet Z-transform of Foster (1996)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#Zwavelet">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Pure Python versions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#pdm_py" class="summary-sig-name">pdm_py</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">Nbin</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">Ncover</span>=<span class="summary-sig-default">5</span>,
+        <span class="summary-sig-arg">D</span>=<span class="summary-sig-default">0.</span>)</span><br />
+      Computes the theta-statistics to do a Phase Dispersion Minimisation.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#pdm_py">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#fasper_py" class="summary-sig-name">fasper_py</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">ofac</span>,
+        <span class="summary-sig-arg">hifac</span>,
+        <span class="summary-sig-arg">MACC</span>=<span class="summary-sig-default">4</span>)</span><br />
+      function fasper
+    Given abscissas x (which need not be equally spaced) and ordinates
+    y, and given a desired oversampling factor ofac (a typical value
+    being 4 or larger).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#fasper_py">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Helper functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#windowfunction" class="summary-sig-name">windowfunction</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">freq</span>)</span><br />
+      Computes the modulus square of the window function of a set of time 
+      points at the given frequencies.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#windowfunction">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#check_input" class="summary-sig-name">check_input</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Check the input arguments for periodogram calculations for mistakes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#check_input">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#__spread__" class="summary-sig-name">__spread__</a>(<span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">yy</span>,
+        <span class="summary-sig-arg">n</span>,
+        <span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">m</span>)</span><br />
+      Given an array yy(0:n-1), extirpolate (spread) a value y into
+m actual array elements that best approximate the &quot;fictional&quot;
+(i.e., possible noninteger) array element number x.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#__spread__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__ane__"></a><span class="summary-sig-name">__ane__</span>(<span class="summary-sig-arg">n</span>,
+        <span class="summary-sig-arg">e</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#__ane__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__bne__"></a><span class="summary-sig-name">__bne__</span>(<span class="summary-sig-arg">n</span>,
+        <span class="summary-sig-arg">e</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#__bne__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#getSignificance" class="summary-sig-name">getSignificance</a>(<span class="summary-sig-arg">wk1</span>,
+        <span class="summary-sig-arg">wk2</span>,
+        <span class="summary-sig-arg">nout</span>,
+        <span class="summary-sig-arg">ofac</span>)</span><br />
+      Returns the peak false alarm probabilities</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#getSignificance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.pergrams-module.html#scargle_probability" class="summary-sig-name">scargle_probability</a>(<span class="summary-sig-arg">peak_value</span>,
+        <span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">freqs</span>,
+        <span class="summary-sig-arg">correct_for_frange</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Compute the probability to observe a peak in the Scargle periodogram.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#scargle_probability">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;TS.PERGRAMS&quot;)">logging.getLogger(&quot;TS.PERGRAMS&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="scargle"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">scargle</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">'amplitude'</span>,
+        <span class="sig-arg">weights</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">single</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#scargle">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Scargle periodogram of Scargle (1982).</p>
+  <p>Several options are available (possibly combined):</p>
+  <ol start="1">
+    <li>
+      weighted Scargle
+    </li>
+    <li>
+      Amplitude spectrum
+    </li>
+    <li>
+      Distribution power spectrum
+    </li>
+    <li>
+      Traditional power spectrum
+    </li>
+    <li>
+      Power density spectrum (see Kjeldsen, 2005 or Carrier, 2010)
+    </li>
+  </ol>
+  <p>This definition makes use of a Fortran-routine written by Jan Cuypers,
+  Conny Aerts and Peter De Cat. A slightly adapted version is used for the 
+  weighted version (adapted by Pieter Degroote).</p>
+  <p>Through the option &quot;norm&quot;, it's possible to norm the 
+  periodogram as to get a periodogram that has a known statistical 
+  distribution. Usually, this norm is the variance of the data (NOT of the 
+  noise or residuals, see Schwarzenberg- Czerny 1998!).</p>
+  <p>Also, it is possible to retrieve the power density spectrum in units 
+  of [ampl**2/frequency]. In this routine, the normalisation constant is 
+  taken to be the total time span T. Kjeldsen (2005) chooses to multiply 
+  the power by the 'effective length of the observing run', which is 
+  calculated as the reciprocal of the area under spectral window (in power,
+  and take 2*Nyquist as upper frequency value).</p>
+  <p>REMARK: this routine does <b>not</b> automatically remove the average.
+  It is the user's responsibility to do this adequately: e.g. subtract a 
+  <b>weighted</b> average if one computes the weighted periodogram!!</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>weights</code></strong> (numpy array) - weights of the datapoints</li>
+        <li><strong class="pname"><code>norm</code></strong> (str) - type of normalisation</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fasper"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fasper</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">single</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">'amplitude'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#fasper">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fasper periodogram from Numerical Recipes.</p>
+  <p>Normalisation here is not correct!!</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="deeming"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">deeming</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">'amplitude'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#deeming">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Deeming periodogram of Deeming et al (1975).</p>
+  <p>Thanks to Jan Cuypers</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>norm</code></strong> (str) - type of normalisation</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gls"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gls</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wexp</span>=<span class="sig-default">2</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#gls">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generalised Least Squares periodogram of Zucher et al (2010).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="clean"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">clean</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">freqbins</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">niter</span>=<span class="sig-default">10.</span>,
+        <span class="sig-arg">gain</span>=<span class="sig-default">1.0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#clean">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Cleaned Fourier periodogram of Roberts et al (1987)</p>
+  <p>Parallization probably isn't such a good idea here because of the 
+  frequency bins.</p>
+  <p>Fortran module probably from John Telting.</p>
+  <p>Should always start from zero, so f0 is not an option</p>
+  <p>Generate some signal with heavy window side lobes:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times_ = np.linspace(0,150,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.array([times_[i] <span class="py-keyword">for</span> i <span class="py-keyword">in</span> xrange(len(times_)) <span class="py-keyword">if</span> (i%10)&gt;7])
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = np.sin(2*pi/10*times) + np.random.normal(size=len(times))</pre>
+  <p>Compute the scargle periodogram as a reference, and compare with the 
+  the CLEAN periodogram with different gains.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>niter,freqbins = 10,[0,1.2]
+<span class="py-prompt">&gt;&gt;&gt; </span>p1 = scargle(times,signal,fn=1.2,norm=<span class="py-string">'amplitude'</span>,threads=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p2 = clean(times,signal,fn=1.2,gain=1.0,niter=niter,freqbins=freqbins)
+<span class="py-prompt">&gt;&gt;&gt; </span>p3 = clean(times,signal,fn=1.2,gain=0.1,niter=niter,freqbins=freqbins)</pre>
+  <p>Make a figure of the result:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.plot(p1[0],p1[1],<span class="py-string">'k-'</span>,label=<span class="py-string">&quot;Scargle&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.plot(p2[0],p2[1],<span class="py-string">'r-'</span>,label=<span class="py-string">&quot;Clean (g=1.0)&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.plot(p3[0],p3[1],<span class="py-string">'b-'</span>,label=<span class="py-string">&quot;Clean (g=0.1)&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.legend()</pre>
+<center><img src='../images/ivs_timeseries_pergrams_clean.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>freqbins</code></strong> (list or array) - frequency bins for clean computation</li>
+        <li><strong class="pname"><code>niter</code></strong> (integer) - number of iterations</li>
+        <li><strong class="pname"><code>gain</code></strong> (float between 0 (no cleaning) and 1 (full cleaning)) - gain for clean computation</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="schwarzenberg_czerny"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">schwarzenberg_czerny</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">nh</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">mode</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#schwarzenberg_czerny">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Multi harmonic periodogram of Schwarzenberg-Czerny (1996).</p>
+  <p>This periodogram follows an F-distribution, so it is possible to 
+  perform hypothesis testing.</p>
+  <p>If the number of the number of harmonics is 1, then this peridogram 
+  reduces to the Lomb-Scargle periodogram except for its better statistic 
+  behaviour. This script uses a Fortran procedure written by 
+  Schwarzenberg-Czerny.</p>
+  <p>Modes:</p>
+  <ul>
+    <li>
+      mode=1: AoV Fisher-Snedecor F(df1,df2) statistic
+    </li>
+    <li>
+      mode=2: total power fitted in all harmonics for mode=2
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1d array) - list of observations times</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1d array) - list of observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency (cycles per day) (default: 0.)</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency (cycles per day) (default: 10.)</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency (cycles per day) (default: 0.001)</li>
+        <li><strong class="pname"><code>nh</code></strong> (integer) - number of harmonics to take into account</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, f-statistic</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="DFTpower"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">DFTpower</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTpower">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the modulus square of the fourier transform.</p>
+  <p>Unit: square of the unit of signal. Time points need not be 
+  equidistant. The normalisation is such that a signal A*sin(2*pi*nu_0*t) 
+  gives power A^2 at nu=nu_0</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - signal [0..Ntime-1]</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - the power is computed for the frequencies freq = arange(f0,fn,df)</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - see f0</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - see f0</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>power spectrum of the signal</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="DFTpower2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">DFTpower2</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freqs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTpower2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the power spectrum of a signal using a discrete Fourier 
+  transform.</p>
+  <p>The main difference between DFTpower and DFTpower2, is that the latter
+  allows for non-equidistant frequencies for which the power spectrum will 
+  be computed.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points, not necessarily equidistant</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - signal corresponding to the given time points</li>
+        <li><strong class="pname"><code>freqs</code></strong> (ndarray) - frequencies for which the power spectrum will be computed. Unit: 
+          inverse of 'time'.</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>power spectrum. Unit: square of unit of 'signal'</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="DFTscargle"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">DFTscargle</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>,
+        <span class="sig-arg">fn</span>,
+        <span class="sig-arg">df</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#DFTscargle">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute Discrete Fourier Transform for unevenly spaced data ( Scargle,
+  1989).</p>
+  <p>Doesn't work yet!</p>
+  <p>It is recommended to start f0 at 0. It is recommended to stop fn  at 
+  the nyquist frequency</p>
+  <p>This makes use of a FORTRAN algorithm written by Scargle (1989).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observations times</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - end frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - frequency step</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>frequencies, dft, Re(dft), Im(dft)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="FFTpower"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">FFTpower</span>(<span class="sig-arg">signal</span>,
+        <span class="sig-arg">timestep</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#FFTpower">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes power spectrum of an equidistant time series 'signal' using 
+  the FFT algorithm. The length of the time series need not be a power of 2
+  (zero padding is done automatically). Normalisation is such that a signal
+  A*sin(2*pi*nu_0*t) gives power A^2 at nu=nu_0  (IF nu_0 is in the 'freq' 
+  array)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - the time series [0..Ntime-1]</li>
+        <li><strong class="pname"><code>timestep</code></strong> (float) - time step fo the equidistant time series</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies and the power spectrum</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="FFTpowerdensity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">FFTpowerdensity</span>(<span class="sig-arg">signal</span>,
+        <span class="sig-arg">timestep</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#FFTpowerdensity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the power density of an equidistant time series 'signal', 
+  using the FFT algorithm. The length of the time series need not be a 
+  power of 2 (zero padding is done automatically).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - the time series [0..Ntime-1]</li>
+        <li><strong class="pname"><code>timestep</code></strong> (float) - time step fo the equidistant time series</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies and the power density spectrum</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="weightedpower"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">weightedpower</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">weight</span>,
+        <span class="sig-arg">freq</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#weightedpower">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the weighted power spectrum of a time signal. For each given 
+  frequency a weighted sine fit is done using chi-square minimization.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - observations [0..Ntime-1]</li>
+        <li><strong class="pname"><code>weight</code></strong> (ndarray) - 1/sigma_i^2 of observation</li>
+        <li><strong class="pname"><code>freq</code></strong> (ndarray) - frequencies [0..Nfreq-1] for which the power needs to be computed</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>weighted power [0..Nfreq-1]</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="pdm"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pdm</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">Nbin</span>=<span class="sig-default">5</span>,
+        <span class="sig-arg">Ncover</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">D</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">forbit</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">asini</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">omega</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">nmax</span>=<span class="sig-default">10</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#pdm">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Phase Dispersion Minimization of Jurkevich-Stellingwerf (1978)</p>
+  <p>This definition makes use of a Fortran routine written by Jan Cuypers 
+  and Conny Aerts.</p>
+  <p>Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 
+  1986)</p>
+  <p>Inclusion of binary orbital motion by Pieter Degroote (see Shibahashi 
+  &amp; Kurtz 2012). When orbits are added, times must be in days, then 
+  asini is in AU.</p>
+  <p>For circular orbits, give only forbit and asini.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+        <li><strong class="pname"><code>Nbin</code></strong> (int) - number of bins (default: 5)</li>
+        <li><strong class="pname"><code>Ncover</code></strong> (int) - number of covers (default: 1)</li>
+        <li><strong class="pname"><code>D</code></strong> (float) - linear frequency shift parameter</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, theta statistic</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="box"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">Nbin</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">qmi</span>=<span class="sig-default">0.005</span>,
+        <span class="sig-arg">qma</span>=<span class="sig-default">0.75</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#box">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Box-Least-Squares spectrum of Kovacs et al (2002).</p>
+  <p>[ see Kovacs, Zucker &amp; Mazeh 2002, A&amp;A, Vol. 391, 369 ]</p>
+  <p>This is the slightly modified version of the original BLS routine by 
+  considering Edge Effect (EE) as suggested by Peter R. McCullough [ 
+  pmcc@stsci.edu ].</p>
+  <p>This modification was motivated by considering the cases when the low 
+  state (the transit event) happened to be devided between the first and 
+  last bins. In these rare cases the original BLS yields lower detection 
+  efficiency because of the lower number of data points in the bin(s) 
+  covering the low state.</p>
+  <p>For further comments/tests see  www.konkoly.hu/staff/kovacs.html</p>
+  <p>Transit fraction and precision are given by nb,qmi and qma</p>
+  <p>Remark: output parameter parameter contains: [frequency,depth,transit 
+  fraction width,fractional start, fraction end]</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1D array) - observation times</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1D array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - end frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - frequency step</li>
+        <li><strong class="pname"><code>Nbin</code></strong> (integer) - number of bins in the folded time series at any test period</li>
+        <li><strong class="pname"><code>qmi</code></strong> (0&lt;float&lt;qma&lt;1) - minimum fractional transit length to be tested</li>
+        <li><strong class="pname"><code>qma</code></strong> (0&lt;qmi&lt;float&lt;1) - maximum fractional transit length to be tested</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e0</span>=<span class="sig-default">0.</span>,
+        <span class="sig-arg">en</span>=<span class="sig-default">0.91</span>,
+        <span class="sig-arg">de</span>=<span class="sig-default">0.1</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wexp</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">x00</span>=<span class="sig-default">0.</span>,
+        <span class="sig-arg">x0n</span>=<span class="sig-default">359.9</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#kepler">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Keplerian periodogram of Zucker et al (2010).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1D array) - observation times</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1D array) - observations</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - end frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - frequency step</li>
+        <li><strong class="pname"><code>e0</code></strong> (float) - start eccentricity</li>
+        <li><strong class="pname"><code>en</code></strong> (float) - end eccentricity</li>
+        <li><strong class="pname"><code>de</code></strong> (float) - eccentricity step</li>
+        <li><strong class="pname"><code>x00</code></strong> (float) - start x0</li>
+        <li><strong class="pname"><code>x0n</code></strong> (float) - end x0</li>
+    </ul></dd>
+    <dt>Returns: array,array</dt>
+        <dd>frequencies, amplitude spectrum</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="Zwavelet"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">Zwavelet</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freq</span>,
+        <span class="sig-arg">position</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">10.0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#Zwavelet">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Weighted Wavelet Z-transform of Foster (1996)</p>
+  <p>Computes &quot;Weighted Wavelet Z-Transform&quot; which is a type of 
+  time-frequency diagram more suitable for non-equidistant time series. 
+  See: G. Foster, 1996, Astronomical Journal, 112, 1709</p>
+  <p>The result can be plotted as a colorimage (imshow in pylab).</p>
+  <p>Mind the max, min order for position. It's often useful to try log(Z) 
+  and/or different sigmas.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - observed data points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>freq</code></strong> (ndarray) - frequencies (omega/2pi in Foster's paper) [0..Nfreq-1] the array 
+          should not contain 0.0</li>
+        <li><strong class="pname"><code>position</code></strong> (ndarray) - time parameter: tau in Foster's paper [0..Npos-1]</li>
+        <li><strong class="pname"><code>sigma</code></strong> (float) - smoothing parameter in time domain: sigma in Foster's paper</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>Z[0..Npos-1, 0..Nfreq-1]: the Z-transform: time-freq diagram</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="pdm_py"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pdm_py</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">Nbin</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">Ncover</span>=<span class="sig-default">5</span>,
+        <span class="sig-arg">D</span>=<span class="sig-default">0.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#pdm_py">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the theta-statistics to do a Phase Dispersion Minimisation. 
+  See Stellingwerf R.F., 1978, ApJ, 224, 953)</p>
+  <p>Joris De Ridder</p>
+  <p>Inclusion of linear frequency shift by Pieter Degroote (see Cuypers 
+  1986)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points  [0..Ntime-1]</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - observed data points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>f0</code></strong> (float) - start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> (float) - stop frequency</li>
+        <li><strong class="pname"><code>df</code></strong> (float) - step frequency</li>
+        <li><strong class="pname"><code>Nbin</code></strong> (integer) - the number of phase bins (with length 1/Nbin)</li>
+        <li><strong class="pname"><code>Ncover</code></strong> (integer) - the number of covers (i.e. bin shifts)</li>
+        <li><strong class="pname"><code>D</code></strong> (float) - linear frequency shift parameter</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>theta-statistic for each given frequency [0..Nfreq-1]</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fasper_py"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fasper_py</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">ofac</span>,
+        <span class="sig-arg">hifac</span>,
+        <span class="sig-arg">MACC</span>=<span class="sig-default">4</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#fasper_py">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+function fasper
+    Given abscissas x (which need not be equally spaced) and ordinates
+    y, and given a desired oversampling factor ofac (a typical value
+    being 4 or larger). this routine creates an array wk1 with a
+    sequence of nout increasing frequencies (not angular frequencies)
+    up to hifac times the &quot;average&quot; Nyquist frequency, and creates
+    an array wk2 with the values of the Lomb normalized periodogram at
+    those frequencies. The arrays x and y are not altered. This
+    routine also returns jmax such that wk2(jmax) is the maximum
+    element in wk2, and prob, an estimate of the significance of that
+    maximum against the hypothesis of random noise. A small value of prob
+    indicates that a significant periodic signal is present.
+
+Reference: 
+    Press, W. H. &amp; Rybicki, G. B. 1989
+    ApJ vol. 338, p. 277-280.
+    Fast algorithm for spectral analysis of unevenly sampled data
+    (1989ApJ...338..277P)
+
+Arguments:
+    X   : Abscissas array, (e.g. an array of times).
+    Y   : Ordinates array, (e.g. corresponding counts).
+    Ofac : Oversampling factor.
+    Hifac : Hifac * &quot;average&quot; Nyquist frequency = highest frequency
+        for which values of the Lomb normalized periodogram will
+        be calculated.
+    
+Returns:
+    Wk1 : An array of Lomb periodogram frequencies.
+    Wk2 : An array of corresponding values of the Lomb periodogram.
+    Nout : Wk1 &amp; Wk2 dimensions (number of calculated frequencies)
+    Jmax : The array index corresponding to the MAX( Wk2 ).
+    Prob : False Alarm Probability of the largest Periodogram value
+    MACC : Number of interpolation points per 1/4 cycle
+            of highest frequency
+
+History:
+    02/23/2009, v1.0, MF
+    Translation of IDL code (orig. Numerical recipies)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="windowfunction"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">windowfunction</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">freq</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#windowfunction">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the modulus square of the window function of a set of time 
+  points at the given frequencies. The time point need not be equidistant. 
+  The normalisation is such that 1.0 is returned at frequency 0.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points  [0..Ntime-1]</li>
+        <li><strong class="pname"><code>freq</code></strong> (ndarray) - frequency points. Units: inverse unit of 'time' [0..Nfreq-1]</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>|W(freq)|^2      [0..Nfreq-1]</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="check_input"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">check_input</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#check_input">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Check the input arguments for periodogram calculations for 
+  mistakes.</p>
+  <p>If you get an error when trying to compute a periodogram, and you 
+  don't understand it, just feed the input you gave to this function, and 
+  it will perform some basic checks.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__spread__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__spread__</span>(<span class="sig-arg">y</span>,
+        <span class="sig-arg">yy</span>,
+        <span class="sig-arg">n</span>,
+        <span class="sig-arg">x</span>,
+        <span class="sig-arg">m</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#__spread__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Given an array yy(0:n-1), extirpolate (spread) a value y into
+m actual array elements that best approximate the &quot;fictional&quot;
+(i.e., possible noninteger) array element number x. The weights
+used are coefficients of the Lagrange interpolating polynomial
+Arguments:
+    y : 
+    yy : 
+    n : 
+    x : 
+    m : 
+Returns:
+    
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="getSignificance"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">getSignificance</span>(<span class="sig-arg">wk1</span>,
+        <span class="sig-arg">wk2</span>,
+        <span class="sig-arg">nout</span>,
+        <span class="sig-arg">ofac</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#getSignificance">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the peak false alarm probabilities</p>
+  <p>Hence the lower is the probability and the more significant is the 
+  peak</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="scargle_probability"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">scargle_probability</span>(<span class="sig-arg">peak_value</span>,
+        <span class="sig-arg">times</span>,
+        <span class="sig-arg">freqs</span>,
+        <span class="sig-arg">correct_for_frange</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.pergrams-pysrc.html#scargle_probability">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the probability to observe a peak in the Scargle 
+  periodogram.</p>
+  <p>If <code>correct_for_frange=True</code>, the Bonferroni correction 
+  will be applied to a smaller number of frequencies (i.e. the independent 
+  number of frequencies in <code>freqs</code>). To be conservative, set 
+  <code>correct_for_frange=False</code>.</p>
+  <p>Example simulation:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,1,5000)
+<span class="py-prompt">&gt;&gt;&gt; </span>N = 500
+<span class="py-prompt">&gt;&gt;&gt; </span>probs = np.zeros(N)
+<span class="py-prompt">&gt;&gt;&gt; </span>peaks = np.zeros(N)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(N):
+<span class="py-more">... </span>    signal = np.random.normal(size=len(times))
+<span class="py-more">... </span>    f,s = scargle(times,signal,threads=<span class="py-string">'max'</span>,norm=<span class="py-string">'distribution'</span>)
+<span class="py-more">... </span>    peaks[i] = s.max()
+<span class="py-more">... </span>    probs[i] = scargle_probability(s.max(),times,f)</pre>
+  <p>Now make a plot:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(131)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(probs,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot([0,N],[0.01,0.01],<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(132)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(peaks[np.argsort(peaks)],probs[np.argsort(peaks)],<span class="py-string">'ro'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(peaks[np.argsort(peaks)],1-(1-np.exp(-np.sort(peaks)))**(10000.),<span class="py-string">'g-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p = pl.plot(peaks[np.argsort(peaks)],1-(1-(1-np.sort(peaks)/2500.)**2500.)**(10000.),'b--')</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(133)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.logspace(-3,0,100):
+<span class="py-more">... </span>    p = pl.plot([i*100],[np.sum(probs&lt;i)/float(N)*100],<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot([1e-6,100],[1e-6,100],<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Should observe this many points below threshold'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Observed this many points below threshold'</span>)</pre>
+<center><img src='../images/ivs_timeseries_pergrams_prob.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

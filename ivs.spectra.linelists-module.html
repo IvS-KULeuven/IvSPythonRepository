@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.spectra.linelists</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.spectra-module.html">Package&nbsp;spectra</a> ::
+        Module&nbsp;linelists
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.spectra.linelists-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module linelists</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.spectra.linelists-pysrc.html">source&nbsp;code</a></span></p>
+<p>Access atomic data</p>
+  <p>Mendelev's Table:</p>
+<pre class="literalblock">
+   1  H  Hydrogen   11 Na Natrium    21 Sc Scandium  31 Ga Gallium    41 Nb Niobium    51 Sb Antimony
+   2  He Helium     12 Mg Magnesium  22 Ti Titanium  32 Ge Germanium  42 Mo Molybdenum 52 Te Tellurium
+   3  Li Lithium    13 Al Aluminium  23 V  Vanadium  33 As Arsenic    43 Tc Technetium 53 I  Iodine
+   4  Be Beryllium  14 Si Silicon    24 Cr Chromium  34 Se Selenium   44 Ru Ruthenium  54 Xe Xenon
+   5  B  Boron      15 P  Phosphorus 25 Mn Manganese 35 Br Bromine    45 Rh Rhodium    55 Cs Caesium
+   6  C  Carbon     16 S  Sulfur     26 Fe Iron      36 Kr Krypton    46 Pd Palladium  56 Ba Barium
+   7  N  Nitrogen   17 Cl Chlorine   28 Ni Nickel    37 Rb Rubidium   47 Ag Silver     57 La Lanthanum
+   8  O  Oxygen     18 Ar Argon      27 Co Cobalt    38 Sr Strontium  48 Cd Cadmium    58 Ce Cerium
+   9  F  Fluorine   19 K  Potassium  29 Cu Copper    39 Y  Yttrium    49 In Indium     59 Pr Praseodymium
+   10 Ne Neon       20 Ca Calcium    30 Zn Zinc      40 Zr Zirconium  50 Sn Tin        60 Nd Neodymium
+
+   61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg  Roentgenium
+   62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 Uub Ununbium
+   63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 Uut Ununtrium
+   64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 Uuq Ununquadium
+   65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 Uup Ununpentium
+   66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 Uuh Ununhexium
+   67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 Uuo Ununoctium
+   68 Er Erbium     78 Pt Platinum   88 Ra Radium    98 Cf Californium  108 Hs Hassium
+   69 Tm Thulium    79 Au Gold       89 Ac Actinium  99 Es Einsteinium  109 Mt Meitnerium
+   70 Yb Ytterbium  80 Hg Mercury    90 Th Thorium   100 Fm Fermium     110 Ds Darmstadtium
+</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Main functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.linelists-module.html#VALD" class="summary-sig-name">VALD</a>(<span class="summary-sig-arg">elem</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">xmin</span>=<span class="summary-sig-default">3200.</span>,
+        <span class="summary-sig-arg">xmax</span>=<span class="summary-sig-default">4800.</span>,
+        <span class="summary-sig-arg">outputdir</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Request linelists from VALD for each ion seperately within a specific
+      wavelength range.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#VALD">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.linelists-module.html#get_lines" class="summary-sig-name">get_lines</a>(<span class="summary-sig-arg">teff</span>,
+        <span class="summary-sig-arg">logg</span>,
+        <span class="summary-sig-arg">z</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">atoms</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ions</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">blend</span>=<span class="summary-sig-default">0.0</span>)</span><br />
+      Retrieve line transitions and strengths for a specific stellar type</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#get_lines">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convert ion codes to ion names and back</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ioncode2name"></a><span class="summary-sig-name">ioncode2name</span>(<span class="summary-sig-arg">ioncode</span>)</span><br />
+      Convert 14.01 to SiII</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#ioncode2name">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="name2ioncode"></a><span class="summary-sig-name">name2ioncode</span>(<span class="summary-sig-arg">name</span>)</span><br />
+      Convert SiII to 14.01</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#name2ioncode">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="splitname"></a><span class="summary-sig-name">splitname</span>(<span class="summary-sig-arg">name</span>)</span><br />
+      Split SiII into Si and II</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#splitname">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SPEC.LINELIST&quot;)">logging.getLogger(&quot;SPEC.LINELIST&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.spectra.linelists-module.html#atomcode" class="summary-name">atomcode</a> = <code title="['X', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg'\
+, 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', \
+'Mn', 'Fe', 'Ni', 'Co', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr'\
+, 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd\
+', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'N\
+d', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', \
+'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',\
+ 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am'\
+...">['X', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.spectra.linelists-module.html#roman" class="summary-name">roman</a> = <code title="['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'X\
+II', 'XIII']">['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="stellar"></a><span class="summary-name">stellar</span> = <code title="os.path.join('linelists/mask')">os.path.join('linelists/mask')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="VALD"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">VALD</span>(<span class="sig-arg">elem</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">xmin</span>=<span class="sig-default">3200.</span>,
+        <span class="sig-arg">xmax</span>=<span class="sig-default">4800.</span>,
+        <span class="sig-arg">outputdir</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#VALD">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Request linelists from VALD for each ion seperately within a specific 
+  wavelength range.</p>
+  <p>elem = an array of ions e.g. ['CI','OII'], xmin and xmax: wavelength 
+  range in which the spectral lines are searched, outputdir = output 
+  directory chosen by the user.</p>
+  <p>If no elements are given, this function returns all of them.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>elem</code></strong> (list of str) - list of ions</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_lines"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_lines</span>(<span class="sig-arg">teff</span>,
+        <span class="sig-arg">logg</span>,
+        <span class="sig-arg">z</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">atoms</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ions</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">blend</span>=<span class="sig-default">0.0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.linelists-pysrc.html#get_lines">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve line transitions and strengths for a specific stellar 
+  type</p>
+  <p>Selection wavelength range in angstrom.</p>
+  <p>Ions should be a list of ions to include. This can either be a string 
+  or a number</p>
+  <p>A lines is considerd a blend if the closest line is closer than 
+  <code>blend</code> angstrom.</p>
+  <p>Returns record array with fields <code>wavelength</code>, 
+  <code>ion</code> and <code>depth</code>.</p>
+  <p>Example usage:</p>
+  <p>Retrieve all Silicon lines between 4500 and 4600 for a B1V star.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = get_lines(20000,4.0,atoms=[<span class="py-string">'Si'</span>],wrange=(4500,4600))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(data[<span class="py-string">'wavelength'</span>],1,1-data[<span class="py-string">'depth'</span>])</pre>
+  <p>See how the depth of the Halpha line varies wrt temperature:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs = range(5000,21000,1000) + range(22000,32000,2000) + range(30000,50000,50000)
+<span class="py-prompt">&gt;&gt;&gt; </span>depths = np.zeros((len(teffs),7))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,teff <span class="py-keyword">in</span> enumerate(teffs):
+<span class="py-more">... </span>    data = get_lines(teff,5.0,ions=[<span class="py-string">'HI'</span>],wrange=(3800,7000))
+<span class="py-more">... </span>    depths[i] = data[<span class="py-string">'depth'</span>]</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure();p = pl.title(<span class="py-string">'Depth of Balmer lines (Halpha-Heta)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(teffs,1-depths,<span class="py-string">'o-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Effective temperature'</span>);p = pl.grid()</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="atomcode"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">atomcode</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+['X', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg'<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+, 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+'Mn', 'Fe', 'Ni', 'Co', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr'<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+, 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'N<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+d', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am'<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+<code class="variable-ellipsis">...</code>
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="roman"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">roman</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'X<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+II', 'XIII']
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

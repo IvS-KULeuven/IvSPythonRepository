@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.spectra.linelists</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.spectra-module.html">Package&nbsp;spectra</a> ::
+        Module&nbsp;linelists
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.spectra.linelists-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.spectra.linelists-module.html">Module ivs.spectra.linelists</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Access atomic data</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Mendelev's Table::</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">    1  H  Hydrogen   11 Na Natrium    21 Sc Scandium  31 Ga Gallium    41 Nb Niobium    51 Sb Antimony</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">    2  He Helium     12 Mg Magnesium  22 Ti Titanium  32 Ge Germanium  42 Mo Molybdenum 52 Te Tellurium</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">    3  Li Lithium    13 Al Aluminium  23 V  Vanadium  33 As Arsenic    43 Tc Technetium 53 I  Iodine</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">    4  Be Beryllium  14 Si Silicon    24 Cr Chromium  34 Se Selenium   44 Ru Ruthenium  54 Xe Xenon</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">    5  B  Boron      15 P  Phosphorus 25 Mn Manganese 35 Br Bromine    45 Rh Rhodium    55 Cs Caesium</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">    6  C  Carbon     16 S  Sulfur     26 Fe Iron      36 Kr Krypton    46 Pd Palladium  56 Ba Barium</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring">    7  N  Nitrogen   17 Cl Chlorine   28 Ni Nickel    37 Rb Rubidium   47 Ag Silver     57 La Lanthanum</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">    8  O  Oxygen     18 Ar Argon      27 Co Cobalt    38 Sr Strontium  48 Cd Cadmium    58 Ce Cerium</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">    9  F  Fluorine   19 K  Potassium  29 Cu Copper    39 Y  Yttrium    49 In Indium     59 Pr Praseodymium</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">    10 Ne Neon       20 Ca Calcium    30 Zn Zinc      40 Zr Zirconium  50 Sn Tin        60 Nd Neodymium</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">    61 Pm Promethium 71 Lu Lutetium   81 Tl Thallium  91 Pa Protactinium 101 Md Mendelevium    111 Rg  Roentgenium</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">    62 Sm Samarium   72 Hf Hafnium    82 Pb Lead      92 U  Uranium      102 No Nobelium       112 Uub Ununbium</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">    63 Eu Europium   73 Ta Tantalum   83 Bi Bismuth   93 Np Neptunium    103 Lr Lawrencium     113 Uut Ununtrium</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">    64 Gd Gadolinium 74 W  Tungsten   84 Po Polonium  94 Pu Plutonium    104 Rf Rutherfordium  114 Uuq Ununquadium</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">    65 Tb Terbium    75 Re Rhenium    85 At Astatine  95 Am Americium    105 Db Dubnium        115 Uup Ununpentium</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">    66 Dy Dysprosium 76 Os Osmium     86 Rn Radon     96 Cm Curium       106 Sg Seaborgium     116 Uuh Ununhexium</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">    67 Ho Holmium    77 Ir Iridium    87 Fr Francium  97 Bk Berkelium    107 Bh Bohrium        118 Uuo Ununoctium</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">    68 Er Erbium     78 Pt Platinum   88 Ra Radium    98 Cf Californium  108 Hs Hassium</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">    69 Tm Thulium    79 Au Gold       89 Ac Actinium  99 Es Einsteinium  109 Mt Meitnerium</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">    70 Yb Ytterbium  80 Hg Mercury    90 Th Thorium   100 Fm Fermium     110 Ds Darmstadtium</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">pylab</tt> <tt class="py-keyword">as</tt> <tt class="py-name">pl</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">inf</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package ivs=ivs-module.html"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-0', 'ivs', 'link-0');">ivs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-1" class="py-name" targets="Module ivs.config=ivs.config-module.html"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-1', 'config', 'link-1');">config</a></tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-2" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-2', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Package ivs.io=ivs.io-module.html"><a title="ivs.io" class="py-name" href="#" onclick="return doclink('link-3', 'io', 'link-3');">io</a></tt> <tt class="py-keyword">import</tt> <tt id="link-4" class="py-name" targets="Module ivs.io.ascii=ivs.io.ascii-module.html"><a title="ivs.io.ascii" class="py-name" href="#" onclick="return doclink('link-4', 'ascii', 'link-4');">ascii</a></tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-5" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-5', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Package ivs.aux=ivs.aux-module.html"><a title="ivs.aux" class="py-name" href="#" onclick="return doclink('link-6', 'aux', 'link-6');">aux</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Module ivs.aux.loggers=ivs.aux.loggers-module.html"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-7', 'loggers', 'link-7');">loggers</a></tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt id="link-8" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-8', 'logger', 'link-8');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"SPEC.LINELIST"</tt><tt class="py-op">)</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt id="link-9" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-9', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">addHandler</tt><tt class="py-op">(</tt><tt id="link-10" class="py-name"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-10', 'loggers', 'link-7');">loggers</a></tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Class ivs.asteroseismology.granulation.NullHandler=ivs.asteroseismology.granulation.NullHandler-class.html,Class ivs.asteroseismology.solarosc.NullHandler=ivs.asteroseismology.solarosc.NullHandler-class.html,Class ivs.aux.loggers.NullHandler=ivs.aux.loggers.NullHandler-class.html"><a title="ivs.asteroseismology.granulation.NullHandler
+ivs.asteroseismology.solarosc.NullHandler
+ivs.aux.loggers.NullHandler" class="py-name" href="#" onclick="return doclink('link-11', 'NullHandler', 'link-11');">NullHandler</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt id="link-12" class="py-name" targets="Variable ivs.spectra.linelists.atomcode=ivs.spectra.linelists-module.html#atomcode"><a title="ivs.spectra.linelists.atomcode" class="py-name" href="#" onclick="return doclink('link-12', 'atomcode', 'link-12');">atomcode</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">'X'</tt><tt class="py-op">,</tt> <tt class="py-string">'H'</tt><tt class="py-op">,</tt><tt class="py-string">'He'</tt><tt class="py-op">,</tt><tt class="py-string">'Li'</tt><tt class="py-op">,</tt><tt class="py-string">'Be'</tt><tt class="py-op">,</tt> <tt class="py-string">'B'</tt><tt class="py-op">,</tt> <tt class="py-string">'C'</tt><tt class="py-op">,</tt> <tt class="py-string">'N'</tt><tt class="py-op">,</tt> <tt class="py-string">'O'</tt><tt class="py-op">,</tt> <tt class="py-string">'F'</tt><tt class="py-op">,</tt><tt class="py-string">'Ne'</tt><tt class="py-op">,</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">                <tt class="py-string">'Na'</tt><tt class="py-op">,</tt><tt class="py-string">'Mg'</tt><tt class="py-op">,</tt><tt class="py-string">'Al'</tt><tt class="py-op">,</tt><tt class="py-string">'Si'</tt><tt class="py-op">,</tt> <tt class="py-string">'P'</tt><tt class="py-op">,</tt> <tt class="py-string">'S'</tt><tt class="py-op">,</tt><tt class="py-string">'Cl'</tt><tt class="py-op">,</tt><tt class="py-string">'Ar'</tt><tt class="py-op">,</tt> <tt class="py-string">'K'</tt><tt class="py-op">,</tt><tt class="py-string">'Ca'</tt><tt class="py-op">,</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">                <tt class="py-string">'Sc'</tt><tt class="py-op">,</tt><tt class="py-string">'Ti'</tt><tt class="py-op">,</tt> <tt class="py-string">'V'</tt><tt class="py-op">,</tt><tt class="py-string">'Cr'</tt><tt class="py-op">,</tt><tt class="py-string">'Mn'</tt><tt class="py-op">,</tt><tt class="py-string">'Fe'</tt><tt class="py-op">,</tt><tt class="py-string">'Ni'</tt><tt class="py-op">,</tt><tt class="py-string">'Co'</tt><tt class="py-op">,</tt><tt class="py-string">'Cu'</tt><tt class="py-op">,</tt><tt class="py-string">'Zn'</tt><tt class="py-op">,</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">                <tt class="py-string">'Ga'</tt><tt class="py-op">,</tt><tt class="py-string">'Ge'</tt><tt class="py-op">,</tt><tt class="py-string">'As'</tt><tt class="py-op">,</tt><tt class="py-string">'Se'</tt><tt class="py-op">,</tt><tt class="py-string">'Br'</tt><tt class="py-op">,</tt><tt class="py-string">'Kr'</tt><tt class="py-op">,</tt><tt class="py-string">'Rb'</tt><tt class="py-op">,</tt><tt class="py-string">'Sr'</tt><tt class="py-op">,</tt> <tt class="py-string">'Y'</tt><tt class="py-op">,</tt><tt class="py-string">'Zr'</tt><tt class="py-op">,</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line">                <tt class="py-string">'Nb'</tt><tt class="py-op">,</tt><tt class="py-string">'Mo'</tt><tt class="py-op">,</tt><tt class="py-string">'Tc'</tt><tt class="py-op">,</tt><tt class="py-string">'Ru'</tt><tt class="py-op">,</tt><tt class="py-string">'Rh'</tt><tt class="py-op">,</tt><tt class="py-string">'Pd'</tt><tt class="py-op">,</tt><tt class="py-string">'Ag'</tt><tt class="py-op">,</tt><tt class="py-string">'Cd'</tt><tt class="py-op">,</tt><tt class="py-string">'In'</tt><tt class="py-op">,</tt><tt class="py-string">'Sn'</tt><tt class="py-op">,</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">                <tt class="py-string">'Sb'</tt><tt class="py-op">,</tt><tt class="py-string">'Te'</tt><tt class="py-op">,</tt> <tt class="py-string">'I'</tt><tt class="py-op">,</tt><tt class="py-string">'Xe'</tt><tt class="py-op">,</tt><tt class="py-string">'Cs'</tt><tt class="py-op">,</tt><tt class="py-string">'Ba'</tt><tt class="py-op">,</tt><tt class="py-string">'La'</tt><tt class="py-op">,</tt><tt class="py-string">'Ce'</tt><tt class="py-op">,</tt><tt class="py-string">'Pr'</tt><tt class="py-op">,</tt><tt class="py-string">'Nd'</tt><tt class="py-op">,</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">                <tt class="py-string">'Pm'</tt><tt class="py-op">,</tt><tt class="py-string">'Sm'</tt><tt class="py-op">,</tt><tt class="py-string">'Eu'</tt><tt class="py-op">,</tt><tt class="py-string">'Gd'</tt><tt class="py-op">,</tt><tt class="py-string">'Tb'</tt><tt class="py-op">,</tt><tt class="py-string">'Dy'</tt><tt class="py-op">,</tt><tt class="py-string">'Ho'</tt><tt class="py-op">,</tt><tt class="py-string">'Er'</tt><tt class="py-op">,</tt><tt class="py-string">'Tm'</tt><tt class="py-op">,</tt><tt class="py-string">'Yb'</tt><tt class="py-op">,</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">                <tt class="py-string">'Lu'</tt><tt class="py-op">,</tt><tt class="py-string">'Hf'</tt><tt class="py-op">,</tt><tt class="py-string">'Ta'</tt><tt class="py-op">,</tt> <tt class="py-string">'W'</tt><tt class="py-op">,</tt><tt class="py-string">'Re'</tt><tt class="py-op">,</tt><tt class="py-string">'Os'</tt><tt class="py-op">,</tt><tt class="py-string">'Ir'</tt><tt class="py-op">,</tt><tt class="py-string">'Pt'</tt><tt class="py-op">,</tt><tt class="py-string">'Au'</tt><tt class="py-op">,</tt><tt class="py-string">'Hg'</tt><tt class="py-op">,</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">                <tt class="py-string">'Tl'</tt><tt class="py-op">,</tt><tt class="py-string">'Pb'</tt><tt class="py-op">,</tt><tt class="py-string">'Bi'</tt><tt class="py-op">,</tt><tt class="py-string">'Po'</tt><tt class="py-op">,</tt><tt class="py-string">'At'</tt><tt class="py-op">,</tt><tt class="py-string">'Rn'</tt><tt class="py-op">,</tt><tt class="py-string">'Fr'</tt><tt class="py-op">,</tt><tt class="py-string">'Ra'</tt><tt class="py-op">,</tt><tt class="py-string">'Ac'</tt><tt class="py-op">,</tt><tt class="py-string">'Th'</tt><tt class="py-op">,</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">                <tt class="py-string">'Pa'</tt><tt class="py-op">,</tt> <tt class="py-string">'U'</tt><tt class="py-op">,</tt><tt class="py-string">'Np'</tt><tt class="py-op">,</tt><tt class="py-string">'Pu'</tt><tt class="py-op">,</tt><tt class="py-string">'Am'</tt><tt class="py-op">,</tt><tt class="py-string">'Cu'</tt><tt class="py-op">,</tt><tt class="py-string">'Bk'</tt><tt class="py-op">,</tt><tt class="py-string">'Cf'</tt><tt class="py-op">,</tt><tt class="py-string">'Es'</tt><tt class="py-op">,</tt><tt class="py-string">'Fm'</tt><tt class="py-op">,</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">                <tt class="py-string">'Md'</tt><tt class="py-op">,</tt><tt class="py-string">'No'</tt><tt class="py-op">,</tt><tt class="py-string">'Lr'</tt><tt class="py-op">,</tt><tt class="py-string">'Rf'</tt><tt class="py-op">,</tt><tt class="py-string">'Db'</tt><tt class="py-op">,</tt><tt class="py-string">'Sg'</tt><tt class="py-op">,</tt><tt class="py-string">'Bh'</tt><tt class="py-op">,</tt><tt class="py-string">'Hs'</tt><tt class="py-op">,</tt><tt class="py-string">'Mt'</tt><tt class="py-op">,</tt><tt class="py-string">'Ds'</tt><tt class="py-op">,</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">                <tt class="py-string">'Rg'</tt><tt class="py-op">]</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt id="link-13" class="py-name" targets="Variable ivs.spectra.linelists.roman=ivs.spectra.linelists-module.html#roman"><a title="ivs.spectra.linelists.roman" class="py-name" href="#" onclick="return doclink('link-13', 'roman', 'link-13');">roman</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">'I'</tt><tt class="py-op">,</tt><tt class="py-string">'II'</tt><tt class="py-op">,</tt><tt class="py-string">'III'</tt><tt class="py-op">,</tt><tt class="py-string">'IV'</tt><tt class="py-op">,</tt><tt class="py-string">'V'</tt><tt class="py-op">,</tt><tt class="py-string">'VI'</tt><tt class="py-op">,</tt><tt class="py-string">'VII'</tt><tt class="py-op">,</tt><tt class="py-string">'VIII'</tt><tt class="py-op">,</tt><tt class="py-string">'IX'</tt><tt class="py-op">,</tt><tt class="py-string">'X'</tt><tt class="py-op">,</tt><tt class="py-string">'XI'</tt><tt class="py-op">,</tt><tt class="py-string">'XII'</tt><tt class="py-op">,</tt><tt class="py-string">'XIII'</tt><tt class="py-op">]</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt id="link-14" class="py-name" targets="Variable ivs.spectra.linelists.stellar=ivs.spectra.linelists-module.html#stellar"><a title="ivs.spectra.linelists.stellar" class="py-name" href="#" onclick="return doclink('link-14', 'stellar', 'link-14');">stellar</a></tt> <tt class="py-op">=</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">join</tt><tt class="py-op">(</tt><tt class="py-string">'linelists/mask'</tt><tt class="py-op">)</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-comment">#{ Main functions</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"> </tt>
+<a name="VALD"></a><div id="VALD-def"><a name="L62"></a><tt class="py-lineno"> 62</tt> <a class="py-toggle" href="#" id="VALD-toggle" onclick="return toggle('VALD');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.linelists-module.html#VALD">VALD</a><tt class="py-op">(</tt><tt class="py-param">elem</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">xmin</tt><tt class="py-op">=</tt><tt class="py-number">3200.</tt><tt class="py-op">,</tt><tt class="py-param">xmax</tt><tt class="py-op">=</tt><tt class="py-number">4800.</tt><tt class="py-op">,</tt><tt class="py-param">outputdir</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="VALD-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="VALD-expanded"><a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line">  <tt class="py-docstring">"""</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">  Request linelists from VALD for each ion seperately within a specific wavelength range.</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring">  </tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring">  elem = an array of ions e.g. ['CI','OII'], xmin and xmax: wavelength range in which the spectral lines are searched, outputdir = output directory chosen by the user.</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring">  </tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">  If no elements are given, this function returns all of them.</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">  </tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">  @param elem: list of ions</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">  @type elem: list of str</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">  """</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line">  <tt class="py-keyword">if</tt> <tt class="py-name">elem</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">    <tt id="link-15" class="py-name" targets="Variable ivs.makedoc.files=ivs.makedoc-module.html#files"><a title="ivs.makedoc.files" class="py-name" href="#" onclick="return doclink('link-15', 'files', 'link-15');">files</a></tt> <tt class="py-op">=</tt> <tt class="py-name">sorted</tt><tt class="py-op">(</tt><tt id="link-16" class="py-name"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-16', 'config', 'link-1');">config</a></tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Function ivs.config.glob()=ivs.config-module.html#glob"><a title="ivs.config.glob" class="py-name" href="#" onclick="return doclink('link-17', 'glob', 'link-17');">glob</a></tt><tt class="py-op">(</tt><tt class="py-string">'VALD_individual'</tt><tt class="py-op">,</tt><tt class="py-string">'VALD_*.lijnen'</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line">    <tt class="py-name">elem</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">splitext</tt><tt class="py-op">(</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name" targets="Variable ivs.sed.reddening.basename=ivs.sed.reddening-module.html#basename"><a title="ivs.sed.reddening.basename" class="py-name" href="#" onclick="return doclink('link-18', 'basename', 'link-18');">basename</a></tt><tt class="py-op">(</tt><tt id="link-19" class="py-name" targets="Variable ivs.makedoc.ff=ivs.makedoc-module.html#ff"><a title="ivs.makedoc.ff" class="py-name" href="#" onclick="return doclink('link-19', 'ff', 'link-19');">ff</a></tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-string">'_'</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-keyword">for</tt> <tt id="link-20" class="py-name"><a title="ivs.makedoc.ff" class="py-name" href="#" onclick="return doclink('link-20', 'ff', 'link-19');">ff</a></tt> <tt class="py-keyword">in</tt> <tt id="link-21" class="py-name"><a title="ivs.makedoc.files" class="py-name" href="#" onclick="return doclink('link-21', 'files', 'link-15');">files</a></tt><tt class="py-op">]</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">   </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">  <tt class="py-name">all_lines</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">  <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">elem</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-name">elem</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">    <tt class="py-name">filename</tt> <tt class="py-op">=</tt> <tt id="link-22" class="py-name"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-22', 'config', 'link-1');">config</a></tt><tt class="py-op">.</tt><tt id="link-23" class="py-name" targets="Function ivs.config.get_datafile()=ivs.config-module.html#get_datafile"><a title="ivs.config.get_datafile" class="py-name" href="#" onclick="return doclink('link-23', 'get_datafile', 'link-23');">get_datafile</a></tt><tt class="py-op">(</tt><tt class="py-string">'VALD_individual'</tt><tt class="py-op">,</tt><tt class="py-string">'VALD_'</tt> <tt class="py-op">+</tt> <tt class="py-name">elem</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">+</tt> <tt class="py-string">'.lijnen'</tt><tt class="py-op">)</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">isfile</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">      <tt id="link-24" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-24', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'No data for element '</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">elem</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">      <tt class="py-keyword">return</tt> <tt class="py-name">None</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line">    </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">    <tt class="py-name">newwav</tt><tt class="py-op">,</tt><tt class="py-name">newexc</tt><tt class="py-op">,</tt><tt class="py-name">newep</tt><tt class="py-op">,</tt><tt class="py-name">newgf</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">loadtxt</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">T</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">    <tt class="py-name">lines</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">rec</tt><tt class="py-op">.</tt><tt class="py-name">fromarrays</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">newwav</tt><tt class="py-op">,</tt><tt class="py-name">newexc</tt><tt class="py-op">,</tt><tt class="py-name">newep</tt><tt class="py-op">,</tt><tt class="py-name">newgf</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">names</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">,</tt><tt class="py-string">'ion'</tt><tt class="py-op">,</tt><tt class="py-string">'ep'</tt><tt class="py-op">,</tt><tt class="py-string">'gf'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">    <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">xmin</tt><tt class="py-op">&lt;=</tt><tt class="py-name">lines</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">lines</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">&lt;=</tt><tt class="py-name">xmax</tt><tt class="py-op">)</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">keep</tt><tt class="py-op">,</tt><tt class="py-string">'__iter__'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">      <tt class="py-keyword">continue</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">    <tt class="py-name">lines</tt> <tt class="py-op">=</tt> <tt class="py-name">lines</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">lines</tt><tt class="py-op">)</tt> <tt class="py-keyword">and</tt> <tt class="py-name">outputdir</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">      <tt id="link-25" class="py-name"><a title="ivs.io.ascii" class="py-name" href="#" onclick="return doclink('link-25', 'ascii', 'link-4');">ascii</a></tt><tt class="py-op">.</tt><tt id="link-26" class="py-name" targets="Function ivs.io.ascii.write_array()=ivs.io.ascii-module.html#write_array,Function ivs.io.fits.write_array()=ivs.io.fits-module.html#write_array"><a title="ivs.io.ascii.write_array
+ivs.io.fits.write_array" class="py-name" href="#" onclick="return doclink('link-26', 'write_array', 'link-26');">write_array</a></tt><tt class="py-op">(</tt><tt class="py-name">lines</tt><tt class="py-op">,</tt><tt class="py-name">outputdir</tt> <tt class="py-op">+</tt> <tt class="py-string">'VALD_'</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">elem</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">'_'</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">xmin</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">'_'</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">xmax</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">'.dat'</tt><tt class="py-op">,</tt><tt class="py-name">auto_width</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt><tt class="py-name">header</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt><tt class="py-name">formats</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-string">'%.3f'</tt><tt class="py-op">,</tt><tt class="py-string">'%.1f'</tt><tt class="py-op">,</tt><tt class="py-string">'%.3f'</tt><tt class="py-op">,</tt><tt class="py-string">'%.3f'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">    <tt class="py-keyword">elif</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">lines</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">      <tt class="py-name">all_lines</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">lines</tt><tt class="py-op">)</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">      <tt id="link-27" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-27', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">debug</tt><tt class="py-op">(</tt><tt class="py-string">'No lines of '</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">elem</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">' in given wavelength range'</tt><tt class="py-op">)</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">  <tt class="py-keyword">return</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">hstack</tt><tt class="py-op">(</tt><tt class="py-name">all_lines</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"> </tt>
+<a name="get_lines"></a><div id="get_lines-def"><a name="L99"></a><tt class="py-lineno"> 99</tt> <a class="py-toggle" href="#" id="get_lines-toggle" onclick="return toggle('get_lines');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.linelists-module.html#get_lines">get_lines</a><tt class="py-op">(</tt><tt class="py-param">teff</tt><tt class="py-op">,</tt><tt class="py-param">logg</tt><tt class="py-op">,</tt><tt class="py-param">z</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-param">atoms</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">ions</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">wrange</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-name">inf</tt><tt class="py-op">,</tt><tt class="py-name">inf</tt><tt class="py-op">)</tt><tt class="py-op">,</tt>\ </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">                <tt class="py-param">blend</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="get_lines-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="get_lines-expanded"><a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-docstring">    Retrieve line transitions and strengths for a specific stellar type</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-docstring">    Selection wavelength range in angstrom.</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring">    Ions should be a list of ions to include. This can either be a string or</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-docstring">    a number</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"><tt class="py-docstring">    A lines is considerd a blend if the closest line is closer than C{blend} angstrom.</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"><tt class="py-docstring">    Returns record array with fields C{wavelength}, C{ion} and C{depth}.</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"><tt class="py-docstring">    Example usage:</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-docstring">    Retrieve all Silicon lines between 4500 and 4600 for a B1V star.</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; data = get_lines(20000,4.0,atoms=['Si'],wrange=(4500,4600))</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.figure()</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.vlines(data['wavelength'],1,1-data['depth'])</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">    See how the depth of the Halpha line varies wrt temperature:</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; teffs = range(5000,21000,1000) + range(22000,32000,2000) + range(30000,50000,50000)</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; depths = np.zeros((len(teffs),7))</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; for i,teff in enumerate(teffs):</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"><tt class="py-docstring">    ...     data = get_lines(teff,5.0,ions=['HI'],wrange=(3800,7000))</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"><tt class="py-docstring">    ...     depths[i] = data['depth']</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.figure();p = pl.title('Depth of Balmer lines (Halpha-Heta)')</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.plot(teffs,1-depths,'o-')</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.xlabel('Effective temperature');p = pl.grid()</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">    <tt class="py-comment">#-- get filepath</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">    <tt class="py-name">filename</tt> <tt class="py-op">=</tt> <tt class="py-string">'mask.%d.%02d.p%02d'</tt><tt class="py-op">%</tt><tt class="py-op">(</tt><tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">teff</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">logg</tt><tt class="py-op">*</tt><tt class="py-number">10</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">z</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">    <tt class="py-name">filename</tt> <tt class="py-op">=</tt> <tt id="link-28" class="py-name"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-28', 'config', 'link-1');">config</a></tt><tt class="py-op">.</tt><tt id="link-29" class="py-name"><a title="ivs.config.get_datafile" class="py-name" href="#" onclick="return doclink('link-29', 'get_datafile', 'link-23');">get_datafile</a></tt><tt class="py-op">(</tt><tt id="link-30" class="py-name"><a title="ivs.spectra.linelists.stellar" class="py-name" href="#" onclick="return doclink('link-30', 'stellar', 'link-14');">stellar</a></tt><tt class="py-op">,</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line">    <tt class="py-comment">#-- read in the data and extract relevant columns</tt> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line">    <tt class="py-name">data</tt> <tt class="py-op">=</tt> <tt id="link-31" class="py-name"><a title="ivs.io.ascii" class="py-name" href="#" onclick="return doclink('link-31', 'ascii', 'link-4');">ascii</a></tt><tt class="py-op">.</tt><tt id="link-32" class="py-name" targets="Function ivs.io.ascii.read2recarray()=ivs.io.ascii-module.html#read2recarray,Function ivs.io.fits.read2recarray()=ivs.io.fits-module.html#read2recarray"><a title="ivs.io.ascii.read2recarray
+ivs.io.fits.read2recarray" class="py-name" href="#" onclick="return doclink('link-32', 'read2recarray', 'link-32');">read2recarray</a></tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">,</tt><tt class="py-name">skip_lines</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-string">'ion'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-string">'depth'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-string">'c3'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-string">'c4'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-string">'c5'</tt><tt class="py-op">,</tt><tt class="py-string">'f8'</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line">    <tt class="py-name">data</tt> <tt class="py-op">=</tt> <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt class="py-name">mlab</tt><tt class="py-op">.</tt><tt class="py-name">rec_drop_fields</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">,</tt><tt class="py-op">[</tt><tt class="py-string">'c3'</tt><tt class="py-op">,</tt><tt class="py-string">'c4'</tt><tt class="py-op">,</tt><tt class="py-string">'c5'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">    <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt> <tt class="py-op">*=</tt> <tt class="py-number">10.</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">    <tt class="py-comment">#-- remove blends</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">blend</tt><tt class="py-op">&gt;</tt><tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">        <tt class="py-name">blends_left</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">hstack</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">diff</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line">        <tt class="py-name">blends_right</tt><tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">hstack</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">diff</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-number">1e10</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line">        <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">blends_left</tt><tt class="py-op">&gt;</tt><tt class="py-name">blend</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">blends_right</tt><tt class="py-op">&gt;</tt><tt class="py-name">blend</tt><tt class="py-op">)</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line">        <tt class="py-name">data</tt> <tt class="py-op">=</tt> <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line">     </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">    <tt class="py-comment">#-- only keep those transitions within a certain wavelength range</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">    <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">wrange</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">&lt;=</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'wavelength'</tt><tt class="py-op">]</tt><tt class="py-op">&lt;=</tt><tt class="py-name">wrange</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line">    <tt class="py-name">data</tt> <tt class="py-op">=</tt> <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line">    <tt class="py-comment">#-- only keep those transitions that belong to certain ions or atoms</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">atoms</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt> <tt class="py-keyword">or</tt> <tt class="py-name">ions</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">        <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">bool</tt><tt class="py-op">)</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">        <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">bool</tt><tt class="py-op">)</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">atoms</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line">        <tt class="py-comment">#-- convert all atoms to their number and select the appropriate ones</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">        <tt class="py-name">atoms</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">atom</tt><tt class="py-op">,</tt><tt class="py-name">str</tt><tt class="py-op">)</tt> <tt class="py-keyword">and</tt> <tt id="link-33" class="py-name"><a title="ivs.spectra.linelists.atomcode" class="py-name" href="#" onclick="return doclink('link-33', 'atomcode', 'link-12');">atomcode</a></tt><tt class="py-op">.</tt><tt class="py-name">index</tt><tt class="py-op">(</tt><tt class="py-name">atom</tt><tt class="py-op">.</tt><tt class="py-name">title</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-keyword">or</tt> <tt class="py-name">atom</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">atom</tt> <tt class="py-keyword">in</tt> <tt class="py-name">atoms</tt><tt class="py-op">]</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">atom</tt> <tt class="py-keyword">in</tt> <tt class="py-name">atoms</tt><tt class="py-op">:</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">            <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-name">keep</tt> <tt class="py-op">|</tt> <tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">abs</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'ion'</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">atom</tt><tt class="py-op">)</tt><tt class="py-op">&lt;</tt><tt class="py-number">0.5</tt><tt class="py-op">)</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">ions</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">        <tt class="py-comment">#-- convert all ions to their number and select the appropriate ones</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">        <tt class="py-name">ions</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">ion</tt><tt class="py-op">,</tt><tt class="py-name">str</tt><tt class="py-op">)</tt> <tt class="py-keyword">and</tt> <tt id="link-34" class="py-name" targets="Function ivs.spectra.linelists.name2ioncode()=ivs.spectra.linelists-module.html#name2ioncode"><a title="ivs.spectra.linelists.name2ioncode" class="py-name" href="#" onclick="return doclink('link-34', 'name2ioncode', 'link-34');">name2ioncode</a></tt><tt class="py-op">(</tt><tt class="py-name">ion</tt><tt class="py-op">)</tt> <tt class="py-keyword">or</tt> <tt class="py-name">ion</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">ion</tt> <tt class="py-keyword">in</tt> <tt class="py-name">ions</tt><tt class="py-op">]</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">ion</tt> <tt class="py-keyword">in</tt> <tt class="py-name">ions</tt><tt class="py-op">:</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">            <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-name">keep</tt> <tt class="py-op">|</tt> <tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">abs</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-string">'ion'</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">ion</tt><tt class="py-op">)</tt><tt class="py-op">&lt;</tt><tt class="py-number">0.005</tt><tt class="py-op">)</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">     </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line"> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line"> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line"><tt class="py-comment">#{ Convert ion codes to ion names and back</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line"> </tt>
+<a name="ioncode2name"></a><div id="ioncode2name-def"><a name="L174"></a><tt class="py-lineno">174</tt> <a class="py-toggle" href="#" id="ioncode2name-toggle" onclick="return toggle('ioncode2name');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.linelists-module.html#ioncode2name">ioncode2name</a><tt class="py-op">(</tt><tt class="py-param">ioncode</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ioncode2name-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="ioncode2name-expanded"><a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line"><tt class="py-docstring">    Convert 14.01 to SiII</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line">    <tt class="py-name">atom</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">floor</tt><tt class="py-op">(</tt><tt class="py-name">ioncode</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">    <tt class="py-name">ion</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">round</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">ioncode</tt><tt class="py-op">-</tt><tt class="py-name">atom</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-number">100</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-35" class="py-name"><a title="ivs.spectra.linelists.atomcode" class="py-name" href="#" onclick="return doclink('link-35', 'atomcode', 'link-12');">atomcode</a></tt><tt class="py-op">[</tt><tt class="py-name">atom</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt id="link-36" class="py-name"><a title="ivs.spectra.linelists.roman" class="py-name" href="#" onclick="return doclink('link-36', 'roman', 'link-13');">roman</a></tt><tt class="py-op">[</tt><tt class="py-name">ion</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"> </tt>
+<a name="name2ioncode"></a><div id="name2ioncode-def"><a name="L182"></a><tt class="py-lineno">182</tt> <a class="py-toggle" href="#" id="name2ioncode-toggle" onclick="return toggle('name2ioncode');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.linelists-module.html#name2ioncode">name2ioncode</a><tt class="py-op">(</tt><tt class="py-param">name</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="name2ioncode-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="name2ioncode-expanded"><a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line"><tt class="py-docstring">    Convert SiII to 14.01</tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">    <tt class="py-name">atomname</tt><tt class="py-op">,</tt><tt class="py-name">ionstage</tt> <tt class="py-op">=</tt> <tt id="link-37" class="py-name" targets="Function ivs.spectra.linelists.splitname()=ivs.spectra.linelists-module.html#splitname"><a title="ivs.spectra.linelists.splitname" class="py-name" href="#" onclick="return doclink('link-37', 'splitname', 'link-37');">splitname</a></tt><tt class="py-op">(</tt><tt class="py-name">name</tt><tt class="py-op">)</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-38" class="py-name"><a title="ivs.spectra.linelists.atomcode" class="py-name" href="#" onclick="return doclink('link-38', 'atomcode', 'link-12');">atomcode</a></tt><tt class="py-op">.</tt><tt class="py-name">index</tt><tt class="py-op">(</tt><tt class="py-name">atomname</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt id="link-39" class="py-name"><a title="ivs.spectra.linelists.roman" class="py-name" href="#" onclick="return doclink('link-39', 'roman', 'link-13');">roman</a></tt><tt class="py-op">.</tt><tt class="py-name">index</tt><tt class="py-op">(</tt><tt class="py-name">ionstage</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-number">100.</tt> </tt>
+</div><a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"> </tt>
+<a name="splitname"></a><div id="splitname-def"><a name="L189"></a><tt class="py-lineno">189</tt> <a class="py-toggle" href="#" id="splitname-toggle" onclick="return toggle('splitname');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.linelists-module.html#splitname">splitname</a><tt class="py-op">(</tt><tt class="py-param">name</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="splitname-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="splitname-expanded"><a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line"><tt class="py-docstring">    Split SiII into Si and II</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line">    <tt class="py-name">atomname</tt> <tt class="py-op">=</tt> <tt class="py-string">''</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line">    <tt class="py-name">ionstage</tt> <tt class="py-op">=</tt> <tt class="py-string">''</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">char</tt> <tt class="py-keyword">in</tt> <tt class="py-name">name</tt><tt class="py-op">:</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">atomname</tt> <tt class="py-keyword">or</tt> <tt class="py-name">char</tt><tt class="py-op">.</tt><tt class="py-name">islower</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line">            <tt class="py-name">atomname</tt><tt class="py-op">+=</tt><tt class="py-name">char</tt> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">char</tt><tt class="py-op">.</tt><tt class="py-name">isupper</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line">            <tt class="py-name">ionstage</tt><tt class="py-op">+=</tt><tt class="py-name">char</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">atomname</tt><tt class="py-op">,</tt><tt class="py-name">ionstage</tt> </tt>
+</div><a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line"> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line"> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line"> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line"> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt><tt class="py-op">==</tt><tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line">    <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt class="py-name">show</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

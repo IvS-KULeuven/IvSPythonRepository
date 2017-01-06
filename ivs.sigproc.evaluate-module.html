@@ -1,0 +1,1740 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.evaluate</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        Module&nbsp;evaluate
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.evaluate-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module evaluate</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html">source&nbsp;code</a></span></p>
+<p>Evaluate model functions.</p>
+  <p>Most functions accept a domain of interest and a set of parameters, 
+  and return a model function (e.g., a sine, gaussian etc...). Parameters 
+  are usually a record array containing named fields for the 
+  parameters.</p>
+  <p>Some nonlinear optimizers expect and return parameters as a 1D array 
+  of the independent parameters. Therefore, all functions also accept these
+  1D numpy arrays, and they are converted by <a 
+  href="ivs.sigproc.evaluate-module.html#check_input" 
+  class="link">check_input</a> to record arrays. The latter function 
+  actually accepts both record arrays and 1D arrays, and acts as a 
+  translator between the two parameter representations.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="check_input"></a><span class="summary-sig-name">check_input</span>(<span class="summary-sig-arg">fctn</span>)</span><br />
+      Decorator to check input of evaluating model, and transforming input 
+      from record array to 1D numpy array for optimization, and vice versa.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#check_input">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Evaluating model fits</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#RSS" class="summary-sig-name">RSS</a>(<span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">model</span>)</span><br />
+      Residual sum of squares.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#RSS">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">percentage</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#varred" class="summary-sig-name">varred</a>(<span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">model</span>)</span><br />
+      Calculate variance reduction.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#varred">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#bic" class="summary-sig-name">bic</a>(<span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">model</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">n</span>=<span class="summary-sig-default">None</span>)</span><br />
+      BIC for time regression</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#bic">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#aic" class="summary-sig-name">aic</a>(<span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">model</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">n</span>=<span class="summary-sig-default">None</span>)</span><br />
+      AIC for time regression</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#aic">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray (shape n)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#fishers_method" class="summary-sig-name">fishers_method</a>(<span class="summary-sig-arg">pvalues</span>)</span><br />
+      Use Fisher's test to combine probabilities.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#fishers_method">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Timeseries</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray,ndarray(, ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#phasediagram" class="summary-sig-name">phasediagram</a>(<span class="summary-sig-arg">time</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">nu0</span>,
+        <span class="summary-sig-arg">D</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">forb</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">asini</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">return_indices</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">chronological</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Construct a phasediagram, using frequency nu0.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#phasediagram">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#sine" class="summary-sig-name">sine</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Creates a harmonic function based on given parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#sine_freqshift" class="summary-sig-name">sine_freqshift</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Creates a sine function with a linear frequency shift.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_freqshift">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#sine_orbit" class="summary-sig-name">sine_orbit</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">nmax</span>=<span class="summary-sig-default">10</span>)</span><br />
+      Creates a sine function with a sinusoidal frequency shift.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_orbit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#periodic_spline" class="summary-sig-name">periodic_spline</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Evaluate a periodic spline function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#periodic_spline">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#kepler" class="summary-sig-name">kepler</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">itermax</span>=<span class="summary-sig-default">8</span>)</span><br />
+      Construct a radial velocity curve due to Kepler orbit(s).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#kepler_diffcorr" class="summary-sig-name">kepler_diffcorr</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">itermax</span>=<span class="summary-sig-default">8</span>)</span><br />
+      Compute coefficients for differential correction method.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler_diffcorr">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#binary" class="summary-sig-name">binary</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">n1</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">itermax</span>=<span class="summary-sig-default">8</span>)</span><br />
+      Simultaneous evaluation of two binary components.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#binary">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#box" class="summary-sig-name">box</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Evaluate a box transit model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#box">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#spots" class="summary-sig-name">spots</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">spots</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Spotted model from Lanza (2003).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#spots">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;General purpose</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#gauss" class="summary-sig-name">gauss</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Evaluate a gaussian fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#gauss">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#lorentz" class="summary-sig-name">lorentz</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Evaluate  Lorentz profile</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#lorentz">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#voigt" class="summary-sig-name">voigt</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Evaluate a Voigt profile.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#voigt">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#power_law" class="summary-sig-name">power_law</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Evaluate a power law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#power_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convert record arrays to flat arrays and back</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#sine_preppars" class="summary-sig-name">sine_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare sine function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#kepler_preppars" class="summary-sig-name">kepler_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare Kepler orbit parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#binary_preppars" class="summary-sig-name">binary_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare Kepler orbit parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#binary_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#box_preppars" class="summary-sig-name">box_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare sine function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#box_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#gauss_preppars" class="summary-sig-name">gauss_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare gauss function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#gauss_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#lorentz_preppars" class="summary-sig-name">lorentz_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare Lorentz function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#lorentz_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#voigt_preppars" class="summary-sig-name">voigt_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare voigt function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#voigt_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">normal numpy array or record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.evaluate-module.html#power_law_preppars" class="summary-sig-name">power_law_preppars</a>(<span class="summary-sig-arg">pars</span>)</span><br />
+      Prepare gauss function parameters in correct form for 
+      evaluating/fitting.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#power_law_preppars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8"  class="private">
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Helper functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_complex_error_function"></a><span class="summary-sig-name">_complex_error_function</span>(<span class="summary-sig-arg">x</span>)</span><br />
+      Complex error function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#_complex_error_function">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('SIGPROC.EVAL')">logging.getLogger('SIGPROC.EVAL')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="RSS"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">RSS</span>(<span class="sig-arg">data</span>,
+        <span class="sig-arg">model</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#RSS">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Residual sum of squares.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>data</code></strong> (numpy array) - data</li>
+        <li><strong class="pname"><code>model</code></strong> (numpy array) - model</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>residual sum of squares</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="varred"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">varred</span>(<span class="sig-arg">data</span>,
+        <span class="sig-arg">model</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#varred">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate variance reduction.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>data</code></strong> (numpy array) - data</li>
+        <li><strong class="pname"><code>model</code></strong> (numpy array) - model</li>
+    </ul></dd>
+    <dt>Returns: percentage</dt>
+        <dd>variance reduction (percentage)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="bic"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">bic</span>(<span class="sig-arg">data</span>,
+        <span class="sig-arg">model</span>,
+        <span class="sig-arg">k</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">n</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#bic">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>BIC for time regression</p>
+  <p>This one is based on the MLE of the variance,</p>
+  <p>Sigma_k^2 = RSS/n</p>
+  <p>Where our maximum likelihood estimator is then (RSS/n)^n</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>data</code></strong> (numpy array) - data</li>
+        <li><strong class="pname"><code>model</code></strong> (numpy array) - model</li>
+        <li><strong class="pname"><code>k</code></strong> (integer) - number of free, independent parameters</li>
+        <li><strong class="pname"><code>n</code></strong> (integer or None) - number of effective observations</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>BIC</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="aic"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">aic</span>(<span class="sig-arg">data</span>,
+        <span class="sig-arg">model</span>,
+        <span class="sig-arg">k</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">n</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#aic">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>AIC for time regression</p>
+  <p>This one is based on the MLE of the variance,</p>
+  <p>Sigma_k^2 = RSS/n</p>
+  <p>Where our maximum likelihood estimator is then (RSS/n)^n</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>data</code></strong> (numpy array) - data</li>
+        <li><strong class="pname"><code>model</code></strong> (numpy array) - model</li>
+        <li><strong class="pname"><code>k</code></strong> (integer) - number of free, independent parameters</li>
+        <li><strong class="pname"><code>n</code></strong> (integer or None) - number of effective observations</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>AIC</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fishers_method"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fishers_method</span>(<span class="sig-arg">pvalues</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#fishers_method">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Use Fisher's test to combine probabilities.</p>
+  <p>http://en.wikipedia.org/wiki/Fisher's_method</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs1 = distributions.norm().rvs(10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs2 = distributions.norm().rvs(10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>pvals1 = scipy.stats.distributions.norm.sf(rvs1)
+<span class="py-prompt">&gt;&gt;&gt; </span>pvals2 = scipy.stats.distributions.norm.sf(rvs2)
+<span class="py-prompt">&gt;&gt;&gt; </span>fpval = fishers_method([pvals1,pvals2])</pre>
+  <p>And make a plot (compare with the wiki page).</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(pvals1,pvals2,c=fpval,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.colorbar()</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pvalues</code></strong> (ndarray (shape Nprob times n)) - array of pvalues, the first axis will be combined</li>
+    </ul></dd>
+    <dt>Returns: ndarray (shape n)</dt>
+        <dd>combined pvalues</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="phasediagram"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">phasediagram</span>(<span class="sig-arg">time</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">nu0</span>,
+        <span class="sig-arg">D</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">forb</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">asini</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">return_indices</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">chronological</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#phasediagram">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct a phasediagram, using frequency nu0.</p>
+  <p>Possibility to include a linear frequency shift D.</p>
+  <p>If needed, the indices can be returned. To 'unphase', just do:</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>original = np.random.normal(size=10)
+<span class="py-prompt">&gt;&gt;&gt; </span>indices = np.argsort(original)
+<span class="py-prompt">&gt;&gt;&gt; </span>inv_indices = np.argsort(indices)
+<span class="py-prompt">&gt;&gt;&gt; </span>all(original == np.take(np.take(original,indices),inv_indices))
+<span class="py-output">True</span></pre>
+  <p>Optionally, the zero time point can be given, it will be subtracted 
+  from all time points</p>
+  <p>Joris De Ridder, Pieter Degroote</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>time</code></strong> (ndarray) - time points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>signal</code></strong> (ndarray) - observed data points [0..Ntime-1]</li>
+        <li><strong class="pname"><code>nu0</code></strong> (float) - frequency to compute the phasediagram with (inverse unit of time)</li>
+        <li><strong class="pname"><code>t0</code></strong> (float) - zero time point, if None: t0 = time[0]</li>
+        <li><strong class="pname"><code>D</code></strong> (float) - frequency shift</li>
+        <li><strong class="pname"><code>chronological</code></strong> (boolean) - set to True if you want to have a list of every phase separately</li>
+        <li><strong class="pname"><code>return_indices</code></strong> (boolean) - flag to return indices</li>
+    </ul></dd>
+    <dt>Returns: ndarray,ndarray(, ndarray)</dt>
+        <dd>phase points (sorted), corresponding observations</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Creates a harmonic function based on given parameters.</p>
+  <p>Parameter fields: <code>const, ampl, freq, phase</code>.</p>
+  <p>This harmonic function is of the form</p>
+  <p>f(p1,...,pm;x1,...,x_n) = &sum; c_i + a_i sin(2 &pi; (f_i+ 
+  &phi;_i))</p>
+  <p>where p_i are parameters and x_i are observation times.</p>
+  <p>Parameters can be given as a record array containing columns 'ampl', 
+  'freq' and 'phase', and optionally also 'const' (the latter array is 
+  summed up so to reduce it to one number).</p>
+  <p><code>pars = 
+  np.rec.fromarrays([consts,ampls,freqs,phases],names=('const','ampl','freq','phase'))</code></p>
+  <p>Parameters can also be given as normal 1D numpy array. In that case, 
+  it will be transformed into a record array by the 
+  <code>sine_preppars</code> function. The array you give must be 1D, 
+  optionally contain a constant as the first parameter, followed by 3 three
+  numbers per frequency:</p>
+  <p><code>pars = [const, ampl1, freq1, phase1, ampl2, freq2, 
+  phase2...]</code></p>
+  <p>Example usage: We construct a synthetic signal with two 
+  frequencies.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,100,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>const = 4.
+<span class="py-prompt">&gt;&gt;&gt; </span>ampls = [0.01,0.004]
+<span class="py-prompt">&gt;&gt;&gt; </span>freqs = [0.1,0.234]
+<span class="py-prompt">&gt;&gt;&gt; </span>phases = [0.123,0.234]</pre>
+  <p>The signal can be made via a record array</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>parameters = np.rec.fromarrays([[const,0],ampls,freqs,phases],names = (<span class="py-string">'const'</span>,<span class="py-string">'ampl'</span>,<span class="py-string">'freq'</span>,<span class="py-string">'phase'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>mysine = sine(times,parameters)</pre>
+  <p>or a normal 1D numpy array</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>parameters = np.hstack([const,np.ravel(np.column_stack([ampls,freqs,phases]))])
+<span class="py-prompt">&gt;&gt;&gt; </span>mysine = sine(times,parameters)</pre>
+  <p>Of course, the latter is easier if you have your parameters in a 
+  list:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freq1 = [0.01,0.1,0.123]
+<span class="py-prompt">&gt;&gt;&gt; </span>freq2 = [0.004,0.234,0.234]
+<span class="py-prompt">&gt;&gt;&gt; </span>parameters = np.hstack([freq1,freq2])
+<span class="py-prompt">&gt;&gt;&gt; </span>mysine = sine(times,parameters)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times</li>
+        <li><strong class="pname"><code>parameters</code></strong> (record array or 1D array) - record array containing amplitudes ('ampl'), frequencies ('freq')
+          phases ('phase') and optionally constants ('const'), or 1D numpy 
+          array (see above). <b>Warning:</b> record array should have shape
+          (n,)!</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>sine signal (same shape as <code>times</code>)</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_freqshift"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_freqshift</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_freqshift">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Creates a sine function with a linear frequency shift.</p>
+  <p>Parameter fields: <code>const, ampl, freq, phase, D</code>.</p>
+  <p>Similar to <code>sine</code>, but with extra column 'D', which is the 
+  linear frequency shift parameter.</p>
+  <p>Only accepts record arrays as parameters (for the moment).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times</li>
+        <li><strong class="pname"><code>parameters</code></strong> (record array) - record array containing amplitudes ('ampl'), frequencies 
+          ('freq'), phases ('phase'), frequency shifts ('D') and optionally
+          constants ('const')</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>sine signal with frequency shift (same shape as 
+          <code>times</code>)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_orbit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_orbit</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">nmax</span>=<span class="sig-default">10</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_orbit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Creates a sine function with a sinusoidal frequency shift.</p>
+  <p>Parameter fields: <code>const, ampl, freq, phase, asini, 
+  omega</code>.</p>
+  <p>Similar to <code>sine</code>, but with extra column 'asini' and 
+  'forb', which are the orbital parameters. forb in cycles/day or something
+  similar, asini in au.</p>
+  <p>For eccentric orbits, add longitude of periastron 'omega' (radians) 
+  and 'ecc' (eccentricity).</p>
+  <p>Only accepts record arrays as parameters (for the moment).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times</li>
+        <li><strong class="pname"><code>parameters</code></strong> (record array) - record array containing amplitudes ('ampl'), frequencies 
+          ('freq'), phases ('phase'), frequency shifts ('D') and optionally
+          constants ('const')</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>sine signal with frequency shift (same shape as 
+          <code>times</code>)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="periodic_spline"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">periodic_spline</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#periodic_spline">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a periodic spline function</p>
+  <p>Parameter fields: <code>freq, knots, coeffs, degree</code>, as 
+  returned from the corresponding fitting function <a 
+  href="ivs.sigproc.fit-module.html#periodic_spline" 
+  class="link">fit.periodic_spline</a>.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times</li>
+        <li><strong class="pname"><code>parameters</code></strong> - [frequency,&quot;cj&quot; spline coefficients]</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>sine signal with frequency shift (same shape as 
+          <code>times</code>)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">itermax</span>=<span class="sig-default">8</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct a radial velocity curve due to Kepler orbit(s).</p>
+  <p>Parameter fields: <code>gamma, P, T0, e, omega, K</code></p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times</li>
+        <li><strong class="pname"><code>parameters</code></strong> (record array) - record array containing periods ('P' in days), times of 
+          periastron ('T0' in days), eccentricities ('e'), longitudes of 
+          periastron ('omega' in radians), amplitude ('K' in km/s) and 
+          systemic velocity ('gamma' in km/s) phases ('phase'), frequency 
+          shifts ('D') and optionally constants ('const')</li>
+        <li><strong class="pname"><code>itermax</code></strong> (integer) - maximum number of iterations for solving Kepler equation</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>radial velocity curve (same shape as <code>times</code>)</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler_diffcorr"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler_diffcorr</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">itermax</span>=<span class="sig-default">8</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler_diffcorr">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute coefficients for differential correction method.</p>
+  <p>See page 97-98 of Hilditch's book &quot;An introduction to close 
+  binary stars&quot;.</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="binary"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">binary</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">n1</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">itermax</span>=<span class="sig-default">8</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#binary">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Simultaneous evaluation of two binary components.</p>
+  <p>parameter fields must be <code>'P','T0','e','omega','K1', 
+  'K2'</code>.</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="box"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#box">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a box transit model.</p>
+  <p>Parameter fields: <code>cont, freq, ingress, egress, depth</code></p>
+  <p>Parameters [[frequency,depth, fractional start, fraction end, 
+  continuum]]</p>
+  <dl class="fields">
+    <dt>Returns: array</dt>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="spots"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">spots</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">spots</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#spots">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Spotted model from Lanza (2003).
+Extract from Carrington Map.
+
+Included:
+    - presence of faculae through Q-factor (set constant to 5 or see 
+    Chapman et al. 1997 or Solank &amp; Unruh for a scaling law, since this
+    factor decreases strongly with decreasing rotation period.
+    - differential rotation through B-value (B/period = 0.2 for the sun)
+    - limb-darkening through coefficients ap, bp and cp
+    - non-equidistant time series
+    - individual starspot evolution and lifetime following a Gaussian law,
+    (see Hall &amp; Henry (1993) for a relation between stellar radius and
+    sunspot lifetime), through an optional 3rd (time of maximum) and
+    4th parameter (decay time)
+
+Not included:
+    - distinction between umbra's and penumbra
+    - sunspot structure
+
+Parameters of global star:
+    - i_sun: inclination angle, i=pi/2 is edge-on, i=0 is pole on.
+    - l0: 'epoch angle', if L0=0, spot with coordinate (0,0)
+    starts in center of disk, if L0=0, spot is in center of
+    disk after half a rotation period
+    - period: equatorial period
+    - b: differential rotation b = Omega_pole - Omega_eq where Omega is in radians per time unit (angular velocity)
+    - ap,bp,cp: limb darkening
+
+Parameters of spots:
+    - lambda: 'greenwich' coordinate (longitude) (pi means push to back of star if l0=0)
+    - theta: latitude (latitude=0 means at equator, latitude=pi/2 means on pole (B{not
+    colatitude})
+    - A: size
+    - maxt0 (optional): time of maximum size
+    - decay (optional): exponential decay speed
+    
+
+Note: alpha = (Omega_eq - Omega_p) / Omega_eq
+      alpha = -b /2*pi * period
+
+Use for fitting!
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#gauss">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a gaussian fit.</p>
+  <p>Parameter fields: <code>'ampl','mu','sigma'</code> and optionally 
+  <code>'const'</code>.</p>
+  <p>Evaluating one Gaussian:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-20,20,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.5,0.,3.]
+<span class="py-prompt">&gt;&gt;&gt; </span>y = gauss(x,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'k-'</span>)</pre>
+  <p>Evaluating multiple Gaussian, with and without constants:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.5,0.,3.,0.1,-10,1.,.1]
+<span class="py-prompt">&gt;&gt;&gt; </span>y = gauss(x,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'r-'</span>)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (ndarray) - domain</li>
+        <li><strong class="pname"><code>parameters</code></strong> - record array.</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>fitted signal</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="lorentz"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">lorentz</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#lorentz">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate  Lorentz profile</p>
+  <p>P(f) = A / ( (x-mu)**2 + gamma**2)</p>
+  <p>Parameters fields: <code>ampl,mu,gamma</code> and optionally 
+  <code>const</code>.</p>
+  <p>Evaluating one Lorentzian:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-20,20,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.5,0.,3.]
+<span class="py-prompt">&gt;&gt;&gt; </span>y = lorentz(x,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'k-'</span>)</pre>
+  <p>Evaluating multiple Lorentzians, with and without constants:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.5,0.,3.,0.1,-10,1.,.1]
+<span class="py-prompt">&gt;&gt;&gt; </span>y = lorentz(x,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'r-'</span>)</pre>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="voigt"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">voigt</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#voigt">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a Voigt profile.</p>
+  <p>Field parameters: <code>ampl, mu, gamma, sigma</code> and optionally 
+  <code>const</code></p>
+  <p>Function:</p>
+<pre class="literalblock">
+   z = (x + gamma*i) / (sigma*sqrt(2))
+   V = A * Real[cerf(z)] / (sigma*sqrt(2*pi))
+</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-20,20,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars1 = [0.5,0.,2.,2.]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars2 = [0.5,0.,1.,2.]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars3 = [0.5,0.,2.,1.]
+<span class="py-prompt">&gt;&gt;&gt; </span>y1 = voigt(x,pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>y2 = voigt(x,pars2)
+<span class="py-prompt">&gt;&gt;&gt; </span>y3 = voigt(x,pars3)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y1,<span class="py-string">'b-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y2,<span class="py-string">'g-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y3,<span class="py-string">'r-'</span>)</pre>
+  <p>Multiple voigt profiles:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars4 = [0.5,0.,2.,1.,0.1,-3,0.5,0.5,0.01]
+<span class="py-prompt">&gt;&gt;&gt; </span>y4 = voigt(x,pars4)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y4,<span class="py-string">'c-'</span>)</pre>
+  <dl class="fields">
+    <dt>Returns: array</dt>
+        <dd>Voigt profile</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="power_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">power_law</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#power_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a power law.</p>
+  <p>Parameter fields: <code>A, B, C</code>, optionally 
+  <code>const</code></p>
+  <p>Function:</p>
+  <p>P(f) = A / (1+ Bf)**C + const</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars1 = [0.5,1.,1.]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars2 = [0.5,1.,2.]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars3 = [0.5,2.,1.]
+<span class="py-prompt">&gt;&gt;&gt; </span>y1 = power_law(x,pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>y2 = power_law(x,pars2)
+<span class="py-prompt">&gt;&gt;&gt; </span>y3 = power_law(x,pars3)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y1,<span class="py-string">'b-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y2,<span class="py-string">'g-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y3,<span class="py-string">'r-'</span>)</pre>
+  <p>Multiple power laws: &gt;&gt;&gt; pars4 = pars1+pars2+pars3 
+  &gt;&gt;&gt; y4 = power_law(x,pars4) &gt;&gt;&gt; p = 
+  pl.plot(x,y4,'c-')</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (ndarray) - domain</li>
+        <li><strong class="pname"><code>parameters</code></strong> - record array.</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>fitted signal</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@check_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#sine_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare sine function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#kepler_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare Kepler orbit parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="binary_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">binary_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#binary_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare Kepler orbit parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="box_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#box_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare sine function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#gauss_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare gauss function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="lorentz_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">lorentz_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#lorentz_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare Lorentz function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="voigt_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">voigt_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#voigt_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare voigt function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="power_law_preppars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">power_law_preppars</span>(<span class="sig-arg">pars</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.evaluate-pysrc.html#power_law_preppars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare gauss function parameters in correct form for 
+  evaluating/fitting.</p>
+  <p>If you input a record array, this function will output a 1D numpy 
+  array containing only the independent parameters for use in nonlinear 
+  fitting algorithms.</p>
+  <p>If you input a 1D numpy array, it will output a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>pars</code></strong> (record array or normal numpy array) - input parameters in record array or normal array form</li>
+    </ul></dd>
+    <dt>Returns: normal numpy array or record array</dt>
+        <dd>input parameters in normal array form or record array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

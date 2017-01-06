@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.stellar_evolution.gyre</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.stellar_evolution-module.html">Package&nbsp;stellar_evolution</a> ::
+        Module&nbsp;gyre
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.stellar_evolution.gyre-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.stellar_evolution.gyre-module.html">Module ivs.stellar_evolution.gyre</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package ivs=ivs-module.html"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-0', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package ivs.units=ivs.units-module.html"><a title="ivs.units" class="py-name" href="#" onclick="return doclink('link-1', 'units', 'link-1');">units</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Module ivs.units.constants=ivs.units.constants-module.html"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-2', 'constants', 'link-2');">constants</a></tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-3" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-3', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-4" class="py-name"><a title="ivs.units" class="py-name" href="#" onclick="return doclink('link-4', 'units', 'link-1');">units</a></tt> <tt class="py-keyword">import</tt> <tt id="link-5" class="py-name" targets="Module ivs.units.conversions=ivs.units.conversions-module.html"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-5', 'conversions', 'link-5');">conversions</a></tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-6" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-6', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-7" class="py-name" targets="Package ivs.aux=ivs.aux-module.html"><a title="ivs.aux" class="py-name" href="#" onclick="return doclink('link-7', 'aux', 'link-7');">aux</a></tt> <tt class="py-keyword">import</tt> <tt id="link-8" class="py-name" targets="Module ivs.aux.numpy_ext=ivs.aux.numpy_ext-module.html"><a title="ivs.aux.numpy_ext" class="py-name" href="#" onclick="return doclink('link-8', 'numpy_ext', 'link-8');">numpy_ext</a></tt> <tt class="py-keyword">as</tt> <tt class="py-name">ne</tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt id="link-9" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-9', 'logger', 'link-9');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">'STAR.GYRE'</tt><tt class="py-op">)</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"> </tt>
+<a name="make_gyre_inputfile"></a><div id="make_gyre_inputfile-def"><a name="L9"></a><tt class="py-lineno"> 9</tt> <a class="py-toggle" href="#" id="make_gyre_inputfile-toggle" onclick="return toggle('make_gyre_inputfile');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.stellar_evolution.gyre-module.html#make_gyre_inputfile">make_gyre_inputfile</a><tt class="py-op">(</tt><tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="make_gyre_inputfile-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="make_gyre_inputfile-expanded"><a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-docstring">    keyword arguments:</tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-docstring">    model_name</tt> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt class="py-docstring">    degree</tt> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt class="py-docstring">    omega_min</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-docstring">    omega_max</tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-docstring">    n_omega</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line">    <tt class="py-name">control_file</tt> <tt class="py-op">=</tt> <tt class="py-string">'gyre_nad.in'</tt> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line">    <tt class="py-name">contents</tt> <tt class="py-op">=</tt> <tt class="py-string">"""</tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt class="py-string">&amp;eqmodel</tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"><tt class="py-string">        file = '{model_name}'</tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"><tt class="py-string">        file_type = 'B3'</tt> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"><tt class="py-string">        G = {G:.10e}</tt> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line"><tt class="py-string">/</tt> </tt>
+<a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line"><tt class="py-string">&amp;grid</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line"><tt class="py-string">/</tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"><tt class="py-string">&amp;bvp</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"><tt class="py-string">        l = {degree}</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line"><tt class="py-string">        scheme = 'MAGNUS_GL2'</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line"><tt class="py-string">/</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line"><tt class="py-string">&amp;freqs</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line"><tt class="py-string">        omega_min = {omega_min:f}</tt> </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line"><tt class="py-string">        omega_max = {omega_max:f}</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line"><tt class="py-string">        n_omega = {n_omega:d}</tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"><tt class="py-string">        omega_grid = 'MIXED'</tt> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line"><tt class="py-string">/</tt> </tt>
+<a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line"><tt class="py-string">&amp;output</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"><tt class="py-string">      eigval_file = 'eigvals.h5'</tt> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line"><tt class="py-string">      eigfunc_prefix = 'eigfunc-'</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line"><tt class="py-string"></tt> </tt>
+<a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line"><tt class="py-string">/</tt> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line"><tt class="py-string">"""</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line">    <tt class="py-keyword">with</tt> <tt class="py-name">open</tt><tt class="py-op">(</tt><tt class="py-name">control_file</tt><tt class="py-op">,</tt><tt class="py-string">'w'</tt><tt class="py-op">)</tt> <tt class="py-keyword">as</tt> <tt id="link-10" class="py-name" targets="Variable ivs.makedoc.ff=ivs.makedoc-module.html#ff"><a title="ivs.makedoc.ff" class="py-name" href="#" onclick="return doclink('link-10', 'ff', 'link-10');">ff</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">        <tt id="link-11" class="py-name"><a title="ivs.makedoc.ff" class="py-name" href="#" onclick="return doclink('link-11', 'ff', 'link-10');">ff</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name" targets="Method ivs.aux.decorators.LogPrinter.write()=ivs.aux.decorators.LogPrinter-class.html#write"><a title="ivs.aux.decorators.LogPrinter.write" class="py-name" href="#" onclick="return doclink('link-12', 'write', 'link-12');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">contents</tt><tt class="py-op">.</tt><tt id="link-13" class="py-name" targets="Variable ivs.asteroseismology.redgiantfreqs.format=ivs.asteroseismology.redgiantfreqs-module.html#format"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-13', 'format', 'link-13');">format</a></tt><tt class="py-op">(</tt><tt class="py-op">**</tt><tt class="py-name">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">control_file</tt> </tt>
+</div><a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:10 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

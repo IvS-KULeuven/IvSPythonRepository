@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.distance</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;distance
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.distance-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.sed.distance-module.html">Module ivs.sed.distance</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-docstring">Calculate the distance to a star with Lutz-Kelker bias</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt id="link-0" class="py-name" targets="Method ivs.units.conversions.Unit.exp()=ivs.units.conversions.Unit-class.html#exp"><a title="ivs.units.conversions.Unit.exp" class="py-name" href="#" onclick="return doclink('link-0', 'exp', 'link-0');">exp</a></tt><tt class="py-op">,</tt><tt id="link-1" class="py-name" targets="Method ivs.units.conversions.Unit.sqrt()=ivs.units.conversions.Unit-class.html#sqrt"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-1', 'sqrt', 'link-1');">sqrt</a></tt><tt class="py-op">,</tt><tt id="link-2" class="py-name" targets="Method ivs.units.conversions.Unit.sin()=ivs.units.conversions.Unit-class.html#sin"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-2', 'sin', 'link-2');">sin</a></tt><tt class="py-op">,</tt><tt class="py-name">pi</tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-3', 'logger', 'link-3');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"IVS.DIST"</tt><tt class="py-op">)</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"> </tt>
+<a name="rho"></a><div id="rho-def"><a name="L12"></a><tt class="py-lineno">12</tt> <a class="py-toggle" href="#" id="rho-toggle" onclick="return toggle('rho');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.sed.distance-module.html#rho">rho</a><tt class="py-op">(</tt><tt class="py-param">z</tt><tt class="py-op">,</tt><tt class="py-param">z_sun</tt><tt class="py-op">=</tt><tt class="py-number">20.0</tt><tt class="py-op">,</tt><tt class="py-param">hd</tt><tt class="py-op">=</tt><tt class="py-number">31.8</tt><tt class="py-op">,</tt><tt class="py-param">hh</tt><tt class="py-op">=</tt><tt class="py-number">490.</tt><tt class="py-op">,</tt><tt class="py-param">sigma</tt><tt class="py-op">=</tt><tt class="py-number">1.91e-3</tt><tt class="py-op">,</tt><tt class="py-param">f</tt><tt class="py-op">=</tt><tt class="py-number">0.039</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="rho-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="rho-expanded"><a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt class="py-docstring">    Stellar galactic density function.</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-docstring">    Galactic coordinate z: self-gravitating isothermal disk plus a Gaussian halo</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"><tt class="py-docstring">    See, e.g., Maiz-Apellaniz, Alfaro and Sota 2007/2008 (Poster)</tt> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt class="py-docstring">    Other values we found in the literature:</tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"><tt class="py-docstring">    z_sun,hd,sigma,f = 24.7,34.2,1.62e-3,0.058</tt> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line"><tt class="py-docstring">    @param z: galactic coordinate z (parsec)</tt> </tt>
+<a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"><tt class="py-docstring">    @type z: array or float</tt> </tt>
+<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line"><tt class="py-docstring">    @param z_sun: Sun's distance above the Galactic plane (20.0 +/- 2.9 pc)</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line"><tt class="py-docstring">    @type z_sun: float</tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-docstring">    @param hd: disk scale height (31.8+/-1.6 pc)</tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"><tt class="py-docstring">    @type hd: float</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"><tt class="py-docstring">    @param hh: halo half width (490+/-170 pc)</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line"><tt class="py-docstring">    @type hh: float</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line"><tt class="py-docstring">    @param sigma: number of stars per square parsec (total surface number density)</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line"><tt class="py-docstring">    (1.91e-3+/-0.11e-3)</tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line"><tt class="py-docstring">    @type sigma: float</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line"><tt class="py-docstring">    @param f: fraction of stars in the halo population (0.039+/-0.015)</tt> </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line"><tt class="py-docstring">    @type f: float</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line"><tt class="py-docstring">    @return: halo+disk,halo and disk density function</tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: 3-tuple</tt> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line">    <tt class="py-name">disk</tt> <tt class="py-op">=</tt> <tt id="link-4" class="py-name" targets="Variable ivs.units.constants.sigma=ivs.units.constants-module.html#sigma"><a title="ivs.units.constants.sigma" class="py-name" href="#" onclick="return doclink('link-4', 'sigma', 'link-4');">sigma</a></tt><tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">f</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt class="py-number">4</tt><tt class="py-op">*</tt><tt class="py-name">hd</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">cosh</tt><tt class="py-op">(</tt><tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">z</tt><tt class="py-op">+</tt><tt class="py-name">z_sun</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">hd</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-op">-</tt><tt class="py-number">2</tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line">    <tt class="py-name">halo</tt> <tt class="py-op">=</tt> <tt id="link-5" class="py-name"><a title="ivs.units.constants.sigma" class="py-name" href="#" onclick="return doclink('link-5', 'sigma', 'link-4');">sigma</a></tt><tt class="py-op">*</tt><tt class="py-name">f</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt id="link-6" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-6', 'sqrt', 'link-1');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-7" class="py-name" targets="Variable ivs.units.constants.hh=ivs.units.constants-module.html#hh"><a title="ivs.units.constants.hh" class="py-name" href="#" onclick="return doclink('link-7', 'hh', 'link-7');">hh</a></tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt id="link-8" class="py-name"><a title="ivs.units.conversions.Unit.exp" class="py-name" href="#" onclick="return doclink('link-8', 'exp', 'link-0');">exp</a></tt><tt class="py-op">(</tt> <tt class="py-op">-</tt><tt class="py-op">(</tt><tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">z</tt><tt class="py-op">+</tt><tt class="py-name">z_sun</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt id="link-9" class="py-name"><a title="ivs.units.constants.hh" class="py-name" href="#" onclick="return doclink('link-9', 'hh', 'link-7');">hh</a></tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">halo</tt><tt class="py-op">+</tt><tt class="py-name">disk</tt><tt class="py-op">,</tt><tt class="py-name">halo</tt><tt class="py-op">,</tt><tt class="py-name">disk</tt> </tt>
+</div><a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line"> </tt>
+<a name="probability_cd"></a><div id="probability_cd-def"><a name="L44"></a><tt class="py-lineno">44</tt> <a class="py-toggle" href="#" id="probability_cd-toggle" onclick="return toggle('probability_cd');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.sed.distance-module.html#probability_cd">probability_cd</a><tt class="py-op">(</tt><tt class="py-param">r</tt><tt class="py-op">,</tt><tt class="py-param">plx</tt><tt class="py-op">,</tt><tt class="py-param">e_plx</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="probability_cd-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="probability_cd-expanded"><a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line"><tt class="py-docstring">    Compute the probability for an object to be at distance r (pc), given</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line"><tt class="py-docstring">    its parallax (mas) and error on the parallax (mas) and a constant density</tt> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line"><tt class="py-docstring">    function.</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line"><tt class="py-docstring">    Unnormalised!</tt> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line"><tt class="py-docstring">    To obtain the probabilty, multiply with a stellar galactic density function.</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line"><tt class="py-docstring">    @param r: distance (pc)</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line"><tt class="py-docstring">    @type r: float/array</tt> </tt>
+<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line"><tt class="py-docstring">    @param plx: parallax (mas)</tt> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"><tt class="py-docstring">    @type plx: float/array</tt> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line"><tt class="py-docstring">    @param e_plx: error on parallax (mas)</tt> </tt>
+<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line"><tt class="py-docstring">    @type e_plx: float/array</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line"><tt class="py-docstring">    @return: probability function</tt> </tt>
+<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line">    <tt class="py-name">plx</tt> <tt class="py-op">/=</tt> <tt class="py-number">1000.</tt> </tt>
+<a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line">    <tt class="py-name">e_plx</tt> <tt class="py-op">/=</tt> <tt class="py-number">1000.</tt> </tt>
+<a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line">    <tt class="py-name">A</tt> <tt class="py-op">=</tt> <tt class="py-number">1.</tt> </tt>
+<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line">    <tt class="py-name">prob1</tt> <tt class="py-op">=</tt> <tt class="py-name">A</tt><tt class="py-op">*</tt><tt class="py-name">r</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt id="link-10" class="py-name"><a title="ivs.units.conversions.Unit.exp" class="py-name" href="#" onclick="return doclink('link-10', 'exp', 'link-0');">exp</a></tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">r</tt><tt class="py-op">*</tt><tt class="py-name">plx</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt class="py-name">r</tt><tt class="py-op">*</tt><tt class="py-name">e_plx</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">prob1</tt> </tt>
+</div><a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line"> </tt>
+<a name="distprob"></a><div id="distprob-def"><a name="L68"></a><tt class="py-lineno">68</tt> <a class="py-toggle" href="#" id="distprob-toggle" onclick="return toggle('distprob');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.sed.distance-module.html#distprob">distprob</a><tt class="py-op">(</tt><tt class="py-param">r</tt><tt class="py-op">,</tt><tt class="py-param">theta</tt><tt class="py-op">,</tt><tt class="py-param">plx</tt><tt class="py-op">,</tt><tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="distprob-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="distprob-expanded"><a name="L69"></a><tt class="py-lineno">69</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line"><tt class="py-docstring">    Compute the probability for an object to be located at a distance r (pc),</tt> </tt>
+<a name="L71"></a><tt class="py-lineno">71</tt>  <tt class="py-line"><tt class="py-docstring">    given its parallax and galactic lattitude.</tt> </tt>
+<a name="L72"></a><tt class="py-lineno">72</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L73"></a><tt class="py-lineno">73</tt>  <tt class="py-line"><tt class="py-docstring">    theta in degrees</tt> </tt>
+<a name="L74"></a><tt class="py-lineno">74</tt>  <tt class="py-line"><tt class="py-docstring">    plx is a tuple!</tt> </tt>
+<a name="L75"></a><tt class="py-lineno">75</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L76"></a><tt class="py-lineno">76</tt>  <tt class="py-line"><tt class="py-docstring">    returns (unnormalised) probability density function.</tt> </tt>
+<a name="L77"></a><tt class="py-lineno">77</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L78"></a><tt class="py-lineno">78</tt>  <tt class="py-line">    <tt class="py-name">z</tt> <tt class="py-op">=</tt> <tt class="py-name">r</tt><tt class="py-op">*</tt><tt id="link-11" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-11', 'sin', 'link-2');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">/</tt><tt class="py-number">180.</tt><tt class="py-op">*</tt><tt class="py-name">pi</tt><tt class="py-op">)</tt> </tt>
+<a name="L79"></a><tt class="py-lineno">79</tt>  <tt class="py-line">    <tt class="py-name">pcd</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name" targets="Function ivs.observations.distance.probability_cd()=ivs.observations.distance-module.html#probability_cd,Function ivs.sed.distance.probability_cd()=ivs.sed.distance-module.html#probability_cd"><a title="ivs.observations.distance.probability_cd
+ivs.sed.distance.probability_cd" class="py-name" href="#" onclick="return doclink('link-12', 'probability_cd', 'link-12');">probability_cd</a></tt><tt class="py-op">(</tt><tt class="py-name">r</tt><tt class="py-op">,</tt><tt class="py-name">plx</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">plx</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L80"></a><tt class="py-lineno">80</tt>  <tt class="py-line">    <tt class="py-name">galaxy</tt><tt class="py-op">,</tt><tt class="py-name">halo</tt><tt class="py-op">,</tt><tt class="py-name">disk</tt> <tt class="py-op">=</tt> <tt id="link-13" class="py-name" targets="Function ivs.observations.distance.rho()=ivs.observations.distance-module.html#rho,Function ivs.sed.distance.rho()=ivs.sed.distance-module.html#rho"><a title="ivs.observations.distance.rho
+ivs.sed.distance.rho" class="py-name" href="#" onclick="return doclink('link-13', 'rho', 'link-13');">rho</a></tt><tt class="py-op">(</tt><tt class="py-name">z</tt><tt class="py-op">,</tt><tt class="py-op">**</tt><tt class="py-name">kwargs</tt><tt class="py-op">)</tt> </tt>
+<a name="L81"></a><tt class="py-lineno">81</tt>  <tt class="py-line">    <tt class="py-name">dpr</tt> <tt class="py-op">=</tt> <tt class="py-name">pcd</tt><tt class="py-op">*</tt><tt class="py-name">galaxy</tt> </tt>
+<a name="L82"></a><tt class="py-lineno">82</tt>  <tt class="py-line">    <tt id="link-14" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-14', 'logger', 'link-3');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Calculate Lutz-Kelker bias for THETA=%.3fdeg"</tt><tt class="py-op">%</tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno">83</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">dpr</tt> </tt>
+</div><a name="L84"></a><tt class="py-lineno">84</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

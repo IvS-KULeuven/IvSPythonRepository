@@ -1,0 +1,1078 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.funclib</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        Module&nbsp;funclib
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.funclib-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module funclib</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html">source&nbsp;code</a></span></p>
+<p>Database with model functions.</p>
+  <p>To be used with the <code 
+  class="link">ivs.sigproc.fit.minimizer</code> function or with the <a 
+  href="ivs.sigproc.funclib-module.html#evaluate" class="link">evaluate</a>
+  function in this module.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-10,10,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'gauss'</span>,x,[5,1.,2.,0.5]),label=<span class="py-string">'gauss'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'voigt'</span>,x,[20.,1.,1.5,3.,0.5]),label=<span class="py-string">'voigt'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'lorentz'</span>,x,[5,1.,2.,0.5]),label=<span class="py-string">'lorentz'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib01.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,1000)[1:]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'power_law'</span>,x,[2.,3.,1.5,0,0.5]),label=<span class="py-string">'power_law'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'power_law'</span>,x,[2.,3.,1.5,0,0.5])+evaluate(<span class="py-string">'gauss'</span>,x,[1.,5.,0.5,0,0]),label=<span class="py-string">'power_law + gauss'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib02.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine'</span>,x,[1.,2.,0,0]),label=<span class="py-string">'sine'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine_linfreqshift'</span>,x,[1.,0.5,0,0,.5]),label=<span class="py-string">'sine_linfreqshift'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine_expfreqshift'</span>,x,[1.,0.5,0,0,1.2]),label=<span class="py-string">'sine_expfreqshift'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib03.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine'</span>,x,[1.,2.,0,0]),label=<span class="py-string">'sine'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine_orbit'</span>,x,[1.,2.,0,0,0.1,10.,0.1]),label=<span class="py-string">'sine_orbit'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib03a.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x_single = np.linspace(0,10,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>x_double = np.vstack([x_single,x_single])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x_single,evaluate(<span class="py-string">'kepler_orbit'</span>,x_single,[2.5,0.,0.5,0,3,1.]),label=<span class="py-string">'kepler_orbit (single)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>y_double = evaluate(<span class="py-string">'kepler_orbit'</span>,x_double,[2.5,0.,0.5,0,3,2.,-4,2.],type=<span class="py-string">'double'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x_double[0],y_double[0],label=<span class="py-string">'kepler_orbit (double 1)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x_double[1],y_double[1],label=<span class="py-string">'kepler_orbit (double 2)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'box_transit'</span>,x,[2.,0.4,0.1,0.3,0.5]),label=<span class="py-string">'box_transit'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib04.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-1,1,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>gammas = [-0.25,0.1,0.25,0.5,1,2,4]
+<span class="py-prompt">&gt;&gt;&gt; </span>y = np.array([evaluate(<span class="py-string">'soft_parabola'</span>,x,[1.,0,1.,gamma]) <span class="py-keyword">for</span> gamma <span class="py-keyword">in</span> gammas])
+<span class="py-output">divide by zero encountered in power</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> iy,gamma <span class="py-keyword">in</span> zip(y,gammas): p = plt.plot(x,iy,label=<span class="py-string">&quot;soft_parabola $\gamma$={:.2f}&quot;</span>.format(gamma))
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib05.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.logspace(-1,2,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>blbo = evaluate(<span class="py-string">'blackbody'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>raje = evaluate(<span class="py-string">'rayleigh_jeans'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wien = evaluate(<span class="py-string">'wien'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.title(r<span class="py-string">'$\lambda$ vs $F_\lambda$'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,blbo,label=<span class="py-string">'Black Body'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,raje,label=<span class="py-string">'Rayleigh-Jeans'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,wien,label=<span class="py-string">'Wien'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>blbo = evaluate(<span class="py-string">'blackbody'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>raje = evaluate(<span class="py-string">'rayleigh_jeans'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wien = evaluate(<span class="py-string">'wien'</span>,x,[10000.,1.],wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.subplot(223)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.title(r<span class="py-string">&quot;$\lambda$ vs $F_\nu$&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,blbo,label=<span class="py-string">'Black Body'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,raje,label=<span class="py-string">'Rayleigh-Jeans'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,wien,label=<span class="py-string">'Wien'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.logspace(0.47,3.47,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>blbo = evaluate(<span class="py-string">'blackbody'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>raje = evaluate(<span class="py-string">'rayleigh_jeans'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wien = evaluate(<span class="py-string">'wien'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'Jy'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.subplot(224)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.title(r<span class="py-string">&quot;$\nu$ vs $F_\nu$&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,blbo,label=<span class="py-string">'Black Body'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,raje,label=<span class="py-string">'Rayleigh-Jeans'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,wien,label=<span class="py-string">'Wien'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>blbo = evaluate(<span class="py-string">'blackbody'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>raje = evaluate(<span class="py-string">'rayleigh_jeans'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wien = evaluate(<span class="py-string">'wien'</span>,x,[10000.,1.],wave_units=<span class="py-string">'THz'</span>,flux_units=<span class="py-string">'W/m3'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.subplot(222)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.title(r<span class="py-string">&quot;$\nu$ vs $F_\lambda$&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,blbo,label=<span class="py-string">'Black Body'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,raje,label=<span class="py-string">'Rayleigh-Jeans'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,wien,label=<span class="py-string">'Wien'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
+<center><img src='../images/ivs_sigproc_fit_funclib06.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#evaluate" class="summary-sig-name">evaluate</a>(<span class="summary-sig-arg">funcname</span>,
+        <span class="summary-sig-arg">domain</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Evaluate a function on specified interval with specified parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#evaluate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Function Library</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#blackbody" class="summary-sig-name">blackbody</a>(<span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Blackbody (T, scale).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#blackbody">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#rayleigh_jeans" class="summary-sig-name">rayleigh_jeans</a>(<span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Rayleigh-Jeans tail (T, scale).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#rayleigh_jeans">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#wien" class="summary-sig-name">wien</a>(<span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Wien approximation (T, scale).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#wien">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#kepler_orbit" class="summary-sig-name">kepler_orbit</a>(<span class="summary-sig-arg">type</span>=<span class="summary-sig-default">'single'</span>)</span><br />
+      Kepler orbits ((p,t0,e,omega,K,v0) or (p,t0,e,omega,K1,v01,K2,v02))</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#kepler_orbit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#box_transit" class="summary-sig-name">box_transit</a>(<span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">0.</span>)</span><br />
+      Box transit model (cont,freq,ingress,egress,depth)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#box_transit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#polynomial" class="summary-sig-name">polynomial</a>(<span class="summary-sig-arg">d</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Polynomial (a1,a0).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#polynomial">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#soft_parabola" class="summary-sig-name">soft_parabola</a>()</span><br />
+      Soft parabola (ta,vlsr,vinf,gamma).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#soft_parabola">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#gauss" class="summary-sig-name">gauss</a>(<span class="summary-sig-arg">use_jacobian</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Gaussian (a,mu,sigma,c)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#gauss">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#sine" class="summary-sig-name">sine</a>()</span><br />
+      Sine (ampl,freq,phase,const)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#sine_linfreqshift" class="summary-sig-name">sine_linfreqshift</a>(<span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">0.</span>)</span><br />
+      Sine with linear frequency shift (ampl,freq,phase,const,D).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_linfreqshift">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#sine_expfreqshift" class="summary-sig-name">sine_expfreqshift</a>(<span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">0.</span>)</span><br />
+      Sine with exponential frequency shift (ampl,freq,phase,const,K).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_expfreqshift">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#sine_orbit" class="summary-sig-name">sine_orbit</a>(<span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">0.</span>,
+        <span class="summary-sig-arg">nmax</span>=<span class="summary-sig-default">10</span>)</span><br />
+      Sine with a sinusoidal frequency shift 
+      (ampl,freq,phase,const,forb,asini,omega,(,ecc))</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_orbit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#power_law" class="summary-sig-name">power_law</a>()</span><br />
+      Power law (A,B,C,f0,const)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#power_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#lorentz" class="summary-sig-name">lorentz</a>()</span><br />
+      Lorentz profile (ampl,mu,gamma,const)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#lorentz">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#voigt" class="summary-sig-name">voigt</a>()</span><br />
+      Voigt profile (ampl,mu,sigma,gamma,const)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#voigt">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Combination functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#multi_sine" class="summary-sig-name">multi_sine</a>(<span class="summary-sig-arg">n</span>=<span class="summary-sig-default">10</span>)</span><br />
+      Multiple sines.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#multi_sine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.funclib-module.html#multi_blackbody" class="summary-sig-name">multi_blackbody</a>(<span class="summary-sig-arg">n</span>=<span class="summary-sig-default">3</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Multiple black bodies.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#multi_blackbody">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8"  class="private">
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal Helper functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_complex_error_function"></a><span class="summary-sig-name">_complex_error_function</span>(<span class="summary-sig-arg">x</span>)</span><br />
+      Complex error function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#_complex_error_function">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SP.FUNCLIB&quot;)">logging.getLogger(&quot;SP.FUNCLIB&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="blackbody"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">blackbody</span>(<span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#blackbody">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Blackbody (T, scale).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave_units</code></strong> (string) - wavelength units</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (string) - flux units</li>
+        <li><strong class="pname"><code>disc_integrated</code></strong> (bool) - sets units equal to SED models</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="rayleigh_jeans"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">rayleigh_jeans</span>(<span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#rayleigh_jeans">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Rayleigh-Jeans tail (T, scale).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave_units</code></strong> (string) - wavelength units</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (string) - flux units</li>
+        <li><strong class="pname"><code>disc_integrated</code></strong> (bool) - sets units equal to SED models</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="wien"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">wien</span>(<span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#wien">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Wien approximation (T, scale).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave_units</code></strong> (string) - wavelength units</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (string) - flux units</li>
+        <li><strong class="pname"><code>disc_integrated</code></strong> (bool) - sets units equal to SED models</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler_orbit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler_orbit</span>(<span class="sig-arg">type</span>=<span class="sig-default">'single'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#kepler_orbit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Kepler orbits ((p,t0,e,omega,K,v0) or 
+  (p,t0,e,omega,K1,v01,K2,v02))</p>
+  <p>A single kepler orbit parameters are: [p, t0, e, omega, k, v0]</p>
+  <p>A double kepler orbit parameters are: [p, t0, e, omega, k_1, v0_1, 
+  k_2, v0_2] Warning: This function uses 2d input and output!</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="box_transit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box_transit</span>(<span class="sig-arg">t0</span>=<span class="sig-default">0.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#box_transit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Box transit model (cont,freq,ingress,egress,depth)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>t0</code></strong> (float) - reference time (defaults to 0)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="polynomial"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">polynomial</span>(<span class="sig-arg">d</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#polynomial">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Polynomial (a1,a0).</p>
+  <p>y(x) = ai*x**i + a(i-1)*x**(i-1) + ... + a1*x + a0</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>d</code></strong> (int) - degree of the polynomial</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="soft_parabola"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">soft_parabola</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#soft_parabola">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Soft parabola (ta,vlsr,vinf,gamma).</p>
+  <p>See Olofsson 1993ApJS...87...267O.</p>
+  <p>T_A(x) = T_A(0) * [ 1 - ((x- v_lsr)/v_inf)**2 ] ** (gamma/2)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss</span>(<span class="sig-arg">use_jacobian</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#gauss">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Gaussian (a,mu,sigma,c)</p>
+  <p>f(x) = a * exp( - (x - mu)**2 / (2 * sigma**2) ) + c</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Sine (ampl,freq,phase,const)</p>
+  <p>f(x) = ampl * sin(2pi*freq*x + 2pi*phase) + const</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_linfreqshift"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_linfreqshift</span>(<span class="sig-arg">t0</span>=<span class="sig-default">0.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_linfreqshift">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Sine with linear frequency shift (ampl,freq,phase,const,D).</p>
+  <p>Similar to <code>sine</code>, but with extra parameter 'D', which is 
+  the linear frequency shift parameter.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>t0</code></strong> (float) - reference time (defaults to 0)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_expfreqshift"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_expfreqshift</span>(<span class="sig-arg">t0</span>=<span class="sig-default">0.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_expfreqshift">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Sine with exponential frequency shift (ampl,freq,phase,const,K).</p>
+  <p>Similar to <code>sine</code>, but with extra parameter 'K', which is 
+  the exponential frequency shift parameter.</p>
+  <p>frequency(x) = freq / log(K) * (K**(x-t0)-1)</p>
+  <p>f(x) = ampl * sin( 2*pi * (frequency + phase))</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>t0</code></strong> (float) - reference time (defaults to 0)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sine_orbit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine_orbit</span>(<span class="sig-arg">t0</span>=<span class="sig-default">0.</span>,
+        <span class="sig-arg">nmax</span>=<span class="sig-default">10</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#sine_orbit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Sine with a sinusoidal frequency shift 
+  (ampl,freq,phase,const,forb,asini,omega,(,ecc))</p>
+  <p>Similar to <code>sine</code>, but with extra parameter 'asini' and 
+  'forb', which are the orbital parameters. forb in cycles/day or something
+  similar, asini in au.</p>
+  <p>For eccentric orbits, add longitude of periastron 'omega' (radians) 
+  and 'ecc' (eccentricity).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>t0</code></strong> (float) - reference time (defaults to 0)</li>
+        <li><strong class="pname"><code>nmax</code></strong> (int) - number of terms to include in series for eccentric orbit</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="power_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">power_law</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#power_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Power law (A,B,C,f0,const)</p>
+  <p>P(f) = A / (1+ B(f-f0))**C + const</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="lorentz"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">lorentz</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#lorentz">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Lorentz profile (ampl,mu,gamma,const)</p>
+  <p>P(f) = A / ( (x-mu)**2 + gamma**2) + const</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="voigt"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">voigt</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#voigt">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Voigt profile (ampl,mu,sigma,gamma,const)</p>
+  <p>z = (x + gamma*i) / (sigma*sqrt(2)) V = A * Real[cerf(z)] / 
+  (sigma*sqrt(2*pi))</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="multi_sine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">multi_sine</span>(<span class="sig-arg">n</span>=<span class="sig-default">10</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#multi_sine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Multiple sines.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>n</code></strong> (int) - number of sines</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="multi_blackbody"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">multi_blackbody</span>(<span class="sig-arg">n</span>=<span class="sig-default">3</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#multi_blackbody">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Multiple black bodies.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>n</code></strong> (int) - number of blackbodies</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="evaluate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">evaluate</span>(<span class="sig-arg">funcname</span>,
+        <span class="sig-arg">domain</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.funclib-pysrc.html#evaluate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a function on specified interval with specified 
+  parameters.</p>
+  <p>Extra keywords are passed to the funcname.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-5,5,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = evaluate(<span class="py-string">'gauss'</span>,x,[1.,0.,2.,0.])</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>funcname</code></strong> (str) - name of the function</li>
+        <li><strong class="pname"><code>domain</code></strong> (array) - domain to evaluate onto</li>
+        <li><strong class="pname"><code>parameters</code></strong> (array) - parameter of the function</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

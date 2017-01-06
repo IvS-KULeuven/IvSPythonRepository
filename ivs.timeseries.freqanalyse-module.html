@@ -1,0 +1,828 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.timeseries.freqanalyse</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.timeseries-module.html">Package&nbsp;timeseries</a> ::
+        Module&nbsp;freqanalyse
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.timeseries.freqanalyse-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module freqanalyse</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html">source&nbsp;code</a></span></p>
+<p>Frequency Analysis Routines.</p>
+  <p>Here are some examples:</p>
+  <h1 class="heading">Section 1. Pulsation frequency analysis</h1>
+    <p>Do a frequency analysis of the star HD129929, after Aerts 2004. We 
+    reproduce their Fig. 8 here.</p>
+    <p>Import necessary modules:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.catalogs <span class="py-keyword">import</span> vizier</pre>
+    <p>Read in the data and do an iterative prewhitening frequency 
+    analysis:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = vizier.search(<span class="py-string">'J/A+A/415/241/table1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>params = iterative_prewhitening(data.HJD,data.Umag-data.Umag.mean(),f0=6.2,fn=7.2,maxiter=6,          stopcrit=(stopcrit_scargle_snr,4.,6,))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pl.mlab.rec2txt(params,precision=6)
+<span class="py-output">      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase   stopcrit</span>
+<span class="py-output">   0.000310   0.014722   6.461700    0.443450   0.000401   0.001323   0.000006   0.089865   4.950496</span>
+<span class="py-output">   0.000000   0.014866   6.978306   -0.050189   0.000000   0.001224   0.000006   0.082305   5.677022</span>
+<span class="py-output">   0.000000   0.011687   6.449591    0.016647   0.000000   0.001090   0.000007   0.093280   5.747565</span>
+<span class="py-output">   0.000000   0.011546   6.990431   -0.482814   0.000000   0.001001   0.000006   0.086678   6.454955</span>
+<span class="py-output">   0.000000   0.009380   6.590938   -0.382048   0.000000   0.000938   0.000007   0.100016   6.510729</span>
+<span class="py-output">   0.000000   0.007645   6.966174    0.323627   0.000000   0.000863   0.000008   0.112876   5.703801</span></pre>
+    <p>Plot the results:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(params[<span class="py-string">'freq'</span>],0,params[<span class="py-string">'ampl'</span>],color=<span class="py-string">'k'</span>,linestyle=<span class="py-string">'-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Frequency [c d$^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [magnitude]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.annotate(<span class="py-string">'$\ell=2$'</span>,(6.46,0.015),xycoords=<span class="py-string">'data'</span>,va=<span class="py-string">'bottom'</span>,ha=<span class="py-string">'center'</span>,fontsize=<span class="py-string">'large'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.annotate(<span class="py-string">'$\ell=0$'</span>,(6.59,0.010),xycoords=<span class="py-string">'data'</span>,va=<span class="py-string">'bottom'</span>,ha=<span class="py-string">'center'</span>,fontsize=<span class="py-string">'large'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.annotate(<span class="py-string">'$\ell=1$'</span>,(6.99,0.015),xycoords=<span class="py-string">'data'</span>,va=<span class="py-string">'bottom'</span>,ha=<span class="py-string">'center'</span>,fontsize=<span class="py-string">'large'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(6.2,7.2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0,0.018)</pre>
+
+
+<center><img src='../images/timeseries_freqanalyse_01.png' alt='[image example]' /></center>
+
+  <h1 class="heading">Section 2: Line profile variability</h1>
+    <p>We generate some line profiles as Gaussian profiles, with varying 
+    average. This as an analogue for purely radial variability.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.linspace(4950.,5000.,200.)
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,1.,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>A,sigma,mu = 0.5, 5., 4975.
+<span class="py-prompt">&gt;&gt;&gt; </span>frequency = 1/0.2
+<span class="py-prompt">&gt;&gt;&gt; </span>wshifts = 10.*np.sin(2*np.pi*frequency*times)
+<span class="py-prompt">&gt;&gt;&gt; </span>spectra = np.zeros((len(times),len(wave)))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,wshift <span class="py-keyword">in</span> enumerate(wshifts):
+<span class="py-more">... </span>   spectra[i] = 1.-evaluate.gauss(wave,[A,mu+wshift,sigma])+np.random.normal(size=len(wave),scale=0.01)</pre>
+    <p>Once the line profiles are constructed, we can compute the Fourier 
+    transform of these lines:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>output = spectrum_2D(times,wave,spectra,f0=frequency/2.,fn=3*frequency,df=0.001,threads=2,method=<span class="py-string">'scargle'</span>,subs_av=True,full_output=True)</pre>
+    <p>With this output, we can find retrieve the frequency. We plot the 
+    periodograms for each wavelength bin on the left, and on the right the 
+    average over all wavelength bins:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.imshow(output[<span class="py-string">'pergram'</span>][1][::-1],extent=[wave[0],wave[-1],frequency/2,3*frequency],aspect=<span class="py-string">'auto'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength (A)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Frequency (c/d)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>cbar = pl.colorbar()
+<span class="py-prompt">&gt;&gt;&gt; </span>cbar.set_label(<span class="py-string">'Amplitude'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(output[<span class="py-string">'pergram'</span>][1].mean(axis=1),output[<span class="py-string">'pergram'</span>][0],<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(frequency/2,3*frequency)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Amplitude'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Frequency (c/d)'</span>)</pre>
+<center><img src='../images/timeseries_freqanalyse_02.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>We can then fix the frequency and compute all the parameters. 
+    However, we now choose not to subtract the average profile, but instead
+    use the GLS periodogram to include the constant</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>output = spectrum_2D(times,wave,spectra,f0=frequency-0.05,fn=frequency+0.05,df=0.001,threads=2,method=<span class="py-string">'gls'</span>,subs_av=False,full_output=True)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,output[<span class="py-string">'pars'</span>][<span class="py-string">'const'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_const'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Wavelength (A)'</span>),pl.ylabel(<span class="py-string">'Constant'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,output[<span class="py-string">'pars'</span>][<span class="py-string">'ampl'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_ampl'</span>],fmt=<span class="py-string">'ro-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Wavelength (A)'</span>),pl.ylabel(<span class="py-string">'Amplitude'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(223)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,output[<span class="py-string">'pars'</span>][<span class="py-string">'freq'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_freq'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Wavelength (A)'</span>),pl.ylabel(<span class="py-string">'Frequency (c/d)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(224)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,output[<span class="py-string">'pars'</span>][<span class="py-string">'phase'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_phase'</span>],fmt=<span class="py-string">'ro-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Wavelength (A)'</span>),pl.ylabel(<span class="py-string">'Phase'</span>)</pre>
+<center><img src='../images/timeseries_freqanalyse_03.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 3. Time-frequency analysis</h1>
+    <p>Example usage: we generate some data where the frequency jumps to 
+    double its value in the middle of the time series. The first half is 
+    thus given by</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>params = np.rec.fromarrays([[10.],[1.],[0.],[0.]],names=[<span class="py-string">'freq'</span>,<span class="py-string">'ampl'</span>,<span class="py-string">'const'</span>,<span class="py-string">'phase'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,15,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = evaluate.sine(times,params)</pre>
+    <p>And the second half by</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>params[<span class="py-string">'freq'</span>] = 20.
+<span class="py-prompt">&gt;&gt;&gt; </span>signal[:len(times)/2] = evaluate.sine(times[:len(times)/2],params)</pre>
+    <p>The time-frequency analysis is calculate via the command</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>output = time_frequency(times,signal,fn=30.)</pre>
+    <p>And the outcome can be plotted via</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.imshow(output[<span class="py-string">'pergram'</span>][1].T[::-1],aspect=<span class="py-string">'auto'</span>,extent=[times[0],times[-1],output[<span class="py-string">'pergram'</span>][0][0],output[<span class="py-string">'pergram'</span>][0][-1]])
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Time (d)'</span>),pl.ylabel(<span class="py-string">'Frequency (c/d)'</span>)</pre>
+<center><img src='../images/timeseries_freqanalyse_04.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>or</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(output[<span class="py-string">'times'</span>],output[<span class="py-string">'pars'</span>][<span class="py-string">'const'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_const'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Time (d)'</span>),pl.ylabel(<span class="py-string">'Constant'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(output[<span class="py-string">'times'</span>],output[<span class="py-string">'pars'</span>][<span class="py-string">'ampl'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_ampl'</span>],fmt=<span class="py-string">'ro-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Time (d)'</span>),pl.ylabel(<span class="py-string">'Amplitude'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(223)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(output[<span class="py-string">'times'</span>],output[<span class="py-string">'pars'</span>][<span class="py-string">'freq'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_freq'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Time (d)'</span>),pl.ylabel(<span class="py-string">'Frequency (c/d)'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(224)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(output[<span class="py-string">'times'</span>],output[<span class="py-string">'pars'</span>][<span class="py-string">'phase'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_phase'</span>],fmt=<span class="py-string">'ro-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Time (d)'</span>),pl.ylabel(<span class="py-string">'Phase'</span>)</pre>
+<center><img src='../images/timeseries_freqanalyse_05.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Author: Pieter Degroote</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.freqanalyse-module.html#autocorrelation" class="summary-sig-name">autocorrelation</a>(<span class="summary-sig-arg">frequencies</span>,
+        <span class="summary-sig-arg">power</span>,
+        <span class="summary-sig-arg">max_step</span>=<span class="summary-sig-default">1.5</span>,
+        <span class="summary-sig-arg">interval</span>=<span class="summary-sig-default">()</span>,
+        <span class="summary-sig-arg">threshold</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Compute the autocorrelation.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#autocorrelation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convenience functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array(, 2x1Darray, 1Darray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.freqanalyse-module.html#find_frequency" class="summary-sig-name">find_frequency</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'scargle'</span>,
+        <span class="summary-sig-arg">model</span>=<span class="summary-sig-default">'sine'</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">optimize</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">max_loops</span>=<span class="summary-sig-default">20</span>,
+        <span class="summary-sig-arg">scale_region</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">scale_df</span>=<span class="summary-sig-default">0.20</span>,
+        <span class="summary-sig-arg">model_kwargs</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">correlation_correction</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">prewhiteningorder_snr</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">prewhiteningorder_snr_window</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Find one frequency, automatically going to maximum precision and 
+      return parameters &amp; error estimates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#find_frequency">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">rec array(, ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.freqanalyse-module.html#iterative_prewhitening" class="summary-sig-name">iterative_prewhitening</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">maxiter</span>=<span class="summary-sig-default">1000</span>,
+        <span class="summary-sig-arg">optimize</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'scargle'</span>,
+        <span class="summary-sig-arg">model</span>=<span class="summary-sig-default">'sine'</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">stopcrit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">correlation_correction</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">prewhiteningorder_snr</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">prewhiteningorder_snr_window</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Fit one or more functions to a timeseries via iterative prewhitening.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#iterative_prewhitening">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.freqanalyse-module.html#spectrum_2D" class="summary-sig-name">spectrum_2D</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">matrix</span>,
+        <span class="summary-sig-arg">weights_2d</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">show_progress</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">subs_av</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Compute a 2D periodogram.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#spectrum_2D">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.freqanalyse-module.html#time_frequency" class="summary-sig-name">time_frequency</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">window_width</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">n_windows</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">window</span>=<span class="summary-sig-default">'rectangular'</span>,
+        <span class="summary-sig-arg">detrend</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Short Time (Fourier) Transform.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#time_frequency">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convenience stop-criteria</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="stopcrit_scargle_prob"></a><span class="summary-sig-name">stopcrit_scargle_prob</span>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">modelfunc</span>,
+        <span class="summary-sig-arg">allparams</span>,
+        <span class="summary-sig-arg">pergram</span>,
+        <span class="summary-sig-arg">crit_value</span>)</span><br />
+      Stop criterium based on probability.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#stopcrit_scargle_prob">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="stopcrit_scargle_snr"></a><span class="summary-sig-name">stopcrit_scargle_snr</span>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">modelfunc</span>,
+        <span class="summary-sig-arg">allparams</span>,
+        <span class="summary-sig-arg">pergram</span>,
+        <span class="summary-sig-arg">crit_value</span>,
+        <span class="summary-sig-arg">width</span>=<span class="summary-sig-default">6.</span>)</span><br />
+      Stop criterium based on signal-to-noise ratio.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#stopcrit_scargle_snr">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;TS.FREQANAL&quot;)">logging.getLogger(&quot;TS.FREQANAL&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="find_frequency"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">find_frequency</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default">'scargle'</span>,
+        <span class="sig-arg">model</span>=<span class="sig-default">'sine'</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">optimize</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">max_loops</span>=<span class="sig-default">20</span>,
+        <span class="sig-arg">scale_region</span>=<span class="sig-default">0.1</span>,
+        <span class="sig-arg">scale_df</span>=<span class="sig-default">0.20</span>,
+        <span class="sig-arg">model_kwargs</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">correlation_correction</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">prewhiteningorder_snr</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">prewhiteningorder_snr_window</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#find_frequency">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Find one frequency, automatically going to maximum precision and 
+  return parameters &amp; error estimates.</p>
+  <p>This routine makes the frequency grid finer until it is finer than the
+  estimated error on the frequency. After that, it will compute (harmonic) 
+  parameters and estimate errors.</p>
+  <p>There is a possibility to escape this optimization by setting 
+  scale_df=0 or freqregscale=0.</p>
+  <p>You can include a nonlinear least square update of the parameters, by 
+  setting the keyword <code>optimize=1</code> (optimization outside loop) 
+  or <code>optimize=2</code> (optimization after each iteration).</p>
+  <p>The method with which to find the frequency can be set with the 
+  keyword <code>method</code>, the model used to fit and optimize should be
+  set with <code>model</code>. Extra keywords for the model functions 
+  should go in <code>model_kwargs</code>. If <code>method</code> is a 
+  tuple, the first method will be used for the first frequency search only.
+  This could be useful to take advantage of such methods as fasper which do
+  not allow for iterative zoom-ins. By default, the function looks for the 
+  highest (or deepest in the case of the pdm method) peak, but instead it 
+  is possible to go for the peak having the highest SNR before prewhitening
+  by setting <code>prewhiteningorder_snr</code> to True. In this case, the 
+  noise spectrum is calculated using a convolution with a 
+  <code>prewhiteningorder_snr_window</code> wide box.</p>
+  <p>Possible extra keywords: see definition of the used periodogram 
+  function.</p>
+  <p><b>Warning</b>: the timeseries must be <b>sorted in time</b> and 
+  <b>cannot contain the same timepoint twice</b>. Otherwise, a 'ValueError,
+  concatenation problem' can occur.</p>
+  <p>Example keywords:</p>
+  <ul>
+    <li>
+      'correlation_correction', default=True
+    </li>
+    <li>
+      'freqregscale', default=0.5: factor for zooming in on frequency
+    </li>
+    <li>
+      'dfscale', default = 0.25: factor for optimizing frequency resolution
+    </li>
+  </ul>
+  <p>Example usage: We generate a sine signal</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,100,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = np.sin(2*np.pi*2.5*times) + np.random.normal(size=len(times))</pre>
+  <p>Compute the frequency</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>parameters, pgram, model = find_frequency(times,signal,full_output=True)</pre>
+  <p>Make a plot:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.axes([0.1,0.3,0.85,0.65])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(pgram[0],pgram[1],<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(2.2,2.8)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.axes([0.1,0.1,0.85,0.2])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(pgram[0][:-1],np.diff(pgram[0]),<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(2.2,2.8)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.xlabel(<span class="py-string">'Frequency (c/d)'</span>),pl.ylabel(<span class="py-string">'Frequency resolution $\Delta F$'</span>)</pre>
+<center><img src='../images/timeseries_freqanalyse_06.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Returns: record array(, 2x1Darray, 1Darray)</dt>
+        <dd>parameters and errors(, periodogram, model function)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="iterative_prewhitening"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">iterative_prewhitening</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">maxiter</span>=<span class="sig-default">1000</span>,
+        <span class="sig-arg">optimize</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default">'scargle'</span>,
+        <span class="sig-arg">model</span>=<span class="sig-default">'sine'</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">stopcrit</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">correlation_correction</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">prewhiteningorder_snr</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">prewhiteningorder_snr_window</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#iterative_prewhitening">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit one or more functions to a timeseries via iterative 
+  prewhitening.</p>
+  <p>This function will use <code>find_frequency</code> to fit the function
+  parameters to the original signal (including any previously found 
+  parameters), optimize the parameters if needed, and remove it from the 
+  data to search for a new frequency in the residuals.</p>
+  <p>It is always the original signal that is used to fit all parameters 
+  again; <b>only the (optimized) frequency is remembered from step to 
+  step</b> (Vanicek's method).</p>
+  <p>You best set <code>maxiter</code> to some sensable value, to 
+  hard-limit the number of frequencies that will be searched for. You can 
+  additionally use a <code>stopcrit</code> and stop looking for frequencies
+  once it is reached. <code>stopcrit</code> should be a tuple; the first 
+  argument is the function to call, the other arguments are passed to the 
+  function, after the mandatory arguments <code>times,signal, 
+  modelfunc,allparams,pergram</code>. See <a 
+  href="ivs.timeseries.freqanalyse-module.html#stopcrit_scargle_snr" 
+  class="link">stopcrit_scargle_snr</a> for an example of such a 
+  function.</p>
+  <p>By default, the function looks for the highest (or deepest in the case
+  of the pdm method) peak, but instead it is possible to go for the peak 
+  having the highest SNR before prewhitening by setting 
+  <code>prewhiteningorder_snr</code> to True. In this case, the noise 
+  spectrum is calculated using a convolution with a 
+  <code>prewhiteningorder_snr_window</code> wide box. Usage of this is 
+  strongly encouraged, especially combined with <a 
+  href="ivs.timeseries.freqanalyse-module.html#stopcrit_scargle_snr" 
+  class="link">stopcrit_scargle_snr</a> as <code>stopcrit</code>.</p>
+  <dl class="fields">
+    <dt>Returns: rec array(, ndarray)</dt>
+        <dd>parameters, model(, model function)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="spectrum_2D"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">spectrum_2D</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">matrix</span>,
+        <span class="sig-arg">weights_2d</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">show_progress</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">subs_av</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#spectrum_2D">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute a 2D periodogram.</p>
+  <p>Rows (first axis) should be spectra chronologically</p>
+  <p>x are time points (length N) y are second axis units (e.g. 
+  wavelengths) (length NxM)</p>
+  <p>If the periodogram/wavelength combination has a large range, this 
+  script can produce a <b>ValueError</b> or <b>MemoryError</b>. To solve 
+  this, you could iterate this function over a subset of wavelength bins 
+  yourself, and write the results to a file.</p>
+  <p>This function also outputs a model, which you can use to subtract from
+  the data (probably together with the average profile, which is also 
+  returned) and look further for any frequencies:</p>
+<pre class="literalblock">
+   output = spectrum_2D(x,y,matrix,subs_av=True)
+   new_matrix = matrix - output['avprof'] - output['model'
+   output2 = spectrum_2D(x,y,new_matrix,subs_av=False)
+</pre>
+  <p>If you want to prewhiten a model, you'd probably want to use the same 
+  frequency across the whole line profile. You can hack this by setting 
+  <code>f0=frequency</code> and <code>fn=frequency+df</code> with 
+  <code>df</code> the size of the frequency step.</p>
+  <p><b>Example usage</b>: first we generate some variable line profiles. 
+  In this case, this is just a radial velocity variation</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,150,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>wavel = np.r_[4500:4600:1.0]
+<span class="py-prompt">&gt;&gt;&gt; </span>matrix = np.zeros((len(times),len(wavel)))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> xrange(len(times)):
+<span class="py-more">... </span>  central_wave = 5*np.sin(2*np.pi/10*times[i])
+<span class="py-more">... </span>  matrix[i,:] = 1 - 0.5*np.exp( -(wavel-4550-central_wave)**2/10**2)</pre>
+  <p>Once the line profiles are constructed, we can compute the Fourier 
+  transform of these lines:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>output = spectrum_2D(times,wavel,matrix,method=<span class="py-string">'scargle'</span>,model=<span class="py-string">'sine'</span>,f0=0.05,fn=0.3,subs_av=True,full_output=True)</pre>
+  <p>With this output, we can find retrieve the frequency. We plot the 
+  periodograms for each wavelength bin on the left, and on the right the 
+  average over all wavelength bins:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.imshow(output[<span class="py-string">'pergram'</span>][1][::-1],extent=[wavel[0],wavel[-1],0.05,0.3],aspect=<span class="py-string">'auto'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(output[<span class="py-string">'pergram'</span>][1].mean(axis=1),output[<span class="py-string">'pergram'</span>][0],<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0.05,0.3)</pre>
+  <p>We can then fix the frequency and compute all the parameters. However,
+  we now choose not to subtract the average profile, but instead use the 
+  GLS periodogram to include the constant</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>output = spectrum_2D(times,wavel,matrix,method=<span class="py-string">'gls'</span>,model=<span class="py-string">'sine'</span>,f0=0.095,fn=0.105,full_output=True)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wavel,output[<span class="py-string">'pars'</span>][<span class="py-string">'const'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_const'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wavel,output[<span class="py-string">'pars'</span>][<span class="py-string">'ampl'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_ampl'</span>],fmt=<span class="py-string">'ro-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(223)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wavel,output[<span class="py-string">'pars'</span>][<span class="py-string">'freq'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_freq'</span>],fmt=<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(224)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wavel,output[<span class="py-string">'pars'</span>][<span class="py-string">'phase'</span>],yerr=output[<span class="py-string">'pars'</span>][<span class="py-string">'e_phase'</span>],fmt=<span class="py-string">'ro-'</span>)</pre>
+  <dl class="fields">
+    <dt>Returns: dict</dt>
+        <dd>dict with keys <code>avprof</code> (2D array), <code>pars</code> 
+          (rec array), <code>model</code> (1D array), <code>pergram</code> 
+          (freqs,2Darray)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="time_frequency"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">time_frequency</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">window_width</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">n_windows</span>=<span class="sig-default">100</span>,
+        <span class="sig-arg">window</span>=<span class="sig-default">'rectangular'</span>,
+        <span class="sig-arg">detrend</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#time_frequency">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Short Time (Fourier) Transform.</p>
+  <p>Slide a window through the timeseries, multiply the timeseries with 
+  the window, and perform a Fourier Transform.</p>
+  <p>It is best to fix explicitly <code>f0</code>, <code>fn</code> and 
+  <code>df</code>, to limit the computation time!</p>
+  <p>Extra kwargs go to <a 
+  href="ivs.timeseries.freqanalyse-module.html#find_frequency" 
+  class="link">find_frequency</a></p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>n_windows</code></strong> (integer) - number of slices</li>
+        <li><strong class="pname"><code>window_width</code></strong> (float) - width of each slice (defaults to T/20)</li>
+        <li><strong class="pname"><code>detrend</code></strong> (callable) - detrending function, accepting times and signal as args</li>
+        <li><strong class="pname"><code>window</code></strong> (string) - window function to apply</li>
+    </ul></dd>
+    <dt>Returns: dict</dt>
+        <dd>spectrogram, times used, parameters, errors, points used per 
+          slice</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_pergram</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="autocorrelation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">autocorrelation</span>(<span class="sig-arg">frequencies</span>,
+        <span class="sig-arg">power</span>,
+        <span class="sig-arg">max_step</span>=<span class="sig-default">1.5</span>,
+        <span class="sig-arg">interval</span>=<span class="sig-default">()</span>,
+        <span class="sig-arg">threshold</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.freqanalyse-pysrc.html#autocorrelation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the autocorrelation.</p>
+  <p>The formulate to estimate the autocorrelation in the periodogram 
+  is</p>
+  <p>R(k) = 1 / (n * s^2) * \sum_{t=1}^n (X_t - mu) * (X_{t+k} - mu)</p>
+  <p>where n is the number of points in the interval, mu an estimator for 
+  the sample mean and s is an estimator for the standard deviation of the 
+  sample.</p>
+  <p>When computed over a large interval, we have to take into account that
+  we cannot sample more points than we have in the spectrum, so we have to 
+  average out over fewer and fewer points, the more we shift the 
+  spectrum.</p>
+  <p>Above formula becomes</p>
+  <p>R(k) = 1 / ((n-k) * s^2) * \sum_{t=1}^{n-k} (X_t - mu) * (X_{t+k} - 
+  mu)</p>
+  <p>Highs and lows are cut of. The lower cut off value is the sample mean,
+  the higher cut off is a user-defined multiple of the sample mean.</p>
+  <p>This function can also be used to compute period spacings: just invert
+  the frequency spacing, reverse the order and reinterpolate to be 
+  equidistant: Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>periods = linspace(1./p[0][-1],1./p[0][0],2*len(p[0]))
+<span class="py-prompt">&gt;&gt;&gt; </span>ampl = interpol.linear_interpolation(1./p[0][::-1],p[1][::-1],periods)
+<span class="py-prompt">&gt;&gt;&gt; </span>ampl = where(isnan(ampl),hstack([ampl[1:],ampl[:1]]),ampl)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>frequencies</code></strong> (numpy 1d array) - frequency array</li>
+        <li><strong class="pname"><code>power</code></strong> (numpy 1d array) - power spectrum</li>
+        <li><strong class="pname"><code>max_step</code></strong> (float) - maximum time shift</li>
+        <li><strong class="pname"><code>interval</code></strong> (tuple of floats) - tuple of frequencies (start, end)</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - high cut off value (in units of sample mean)</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>domain of autocorrelation and autocorrelation</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,2955 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.builder.SED</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        <a href="ivs.sed.builder-module.html">Module&nbsp;builder</a> ::
+        Class&nbsp;SED
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.builder.SED-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class SED</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>Class that facilitates the use of the ivs.sed module.</p>
+  <p>This class is meant to be an easy interface to many of the ivs.sed 
+  module's functionality.</p>
+  <p>The most important attributes of SED are:</p>
+  <ol start="1">
+    <li>
+      <code>sed.ID</code>: star's identification (str)
+    </li>
+    <li>
+      <code>sed.photfile</code>: name of the file containing all photometry
+      (str)
+    </li>
+    <li>
+      <code>sed.info</code>: star's information from Simbad (dict)
+    </li>
+    <li>
+      <code>sed.master</code>: photometry data (record array)
+    </li>
+    <li>
+      <code>sed.results</code>: results and summary of the fitting process 
+      (dict)
+    </li>
+  </ol>
+  <p>After fitting, e.g. via calling <a 
+  href="ivs.sed.builder.SED-class.html#igrid_search" 
+  class="link">igrid_search</a>, you can call <a 
+  href="ivs.sed.builder.SED-class.html#get_model" 
+  class="link">get_model</a> to retrieve the full SED matching the best 
+  fitting parameters (or, rather, closely matching them, see the 
+  documentation).</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photfile</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">plx</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">load_fits</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">load_hdf5</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">''</span>)</span><br />
+      Initialize SED class.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#__repr__" class="summary-sig-name">__repr__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Machine readable string representation of an SED object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__repr__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Human readable string representation of an SED object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="generate_ranges"></a><span class="summary-sig-name">generate_ranges</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">type</span>=<span class="summary-sig-default">'single'</span>,
+        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">distribution</span>=<span class="summary-sig-default">'uniform'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate sensible search range for each parameter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.generate_ranges">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Handling photometric data</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#get_photometry" class="summary-sig-name">get_photometry</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ra</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">dec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">include</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">exclude</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">force</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>)</span><br />
+      Search photometry on the net or from the phot file if it exists.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#get_spectrophotometry" class="summary-sig-name">get_spectrophotometry</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">directory</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">force_download</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Retrieve and combine spectra.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_spectrophotometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#exclude" class="summary-sig-name">exclude</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Exclude (any) photometry from fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.exclude">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="exclude_colors"></a><span class="summary-sig-name">exclude_colors</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Exclude (color) photometry from fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.exclude_colors">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="exclude_abs"></a><span class="summary-sig-name">exclude_abs</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Exclude (absolute) photometry from fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.exclude_abs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="include"></a><span class="summary-sig-name">include</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Include (any) photometry in fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.include">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="include_colors"></a><span class="summary-sig-name">include_colors</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Include (color) photometry in fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.include_colors">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="include_abs"></a><span class="summary-sig-name">include_abs</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sources</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">indices</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Include (absolute) photometry in fitting process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.include_abs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#set_photometry_scheme" class="summary-sig-name">set_photometry_scheme</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">scheme</span>,
+        <span class="summary-sig-arg">infrared</span>=<span class="summary-sig-default">(1,'micron')</span>)</span><br />
+      Set a default scheme of colors/absolute values to fit the SED.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_photometry_scheme">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#add_photometry_fromarrays" class="summary-sig-name">add_photometry_fromarrays</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">units</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">flags</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Add photometry from numpy arrays</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_photometry_fromarrays">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Additional information</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">bool</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#is_target" class="summary-sig-name">is_target</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">name</span>)</span><br />
+      Check if this SED represents the object `name'.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.is_target">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">bool</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#has_photfile" class="summary-sig-name">has_photfile</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Check if this SED has a phot file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.has_photfile">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#get_distance_from_plx" class="summary-sig-name">get_distance_from_plx</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">plx</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">lutz_kelker</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">unit</span>=<span class="summary-sig-default">'pc'</span>)</span><br />
+      Get the probability density function for the distance, given a 
+      parallax.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_distance_from_plx">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_interstellar_reddening"></a><span class="summary-sig-name">get_interstellar_reddening</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>)</span><br />
+      Under construction.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_interstellar_reddening">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_angular_diameter"></a><span class="summary-sig-name">get_angular_diameter</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Under construction.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_angular_diameter">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#compute_distance" class="summary-sig-name">compute_distance</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+      Compute distance from radius and angular diameter (scale factor).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.compute_distance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Fitting routines</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#clip_grid" class="summary-sig-name">clip_grid</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Clip grid on CI limit, to save memory.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.clip_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="collect_results"></a><span class="summary-sig-name">collect_results</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">grid</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fitresults</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">selfact</span>=<span class="summary-sig-default">'chisq'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      creates a record array of all fit results and removes the failurs</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.collect_results">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="calculateDF"></a><span class="summary-sig-name">calculateDF</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**ranges</span>)</span><br />
+      Calculates the degrees of freedom from the given ranges</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculateDF">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#calculate_statistics" class="summary-sig-name">calculate_statistics</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ranges</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">selfact</span>=<span class="summary-sig-default">'chisq'</span>)</span><br />
+      Calculates the Chi2 and reduced Chi2 based on nr of observations and 
+      degrees of freedom.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_statistics">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#calculate_confidence_intervals" class="summary-sig-name">calculate_confidence_intervals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2_type</span>=<span class="summary-sig-default">'red'</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Compute confidence interval of all columns in the results grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_confidence_intervals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#store_confidence_intervals" class="summary-sig-name">store_confidence_intervals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">name</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">value</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cilow</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cihigh</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Saves the provided confidence intervals in the result dictionary of 
+      self.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.store_confidence_intervals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#igrid_search" class="summary-sig-name">igrid_search</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">100000</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">(0,0)</span>,
+        <span class="summary-sig-arg">rvrange</span>=<span class="summary-sig-default">(3.1,3.1)</span>,
+        <span class="summary-sig-arg">vradrange</span>=<span class="summary-sig-default">(0,0)</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">set_model</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Fit fundamental parameters using a (pre-integrated) grid search.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.igrid_search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="generate_fit_param"></a><span class="summary-sig-name">generate_fit_param</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">**pars</span>)</span><br />
+      generates a dictionary with parameter information that can be handled
+      by fit.iminimize</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.generate_fit_param">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="calculate_iminimize_CI"></a><span class="summary-sig-name">calculate_iminimize_CI</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'iminimize'</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">0.66</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_iminimize_CI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="calculate_iminimize_CI2D"></a><span class="summary-sig-name">calculate_iminimize_CI2D</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xpar</span>,
+        <span class="summary-sig-arg">ypar</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'iminimize'</span>,
+        <span class="summary-sig-arg">limits</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_iminimize_CI2D">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_get_imin_ci"></a><span class="summary-sig-name">_get_imin_ci</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'iminimize'</span>,
+        <span class="summary-sig-arg">**ranges</span>)</span><br />
+      returns ci information for store_confidence_intervals</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED._get_imin_ci">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="iminimize"></a><span class="summary-sig-name">iminimize</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">z</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">rvrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vradrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">calc_ci</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">set_model</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Basic minimizer method for SED fitting implemented using the lmfit 
+      library from sigproc.fit</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.iminimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="imc"></a><span class="summary-sig-name">imc</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'imc'</span>,
+        <span class="summary-sig-arg">distribution</span>=<span class="summary-sig-default">'uniform'</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'fmin'</span>,
+        <span class="summary-sig-arg">disturb</span>=<span class="summary-sig-default">True</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.imc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Interfaces</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="clear"></a><span class="summary-sig-name">clear</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Clear the results.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.clear">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_best_model"></a><span class="summary-sig-name">set_best_model</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'fitzpatrick2004'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Get reddenend and unreddened model</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_best_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#set_model" class="summary-sig-name">set_model</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">'manual'</span>)</span><br />
+      Manually set the best SED model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#get_model" class="summary-sig-name">get_model</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+      Retrieve the best SED model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#sample_gridsearch" class="summary-sig-name">sample_gridsearch</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">NrSamples</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">selfact</span>=<span class="summary-sig-default">'chisq'</span>)</span><br />
+      Retrieve an element from the results of a grid search according to 
+      the derived probability.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.sample_gridsearch">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#chi2" class="summary-sig-name">chi2</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">select</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">reduced</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+      Calculate chi2 of best model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.chi2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Add constraints</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#add_constraint_distance" class="summary-sig-name">add_constraint_distance</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Use the distance to compute additional information.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_distance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#add_constraint_slo" class="summary-sig-name">add_constraint_slo</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">numax</span>,
+        <span class="summary-sig-arg">Deltanu0</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2_type</span>=<span class="summary-sig-default">'red'</span>)</span><br />
+      Use diagnostics from solar-like oscillations to put additional 
+      constraints on the parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_slo">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#add_constraint_reddening" class="summary-sig-name">add_constraint_reddening</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e_ebv</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">model</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2_type</span>=<span class="summary-sig-default">'red'</span>,
+        <span class="summary-sig-arg">upper_limit</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Use reddening maps to put additional constraints on the parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_reddening">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="add_constraint_angular_diameter"></a><span class="summary-sig-name">add_constraint_angular_diameter</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">angdiam</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_angular_diameter">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#add_constraint_mass" class="summary-sig-name">add_constraint_mass</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mass</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2_type</span>=<span class="summary-sig-default">'red'</span>)</span><br />
+      Add constraints on the mass.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_mass">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="add_constraint_evolution_models"></a><span class="summary-sig-name">add_constraint_evolution_models</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">models</span>=<span class="summary-sig-default">'siess2000'</span>,
+        <span class="summary-sig-arg">ylabels</span>=<span class="summary-sig-default">['age','labs','radius']</span>,
+        <span class="summary-sig-arg">e_y</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">function</span>=<span class="summary-sig-default">'linear'</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2_type</span>=<span class="summary-sig-default">'red'</span>)</span><br />
+      Use stellar evolutionary models to put additional constraints on the 
+      parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_evolution_models">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Plotting routines</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#_label_dict" class="summary-sig-name" onclick="show_private();">_label_dict</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">param</span>)</span><br />
+      Returns the label belonging to a certain parameter</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED._label_dict">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_grid" class="summary-sig-name">plot_grid</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>=<span class="summary-sig-default">'teff'</span>,
+        <span class="summary-sig-arg">y</span>=<span class="summary-sig-default">'logg'</span>,
+        <span class="summary-sig-arg">ptype</span>=<span class="summary-sig-default">'ci_red'</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">limit</span>=<span class="summary-sig-default">0.95</span>,
+        <span class="summary-sig-arg">d</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot grid as scatter plot</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_CI2D" class="summary-sig-name">plot_CI2D</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xpar</span>=<span class="summary-sig-default">'teff'</span>,
+        <span class="summary-sig-arg">ypar</span>=<span class="summary-sig-default">'logg'</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'iminimize'</span>,
+        <span class="summary-sig-arg">ptype</span>=<span class="summary-sig-default">'ci_red'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot a 2D confidence intervall calculated using the CI2D computation 
+      from calculate_iminimize_CI2D.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_CI2D">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_data" class="summary-sig-name">plot_data</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">plot_unselected</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">unit_wavelength</span>=<span class="summary-sig-default">'angstrom'</span>,
+        <span class="summary-sig-arg">unit_flux</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot only the SED data.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_data">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_sed" class="summary-sig-name">plot_sed</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">plot_deredded</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">plot_unselected</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot a fitted SED together with the data.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_sed">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_chi2" class="summary-sig-name">plot_chi2</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+      Plot chi2 statistic for every datapoint included in the fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_chi2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_distance" class="summary-sig-name">plot_distance</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_distance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_grid_model" class="summary-sig-name">plot_grid_model</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ptype</span>=<span class="summary-sig-default">'prob'</span>)</span><br />
+      Grid of models</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_grid_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_MW_side" class="summary-sig-name">plot_MW_side</a>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_MW_side">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_MW_top" class="summary-sig-name">plot_MW_top</a>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_MW_top">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_finderchart" class="summary-sig-name">plot_finderchart</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">cmap_photometry</span>=<span class="summary-sig-default">pl.cm.spectral</span>,
+        <span class="summary-sig-arg">window_size</span>=<span class="summary-sig-default">5.</span>)</span><br />
+      Size is x and y width in arcminutes</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_finderchart">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="make_plots"></a><span class="summary-sig-name">make_plots</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Make all available plots</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.make_plots">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Input and output</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#save_photometry" class="summary-sig-name">save_photometry</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">photfile</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Save master photometry to a file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#load_photometry" class="summary-sig-name">load_photometry</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">photfile</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Load the contents of the photometry file to the master record.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#save_fits" class="summary-sig-name">save_fits</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">overwrite</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Save content of SED object to a FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_fits">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#load_fits" class="summary-sig-name">load_fits</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Load a previously made SED FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_fits">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">string</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#save_hdf5" class="summary-sig-name">save_hdf5</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">update</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Save content of SED object to a HDF5 file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_hdf5">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">bool</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#load_hdf5" class="summary-sig-name">load_hdf5</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Load a previously made SED from HDF5 file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_hdf5">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#save_bibtex" class="summary-sig-name">save_bibtex</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Convert the bibcodes in a phot file to a bibtex file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_bibtex">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="save_summary"></a><span class="summary-sig-name">save_summary</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2type</span>=<span class="summary-sig-default">'ci_red'</span>)</span><br />
+      Save a summary of the results to an ASCII file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_summary">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#ci2str" class="summary-sig-name">ci2str</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+      Prints the stored confidence intervals of the given mtype, the 
+      confidence intervals are sorted alfabetically.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.ci2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photfile</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">plx</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">load_fits</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">load_hdf5</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">label</span>=<span class="sig-default">''</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Initialize SED class.</p>
+  <p>Different ways to initialize:</p>
+  <p><b>1. If no previous data are saved:</b></p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed = SED(<span class="py-string">'HD129929'</span>)</pre>
+  <p><b>2. If previous data exists:</b></p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#mysed = SED(photfile='HD129929.phot') # will set ID with 'oname' field from SIMBAD</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#mysed = SED(ID='bla', photfile='HD129929.phot') # Sets custom ID</span></pre>
+  <p>The <code>ID</code> variable is used internally to look up data, so it
+  should be something SIMBAD understands and that designates the 
+  target.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>plx</code></strong> (tuple (plx,e_plx)) - parallax (and error) of the object</li>
+    </ul></dd>
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__repr__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__repr__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__repr__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Machine readable string representation of an SED object.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__repr__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Human readable string representation of an SED object.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__str__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_photometry</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">radius</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ra</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">dec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">include</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">exclude</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">force</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Search photometry on the net or from the phot file if it exists.</p>
+  <p>For bright stars, you can set radius a bit higher...</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>radius</code></strong> (float.) - search radius (arcseconds)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_spectrophotometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_spectrophotometry</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">directory</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">force_download</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_spectrophotometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve and combine spectra.</p>
+  <p><b>WARNING:</b> this function creates FUSE and DIR directories!</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="exclude"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">exclude</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">names</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">sources</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">indices</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.exclude">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Exclude (any) photometry from fitting process.</p>
+  <p>If called without arguments, all photometry will be excluded.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="set_photometry_scheme"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_photometry_scheme</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">scheme</span>,
+        <span class="sig-arg">infrared</span>=<span class="sig-default">(1,'micron')</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_photometry_scheme">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set a default scheme of colors/absolute values to fit the SED.</p>
+  <p>Possible values:</p>
+  <ol start="1">
+    <li>
+      scheme = 'abs': means excluding all colors, including all absolute 
+      values
+    </li>
+    <li>
+      scheme = 'color': means including all colors, excluding all absolute 
+      values
+    </li>
+    <li>
+      scheme = 'combo': means inculding all colors, and one absolute value 
+      per system (the one with the smallest relative error)
+    </li>
+    <li>
+      scheme = 'irfm': means mimic infrared flux method: choose absolute 
+      values in the infrared (define with <code>infrared</code>), and 
+      colours in the optical
+    </li>
+  </ol>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>infrared</code></strong> (tuple (value &lt;float&gt;, unit &lt;str&gt;)) - definition of start of infrared for infrared flux method</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="add_photometry_fromarrays"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">add_photometry_fromarrays</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">units</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">source</span>,
+        <span class="sig-arg">flags</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_photometry_fromarrays">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Add photometry from numpy arrays</p>
+  <p>By default unflagged, and at the ra and dec of the star. No color and 
+  included.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>meas</code></strong> (array) - original measurements (fluxes, magnitudes...)</li>
+        <li><strong class="pname"><code>e_meas</code></strong> (array) - error on original measurements in same units as <code>meas</code></li>
+        <li><strong class="pname"><code>units</code></strong> (array of strings) - units of original measurements</li>
+        <li><strong class="pname"><code>photbands</code></strong> (array of strings) - photometric passbands of original measurements</li>
+        <li><strong class="pname"><code>source</code></strong> (array of strings) - source of original measurements</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="is_target"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">is_target</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">name</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.is_target">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Check if this SED represents the object `name'.</p>
+  <p>Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
+  checking for &quot;V* V836 Cen&quot;, which is the same target.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str) - object name</li>
+    </ul></dd>
+    <dt>Returns: bool</dt>
+        <dd>True if this object instance represent the target 
+          &quot;name&quot;.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="has_photfile"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">has_photfile</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.has_photfile">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Check if this SED has a phot file.</p>
+  <dl class="fields">
+    <dt>Returns: bool</dt>
+        <dd>True if this object instance has a photfile</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_distance_from_plx"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_distance_from_plx</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">plx</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">lutz_kelker</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">unit</span>=<span class="sig-default">'pc'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_distance_from_plx">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get the probability density function for the distance, given a 
+  parallax.</p>
+  <p>If no parallax is given, the catalogue value will be used. If that one
+  is also not available, a ValueError will be raised.</p>
+  <p>Parallax must be given in mas.</p>
+  <p>If the parallax is a float without uncertainty, an uncertainty of 0 
+  will be assumed.</p>
+  <p>If <code>lutz_kelker=True</code>, a probability density function will 
+  be given for the distance, otherwise the distance is computed from simply
+  inverting the parallax.</p>
+  <p>Distance is returned in parsec (pc).</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>distance</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_distance"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_distance</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.compute_distance">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute distance from radius and angular diameter (scale factor).</p>
+  <p>The outcome is added to the <code>results</code> attribute:</p>
+<pre class="literalblock">
+   distance = r/sqrt(scale)
+</pre>
+  <p>This particularly useful when you added constraints from solar-like 
+  oscillations (<a href="ivs.sed.builder.SED-class.html#add_constraint_slo"
+  class="link">add_constraint_slo</a>).</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>distance,uncertainty (pc)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="clip_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">clip_grid</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">CI_limit</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.clip_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Clip grid on CI limit, to save memory.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>mtype</code></strong> (str) - type or results to clip</li>
+        <li><strong class="pname"><code>CI_limit</code></strong> (float (between 0 (clips everything) and 1 (clips nothing))) - confidence limit to clip on</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_statistics"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_statistics</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ranges</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">selfact</span>=<span class="sig-default">'chisq'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_statistics">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates the Chi2 and reduced Chi2 based on nr of observations and 
+  degrees of freedom. If df is not provided, tries to calculate df from the
+  fitting ranges.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_confidence_intervals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_confidence_intervals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">chi2_type</span>=<span class="sig-default">'red'</span>,
+        <span class="sig-arg">CI_limit</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.calculate_confidence_intervals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute confidence interval of all columns in the results grid.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>mtype</code></strong> (str) - type of results to compute confidence intervals of</li>
+        <li><strong class="pname"><code>chi2_type</code></strong> (str ('raw' or 'red')) - type of chi2 (raw or reduced)</li>
+        <li><strong class="pname"><code>CI_limit</code></strong> (float (between 0 (clips everything) and 1 (clips nothing))) - confidence limit to clip on</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="store_confidence_intervals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">store_confidence_intervals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">name</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">value</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">cilow</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">cihigh</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.store_confidence_intervals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Saves the provided confidence intervals in the result dictionary of 
+  self. The provided confidence intervals will be saved in a dictionary: 
+  self.results[mtype]['CI'] with as key for the value the name, for cilow: 
+  name_l and for cihigh: name_u.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>mtype</code></strong> (str) - the search type</li>
+        <li><strong class="pname"><code>name</code></strong> (array) - names of the parameters</li>
+        <li><strong class="pname"><code>value</code></strong> (array) - best fit values</li>
+        <li><strong class="pname"><code>cilow</code></strong> (array) - lower CI limit</li>
+        <li><strong class="pname"><code>cihigh</code></strong> (array) - upper CI limit</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="igrid_search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">igrid_search</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">100000</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">zrange</span>=<span class="sig-default">(0,0)</span>,
+        <span class="sig-arg">rvrange</span>=<span class="sig-default">(3.1,3.1)</span>,
+        <span class="sig-arg">vradrange</span>=<span class="sig-default">(0,0)</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">CI_limit</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">set_model</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.igrid_search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit fundamental parameters using a (pre-integrated) grid search.</p>
+  <p>If called consecutively, the ranges will be set to the CI_limit of 
+  previous estimations, unless set explicitly.</p>
+  <p>If called for the first time, the ranges will be +/- np.inf by 
+  defaults, unless set explicitly.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="set_model"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_model</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">label</span>=<span class="sig-default">'manual'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_model">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Manually set the best SED model.</p>
+  <p>This is particularly useful when working with calibrators for which 
+  there is an observed SED.</p>
+  <p>The label will be used to store the model in the <code>results</code> 
+  attribute.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength array (angstrom)</li>
+        <li><strong class="pname"><code>flux</code></strong> (ndarray) - flux array (erg/s/cm2/AA)</li>
+        <li><strong class="pname"><code>label</code></strong> (s str) - key used to store the model and synthetic photometry in 
+          <code>results</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_model"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_model</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">label</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.get_model">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the best SED model.</p>
+  <p><b>Warning</b>: the grid search interpolation is also done with 
+  interpolation in metallicity, while this is not the case for the best 
+  full SED model. Interpolation of the full SED is only done in teff/logg, 
+  and the metallicity is chosen to be equal to the closest grid point. On 
+  the other hand, while the reddening value is interpolated in the grid 
+  search, this is not the case for the best model (the model is simply 
+  reddened according the found best value). So don't be surprised if you 
+  find differences between the values of 
+  <code>self.results[label]['synflux']</code>, which are the value sfor the
+  interpolated photometric points of the best model, and the synthetic 
+  photometry obtained by manual integration of the returned full SED model.
+  Those differences should be incredible small and mainly due to the 
+  metallicity.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="sample_gridsearch"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sample_gridsearch</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">NrSamples</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">selfact</span>=<span class="sig-default">'chisq'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.sample_gridsearch">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve an element from the results of a grid search according to the
+  derived probability.</p>
+  <p>An array of length &quot;NrSamples&quot; containing 'grid-indices' is 
+  returned, so the actual parameter values of the corresponding model can 
+  be retrieved from the results dictionary.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>NrSamples</code></strong> (int) - the number of samples you wish to draw</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="chi2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">chi2</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">select</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">reduced</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">label</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.chi2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate chi2 of best model.</p>
+  <p>TEMPORARY!!! API WILL CHANGE!!!</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="add_constraint_distance"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">add_constraint_distance</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">distance</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_distance">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Use the distance to compute additional information.</p>
+  <p>Compute radii, absolute luminosities and masses, and add them to the 
+  results.</p>
+  <p>Extra kwargs go to <a 
+  href="ivs.sed.builder.SED-class.html#get_distance_from_plx" 
+  class="link">get_distance_from_plx</a>.</p>
+  <p><b>Warning:</b> after calling this function, the <code>labs</code> 
+  column in the grid is actually absolutely calibrated and reflects the 
+  true absolute luminosity instead of the absolute luminosity assuming 1 
+  solar radius.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>distance</code></strong> (tuple (float,float)) - distance in solar units and error</li>
+        <li><strong class="pname"><code>mtype</code></strong> (str) - type of results to add the information to</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="add_constraint_slo"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">add_constraint_slo</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">numax</span>,
+        <span class="sig-arg">Deltanu0</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">chi2_type</span>=<span class="sig-default">'red'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_slo">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Use diagnostics from solar-like oscillations to put additional 
+  constraints on the parameters.</p>
+  <p>If the results are constrained with the distance before <a 
+  href="ivs.sed.builder.SED-class.html#add_constraint_distance" 
+  class="link">add_constraint_distance</a>, then these results are combined
+  with the SLO constraints.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>numax</code></strong> (3-tuple (value,error,unit)) - frequency of maximum amplitude</li>
+        <li><strong class="pname"><code>Deltanu0</code></strong> (3-tuple (value,error,unit)) - large separation (l=0)</li>
+        <li><strong class="pname"><code>chi2_type</code></strong> (str ('raw' or 'red')) - type of chi2 (raw or reduced)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="add_constraint_reddening"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">add_constraint_reddening</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">distance</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e_ebv</span>=<span class="sig-default">0.1</span>,
+        <span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">model</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">chi2_type</span>=<span class="sig-default">'red'</span>,
+        <span class="sig-arg">upper_limit</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_reddening">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Use reddening maps to put additional constraints on the 
+  parameters.</p>
+  <p>This constraint assumes that, if <code>upper_limit=False</code>, given
+  the distance to target, the reddening from the reddening maps is similar 
+  to the one derived from the SED. All models where this is not the case 
+  will be deemed improbable.</p>
+  <p>If <code>upper_limit=True</code>, all models with an E(B-V) value 
+  above <code>ebv</code> will be considered improbable.</p>
+  <p>When you don't set <code>ebv</code>, the value will, by default, be 
+  derived from Drimmel maps if <code>upper_limit=False</code> and from 
+  Schlegel if <code>upper_limit=True</code>. You can change this behaviour 
+  by setting <code>model</code> manually.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>distance</code></strong> (tuple (float,float)) - distance and uncertainty in parsec</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - E(B-V) reddening in magnitude</li>
+        <li><strong class="pname"><code>e_ebv</code></strong> (float) - error on the reddening in percentage</li>
+        <li><strong class="pname"><code>model</code></strong> (str) - model reddening maps</li>
+        <li><strong class="pname"><code>mtype</code></strong> (str) - type of results to add the information to</li>
+        <li><strong class="pname"><code>upper_limit</code></strong> (bool) - consider the E(B-V) value as an upper limit</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="add_constraint_mass"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">add_constraint_mass</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mass</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">chi2_type</span>=<span class="sig-default">'red'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_constraint_mass">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Add constraints on the mass.</p>
+  <p><code>mass</code> must be a tuple, if the second element is smaller 
+  than the first, it is assumed to be (mu,sigma) from a normal 
+  distribution. If the second element is larger than the first, it is 
+  assumed to be (lower, upper) from a uniform distribution.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_label_dict"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_label_dict</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">param</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED._label_dict">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the label belonging to a certain parameter</p>
+  <p>If the label is not present, the function will just return param.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_grid</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x</span>=<span class="sig-default">'teff'</span>,
+        <span class="sig-arg">y</span>=<span class="sig-default">'logg'</span>,
+        <span class="sig-arg">ptype</span>=<span class="sig-default">'ci_red'</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">limit</span>=<span class="sig-default">0.95</span>,
+        <span class="sig-arg">d</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot grid as scatter plot</p>
+  <p>Prameter<code>ptype</code> sets the colors of the scattered points 
+  (e.g., 'ci_red','z','ebv').</p>
+  <p>Example usage:</p>
+  <p>First set the SED:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed = SED(<span class="py-string">'HD180642'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.load_fits()</pre>
+  <p>Then make the plots:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(221);mysed.plot_grid(limit=None)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222);mysed.plot_grid(x=<span class="py-string">'ebv'</span>,y=<span class="py-string">'z'</span>,limit=None)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(223);mysed.plot_grid(x=<span class="py-string">'teff'</span>,y=<span class="py-string">'ebv'</span>,limit=None)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(224);mysed.plot_grid(x=<span class="py-string">'logg'</span>,y=<span class="py-string">'z'</span>,limit=None)</pre>
+<center><img src='../images/ivs_sed_builder_plot_grid_01.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_CI2D"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_CI2D</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">xpar</span>=<span class="sig-default">'teff'</span>,
+        <span class="sig-arg">ypar</span>=<span class="sig-default">'logg'</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'iminimize'</span>,
+        <span class="sig-arg">ptype</span>=<span class="sig-default">'ci_red'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_CI2D">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot a 2D confidence intervall calculated using the CI2D computation 
+  from calculate_iminimize_CI2D. Make sure you first calculate the grid you
+  want using the calculate_iminimize_CI2D function.</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_data"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_data</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">colors</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">plot_unselected</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">unit_wavelength</span>=<span class="sig-default">'angstrom'</span>,
+        <span class="sig-arg">unit_flux</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_data">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot only the SED data.</p>
+  <p>Extra kwargs are passed to plotting functions.</p>
+  <p>The decorator provides an keyword <code>savefig</code>. When set to 
+  <code>True</code>, an image name is generated automatically (very long!),
+  and the figure is closed. When set to a string, the image is saved with 
+  that name, and the figure is closed. When <code>savefig</code> is not 
+  given, the image will stay open so that the user can still access all 
+  plot elements and do further enhancements.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>colors</code></strong> (boolean) - if False, plot absolute values, otherwise plot colors (flux 
+          ratios)</li>
+        <li><strong class="pname"><code>plot_unselected</code></strong> - if True, all photometry is plotted, otherwise only those that are
+          selected</li>
+    </ul></dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_sed"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_sed</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">colors</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">plot_deredded</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">plot_unselected</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_sed">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot a fitted SED together with the data.</p>
+  <p>Example usage:</p>
+  <p>First set the SED:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed = SED(<span class="py-string">'HD180642'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.load_fits()</pre>
+  <p>Then make the plots:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.plot_sed(colors=False)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.plot_sed(colors=True)</pre>
+<center><img src='../images/ivs_sed_builder_plot_sed_01.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_chi2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_chi2</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">colors</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_chi2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot chi2 statistic for every datapoint included in the fit.</p>
+  <p>To plot the statistic from the included absolute values, set 
+  <code>colors=False</code>.</p>
+  <p>To plot the statistic from the included colors, set 
+  <code>colors=True</code>.</p>
+  <p>Example usage:</p>
+  <p>First set the SED:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed = SED(<span class="py-string">'HD180642'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.load_fits()</pre>
+  <p>Then make the plots:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.plot_chi2(colors=False)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysed.plot_chi2(colors=True)</pre>
+<center><img src='../images/ivs_sed_builder_plot_chi2_01.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>colors</code></strong> (boolean) - flag to distinguish between colors and absolute values</li>
+    </ul></dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_distance"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_distance</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_distance">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_grid_model"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_grid_model</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ptype</span>=<span class="sig-default">'prob'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_grid_model">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Grid of models</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_MW_side"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_MW_side</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_MW_side">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_MW_top"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_MW_top</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_MW_top">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_finderchart"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_finderchart</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">cmap_photometry</span>=<span class="sig-default">pl.cm.spectral</span>,
+        <span class="sig-arg">window_size</span>=<span class="sig-default">5.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_finderchart">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Size is x and y width in arcminutes</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@standalone_figure</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="save_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">save_photometry</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">photfile</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Save master photometry to a file.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>photfile</code></strong> (str) - name of the photfile. Defaults to <code>starname.phot</code>.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="load_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">load_photometry</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">photfile</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Load the contents of the photometry file to the master record.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>photfile</code></strong> (str) - name of the photfile. Defaults to the value of 
+          <code>self.photfile</code>.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="save_fits"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">save_fits</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">overwrite</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_fits">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Save content of SED object to a FITS file. 
+
+The .fits file will contain the following extensions if they are present in the object:
+   1) data (all previously collected photometric data = content of .phot file)
+   2) model_igrid_search (full best model SED table from grid_search)
+   3) igrid_search (CI from grid search = actual grid samples)
+   4) synflux_igrid_search (integrated synthetic fluxes for best model from grid_search)
+   5) model_imc (full best model SED table from monte carlo)
+   6) imc (CI from monte carlo = actual monte carlo samples)
+   7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
+
+@param filename: name of SED FITS file
+@type filename: string
+@param overwrite: overwrite old FITS file if true
+@type overwrite: boolean
+
+Example usage:
+
+&gt;&gt;&gt; #mysed.save_fits()
+&gt;&gt;&gt; #mysed.save_fits(filename='myname.fits')
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="load_fits"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">load_fits</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_fits">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Load a previously made SED FITS file. Only works for SEDs saved with 
+the save_fits function after 14.06.2012.
+
+The .fits file can contain the following extensions:
+   1) data (all previously collected photometric data = content of .phot file)
+   2) model_igrid_search (full best model SED table from grid_search)
+   3) igrid_search (CI from grid search = actual grid samples)
+   4) synflux_igrid_search (integrated synthetic fluxes for best model from grid_search)
+   5) model_imc (full best model SED table from monte carlo)
+   6) imc (CI from monte carlo = actual monte carlo samples)
+   7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
+
+@param filename: name of SED FITS file
+@type filename: string
+@rtype: bool
+@return: true if Fits file could be loaded
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="save_hdf5"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">save_hdf5</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">update</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_hdf5">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Save content of SED object to a HDF5 file. (HDF5 is the successor of 
+  FITS files, providing a clearer structure of the saved content.) This way
+  of saving is more thorough that save_fits(), fx. the CI2D confidence 
+  intervals are not save to a fits file, but are saved to a hdf5 file. 
+  Currently the following data is saved to HDF5 file:</p>
+  <ul>
+    <li>
+      sed.master (photometry)
+    </li>
+    <li>
+      sed.results (results from all fitting methods)
+    </li>
+    <li>
+      sed.constraints (extra constraints on the fits)
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (string) - name of SED FITS file</li>
+        <li><strong class="pname"><code>update</code></strong> (bool) - if True, an existing file will be updated with the current 
+          information, if False, an existing fill be overwritten</li>
+    </ul></dd>
+    <dt>Returns: string</dt>
+        <dd>the name of the output HDF5 file.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="load_hdf5"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">load_hdf5</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.load_hdf5">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Load a previously made SED from HDF5 file.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (string) - name of SED FITS file</li>
+    </ul></dd>
+    <dt>Returns: bool</dt>
+        <dd>True if HDF5 file could be loaded</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="save_bibtex"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">save_bibtex</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_bibtex">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the bibcodes in a phot file to a bibtex file.</p>
+  <p>The first line in the bibtex file contains a \citet command citing all
+  photometry.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="ci2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">ci2str</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.ci2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prints the stored confidence intervals of the given mtype, the 
+  confidence intervals are sorted alfabetically.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>mtype</code></strong> (str) - the search type for which to show the ci</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>The confidence intervals in a string</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

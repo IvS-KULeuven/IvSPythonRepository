@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.spectra.lsd</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.spectra-module.html">Package&nbsp;spectra</a> ::
+        Module&nbsp;lsd
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.spectra.lsd-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module lsd</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.spectra.lsd-pysrc.html">source&nbsp;code</a></span></p>
+<p>Compute Least-Square-Deconvolutions of spectra.</p>
+  <h1 class="heading">Section 1. Single stars</h1>
+    <h2 class="heading">Section 1.1 Without Tikhonov regularization</h2>
+      <p>Generate some spectra of a single star:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>velos,V,S,masks = __generate_test_spectra(1,binary=False,noise=0.01)</pre>
+      <p>Compute the LSD profiles in certain radial velocity range:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs = np.linspace(-10,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>Z,cc = lsd(velos,V,S,rvs,masks)</pre>
+      <p>Plot both the input spectrum and the LSD and CCF profiles:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(velos,V[:,0],<span class="py-string">'k-'</span>,label=<span class="py-string">'Observation'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(masks[0][0],1,1-np.array(masks[0][1]),color=<span class="py-string">'r'</span>,label=<span class="py-string">'Mask'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,Z[0][0],<span class="py-string">'k-'</span>,label=<span class="py-string">'LSD'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,cc[0][0],<span class="py-string">'r-'</span>,label=<span class="py-string">'CCF'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)</pre>
+<center><img src='../images/ivs_spectra_lsd01.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <h2 class="heading">Section 1.2 With Tikhonov regularization</h2>
+      <p>Do the same as above, but for more noise and different Tikhonov 
+      regularizations.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>velos,V,S,masks = __generate_test_spectra(1,binary=False,noise=0.1)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs = np.linspace(-10,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lambdas = [0.,0.1,0.5,1.0]
+<span class="py-prompt">&gt;&gt;&gt; </span>output = [lsd(velos,V,S,rvs,masks,Lambda=lam) <span class="py-keyword">for</span> lam <span class="py-keyword">in</span> lambdas]</pre>
+      <p>We plot both the input spectrum and the LSD and CCF profiles:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(velos,V[:,0],<span class="py-string">'k-'</span>,label=<span class="py-string">'Observation'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(masks[0][0],1,1-np.array(masks[0][1]),color=<span class="py-string">'r'</span>,label=<span class="py-string">'Mask'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> lam,(Z,cc) <span class="py-keyword">in</span> zip(lambdas,output):
+<span class="py-more">... </span>    p = pl.plot(rvs,Z[0][0],<span class="py-string">'-'</span>,label=<span class="py-string">'$\Lambda$=%.1f'</span>%(lam),lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)</pre>
+<center><img src='../images/ivs_spectra_lsd02.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Binary stars</h1>
+    <p>Generate some spectra of a binary star:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>velos,V,S,masks = __generate_test_spectra(1,binary=True,noise=0.01)</pre>
+    <p>Compute the LSD profiles in certain radial velocity range, first 
+    using only one line mask, then both:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs = np.linspace(-10,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>Z1,cc1 = lsd(velos,V,S,rvs,masks[:1])
+<span class="py-prompt">&gt;&gt;&gt; </span>Z2,cc2 = lsd(velos,V,S,rvs,masks)</pre>
+    <p>Plot both the spectrum and the LSD and CCF profiles. Note that the 
+    CCF in the binary case is exactly the same as in the single star case 
+    (see implementation). First, we plot the LSD profile under the 
+    assumption of a single star. Second, we plot the LSD profile when 
+    taking binarity into account.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(velos,V[:,0],<span class="py-string">'k-'</span>,label=<span class="py-string">'Observation'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(masks[0][0],1,1-np.array(masks[0][1]),color=<span class="py-string">'r'</span>,label=<span class="py-string">'Mask 1'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,Z1[0][0],<span class="py-string">'k-'</span>,label=<span class="py-string">'LSD 1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,cc1[0][0],<span class="py-string">'r-'</span>,label=<span class="py-string">'CCF 1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)</pre>
+<center><img src='../images/ivs_spectra_lsd03.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(velos,V[:,0],<span class="py-string">'k-'</span>,label=<span class="py-string">'Observation'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(masks[0][0],1,1-np.array(masks[0][1]),color=<span class="py-string">'r'</span>,label=<span class="py-string">'Mask 1'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.vlines(masks[1][0],1,1-np.array(masks[1][1]),color=<span class="py-string">'b'</span>,label=<span class="py-string">'Mask 2'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,Z2[0][0],<span class="py-string">'r-'</span>,label=<span class="py-string">'LSD 1'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rvs,Z2[0][1],<span class="py-string">'b-'</span>,label=<span class="py-string">'LSD 2'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'best'</span>)</pre>
+<center><img src='../images/ivs_spectra_lsd04.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">2D array, 2D array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.spectra.lsd-module.html#lsd" class="summary-sig-name">lsd</a>(<span class="summary-sig-arg">velos</span>,
+        <span class="summary-sig-arg">V</span>,
+        <span class="summary-sig-arg">S</span>,
+        <span class="summary-sig-arg">rvs</span>,
+        <span class="summary-sig-arg">masks</span>,
+        <span class="summary-sig-arg">Lambda</span>=<span class="summary-sig-default">0.</span>)</span><br />
+      Compute LSD profiles and cross correlation functions.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.lsd-pysrc.html#lsd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__generate_test_spectra"></a><span class="summary-sig-name">__generate_test_spectra</span>(<span class="summary-sig-arg">Nspec</span>,
+        <span class="summary-sig-arg">binary</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">noise</span>=<span class="summary-sig-default">0.01</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.spectra.lsd-pysrc.html#__generate_test_spectra">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="lsd"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">lsd</span>(<span class="sig-arg">velos</span>,
+        <span class="sig-arg">V</span>,
+        <span class="sig-arg">S</span>,
+        <span class="sig-arg">rvs</span>,
+        <span class="sig-arg">masks</span>,
+        <span class="sig-arg">Lambda</span>=<span class="sig-default">0.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.spectra.lsd-pysrc.html#lsd">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute LSD profiles and cross correlation functions.</p>
+  <p>Possibility to include Tikhonov regularization to clean up the 
+  profiles, when setting <code>Lambda&gt;0</code>.</p>
+  <p>Possibility to include multiprofile LSD. Parameter <code>masks</code> 
+  should be a list of <code>(centers,weights)</code> (if you give only one 
+  mask, give <code>masks=[(centers,weights)]</code>.</p>
+  <p>See Donati, 1997 for the original paper and Kochukhov, 2010 for 
+  extensions.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>velos</code></strong> (array of length N_spec) - velocity vector of observations</li>
+        <li><strong class="pname"><code>V</code></strong> (N_obs x N_spec array) - observation array</li>
+        <li><strong class="pname"><code>S</code></strong> (array of length N_spec) - weights of individual pixels</li>
+        <li><strong class="pname"><code>rvs</code></strong> (array of length N_rv) - radial velocity vector to compute the profile on</li>
+        <li><strong class="pname"><code>Lambda</code></strong> (float) - Tikhonov regularization parameter</li>
+        <li><strong class="pname"><code>masks</code></strong> (list (length N_mask) of tuples of 1D arrays) - list of tuples (center velocities, weights)</li>
+    </ul></dd>
+    <dt>Returns: 2D array, 2D array</dt>
+        <dd>LSD profile, CCF of shape (N_obs x (N_rv.N_mask))</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

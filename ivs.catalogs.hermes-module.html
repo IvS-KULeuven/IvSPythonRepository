@@ -1,0 +1,1447 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.catalogs.hermes</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.catalogs-module.html">Package&nbsp;catalogs</a> ::
+        Module&nbsp;hermes
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.catalogs.hermes-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module hermes</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface the spectra from the Hermes spectrograph.</p>
+  <p>The most important function is <a 
+  href="ivs.catalogs.hermes-module.html#search" class="link">search</a>. 
+  This looks in SIMBAD for the coordinates of a given object, and finds all
+  spectra matching those within a given radius. If the object's name is not
+  recognised, it will look for correspondence between the given name and 
+  the contents of the FITS header's keyword <code>object</code>. <a 
+  href="ivs.catalogs.hermes-module.html#search" class="link">search</a> 
+  returns a record array, so that you can easily access all columns by 
+  their names.</p>
+  <p>Note that Hermes spectra retrieved in <b>logscale</b> should <b>not be
+  corrected</b> for the <b>barycentric velocity</b> (the pipeline does it).
+  The spectra retrieved in <b>normal wavelength scale should</b> be 
+  corrected. These two cases are outlined below.</p>
+  <h1 class="heading">Section 1. Data lookup and reading</h1>
+    <p><b>Example usage:</b> retrieve all data on HD170580</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mydata = search(<span class="py-string">'HD170580'</span>)</pre>
+    <p>Keep only those with a long enough exposure time:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myselection = mydata[mydata[<span class="py-string">'exptime'</span>]&gt;500]</pre>
+    <p>Now read in all the data, and plot the spectra. First, we need an 
+    extra module to read the FITS file and the plotting package.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.io <span class="py-keyword">import</span> fits
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl</pre>
+    <p>Then we can easily plot the relevant data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> fname <span class="py-keyword">in</span> myselection[<span class="py-string">'filename'</span>]:
+<span class="py-more">... </span>    wave,flux = fits.read_spectrum(fname)
+<span class="py-more">... </span>    p = pl.plot(wave,flux)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0,45000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(4511,4513.5)</pre>
+<center><img src='../images/ivs_catalogs_hermes_HD170580.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Note that you can easily shift them according to some radial 
+    velocity: as an extra example, we retrieve the data in wavelength 
+    scale, shift according to the barycentric velocity, convert to velocity
+    space, and plot them:</p>
+    <p>First start a new figure and add extra modules:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.spectra <span class="py-keyword">import</span> model         <span class="py-comment"># to apply doppler shift</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.units <span class="py-keyword">import</span> conversions     <span class="py-comment"># to convert to velocity space</span></pre>
+    <p>Then get the spectra again, but now not in log scale. Make the same 
+    selection on exposure time.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mydata = search(<span class="py-string">'HD170580'</span>,data_type=<span class="py-string">'cosmicsremoved_wavelength'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>myselection = mydata[mydata[<span class="py-string">'exptime'</span>]&gt;500]</pre>
+    <p>Then read them all in and shift according to the barycentric 
+    velocity. Also, convert the spectra to velocity space afterwards for 
+    plotting purposes.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> rv,fname <span class="py-keyword">in</span> zip(myselection[<span class="py-string">'bvcor'</span>],myselection[<span class="py-string">'filename'</span>]):
+<span class="py-more">... </span>    wave,flux = fits.read_spectrum(fname)
+<span class="py-more">... </span>    wave_shifted = model.doppler_shift(wave,rv)
+<span class="py-more">... </span>    velo_shifted = conversions.convert(<span class="py-string">'angstrom'</span>,<span class="py-string">'km/s'</span>,wave_shifted,wave=(4512.3,<span class="py-string">'angstrom'</span>))
+<span class="py-more">... </span>    p = pl.plot(velo_shifted,flux)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0,45000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(-70,70)</pre>
+<center><img src='../images/ivs_catalogs_hermes_HD170580_velo.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Extracting information</h1>
+    <p>If you want to list the observers of a certain target, and the 
+    amount of spectra they took, you can do the following:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = search(<span class="py-string">'HD50230'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> [(i,list(data[<span class="py-string">'observer'</span>]).count(i)) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> set(data[<span class="py-string">'observer'</span>])]
+<span class="py-output">[('Robin Lombaert', 4), ('Steven Bloemen', 6), ('Pieter Degroote', 25), ('Michel Hillen', 3)]</span></pre>
+  <h1 class="heading">Section 3. Radial velocity computation with the HERMES DRS</h1>
+    <p>Make sure you have sourced the Hermes DRS (<code>source 
+    ~mercator/HermesDRS.rc</code>) and that you make a backup of your 
+    config file before proceeding.</p>
+    <p>In this example, we first make a mask file:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.spectra <span class="py-keyword">import</span> linelists
+<span class="py-prompt">&gt;&gt;&gt; </span>teff = 12500
+<span class="py-prompt">&gt;&gt;&gt; </span>logg = 4.0
+<span class="py-prompt">&gt;&gt;&gt; </span>ll = linelists.get_lines(teff,logg)
+<span class="py-prompt">&gt;&gt;&gt; </span>mask_file = <span class="py-string">'%.0f_%.2f.fits'</span>%(teff,logg)
+<span class="py-prompt">&gt;&gt;&gt; </span>make_mask_file(ll[<span class="py-string">'wavelength'</span>],ll[<span class="py-string">'depth'</span>],filename=mask_file)</pre>
+    <p>And run the DRS:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>CCFList(<span class="py-string">'HD170200'</span>,mask_file=mask_file)</pre>
+  <h1 class="heading">Section 4. Hermes overview file</h1>
+    <p>To ensure a fast lookup of datafiles, an overview file 
+    <code>HermesFullDataOverview.tsv</code> is created via <a 
+    href="ivs.catalogs.hermes-module.html#make_data_overview" 
+    class="link">make_data_overview</a>. The file resides in one of the 
+    <code>IVSdata</code> directories, and there should also exist a copy at
+    <code>/STER/mercator/hermes/</code>.</p>
+    <p>The best strategy to keep the file up-to-date is by running this 
+    module in the background in a terminal, via (probably on pleiad22):</p>
+<pre class="literalblock">
+   $:&gt; python hermes.py update
+</pre>
+    <p>This script will look for a <code>HermesFullDataOverview.tsv</code> 
+    in one of the data directories (see <a href="ivs.config-module.html" 
+    class="link">config</a> module), check until what date data files are 
+    stored, and add entries for HERMES data files created since the last 
+    update. If you want a complete update of all the HERMES data folders, 
+    you will need to remove the file and run the update. Indeed, if 
+    <code>HermesFullDataOverview.tsv</code> does not exist, it will create 
+    a new file in the current working directory from scratch, and copy it 
+    to <code>/STER/mercator/hermes/</code>. It is the user's responsibility
+    to copy the file also to one of the IVSdata directories where the user 
+    has write permission, so that next time the update is performed, the 
+    script can start from the previous results.</p>
+    <p>When running the above command in the terminal, you will notice that
+    the script does not terminate until a manual <code>CTRL+C</code> is 
+    performed. Indeed, when left running the script will perform the update
+    once a day. So once it runs, as long as the filepaths do not change or 
+    computers do not shut down, you don't need to run it again. If a 
+    computer does stop running, just restart again with:</p>
+<pre class="literalblock">
+   $:&gt; python hermes.py update
+</pre>
+    <p>and everything should be fine.</p>
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Classes</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Classes"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.catalogs.hermes.HermesCCF-class.html" class="summary-name">HermesCCF</a><br />
+      Object that holds all information stored in the *_AllCCF.fits files
+        written by hermesVR.
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;User functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">numpy rec array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#search" class="summary-sig-name">search</a>(<span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">time_range</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">prog_ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">data_type</span>=<span class="summary-sig-default">'cosmicsremoved_log'</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Retrieve datafiles from the Hermes catalogue.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">[array, array, dict]</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#merge_hermes_spectra" class="summary-sig-name">merge_hermes_spectra</a>(<span class="summary-sig-arg">objlist</span>,
+        <span class="summary-sig-arg">wscalelist</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Combines HERMES spectra with sigma clipping to remove cosmics.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#merge_hermes_spectra">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#make_list_star" class="summary-sig-name">make_list_star</a>(<span class="summary-sig-arg">ID</span>,
+        <span class="summary-sig-arg">direc</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Mimics HermesTool MakeListStar.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_list_star">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#make_mask_file" class="summary-sig-name">make_mask_file</a>(<span class="summary-sig-arg">wavelength</span>,
+        <span class="summary-sig-arg">depth</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">'mymask.fits'</span>)</span><br />
+      Make a mask file for RV calculations with the Hermes pipeline.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_mask_file">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#calibrate" class="summary-sig-name">calibrate</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">header</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Rough calibration of Hermes spectrum.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#calibrate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Read / Write</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#read_hermesVR_velocities" class="summary-sig-name">read_hermesVR_velocities</a>(<span class="summary-sig-arg">unique</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">return_latest</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">unseq</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">object</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Read the velocities.data file with the resuls from hermesVR.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#read_hermesVR_velocities">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">HermesCCF object</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#read_hermesVR_AllCCF" class="summary-sig-name">read_hermesVR_AllCCF</a>(<span class="summary-sig-arg">unseq</span>)</span><br />
+      Read the AllCCF.fits files written by hermesVR with the individual 
+      cross correlation functions of each order.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#read_hermesVR_AllCCF">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#write_hermesConfig" class="summary-sig-name">write_hermesConfig</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Update the hermesConfig.xml file with the specified keywords.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#write_hermesConfig">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Hermes DRS wrappers</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(int, str, int)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#run_hermesVR" class="summary-sig-name">run_hermesVR</a>(<span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">mask_file</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wvl_file</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cosmic_clipping</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">flatfield</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">vrange</span>=<span class="summary-sig-default">'default'</span>,
+        <span class="summary-sig-arg">vrot</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">version</span>=<span class="summary-sig-default">'release'</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">timeout</span>=<span class="summary-sig-default">500</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Wrapper around hermesVR that will run hermesVR on any given filename.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#run_hermesVR">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#CCFList" class="summary-sig-name">CCFList</a>(<span class="summary-sig-arg">ID</span>,
+        <span class="summary-sig-arg">config_dir</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">out_dir</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mask_file</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cosmic_clipping</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">flatfield</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Calculate radial velocities for Hermes stars.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#CCFList">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Administrator functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#make_data_overview" class="summary-sig-name">make_data_overview</a>()</span><br />
+      Summarize all Hermes data in a file for easy data retrieval.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_data_overview">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_derive_filelocation_from_raw"></a><span class="summary-sig-name">_derive_filelocation_from_raw</span>(<span class="summary-sig-arg">rawfile</span>,
+        <span class="summary-sig-arg">data_type</span>)</span><br />
+      Derive the location of a reduced file from the raw file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_derive_filelocation_from_raw">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#_timestamp2jd" class="summary-sig-name" onclick="show_private();">_timestamp2jd</a>(<span class="summary-sig-arg">timestamp</span>)</span><br />
+      Convert the time stamp from a HERMES FITS 'date-avg' to Julian Date.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_timestamp2jd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">datetime</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#_timestamp2datetime" class="summary-sig-name" onclick="show_private();">_timestamp2datetime</a>(<span class="summary-sig-arg">timestamp</span>)</span><br />
+      Convert the time stamp from a HERMES FITS 'date-avg' to a datetime 
+      object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_timestamp2datetime">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.hermes-module.html#_etree_to_dict" class="summary-sig-name" onclick="show_private();">_etree_to_dict</a>(<span class="summary-sig-arg">t</span>)</span><br />
+      Convert a xml tree to a dictionary.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_etree_to_dict">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_subprocess_execute"></a><span class="summary-sig-name">_subprocess_execute</span>(<span class="summary-sig-arg">command</span>,
+        <span class="summary-sig-arg">time_out</span>=<span class="summary-sig-default">100</span>)</span><br />
+      executing the command with a watchdog</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_subprocess_execute">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.catalogs.hermes-module.html#hermesDir" class="summary-name">hermesDir</a> = <code title="os.path.expanduser('~/')">os.path.expanduser('~/')</code><br />
+      Path to the directory in which the hermes folders (hermesAnalysis, 
+      hermesRun, hermesDebug) are located.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.catalogs.hermes-module.html#tempDir" class="summary-name">tempDir</a> = <code title="'/scratch/%s/' %(getpass.getuser())">'/scratch/%s/' %(getpass.getuser())</code><br />
+      Path to temporary directory where files nessessary for hermesVR to 
+      run can be copied to.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;CAT.HERMES&quot;)">logging.getLogger(&quot;CAT.HERMES&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">search</span>(<span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">time_range</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">prog_ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">data_type</span>=<span class="sig-default">'cosmicsremoved_log'</span>,
+        <span class="sig-arg">radius</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve datafiles from the Hermes catalogue.</p>
+  <p><b>If <code>ID</code> is given</b>: A string search is performed to 
+  match the 'object' field in the FITS headers. The coordinates are pulled 
+  from SIMBAD. If the star ID is recognised by SIMBAD, an additional search
+  is done based only on the coordinates. The union of both searches is the 
+  final result.</p>
+  <p><b>If <code>time_range</code> is given</b>: The search is confined 
+  within the defined range. If you only give one day, the search is 
+  confined to the observations made during the night starting at that day. 
+  If <code>ID</code> is not given, all observations will be returned of the
+  given datatype.</p>
+  <p><b>If <code>prog_ID</code> is given</b>: The search is performed to 
+  match the number of the program. Individual stars are not queried in 
+  SIMBAD, so any information that is missing in the header will not be 
+  corrected.</p>
+  <p>If you don't give either ID or time_range, the info on all data will 
+  be returned. This is a huge amount of data, so it can take a while before
+  it is returned. Remember that the header of each spectrum is read in and 
+  checked.</p>
+  <p>Data type can be any of:</p>
+  <ol start="1">
+    <li>
+      cosmicsremoved_log: return log merged without cosmics
+    </li>
+    <li>
+      cosmicsremoved_wavelength: return wavelength merged without cosmics
+    </li>
+    <li>
+      ext_log: return log merged with cosmics
+    </li>
+    <li>
+      ext_wavelength: return wavelength merged with cosmics
+    </li>
+    <li>
+      raw: raw files (also TECH..., i.e. any file in the raw directory)
+    </li>
+  </ol>
+  <p>This functions needs a <code>HermesFullDataOverview.tsv</code> file 
+  located in one of the datadirectories from <code>config.py</code>, and 
+  subdirectory <code>catalogs/hermes</code>.</p>
+  <p>If this file does not exist, you can create it with <a 
+  href="ivs.catalogs.hermes-module.html#make_data_overview" 
+  class="link">make_data_overview</a>.</p>
+  <p>If you want a summary file with the data you search for, you can give 
+  <code>filename</code> as an extra keyword argument. The results will be 
+  saved to that file.</p>
+  <p>The columns in the returned record array are listed in <a 
+  href="ivs.catalogs.hermes-module.html#make_data_overview" 
+  class="link">make_data_overview</a>, but are repeated here (capital 
+  letters are directly retrieved from the fits header, small letters are 
+  calculated values. The real header strings are all small capitals):</p>
+  <ol start="1">
+    <li>
+      UNSEQ
+    </li>
+    <li>
+      PROG_ID
+    </li>
+    <li>
+      OBSMODE
+    </li>
+    <li>
+      BVCOR
+    </li>
+    <li>
+      OBSERVER
+    </li>
+    <li>
+      OBJECT
+    </li>
+    <li>
+      RA
+    </li>
+    <li>
+      DEC
+    </li>
+    <li>
+      BJD
+    </li>
+    <li>
+      EXPTIME
+    </li>
+    <li>
+      PMTOTAL
+    </li>
+    <li>
+      DATE-AVG
+    </li>
+    <li>
+      OBJECT
+    </li>
+    <li>
+      airmass
+    </li>
+    <li>
+      filename
+    </li>
+  </ol>
+  <p>The column <code>filename</code> contains a string with the absolute 
+  location of the file. If you need any extra information from the header, 
+  you can easily retrieve it.</p>
+  <p>If BVCOR or BJD are not available from the FITS header, this function 
+  will attempt to calculate it. It will not succeed if the object's name is
+  not recognised by SIMBAD.</p>
+  <p>Example usage: retrieve all data on HD50230</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mydata = search(<span class="py-string">'HD50230'</span>)</pre>
+  <p>Keep only those with a long enough exposure time:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myselection = mydata[mydata[<span class="py-string">'exptime'</span>]&gt;500]</pre>
+  <p>Look up the 'telalt' value in the FITS headers of all these files via 
+  a fast list comprehension:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>telalts = [pyfits.getheader(fname)[<span class="py-string">'telalt'</span>] <span class="py-keyword">for</span> fname <span class="py-keyword">in</span> myselection[<span class="py-string">'filename'</span>]]</pre>
+  <p>Search for all data of HD50230 taken in the night of 22 September 
+  2009:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = hermes.search(<span class="py-string">'HD50230'</span>,time_range=<span class="py-string">'2009-9-22'</span>)</pre>
+  <p>Or within an interval of a few days:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = hermes.search(<span class="py-string">'HD50230'</span>,time_range=(<span class="py-string">'2009-9-23'</span>,<span class="py-string">'2009-9-30'</span>))</pre>
+  <p>Search for all data observed in a given night:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = hermes.search(time_range=<span class="py-string">'2009-9-22'</span>)</pre>
+  <p><b>Warning:</b> the heliocentric correction is not calculated when no 
+  ID is given, so make sure it is present in the header if you need it, or 
+  calculate it yourself.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>ID</code></strong> (str) - ID of the star, understandable by SIMBAD</li>
+        <li><strong class="pname"><code>time_range</code></strong> (tuple strings of type '2009-09-23T04:24:35.712556' or 
+          '2009-09-23') - range of dates to confine the search to</li>
+        <li><strong class="pname"><code>data_type</code></strong> (str) - if None, all data will be returned. Otherwise, subset 
+          'cosmicsremoved', 'merged' or 'raw'</li>
+        <li><strong class="pname"><code>radius</code></strong> (float) - search radius around the coordinates (arcminutes)</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - write summary to outputfile if not None</li>
+    </ul></dd>
+    <dt>Returns: numpy rec array</dt>
+        <dd>record array with summary information on the observations, as 
+          well as their location (column 'filename')</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="merge_hermes_spectra"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">merge_hermes_spectra</span>(<span class="sig-arg">objlist</span>,
+        <span class="sig-arg">wscalelist</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#merge_hermes_spectra">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Combines HERMES spectra with sigma clipping to remove cosmics. The 
+  input spectra are given as a list of filenames for the objects and for 
+  the wavelength scales. The output is the wavelength scale of the first 
+  object, the merged and sigma clipped flux, and the adapted header of the 
+  object. In this adapted header, the exposure time is the sum of all 
+  individual exposure times, and the observing time is averaged. Uses the 
+  <a href="ivs.spectra.tools-module.html#merge_cosmic_clipping" 
+  class="link">ivs.spectra.tools.merge_cosmic_clipping</a> method to merge 
+  the spectra.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = search(<span class="py-string">'KIC9540226'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>objlist = data[<span class="py-string">'filename'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>wave, flux, header = merge_hermes_spectra(objlist, wscalelist=None)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>objlist</code></strong> - list of OBJ or order merged filenames</li>
+        <li><strong class="pname"><code>wscalelist</code></strong> - list of wavelengthscale filenames</li>
+        <li><strong class="pname"><code>vrads</code></strong> - list of radial velocities (optional)</li>
+        <li><strong class="pname"><code>vrad_units</code></strong> - units of the radial velocities</li>
+        <li><strong class="pname"><code>sigma</code></strong> - value used for sigma clipping</li>
+        <li><strong class="pname"><code>window</code></strong> - window size used in median filter</li>
+        <li><strong class="pname"><code>runs</code></strong> - number of iterations through the spectra</li>
+    </ul></dd>
+    <dt>Returns: [array, array, dict]</dt>
+        <dd>The combined spectrum, cosmic clipped. (wave, flux, header)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="make_list_star"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_list_star</span>(<span class="sig-arg">ID</span>,
+        <span class="sig-arg">direc</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_list_star">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Mimics HermesTool MakeListStar.</p>
+  <p>This should work as input for HermesTool CCFList.py</p>
+  <p>The result is a file in the current working directory with name 
+  <code>ID.list</code>. If you have specified the <code>direc</code> 
+  keyword, the file will be written inside that directory. Make sure you 
+  have write permission.</p>
+  <p>The contents of the file is:</p>
+  <p>unseq, date-avg, ID, bjd, bvcor, prog_id, exptime, airmass, 
+  pmtotal</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>ID</code></strong> (string) - name of the star, understandable by SIMBAD.</li>
+        <li><strong class="pname"><code>direc</code></strong> (string) - directory to write the file into (defaults to current working 
+          directory)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="make_mask_file"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_mask_file</span>(<span class="sig-arg">wavelength</span>,
+        <span class="sig-arg">depth</span>,
+        <span class="sig-arg">filename</span>=<span class="sig-default">'mymask.fits'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_mask_file">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Make a mask file for RV calculations with the Hermes pipeline.</p>
+  <p>See <code class="link">ivs.units.linelists</code> to select 
+  appropriate masks. You readily use the columns <code>wavelength</code> 
+  and <code>depth</code> as input for this function.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wavelength</code></strong> (1D numpy array) - wavelength in angstrom</li>
+        <li><strong class="pname"><code>depth</code></strong> (1D numpy array) - strenght of the line (1-normalised flux minimum)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calibrate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calibrate</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">header</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#calibrate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Rough calibration of Hermes spectrum.</p>
+  <p>Thanks to Roy Ostensen for computing the response function via 
+  detailed modeling of Feige 66.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_hermesVR_velocities"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_hermesVR_velocities</span>(<span class="sig-arg">unique</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">return_latest</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">unseq</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">object</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#read_hermesVR_velocities">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read the velocities.data file with the resuls from hermesVR. The 
+  results are returned as a numpy record array. By setting unique to True, 
+  the method will only return a unique set of sequence numbers. When 
+  return_latest is True it will pick the latest added version, otherwise 
+  the first added is picked.</p>
+  <p>You can supply a list of unseq numbers, and then only those will be 
+  returned, same goes for object. In both cases the output is ordered in 
+  the same way as the list of unseq or object that you provided. These 
+  lists can be used together with the unique option.</p>
+  <p>This method will search for 'velocities.data' in 
+  'hermesDir/hermesAnalyses/'. You can provide another file location by 
+  using the keyword filename.</p>
+  <p>The field in the recored array are:</p>
+  <ul>
+    <li>
+      unseq: unique number
+    </li>
+    <li>
+      object: object name
+    </li>
+    <li>
+      hjd: HJD
+    </li>
+    <li>
+      exptime: exposure time
+    </li>
+    <li>
+      bvcorr: bary_corr
+    </li>
+    <li>
+      rvdrift: RV drift (2F frames only)
+    </li>
+    <li>
+      telloff: telluric offset
+    </li>
+    <li>
+      tellofferr: error on telluric offset
+    </li>
+    <li>
+      telloffwidth: width telluric fit
+    </li>
+    <li>
+      vrad: Vrad(55-74) (bvcorr applied)
+    </li>
+    <li>
+      vraderr: err on Vrad
+    </li>
+    <li>
+      nlines: number of lines used
+    </li>
+    <li>
+      ccfdepth: depth_CCF
+    </li>
+    <li>
+      ccfdeptherr: error on depth_CCF
+    </li>
+    <li>
+      ccfsigma: sigma_CCF
+    </li>
+    <li>
+      ccfsigmaerr: err on sigma_CCF
+    </li>
+    <li>
+      sn: signal to noise in spectrum (orders 55-74)
+    </li>
+    <li>
+      gaussoc: O-C of Gaussian fit
+    </li>
+    <li>
+      wvlfile: wavelength calibration file
+    </li>
+    <li>
+      maskfile: mask file
+    </li>
+    <li>
+      fffile: Flatfield file
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>unique</code></strong> (bool) - True is only return unique sequence numbers</li>
+        <li><strong class="pname"><code>return_latest</code></strong> (bool) - True to pick the last added file</li>
+        <li><strong class="pname"><code>unseq</code></strong> (list) - list of sequence numbers to return</li>
+        <li><strong class="pname"><code>object</code></strong> (list) - list of object names to return</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - Path to the velocities.data file</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>array with the requested result</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_hermesVR_AllCCF"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_hermesVR_AllCCF</span>(<span class="sig-arg">unseq</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#read_hermesVR_AllCCF">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read the AllCCF.fits files written by hermesVR with the individual 
+  cross correlation functions of each order. The cross-correlation 
+  functions are stored in a HermesCCF object from which they can be 
+  requested.</p>
+  <p>You can read *_AllCCF.fits file by providing only the unique sequence 
+  number as an integer. In this case the file will be searched in the 
+  hermesDir/hermesAnalyses/ folder. You can also provide the complete 
+  filename instead as a string fx.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>read_hermesVR_AllCCF(457640)
+<span class="py-prompt">&gt;&gt;&gt; </span>read_hermesVR_AllCCF(<span class="py-string">'/home/jorisv/hermesAnalysis/00457640_AllCCF.fits'</span>)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>unseq</code></strong> (int or str) - unique sequence number or filename to read</li>
+    </ul></dd>
+    <dt>Returns: HermesCCF object</dt>
+        <dd>The cross correlation functions</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="write_hermesConfig"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_hermesConfig</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#write_hermesConfig">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Update the hermesConfig.xml file with the specified keywords. This 
+  method will return the original content of the file as a dictionary. You 
+  can use that dict as an argument to this function if you want to restore 
+  the hermesConfig file to the original state.</p>
+  <p>write_hermesConfig will search for hermesConfig.xml in 
+  hermesDir/hermesRun/ unless a path is specified in the kwarg 
+  filename.</p>
+  <p>example use:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>old = write_hermesConfig(CurrentNight=<span class="py-string">&quot;/STER/mercator/hermes/20101214&quot;</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-string">&quot; Do some stuff &quot;</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>write_hermesConfig(**old)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - complete path to the hermesConfig.xml file</li>
+    </ul></dd>
+    <dt>Returns: dict</dt>
+        <dd>The original content of hermesConfig.xml before modification.</dd>
+  </dl>
+<div class="fields">      <p><strong>Attention:</strong>
+        This function does not check the validity of the keywords that you 
+        provide, that is your own responsibility.
+      </p>
+</div></td></tr></table>
+</div>
+<a name="run_hermesVR"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">run_hermesVR</span>(<span class="sig-arg">filename</span>,
+        <span class="sig-arg">mask_file</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wvl_file</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">cosmic_clipping</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">flatfield</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">vrange</span>=<span class="sig-default">'default'</span>,
+        <span class="sig-arg">vrot</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">version</span>=<span class="sig-default">'release'</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">timeout</span>=<span class="sig-default">500</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#run_hermesVR">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Wrapper around hermesVR that will run hermesVR on any given filename. 
+  Thus not on sequence number. This can be usefull if you first merge 
+  together 2 back-to-back spectra and then want to calculate the radial 
+  velocity of the merged spectrum.</p>
+  <p>The original file will not be modified, it is coppied to the tempDir, 
+  and the name will be changed according to the supplied flags. During the 
+  process hermesConfig.xml is adapted, but after hermesVR is finished, it 
+  is restored to its old state.</p>
+  <p>When providing a wavelength scale file, provide the full path, but cut
+  off the '_HRF_TH_ext_wavelengthScale.fits' part of the filename. Thus if 
+  you want to use: '/folder/2451577_HRF_TH_ext_wavelengthScale.fits', 
+  use:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>run_hermesVR(filename, wvl_file = <span class="py-string">'/folder/2451577'</span>)</pre>
+  <p>The results of hermesVR are saved to the standard paths, as provided 
+  in the hermesConfig file. This method only returns the unseq number of 
+  the filename so you can find the corresponding output file, the output of
+  hermesVR as a string, and a unix return signal of running hermesVR. The 
+  returncode is 0 if no errors are found. Any negative number means 
+  hermesVR failed (codes can be consulted here:  <a 
+  href="http://people.cs.pitt.edu/~alanjawi/cs449/code/shell/UnixSignals.htm"
+  target="_top">unix signals</a>). If returncode = -35, then hermesVR 
+  completed but didn't write any output. In this case consult the logs or 
+  string output to find out what went wrong.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - complete path to the input spectrum for hermesVR</li>
+        <li><strong class="pname"><code>mask_file</code></strong> (str) - complete path to the mask file to use or None</li>
+        <li><strong class="pname"><code>wvl_file</code></strong> (str) - path to wavelengthscale file or None</li>
+        <li><strong class="pname"><code>cosmic_clipping</code></strong> (bool) - Doesn't do anything for now</li>
+        <li><strong class="pname"><code>flatfield</code></strong> (bool) - Use flatfield devision or not</li>
+        <li><strong class="pname"><code>vrange</code></strong> (str) - Size of velocity window ('default', 'large' (x2), 'xlarge' (x5))</li>
+        <li><strong class="pname"><code>vrot</code></strong> (bool) - Fit CCF with rotationaly broadend profile instead of gaussian</li>
+        <li><strong class="pname"><code>version</code></strong> (str) - which version of the pipeline to use: 'release' or 'trunk'</li>
+        <li><strong class="pname"><code>verbose</code></strong> (bool) - print output of hermesVR</li>
+        <li><strong class="pname"><code>timeout</code></strong> (int) - Maximum time hermesVR is allowed to run in seconds</li>
+    </ul></dd>
+    <dt>Returns: (int, str, int)</dt>
+        <dd>unseq used, text output of hermesVR, unix return code</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="CCFList"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">CCFList</span>(<span class="sig-arg">ID</span>,
+        <span class="sig-arg">config_dir</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">out_dir</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">mask_file</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">cosmic_clipping</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">flatfield</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#CCFList">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate radial velocities for Hermes stars.</p>
+  <dl class="fields">
+  </dl>
+<div class="fields">      <strong>Warnings:</strong>
+      <ul class="nomargin-top">
+        <li>
+        you have to have the DRS installed locally!
+        </li>
+        <li>
+        this function changes your hermesConfig.xml file, you'd better 
+        backup it before use
+        </li>
+      </ul>
+</div></td></tr></table>
+</div>
+<a name="make_data_overview"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_data_overview</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#make_data_overview">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Summarize all Hermes data in a file for easy data retrieval.</p>
+  <p>The file is located in one of date data directories (see 
+  <code>config.py</code>), in subdirectories 
+  <code>catalogs/hermes/HermesFullDataOverview.tsv</code>. If it doesn't 
+  exist, it will be created. It contains the following columns, which are 
+  extracted from the Hermes FITS headers (except <code>filename</code>:</p>
+  <ol start="1">
+    <li>
+      UNSEQ
+    </li>
+    <li>
+      PROG_ID
+    </li>
+    <li>
+      OBSMODE
+    </li>
+    <li>
+      BVCOR
+    </li>
+    <li>
+      OBSERVER
+    </li>
+    <li>
+      OBJECT
+    </li>
+    <li>
+      RA
+    </li>
+    <li>
+      DEC
+    </li>
+    <li>
+      BJD
+    </li>
+    <li>
+      EXPTIME
+    </li>
+    <li>
+      PMTOTAL
+    </li>
+    <li>
+      DATE-AVG
+    </li>
+    <li>
+      OBJECT
+    </li>
+    <li>
+      airmass
+    </li>
+    <li>
+      filename
+    </li>
+  </ol>
+  <p>This file can most easily be read with the <a 
+  href="ivs.io.ascii-module.html" class="link">ivs.io.ascii</a> module and 
+  the command:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>hermes_file = config.get_datafile(os.path.join(<span class="py-string">'catalogs'</span>,<span class="py-string">'hermes'</span>),<span class="py-string">'HermesFullDataOverview.tsv'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>data = ascii.read2recarray(hermes_file,splitchar=<span class="py-string">'\t'</span>)</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_timestamp2jd"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_timestamp2jd</span>(<span class="sig-arg">timestamp</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_timestamp2jd">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the time stamp from a HERMES FITS 'date-avg' to Julian 
+  Date.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>timestamp</code></strong> (string) - string from 'date-avg'</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>julian date</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_timestamp2datetime"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_timestamp2datetime</span>(<span class="sig-arg">timestamp</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_timestamp2datetime">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the time stamp from a HERMES FITS 'date-avg' to a datetime 
+  object.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>timestamp</code></strong> (string) - string from 'date-avg'</li>
+    </ul></dd>
+    <dt>Returns: datetime</dt>
+        <dd>datetime object</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_etree_to_dict"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_etree_to_dict</span>(<span class="sig-arg">t</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.hermes-pysrc.html#_etree_to_dict">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert a xml tree to a dictionary.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>t</code></strong> (ElementTree root) - the xml tree</li>
+    </ul></dd>
+    <dt>Returns: dict</dt>
+        <dd>the xml tree as a dictionary</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="hermesDir"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">hermesDir</h3>
+  Path to the directory in which the hermes folders (hermesAnalysis, 
+  hermesRun, hermesDebug) are located. By default this is set to 
+  '/home/user/'.
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+os.path.expanduser('~/')
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="tempDir"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">tempDir</h3>
+  Path to temporary directory where files nessessary for hermesVR to run 
+  can be copied to. You need write permission in this directory. The 
+  default is set to '/scratch/user/'
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+'/scratch/%s/' %(getpass.getuser())
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

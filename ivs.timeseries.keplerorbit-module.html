@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.timeseries.keplerorbit</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.timeseries-module.html">Package&nbsp;timeseries</a> ::
+        Module&nbsp;keplerorbit
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.timeseries.keplerorbit-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module keplerorbit</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html">source&nbsp;code</a></span></p>
+<p>Fit and evaluate binary (Keplerian) orbits.</p>
+  <p>Be careful with the inclination angle: if you only want an image 
+  projected onto the sky, it is not case-sensitive. Only for the radial 
+  velocities this becomes important (the primary and secondary can be 
+  mixed).</p>
+  <p>Example usage: compute the absolute orbits of the two components of mu
+  Cassiopeia, and compute the relative orbit of the second component.</p>
+  <p>See ps file on http://www.chara.gsu.edu/~gudehus/binary.html and 
+  Drummond et al., 1995 (the latter's orbital parameters are used).</p>
+  <p>Neccesary imports:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.units.constants <span class="py-keyword">import</span> *</pre>
+  <p>Orbital elements, Euler angles and masses of the system</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>P = 21.753*365 <span class="py-comment"># period in days</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>e = 0.561 <span class="py-comment"># ecc</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>omega,Omega,i = 332.7, 47.3, 106.8 <span class="py-comment"># degrees</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T0 = 1975.738*365 <span class="py-comment"># year in days</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>plx = 133.2 <span class="py-comment"># mas</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M1,M2 = 0.719,0.168 <span class="py-comment"># Msun</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(T0,T0+0.95*P,100)</pre>
+  <p>Derive semi-major axis of absolute orbits (semi-major axis of relative
+  orbit is a+a2)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>fA = M2**3/ (M1+M2)**2 * Msol
+<span class="py-prompt">&gt;&gt;&gt; </span>a1 = ((P*24*3600)**2 * GG * fA / (4*np.pi**2))**(1/3.)
+<span class="py-prompt">&gt;&gt;&gt; </span>a1 = a1/au
+<span class="py-prompt">&gt;&gt;&gt; </span>a2 = a1*M1/M2</pre>
+  <p>Convert the angles to radians</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega,Omega,i = omega/180*np.pi,Omega/180*np.pi,i/180*np.pi</pre>
+  <p>Compute the orbits of the primary and secondary in the plane of the 
+  sky</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,z1 = orbit_on_sky(times,(P,e,a1,T0,omega,Omega,i),component=<span class="py-string">'prim'</span>,distance=(1000./133.,<span class="py-string">'pc'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>x2,y2,z2 = orbit_on_sky(times,(P,e,a2,T0,omega,Omega,i),component=<span class="py-string">'sec'</span>,distance=(1000./133.,<span class="py-string">'pc'</span>))</pre>
+  <p>Plot it:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl
+<span class="py-prompt">&gt;&gt;&gt; </span>colors = times/365.
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'mu Cassiopeia'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x1,y1,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x2,y2,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x2-x1,y2-y1,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x1,y1,<span class="py-string">'b-'</span>,label=<span class="py-string">'Primary'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x2,y2,<span class="py-string">'g-'</span>,label=<span class="py-string">'Secondary'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x2-x1,y2-y1,<span class="py-string">'r-'</span>,label=<span class="py-string">'Secondary relative'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.colorbar()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.grid()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(r<span class="py-string">'Angular size (arcsec) --&gt; N'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(r<span class="py-string">'Angular size (arcsec) --&gt; E'</span>)</pre>
+<center><img src='../images/ivs_binary_keplerorbit_muCas.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <p>Example usage 2: compute the absolute orbits of the two components of 
+  Capella, and compute the relative orbit of the primary component.</p>
+  <p>See Hummel et al. 1994 (?).</p>
+  <p>Neccesary imports:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.units.constants <span class="py-keyword">import</span> *</pre>
+  <p>Orbital elements, Euler angles and masses of the system</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>P = 104.022 <span class="py-comment"># period in days</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>e = 0.000 <span class="py-comment">#ecc</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>i = 137.18 <span class="py-comment"># degree</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T0 = 2447528.45 <span class="py-comment"># year</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>omega = 0 <span class="py-comment"># degrees</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>Omega = 40.8 <span class="py-comment"># degrees</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>plx = 76.20 <span class="py-comment"># mas</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M1 = 2.69 <span class="py-comment">#Msun</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M2 = 2.56 <span class="py-comment">#Msun</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>RV0 = 0.
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(T0,T0+0.95*P,100)</pre>
+  <p>Derive semi-major axis of absolute orbits (semi-major axis of relative
+  orbit is a+a2)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>fA = M2**3/ (M1+M2)**2 * Msol
+<span class="py-prompt">&gt;&gt;&gt; </span>a1 = ((P*24*3600)**2 * GG * fA / (4*np.pi**2))**(1/3.)
+<span class="py-prompt">&gt;&gt;&gt; </span>a1 = a1/au
+<span class="py-prompt">&gt;&gt;&gt; </span>a2 = a1*M1/M2</pre>
+  <p>Convert the angles to radians</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega,Omega,i = omega/180*np.pi,Omega/180*np.pi,i/180*np.pi</pre>
+  <p>Compute the orbits of the primary and secondary in the plane of the 
+  sky</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,z1 = orbit_on_sky(times,(P,e,a1,T0,omega,Omega,i),component=<span class="py-string">'prim'</span>,distance=(1000./plx,<span class="py-string">'pc'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>x2,y2,z2 = orbit_on_sky(times,(P,e,a2,T0,omega,Omega,i),component=<span class="py-string">'sec'</span>,distance=(1000./plx,<span class="py-string">'pc'</span>))</pre>
+  <p>Plot it:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl
+<span class="py-prompt">&gt;&gt;&gt; </span>colors = times/365.
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'Capella'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x1,y1,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x2,y2,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x1-x2,y1-y2,c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral,label=<span class="py-string">'_nolegend_'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x1,y1,<span class="py-string">'b-'</span>,label=<span class="py-string">'Primary'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x2,y2,<span class="py-string">'g-'</span>,label=<span class="py-string">'Secondary'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x1-x2,y1-y2,<span class="py-string">'r-'</span>,label=<span class="py-string">'Secondary relative'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.colorbar()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.grid()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(r<span class="py-string">'Angular size DEC (arcsec) --&gt; N'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(r<span class="py-string">'Angular size RA (arcsec) --&gt; E'</span>)</pre>
+<center><img src='../images/ivs_binary_keplerorbit_capella.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Radial velocities</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#radial_velocity" class="summary-sig-name">radial_velocity</a>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">times</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">theta</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">itermax</span>=<span class="summary-sig-default">8</span>)</span><br />
+      Evaluate Radial velocities due to kepler orbit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#radial_velocity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">2xarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#orbit_in_plane" class="summary-sig-name">orbit_in_plane</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">component</span>=<span class="summary-sig-default">'primary'</span>,
+        <span class="summary-sig-arg">coordinate_frame</span>=<span class="summary-sig-default">'polar'</span>)</span><br />
+      Construct an orbit in the orbital plane.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#orbit_in_plane">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">2xarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#velocity_in_plane" class="summary-sig-name">velocity_in_plane</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">component</span>=<span class="summary-sig-default">'primary'</span>,
+        <span class="summary-sig-arg">coordinate_frame</span>=<span class="summary-sig-default">'polar'</span>)</span><br />
+      Calculate the velocity in the orbital plane.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#velocity_in_plane">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#project_orbit" class="summary-sig-name">project_orbit</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">parameters</span>)</span><br />
+      Project an orbit onto the plane of the sky.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#project_orbit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#orbit_on_sky" class="summary-sig-name">orbit_on_sky</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">component</span>=<span class="summary-sig-default">'primary'</span>)</span><br />
+      Construct an orbit projected on the sky.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#orbit_on_sky">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#true_anomaly" class="summary-sig-name">true_anomaly</a>(<span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">e</span>,
+        <span class="summary-sig-arg">itermax</span>=<span class="summary-sig-default">8</span>)</span><br />
+      Calculation of true and eccentric anomaly in Kepler orbits.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#true_anomaly">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#calculate_phase" class="summary-sig-name">calculate_phase</a>(<span class="summary-sig-arg">T</span>,
+        <span class="summary-sig-arg">e</span>,
+        <span class="summary-sig-arg">omega</span>,
+        <span class="summary-sig-arg">pshift</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Compute orbital phase from true anomaly T</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#calculate_phase">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#calculate_critical_phases" class="summary-sig-name">calculate_critical_phases</a>(<span class="summary-sig-arg">omega</span>,
+        <span class="summary-sig-arg">e</span>,
+        <span class="summary-sig-arg">pshift</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Compute phase of superior conjunction and periastron passage.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#calculate_critical_phases">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#eclipse_separation" class="summary-sig-name">eclipse_separation</a>(<span class="summary-sig-arg">e</span>,
+        <span class="summary-sig-arg">omega</span>)</span><br />
+      Calculate the eclipse separation between primary and secondary in a 
+      light curve.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#eclipse_separation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#omega_from_eclipse_separation" class="summary-sig-name">omega_from_eclipse_separation</a>(<span class="summary-sig-arg">separation</span>,
+        <span class="summary-sig-arg">e</span>)</span><br />
+      Caculate the argument of periastron from the eclipse separation and 
+      eccentricity.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#omega_from_eclipse_separation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Kepler's laws</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.timeseries.keplerorbit-module.html#third_law" class="summary-sig-name">third_law</a>(<span class="summary-sig-arg">M</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">a</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">P</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Kepler's third law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#third_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('IVS.KEPLER')">logging.getLogger('IVS.KEPLER')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="radial_velocity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">radial_velocity</span>(<span class="sig-arg">parameters</span>,
+        <span class="sig-arg">times</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">theta</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">itermax</span>=<span class="sig-default">8</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#radial_velocity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate Radial velocities due to kepler orbit.</p>
+  <p>These parameters define the Keplerian orbit if you give times points 
+  (<code>times</code>, days):</p>
+  <ol start="1">
+    <li>
+      Period of the system (days)
+    </li>
+    <li>
+      time of periastron passage T0 (not x0!) (HJD)
+    </li>
+    <li>
+      eccentricity
+    </li>
+    <li>
+      omega, the longitude of periastron gives the orientation of the orbit
+      within its own plane (radians)
+    </li>
+    <li>
+      the semiamplitude of the velocity curve (km/s)
+    </li>
+    <li>
+      systemic velocity RV0 (RV of centre of mass of system) (km/s)
+    </li>
+  </ol>
+  <p>These parameters define the Keplerian orbit if you give angles 
+  (<code>theta</code>, radians):</p>
+  <ol start="1">
+    <li>
+      Period of the system (days)
+    </li>
+    <li>
+      eccentricity
+    </li>
+    <li>
+      a, the semi-major axis of the absolute orbit of the component (au)
+    </li>
+    <li>
+      omega, the longitude of periastron gives the orientation of the orbit
+      within in its own plane (radians)
+    </li>
+    <li>
+      inclination of the orbit (radians)
+    </li>
+    <li>
+      systemic velocity RV0 (RV of centre of mass of system) (km/s)
+    </li>
+  </ol>
+  <p>The periastron passage T0 can be derived via x0 by calculating</p>
+  <p>T0 = x0/(2pi*Freq) + times[0]</p>
+  <p>See e.g. p 41,42 of Hilditch, 'An Introduction To Close Binary 
+  Stars'</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>parameters</code></strong> (iterable) - parameters of Keplerian orbit (dependent on input)</li>
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - observation times (days)</li>
+        <li><strong class="pname"><code>theta</code></strong> (numpy array) - orbital angles (radians)</li>
+        <li><strong class="pname"><code>itermax</code></strong> (integer) - number of iterations to find true anomaly</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>fitted radial velocities (km/s)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="orbit_in_plane"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">orbit_in_plane</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">component</span>=<span class="sig-default">'primary'</span>,
+        <span class="sig-arg">coordinate_frame</span>=<span class="sig-default">'polar'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#orbit_in_plane">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct an orbit in the orbital plane.</p>
+  <p>Give times in days</p>
+  <p>Parameters contains:</p>
+  <ol start="1">
+    <li>
+      period (days)
+    </li>
+    <li>
+      eccentricity
+    </li>
+    <li>
+      semi-major axis (au)
+    </li>
+    <li>
+      time of periastron passage T0 (not x0!) (HJD)
+    </li>
+  </ol>
+  <p>Return r (m) and theta (radians)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (array) - times of observations (days)</li>
+        <li><strong class="pname"><code>parameters</code></strong> (list) - list of parameters (P,e,a,T0)</li>
+        <li><strong class="pname"><code>component</code></strong> (string, one of 'primary' or 'secondary') - component to calculate the orbit of. If it's the secondary, the 
+          angles will be shifted by 180 degrees</li>
+        <li><strong class="pname"><code>coordinate_frame</code></strong> (str, ('polar' or 'cartesian')) - type of coordinates</li>
+    </ul></dd>
+    <dt>Returns: 2xarray</dt>
+        <dd>coord1,coord2</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="velocity_in_plane"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">velocity_in_plane</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">component</span>=<span class="sig-default">'primary'</span>,
+        <span class="sig-arg">coordinate_frame</span>=<span class="sig-default">'polar'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#velocity_in_plane">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the velocity in the orbital plane.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (array) - times of observations (days)</li>
+        <li><strong class="pname"><code>parameters</code></strong> (list) - list of parameters (P,e,a,T0)</li>
+        <li><strong class="pname"><code>component</code></strong> (string, one of 'primary' or 'secondary') - component to calculate the orbit of. If it's the secondary, the 
+          angles will be shifted by 180 degrees</li>
+        <li><strong class="pname"><code>coordinate_frame</code></strong> (str, ('polar' or 'cartesian')) - type of coordinates</li>
+    </ul></dd>
+    <dt>Returns: 2xarray</dt>
+        <dd>coord1,coord2</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="project_orbit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">project_orbit</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#project_orbit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Project an orbit onto the plane of the sky.</p>
+  <p>Parameters contains the Euler angles:</p>
+  <ol start="1">
+    <li>
+      omega: the longitude of periastron gives the orientation of the orbit
+      within in its own plane (radians)
+    </li>
+    <li>
+      Omega: PA of ascending node (radians)
+    </li>
+    <li>
+      i: inclination (radians), i=pi/2 is edge on
+    </li>
+  </ol>
+  <p>Returns x,y (orbit in plane of the sky) and z</p>
+  <p>See Hilditch p41 for a sketch of the coordinates. The difference with 
+  this is that all angles are inverted. In this approach, North is in the 
+  positive X direction, East is in the negative Y direction.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="orbit_on_sky"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">orbit_on_sky</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">distance</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">component</span>=<span class="sig-default">'primary'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#orbit_on_sky">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct an orbit projected on the sky.</p>
+  <p>Parameters contains:</p>
+  <ol start="1">
+    <li>
+      period (days)
+    </li>
+    <li>
+      eccentricity
+    </li>
+    <li>
+      semi-major axis (au)
+    </li>
+    <li>
+      time of periastron passage T0 (not x0!) (HJD)
+    </li>
+    <li>
+      omega: the longitude of periastron gives the orientation of the orbit
+      within in its own plane (radians)
+    </li>
+    <li>
+      Omega: PA of ascending node (radians)
+    </li>
+    <li>
+      i: inclination (radians), i=pi/2 is edge on
+    </li>
+  </ol>
+  <p>You can give an extra parameter 'distance' as a tuple (value,'unit'). 
+  This will be used to convert the distances to angular scale (arcsec).</p>
+  <p>Else, this function returns the distances in AU.</p>
+  <p>See Hilditch p41 for a sketch of the coordinates. The difference with 
+  this is that all angles are inverted. In this approach, North is in the 
+  positive X direction, East is in the negative Y direction.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="true_anomaly"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">true_anomaly</span>(<span class="sig-arg">M</span>,
+        <span class="sig-arg">e</span>,
+        <span class="sig-arg">itermax</span>=<span class="sig-default">8</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#true_anomaly">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculation of true and eccentric anomaly in Kepler orbits.</p>
+  <p>M is the phase of the star, e is the eccentricity</p>
+  <p>See p.39 of Hilditch, 'An Introduction To Close Binary Stars'</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>M</code></strong> (float) - phase</li>
+        <li><strong class="pname"><code>e</code></strong> (float) - eccentricity</li>
+        <li><strong class="pname"><code>itermax</code></strong> (integer) - maximum number of iterations</li>
+    </ul></dd>
+    <dt>Returns: float,float</dt>
+        <dd>eccentric anomaly (E), true anomaly (theta)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_phase"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_phase</span>(<span class="sig-arg">T</span>,
+        <span class="sig-arg">e</span>,
+        <span class="sig-arg">omega</span>,
+        <span class="sig-arg">pshift</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#calculate_phase">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute orbital phase from true anomaly T</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>T</code></strong> (float) - true anomaly</li>
+        <li><strong class="pname"><code>omega</code></strong> (float) - argument of periastron (radians)</li>
+        <li><strong class="pname"><code>e</code></strong> (float) - eccentricity</li>
+        <li><strong class="pname"><code>pshift</code></strong> (float) - phase shift</li>
+    </ul></dd>
+    <dt>Returns: float,float</dt>
+        <dd>phase of superior conjunction, phase of periastron passage</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_critical_phases"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_critical_phases</span>(<span class="sig-arg">omega</span>,
+        <span class="sig-arg">e</span>,
+        <span class="sig-arg">pshift</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#calculate_critical_phases">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute phase of superior conjunction and periastron passage.</p>
+  <p>Example usage: &gt;&gt;&gt; omega = np.pi/4.0 &gt;&gt;&gt; e = 0.3 
+  &gt;&gt;&gt; print calculate_critical_phases(omega,e) (-0.125, 
+  -0.057644612788576133, -0.42054512757020118, -0.19235538721142384, 
+  0.17054512757020118)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>omega</code></strong> (float) - argument of periastron (radians)</li>
+        <li><strong class="pname"><code>e</code></strong> (float) - eccentricity</li>
+        <li><strong class="pname"><code>pshift</code></strong> (float) - phase shift</li>
+    </ul></dd>
+    <dt>Returns: float,float</dt>
+        <dd>phase of superior conjunction, phase of periastron passage</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="eclipse_separation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">eclipse_separation</span>(<span class="sig-arg">e</span>,
+        <span class="sig-arg">omega</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#eclipse_separation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the eclipse separation between primary and secondary in a 
+  light curve.</p>
+  <p>Minimum separation at omega=pi Maximum spearation at omega=0</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>e</code></strong> (float) - eccentricity</li>
+        <li><strong class="pname"><code>omega</code></strong> (float) - argument of periastron (radians)</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>separation in phase units (0.5 is half)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="omega_from_eclipse_separation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">omega_from_eclipse_separation</span>(<span class="sig-arg">separation</span>,
+        <span class="sig-arg">e</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#omega_from_eclipse_separation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Caculate the argument of periastron from the eclipse separation and 
+  eccentricity.</p>
+  <p>separation in phase units.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>separation</code></strong> (float) - separation in phase units (0.5 is half)</li>
+        <li><strong class="pname"><code>e</code></strong> (float) - eccentricity</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>omega (longitude of periastron) in radians</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="third_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">third_law</span>(<span class="sig-arg">M</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">a</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">P</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.timeseries.keplerorbit-pysrc.html#third_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Kepler's third law.</p>
+  <p>Give two quantities, derived the third.</p>
+  <p>M = total mass system (solar units) a = semi-major axis (au) P = 
+  period (d)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> third_law(M=1.,a=1.)
+<span class="py-output">365.256891359 </span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> third_law(a=1.,P=365.25)
+<span class="py-output">1.00003773538</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> third_law(M=1.,P=365.25)
+<span class="py-output">0.999987421856</span></pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

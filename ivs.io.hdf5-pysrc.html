@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.io.hdf5</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.io-module.html">Package&nbsp;io</a> ::
+        Module&nbsp;hdf5
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.io.hdf5-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.io.hdf5-module.html">Module ivs.io.hdf5</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">Read and write HDF5 files.</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">HDF5 is a data model, library, and file format for storing and managing data. It supports</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">an unlimited variety of datatypes, and is designed for flexible and efficient I/O and for</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">high volume and complex data. HDF5 is portable and is extensible, allowing applications </tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">to evolve in their use of HDF5. The HDF5 Technology suite includes tools and applications</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">for managing, manipulating, viewing, and analyzing data in the HDF5 format.</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">http://alfven.org/wp/hdf5-for-python/</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">h5py</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package ivs=ivs-module.html"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-0', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package ivs.aux=ivs.aux-module.html"><a title="ivs.aux" class="py-name" href="#" onclick="return doclink('link-1', 'aux', 'link-1');">aux</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Module ivs.aux.loggers=ivs.aux.loggers-module.html"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-2', 'loggers', 'link-2');">loggers</a></tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-3', 'logger', 'link-3');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"IO.HDF5"</tt><tt class="py-op">)</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt id="link-4" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-4', 'logger', 'link-3');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">addHandler</tt><tt class="py-op">(</tt><tt id="link-5" class="py-name"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-5', 'loggers', 'link-2');">loggers</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Class ivs.asteroseismology.granulation.NullHandler=ivs.asteroseismology.granulation.NullHandler-class.html,Class ivs.asteroseismology.solarosc.NullHandler=ivs.asteroseismology.solarosc.NullHandler-class.html,Class ivs.aux.loggers.NullHandler=ivs.aux.loggers.NullHandler-class.html"><a title="ivs.asteroseismology.granulation.NullHandler
+ivs.asteroseismology.solarosc.NullHandler
+ivs.aux.loggers.NullHandler" class="py-name" href="#" onclick="return doclink('link-6', 'NullHandler', 'link-6');">NullHandler</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-comment">#{ Input</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"> </tt>
+<a name="read2dict"></a><div id="read2dict-def"><a name="L23"></a><tt class="py-lineno"> 23</tt> <a class="py-toggle" href="#" id="read2dict-toggle" onclick="return toggle('read2dict');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.io.hdf5-module.html#read2dict">read2dict</a><tt class="py-op">(</tt><tt class="py-param">filename</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="read2dict-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="read2dict-expanded"><a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">    Read the filestructure of a hdf5 file to a dictionary.</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">    @param filename: the name of the hdf5 file to read</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">    @type filename: str</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">    @return: dictionary with read filestructure</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: dict</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line">     </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">isfile</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line">        <tt id="link-7" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-7', 'logger', 'link-3');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">error</tt><tt class="py-op">(</tt><tt class="py-string">'The file you try to read does not exist!'</tt><tt class="py-op">)</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line">        <tt class="py-keyword">raise</tt> <tt class="py-name">IOError</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line">     </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">    <tt class="py-keyword">def</tt> <tt class="py-def-name">read_rec</tt><tt class="py-op">(</tt><tt class="py-param">hdf</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">        <tt class="py-docstring">""" recusively read the hdf5 file """</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">        <tt class="py-name">res</tt> <tt class="py-op">=</tt> <tt class="py-op">{</tt><tt class="py-op">}</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">name</tt><tt class="py-op">,</tt><tt class="py-name">grp</tt> <tt class="py-keyword">in</tt> <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">items</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">            <tt class="py-comment">#-- read the subgroups and datasets</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">grp</tt><tt class="py-op">,</tt> <tt class="py-string">'items'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">                <tt class="py-comment"># in case of a group, read the group into a new dictionary key</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">                <tt class="py-name">res</tt><tt class="py-op">[</tt><tt class="py-name">name</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">read_rec</tt><tt class="py-op">(</tt><tt class="py-name">grp</tt><tt class="py-op">)</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line">                <tt class="py-comment"># in case of dataset, read the value</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">                <tt class="py-name">res</tt><tt class="py-op">[</tt><tt class="py-name">name</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">grp</tt><tt class="py-op">.</tt><tt class="py-name">value</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">                 </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">        <tt class="py-comment">#-- read all the attributes</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">name</tt><tt class="py-op">,</tt> <tt class="py-name">atr</tt> <tt class="py-keyword">in</tt> <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">attrs</tt><tt class="py-op">.</tt><tt class="py-name">iteritems</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">            <tt class="py-name">res</tt><tt class="py-op">[</tt><tt class="py-name">name</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">atr</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">                 </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">res</tt> </tt>
+</div><a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">     </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line">    <tt class="py-name">hdf</tt> <tt class="py-op">=</tt> <tt class="py-name">h5py</tt><tt class="py-op">.</tt><tt class="py-name">File</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">,</tt> <tt class="py-string">'r'</tt><tt class="py-op">)</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">    <tt class="py-name">result</tt> <tt class="py-op">=</tt> <tt class="py-name">read_rec</tt><tt class="py-op">(</tt><tt class="py-name">hdf</tt><tt class="py-op">)</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">    <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">     </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">result</tt> </tt>
+</div><a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment">#{ Output</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"> </tt>
+<a name="write_dict"></a><div id="write_dict-def"><a name="L65"></a><tt class="py-lineno"> 65</tt> <a class="py-toggle" href="#" id="write_dict-toggle" onclick="return toggle('write_dict');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.io.hdf5-module.html#write_dict">write_dict</a><tt class="py-op">(</tt><tt class="py-param">data</tt><tt class="py-op">,</tt> <tt class="py-param">filename</tt><tt class="py-op">,</tt> <tt class="py-param">update</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt> <tt class="py-param">attr_types</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="write_dict-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="write_dict-expanded"><a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring">    Write the content of a dictionary to a hdf5 file. The dictionary can contain other</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">    nested dictionaries, this file stucture will be maintained in the saved hdf5 file.</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">    Pay attention to the fact that the data type of lists might change when writing to </tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">    hdf5. Lists are stored as numpy arrays, thus all items in a list are converted to</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">    the same type: ['bla', 1, 24.5] will become ['bla', '1', '24.5']. Upt till now there</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    is nothing in place to check this, or correct it when reading a hdf5 file.</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">    @param data: the dictionary to write to file</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">    @type data: dict</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">    @param filename: the name of the hdf5 file to write to</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">    @type filename: str</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring">    @param update: True if you want to update an existing file, False to overwrite</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">    @type update: bool</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">    @param attr_types: the data types that you want to save as an attribute instead of</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring">                       a dataset. (standard everything is saved as dataset.)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-docstring">    @type attr_types: List of types</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">     </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt id="link-8" class="py-name" targets="Method ivs.aux.progressMeter.ProgressMeter.update()=ivs.aux.progressMeter.ProgressMeter-class.html#update,Method ivs.io.database.Database.update()=ivs.io.database.Database-class.html#update"><a title="ivs.aux.progressMeter.ProgressMeter.update
+ivs.io.database.Database.update" class="py-name" href="#" onclick="return doclink('link-8', 'update', 'link-8');">update</a></tt> <tt class="py-keyword">and</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">isfile</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">        <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">remove</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">     </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">    <tt class="py-keyword">def</tt> <tt class="py-def-name">save_rec</tt><tt class="py-op">(</tt><tt class="py-param">data</tt><tt class="py-op">,</tt> <tt class="py-param">hdf</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">        <tt class="py-docstring">""" recusively save a dictionary """</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">key</tt> <tt class="py-keyword">in</tt> <tt class="py-name">data</tt><tt class="py-op">.</tt><tt class="py-name">keys</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">             </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">type</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-name">dict</tt><tt class="py-op">:</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">                <tt class="py-comment"># if part is dictionary: add 1 level and save dictionary in new level</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">key</tt> <tt class="py-keyword">in</tt> <tt class="py-name">hdf</tt><tt class="py-op">:</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">                    <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">create_group</tt><tt class="py-op">(</tt><tt class="py-name">key</tt><tt class="py-op">)</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">                <tt class="py-name">save_rec</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-name">hdf</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">                 </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">            <tt class="py-keyword">elif</tt> <tt class="py-name">type</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-keyword">in</tt> <tt class="py-name">attr_types</tt><tt class="py-op">:</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">                <tt class="py-comment"># save data as attribute</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">                <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">attrs</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">                 </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">                <tt class="py-comment"># other data is stored as datasets</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">key</tt> <tt class="py-keyword">in</tt> <tt class="py-name">hdf</tt><tt class="py-op">:</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">                    <tt class="py-keyword">del</tt> <tt class="py-name">hdf</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">                <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">create_dataset</tt><tt class="py-op">(</tt><tt class="py-name">key</tt><tt class="py-op">,</tt> <tt class="py-name">data</tt><tt class="py-op">=</tt><tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-name">key</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">     </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-name">hdf</tt> <tt class="py-op">=</tt> <tt class="py-name">h5py</tt><tt class="py-op">.</tt><tt class="py-name">File</tt><tt class="py-op">(</tt><tt class="py-name">filename</tt><tt class="py-op">)</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-name">save_rec</tt><tt class="py-op">(</tt><tt class="py-name">data</tt><tt class="py-op">,</tt> <tt class="py-name">hdf</tt><tt class="py-op">)</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">    <tt class="py-name">hdf</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:11 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

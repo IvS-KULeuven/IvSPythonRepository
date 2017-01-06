@@ -1,0 +1,2379 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.model</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;model
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.model-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module model</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.model-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface to the SED library.</p>
+  <p>The most basic usage of this module is:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=10000,logg=4.0)</pre>
+  <p>This will retrieve the model SED with the specified <b>effective 
+  temperature</b> and <b>logg</b>, from the standard <b>grid</b>, in 
+  standard <b>units</b> and with zero <b>reddening</b>. All these things 
+  can be specified though (see below).</p>
+  <h1 class="heading">Section 1. Available model grids</h1>
+    <h2 class="heading">Section 1.1 Available grids</h2>
+      <ul>
+        <li>
+          kurucz: The Kurucz model grids, (default setting)  reference: 
+          Kurucz 1993, yCat, 6039, 0
+          <ul>
+            <li>
+              metallicity (z): m01 is -0.1 log metal abundance relative to 
+              solar (solar abundances from Anders and Grevesse 1989)
+            </li>
+            <li>
+              metallicity (z): p01 is +0.1 log metal abundance relative to 
+              solar (solar abundances from Anders and Grevesse 1989)
+            </li>
+            <li>
+              alpha enhancement (alpha): True means alpha enhanced (+0.4)
+            </li>
+            <li>
+              turbulent velocity (vturb): vturb in km/s
+            </li>
+            <li>
+              nover= True means no overshoot
+            </li>
+            <li>
+              odfnew=True means no overshoot but with better opacities and 
+              abundances
+            </li>
+          </ul>
+        </li>
+        <li>
+          tmap: NLTE grids computed for sdB stars with the Tubingen NLTE 
+          Model Atmosphere package. No further parameters are available. 
+          Reference: Werner et al. 2003,
+        </li>
+      </ul>
+    <h2 class="heading">Section 1.2 Plotting the domains of all spectral grids</h2>
+      <p>We make a plot of the domains of all spectral grids. Therefore, we
+      first collect all the grid names</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>grids = get_gridnames()</pre>
+      <p>Preparation of the plot: set the color cycle of the current axes 
+      to the spectral color cycle.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(figsize=(10,8))
+<span class="py-prompt">&gt;&gt;&gt; </span>color_cycle = [pl.cm.spectral(j) <span class="py-keyword">for</span> j <span class="py-keyword">in</span> np.linspace(0, 1.0, len(grids))]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_color_cycle(color_cycle)</pre>
+      <p>To plot all the grid points, we run over all grid names (which are
+      strings), and retrieve their dimensions. The dimensions are just two 
+      arrays giving the teff- and logg-coordinate of each SED in the grid. 
+      They can thus be easily plot:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> grid <span class="py-keyword">in</span> grids:
+<span class="py-more">... </span>   teffs,loggs = get_grid_dimensions(grid=grid)
+<span class="py-more">... </span>   p = pl.plot(np.log10(teffs),loggs,<span class="py-string">'o'</span>,ms=7,label=grid)</pre>
+      <p>And we need to set some of the plotting details to make it look 
+      nicer.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Effective temperature [K]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'log( Surface gravity [cm s$^{-1}$]) [dex]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>xticks = [3000,5000,7000,10000,15000,25000,35000,50000,65000]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xticks([np.log10(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> xticks],[<span class="py-string">'%d'</span>%(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> xticks])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'upper left'</span>,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.grid()</pre>
+<center><img src='../images/ivs_sed_model_grid.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Retrieval of model SEDs</h1>
+    <h2 class="heading">Subsection 2.1 Default settings</h2>
+      <p>To get information on the grid that is currently defined, you can 
+      type the following. Note that not all parameters are relevant for all
+      grids, e.g. the convection theory parameter <code>ct</code> has no 
+      influence when the Kurucz grid is chosen.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> defaults
+<span class="py-output">{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}</span></pre>
+      <p>or</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> os.path.basename(get_file())
+<span class="py-output">kurucz93_z0.0_k2odfnew_sed.fits</span></pre>
+      <p>You can change the defaults with the function <a 
+      href="ivs.sed.model-module.html#set_defaults" 
+      class="link">set_defaults</a>:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>set_defaults(z=0.5)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> defaults
+<span class="py-output">{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.5, 'nover': False, 'He': 97}</span></pre>
+      <p>And reset the 'default' default values by calling <a 
+      href="ivs.sed.model-module.html#set_defaults" 
+      class="link">set_defaults</a> without arguments</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>set_defaults()
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> defaults
+<span class="py-output">{'use_scratch': False, 'Rv': 3.1, 'co': 1.05, 'c': 0.5, 'grid': 'kurucz', 'alpha': False, 'odfnew': True, 'ct': 'mlt', 'a': 0.0, 'vturb': 2, 'law': 'fitzpatrick2004', 'm': 1.0, 't': 1.0, 'z': 0.0, 'nover': False, 'He': 97}</span></pre>
+    <h2 class="heading">Subsection 2.2 Speeding up</h2>
+      <p>When fitting an sed using the builder class, or repeatedly reading
+      model seds, or integrated photometry, the main bottleneck on the 
+      speed will be the disk access This can be circumvented by using the 
+      scratch disk. To do this, call the function copy2scratch() after 
+      setting the default settings as explained above. f.x.:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>set_defaults(grid=<span class="py-string">'kurucz'</span>, z=0.5)
+<span class="py-prompt">&gt;&gt;&gt; </span>copy2scratch()</pre>
+      <p>You have to do this every time you change a grid setting. This 
+      function creates a directory named 'your_username' on the scratch 
+      disk and works from there. So you won`t disturbed other users.</p>
+      <p>After the fitting process use the function</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>clean_scratch()</pre>
+      <p>to remove the models that you used from the scratch disk. Be 
+      carefull with this, because it will remove the models without 
+      checking if there is another process using them. So if you have 
+      multiple scripts running that are using the same models, only clean 
+      the scratch disk after the last process is finished.</p>
+      <p>The gain in speed can be up to 70% in single sed fitting, and up 
+      to 40% in binary and multiple sed fitting.</p>
+      <p>For the sake of the examples, we'll set the defaults back to 
+      z=0.0:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>set_defaults()</pre>
+    <h2 class="heading">Subsection 2.3 Model SEDs</h2>
+      <p>Be careful when you supply parameters: e.g., not all grids are 
+      calculated for the same range of metallicities. In <a 
+      href="ivs.sed.model-module.html#get_table" 
+      class="link">get_table</a>, only the effective temperature and logg 
+      are 'interpolatable' quantities. You have to set the metallicity to a
+      grid value. The reddening value can take any value: it is not 
+      interpolated but calculated. You can thus also specify the type of 
+      reddening law (see <a href="ivs.sed.reddening-module.html" 
+      class="link">reddening</a>).</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=12345,logg=4.321,ebv=0.12345,z=0.5)</pre>
+      <p>but</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>try:
+<span class="py-more">... </span>    wave,flux = get_table(teff=12345,logg=4.321,ebv=0.12345,z=0.6)
+<span class="py-more">... </span><span class="py-keyword">except</span> IOError,msg:
+<span class="py-more">... </span>    <span class="py-keyword">print</span> msg
+<span class="py-output">File sedtables/modelgrids/kurucz93_z0.6_k2odfnew_sed.fits not found in any of the specified data directories /STER/pieterd/IVSDATA/, /STER/kristofs/IVSdata</span></pre>
+      <p>Since the Kurucz model atmospheres have not been calculated for 
+      the value of <code>z=0.6</code>.</p>
+      <p>Instead of changing the defaults of this module with <a 
+      href="ivs.sed.model-module.html#set_defaults" 
+      class="link">set_defaults</a>, you can also give extra arguments to 
+      <a href="ivs.sed.model-module.html#get_table" 
+      class="link">get_table</a> to specify the grid you want to use. The 
+      default settings will not change in this case.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=16321,logg=4.321,ebv=0.12345,z=0.3,grid=<span class="py-string">'tlusty'</span>)</pre>
+      <p>The default <b>units</b> of the SEDs are angstrom and 
+      erg/s/cm2/AA/sr. To change them, do:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=16321,logg=4.321,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>)</pre>
+      <p>To <b>remove the steradian</b> from the units when you know the 
+      angular diameter of your star in milliarcseconds, you can do (we have
+      to convert diameter to surface):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>ang_diam = 3.21 <span class="py-comment"># mas</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>scale = conversions.convert(<span class="py-string">'mas'</span>,<span class="py-string">'sr'</span>,ang_diam/2.)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=9602,logg=4.1,ebv=0.0,z=0.0,grid=<span class="py-string">'kurucz'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux *= scale</pre>
+      <p>The example above is representative for the case of Vega. So, if 
+      we now calculate the <b>synthetic flux</b> in the GENEVA.V band, we 
+      should end up with the zeropoint magnitude of this band, which is 
+      close to zero:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>flam = synthetic_flux(wave,flux,photbands=[<span class="py-string">'GENEVA.V'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> <span class="py-string">'%.3f'</span>%(conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'mag'</span>,flam,photband=<span class="py-string">'GENEVA.V'</span>)[0])
+<span class="py-output">0.063</span></pre>
+      <p>Compare this with the calibrated value</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> filters.get_info([<span class="py-string">'GENEVA.V'</span>])[<span class="py-string">'vegamag'</span>][0]
+<span class="py-output">0.061</span></pre>
+  <h1 class="heading">Section 3. Retrieval of integrated photometry</h1>
+    <p>Instead of retrieving a model SED, you can immediately retrieve 
+    pre-calculated integrated photometry. The benefit of this approach is 
+    that it is <b>much</b> faster than retrieving the model SED and then 
+    calculating the synthetic flux. Also, you can supply arbitrary 
+    metallicities within the grid boundaries, as interpolation is done in 
+    effective temperature, surface gravity, reddening <b>and</b> 
+    metallicity.</p>
+    <p>Note that also the <b>reddening law is fixed</b> now, you need to 
+    recalculate the tables for different parameters if you need them.</p>
+    <p>The <b>massive speed-up</b> is accomplished the following way: it 
+    may take a few tens of seconds to retrieve the first pre-integrated 
+    SED, because all available files from the specified grid will be loaded
+    into memory, and a `markerarray' will be made allowing a binary search 
+    in the grid. This makes it easy to retrieve all models around the 
+    speficied point in N-dimensional space. Next, a linear interpolation 
+    method is applied to predict the photometric values of the specified 
+    point.</p>
+    <p>All defaults set for the retrieval of model SEDs are applicable for 
+    the integrated photometry tables as well.</p>
+    <p>When retrieving integrated photometry, you also get the <b>absolute 
+    luminosity</b> (integration of total SED) as a bonus. This is the 
+    absolute luminosity assuming the star has a radius of 1Rsol. Multiply 
+    by Rstar**2 to get the true luminosity.</p>
+    <p>Because photometric filters cannot trivially be assigned a 
+    <b>wavelength</b> to (see <a 
+    href="ivs.sed.filters-module.html#eff_wave" 
+    class="link">filters.eff_wave</a>), by default, no wavelength 
+    information is retrieved. If you want to retrieve the effective 
+    wavelengths of the filters themselves (not taking into account the 
+    model atmospheres), you can give an extra keyword argument 
+    <code>wave_units</code>. If you want to take into account the model 
+    atmosphere, use <a href="ivs.sed.filters-module.html#eff_wave" 
+    class="link">filters.eff_wave</a>.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'GENEVA.U'</span>,<span class="py-string">'2MASS.J'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands)
+<span class="py-prompt">&gt;&gt;&gt; </span>waves,fluxes,Labs = get_itable(teff=16321,logg=4.321,ebv=0.12345,z=0.123,photbands=photbands,wave_units=<span class="py-string">'AA'</span>)</pre>
+    <p>Note that the integration only gives you fluxes, and is thus 
+    independent from the zeropoints of the filters (but dependent on the 
+    transmission curves). To get the synthetic magnitudes, you can do</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mymags = [conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'mag'</span>,fluxes[i],photband=photbands[i]) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(photbands))]</pre>
+    <p>The mags don't mean anything in this case because they have not been
+    corrected for the distance to the star.</p>
+    <p>The retrieval of integrated photometry can go much faster if you 
+    want to do it for a whole set of parameters. The <a 
+    href="ivs.sed.model-module.html#get_itable_pix" 
+    class="link">get_itable_pix</a> function has a much more flexible, 
+    reliable and fast interpolation scheme. It is possible to interpolate 
+    also over doppler shift and interstellar Rv, as long as the grids have 
+    been computed before. See <a 
+    href="ivs.sed.model-module.html#get_itable_pix" 
+    class="link">get_itable_pix</a> for more information.</p>
+  <h1 class="heading">Subsection 3. Full example</h1>
+    <p>We build an SED of Vega and compute synthetic magnitudes in the 
+    GENEVA and 2MASS bands.</p>
+    <p>These are the relevant parameters of Vega and photometric 
+    passbands</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>ang_diam = 3.21 <span class="py-comment"># mas</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>teff = 9602
+<span class="py-prompt">&gt;&gt;&gt; </span>logg = 4.1
+<span class="py-prompt">&gt;&gt;&gt; </span>ebv = 0.0
+<span class="py-prompt">&gt;&gt;&gt; </span>z = 0.0
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'GENEVA.U'</span>,<span class="py-string">'GENEVA.G'</span>,<span class="py-string">'2MASS.J'</span>,<span class="py-string">'2MASS.H'</span>,<span class="py-string">'2MASS.KS'</span>]</pre>
+    <p>We can compute (R/d) to scale the synthetic flux as</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>scale = conversions.convert(<span class="py-string">'mas'</span>,<span class="py-string">'sr'</span>,ang_diam/2.)</pre>
+    <p>We retrieve the SED</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid=<span class="py-string">'kurucz'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux *= scale</pre>
+    <p>Then compute the synthetic fluxes, and compare them with the 
+    synthetic fluxes as retrieved from the pre-calculated tables</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>fluxes_calc = synthetic_flux(wave,flux,photbands)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_int,fluxes_int,Labs = get_itable(teff=teff,logg=logg,ebv=ebv,z=z,photbands=photbands,wave_units=<span class="py-string">'AA'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>fluxes_int *= scale</pre>
+    <p>Convert to magnitudes:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>m1 = [conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'mag'</span>,fluxes_calc[i],photband=photbands[i]) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(photbands))]
+<span class="py-prompt">&gt;&gt;&gt; </span>m2 = [conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'mag'</span>,fluxes_int[i],photband=photbands[i]) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(photbands))]</pre>
+    <p>And make a nice plot</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,flux,<span class="py-string">'k-'</span>,label=<span class="py-string">'Kurucz model'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_int,fluxes_calc,<span class="py-string">'ro'</span>,label=<span class="py-string">'Calculated'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_int,fluxes_int,<span class="py-string">'bx'</span>,ms=10,mew=2,label=<span class="py-string">'Pre-calculated'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = [pl.annotate(<span class="py-string">'%s: %.3f'</span>%(b,m),(w,f),color=<span class="py-string">'r'</span>) <span class="py-keyword">for</span> b,m,w,f <span class="py-keyword">in</span> zip(photbands,m1,wave_int,fluxes_calc)]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = [pl.annotate(<span class="py-string">'%s: %.3f'</span>%(b,m),(w-1000,0.8*f),color=<span class="py-string">'b'</span>) <span class="py-keyword">for</span> b,m,w,f <span class="py-keyword">in</span> zip(photbands,m2,wave_int,fluxes_int)]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [Angstrom]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Flux [erg/s/cm2/AA]'</span>)</pre>
+<center><img src='../images/ivs_sed_model_example.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#_get_itable_markers" class="summary-sig-name" onclick="show_private();">_get_itable_markers</a>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">include_Labs</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Get a list of markers to more easily retrieve integrated fluxes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_itable_markers">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#_get_pix_grid" class="summary-sig-name" onclick="show_private();">_get_pix_grid</a>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">rvrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">vradrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">include_Labs</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">variables</span>=<span class="summary-sig-default">['teff','logg','ebv','z','rv','vrad']</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Prepare the pixalted grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_pix_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#_get_flux_from_table" class="summary-sig-name" onclick="show_private();">_get_flux_from_table</a>(<span class="summary-sig-arg">fits_ext</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">include_Labs</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Retrieve flux and flux ratios from an integrated SED table.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_flux_from_table">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Interface to library</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#set_defaults" class="summary-sig-name">set_defaults</a>(<span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Set defaults of this module</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#set_defaults">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_defaults_multiple"></a><span class="summary-sig-name">set_defaults_multiple</span>(<span class="summary-sig-arg">*args</span>)</span><br />
+      Set defaults for multiple stars</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#set_defaults_multiple">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#copy2scratch" class="summary-sig-name">copy2scratch</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Copy the grids to the scratch directory to speed up the fitting 
+      process.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#copy2scratch">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#clean_scratch" class="summary-sig-name">clean_scratch</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Remove the grids that were copied to the scratch directory by using 
+      the function copy2scratch().</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#clean_scratch">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#defaults2str" class="summary-sig-name">defaults2str</a>()</span><br />
+      Convert the defaults to a string, e.g.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#defaults2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#defaults_multiple2str" class="summary-sig-name">defaults_multiple2str</a>()</span><br />
+      Convert the defaults to a string, e.g.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#defaults_multiple2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_gridnames" class="summary-sig-name">get_gridnames</a>(<span class="summary-sig-arg">grid</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Return a list of available grid names.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_gridnames">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_file" class="summary-sig-name">get_file</a>(<span class="summary-sig-arg">integrated</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the filename containing the specified SED grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_file">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#_blackbody_input" class="summary-sig-name" onclick="show_private();">_blackbody_input</a>(<span class="summary-sig-arg">fctn</span>)</span><br />
+      Prepare input and output for blackbody-like functions.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#_blackbody_input">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#blackbody" class="summary-sig-name">blackbody</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">T</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">ang_diam</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Definition of black body curve.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#blackbody">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#rayleigh_jeans" class="summary-sig-name">rayleigh_jeans</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">T</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">ang_diam</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Rayleigh-Jeans approximation of a black body.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#rayleigh_jeans">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#wien" class="summary-sig-name">wien</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">T</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA'</span>,
+        <span class="summary-sig-arg">disc_integrated</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">ang_diam</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Wien approximation of a black body.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#wien">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_table_single" class="summary-sig-name">get_table_single</a>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">rad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">star</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the spectral energy distribution of a model atmosphere.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_table_single">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,)ndarray,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_itable_single" class="summary-sig-name">get_itable_single</a>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">z</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">rad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the spectral energy distribution of a model atmosphere in 
+      photometric passbands.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable_single">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_itable" class="summary-sig-name">get_itable</a>(<span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="summary-sig-arg">grids</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the integrated spectral energy distribution of a combined 
+      model atmosphere.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_itable_single_pix" class="summary-sig-name">get_itable_single_pix</a>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">z</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Super fast grid interpolator.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable_single_pix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_itable_pix"></a><span class="summary-sig-name">get_itable_pix</span>(<span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="summary-sig-arg">grids</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Super fast grid interpolator for multiple tables, completely based on
+      get_itable_pix.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable_pix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_table" class="summary-sig-name">get_table</a>(<span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/cm2/s/AA/sr'</span>,
+        <span class="summary-sig-arg">grids</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the spectral energy distribution of a combined model 
+      atmosphere.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_table">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_grid_dimensions" class="summary-sig-name">get_grid_dimensions</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve possible effective temperatures and gravities from a grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_grid_dimensions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_igrid_dimensions" class="summary-sig-name">get_igrid_dimensions</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve possible effective temperatures, surface gravities and 
+      reddenings from an integrated grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_igrid_dimensions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(3x1Darray,3Darray,interp_func)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_grid_mesh" class="summary-sig-name">get_grid_mesh</a>(<span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Return InterpolatingFunction spanning the available grid of 
+      atmosphere models.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_grid_mesh">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Calibration</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#list_calibrators" class="summary-sig-name">list_calibrators</a>(<span class="summary-sig-arg">library</span>=<span class="summary-sig-default">'calspec'</span>)</span><br />
+      Print and return the list of calibrators</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#list_calibrators">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#get_calibrator" class="summary-sig-name">get_calibrator</a>(<span class="summary-sig-arg">name</span>=<span class="summary-sig-default">'alpha_lyr'</span>,
+        <span class="summary-sig-arg">version</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">library</span>=<span class="summary-sig-default">'calspec'</span>)</span><br />
+      Retrieve a calibration SED</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#get_calibrator">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#read_calibrator_info" class="summary-sig-name">read_calibrator_info</a>(<span class="summary-sig-arg">library</span>=<span class="summary-sig-default">'ngsl'</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#read_calibrator_info">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#calibrate" class="summary-sig-name">calibrate</a>()</span><br />
+      Calibrate photometry.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#calibrate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Synthetic photometry</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#synthetic_flux" class="summary-sig-name">synthetic_flux</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Extract flux measurements from a synthetic SED (Fnu or Flambda).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#synthetic_flux">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#synthetic_color" class="summary-sig-name">synthetic_color</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">colors</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Construct colors from a synthetic SED.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#synthetic_color">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.model-module.html#luminosity" class="summary-sig-name">luminosity</a>(<span class="summary-sig-arg">wave</span>,
+        <span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">1.</span>)</span><br />
+      Calculate the bolometric luminosity of a model SED.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.model-pysrc.html#luminosity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="new_scipy"></a><span class="summary-name">new_scipy</span> = <code title="False">False</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SED.MODEL&quot;)">logging.getLogger(&quot;SED.MODEL&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="caldir"></a><span class="summary-name">caldir</span> = <code title="os.sep.join(['sedtables', 'calibrators'])">os.sep.join(['sedtables', 'calibrators'])</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sed.model-module.html#__defaults__" class="summary-name">__defaults__</a> = <code title="dict(grid= 'kurucz', odfnew= True, z=+ 0.0, vturb= 2, alpha= False, no\
+ver= False, He= 97, ct= 'mlt', t= 1.0, a= 0.0, c= 0.5, m= 1.0, co= 1.0\
+5, Rv= 3.1, law= 'fitzpatrick2004', use_scratch= False)">dict(grid= 'kurucz', odfnew= True, z=+ 0.0, vtu<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="defaults"></a><span class="summary-name">defaults</span> = <code title="__defaults__.copy()">__defaults__.copy()</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="defaults_multiple"></a><span class="summary-name">defaults_multiple</span> = <code title="[defaults.copy(), defaults.copy()]">[defaults.copy(), defaults.copy()]</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basedir"></a><span class="summary-name">basedir</span> = <code title="'sedtables/modelgrids/'">'sedtables/modelgrids/'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="scratchdir"></a><span class="summary-name">scratchdir</span> = <code title="None">None</code><br />
+      hash(x)
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="set_defaults"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_defaults</span>(<span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#set_defaults">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set defaults of this module</p>
+  <p>If you give no keyword arguments, the default values will be 
+  reset.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="copy2scratch"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">copy2scratch</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#copy2scratch">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Copy the grids to the scratch directory to speed up the fitting 
+  process. Files are placed in the directory: /scratch/uname/ where uname 
+  is your username.</p>
+  <p>This function checks the grids that are set with the functions 
+  set_defaults() and set_defaults_multiple(). Every time a grid setting is 
+  changed, this function needs to be called again.</p>
+  <p>Don`t forget to remove the files from the scratch directory after the 
+  fitting process is completed with clean_scratch()</p>
+  <p>It is possible to give z='*' and Rv='*' as an option; when you do 
+  that, the grids with all z, Rv values are copied. Don't forget to add 
+  that option to clean_scratch too!</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="clean_scratch"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">clean_scratch</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#clean_scratch">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Remove the grids that were copied to the scratch directory by using 
+  the function copy2scratch(). Be carefull with this function, as it 
+  doesn't check if the models are still in use. If you are running multiple
+  scripts that use the same models, only clean the scratch disk after the 
+  last script is finnished.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="defaults2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">defaults2str</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#defaults2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the defaults to a string, e.g. for saving files.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="defaults_multiple2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">defaults_multiple2str</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#defaults_multiple2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the defaults to a string, e.g. for saving files.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_gridnames"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_gridnames</span>(<span class="sig-arg">grid</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_gridnames">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return a list of available grid names.</p>
+  <p>If you specificy the grid's name, you get two lists: one with all 
+  available original, non-integrated grids, and one with the pre-calculated
+  photometry.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>grid</code></strong> (string) - name of the type of grid (optional)</li>
+    </ul></dd>
+    <dt>Returns: list of str</dt>
+        <dd>list of grid names</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_file"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_file</span>(<span class="sig-arg">integrated</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_file">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the filename containing the specified SED grid.</p>
+  <p>The keyword arguments are specific to the kind of grid you're 
+  using.</p>
+  <p>Basic keywords are 'grid' for the name of the grid, and 'z' for 
+  metallicity. For other keywords, see the source code.</p>
+  <p>Available grids and example keywords:</p>
+  <ul>
+    <li>
+      grid='kurucz93':
+      <ul>
+        <li>
+          metallicity (z): m01 is -0.1 log metal abundance relative to 
+          solar (solar abundances from Anders and Grevesse 1989)
+        </li>
+        <li>
+          metallicity (z): p01 is +0.1 log metal abundance relative to 
+          solar (solar abundances from Anders and Grevesse 1989)
+        </li>
+        <li>
+          alpha enhancement (alpha): True means alpha enhanced (+0.4)
+        </li>
+        <li>
+          turbulent velocity (vturb): vturb in km/s
+        </li>
+        <li>
+          nover= True means no overshoot
+        </li>
+        <li>
+          odfnew=True means no overshoot but with better opacities and 
+          abundances
+        </li>
+      </ul>
+    </li>
+    <li>
+      grid='tlusty':
+      <ul>
+        <li>
+          z: log10(Z/Z0)
+        </li>
+      </ul>
+    </li>
+    <li>
+      grid='sdb_uli': metallicity and helium fraction (z, he=98)
+    </li>
+    <li>
+      grid='fastwind': no options
+    </li>
+    <li>
+      grid='wd_boris': no options
+    </li>
+    <li>
+      grid='stars': precomputed stars (vega, betelgeuse...)
+    </li>
+    <li>
+      grid='uvblue'
+    </li>
+    <li>
+      grid='marcs'
+    </li>
+    <li>
+      grid='marcs2'
+    </li>
+    <li>
+      grid='atlas12'
+    </li>
+    <li>
+      grid='tkachenko': metallicity z
+    </li>
+    <li>
+      grid='nemo': convection theory and metallicity (CM=Canuto and 
+      Mazzitelli 1991), (CGM=Canuto,Goldman,Mazzitelli 1996), 
+      (MLT=mixinglengththeory a=0.5)
+    </li>
+    <li>
+      grid='marcsjorissensp': high resolution spectra from 4000 to 25000 A 
+      of (online available) MARCS grid computed by A. Jorissen with 
+      turbospectrum v12.1.1 in late 2012, then converted to the Kurucz 
+      wavelength grid (by S. Bloemen and M. Hillen).
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>integrated</code></strong> (boolean) - choose integrated version of the grid</li>
+        <li><strong class="pname"><code>grid</code></strong> (str) - gridname (default Kurucz)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>gridfile</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_blackbody_input"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_blackbody_input</span>(<span class="sig-arg">fctn</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#_blackbody_input">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Prepare input and output for blackbody-like functions.</p>
+  <p>If the user gives wavelength units and Flambda units, we only need to 
+  convert everything to SI (and back to the desired units in the end).</p>
+  <p>If the user gives frequency units and Fnu units, we only need to 
+  convert everything to SI ( and back to the desired units in the end).</p>
+  <p>If the user gives wavelength units and Fnu units, we need to convert 
+  the wavelengths first to frequency.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="blackbody"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">blackbody</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">T</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">ang_diam</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#blackbody">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Definition of black body curve.</p>
+  <p>To get them into the same units as the Kurucz disc-integrated SEDs, 
+  they are multiplied by sqrt(2*pi) (set 
+  <code>disc_integrated=True</code>).</p>
+  <p>You can only give an angular diameter if disc_integrated is True.</p>
+  <p>To convert the scale parameter back to mas, simply do:</p>
+  <p>ang_diam = 2*conversions.convert('sr','mas',scale)</p>
+  <p>See decorator <code class="link">blackbody_input</code> for details on
+  how the input parameters are handled: the user is free to choose 
+  wavelength or frequency units, choose *which* wavelength or frequency 
+  units, and can even mix them. To be sure that everything is handled 
+  correctly, we need to do some preprocessing and unit conversions.</p>
+  <p>Be careful when, e.g. during fitting, scale contains an error: be sure
+  to set the option <code>unpack=True</code> in the <code 
+  class="link">conversions.convert</code> function!</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(2.3595,193.872,500)
+<span class="py-prompt">&gt;&gt;&gt; </span>F1 = blackbody(x,280.,wave_units=<span class="py-string">'AA'</span>,flux_units=<span class="py-string">'Jy'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>F2 = rayleigh_jeans(x,280.,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>F3 = wien(x,280.,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F3)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>F1 = blackbody(x,280.,wave_units=<span class="py-string">'AA'</span>,flux_units=<span class="py-string">'erg/s/cm2/AA'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>F2 = rayleigh_jeans(x,280.,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'erg/s/cm2/AA'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>F3 = wien(x,280.,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'erg/s/cm2/AA'</span>,ang_diam=(1.,<span class="py-string">'mas'</span>))</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,F3)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>T</code></strong> - temperature, unit</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str (units)) - wavelength units (frequency or length)</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str (units)) - flux units (could be in Fnu-units or Flambda-units)</li>
+        <li><strong class="pname"><code>disc_integrated</code></strong> (bool) - if True, they are in the same units as Kurucz-disc-integrated 
+          SEDs</li>
+        <li><strong class="pname"><code>ang_diam</code></strong> ((value, unit)) - angular diameter (in mas or rad or something similar)</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>intensity</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@_blackbody_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="rayleigh_jeans"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">rayleigh_jeans</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">T</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">ang_diam</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#rayleigh_jeans">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Rayleigh-Jeans approximation of a black body.</p>
+  <p>Valid at long wavelengths.</p>
+  <p>For input details, see <a href="ivs.sed.model-module.html#blackbody" 
+  class="link">blackbody</a>.</p>
+  <dl class="fields">
+    <dt>Returns: array</dt>
+        <dd>intensity</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@_blackbody_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="wien"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">wien</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">T</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA'</span>,
+        <span class="sig-arg">disc_integrated</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">ang_diam</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#wien">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Wien approximation of a black body.</p>
+  <p>Valid at short wavelengths.</p>
+  <p>For input details, see <a href="ivs.sed.model-module.html#blackbody" 
+  class="link">blackbody</a>.</p>
+  <dl class="fields">
+    <dt>Returns: array</dt>
+        <dd>intensity</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@_blackbody_input</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_table_single"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_table_single</span>(<span class="sig-arg">teff</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">logg</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">rad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">star</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_table_single">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the spectral energy distribution of a model atmosphere.</p>
+  <p>Wavelengths in A (angstrom) Fluxes in Ilambda = ergs/cm2/s/AA/sr, 
+  except specified via 'units',</p>
+  <p>If you give 'units', and /sr is not included, you are responsible 
+  yourself for giving an extra keyword with the angular diameter 
+  <code>ang_diam</code>, or other possibilities offered by the 
+  <code>units.conversions.convert</code> function.</p>
+  <p>Possibility to redden the fluxes according to the reddening parameter 
+  EB_V.</p>
+  <p>Extra kwargs can specify the grid type. Extra kwargs can specify 
+  constraints on the size of the grid to interpolate. Extra kwargs can 
+  specify reddening law types. Extra kwargs can specify information for 
+  conversions.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> pylab <span class="py-keyword">import</span> figure,gca,subplot,title,gcf,loglog
+<span class="py-prompt">&gt;&gt;&gt; </span>p = figure(figsize=(10,6))
+<span class="py-prompt">&gt;&gt;&gt; </span>p=gcf().canvas.set_window_title(<span class="py-string">'Test of &lt;get_table&gt;'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(131)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'FASTWIND'</span>,teff=35000,logg=4.0),**dict(label=<span class="py-string">'Fastwind'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=35000,logg=4.0),**dict(label=<span class="py-string">'Kurucz'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'TLUSTY'</span>,teff=35000,logg=4.0),**dict(label=<span class="py-string">'Tlusty'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'MARCS'</span>,teff=5000,logg=2.0),**dict(label=<span class="py-string">'Marcs'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=5000,logg=2.0),**dict(label=<span class="py-string">'Kurucz'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [angstrom]'</span>);p = pl.ylabel(<span class="py-string">'Flux [erg/s/cm2/AA/sr]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'upper right'</span>,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(132)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'FASTWIND'</span>,teff=35000,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'Fastwind'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=35000,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'Kurucz'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'TLUSTY'</span>,teff=35000,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'Tlusty'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'MARCS'</span>,teff=5000,logg=2.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'Marcs'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=5000,logg=2.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'Kurucz'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [micron]'</span>);p = pl.ylabel(<span class="py-string">'Flux [Jy/sr]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'upper right'</span>,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(133);p = title(<span class="py-string">'Kurucz'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=10000,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'10000'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=10250,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'10250'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=10500,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'10500'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=10750,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'10750'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = loglog(*get_table(grid=<span class="py-string">'KURUCZ'</span>,teff=11000,logg=4.0,wave_units=<span class="py-string">'micron'</span>,flux_units=<span class="py-string">'Jy/sr'</span>),**dict(label=<span class="py-string">'11000'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [micron]'</span>);p = pl.ylabel(<span class="py-string">'Flux [Jy/sr]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'upper right'</span>,prop=dict(size=<span class="py-string">'small'</span>))</pre>
+<center><img src='../images/ivs_sed_model_comparison.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening coefficient</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str) - units to convert the wavelengths to (if not given, A)</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str) - units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelength,flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_itable_single"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_itable_single</span>(<span class="sig-arg">teff</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">logg</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">z</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">rad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable_single">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the spectral energy distribution of a model atmosphere in 
+  photometric passbands.</p>
+  <p>Wavelengths in A (angstrom). If you set 'wavelengths' to None, no 
+  effective wavelengths will be calculated. Otherwise, the effective 
+  wavelength is calculated taking the model flux into account. Fluxes in 
+  Ilambda = ergs/cm2/s/AA/sr, except specified via 'units',</p>
+  <p>If you give 'units', and /sr is not included, you are responsible 
+  yourself for giving an extra keyword with the angular diameter 
+  <code>ang_diam</code>, or other possibilities offered by the 
+  <code>units.conversions.convert</code> function.</p>
+  <p>Possibility to redden the fluxes according to the reddening parameter 
+  EB_V.</p>
+  <p>Extra kwargs can specify the grid type. Extra kwargs can specify 
+  constraints on the size of the grid to interpolate. Extra kwargs can 
+  specify reddening law types. Extra kwargs can specify information for 
+  conversions.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening coefficient</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of photometric passbands) - photometric passbands</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str) - units to convert the wavelengths to (if not given, A)</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str) - units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)</li>
+        <li><strong class="pname"><code>clear_memory</code></strong> (boolean) - flag to clear memory from previously loaded SED tables. If you 
+          set it to False, you can easily get an overloaded memory!</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,)ndarray,float</dt>
+        <dd>(wave,) flux, absolute luminosity</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_itable"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_itable</span>(<span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="sig-arg">grids</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the integrated spectral energy distribution of a combined 
+  model atmosphere.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teff1,teff2 = 20200,5100
+<span class="py-prompt">&gt;&gt;&gt; </span>logg1,logg2 = 4.35,2.00
+<span class="py-prompt">&gt;&gt;&gt; </span>ebv = 0.2,0.2
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'JOHNSON.U'</span>,<span class="py-string">'JOHNSON.V'</span>,<span class="py-string">'2MASS.J'</span>,<span class="py-string">'2MASS.H'</span>,<span class="py-string">'2MASS.KS'</span>]</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=ebv[0])
+<span class="py-prompt">&gt;&gt;&gt; </span>wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
+<span class="py-prompt">&gt;&gt;&gt; </span>wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units=<span class="py-string">'AA'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
+<span class="py-prompt">&gt;&gt;&gt; </span>iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gcf().canvas.set_window_title(<span class="py-string">'Test of &lt;get_itable_multiple&gt;'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave1,flux1,<span class="py-string">'r-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(iwave1,iflux1,<span class="py-string">'ro'</span>,ms=10)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave2,flux2*20**2,<span class="py-string">'b-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(iwave1,iflux2*20**2,<span class="py-string">'bo'</span>,ms=10)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave3,flux3,<span class="py-string">'k-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(iwave1,iflux3,<span class="py-string">'kx'</span>,ms=10,mew=2)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (tuple floats) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (tuple floats) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (tuple floats) - reddening coefficient</li>
+        <li><strong class="pname"><code>z</code></strong> (tuple floats) - metallicity</li>
+        <li><strong class="pname"><code>radius</code></strong> (tuple of floats) - ratio of R_i/(R_{i-1})</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list) - photometric passbands</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str) - units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)</li>
+        <li><strong class="pname"><code>grids</code></strong> (list of dict) - specifications for grid1</li>
+        <li><strong class="pname"><code>full_output</code></strong> (boolean) - return all individual SEDs</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelength,flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_itable_single_pix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_itable_single_pix</span>(<span class="sig-arg">teff</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">logg</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">z</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">vrad</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/s/cm2/AA/sr'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_itable_single_pix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Super fast grid interpolator.</p>
+  <p>Possible kwargs are teffrange,loggrange etc.... that are past on to <a
+  href="ivs.sed.model-module.html#_get_pix_grid" class="link" 
+  onclick="show_private();">_get_pix_grid</a>. You should probably use 
+  these options when you want to interpolate in many variables; supplying 
+  these ranges will make the grid smaller and thus decrease memory 
+  usage.</p>
+  <p>It is possible to fix <code>teff</code>, <code>logg</code>, 
+  <code>ebv</code>, <code>z</code>, <code>rv</code> and/or 
+  <code>vrad</code> to one value, in which case it <b>has</b> to be a point
+  in the grid. If you want to retrieve a list of fluxes with the same ebv 
+  value that is not in the grid, you need to give an array with all equal 
+  values. The reason is that the script can try to minimize the number of 
+  interpolations, by fixing a variable on a grid point. The fluxes on the 
+  other gridpoints will then not be loaded or not interpolated over.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs = np.linspace(5000,7000,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>loggs = np.linspace(4.0,4.5,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>ebvs = np.linspace(0,1,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>zs = np.linspace(-0.5,0.5,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>rvs = np.linspace(2.2,5.0,100)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>set_defaults(grid=<span class="py-string">'kurucz2'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux,labs = get_itable_pix(teffs,loggs,ebvs,zs,rvs,photbands=[<span class="py-string">'JOHNSON.V'</span>])</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>names = [<span class="py-string">'teffs'</span>,<span class="py-string">'loggs'</span>,<span class="py-string">'ebvs'</span>,<span class="py-string">'zs'</span>,<span class="py-string">'rvs'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i <span class="py-keyword">in</span> range(len(names)):
+<span class="py-more">... </span>    p = pl.subplot(2,3,i+1)
+<span class="py-more">... </span>    p = pl.plot(locals()[names[i]],flux[0],<span class="py-string">'k-'</span>)
+<span class="py-more">... </span>    p = pl.xlabel(names[i])</pre>
+  <p>Thanks to Steven Bloemen for the core implementation of the 
+  interpolation algorithm.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_table"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_table</span>(<span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/cm2/s/AA/sr'</span>,
+        <span class="sig-arg">grids</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_table">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the spectral energy distribution of a combined model 
+  atmosphere.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teff1,teff2 = 20200,5100
+<span class="py-prompt">&gt;&gt;&gt; </span>logg1,logg2 = 4.35,2.00
+<span class="py-prompt">&gt;&gt;&gt; </span>wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=0.2)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=0.2)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=(0.2,0.2),radius=[1,20])</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gcf().canvas.set_window_title(<span class="py-string">'Test of &lt;get_table_multiple&gt;'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave1,flux1,<span class="py-string">'r-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave2,flux2,<span class="py-string">'b-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave2,flux2*20**2,<span class="py-string">'b--'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave3,flux3,<span class="py-string">'k-'</span>,lw=2)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (tuple floats) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (tuple floats) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (tuple floats) - tuple reddening coefficients</li>
+        <li><strong class="pname"><code>radius</code></strong> (tuple of floats) - radii of the stars</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str) - units to convert the wavelengths to (if not given, A)</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str) - units to convert the fluxes to (if not given, erg/s/cm2/AA/sr)</li>
+        <li><strong class="pname"><code>grids</code></strong> (list of dict) - specifications for grid1</li>
+        <li><strong class="pname"><code>full_output</code></strong> (boolean) - return all individual SEDs</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelength,flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_grid_dimensions"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_grid_dimensions</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_grid_dimensions">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve possible effective temperatures and gravities from a 
+  grid.</p>
+  <p>E.g. kurucz, sdB, fastwind...</p>
+  <dl class="fields">
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>effective temperatures, gravities</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_igrid_dimensions"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_igrid_dimensions</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_igrid_dimensions">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve possible effective temperatures, surface gravities and 
+  reddenings from an integrated grid.</p>
+  <p>E.g. kurucz, sdB, fastwind...</p>
+  <dl class="fields">
+    <dt>Returns: (ndarray,ndarray,ndarray)</dt>
+        <dd>effective temperatures, surface, gravities, E(B-V)s</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_grid_mesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_grid_mesh</span>(<span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_grid_mesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return InterpolatingFunction spanning the available grid of atmosphere
+  models.</p>
+  <p>WARNING: the grid must be entirely defined on a mesh grid, but it does
+  not need to be equidistant.</p>
+  <p>It is thus the user's responsibility to know whether the grid is 
+  evenly spaced in logg and teff (e.g. this is not so for the CMFGEN 
+  models).</p>
+  <p>You can supply your own wavelength range, since the grid models' 
+  resolution are not necessarily homogeneous. If not, the first wavelength 
+  array found in the grid will be used as a template.</p>
+  <p>It might take a long a time and cost a lot of memory if you load the 
+  entire grid. Therefor, you can also set range of temperature and 
+  gravity.</p>
+  <p>WARNING: 30000,50000 did not work out for FASTWIND, since we miss a 
+  model!</p>
+  <p>Example usage:</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength to define the grid on</li>
+        <li><strong class="pname"><code>teffrange</code></strong> (tuple of floats) - starting and ending of the grid in teff</li>
+        <li><strong class="pname"><code>loggrange</code></strong> (tuple of floats) - starting and ending of the grid in logg</li>
+    </ul></dd>
+    <dt>Returns: (3x1Darray,3Darray,interp_func)</dt>
+        <dd>wavelengths, teffs, loggs and fluxes of grid, and the 
+          interpolating function</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="list_calibrators"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">list_calibrators</span>(<span class="sig-arg">library</span>=<span class="sig-default">'calspec'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#list_calibrators">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Print and return the list of calibrators</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>library</code></strong> (str) - name of the library (calspec, ngsl, stelib)</li>
+    </ul></dd>
+    <dt>Returns: list of str</dt>
+        <dd>list of calibrator names</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_calibrator"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_calibrator</span>(<span class="sig-arg">name</span>=<span class="sig-default">'alpha_lyr'</span>,
+        <span class="sig-arg">version</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">library</span>=<span class="sig-default">'calspec'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#get_calibrator">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve a calibration SED</p>
+  <p>If <code>version</code> is None, get the last version.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_calibrator(name=<span class="py-string">'alpha_lyr'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_calibrator(name=<span class="py-string">'alpha_lyr'</span>,version=<span class="py-string">'003'</span>)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str) - calibrator name</li>
+        <li><strong class="pname"><code>version</code></strong> (str) - version of the calibration file</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str (interpretable by <code>units.conversions.convert</code>)) - units of wavelength arrays (default: AA)</li>
+        <li><strong class="pname"><code>flux_units</code></strong> (str (interpretable by <code>units.conversions.convert</code>)) - units of flux arrays (default: erg/s/cm2/AA)</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelength and flux arrays of calibrator</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_calibrator_info"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_calibrator_info</span>(<span class="sig-arg">library</span>=<span class="sig-default">'ngsl'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#read_calibrator_info">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calibrate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calibrate</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#calibrate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calibrate photometry.</p>
+  <p>Not finished!</p>
+  <p>ABmag = -2.5 Log F_nu - 48.6 with F_nu in erg/s/cm2/Hz Flux computed 
+  as 10**(-(meas-mag0)/2.5)*F0 Magnitude computed as -2.5*log10(Fmeas/F0) 
+  F0 = 3.6307805477010029e-20 erg/s/cm2/Hz</p>
+  <p>STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/AA Flux 
+  computed as 10**(-(meas-mag0)/2.5)*F0 Magnitude computed as 
+  -2.5*log10(Fmeas/F0) F0 = 3.6307805477010028e-09 erg/s/cm2/AA</p>
+  <p>Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/AA Flux computed 
+  as 10**(-meas/2.5)*F0 Magnitude computed as -2.5*log10(Fmeas/F0)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="synthetic_flux"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">synthetic_flux</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#synthetic_flux">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Extract flux measurements from a synthetic SED (Fnu or Flambda).</p>
+  <p>The fluxes below 4micron are calculated assuming PHOTON-counting 
+  detectors (e.g. CCDs).</p>
+  <p>Flam = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)</p>
+  <p>When otherwise specified, we assume ENERGY-counting detectors (e.g. 
+  bolometers)</p>
+  <p>Flam = int(P_lam * f_lam, dlam) / int(P_lam, dlam)</p>
+  <p>Where P_lam is the total system dimensionless sensitivity function, 
+  which is normalised so that the maximum equals 1. Also, f_lam is the SED 
+  of the object, in units of energy per time per unit area per 
+  wavelength.</p>
+  <p>The PHOTON-counting part of this routine has been thoroughly checked 
+  with respect to johnson UBV, geneva and stromgren filters, and only gives
+  offsets with respect to the Kurucz integrated files (.geneva and stuff on
+  his websites). These could be due to different normalisation.</p>
+  <p>You can also readily integrate in Fnu instead of Flambda by suppling a
+  list of strings to 'units'. This should have equal length of photbands, 
+  and should contain the strings 'flambda' and 'fnu' corresponding to each 
+  filter. In that case, the above formulas reduce to</p>
+  <p>Fnu = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)</p>
+  <p>and</p>
+  <p>Fnu = int(P_nu * f_nu, dnu) / int(P_nu, dnu)</p>
+  <p>Small note of caution: P_nu is not equal to P_lam according to 
+  Maiz-Apellaniz, he states that P_lam = P_nu/lambda. But in the definition
+  we use above here, it *is* the same!</p>
+  <p>The model fluxes should <b>always</b> be given in Flambda 
+  (erg/s/cm2/AA). The program will convert them to Fnu where needed.</p>
+  <p>The output is a list of numbers, equal in length to the 'photband' 
+  inputs. The units of the output are erg/s/cm2/AA where Flambda was given,
+  and erg/s/cm2/Hz where Fnu was given.</p>
+  <p>The difference is only marginal for 'blue' bands. For example, 
+  integrating 2MASS in Flambda or Fnu is only different below the 1.1% 
+  level:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = get_table(teff=10000,logg=4.0)
+<span class="py-prompt">&gt;&gt;&gt; </span>energys = synthetic_flux(wave,flux,[<span class="py-string">'2MASS.J'</span>,<span class="py-string">'2MASS.J'</span>],units=[<span class="py-string">'flambda'</span>,<span class="py-string">'fnu'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>e0_conv = conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'erg/s/cm2/Hz'</span>,energys[0],photband=<span class="py-string">'2MASS.J'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>np.abs(energys[1]-e0_conv)/energys[1]&lt;0.012
+<span class="py-output">True</span></pre>
+  <p>But this is not the case for IRAS.F12:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>energys = synthetic_flux(wave,flux,[<span class="py-string">'IRAS.F12'</span>,<span class="py-string">'IRAS.F12'</span>],units=[<span class="py-string">'flambda'</span>,<span class="py-string">'fnu'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>e0_conv = conversions.convert(<span class="py-string">'erg/s/cm2/AA'</span>,<span class="py-string">'erg/s/cm2/Hz'</span>,energys[0],photband=<span class="py-string">'IRAS.F12'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>np.abs(energys[1]-e0_conv)/energys[1]&gt;0.1
+<span class="py-output">True</span></pre>
+  <p>If you have a spectrum in micron vs Jy and want to calculate the 
+  synthetic fluxes in Jy, a little bit more work is needed to get 
+  everything in the right units. In the following example, we first 
+  generate a constant flux spectrum in micron and Jy. Then, we convert flux
+  to erg/s/cm2/AA using the wavelengths (this is no approximation) and 
+  convert wavelength to angstrom. Next, we compute the synthetic fluxes in 
+  the IRAS band in Fnu, and finally convert the outcome (in erg/s/cm2/Hz) 
+  to Jansky.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,flux = np.linspace(0.1,200,10000),np.ones(10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>flam = conversions.convert(<span class="py-string">'Jy'</span>,<span class="py-string">'erg/s/cm2/AA'</span>,flux,wave=(wave,<span class="py-string">'micron'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>lam = conversions.convert(<span class="py-string">'micron'</span>,<span class="py-string">'AA'</span>,wave)
+<span class="py-prompt">&gt;&gt;&gt; </span>energys = synthetic_flux(lam,flam,[<span class="py-string">'IRAS.F12'</span>,<span class="py-string">'IRAS.F25'</span>,<span class="py-string">'IRAS.F60'</span>,<span class="py-string">'IRAS.F100'</span>],units=[<span class="py-string">'Fnu'</span>,<span class="py-string">'Fnu'</span>,<span class="py-string">'Fnu'</span>,<span class="py-string">'Fnu'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>energys = conversions.convert(<span class="py-string">'erg/s/cm2/Hz'</span>,<span class="py-string">'Jy'</span>,energys)</pre>
+  <p>You are responsible yourself for having a response curve covering the 
+  model fluxes!</p>
+  <p>Now. let's put this all in practice in a more elaborate example: we 
+  want to check if the effective wavelength is well defined. To do that we 
+  will:</p>
+  <ol start="1">
+    <li>
+      construct a model (black body)
+    </li>
+    <li>
+      make our own weird, double-shaped filter (CCD-type and BOL-type 
+      detector)
+    </li>
+    <li>
+      compute fluxes in Flambda, and convert to Fnu via the effective 
+      wavelength
+    </li>
+    <li>
+      compute fluxes in Fnu, and compare with step 3.
+    </li>
+  </ol>
+  <p>In an ideal world, the outcome of step (3) and (4) must be equal:</p>
+  <p>Step (1): We construct a black body model.</p>
+  <p>WARNING: OPEN.BOL only works in Flambda for now.</p>
+  <p>See e.g. Maiz-Apellaniz, 2006.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - model wavelengths (angstrom)</li>
+        <li><strong class="pname"><code>flux</code></strong> (ndarray) - model fluxes (erg/s/cm2/AA)</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of str) - list of photometric passbands</li>
+        <li><strong class="pname"><code>units</code></strong> (list of strings or str) - list containing Flambda or Fnu flag (defaults to all Flambda)</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>model fluxes (erg/s/cm2/AA or erg/s/cm2/Hz)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="synthetic_color"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">synthetic_color</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">colors</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#synthetic_color">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct colors from a synthetic SED.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - model wavelengths (angstrom)</li>
+        <li><strong class="pname"><code>flux</code></strong> (ndarray) - model fluxes (erg/s/cm2/AA)</li>
+        <li><strong class="pname"><code>colors</code></strong> (list of str) - list of photometric passbands</li>
+        <li><strong class="pname"><code>units</code></strong> (list of strings or str) - list containing Flambda or Fnu flag (defaults to all Flambda)</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>flux ratios or colors</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="luminosity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">luminosity</span>(<span class="sig-arg">wave</span>,
+        <span class="sig-arg">flux</span>,
+        <span class="sig-arg">radius</span>=<span class="sig-default">1.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#luminosity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the bolometric luminosity of a model SED.</p>
+  <p>Flux should be in cgs per unit wavelength (same unit as wave). The 
+  latter is integrated out, so it is of no importance. After integration, 
+  flux, should have units erg/s/cm2.</p>
+  <p>Returned luminosity is in solar units.</p>
+  <p>If you give radius=1 and want to correct afterwards, multiply the 
+  obtained Labs with radius**2.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - model wavelengths</li>
+        <li><strong class="pname"><code>flux</code></strong> (ndarray) - model fluxes (Flam)</li>
+        <li><strong class="pname"><code>radius</code></strong> (float) - stellar radius in solar units</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>total bolometric luminosity</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_itable_markers"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_itable_markers</span>(<span class="sig-arg">photbands</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">zrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">include_Labs</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">clear_memory</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_itable_markers">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get a list of markers to more easily retrieve integrated fluxes.</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_pix_grid"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_pix_grid</span>(<span class="sig-arg">photbands</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">zrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">rvrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">vradrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">include_Labs</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">clear_memory</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">variables</span>=<span class="sig-default">['teff','logg','ebv','z','rv','vrad']</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_pix_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Prepare the pixalted grid.
+
+In principle, it should be possible to return any number of free parameters
+here. I'm thinking about:
+
+    teff, logg, ebv, z, Rv, vrad.
+
+</pre>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_flux_from_table"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_flux_from_table</span>(<span class="sig-arg">fits_ext</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">include_Labs</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.model-pysrc.html#_get_flux_from_table">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve flux and flux ratios from an integrated SED table.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>fits_ext</code></strong> (FITS extension) - fits extension containing integrated flux</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of str) - list of photometric passbands</li>
+        <li><strong class="pname"><code>index</code></strong> (slice or integer) - slice or index of rows to retrieve</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>fluxes or flux ratios #@rtype: list</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__defaults__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">__defaults__</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+dict(grid= 'kurucz', odfnew= True, z=+ 0.0, vturb= 2, alpha= False, no<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ver= False, He= 97, ct= 'mlt', t= 1.0, a= 0.0, c= 0.5, m= 1.0, co= 1.0<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+5, Rv= 3.1, law= 'fitzpatrick2004', use_scratch= False)
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

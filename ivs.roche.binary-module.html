@@ -1,0 +1,749 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.roche.binary</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.roche-module.html">Package&nbsp;roche</a> ::
+        Module&nbsp;binary
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.roche.binary-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module binary</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.roche.binary-pysrc.html">source&nbsp;code</a></span></p>
+<p>Roche models of binary or multiple stars.</p>
+  <p>You'd better not use this module, but talk to Pieter Degroote.</p>
+  <p>The premisse of the Roche potential is that the stellar mass can be 
+  represented by a point source.</p>
+  <p>Currently, three types of stellar shapes are implemented:</p>
+  <ol start="1">
+    <li>
+      asynchronously rotating eccentric binary (<a 
+      href="ivs.roche.binary-module.html#get_binary_roche_radius" 
+      class="link">get_binary_roche_radius</a>)
+    </li>
+    <li>
+      fast rotating star (<code 
+      class="link">get_fastrot_roche_radius</code>)
+    </li>
+    <li>
+      differentially (fast) rotating star (<code 
+      class="link">get_diffrot_roche_surface_gravity</code>)
+    </li>
+  </ol>
+  <p>This module can be used to calculate the following information:</p>
+  <ol start="1">
+    <li>
+      the distorted shape of the star due to a Roche potential
+    </li>
+    <li>
+      the local surface gravity assuming Von Zeipel gravity darkening
+    </li>
+    <li>
+      the <code class="link">local effective temperature</code>
+    </li>
+    <li>
+      the local velocity vector due to rotation
+    </li>
+    <li>
+      the radial velocity
+    </li>
+    <li>
+      the total distorted surface area
+    </li>
+    <li>
+      the total distorted luminosity
+    </li>
+    <li>
+      the <code class="link">projected intensity</code> in the line of 
+      sight
+    </li>
+    <li>
+      the mean radial velocity (e.g. Rossiter effect in binaries)
+    </li>
+    <li>
+      a <a href="ivs.roche.binary-module.html#spectral_synthesis" 
+      class="link">synthetic spectrum</a> starting from a library of 
+      spectra
+    </li>
+    <li>
+      a <a href="ivs.roche.binary-module.html#binary_light_curve_synthesis"
+      class="link">synthetic light curve</a> from the projected intensities
+    </li>
+  </ol>
+  <h1 class="heading">Section 1. Binary star</h1>
+    <p>As an example we take the binary star SX Aurigae. This is the 
+    minimum set of parameters.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>P = 1.2100802        <span class="py-comment"># period in days</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>e = 0.               <span class="py-comment"># eccentricity</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>q = 0.54369          <span class="py-comment"># mass ratio M2/M1</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>asini = 11.9*constants.Rsol/constants.au <span class="py-comment"># semi-major axis</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>i = 81.27            <span class="py-comment"># inclination angle</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>F = 1.               <span class="py-comment"># synchronicity parameter</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>d = 1.               <span class="py-comment"># separation in semi-major axis units</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>Phi1 = 3.            <span class="py-comment"># gravitational potential primary</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>Phi2 = 5.05          <span class="py-comment"># gravitational potential secondary</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T_pole1 = 25000.     <span class="py-comment"># polar temperature primary</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T_pole2 = 18850.     <span class="py-comment"># polar temperature secondary</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M1 = 10.3            <span class="py-comment"># primary mass</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M2 = 5.6             <span class="py-comment"># secondary mass</span></pre>
+    <p>Note that we actually do not need the masses, since we can derive 
+    them from the third kepler law with the other parameters. We do so for 
+    convenience.</p>
+    <p>Everything is calculated in units of semi-major axis. Thus, to 
+    convert to SI units we need the following conversion factor:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>a = asini * sin(i/180.*pi)
+<span class="py-prompt">&gt;&gt;&gt; </span>to_SI = a*constants.au</pre>
+    <p>We need some constants for the calculations: the polar radii and 
+    angular velocity</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>r_pole1 = newton(binary_roche_potential,1e-5,args=(0,0,Phi1,  q,d,F))
+<span class="py-prompt">&gt;&gt;&gt; </span>r_pole2 = newton(binary_roche_potential,1e-5,args=(0,0,Phi2,1/q,d,F))
+<span class="py-prompt">&gt;&gt;&gt; </span>omega_rot = F * 2*pi/(P*24*3600) * 1/d**2 * sqrt( (1+e)*(1-e))
+<span class="py-prompt">&gt;&gt;&gt; </span>omega_rot_vec = np.array([0.,0.,-omega_rot])</pre>
+    <p>Derive the shape of the two stars</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>radius1 = np.array([get_binary_roche_radius(itheta,iphi,Phi=Phi1,q=  q,d=d,F=F,r_pole=r_pole1) <span class="py-keyword">for</span> itheta,iphi <span class="py-keyword">in</span> zip(thetas,phis)]).reshape(theta.shape)
+<span class="py-prompt">&gt;&gt;&gt; </span>radius2 = np.array([get_binary_roche_radius(itheta,iphi,Phi=Phi2,q=1/q,d=d,F=F,r_pole=r_pole2) <span class="py-keyword">for</span> itheta,iphi <span class="py-keyword">in</span> zip(thetas,phis)]).reshape(theta.shape)</pre>
+    <p>We focus on the primary, then repeat everything for the secondary: 
+    The local surface gravity can only be calculated if we have Cartesian 
+    coordinates.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,z1 = vectors.spher2cart_coord(radius1,phi,theta)
+<span class="py-prompt">&gt;&gt;&gt; </span>g_pole1 = binary_roche_surface_gravity(0,0,r_pole1*to_SI,d*to_SI,omega_rot,M1*constants.Msol,M2*constants.Msol,norm=True)
+<span class="py-prompt">&gt;&gt;&gt; </span>Gamma_pole1 = binary_roche_potential_gradient(0,0,r_pole1,q,d,F,norm=True)
+<span class="py-prompt">&gt;&gt;&gt; </span>zeta1 = g_pole1 / Gamma_pole1
+<span class="py-prompt">&gt;&gt;&gt; </span>dOmega1 = binary_roche_potential_gradient(x1,y1,z1,q,d,F,norm=False)
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local1 = dOmega1*zeta1
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local1 = np.array([i.reshape(theta.shape) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> grav_local1])
+<span class="py-prompt">&gt;&gt;&gt; </span>grav1 = vectors.norm(grav_local1)</pre>
+    <p>Now we can, as before, calculate the other local quantities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>areas_local1,cos_gamma1 = surface_elements((radius1,theta,phi),-grav_local1)
+<span class="py-prompt">&gt;&gt;&gt; </span>teff_local1 = local_temperature(grav1,g_pole1,T_pole1,beta=1.)
+<span class="py-prompt">&gt;&gt;&gt; </span>ints_local1 = local_intensity(teff_local1,grav1,np.ones_like(cos_gamma1),photband=<span class="py-string">'OPEN.BOL'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>velo_local1 = np.cross(np.array([x1,y1,z1]).T*to_SI,omega_rot_vec).T</pre>
+    <p>Now make some plots showing the local quantities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>quantities = areas_local1,np.log10(grav1*100),teff_local1,ints_local1
+<span class="py-prompt">&gt;&gt;&gt; </span>names = <span class="py-string">'Area'</span>,<span class="py-string">'log g'</span>, <span class="py-string">'Teff'</span>, <span class="py-string">'Flux'</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>rows,cols = 2,2    
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,(quantity,name) <span class="py-keyword">in</span> enumerate(zip(quantities,names)):
+<span class="py-more">... </span>   p = pl.subplot(rows,cols,i+1)
+<span class="py-more">... </span>   p = pl.title(name)
+<span class="py-more">... </span>   q = quantity.ravel()
+<span class="py-more">... </span>   vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
+<span class="py-more">... </span>   <span class="py-keyword">if</span> vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
+<span class="py-more">... </span>   p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors=<span class="py-string">'none'</span>,vmin=vmin,vmax=vmax)
+<span class="py-more">... </span>   p = pl.colorbar()
+<span class="py-more">... </span>   p = pl.xlim(0,360)
+<span class="py-more">... </span>   p = pl.ylim(180,0)</pre>
+<center><img src='../images/ivs_binary_rochepotential_binarystar.png' alt='[image example]' width='75%'/></center>
+
+
+
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'top view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x1,y1,c=teff_local1.ravel(),edgecolors=<span class="py-string">'none'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'side view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x1,z1,c=teff_local1.ravel(),edgecolors=<span class="py-string">'none'</span>)</pre>
+<center><img src='../images/ivs_binary_rochepotential_binarystar_shape.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 5. Synthesizing spectra</h1>
+    <p>In this case study, we calculate the projected radial velocity of a 
+    uniformly rotating star, but in the limit of no deformation due to the 
+    rotation. We do this, so that we can easily compare rotational 
+    broadening calculated with the ROTIN package, and numerically. So let 
+    us build a star with these parameters:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega = 0.0        <span class="py-comment"># ratio to critical velocity</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T_pole = 13000.    <span class="py-comment"># K</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>r_pole = 2.0       <span class="py-comment"># solar radii</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M = 1.5            <span class="py-comment"># solar mass</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>view_angle = pi/2  <span class="py-comment"># radians</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>theta,phi = get_grid(20,100,full=True,gtype=<span class="py-string">'spher'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>thetas,phis = np.ravel(theta),np.ravel(phi)</pre>
+    <p>Then calculate the shape of this star</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>radius = np.array([get_fastrot_roche_radius(itheta,r_pole,omega) <span class="py-keyword">for</span> itheta <span class="py-keyword">in</span> thetas]).reshape(theta.shape)
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([fastrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,omega,M) <span class="py-keyword">for</span> iradius,itheta,iphi <span class="py-keyword">in</span> zip(radius.ravel(),thetas,phis)]).T
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([i.reshape(theta.shape) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> grav_local])
+<span class="py-prompt">&gt;&gt;&gt; </span>g_pole = fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]
+<span class="py-prompt">&gt;&gt;&gt; </span>grav = vectors.norm(grav_local)</pre>
+    <p>and the local quantities</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
+<span class="py-prompt">&gt;&gt;&gt; </span>teff_local = local_temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
+<span class="py-prompt">&gt;&gt;&gt; </span>ints_local = local_intensity(teff_local,grav,photband=<span class="py-string">'OPEN.BOL'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)</pre>
+    <p>Assume, with a shape of a non-rotating star, that we have a velocity
+    component on the surface of the star:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myomega = 0.5
+<span class="py-prompt">&gt;&gt;&gt; </span>velo_local = diffrot_velocity((phi,theta,radius*constants.Rsol),myomega,myomega,r_pole,M)</pre>
+    <p>Collect all the necessary information in one record array.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>starlist = [x,y,z] + [i.ravel() <span class="py-keyword">for</span> i <span class="py-keyword">in</span> velo_local] + [i.ravel() <span class="py-keyword">for</span> i <span class="py-keyword">in</span> grav_local] + [teff_local.ravel(),areas_local.ravel()]
+<span class="py-prompt">&gt;&gt;&gt; </span>starnames = [<span class="py-string">'x'</span>,<span class="py-string">'y'</span>,<span class="py-string">'z'</span>,<span class="py-string">'vx'</span>,<span class="py-string">'vy'</span>,<span class="py-string">'vz'</span>,<span class="py-string">'gravx'</span>,<span class="py-string">'gravy'</span>,<span class="py-string">'gravz'</span>,<span class="py-string">'teff'</span>,<span class="py-string">'areas'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>star = np.rec.array(starlist,names=starnames)</pre>
+    <p>Project the star in some line-of-sight. The velocity component in 
+    the X-direction is the radial velocity.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>view_angle = pi/2 <span class="py-comment"># edge on</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>mystar = project(star,view_long=(0,0,0),view_lat=(view_angle,0,0),photband=<span class="py-string">'OPEN.BOL'</span>,only_visible=True,plot_sort=True)</pre>
+    <p>We can calculate the synthetic spectra for all surface elements 
+    between 7055 and 7075 angstrom:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>loggs = np.log10(np.sqrt(mystar[<span class="py-string">'gravx'</span>]**2 + mystar[<span class="py-string">'gravy'</span>]**2 + mystar[<span class="py-string">'gravz'</span>]**2)*100)
+<span class="py-prompt">&gt;&gt;&gt; </span>iterator = zip(mystar[<span class="py-string">'teff'</span>],loggs,mystar[<span class="py-string">'vx'</span>]/1000.)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_spec = np.linspace(7055,7075,750)
+<span class="py-prompt">&gt;&gt;&gt; </span>spectra = np.array([spectra_model.get_table(teff=iteff,logg=ilogg,vrad=ivrad,wave=wave_spec)[1] <span class="py-keyword">for</span> iteff,ilogg,ivrad <span class="py-keyword">in</span> iterator])</pre>
+    <p>The total observed spectrum is then simply the weighted sum with the
+    local projected intensities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>average_spectrum = np.average(spectra,weights=mystar[<span class="py-string">'projflux'</span>],axis=0)</pre>
+    <p>We compare with the ROTIN package, which assumes a linear 
+    limbdarkening law</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>original = spectra_model.get_table(teff=mystar[<span class="py-string">'teff'</span>][0],logg=loggs[0],wave=wave_spec)[1]
+<span class="py-prompt">&gt;&gt;&gt; </span>rotin1 = spectra_model.get_table(teff=mystar[<span class="py-string">'teff'</span>][0],logg=loggs[0],vrot=vmax/1000.*sin(view_angle),wave=wave_spec,fwhm=0,epsilon=0.6,stepr=-1)[1]</pre>
+    <p>And a plot can be made via</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>colors = mystar[<span class="py-string">'eyeflux'</span>]/mystar[<span class="py-string">'eyeflux'</span>].max()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(figsize=(7,7))
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.axes([0,0.5,1,0.5])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = ax.set_aspect(<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = ax.set_axis_bgcolor(<span class="py-string">'k'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.box(on=False)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xticks([]);p = pl.yticks([])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(mystar[<span class="py-string">'y'</span>],mystar[<span class="py-string">'z'</span>],c=colors,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.gray,vmin=0,vmax=1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(mystar[<span class="py-string">'y'</span>]+1.02*mystar[<span class="py-string">'y'</span>].ptp(),mystar[<span class="py-string">'z'</span>],c=mystar[<span class="py-string">'vx'</span>],edgecolors=<span class="py-string">'none'</span>,vmin=vmin,vmax=vmax,cmap=pl.cm.RdBu)
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.axes([0.13,0.1,0.78,0.4])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_spec,average_spectrum,<span class="py-string">'k-'</span>,lw=2,label=<span class="py-string">'Numerical'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_spec,original,<span class="py-string">'r-'</span>,label=<span class="py-string">'No rotation'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_spec,rotin1,<span class="py-string">'b-'</span>,label=<span class="py-string">'Rotin v=%.1f km/s'</span>%(vmax/1000.),lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0.95,1.0)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(loc=<span class="py-string">'lower right'</span>,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [angstrom]'</span>,color=<span class="py-string">'1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Normalised flux'</span>,color=<span class="py-string">'1'</span>)</pre>
+<center><img src='../images/ivs_binary_rochepotential_norot_spectrum_b.png' alt='[image example]' width='75%'/></center>
+
+
+
+<center><img src='../images/ivs_binary_rochepotential_norot_spectrum_a.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="reflection_effect"></a><span class="summary-sig-name">reflection_effect</span>(<span class="summary-sig-arg">primary</span>,
+        <span class="summary-sig-arg">secondary</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">A1</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">A2</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">max_iter</span>=<span class="summary-sig-default">1</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#reflection_effect">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">tuple of numpy arrays</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.binary-module.html#spectral_synthesis" class="summary-sig-name">spectral_synthesis</a>(<span class="summary-sig-arg">*stars</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate a synthetic spectrum of one or more stars.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#spectral_synthesis">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.binary-module.html#binary_light_curve_synthesis" class="summary-sig-name">binary_light_curve_synthesis</a>(<span class="summary-sig-arg">**parameters</span>)</span><br />
+      Generate a synthetic light curve of a binary system.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_light_curve_synthesis">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Eccentric asynchronous binary Roche potential in spherical coordinates</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.binary-module.html#binary_roche_potential" class="summary-sig-name">binary_roche_potential</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">Phi</span>,
+        <span class="summary-sig-arg">q</span>,
+        <span class="summary-sig-arg">d</span>,
+        <span class="summary-sig-arg">F</span>)</span><br />
+      Unitless eccentric asynchronous Roche potential in spherical 
+      coordinates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_roche_potential">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray or float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.binary-module.html#binary_roche_potential_gradient" class="summary-sig-name">binary_roche_potential_gradient</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">z</span>,
+        <span class="summary-sig-arg">q</span>,
+        <span class="summary-sig-arg">d</span>,
+        <span class="summary-sig-arg">F</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Gradient of eccenctric asynchronous Roche potential in cartesian 
+      coordinates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_roche_potential_gradient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="binary_roche_surface_gravity"></a><span class="summary-sig-name">binary_roche_surface_gravity</span>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">z</span>,
+        <span class="summary-sig-arg">d</span>,
+        <span class="summary-sig-arg">omega</span>,
+        <span class="summary-sig-arg">M1</span>,
+        <span class="summary-sig-arg">M2</span>,
+        <span class="summary-sig-arg">a</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Calculate surface gravity in an eccentric asynchronous binary roche 
+      potential.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_roche_surface_gravity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.binary-module.html#get_binary_roche_radius" class="summary-sig-name">get_binary_roche_radius</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">Phi</span>,
+        <span class="summary-sig-arg">q</span>,
+        <span class="summary-sig-arg">d</span>,
+        <span class="summary-sig-arg">F</span>,
+        <span class="summary-sig-arg">r_pole</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Calculate the eccentric asynchronous binary Roche radius in spherical
+      coordinates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.binary-pysrc.html#get_binary_roche_radius">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;BIN.ROCHE&quot;)">logging.getLogger(&quot;BIN.ROCHE&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="binary_roche_potential"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">binary_roche_potential</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">Phi</span>,
+        <span class="sig-arg">q</span>,
+        <span class="sig-arg">d</span>,
+        <span class="sig-arg">F</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_roche_potential">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Unitless eccentric asynchronous Roche potential in spherical 
+  coordinates.</p>
+  <p>See Wilson, 1979.</p>
+  <p>The  synchronicity parameter F is 1 for synchronised circular orbits. 
+  For pseudo-synchronous eccentrical orbits, it is equal to (Hut, 1981)</p>
+  <p>F = sqrt( (1+e)/ (1-e)^3)</p>
+  <p>Periastron is reached when d = 1-e.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>r</code></strong> (float) - radius of Roche volume at potential Phi (in units of semi-major 
+          axis)</li>
+        <li><strong class="pname"><code>theta</code></strong> (float) - colatitude (0 at the pole, pi/2 at the equator)</li>
+        <li><strong class="pname"><code>phi</code></strong> (float) - longitude (0 in direction of COM)</li>
+        <li><strong class="pname"><code>Phi</code></strong> (float) - Roche potential value (unitless)</li>
+        <li><strong class="pname"><code>q</code></strong> (float) - mass ratio</li>
+        <li><strong class="pname"><code>d</code></strong> (float) - separation (in units of semi-major axis)</li>
+        <li><strong class="pname"><code>F</code></strong> (float) - synchronicity parameter</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>residu between Phi and roche potential</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="binary_roche_potential_gradient"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">binary_roche_potential_gradient</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">z</span>,
+        <span class="sig-arg">q</span>,
+        <span class="sig-arg">d</span>,
+        <span class="sig-arg">F</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_roche_potential_gradient">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Gradient of eccenctric asynchronous Roche potential in cartesian 
+  coordinates.</p>
+  <p>See Phoebe scientific reference, 
+  http://phoebe.fiz.uni-lj.si/docs/phoebe_science.ps.gz</p>
+  <p>x,y,z,d in real units! (otherwise you have to scale it yourself)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (float') - x-axis</li>
+        <li><strong class="pname"><code>y</code></strong> (float') - y-axis</li>
+        <li><strong class="pname"><code>z</code></strong> (float') - z-axis</li>
+        <li><strong class="pname"><code>q</code></strong> (float) - mass ratio</li>
+        <li><strong class="pname"><code>d</code></strong> (float) - separation (in units of semi-major axis)</li>
+        <li><strong class="pname"><code>F</code></strong> (float) - synchronicity parameter</li>
+        <li><strong class="pname"><code>norm</code></strong> (boolean) - flag to return magnitude (True) or vector form (False)</li>
+    </ul></dd>
+    <dt>Returns: ndarray or float</dt>
+        <dd>Roche potential gradient</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_binary_roche_radius"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_binary_roche_radius</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">Phi</span>,
+        <span class="sig-arg">q</span>,
+        <span class="sig-arg">d</span>,
+        <span class="sig-arg">F</span>,
+        <span class="sig-arg">r_pole</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.binary-pysrc.html#get_binary_roche_radius">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the eccentric asynchronous binary Roche radius in spherical 
+  coordinates.</p>
+  <p>This is done via the Newton-Raphson secant method. If r_pole is not 
+  given as a starting value, it will be calculated here (slowing down the 
+  function).</p>
+  <p>If no radius can be calculated for the given coordinates, 'nan' is 
+  returned.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>theta</code></strong> (float) - colatitude (0 at the pole, pi/2 at the equator)</li>
+        <li><strong class="pname"><code>phi</code></strong> (float) - longitude (0 in direction of COM)</li>
+        <li><strong class="pname"><code>Phi</code></strong> (float) - Roche potential value (unitless)</li>
+        <li><strong class="pname"><code>q</code></strong> (float) - mass ratio</li>
+        <li><strong class="pname"><code>d</code></strong> (float) - separation (in units of semi-major axis)</li>
+        <li><strong class="pname"><code>F</code></strong> (float) - synchronicity parameter</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius (serves as starting value for NR method)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="spectral_synthesis"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">spectral_synthesis</span>(<span class="sig-arg">*stars</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.binary-pysrc.html#spectral_synthesis">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generate a synthetic spectrum of one or more stars.</p>
+  <p>If you give more than one star, you get more than one synthesized 
+  spectrum back. To compute the total spectrum, just add them up.</p>
+  <p>WARNING: the spectra are scaled with the value of the projected 
+  intensity. This is usually calculated within a specific photometric 
+  passband. The total spectrum will thus be dependent on the photometric 
+  passband, unless you specified 'OPEN.BOL' (which is the bolometric open 
+  filter). If you want to know the RV for a specific line, you might want 
+  to look into calculating the projected intensities at specific wavelength
+  intervals.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>stars</code></strong> (tuple of star record arrays) - any number of (projected) star record arrays</li>
+        <li><strong class="pname"><code>wave</code></strong> (numpy array) - wavelength template to compute the synthetic spectrum on</li>
+    </ul></dd>
+    <dt>Returns: tuple of numpy arrays</dt>
+        <dd>tuple of synthetic spectra, scaled to total intensity</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="binary_light_curve_synthesis"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">binary_light_curve_synthesis</span>(<span class="sig-arg">**parameters</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.binary-pysrc.html#binary_light_curve_synthesis">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generate a synthetic light curve of a binary system.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (string) - name of the binary system, used for output</li>
+        <li><strong class="pname"><code>direc</code></strong> (string (if empty string, then current directory will be taken, if
+          None, then not output will be written)) - directory to put output files</li>
+        <li><strong class="pname"><code>gres</code></strong> (integer, 2-tuple or 4-tuple) - grid resolution for primary and secondary. If integer, the 
+          resolution of both components and both longitude and latitude 
+          will be the same. A 2-tuple will be interpreted as (latitude 
+          resolution, longitude resolution)</li>
+        <li><strong class="pname"><code>tres</code></strong> (integer) - number of phase steps to comptue the light curve on</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

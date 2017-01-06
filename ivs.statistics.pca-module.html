@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.statistics.pca</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.statistics-module.html">Package&nbsp;statistics</a> ::
+        Module&nbsp;pca
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.statistics.pca-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module pca</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.statistics.pca-pysrc.html">source&nbsp;code</a></span></p>
+<p>Principal component analysis</p>
+
+<hr />
+<div class="fields">      <p><strong>Version:</strong>
+        1.1.02
+      </p>
+      <p><strong>Date:</strong>
+        February 2008
+      </p>
+      <p><strong>Author:</strong>
+        Henning Risvik
+      </p>
+</div><!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Preprocessing Methods</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#mean_center" class="summary-sig-name">mean_center</a>(<span class="summary-sig-arg">X</span>)</span><br />
+      Returns:
+      Mean centered X (always has same dimensions as X)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#mean_center">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#standardization" class="summary-sig-name">standardization</a>(<span class="summary-sig-arg">X</span>)</span><br />
+      Returns:
+      Standardized X (always has same dimensions as X)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#standardization">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;NIPALS array help functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#get_column" class="summary-sig-name">get_column</a>(<span class="summary-sig-arg">E</span>)</span><br />
+      Get an acceptable column-vector of E.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#get_column">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#get_column_mat" class="summary-sig-name">get_column_mat</a>(<span class="summary-sig-arg">E</span>)</span><br />
+      NIPALS matrix help function.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#get_column_mat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#vec_inner" class="summary-sig-name">vec_inner</a>(<span class="summary-sig-arg">v</span>)</span><br />
+      Returns:
+      transpose(v) * v (float or int)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#vec_inner">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#mat_prod" class="summary-sig-name">mat_prod</a>(<span class="summary-sig-arg">A</span>,
+        <span class="summary-sig-arg">x</span>)</span><br />
+      Returns:
+      b of (Ax = b).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#mat_prod">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#remove_tp_prod" class="summary-sig-name">remove_tp_prod</a>(<span class="summary-sig-arg">E</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">p</span>)</span><br />
+      sets: E = E - (t*transpose(p)) E: (m, n)-matrix, (t*transpose(p)): 
+      (m, n)-matrix</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#remove_tp_prod">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;NIPALS Algorithm</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#nipals_mat" class="summary-sig-name">nipals_mat</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">PCs</span>,
+        <span class="summary-sig-arg">threshold</span>,
+        <span class="summary-sig-arg">E_matrices</span>)</span><br />
+      PCA by NIPALS using numpy matrix</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#nipals_mat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#nipals_arr" class="summary-sig-name">nipals_arr</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">PCs</span>,
+        <span class="summary-sig-arg">threshold</span>,
+        <span class="summary-sig-arg">E_matrices</span>)</span><br />
+      PCA by NIPALS using numpy array</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#nipals_arr">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Principal Component Analysis (using NIPALS)</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#PCA_nipals" class="summary-sig-name">PCA_nipals</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">standardize</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">PCs</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">threshold</span>=<span class="summary-sig-default">0.0001</span>,
+        <span class="summary-sig-arg">E_matrices</span>=<span class="summary-sig-default">False</span>)</span><br />
+      PCA by NIPALS and get Scores, Loadings, E</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#PCA_nipals2" class="summary-sig-name">PCA_nipals2</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">standardize</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">PCs</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">threshold</span>=<span class="summary-sig-default">0.0001</span>,
+        <span class="summary-sig-arg">E_matrices</span>=<span class="summary-sig-default">False</span>)</span><br />
+      PCA by NIPALS and get Scores, Loadings, E</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#PCA_nipals_c" class="summary-sig-name">PCA_nipals_c</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">standardize</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">PCs</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">threshold</span>=<span class="summary-sig-default">0.0001</span>,
+        <span class="summary-sig-arg">E_matrices</span>=<span class="summary-sig-default">False</span>)</span><br />
+      PCA by NIPALS and get Scores, Loadings, E</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals_c">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Principal Component Analysis (using SVD)</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#PCA_svd" class="summary-sig-name">PCA_svd</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">standardize</span>=<span class="summary-sig-default">True</span>)</span><br />
+      PCA by SVD and get Scores, Loadings, E Remake of method made by 
+      Oliver Tomic Ph.D.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_svd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Correlation Loadings</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.pca-module.html#CorrelationLoadings" class="summary-sig-name">CorrelationLoadings</a>(<span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">Scores</span>)</span><br />
+      Get correlation loadings matrix based on Scores (T of PCA) and X 
+      (original variables, not mean centered).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.pca-pysrc.html#CorrelationLoadings">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="mean_center"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">mean_center</span>(<span class="sig-arg">X</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#mean_center">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>Mean centered X (always has same dimensions as X)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="standardization"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">standardization</span>(<span class="sig-arg">X</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#standardization">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>Standardized X (always has same dimensions as X)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_column"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_column</span>(<span class="sig-arg">E</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#get_column">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get an acceptable column-vector of E.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>E</code></strong> (numpy array) - 2-dimensional matrix of number data</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>a non-zero vector</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_column_mat"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_column_mat</span>(<span class="sig-arg">E</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#get_column_mat">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>NIPALS matrix help function. Get an acceptable column-vector of E.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>E</code></strong> (numpy matrix) - 2-dimensional matrix of number data</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>a non-zero vector</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="vec_inner"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">vec_inner</span>(<span class="sig-arg">v</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#vec_inner">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>v</code></strong> (numpy array) - Vector of number data.</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>transpose(v) * v (float or int)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="mat_prod"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">mat_prod</span>(<span class="sig-arg">A</span>,
+        <span class="sig-arg">x</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#mat_prod">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>A</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>x</code></strong> (numpy array) - Vector of number data.</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>b of (Ax = b). Product of:  matrix A (m,n) * vector x (n) = 
+          vector b (m)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="remove_tp_prod"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">remove_tp_prod</span>(<span class="sig-arg">E</span>,
+        <span class="sig-arg">t</span>,
+        <span class="sig-arg">p</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#remove_tp_prod">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>sets: E = E - (t*transpose(p)) E: (m, n)-matrix, (t*transpose(p)): (m,
+  n)-matrix</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>E</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>t</code></strong> (numpy array) - Vector of number data. Current Scores (of PC_i).</li>
+        <li><strong class="pname"><code>p</code></strong> (numpy array) - Vector of number data. Current Loading (of PC_i).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>None</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="nipals_mat"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">nipals_mat</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">PCs</span>,
+        <span class="sig-arg">threshold</span>,
+        <span class="sig-arg">E_matrices</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#nipals_mat">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by NIPALS using numpy matrix</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>PCs</code></strong> (int) - Number of Principal Components.</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - Convergence check value. For checking on convergence to zero 
+          difference (e.g. 0.000001).</li>
+        <li><strong class="pname"><code>E_matrices</code></strong> (bool) - If E-matrices should be retrieved or not. E-matrices (for each 
+          PC) or explained_var (explained variance for each PC).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>(Scores, Loadings, E)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="nipals_arr"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">nipals_arr</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">PCs</span>,
+        <span class="sig-arg">threshold</span>,
+        <span class="sig-arg">E_matrices</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#nipals_arr">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by NIPALS using numpy array</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>PCs</code></strong> (int) - Number of Principal Components.</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - Convergence check value. For checking on convergence to zero 
+          (e.g. 0.000001).</li>
+        <li><strong class="pname"><code>E_matrices</code></strong> (bool) - If E-matrices should be retrieved or not. E-matrices (for each 
+          PC) or explained_var (explained variance for each PC).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>(Scores, Loadings, E)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="PCA_nipals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">PCA_nipals</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">standardize</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">PCs</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">threshold</span>=<span class="sig-default">0.0001</span>,
+        <span class="sig-arg">E_matrices</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by NIPALS and get Scores, Loadings, E</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>standardize</code></strong> (bool) - Wheter X should be standardized or not.</li>
+        <li><strong class="pname"><code>PCs</code></strong> (int) - Number of Principal Components.</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - Convergence check value. For checking on convergence to zero 
+          (e.g. 0.000001).</li>
+        <li><strong class="pname"><code>E_matrices</code></strong> (bool) - If E-matrices should be retrieved or not. E-matrices (for each 
+          PC) or explained_var (explained variance for each PC).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>nipals_mat(X, PCs, threshold, E_matrices)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="PCA_nipals2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">PCA_nipals2</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">standardize</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">PCs</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">threshold</span>=<span class="sig-default">0.0001</span>,
+        <span class="sig-arg">E_matrices</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by NIPALS and get Scores, Loadings, E</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>standardize</code></strong> (bool) - Wheter X should be standardized or not.</li>
+        <li><strong class="pname"><code>PCs</code></strong> (int) - Number of Principal Components.</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - Convergence check value. For checking on convergence to zero 
+          (e.g. 0.000001).</li>
+        <li><strong class="pname"><code>E_matrices</code></strong> (bool) - If E-matrices should be retrieved or not. E-matrices (for each 
+          PC) or explained_var (explained variance for each PC).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>nipals_arr(X, PCs, threshold, E_matrices)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="PCA_nipals_c"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">PCA_nipals_c</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">standardize</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">PCs</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">threshold</span>=<span class="sig-default">0.0001</span>,
+        <span class="sig-arg">E_matrices</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_nipals_c">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by NIPALS and get Scores, Loadings, E</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>standardize</code></strong> (bool) - Wheter X should be standardized or not.</li>
+        <li><strong class="pname"><code>PCs</code></strong> (int) - Number of Principal Components.</li>
+        <li><strong class="pname"><code>threshold</code></strong> (float) - Convergence check value. For checking on convergence to zero 
+          (e.g. 0.000001).</li>
+        <li><strong class="pname"><code>E_matrices</code></strong> (bool) - If E-matrices should be retrieved or not. E-matrices (for each 
+          PC) or explained_var (explained variance for each PC).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>nipals_c(X, PCs, threshold, E_matrices)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="PCA_svd"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">PCA_svd</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">standardize</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#PCA_svd">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>PCA by SVD and get Scores, Loadings, E Remake of method made by Oliver
+  Tomic Ph.D.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>standardize</code></strong> (bool) - Wheter X should be standardized or not.</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>(Scores, Loadings, explained_var)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="CorrelationLoadings"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">CorrelationLoadings</span>(<span class="sig-arg">X</span>,
+        <span class="sig-arg">Scores</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.pca-pysrc.html#CorrelationLoadings">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get correlation loadings matrix based on Scores (T of PCA) and X 
+  (original variables, not mean centered). Remake of method made by Oliver 
+  Tomic Ph.D.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>X</code></strong> (numpy array) - 2-dimensional matrix of number data.</li>
+        <li><strong class="pname"><code>Scores</code></strong> (numpy array) - Scores of PCA (T).</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>Returns the correlation loadings matrix</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

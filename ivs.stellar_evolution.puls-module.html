@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.stellar_evolution.puls</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.stellar_evolution-module.html">Package&nbsp;stellar_evolution</a> ::
+        Module&nbsp;puls
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.stellar_evolution.puls-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module puls</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interfaces to LOSC and ADIPLS pulsation codes.</p>
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Classes</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Classes"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.stellar_evolution.puls.StellarModel-class.html" class="summary-name">StellarModel</a><br />
+      Class facilitating reading in of stellar models from different 
+        codes, and calculating frequencies with different codes,
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="test"></a><span class="summary-sig-name">test</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#test">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;General</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#repartition" class="summary-sig-name">repartition</a>(<span class="summary-sig-arg">xx</span>,
+        <span class="summary-sig-arg">n_new</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">smooth</span>=<span class="summary-sig-default">9</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Repartition and increase length of a vector.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#repartition">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#generate_newx" class="summary-sig-name">generate_newx</a>(<span class="summary-sig-arg">xx</span>,
+        <span class="summary-sig-arg">bruntA</span>,
+        <span class="summary-sig-arg">n_new</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">type_mode</span>=<span class="summary-sig-default">'g'</span>,
+        <span class="summary-sig-arg">smooth_bruntA</span>=<span class="summary-sig-default">0.005</span>,
+        <span class="summary-sig-arg">smooth_mesh</span>=<span class="summary-sig-default">9</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Construct a new mesh that is optimized to compute p or g modes (or 
+      both)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#generate_newx">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#remesh" class="summary-sig-name">remesh</a>(<span class="summary-sig-arg">starl</span>,
+        <span class="summary-sig-arg">x</span>=<span class="summary-sig-default">'x'</span>,
+        <span class="summary-sig-arg">n_new</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">type_mode</span>=<span class="summary-sig-default">'g'</span>,
+        <span class="summary-sig-arg">smooth_mesh</span>=<span class="summary-sig-default">9</span>,
+        <span class="summary-sig-arg">smooth_weights</span>=<span class="summary-sig-default">0.005</span>,
+        <span class="summary-sig-arg">smooth_profile</span>=<span class="summary-sig-default">0.002</span>)</span><br />
+      Improve sampling of a local star record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#remesh">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="match_losc_adipls"></a><span class="summary-sig-name">match_losc_adipls</span>(<span class="summary-sig-arg">losc</span>,
+        <span class="summary-sig-arg">adip</span>)</span><br />
+      Match output from LOSC and ADIPLS.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#match_losc_adipls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;LOSC</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="physical2osc"></a><span class="summary-sig-name">physical2osc</span>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">P_r</span>,
+        <span class="summary-sig-arg">rho_r</span>,
+        <span class="summary-sig-arg">G1</span>,
+        <span class="summary-sig-arg">G</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert the physical stellar model to dimonsionless variants which 
+      can be used in OSC.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#physical2osc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="star2losc"></a><span class="summary-sig-name">star2losc</span>(<span class="summary-sig-arg">starg</span>,
+        <span class="summary-sig-arg">starl</span>,
+        <span class="summary-sig-arg">G</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert a star model to LOSC quantities.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#star2losc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="osc2physical"></a><span class="summary-sig-name">osc2physical</span>(<span class="summary-sig-arg">columns</span>,
+        <span class="summary-sig-arg">R</span>,
+        <span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">G</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert the stellar model from dimensionless variants as used in OSC 
+      to real physical parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#osc2physical">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="fgong2cles"></a><span class="summary-sig-name">fgong2cles</span>(<span class="summary-sig-arg">starg</span>,
+        <span class="summary-sig-arg">starl</span>,
+        <span class="summary-sig-arg">G</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert FGONG file to CLES dat files naming convections.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#fgong2cles">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#get_pressure_perturbation" class="summary-sig-name">get_pressure_perturbation</a>(<span class="summary-sig-arg">star_cles</span>,
+        <span class="summary-sig-arg">star_osc</span>,
+        <span class="summary-sig-arg">oscl</span>,
+        <span class="summary-sig-arg">mode</span>)</span><br />
+      Calculate pressure perturbation for radial and nonradial modes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#get_pressure_perturbation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#get_density_perturbation" class="summary-sig-name">get_density_perturbation</a>(<span class="summary-sig-arg">star_cles</span>,
+        <span class="summary-sig-arg">star_osc</span>,
+        <span class="summary-sig-arg">oscl</span>,
+        <span class="summary-sig-arg">mode</span>)</span><br />
+      Compute density perturbation in the quasi-adiabatic approx.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#get_density_perturbation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_temperature_perturbation"></a><span class="summary-sig-name">get_temperature_perturbation</span>(<span class="summary-sig-arg">star_cles</span>,
+        <span class="summary-sig-arg">star_osc</span>,
+        <span class="summary-sig-arg">oscl</span>,
+        <span class="summary-sig-arg">mode</span>)</span><br />
+      Compute temperature perturbation in the quasi-adiabatic approx.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#get_temperature_perturbation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls-module.html#work_integral" class="summary-sig-name">work_integral</a>(<span class="summary-sig-arg">star_cles</span>,
+        <span class="summary-sig-arg">star_osc</span>,
+        <span class="summary-sig-arg">oscl</span>,
+        <span class="summary-sig-arg">mode</span>)</span><br />
+      Calculate integrated work integral in the quasi-adiabatic approx.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#work_integral">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;IVS.STAR.PULS&quot;)">logging.getLogger(&quot;IVS.STAR.PULS&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="np0max"></a><span class="summary-name">np0max</span> = <code title="6001">6001</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="repartition"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">repartition</span>(<span class="sig-arg">xx</span>,
+        <span class="sig-arg">n_new</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">smooth</span>=<span class="sig-default">9</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#repartition">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Repartition and increase length of a vector.</p>
+  <p>The new partition of the vector is more smoothed.</p>
+  <p>Keyword <code>smooth</code> sets the smoothness (the higher, the 
+  smoother). The keyword <code>sigma</code> can be used to give additional 
+  weights to regions in the star.</p>
+  <p>The start and end of the new <code>xx</code> will be exactly the same 
+  as the original.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>xx</code></strong> (ndarray) - original x vector</li>
+        <li><strong class="pname"><code>n_new</code></strong> (None/int) - length of the new repartitioned vector (defaults to length of 
+          original vector)</li>
+        <li><strong class="pname"><code>smooth</code></strong> (int) - smoothness parameter</li>
+        <li><strong class="pname"><code>sigma</code></strong> (ndarray) - weights for repartitioning</li>
+        <li><strong class="pname"><code>full_output</code></strong> (bool) - if True, function returns new x and weights</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>repartitioned vector</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="generate_newx"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generate_newx</span>(<span class="sig-arg">xx</span>,
+        <span class="sig-arg">bruntA</span>,
+        <span class="sig-arg">n_new</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">type_mode</span>=<span class="sig-default">'g'</span>,
+        <span class="sig-arg">smooth_bruntA</span>=<span class="sig-default">0.005</span>,
+        <span class="sig-arg">smooth_mesh</span>=<span class="sig-default">9</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#generate_newx">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct a new mesh that is optimized to compute p or g modes (or 
+  both)</p>
+  <p>If you give <code>type_mode==None</code>, the mesh is only smoothed, 
+  not locally enhanced.</p>
+  <p>We need the Brunt_A</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>smooth_mesh</code></strong> (int) - smoothness parameter for mesh</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="remesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">remesh</span>(<span class="sig-arg">starl</span>,
+        <span class="sig-arg">x</span>=<span class="sig-default">'x'</span>,
+        <span class="sig-arg">n_new</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">type_mode</span>=<span class="sig-default">'g'</span>,
+        <span class="sig-arg">smooth_mesh</span>=<span class="sig-default">9</span>,
+        <span class="sig-arg">smooth_weights</span>=<span class="sig-default">0.005</span>,
+        <span class="sig-arg">smooth_profile</span>=<span class="sig-default">0.002</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#remesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Improve sampling of a local star record array.</p>
+  <p>The are the actions that are taken:</p>
+  <ol start="1">
+    <li>
+      A new x-axis is generated, locally smoothed 
+      (<code>smooth_mesh</code>, see <a 
+      href="ivs.stellar_evolution.puls-module.html#repartition" 
+      class="link">repartition</a> and possibly locally adapted for the 
+      type of modes (<code>type_mode</code>, see <a 
+      href="ivs.stellar_evolution.puls-module.html#generate_newx" 
+      class="link">generate_newx</a>). The latter uses the Brunt-A, which 
+      can be smoothed with <code>smooth_weights</code> (see 
+      <code>smooth_bruntA</code> in <a 
+      href="ivs.stellar_evolution.puls-module.html#generate_newx" 
+      class="link">generate_newx</a>).
+    </li>
+    <li>
+      All quantities defined in the local star record array are 
+      interpolated on the new mesh, with the possibility to locally 
+      smoothen the profiles, with a smoothing factor that is proportional 
+      to the logarithm of the brunt A but inverse propertional to the 
+      distance within the star (<code>smooth_profile=0.002</code>). The 
+      interpolation method is the local polynomial interpolation of 
+      Marc-Antoine Dupret.
+    </li>
+  </ol>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_pressure_perturbation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_pressure_perturbation</span>(<span class="sig-arg">star_cles</span>,
+        <span class="sig-arg">star_osc</span>,
+        <span class="sig-arg">oscl</span>,
+        <span class="sig-arg">mode</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#get_pressure_perturbation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate pressure perturbation for radial and nonradial modes.</p>
+  <p>This is independent of theta and phi, and should thus be inserted in 
+  the right equation to get the 'real' perturbation at a specific point 
+  inside the star.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_density_perturbation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_density_perturbation</span>(<span class="sig-arg">star_cles</span>,
+        <span class="sig-arg">star_osc</span>,
+        <span class="sig-arg">oscl</span>,
+        <span class="sig-arg">mode</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#get_density_perturbation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute density perturbation in the quasi-adiabatic approx.</p>
+  <p>See course notes of C.~Aerts (Stellar pulsations, p. 72) or C.~Aerts 
+  et al, Asteroseismology, 2009.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="work_integral"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">work_integral</span>(<span class="sig-arg">star_cles</span>,
+        <span class="sig-arg">star_osc</span>,
+        <span class="sig-arg">oscl</span>,
+        <span class="sig-arg">mode</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#work_integral">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate integrated work integral in the quasi-adiabatic approx.</p>
+  <p>We now interpolate onto the OSC grid, maybe we should do it the other 
+  way around, onto the CLES grid?</p>
+  <p>WARNING: there might be a mix-up with dimensional and dimensionless 
+  units, but I guess this will only introduce constant factors, which will 
+  propagate outside of the integrals and derivatives. I guess the opacity 
+  derivatives are calculated in cgs, other stuff in dimensionless...</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

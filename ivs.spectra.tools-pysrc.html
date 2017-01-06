@@ -1,0 +1,1037 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.spectra.tools</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.spectra-module.html">Package&nbsp;spectra</a> ::
+        Module&nbsp;tools
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.spectra.tools-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.spectra.tools-module.html">Module ivs.spectra.tools</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Manipulate or extract information from spectra.</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Subsection 1. Example usage</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">===========================</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">In this example, we:</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">    1. retrieve a synthetic spectrum</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">    2. apply a doppler shift of 20 km/s</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">    3. rotationally broaden the synthetic spectrum according to a vsini of 66 km/s,</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring">    a solar-like limb darkening, and an instrumental profile with FWHM=0.25 angstrom</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">    4. add noise to the synthetic spectrum</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">    5. calculate the vsini with the Fourier Transform Method and check the influence</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">    of the limb darkening coefficients</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">Retrieve a synthetic spectrum with effective temperature and surface gravity</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">resembling a main sequence star of spectral type A0. For this purpose, we do</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">not need the whole spectrum but just cut out a piece</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; from ivs.spectra import model</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; wave = np.linspace(4570,4574,300)</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; wave,flux,cont = model.get_table(teff=10000,logg=4.0,wave=wave)</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; clam = wave[np.argmin(flux)]</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">Apply a doppler shift of 20 km/s (the star travels away from us)</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; wave_ = doppler_shift(wave,20.)</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; clam_shift = doppler_shift(clam,20.)</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">Rotationally broaden the spectrum and convolve with an instrumental profile</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; wave_,flux_ = rotational_broadening(wave_,flux,66.,stepr=-1,fwhm=0.25,stepi=-1,epsilon=0.6)</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-docstring">Add some noise</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; fluxn_ = flux_ + np.random.normal(size=len(flux_),scale=0.01)</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring">Calculate the vsini with the Fourier transform method. To compare the results,</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring">first compute the FT of the synthetic broadened spectrum without noise:</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; pergram,minima,vsinis,error = vsini(wave_,flux_,epsilon=0.6,clam=clam_shift,window=(4571,4573.5),df=1e-4)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring">Make a plot of what we already have:</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.figure()</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.subplot(121)</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.plot(wave,flux,'k-',label='Original template')</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.plot(wave_,fluxn_,'b-',label='Spectrum + noise')</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.plot(wave_,flux_,'r-',lw=2,label='Broadened')</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.legend(loc='lower right',prop=dict(size='small'))</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">Set the color cycle of the Fourier Transform plot to spectral</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.subplot(122)</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, 10)]</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.gca().set_color_cycle(color_cycle)</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.plot(pergram[0],pergram[1],'r-',lw=2,label='Correct')</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.gca().set_yscale('log')</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">Now compute the vsini of the noisy spectrum, assuming different limb darkening</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">parameters</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; for epsilon in np.linspace(0.0,1.0,10):</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring">...   pergram,minima,vsinis,error = vsini(wave_,fluxn_,epsilon=epsilon,clam=clam_shift,window=(4571,4573.5),df=1e-4)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring">...   p = pl.plot(pergram[0],pergram[1],label='$\epsilon$=%.2f: vsini = %.1f km/s'%(epsilon,vsinis[0]))</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">Set the xticks to vsini values for clarity:</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; xticks = np.array([25,35,50.,66,80,100,500][::-1])</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.xticks(1/xticks,['%.0f'%(i) for i in xticks])</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.xlim(0,0.04);p = pl.grid()</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.ylim(5e-4,1)</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p = pl.legend(loc='lower left',prop=dict(size='small'))</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">]include figure]]ivs_spectra_tools_vsini01.png]</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">]include figure]]ivs_spectra_tools_vsini02.png]</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package ivs=ivs-module.html"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-0', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package ivs.spectra=ivs.spectra-module.html"><a title="ivs.spectra" class="py-name" href="#" onclick="return doclink('link-1', 'spectra', 'link-1');">spectra</a></tt> <tt class="py-keyword">import</tt> <tt class="py-name">pyrotin4</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">pi</tt><tt class="py-op">,</tt><tt id="link-2" class="py-name" targets="Method ivs.units.conversions.Unit.sin()=ivs.units.conversions.Unit-class.html#sin"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-2', 'sin', 'link-2');">sin</a></tt><tt class="py-op">,</tt><tt id="link-3" class="py-name" targets="Method ivs.units.conversions.Unit.cos()=ivs.units.conversions.Unit-class.html#cos"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-3', 'cos', 'link-3');">cos</a></tt><tt class="py-op">,</tt><tt id="link-4" class="py-name" targets="Method ivs.units.conversions.Unit.sqrt()=ivs.units.conversions.Unit-class.html#sqrt"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-4', 'sqrt', 'link-4');">sqrt</a></tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">stats</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">signal</tt> <tt class="py-keyword">import</tt> <tt class="py-name">fftconvolve</tt><tt class="py-op">,</tt> <tt class="py-name">medfilt</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-5" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-5', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Package ivs.timeseries=ivs.timeseries-module.html"><a title="ivs.timeseries" class="py-name" href="#" onclick="return doclink('link-6', 'timeseries', 'link-6');">timeseries</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Module ivs.timeseries.pergrams=ivs.timeseries.pergrams-module.html"><a title="ivs.timeseries.pergrams" class="py-name" href="#" onclick="return doclink('link-7', 'pergrams', 'link-7');">pergrams</a></tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-8" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-8', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-9" class="py-name" targets="Package ivs.units=ivs.units-module.html"><a title="ivs.units" class="py-name" href="#" onclick="return doclink('link-9', 'units', 'link-9');">units</a></tt> <tt class="py-keyword">import</tt> <tt id="link-10" class="py-name" targets="Module ivs.units.conversions=ivs.units.conversions-module.html"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-10', 'conversions', 'link-10');">conversions</a></tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-11" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-11', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name"><a title="ivs.units" class="py-name" href="#" onclick="return doclink('link-12', 'units', 'link-9');">units</a></tt> <tt class="py-keyword">import</tt> <tt id="link-13" class="py-name" targets="Module ivs.units.constants=ivs.units.constants-module.html"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-13', 'constants', 'link-13');">constants</a></tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-14" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-14', 'ivs', 'link-0');">ivs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-15" class="py-name" targets="Module ivs.config=ivs.config-module.html"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-15', 'config', 'link-15');">config</a></tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-16" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-16', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Package ivs.io=ivs.io-module.html"><a title="ivs.io" class="py-name" href="#" onclick="return doclink('link-17', 'io', 'link-17');">io</a></tt> <tt class="py-keyword">import</tt> <tt id="link-18" class="py-name" targets="Module ivs.io.fits=ivs.io.fits-module.html"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-18', 'fits', 'link-18');">fits</a></tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name" targets="Function ivs.sigproc.interpol.interpolate()=ivs.sigproc.interpol-module.html#interpolate"><a title="ivs.sigproc.interpol.interpolate" class="py-name" href="#" onclick="return doclink('link-19', 'interpolate', 'link-19');">interpolate</a></tt> <tt class="py-keyword">import</tt> <tt class="py-name">interp1d</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt id="link-20" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-20', 'logger', 'link-20');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"SPEC.TOOLS"</tt><tt class="py-op">)</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"> </tt>
+<a name="doppler_shift"></a><div id="doppler_shift-def"><a name="L97"></a><tt class="py-lineno"> 97</tt> <a class="py-toggle" href="#" id="doppler_shift-toggle" onclick="return toggle('doppler_shift');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#doppler_shift">doppler_shift</a><tt class="py-op">(</tt><tt class="py-param">wave</tt><tt class="py-op">,</tt><tt class="py-param">vrad</tt><tt class="py-op">,</tt><tt class="py-param">vrad_units</tt><tt class="py-op">=</tt><tt class="py-string">'km/s'</tt><tt class="py-op">,</tt><tt class="py-param">flux</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="doppler_shift-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="doppler_shift-expanded"><a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-docstring">    Shift a spectrum with towards the red or blue side with some radial velocity.</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-docstring">    You can give units with the extra keywords C{vrad_units} (units of</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-docstring">    wavelengths are not important). The shifted wavelengths will be in the same</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-docstring">    units as the input wave array.</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-docstring">    If units are not supplied, the radial velocity is assumed to be in km/s.</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-docstring">    If you want to apply a barycentric (or orbital) correction, you'd probabl</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"><tt class="py-docstring">    want to reverse the sign of the radial velocity!</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"><tt class="py-docstring">    When the keyword C{flux} is set, the spectrum will be interpolated onto</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"><tt class="py-docstring">    the original wavelength grid (so the original wavelength grid will not</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-docstring">    change). When the keyword C{flux} is not set, the wavelength array will be</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"><tt class="py-docstring">    changed (but the fluxes not, obviously).</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-docstring">    When C{flux} is set, fluxes will be returned.</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line"><tt class="py-docstring">    When C{flux} is not set, wavelengths will be returned.</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"><tt class="py-docstring">    Example usage: shift a spectrum to the blue ('left') with 20 km/s.</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; wave = np.linspace(3000,8000,1000)</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; wave_shift1 = doppler_shift(wave,20.)</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; wave_shift2 = doppler_shift(wave,20000.,vrad_units='m/s')</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print(wave_shift1[0],wave_shift1[-1])</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"><tt class="py-docstring">    (3000.200138457119, 8000.5337025523177)</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print(wave_shift2[0],wave_shift2[-1])</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"><tt class="py-docstring">    (3000.200138457119, 8000.5337025523177)</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"><tt class="py-docstring">    @param wave: wavelength array</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"><tt class="py-docstring">    @type wave: ndarray</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"><tt class="py-docstring">    @param vrad: radial velocity (negative shifts towards blue, positive towards red)</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line"><tt class="py-docstring">    @type vrad: float (units: km/s) or tuple (float,'units')</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"><tt class="py-docstring">    @param vrad_units: units of radial velocity (default: km/s)</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line"><tt class="py-docstring">    @type vrad_units: str (interpretable for C{units.conversions.convert})</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line"><tt class="py-docstring">    @return: shifted wavelength array/shifted flux</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: ndarray</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt>  </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line">    <tt id="link-21" class="py-name" targets="Variable ivs.units.constants.cc=ivs.units.constants-module.html#cc"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-21', 'cc', 'link-21');">cc</a></tt> <tt class="py-op">=</tt> <tt id="link-22" class="py-name"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-22', 'constants', 'link-13');">constants</a></tt><tt class="py-op">.</tt><tt id="link-23" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-23', 'cc', 'link-21');">cc</a></tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line">    <tt id="link-24" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-24', 'cc', 'link-21');">cc</a></tt> <tt class="py-op">=</tt> <tt id="link-25" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-25', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-26" class="py-name" targets="Method ivs.units.conversions.Unit.convert()=ivs.units.conversions.Unit-class.html#convert,Function ivs.units.conversions.convert()=ivs.units.conversions-module.html#convert"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-26', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-string">'m/s'</tt><tt class="py-op">,</tt><tt class="py-name">vrad_units</tt><tt class="py-op">,</tt><tt id="link-27" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-27', 'cc', 'link-21');">cc</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">    <tt class="py-name">wave_out</tt> <tt class="py-op">=</tt> <tt class="py-name">wave</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">+</tt><tt class="py-name">vrad</tt><tt class="py-op">/</tt><tt id="link-28" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-28', 'cc', 'link-21');">cc</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">flux</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line">        <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-name">wave_out</tt><tt class="py-op">,</tt><tt class="py-name">flux</tt><tt class="py-op">)</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">flux</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">wave_out</tt> </tt>
+</div><a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"> </tt>
+<a name="vsini"></a><div id="vsini-def"><a name="L147"></a><tt class="py-lineno">147</tt> <a class="py-toggle" href="#" id="vsini-toggle" onclick="return toggle('vsini');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#vsini">vsini</a><tt class="py-op">(</tt><tt class="py-param">wave</tt><tt class="py-op">,</tt><tt class="py-param">flux</tt><tt class="py-op">,</tt><tt class="py-param">epsilon</tt><tt class="py-op">=</tt><tt class="py-number">0.6</tt><tt class="py-op">,</tt><tt class="py-param">clam</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">window</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="vsini-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="vsini-expanded"><a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-docstring">    Deterimine vsini of an observed spectrum via the Fourier transform method.</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-docstring">    According to Simon-Diaz (2006) and Carroll (1933):</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line"><tt class="py-docstring">    vsini = 0.660 * c/ (lambda * f1)</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line"><tt class="py-docstring">    But more general (see Reiners 2001, Dravins 1990)</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line"><tt class="py-docstring">    vsini = q1 * c/ (lambda*f1)</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line"><tt class="py-docstring">    where f1 is the first minimum of the Fourier transform.</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line"><tt class="py-docstring">    The error is estimated as the Rayleigh limit of the Fourier Transform</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line"><tt class="py-docstring">    Example usage and tests: Generate some data. We need a central wavelength (A),</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line"><tt class="py-docstring">    the speed of light in angstrom/s, limb darkening coefficients and test</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line"><tt class="py-docstring">    vsinis:</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; clam = 4480.</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; c = conversions.convert('m/s','A/s',constants.cc)</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; epsilons = np.linspace(0.,1.0,10)</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; vsinis = np.linspace(50,300,10)</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line"><tt class="py-docstring">    We analytically compute the shape of the Fourier transform in the following</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line"><tt class="py-docstring">    domain (and need the C{scipy.special.j1} for this)</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; x = np.linspace(0,30,1000)[1:]</tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from scipy.special import j1</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"><tt class="py-docstring">    Keep track of the calculated and predicted q1 values:</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; q1s = np.zeros((len(epsilons),len(vsinis)))</tt> </tt>
+<a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; q1s_pred = np.zeros((len(epsilons),len(vsinis)))</tt> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line"><tt class="py-docstring">    Start a figure and set the color cycle</tt> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.figure()</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p=pl.subplot(131)</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(epsilons))]</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.gca().set_color_cycle(color_cycle)</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p=pl.subplot(133);p=pl.title('Broadening kernel')</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p = pl.gca().set_color_cycle(color_cycle)</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"><tt class="py-docstring">    Now run over all epsilons and vsinis and determine the q1 constant:</tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; for j,epsilon in enumerate(epsilons):</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line"><tt class="py-docstring">    ...    for i,vsini in enumerate(vsinis):</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line"><tt class="py-docstring">    ...       vsini = conversions.convert('km/s','A/s',vsini)</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line"><tt class="py-docstring">    ...       delta = clam*vsini/c</tt> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line"><tt class="py-docstring">    ...       lambdas = np.linspace(-5.,+5.,20000)</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line"><tt class="py-docstring">    ...       #-- analytical rotational broadening kernel</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"><tt class="py-docstring">    ...       y = 1-(lambdas/delta)**2</tt> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line"><tt class="py-docstring">    ...       G = (2*(1-epsilon)*np.sqrt(y)+pi*epsilon/2.*y)/(pi*delta*(1-epsilon/3))</tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line"><tt class="py-docstring">    ...       lambdas = lambdas[-np.isnan(G)]</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line"><tt class="py-docstring">    ...       G = G[-np.isnan(G)]</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line"><tt class="py-docstring">    ...       G /= max(G)</tt> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line"><tt class="py-docstring">    ...       #-- analytical FT of rotational broadening kernel</tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"><tt class="py-docstring">    ...       g = 2. / (x*(1-epsilon/3.)) * ( (1-epsilon)*j1(x) +  epsilon* (sin(x)/x**2 - cos(x)/x))</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line"><tt class="py-docstring">    ...       #-- numerical FT of rotational broadening kernel</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line"><tt class="py-docstring">    ...       sigma,g_ = pergrams.deeming(lambdas-lambdas[0],G,fn=2e0,df=1e-3,norm='power')</tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line"><tt class="py-docstring">    ...       myx = 2*pi*delta*sigma</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line"><tt class="py-docstring">    ...       #-- get the minima</tt> </tt>
+<a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line"><tt class="py-docstring">    ...       rise = np.diff(g_[1:])&gt;=0</tt> </tt>
+<a name="L212"></a><tt class="py-lineno">212</tt>  <tt class="py-line"><tt class="py-docstring">    ...       fall = np.diff(g_[:-1])&lt;=0</tt> </tt>
+<a name="L213"></a><tt class="py-lineno">213</tt>  <tt class="py-line"><tt class="py-docstring">    ...       minima = sigma[1:-1][rise &amp; fall]</tt> </tt>
+<a name="L214"></a><tt class="py-lineno">214</tt>  <tt class="py-line"><tt class="py-docstring">    ...       minvals = g_[1:-1][rise &amp; fall]</tt> </tt>
+<a name="L215"></a><tt class="py-lineno">215</tt>  <tt class="py-line"><tt class="py-docstring">    ...       q1s[j,i] =  vsini / (c/clam/minima[0])</tt> </tt>
+<a name="L216"></a><tt class="py-lineno">216</tt>  <tt class="py-line"><tt class="py-docstring">    ...       q1s_pred[j,i] = 0.610 + 0.062*epsilon + 0.027*epsilon**2 + 0.012*epsilon**3 + 0.004*epsilon**4</tt> </tt>
+<a name="L217"></a><tt class="py-lineno">217</tt>  <tt class="py-line"><tt class="py-docstring">    ...    p= pl.subplot(131)</tt> </tt>
+<a name="L218"></a><tt class="py-lineno">218</tt>  <tt class="py-line"><tt class="py-docstring">    ...    p= pl.plot(vsinis,q1s[j],'o',label='$\epsilon$=%.2f'%(epsilon));pl.gca()._get_lines.count -= 1</tt> </tt>
+<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line"><tt class="py-docstring">    ...    p= pl.plot(vsinis,q1s_pred[j],'-')</tt> </tt>
+<a name="L220"></a><tt class="py-lineno">220</tt>  <tt class="py-line"><tt class="py-docstring">    ...    p= pl.subplot(133)</tt> </tt>
+<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line"><tt class="py-docstring">    ...    p= pl.plot(lambdas,G,'-')</tt> </tt>
+<a name="L222"></a><tt class="py-lineno">222</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line"><tt class="py-docstring">    And plot the results:</tt> </tt>
+<a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.subplot(131)</tt> </tt>
+<a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.xlabel('v sini [km/s]');p = pl.ylabel('q1')</tt> </tt>
+<a name="L227"></a><tt class="py-lineno">227</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.legend(prop=dict(size='small'))</tt> </tt>
+<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L229"></a><tt class="py-lineno">229</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.subplot(132);p=pl.title('Fourier transform')</tt> </tt>
+<a name="L231"></a><tt class="py-lineno">231</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.plot(x,g**2,'k-',label='Analytical FT')</tt> </tt>
+<a name="L232"></a><tt class="py-lineno">232</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.plot(myx,g_/max(g_),'r-',label='Computed FT')</tt> </tt>
+<a name="L233"></a><tt class="py-lineno">233</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.plot(minima*2*pi*delta,minvals/max(g_),'bo',label='Minima')</tt> </tt>
+<a name="L234"></a><tt class="py-lineno">234</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.legend(prop=dict(size='small'))</tt> </tt>
+<a name="L235"></a><tt class="py-lineno">235</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; p= pl.gca().set_yscale('log')</tt> </tt>
+<a name="L236"></a><tt class="py-lineno">236</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L237"></a><tt class="py-lineno">237</tt>  <tt class="py-line"><tt class="py-docstring">    ]include figure]]ivs_spectra_tools_vsini_kernel.png]</tt> </tt>
+<a name="L238"></a><tt class="py-lineno">238</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L239"></a><tt class="py-lineno">239</tt>  <tt class="py-line"><tt class="py-docstring">    Extra keyword arguments are passed to L{pergrams.deeming}</tt> </tt>
+<a name="L240"></a><tt class="py-lineno">240</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L241"></a><tt class="py-lineno">241</tt>  <tt class="py-line"><tt class="py-docstring">    @param wave: wavelength array in Angstrom</tt> </tt>
+<a name="L242"></a><tt class="py-lineno">242</tt>  <tt class="py-line"><tt class="py-docstring">    @type wave: ndarray</tt> </tt>
+<a name="L243"></a><tt class="py-lineno">243</tt>  <tt class="py-line"><tt class="py-docstring">    @param flux: normalised flux of the profile</tt> </tt>
+<a name="L244"></a><tt class="py-lineno">244</tt>  <tt class="py-line"><tt class="py-docstring">    @type flux: ndarray</tt> </tt>
+<a name="L245"></a><tt class="py-lineno">245</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: (array,array),(array,array),array,float</tt> </tt>
+<a name="L246"></a><tt class="py-lineno">246</tt>  <tt class="py-line"><tt class="py-docstring">    @return: periodogram (freqs in s/km), extrema (weird units), vsini values (km/s), error (km/s)</tt> </tt>
+<a name="L247"></a><tt class="py-lineno">247</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L248"></a><tt class="py-lineno">248</tt>  <tt class="py-line">    <tt id="link-29" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-29', 'cc', 'link-21');">cc</a></tt> <tt class="py-op">=</tt> <tt id="link-30" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-30', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-31" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-31', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-string">'m/s'</tt><tt class="py-op">,</tt><tt class="py-string">'AA/s'</tt><tt class="py-op">,</tt><tt id="link-32" class="py-name"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-32', 'constants', 'link-13');">constants</a></tt><tt class="py-op">.</tt><tt id="link-33" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-33', 'cc', 'link-21');">cc</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L249"></a><tt class="py-lineno">249</tt>  <tt class="py-line">    <tt class="py-comment">#-- clip the wavelength and flux region if needed:</tt> </tt>
+<a name="L250"></a><tt class="py-lineno">250</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">window</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L251"></a><tt class="py-lineno">251</tt>  <tt class="py-line">        <tt class="py-name">keep</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">window</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">&lt;=</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">&lt;=</tt><tt class="py-name">window</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L252"></a><tt class="py-lineno">252</tt>  <tt class="py-line">        <tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">wave</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">flux</tt><tt class="py-op">[</tt><tt class="py-name">keep</tt><tt class="py-op">]</tt> </tt>
+<a name="L253"></a><tt class="py-lineno">253</tt>  <tt class="py-line">    <tt class="py-comment">#-- what is the central wavelength? If not given, it's the middle of the</tt> </tt>
+<a name="L254"></a><tt class="py-lineno">254</tt>  <tt class="py-line">    <tt class="py-comment">#   wavelength range</tt> </tt>
+<a name="L255"></a><tt class="py-lineno">255</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">clam</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> <tt class="py-name">clam</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt class="py-name">wave</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-number">2</tt><tt class="py-op">)</tt> </tt>
+<a name="L256"></a><tt class="py-lineno">256</tt>  <tt class="py-line">    <tt class="py-comment">#-- take care of the limb darkening</tt> </tt>
+<a name="L257"></a><tt class="py-lineno">257</tt>  <tt class="py-line">    <tt class="py-name">q1</tt> <tt class="py-op">=</tt> <tt class="py-number">0.610</tt> <tt class="py-op">+</tt> <tt class="py-number">0.062</tt><tt class="py-op">*</tt><tt class="py-name">epsilon</tt> <tt class="py-op">+</tt> <tt class="py-number">0.027</tt><tt class="py-op">*</tt><tt class="py-name">epsilon</tt><tt class="py-op">**</tt><tt class="py-number">2</tt> <tt class="py-op">+</tt> <tt class="py-number">0.012</tt><tt class="py-op">*</tt><tt class="py-name">epsilon</tt><tt class="py-op">**</tt><tt class="py-number">3</tt> <tt class="py-op">+</tt> <tt class="py-number">0.004</tt><tt class="py-op">*</tt><tt class="py-name">epsilon</tt><tt class="py-op">**</tt><tt class="py-number">4</tt> </tt>
+<a name="L258"></a><tt class="py-lineno">258</tt>  <tt class="py-line">    <tt class="py-comment">#-- do the Fourier transform and normalise</tt> </tt>
+<a name="L259"></a><tt class="py-lineno">259</tt>  <tt class="py-line">    <tt class="py-comment">#flux = flux / (np.median(np.sort(flux)[-5:]))</tt> </tt>
+<a name="L260"></a><tt class="py-lineno">260</tt>  <tt class="py-line">    <tt class="py-name">freqs</tt><tt class="py-op">,</tt><tt class="py-name">ampls</tt> <tt class="py-op">=</tt> <tt id="link-34" class="py-name"><a title="ivs.timeseries.pergrams" class="py-name" href="#" onclick="return doclink('link-34', 'pergrams', 'link-7');">pergrams</a></tt><tt class="py-op">.</tt><tt id="link-35" class="py-name" targets="Function ivs.timeseries.pergrams.deeming()=ivs.timeseries.pergrams-module.html#deeming"><a title="ivs.timeseries.pergrams.deeming" class="py-name" href="#" onclick="return doclink('link-35', 'deeming', 'link-35');">deeming</a></tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">flux</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">**</tt><tt class="py-name">kwargs</tt><tt class="py-op">)</tt> </tt>
+<a name="L261"></a><tt class="py-lineno">261</tt>  <tt class="py-line">    <tt class="py-name">ampls</tt> <tt class="py-op">=</tt> <tt class="py-name">ampls</tt><tt class="py-op">/</tt><tt class="py-name">max</tt><tt class="py-op">(</tt><tt class="py-name">ampls</tt><tt class="py-op">)</tt> </tt>
+<a name="L262"></a><tt class="py-lineno">262</tt>  <tt class="py-line">    <tt class="py-name">error</tt> <tt class="py-op">=</tt> <tt class="py-number">1.</tt><tt class="py-op">/</tt><tt class="py-name">wave</tt><tt class="py-op">.</tt><tt class="py-name">ptp</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L263"></a><tt class="py-lineno">263</tt>  <tt class="py-line">    <tt class="py-comment">#-- get all the peaks</tt> </tt>
+<a name="L264"></a><tt class="py-lineno">264</tt>  <tt class="py-line">    <tt class="py-name">rise</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">diff</tt><tt class="py-op">(</tt><tt class="py-name">ampls</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">:</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">&gt;=</tt><tt class="py-number">0</tt> </tt>
+<a name="L265"></a><tt class="py-lineno">265</tt>  <tt class="py-line">    <tt class="py-name">fall</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">diff</tt><tt class="py-op">(</tt><tt class="py-name">ampls</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">&lt;=</tt><tt class="py-number">0</tt> </tt>
+<a name="L266"></a><tt class="py-lineno">266</tt>  <tt class="py-line">    <tt class="py-name">minima</tt> <tt class="py-op">=</tt> <tt class="py-name">freqs</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">:</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-name">rise</tt> <tt class="py-op">&amp;</tt> <tt class="py-name">fall</tt><tt class="py-op">]</tt> </tt>
+<a name="L267"></a><tt class="py-lineno">267</tt>  <tt class="py-line">    <tt class="py-name">minvals</tt> <tt class="py-op">=</tt> <tt class="py-name">ampls</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">:</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">[</tt><tt class="py-name">rise</tt> <tt class="py-op">&amp;</tt> <tt class="py-name">fall</tt><tt class="py-op">]</tt> </tt>
+<a name="L268"></a><tt class="py-lineno">268</tt>  <tt class="py-line">    <tt class="py-comment">#-- compute the vsini and convert to km/s</tt> </tt>
+<a name="L269"></a><tt class="py-lineno">269</tt>  <tt class="py-line">    <tt class="py-name">freqs</tt> <tt class="py-op">=</tt> <tt class="py-name">freqs</tt><tt class="py-op">*</tt><tt class="py-name">clam</tt><tt class="py-op">/</tt><tt class="py-name">q1</tt><tt class="py-op">/</tt><tt id="link-36" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-36', 'cc', 'link-21');">cc</a></tt> </tt>
+<a name="L270"></a><tt class="py-lineno">270</tt>  <tt class="py-line">    <tt class="py-name">freqs</tt> <tt class="py-op">=</tt> <tt id="link-37" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-37', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-38" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-38', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-string">'s/AA'</tt><tt class="py-op">,</tt><tt class="py-string">'s/km'</tt><tt class="py-op">,</tt><tt class="py-name">freqs</tt><tt class="py-op">,</tt><tt class="py-name">wave</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-name">clam</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L271"></a><tt class="py-lineno">271</tt>  <tt class="py-line">    <tt class="py-name">vsini_values</tt> <tt class="py-op">=</tt> <tt id="link-39" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-39', 'cc', 'link-21');">cc</a></tt><tt class="py-op">/</tt><tt class="py-name">clam</tt><tt class="py-op">*</tt><tt class="py-name">q1</tt><tt class="py-op">/</tt><tt class="py-name">minima</tt> </tt>
+<a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line">    <tt class="py-name">vsini_values</tt> <tt class="py-op">=</tt> <tt id="link-40" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-40', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-41" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-41', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-string">'AA/s'</tt><tt class="py-op">,</tt><tt class="py-string">'km/s'</tt><tt class="py-op">,</tt><tt class="py-name">vsini_values</tt><tt class="py-op">)</tt><tt class="py-comment">#,wave=(clam,'AA'))</tt> </tt>
+<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line">    <tt class="py-comment">#-- determine the error as the rayleigh limit</tt> </tt>
+<a name="L274"></a><tt class="py-lineno">274</tt>  <tt class="py-line">    <tt class="py-name">error</tt> <tt class="py-op">=</tt> <tt class="py-name">error</tt><tt class="py-op">*</tt><tt class="py-name">clam</tt><tt class="py-op">/</tt><tt class="py-name">q1</tt><tt class="py-op">/</tt><tt id="link-42" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-42', 'cc', 'link-21');">cc</a></tt> </tt>
+<a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line">    <tt class="py-name">error</tt> <tt class="py-op">=</tt> <tt id="link-43" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-43', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-44" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-44', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-string">'s/AA'</tt><tt class="py-op">,</tt><tt class="py-string">'s/km'</tt><tt class="py-op">,</tt><tt class="py-name">error</tt><tt class="py-op">,</tt><tt class="py-name">wave</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-name">clam</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L276"></a><tt class="py-lineno">276</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">freqs</tt><tt class="py-op">,</tt><tt class="py-name">ampls</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-name">minima</tt><tt class="py-op">,</tt><tt class="py-name">minvals</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">vsini_values</tt><tt class="py-op">,</tt><tt class="py-name">error</tt> </tt>
+</div><a name="L277"></a><tt class="py-lineno">277</tt>  <tt class="py-line"> </tt>
+<a name="L278"></a><tt class="py-lineno">278</tt>  <tt class="py-line"> </tt>
+<a name="L279"></a><tt class="py-lineno">279</tt>  <tt class="py-line"> </tt>
+<a name="L280"></a><tt class="py-lineno">280</tt>  <tt class="py-line"> </tt>
+<a name="rotational_broadening"></a><div id="rotational_broadening-def"><a name="L281"></a><tt class="py-lineno">281</tt> <a class="py-toggle" href="#" id="rotational_broadening-toggle" onclick="return toggle('rotational_broadening');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#rotational_broadening">rotational_broadening</a><tt class="py-op">(</tt><tt class="py-param">wave_spec</tt><tt class="py-op">,</tt><tt class="py-param">flux_spec</tt><tt class="py-op">,</tt><tt class="py-param">vrot</tt><tt class="py-op">,</tt><tt class="py-param">fwhm</tt><tt class="py-op">=</tt><tt class="py-number">0.25</tt><tt class="py-op">,</tt><tt class="py-param">epsilon</tt><tt class="py-op">=</tt><tt class="py-number">0.6</tt><tt class="py-op">,</tt> </tt>
+<a name="L282"></a><tt class="py-lineno">282</tt>  <tt class="py-line">                         <tt class="py-param">chard</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">stepr</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-param">stepi</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-param">alam0</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">alam1</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> </tt>
+<a name="L283"></a><tt class="py-lineno">283</tt>  <tt class="py-line">                         <tt class="py-param">irel</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-param">cont</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt><tt class="py-param">method</tt><tt class="py-op">=</tt><tt class="py-string">'fortran'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="rotational_broadening-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="rotational_broadening-expanded"><a name="L284"></a><tt class="py-lineno">284</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L285"></a><tt class="py-lineno">285</tt>  <tt class="py-line"><tt class="py-docstring">    Apply rotational broadening to a spectrum assuming a linear limb darkening</tt> </tt>
+<a name="L286"></a><tt class="py-lineno">286</tt>  <tt class="py-line"><tt class="py-docstring">    law.</tt> </tt>
+<a name="L287"></a><tt class="py-lineno">287</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L288"></a><tt class="py-lineno">288</tt>  <tt class="py-line"><tt class="py-docstring">    This function is based on the ROTIN program. See Fortran file for</tt> </tt>
+<a name="L289"></a><tt class="py-lineno">289</tt>  <tt class="py-line"><tt class="py-docstring">    explanations of parameters.</tt> </tt>
+<a name="L290"></a><tt class="py-lineno">290</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L291"></a><tt class="py-lineno">291</tt>  <tt class="py-line"><tt class="py-docstring">    Limb darkening law is linear, default value is epsilon=0.6</tt> </tt>
+<a name="L292"></a><tt class="py-lineno">292</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L293"></a><tt class="py-lineno">293</tt>  <tt class="py-line"><tt class="py-docstring">    Possibility to normalize as well by giving continuum in 'cont' parameter.</tt> </tt>
+<a name="L294"></a><tt class="py-lineno">294</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L295"></a><tt class="py-lineno">295</tt>  <tt class="py-line"><tt class="py-docstring">    B{Warning}: C{method='python'} is still experimental, but should work.</tt> </tt>
+<a name="L296"></a><tt class="py-lineno">296</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L297"></a><tt class="py-lineno">297</tt>  <tt class="py-line"><tt class="py-docstring">    Section 1. Parameters for rotational convolution </tt> </tt>
+<a name="L298"></a><tt class="py-lineno">298</tt>  <tt class="py-line"><tt class="py-docstring">    ================================================</tt> </tt>
+<a name="L299"></a><tt class="py-lineno">299</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L300"></a><tt class="py-lineno">300</tt>  <tt class="py-line"><tt class="py-docstring">    C{VROT}: v sin i (in km/s):</tt> </tt>
+<a name="L301"></a><tt class="py-lineno">301</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L302"></a><tt class="py-lineno">302</tt>  <tt class="py-line"><tt class="py-docstring">        -  if VROT=0 - rotational convolution is </tt> </tt>
+<a name="L303"></a><tt class="py-lineno">303</tt>  <tt class="py-line"><tt class="py-docstring">                 a) either not calculated,</tt> </tt>
+<a name="L304"></a><tt class="py-lineno">304</tt>  <tt class="py-line"><tt class="py-docstring">                 b) or, if simultaneously FWHM is rather large</tt> </tt>
+<a name="L305"></a><tt class="py-lineno">305</tt>  <tt class="py-line"><tt class="py-docstring">                 (vrot/c*lambda &lt; FWHM/20.),</tt> </tt>
+<a name="L306"></a><tt class="py-lineno">306</tt>  <tt class="py-line"><tt class="py-docstring">                 vrot is set to  FWHM/20*c/lambda;</tt> </tt>
+<a name="L307"></a><tt class="py-lineno">307</tt>  <tt class="py-line"><tt class="py-docstring">        -  if VROT &gt;0 but the previous condition b) applies, the</tt> </tt>
+<a name="L308"></a><tt class="py-lineno">308</tt>  <tt class="py-line"><tt class="py-docstring">        value of VROT is changed as  in the previous case</tt> </tt>
+<a name="L309"></a><tt class="py-lineno">309</tt>  <tt class="py-line"><tt class="py-docstring">        -  if VROT&lt;0 - the value of abs(VROT) is used regardless of</tt> </tt>
+<a name="L310"></a><tt class="py-lineno">310</tt>  <tt class="py-line"><tt class="py-docstring">        how small compared to FWHM it is</tt> </tt>
+<a name="L311"></a><tt class="py-lineno">311</tt>  <tt class="py-line"><tt class="py-docstring">     </tt> </tt>
+<a name="L312"></a><tt class="py-lineno">312</tt>  <tt class="py-line"><tt class="py-docstring">    C{CHARD}: characteristic scale of the variations of unconvolved stellar</tt> </tt>
+<a name="L313"></a><tt class="py-lineno">313</tt>  <tt class="py-line"><tt class="py-docstring">    spectrum (basically, characteristic distance between two neighbouring</tt> </tt>
+<a name="L314"></a><tt class="py-lineno">314</tt>  <tt class="py-line"><tt class="py-docstring">    wavelength points) - in A:</tt> </tt>
+<a name="L315"></a><tt class="py-lineno">315</tt>  <tt class="py-line"><tt class="py-docstring">     </tt> </tt>
+<a name="L316"></a><tt class="py-lineno">316</tt>  <tt class="py-line"><tt class="py-docstring">        - if =0 - program sets up default (0.01 A)</tt> </tt>
+<a name="L317"></a><tt class="py-lineno">317</tt>  <tt class="py-line"><tt class="py-docstring">        </tt> </tt>
+<a name="L318"></a><tt class="py-lineno">318</tt>  <tt class="py-line"><tt class="py-docstring">    C{STEPR}: wavelength step for evaluation rotational convolution;</tt> </tt>
+<a name="L319"></a><tt class="py-lineno">319</tt>  <tt class="py-line"><tt class="py-docstring">     </tt> </tt>
+<a name="L320"></a><tt class="py-lineno">320</tt>  <tt class="py-line"><tt class="py-docstring">        - if =0, the program sets up default (the wavelength</tt> </tt>
+<a name="L321"></a><tt class="py-lineno">321</tt>  <tt class="py-line"><tt class="py-docstring">        interval corresponding to the rotational velocity</tt> </tt>
+<a name="L322"></a><tt class="py-lineno">322</tt>  <tt class="py-line"><tt class="py-docstring">        devided by 3.)                           </tt> </tt>
+<a name="L323"></a><tt class="py-lineno">323</tt>  <tt class="py-line"><tt class="py-docstring">        - if &lt;0, convolved spectrum calculated on the original</tt> </tt>
+<a name="L324"></a><tt class="py-lineno">324</tt>  <tt class="py-line"><tt class="py-docstring">        (detailed) SYNSPEC wavelength mesh</tt> </tt>
+<a name="L325"></a><tt class="py-lineno">325</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L326"></a><tt class="py-lineno">326</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L327"></a><tt class="py-lineno">327</tt>  <tt class="py-line"><tt class="py-docstring">    Section 2. parameters for instrumental convolution</tt> </tt>
+<a name="L328"></a><tt class="py-lineno">328</tt>  <tt class="py-line"><tt class="py-docstring">    ==================================================</tt> </tt>
+<a name="L329"></a><tt class="py-lineno">329</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L330"></a><tt class="py-lineno">330</tt>  <tt class="py-line"><tt class="py-docstring">    C{FWHM}: WARNING: this is not the full width at half maximum for Gaussian</tt> </tt>
+<a name="L331"></a><tt class="py-lineno">331</tt>  <tt class="py-line"><tt class="py-docstring">    instrumental profile, but the sigma (FWHM = 2.3548 sigma).</tt> </tt>
+<a name="L332"></a><tt class="py-lineno">332</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L333"></a><tt class="py-lineno">333</tt>  <tt class="py-line"><tt class="py-docstring">    C{STEPI}: wavelength step for evaluating instrumental convolution</tt> </tt>
+<a name="L334"></a><tt class="py-lineno">334</tt>  <tt class="py-line"><tt class="py-docstring">          - if =0, the program sets up default (FWHM/10.)</tt> </tt>
+<a name="L335"></a><tt class="py-lineno">335</tt>  <tt class="py-line"><tt class="py-docstring">          - if &lt;0, convolved spectrum calculated with the previous</tt> </tt>
+<a name="L336"></a><tt class="py-lineno">336</tt>  <tt class="py-line"><tt class="py-docstring">          wavelength mesh:</tt> </tt>
+<a name="L337"></a><tt class="py-lineno">337</tt>  <tt class="py-line"><tt class="py-docstring">          either the original (SYNSPEC) one if vrot=0,</tt> </tt>
+<a name="L338"></a><tt class="py-lineno">338</tt>  <tt class="py-line"><tt class="py-docstring">          or the one used in rotational convolution (vrot &gt; 0)</tt> </tt>
+<a name="L339"></a><tt class="py-lineno">339</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L340"></a><tt class="py-lineno">340</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L341"></a><tt class="py-lineno">341</tt>  <tt class="py-line"><tt class="py-docstring">    Section 3. wavelength interval and normalization of spectra</tt> </tt>
+<a name="L342"></a><tt class="py-lineno">342</tt>  <tt class="py-line"><tt class="py-docstring">    ===========================================================</tt> </tt>
+<a name="L343"></a><tt class="py-lineno">343</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L344"></a><tt class="py-lineno">344</tt>  <tt class="py-line"><tt class="py-docstring">    C{ALAM0}: initial wavelength</tt> </tt>
+<a name="L345"></a><tt class="py-lineno">345</tt>  <tt class="py-line"><tt class="py-docstring">    C{ALAM1}: final wavelength</tt> </tt>
+<a name="L346"></a><tt class="py-lineno">346</tt>  <tt class="py-line"><tt class="py-docstring">    C{IREL}: for =1 relative spectrum, =0 absolute spectrum</tt> </tt>
+<a name="L347"></a><tt class="py-lineno">347</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L348"></a><tt class="py-lineno">348</tt>  <tt class="py-line"><tt class="py-docstring">    @return: wavelength,flux</tt> </tt>
+<a name="L349"></a><tt class="py-lineno">349</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: array, array</tt> </tt>
+<a name="L350"></a><tt class="py-lineno">350</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L351"></a><tt class="py-lineno">351</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">method</tt><tt class="py-op">==</tt><tt class="py-string">'fortran'</tt><tt class="py-op">:</tt> </tt>
+<a name="L352"></a><tt class="py-lineno">352</tt>  <tt class="py-line">        <tt class="py-comment">#-- set arguments</tt> </tt>
+<a name="L353"></a><tt class="py-lineno">353</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">alam0</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> <tt class="py-name">alam0</tt> <tt class="py-op">=</tt> <tt class="py-name">wave_spec</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L354"></a><tt class="py-lineno">354</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">alam1</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> <tt class="py-name">alam1</tt> <tt class="py-op">=</tt> <tt class="py-name">wave_spec</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L355"></a><tt class="py-lineno">355</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">cont</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> <tt class="py-name">cont</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L356"></a><tt class="py-lineno">356</tt>  <tt class="py-line">        <tt class="py-name">contw</tt><tt class="py-op">,</tt><tt class="py-name">contf</tt> <tt class="py-op">=</tt> <tt class="py-name">cont</tt> </tt>
+<a name="L357"></a><tt class="py-lineno">357</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">chard</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L358"></a><tt class="py-lineno">358</tt>  <tt class="py-line">            <tt class="py-name">chard</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">diff</tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">mean</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L359"></a><tt class="py-lineno">359</tt>  <tt class="py-line">         </tt>
+<a name="L360"></a><tt class="py-lineno">360</tt>  <tt class="py-line">        <tt class="py-comment">#-- apply broadening</tt> </tt>
+<a name="L361"></a><tt class="py-lineno">361</tt>  <tt class="py-line">        <tt id="link-45" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-45', 'logger', 'link-20');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'ROTIN rot.broad. with vrot=%.3f (epsilon=%.2f)'</tt><tt class="py-op">%</tt><tt class="py-op">(</tt><tt class="py-name">vrot</tt><tt class="py-op">,</tt><tt class="py-name">epsilon</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L362"></a><tt class="py-lineno">362</tt>  <tt class="py-line">        <tt class="py-name">w3</tt><tt class="py-op">,</tt><tt class="py-name">f3</tt><tt class="py-op">,</tt><tt class="py-name">ind</tt> <tt class="py-op">=</tt> <tt class="py-name">pyrotin4</tt><tt class="py-op">.</tt><tt class="py-name">pyrotin</tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">,</tt><tt class="py-name">flux_spec</tt><tt class="py-op">,</tt><tt class="py-name">contw</tt><tt class="py-op">,</tt><tt class="py-name">contf</tt><tt class="py-op">,</tt> </tt>
+<a name="L363"></a><tt class="py-lineno">363</tt>  <tt class="py-line">                    <tt class="py-name">vrot</tt><tt class="py-op">,</tt><tt class="py-name">chard</tt><tt class="py-op">,</tt><tt class="py-name">stepr</tt><tt class="py-op">,</tt><tt class="py-name">fwhm</tt><tt class="py-op">,</tt><tt class="py-name">stepi</tt><tt class="py-op">,</tt><tt class="py-name">alam0</tt><tt class="py-op">,</tt><tt class="py-name">alam1</tt><tt class="py-op">,</tt><tt class="py-name">irel</tt><tt class="py-op">,</tt><tt class="py-name">epsilon</tt><tt class="py-op">)</tt> </tt>
+<a name="L364"></a><tt class="py-lineno">364</tt>  <tt class="py-line">         </tt>
+<a name="L365"></a><tt class="py-lineno">365</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">w3</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-name">ind</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">f3</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-name">ind</tt><tt class="py-op">]</tt> </tt>
+<a name="L366"></a><tt class="py-lineno">366</tt>  <tt class="py-line">    <tt class="py-keyword">elif</tt> <tt class="py-name">method</tt><tt class="py-op">==</tt><tt class="py-string">'python'</tt><tt class="py-op">:</tt> </tt>
+<a name="L367"></a><tt class="py-lineno">367</tt>  <tt class="py-line">        <tt id="link-46" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-46', 'logger', 'link-20');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"PYTHON rot.broad with vrot=%.3f (epsilon=%.2f)"</tt><tt class="py-op">%</tt><tt class="py-op">(</tt><tt class="py-name">vrot</tt><tt class="py-op">,</tt><tt class="py-name">epsilon</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L368"></a><tt class="py-lineno">368</tt>  <tt class="py-line">        <tt class="py-comment">#-- first a wavelength Gaussian convolution:</tt> </tt>
+<a name="L369"></a><tt class="py-lineno">369</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">fwhm</tt><tt class="py-op">&gt;</tt><tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L370"></a><tt class="py-lineno">370</tt>  <tt class="py-line">            <tt class="py-name">fwhm</tt> <tt class="py-op">/=</tt> <tt class="py-number">2.3548</tt> </tt>
+<a name="L371"></a><tt class="py-lineno">371</tt>  <tt class="py-line">            <tt class="py-comment">#-- make sure it's equidistant</tt> </tt>
+<a name="L372"></a><tt class="py-lineno">372</tt>  <tt class="py-line">            <tt class="py-name">wave_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linspace</tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">wave_spec</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L373"></a><tt class="py-lineno">373</tt>  <tt class="py-line">            <tt class="py-name">flux_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wave_</tt><tt class="py-op">,</tt><tt class="py-name">wave_spec</tt><tt class="py-op">,</tt><tt class="py-name">flux_spec</tt><tt class="py-op">)</tt> </tt>
+<a name="L374"></a><tt class="py-lineno">374</tt>  <tt class="py-line">            <tt class="py-name">dwave</tt> <tt class="py-op">=</tt> <tt class="py-name">wave_</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">wave_</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L375"></a><tt class="py-lineno">375</tt>  <tt class="py-line">            <tt id="link-47" class="py-name" targets="Variable ivs.units.constants.n=ivs.units.constants-module.html#n"><a title="ivs.units.constants.n" class="py-name" href="#" onclick="return doclink('link-47', 'n', 'link-47');">n</a></tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt class="py-number">4</tt><tt class="py-op">*</tt><tt class="py-name">fwhm</tt><tt class="py-op">/</tt><tt class="py-name">dwave</tt><tt class="py-op">)</tt> </tt>
+<a name="L376"></a><tt class="py-lineno">376</tt>  <tt class="py-line">            <tt class="py-name">wave_k</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt id="link-48" class="py-name"><a title="ivs.units.constants.n" class="py-name" href="#" onclick="return doclink('link-48', 'n', 'link-47');">n</a></tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">dwave</tt> </tt>
+<a name="L377"></a><tt class="py-lineno">377</tt>  <tt class="py-line">            <tt class="py-name">wave_k</tt><tt class="py-op">-=</tt> <tt class="py-name">wave_k</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">/</tt><tt class="py-number">2.</tt> </tt>
+<a name="L378"></a><tt class="py-lineno">378</tt>  <tt class="py-line">            <tt class="py-name">kernel</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-49" class="py-name" targets="Method ivs.units.conversions.Unit.exp()=ivs.units.conversions.Unit-class.html#exp"><a title="ivs.units.conversions.Unit.exp" class="py-name" href="#" onclick="return doclink('link-49', 'exp', 'link-49');">exp</a></tt><tt class="py-op">(</tt><tt class="py-op">-</tt> <tt class="py-op">(</tt><tt class="py-name">wave_k</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt class="py-name">fwhm</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L379"></a><tt class="py-lineno">379</tt>  <tt class="py-line">            <tt class="py-name">kernel</tt> <tt class="py-op">/=</tt> <tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">kernel</tt><tt class="py-op">)</tt> </tt>
+<a name="L380"></a><tt class="py-lineno">380</tt>  <tt class="py-line">            <tt class="py-name">flux_conv</tt> <tt class="py-op">=</tt> <tt class="py-name">fftconvolve</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">flux_</tt><tt class="py-op">,</tt><tt class="py-name">kernel</tt><tt class="py-op">,</tt><tt class="py-name">mode</tt><tt class="py-op">=</tt><tt class="py-string">'same'</tt><tt class="py-op">)</tt> </tt>
+<a name="L381"></a><tt class="py-lineno">381</tt>  <tt class="py-line">            <tt class="py-name">flux_spec</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">+</tt><tt class="py-name">dwave</tt><tt class="py-op">/</tt><tt class="py-number">2</tt><tt class="py-op">,</tt><tt class="py-name">wave_</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">flux_conv</tt><tt class="py-op">,</tt><tt class="py-name">left</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-name">right</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L382"></a><tt class="py-lineno">382</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">vrot</tt><tt class="py-op">&gt;</tt><tt class="py-number">0</tt><tt class="py-op">:</tt>     </tt>
+<a name="L383"></a><tt class="py-lineno">383</tt>  <tt class="py-line">            <tt class="py-comment">#-- convert wavelength array into velocity space, this is easier</tt> </tt>
+<a name="L384"></a><tt class="py-lineno">384</tt>  <tt class="py-line">            <tt class="py-comment">#   we also need to make it equidistant!</tt> </tt>
+<a name="L385"></a><tt class="py-lineno">385</tt>  <tt class="py-line">            <tt class="py-name">wave_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-50" class="py-name" targets="Method ivs.units.conversions.Unit.log()=ivs.units.conversions.Unit-class.html#log"><a title="ivs.units.conversions.Unit.log" class="py-name" href="#" onclick="return doclink('link-50', 'log', 'link-50');">log</a></tt><tt class="py-op">(</tt><tt class="py-name">wave_spec</tt><tt class="py-op">)</tt> </tt>
+<a name="L386"></a><tt class="py-lineno">386</tt>  <tt class="py-line">            <tt class="py-name">velo_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linspace</tt><tt class="py-op">(</tt><tt class="py-name">wave_</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">wave_</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">wave_</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L387"></a><tt class="py-lineno">387</tt>  <tt class="py-line">            <tt class="py-name">flux_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">velo_</tt><tt class="py-op">,</tt><tt class="py-name">wave_</tt><tt class="py-op">,</tt><tt class="py-name">flux_spec</tt><tt class="py-op">)</tt> </tt>
+<a name="L388"></a><tt class="py-lineno">388</tt>  <tt class="py-line">            <tt class="py-name">dvelo</tt> <tt class="py-op">=</tt> <tt class="py-name">velo_</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">-</tt><tt class="py-name">velo_</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L389"></a><tt class="py-lineno">389</tt>  <tt class="py-line">            <tt class="py-name">vrot</tt> <tt class="py-op">=</tt> <tt class="py-name">vrot</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt id="link-51" class="py-name"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-51', 'constants', 'link-13');">constants</a></tt><tt class="py-op">.</tt><tt id="link-52" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-52', 'cc', 'link-21');">cc</a></tt><tt class="py-op">*</tt><tt class="py-number">1e-3</tt><tt class="py-op">)</tt> </tt>
+<a name="L390"></a><tt class="py-lineno">390</tt>  <tt class="py-line">            <tt class="py-comment">#-- compute the convolution kernel and normalise it</tt> </tt>
+<a name="L391"></a><tt class="py-lineno">391</tt>  <tt class="py-line">            <tt id="link-53" class="py-name"><a title="ivs.units.constants.n" class="py-name" href="#" onclick="return doclink('link-53', 'n', 'link-47');">n</a></tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt class="py-name">vrot</tt><tt class="py-op">/</tt><tt class="py-name">dvelo</tt><tt class="py-op">)</tt> </tt>
+<a name="L392"></a><tt class="py-lineno">392</tt>  <tt class="py-line">            <tt class="py-name">velo_k</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt id="link-54" class="py-name"><a title="ivs.units.constants.n" class="py-name" href="#" onclick="return doclink('link-54', 'n', 'link-47');">n</a></tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">dvelo</tt> </tt>
+<a name="L393"></a><tt class="py-lineno">393</tt>  <tt class="py-line">            <tt class="py-name">velo_k</tt> <tt class="py-op">-=</tt> <tt class="py-name">velo_k</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">/</tt><tt class="py-number">2.</tt> </tt>
+<a name="L394"></a><tt class="py-lineno">394</tt>  <tt class="py-line">            <tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-number">1</tt> <tt class="py-op">-</tt> <tt class="py-op">(</tt><tt class="py-name">velo_k</tt><tt class="py-op">/</tt><tt class="py-name">vrot</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt> <tt class="py-comment"># transformation of velocity</tt> </tt>
+<a name="L395"></a><tt class="py-lineno">395</tt>  <tt class="py-line">            <tt class="py-name">G</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">epsilon</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-55" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-55', 'sqrt', 'link-4');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">y</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-name">pi</tt><tt class="py-op">*</tt><tt class="py-name">epsilon</tt><tt class="py-op">/</tt><tt class="py-number">2.</tt><tt class="py-op">*</tt><tt class="py-name">y</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-op">(</tt><tt class="py-name">pi</tt><tt class="py-op">*</tt><tt class="py-name">vrot</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">epsilon</tt><tt class="py-op">/</tt><tt class="py-number">3.0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt>  <tt class="py-comment"># the kernel</tt> </tt>
+<a name="L396"></a><tt class="py-lineno">396</tt>  <tt class="py-line">            <tt class="py-name">G</tt> <tt class="py-op">/=</tt> <tt class="py-name">G</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L397"></a><tt class="py-lineno">397</tt>  <tt class="py-line">            <tt class="py-comment">#-- convolve the flux with the kernel</tt> </tt>
+<a name="L398"></a><tt class="py-lineno">398</tt>  <tt class="py-line">            <tt class="py-name">flux_conv</tt> <tt class="py-op">=</tt> <tt class="py-name">fftconvolve</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">flux_</tt><tt class="py-op">,</tt><tt class="py-name">G</tt><tt class="py-op">,</tt><tt class="py-name">mode</tt><tt class="py-op">=</tt><tt class="py-string">'same'</tt><tt class="py-op">)</tt> </tt>
+<a name="L399"></a><tt class="py-lineno">399</tt>  <tt class="py-line">            <tt class="py-name">velo_</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">flux_conv</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">dvelo</tt><tt class="py-op">+</tt><tt class="py-name">velo_</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L400"></a><tt class="py-lineno">400</tt>  <tt class="py-line">            <tt class="py-name">wave_conv</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-56" class="py-name"><a title="ivs.units.conversions.Unit.exp" class="py-name" href="#" onclick="return doclink('link-56', 'exp', 'link-49');">exp</a></tt><tt class="py-op">(</tt><tt class="py-name">velo_</tt><tt class="py-op">)</tt> </tt>
+<a name="L401"></a><tt class="py-lineno">401</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">wave_conv</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">-</tt><tt class="py-name">flux_conv</tt> </tt>
+<a name="L402"></a><tt class="py-lineno">402</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">wave_spec</tt><tt class="py-op">,</tt><tt class="py-name">flux_spec</tt> </tt>
+<a name="L403"></a><tt class="py-lineno">403</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L404"></a><tt class="py-lineno">404</tt>  <tt class="py-line">        <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt><tt class="py-string">"don't understand method {}"</tt><tt class="py-op">.</tt><tt id="link-57" class="py-name" targets="Variable ivs.asteroseismology.redgiantfreqs.format=ivs.asteroseismology.redgiantfreqs-module.html#format"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-57', 'format', 'link-57');">format</a></tt><tt class="py-op">(</tt><tt class="py-name">method</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L405"></a><tt class="py-lineno">405</tt>  <tt class="py-line"> </tt>
+<a name="combine"></a><div id="combine-def"><a name="L406"></a><tt class="py-lineno">406</tt> <a class="py-toggle" href="#" id="combine-toggle" onclick="return toggle('combine');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#combine">combine</a><tt class="py-op">(</tt><tt class="py-param">list_of_spectra</tt><tt class="py-op">,</tt><tt class="py-param">R</tt><tt class="py-op">=</tt><tt class="py-number">200.</tt><tt class="py-op">,</tt><tt class="py-param">lambda0</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-number">950.</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-param">lambdan</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-number">3350.</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="combine-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="combine-expanded"><a name="L407"></a><tt class="py-lineno">407</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L408"></a><tt class="py-lineno">408</tt>  <tt class="py-line"><tt class="py-docstring">    Combine and weight-average spectra on a common wavelength grid.</tt> </tt>
+<a name="L409"></a><tt class="py-lineno">409</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L410"></a><tt class="py-lineno">410</tt>  <tt class="py-line"><tt class="py-docstring">    C{list_of_spectra} should be a list of lists/arrays. Each element in the</tt> </tt>
+<a name="L411"></a><tt class="py-lineno">411</tt>  <tt class="py-line"><tt class="py-docstring">    main list should be (wavelength,flux,error).</tt> </tt>
+<a name="L412"></a><tt class="py-lineno">412</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L413"></a><tt class="py-lineno">413</tt>  <tt class="py-line"><tt class="py-docstring">    If you have FUSE fits files, use L{ivs.fits.read_fuse}.</tt> </tt>
+<a name="L414"></a><tt class="py-lineno">414</tt>  <tt class="py-line"><tt class="py-docstring">    If you have IUE FITS files, use L{ivs.fits.read_iue}.</tt> </tt>
+<a name="L415"></a><tt class="py-lineno">415</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L416"></a><tt class="py-lineno">416</tt>  <tt class="py-line"><tt class="py-docstring">    After Peter Woitke.</tt> </tt>
+<a name="L417"></a><tt class="py-lineno">417</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L418"></a><tt class="py-lineno">418</tt>  <tt class="py-line"><tt class="py-docstring">    @param R: resolution</tt> </tt>
+<a name="L419"></a><tt class="py-lineno">419</tt>  <tt class="py-line"><tt class="py-docstring">    @type R: float</tt> </tt>
+<a name="L420"></a><tt class="py-lineno">420</tt>  <tt class="py-line"><tt class="py-docstring">    @param lambda0: start wavelength, unit</tt> </tt>
+<a name="L421"></a><tt class="py-lineno">421</tt>  <tt class="py-line"><tt class="py-docstring">    @type lambda0: tuple (float,str)</tt> </tt>
+<a name="L422"></a><tt class="py-lineno">422</tt>  <tt class="py-line"><tt class="py-docstring">    @param lambdan: end wavelength, unit</tt> </tt>
+<a name="L423"></a><tt class="py-lineno">423</tt>  <tt class="py-line"><tt class="py-docstring">    @type lambdan: tuple (float,str)</tt> </tt>
+<a name="L424"></a><tt class="py-lineno">424</tt>  <tt class="py-line"><tt class="py-docstring">    @return: binned spectrum (wavelengths,flux, error)</tt> </tt>
+<a name="L425"></a><tt class="py-lineno">425</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: array, array, array</tt> </tt>
+<a name="L426"></a><tt class="py-lineno">426</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L427"></a><tt class="py-lineno">427</tt>  <tt class="py-line">    <tt class="py-name">l0</tt> <tt class="py-op">=</tt> <tt id="link-58" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-58', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-59" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-59', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-name">lambda0</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">,</tt><tt class="py-name">lambda0</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L428"></a><tt class="py-lineno">428</tt>  <tt class="py-line">    <tt class="py-name">ln</tt> <tt class="py-op">=</tt> <tt id="link-60" class="py-name"><a title="ivs.units.conversions" class="py-name" href="#" onclick="return doclink('link-60', 'conversions', 'link-10');">conversions</a></tt><tt class="py-op">.</tt><tt id="link-61" class="py-name"><a title="ivs.units.conversions.Unit.convert
+ivs.units.conversions.convert" class="py-name" href="#" onclick="return doclink('link-61', 'convert', 'link-26');">convert</a></tt><tt class="py-op">(</tt><tt class="py-name">lambdan</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-string">'AA'</tt><tt class="py-op">,</tt><tt class="py-name">lambdan</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L429"></a><tt class="py-lineno">429</tt>  <tt class="py-line">    <tt class="py-comment">#-- STEP 1: define wavelength bins</tt> </tt>
+<a name="L430"></a><tt class="py-lineno">430</tt>  <tt class="py-line">    <tt class="py-name">Delta</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-62" class="py-name" targets="Method ivs.units.conversions.Unit.log10()=ivs.units.conversions.Unit-class.html#log10"><a title="ivs.units.conversions.Unit.log10" class="py-name" href="#" onclick="return doclink('link-62', 'log10', 'link-62');">log10</a></tt><tt class="py-op">(</tt><tt class="py-number">1.</tt><tt class="py-op">+</tt><tt class="py-number">1.</tt><tt class="py-op">/</tt><tt class="py-name">R</tt><tt class="py-op">)</tt> </tt>
+<a name="L431"></a><tt class="py-lineno">431</tt>  <tt class="py-line">    <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-63" class="py-name"><a title="ivs.units.conversions.Unit.log10" class="py-name" href="#" onclick="return doclink('link-63', 'log10', 'link-62');">log10</a></tt><tt class="py-op">(</tt><tt class="py-name">l0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-64" class="py-name"><a title="ivs.units.conversions.Unit.log10" class="py-name" href="#" onclick="return doclink('link-64', 'log10', 'link-62');">log10</a></tt><tt class="py-op">(</tt><tt class="py-name">ln</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-name">Delta</tt><tt class="py-op">,</tt><tt class="py-name">Delta</tt><tt class="py-op">)</tt> </tt>
+<a name="L432"></a><tt class="py-lineno">432</tt>  <tt class="py-line">    <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-number">10</tt><tt class="py-op">**</tt><tt class="py-name">x</tt> </tt>
+<a name="L433"></a><tt class="py-lineno">433</tt>  <tt class="py-line">    <tt class="py-name">lamc_j</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">roll</tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">+</tt><tt class="py-name">x</tt><tt class="py-op">)</tt> </tt>
+<a name="L434"></a><tt class="py-lineno">434</tt>  <tt class="py-line"> </tt>
+<a name="L435"></a><tt class="py-lineno">435</tt>  <tt class="py-line">    <tt class="py-comment">#-- STEP 2: rebinning of data onto newly defined wavelength bins</tt> </tt>
+<a name="L436"></a><tt class="py-lineno">436</tt>  <tt class="py-line">    <tt class="py-name">Ns</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">list_of_spectra</tt><tt class="py-op">)</tt> </tt>
+<a name="L437"></a><tt class="py-lineno">437</tt>  <tt class="py-line">    <tt class="py-name">Nw</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">lamc_j</tt><tt class="py-op">)</tt><tt class="py-op">-</tt><tt class="py-number">1</tt> </tt>
+<a name="L438"></a><tt class="py-lineno">438</tt>  <tt class="py-line">    <tt class="py-name">binned_fluxes</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">Ns</tt><tt class="py-op">,</tt><tt class="py-name">Nw</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L439"></a><tt class="py-lineno">439</tt>  <tt class="py-line">    <tt class="py-name">binned_errors</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">inf</tt><tt class="py-op">*</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">Ns</tt><tt class="py-op">,</tt><tt class="py-name">Nw</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L440"></a><tt class="py-lineno">440</tt>  <tt class="py-line"> </tt>
+<a name="L441"></a><tt class="py-lineno">441</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">snr</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-name">flux</tt><tt class="py-op">,</tt><tt class="py-name">err</tt><tt class="py-op">)</tt> <tt class="py-keyword">in</tt> <tt class="py-name">enumerate</tt><tt class="py-op">(</tt><tt class="py-name">list_of_spectra</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L442"></a><tt class="py-lineno">442</tt>  <tt class="py-line">        <tt class="py-name">wave0</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">roll</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L443"></a><tt class="py-lineno">443</tt>  <tt class="py-line">        <tt class="py-name">wave1</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">roll</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L444"></a><tt class="py-lineno">444</tt>  <tt class="py-line">        <tt class="py-name">lam_i0_dc</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">wave0</tt><tt class="py-op">+</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt> </tt>
+<a name="L445"></a><tt class="py-lineno">445</tt>  <tt class="py-line">        <tt class="py-name">lam_i1_dc</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">wave1</tt><tt class="py-op">+</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt> </tt>
+<a name="L446"></a><tt class="py-lineno">446</tt>  <tt class="py-line">        <tt class="py-name">dlam_i</tt> <tt class="py-op">=</tt> <tt class="py-name">lam_i1_dc</tt><tt class="py-op">-</tt><tt class="py-name">lam_i0_dc</tt> </tt>
+<a name="L447"></a><tt class="py-lineno">447</tt>  <tt class="py-line">         </tt>
+<a name="L448"></a><tt class="py-lineno">448</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">j</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">Nw</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L449"></a><tt class="py-lineno">449</tt>  <tt class="py-line">            <tt class="py-name">A</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">min</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">vstack</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">lamc_j</tt><tt class="py-op">[</tt><tt class="py-name">j</tt><tt class="py-op">+</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">*</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">lam_i1_dc</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L450"></a><tt class="py-lineno">450</tt>  <tt class="py-line">            <tt class="py-name">B</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">max</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">vstack</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">lamc_j</tt><tt class="py-op">[</tt><tt class="py-name">j</tt><tt class="py-op">]</tt><tt class="py-op">*</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ones</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">lam_i0_dc</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L451"></a><tt class="py-lineno">451</tt>  <tt class="py-line">            <tt class="py-name">overlaps</tt> <tt class="py-op">=</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">stats</tt><tt class="py-op">.</tt><tt class="py-name">threshold</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">-</tt><tt class="py-name">B</tt><tt class="py-op">,</tt><tt class="py-name">threshmin</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L452"></a><tt class="py-lineno">452</tt>  <tt class="py-line">            <tt id="link-65" class="py-name" targets="Function ivs.coordinates.vectors.norm()=ivs.coordinates.vectors-module.html#norm"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-65', 'norm', 'link-65');">norm</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">overlaps</tt><tt class="py-op">)</tt> </tt>
+<a name="L453"></a><tt class="py-lineno">453</tt>  <tt class="py-line">            <tt class="py-name">binned_fluxes</tt><tt class="py-op">[</tt><tt class="py-name">snr</tt><tt class="py-op">,</tt><tt class="py-name">j</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">flux</tt><tt class="py-op">*</tt><tt class="py-name">overlaps</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt id="link-66" class="py-name"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-66', 'norm', 'link-65');">norm</a></tt> </tt>
+<a name="L454"></a><tt class="py-lineno">454</tt>  <tt class="py-line">            <tt class="py-name">binned_errors</tt><tt class="py-op">[</tt><tt class="py-name">snr</tt><tt class="py-op">,</tt><tt class="py-name">j</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-67" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-67', 'sqrt', 'link-4');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">err</tt><tt class="py-op">*</tt><tt class="py-name">overlaps</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt id="link-68" class="py-name"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-68', 'norm', 'link-65');">norm</a></tt> </tt>
+<a name="L455"></a><tt class="py-lineno">455</tt>  <tt class="py-line">     </tt>
+<a name="L456"></a><tt class="py-lineno">456</tt>  <tt class="py-line">    <tt class="py-comment">#-- STEP 3: all available spectra sets are co-added, using the inverse</tt> </tt>
+<a name="L457"></a><tt class="py-lineno">457</tt>  <tt class="py-line">    <tt class="py-comment">#   square of the bin uncertainty as weight</tt> </tt>
+<a name="L458"></a><tt class="py-lineno">458</tt>  <tt class="py-line">    <tt class="py-name">binned_fluxes</tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">isnan</tt><tt class="py-op">(</tt><tt class="py-name">binned_fluxes</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L459"></a><tt class="py-lineno">459</tt>  <tt class="py-line">    <tt class="py-name">binned_errors</tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">isnan</tt><tt class="py-op">(</tt><tt class="py-name">binned_errors</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-number">1e300</tt> </tt>
+<a name="L460"></a><tt class="py-lineno">460</tt>  <tt class="py-line">    <tt class="py-name">weights</tt> <tt class="py-op">=</tt> <tt class="py-number">1.</tt><tt class="py-op">/</tt><tt class="py-name">binned_errors</tt><tt class="py-op">**</tt><tt class="py-number">2</tt> </tt>
+<a name="L461"></a><tt class="py-lineno">461</tt>  <tt class="py-line">     </tt>
+<a name="L462"></a><tt class="py-lineno">462</tt>  <tt class="py-line">    <tt class="py-name">totalflux</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">weights</tt><tt class="py-op">*</tt><tt class="py-name">binned_fluxes</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">weights</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L463"></a><tt class="py-lineno">463</tt>  <tt class="py-line">    <tt class="py-name">totalerr</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-69" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-69', 'sqrt', 'link-4');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">weights</tt><tt class="py-op">*</tt><tt class="py-name">binned_errors</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">weights</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L464"></a><tt class="py-lineno">464</tt>  <tt class="py-line">    <tt class="py-name">totalspec</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">binned_fluxes</tt><tt class="py-op">&gt;</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L465"></a><tt class="py-lineno">465</tt>  <tt class="py-line">     </tt>
+<a name="L466"></a><tt class="py-lineno">466</tt>  <tt class="py-line">    <tt class="py-comment">#-- that's it!</tt> </tt>
+<a name="L467"></a><tt class="py-lineno">467</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">x</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">totalflux</tt><tt class="py-op">,</tt><tt class="py-name">totalerr</tt><tt class="py-op">,</tt><tt class="py-name">totalspec</tt> </tt>
+</div><a name="L468"></a><tt class="py-lineno">468</tt>  <tt class="py-line"> </tt>
+<a name="merge_cosmic_clipping"></a><div id="merge_cosmic_clipping-def"><a name="L469"></a><tt class="py-lineno">469</tt> <a class="py-toggle" href="#" id="merge_cosmic_clipping-toggle" onclick="return toggle('merge_cosmic_clipping');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#merge_cosmic_clipping">merge_cosmic_clipping</a><tt class="py-op">(</tt><tt class="py-param">waves</tt><tt class="py-op">,</tt> <tt class="py-param">fluxes</tt><tt class="py-op">,</tt> <tt class="py-param">vrads</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">vrad_units</tt><tt class="py-op">=</tt><tt class="py-string">'km/s'</tt><tt class="py-op">,</tt> <tt class="py-param">sigma</tt><tt class="py-op">=</tt><tt class="py-number">3.0</tt><tt class="py-op">,</tt>  </tt>
+<a name="L470"></a><tt class="py-lineno">470</tt>  <tt class="py-line">                          <tt class="py-param">base</tt><tt class="py-op">=</tt><tt class="py-string">'average'</tt><tt class="py-op">,</tt> <tt class="py-param">offset</tt><tt class="py-op">=</tt><tt class="py-string">'std'</tt><tt class="py-op">,</tt> <tt class="py-param">window</tt><tt class="py-op">=</tt><tt class="py-number">51</tt><tt class="py-op">,</tt> <tt class="py-param">runs</tt><tt class="py-op">=</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> </tt>
+<a name="L471"></a><tt class="py-lineno">471</tt>  <tt class="py-line">                          <tt class="py-param">full_output</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="merge_cosmic_clipping-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="merge_cosmic_clipping-expanded"><a name="L472"></a><tt class="py-lineno">472</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L473"></a><tt class="py-lineno">473</tt>  <tt class="py-line"><tt class="py-docstring">    Method to combine a set of spectra while removing cosmic rays by comparing the</tt> </tt>
+<a name="L474"></a><tt class="py-lineno">474</tt>  <tt class="py-line"><tt class="py-docstring">    spectra with each other and removing the outliers.</tt> </tt>
+<a name="L475"></a><tt class="py-lineno">475</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L476"></a><tt class="py-lineno">476</tt>  <tt class="py-line"><tt class="py-docstring">    Algorithm:</tt> </tt>
+<a name="L477"></a><tt class="py-lineno">477</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L478"></a><tt class="py-lineno">478</tt>  <tt class="py-line"><tt class="py-docstring">    For each spectrum a very rough continuum is determined by using a median filter.</tt> </tt>
+<a name="L479"></a><tt class="py-lineno">479</tt>  <tt class="py-line"><tt class="py-docstring">    Then there are multiple passes through the spectra. In one pass, outliers are </tt> </tt>
+<a name="L480"></a><tt class="py-lineno">480</tt>  <tt class="py-line"><tt class="py-docstring">    identified by compairing the flux point with the median of all normalized spectra</tt> </tt>
+<a name="L481"></a><tt class="py-lineno">481</tt>  <tt class="py-line"><tt class="py-docstring">    plus sigma times the standard deviation of all points. The standard deviation is</tt> </tt>
+<a name="L482"></a><tt class="py-lineno">482</tt>  <tt class="py-line"><tt class="py-docstring">    the median of the std for all flux points in 1 spectrum (spec_std) plus the std</tt> </tt>
+<a name="L483"></a><tt class="py-lineno">483</tt>  <tt class="py-line"><tt class="py-docstring">    of all fluxes of a given wavelength point over all spectra.</tt> </tt>
+<a name="L484"></a><tt class="py-lineno">484</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L485"></a><tt class="py-lineno">485</tt>  <tt class="py-line"><tt class="py-docstring">    C{spec_std = np.median( np.std(fluxes) )}</tt> </tt>
+<a name="L486"></a><tt class="py-lineno">486</tt>  <tt class="py-line"><tt class="py-docstring">    C{fn &gt; np.median(fn) + sigma * (np.std(fn) + spec_std)}</tt> </tt>
+<a name="L487"></a><tt class="py-lineno">487</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L488"></a><tt class="py-lineno">488</tt>  <tt class="py-line"><tt class="py-docstring">    Where fn are the roughly normalized spectra, NOT the original spectra.</tt> </tt>
+<a name="L489"></a><tt class="py-lineno">489</tt>  <tt class="py-line"><tt class="py-docstring">    In the next passes those outliers are not used to calculat the median and std</tt> </tt>
+<a name="L490"></a><tt class="py-lineno">490</tt>  <tt class="py-line"><tt class="py-docstring">    of the spectrum. After the last pass, the flux points that were rejected are</tt> </tt>
+<a name="L491"></a><tt class="py-lineno">491</tt>  <tt class="py-line"><tt class="py-docstring">    replaced by the rough continuum value, and they are summed to get the final </tt> </tt>
+<a name="L492"></a><tt class="py-lineno">492</tt>  <tt class="py-line"><tt class="py-docstring">    flux.</tt> </tt>
+<a name="L493"></a><tt class="py-lineno">493</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L494"></a><tt class="py-lineno">494</tt>  <tt class="py-line"><tt class="py-docstring">    The value for sigma strongly depends on the number of spectra and the quality</tt> </tt>
+<a name="L495"></a><tt class="py-lineno">495</tt>  <tt class="py-line"><tt class="py-docstring">    of the spectra. General, the more spectra, the higher sigma should be. Using</tt> </tt>
+<a name="L496"></a><tt class="py-lineno">496</tt>  <tt class="py-line"><tt class="py-docstring">    a too low value for sigma will throw away to much information. The effect of</tt> </tt>
+<a name="L497"></a><tt class="py-lineno">497</tt>  <tt class="py-line"><tt class="py-docstring">    the window size and the number of runs is limited.</tt> </tt>
+<a name="L498"></a><tt class="py-lineno">498</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L499"></a><tt class="py-lineno">499</tt>  <tt class="py-line"><tt class="py-docstring">    Returns the wavelengths and fluxes of the merged spectra, and if full_output</tt> </tt>
+<a name="L500"></a><tt class="py-lineno">500</tt>  <tt class="py-line"><tt class="py-docstring">    is True, also a list of accepted and rejected points, produced by np.where()</tt> </tt>
+<a name="L501"></a><tt class="py-lineno">501</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L502"></a><tt class="py-lineno">502</tt>  <tt class="py-line"><tt class="py-docstring">    @param waves: list of wavelengths</tt> </tt>
+<a name="L503"></a><tt class="py-lineno">503</tt>  <tt class="py-line"><tt class="py-docstring">    @param fluxes: list of fluxes</tt> </tt>
+<a name="L504"></a><tt class="py-lineno">504</tt>  <tt class="py-line"><tt class="py-docstring">    @param vrads: list of radial velocities (optional)</tt> </tt>
+<a name="L505"></a><tt class="py-lineno">505</tt>  <tt class="py-line"><tt class="py-docstring">    @param vrad_units: units of the radial velocities</tt> </tt>
+<a name="L506"></a><tt class="py-lineno">506</tt>  <tt class="py-line"><tt class="py-docstring">    @param sigma: value used for sigma clipping</tt> </tt>
+<a name="L507"></a><tt class="py-lineno">507</tt>  <tt class="py-line"><tt class="py-docstring">    @param window: window size used in median filter</tt> </tt>
+<a name="L508"></a><tt class="py-lineno">508</tt>  <tt class="py-line"><tt class="py-docstring">    @param runs: number of iterations through the spectra</tt> </tt>
+<a name="L509"></a><tt class="py-lineno">509</tt>  <tt class="py-line"><tt class="py-docstring">    @param full_output: True is need to return accepted and rejected</tt> </tt>
+<a name="L510"></a><tt class="py-lineno">510</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L511"></a><tt class="py-lineno">511</tt>  <tt class="py-line"><tt class="py-docstring">    @return: wavelenght and flux of merged spectrum (, accepted and rejected points)</tt> </tt>
+<a name="L512"></a><tt class="py-lineno">512</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: array, array (, tuple, tuple)</tt> </tt>
+<a name="L513"></a><tt class="py-lineno">513</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L514"></a><tt class="py-lineno">514</tt>  <tt class="py-line">     </tt>
+<a name="L515"></a><tt class="py-lineno">515</tt>  <tt class="py-line">    <tt class="py-comment"># Get the correct function for base from numpy masked arrays</tt> </tt>
+<a name="L516"></a><tt class="py-lineno">516</tt>  <tt class="py-line">    <tt class="py-name">base</tt> <tt class="py-op">=</tt> <tt class="py-name">getattr</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">,</tt> <tt class="py-name">base</tt><tt class="py-op">)</tt> </tt>
+<a name="L517"></a><tt class="py-lineno">517</tt>  <tt class="py-line">     </tt>
+<a name="L518"></a><tt class="py-lineno">518</tt>  <tt class="py-line">    <tt class="py-comment"># If vrads are given, shift the spectra to zero velocity</tt> </tt>
+<a name="L519"></a><tt class="py-lineno">519</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">vrads</tt> <tt class="py-op">!=</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L520"></a><tt class="py-lineno">520</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">i</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">rv</tt><tt class="py-op">)</tt> <tt class="py-keyword">in</tt> <tt class="py-name">enumerate</tt><tt class="py-op">(</tt><tt class="py-name">zip</tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">,</tt> <tt class="py-name">vrads</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L521"></a><tt class="py-lineno">521</tt>  <tt class="py-line">            <tt class="py-name">waves</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt id="link-70" class="py-name" targets="Function ivs.spectra.tools.doppler_shift()=ivs.spectra.tools-module.html#doppler_shift"><a title="ivs.spectra.tools.doppler_shift" class="py-name" href="#" onclick="return doclink('link-70', 'doppler_shift', 'link-70');">doppler_shift</a></tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-op">-</tt><tt class="py-name">rv</tt><tt class="py-op">,</tt> <tt class="py-name">vrad_units</tt><tt class="py-op">=</tt><tt class="py-name">vrad_units</tt><tt class="py-op">)</tt> </tt>
+<a name="L522"></a><tt class="py-lineno">522</tt>  <tt class="py-line">     </tt>
+<a name="L523"></a><tt class="py-lineno">523</tt>  <tt class="py-line">    <tt class="py-comment"># setup output arrays</tt> </tt>
+<a name="L524"></a><tt class="py-lineno">524</tt>  <tt class="py-line">    <tt class="py-name">wave</tt> <tt class="py-op">=</tt> <tt class="py-name">waves</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L525"></a><tt class="py-lineno">525</tt>  <tt class="py-line">    <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros_like</tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L526"></a><tt class="py-lineno">526</tt>  <tt class="py-line">     </tt>
+<a name="L527"></a><tt class="py-lineno">527</tt>  <tt class="py-line">    <tt class="py-comment"># define a rough continuum for each spectrum by using median smoothing</tt> </tt>
+<a name="L528"></a><tt class="py-lineno">528</tt>  <tt class="py-line">    <tt class="py-name">fc</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">w_</tt><tt class="py-op">,</tt> <tt class="py-name">medfilt</tt><tt class="py-op">(</tt><tt class="py-name">f_</tt><tt class="py-op">,</tt> <tt class="py-name">window</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">w_</tt><tt class="py-op">,</tt> <tt class="py-name">f_</tt> <tt class="py-keyword">in</tt> <tt class="py-name">zip</tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">,</tt> <tt class="py-name">fluxes</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L529"></a><tt class="py-lineno">529</tt>  <tt class="py-line">    <tt class="py-name">fc</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">masked_array</tt><tt class="py-op">(</tt> <tt class="py-name">fc</tt><tt class="py-op">,</tt> <tt class="py-name">mask</tt> <tt class="py-op">=</tt> <tt class="py-name">fc</tt> <tt class="py-op">==</tt> <tt class="py-number">0.</tt> <tt class="py-op">)</tt> </tt>
+<a name="L530"></a><tt class="py-lineno">530</tt>  <tt class="py-line">     </tt>
+<a name="L531"></a><tt class="py-lineno">531</tt>  <tt class="py-line">    <tt class="py-comment"># convert all spectra to same wavelength scale and calc normalized spectra</tt> </tt>
+<a name="L532"></a><tt class="py-lineno">532</tt>  <tt class="py-line">    <tt class="py-name">fo</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">w_</tt><tt class="py-op">,</tt> <tt class="py-name">f_</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">w_</tt><tt class="py-op">,</tt> <tt class="py-name">f_</tt> <tt class="py-keyword">in</tt> <tt class="py-name">zip</tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">,</tt> <tt class="py-name">fluxes</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L533"></a><tt class="py-lineno">533</tt>  <tt class="py-line">    <tt class="py-name">fo</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">masked_array</tt><tt class="py-op">(</tt> <tt class="py-name">fo</tt><tt class="py-op">,</tt> <tt class="py-name">mask</tt><tt class="py-op">=</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">isfinite</tt><tt class="py-op">(</tt><tt class="py-name">fo</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-name">False</tt> <tt class="py-op">)</tt> </tt>
+<a name="L534"></a><tt class="py-lineno">534</tt>  <tt class="py-line">     </tt>
+<a name="L535"></a><tt class="py-lineno">535</tt>  <tt class="py-line">    <tt class="py-comment"># calculate normalized flux from fc and fo</tt> </tt>
+<a name="L536"></a><tt class="py-lineno">536</tt>  <tt class="py-line">    <tt class="py-name">fn</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">f_</tt><tt class="py-op">/</tt><tt class="py-name">c_</tt> <tt class="py-keyword">for</tt> <tt class="py-name">f_</tt><tt class="py-op">,</tt> <tt class="py-name">c_</tt> <tt class="py-keyword">in</tt> <tt class="py-name">zip</tt><tt class="py-op">(</tt><tt class="py-name">fo</tt><tt class="py-op">,</tt> <tt class="py-name">fc</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L537"></a><tt class="py-lineno">537</tt>  <tt class="py-line">    <tt class="py-name">fn</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">masked_array</tt><tt class="py-op">(</tt> <tt class="py-name">fn</tt><tt class="py-op">,</tt> <tt class="py-name">mask</tt><tt class="py-op">=</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">isfinite</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-name">False</tt> <tt class="py-op">)</tt> </tt>
+<a name="L538"></a><tt class="py-lineno">538</tt>  <tt class="py-line">     </tt>
+<a name="L539"></a><tt class="py-lineno">539</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">runs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L540"></a><tt class="py-lineno">540</tt>  <tt class="py-line">        <tt class="py-comment"># calculate average and standard deviation for each wavelength bin</tt> </tt>
+<a name="L541"></a><tt class="py-lineno">541</tt>  <tt class="py-line">        <tt class="py-name">a</tt> <tt class="py-op">=</tt> <tt class="py-name">base</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">,</tt> <tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L542"></a><tt class="py-lineno">542</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">offset</tt> <tt class="py-op">==</tt> <tt class="py-string">'std'</tt><tt class="py-op">:</tt> <tt class="py-name">a</tt> <tt class="py-op">+=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">median</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">std</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">,</tt> <tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L543"></a><tt class="py-lineno">543</tt>  <tt class="py-line">        <tt class="py-name">s</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">std</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">,</tt> <tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L544"></a><tt class="py-lineno">544</tt>  <tt class="py-line">         </tt>
+<a name="L545"></a><tt class="py-lineno">545</tt>  <tt class="py-line">        <tt class="py-comment"># perform sigma clipping</tt> </tt>
+<a name="L546"></a><tt class="py-lineno">546</tt>  <tt class="py-line">        <tt class="py-name">fn</tt><tt class="py-op">.</tt><tt class="py-name">mask</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">mask_or</tt><tt class="py-op">(</tt> <tt class="py-name">fn</tt><tt class="py-op">.</tt><tt class="py-name">mask</tt><tt class="py-op">,</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">ma</tt><tt class="py-op">.</tt><tt class="py-name">make_mask</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt> <tt class="py-op">&gt;</tt> <tt class="py-name">a</tt><tt class="py-op">+</tt><tt id="link-71" class="py-name" targets="Variable ivs.units.constants.sigma=ivs.units.constants-module.html#sigma"><a title="ivs.units.constants.sigma" class="py-name" href="#" onclick="return doclink('link-71', 'sigma', 'link-71');">sigma</a></tt><tt class="py-op">*</tt><tt class="py-name">s</tt><tt class="py-op">)</tt> <tt class="py-op">)</tt> </tt>
+<a name="L547"></a><tt class="py-lineno">547</tt>  <tt class="py-line">     </tt>
+<a name="L548"></a><tt class="py-lineno">548</tt>  <tt class="py-line">    <tt class="py-comment"># sum the original flux over all spectra</tt> </tt>
+<a name="L549"></a><tt class="py-lineno">549</tt>  <tt class="py-line">    <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">where</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">.</tt><tt class="py-name">mask</tt><tt class="py-op">,</tt> <tt class="py-name">fc</tt><tt class="py-op">,</tt> <tt class="py-name">fo</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> </tt>
+<a name="L550"></a><tt class="py-lineno">550</tt>  <tt class="py-line">    <tt id="link-72" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-72', 'logger', 'link-20');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">debug</tt><tt class="py-op">(</tt><tt class="py-string">'Merged %i spectra with sigma = %f and base = %s'</tt><tt class="py-op">%</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt id="link-73" class="py-name"><a title="ivs.units.constants.sigma" class="py-name" href="#" onclick="return doclink('link-73', 'sigma', 'link-71');">sigma</a></tt><tt class="py-op">,</tt> <tt class="py-name">base</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L551"></a><tt class="py-lineno">551</tt>  <tt class="py-line">     </tt>
+<a name="L552"></a><tt class="py-lineno">552</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">full_output</tt><tt class="py-op">:</tt> </tt>
+<a name="L553"></a><tt class="py-lineno">553</tt>  <tt class="py-line">        <tt class="py-name">rejected</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">where</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">.</tt><tt class="py-name">mask</tt><tt class="py-op">)</tt> </tt>
+<a name="L554"></a><tt class="py-lineno">554</tt>  <tt class="py-line">        <tt class="py-name">accepted</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">where</tt><tt class="py-op">(</tt><tt class="py-name">fn</tt><tt class="py-op">.</tt><tt class="py-name">mask</tt> <tt class="py-op">==</tt> <tt class="py-name">False</tt><tt class="py-op">)</tt> </tt>
+<a name="L555"></a><tt class="py-lineno">555</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt><tt class="py-op">,</tt> <tt class="py-name">accepted</tt><tt class="py-op">,</tt> <tt class="py-name">rejected</tt> </tt>
+<a name="L556"></a><tt class="py-lineno">556</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L557"></a><tt class="py-lineno">557</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt> </tt>
+</div><a name="L558"></a><tt class="py-lineno">558</tt>  <tt class="py-line"> </tt>
+<a name="cross_correlate"></a><div id="cross_correlate-def"><a name="L559"></a><tt class="py-lineno">559</tt> <a class="py-toggle" href="#" id="cross_correlate-toggle" onclick="return toggle('cross_correlate');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#cross_correlate">cross_correlate</a><tt class="py-op">(</tt><tt class="py-param">obj_wave</tt><tt class="py-op">,</tt> <tt class="py-param">obj_flux</tt><tt class="py-op">,</tt> <tt class="py-param">temp_wave</tt><tt class="py-op">,</tt> <tt class="py-param">temp_flux</tt><tt class="py-op">,</tt> <tt class="py-param">step</tt><tt class="py-op">=</tt><tt class="py-number">0.3</tt><tt class="py-op">,</tt> <tt class="py-param">nsteps</tt><tt class="py-op">=</tt><tt class="py-number">500</tt><tt class="py-op">,</tt> </tt>
+<a name="L560"></a><tt class="py-lineno">560</tt>  <tt class="py-line">                    <tt class="py-param">start_dev</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">two_step</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">,</tt> <tt class="py-param">verbose</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="cross_correlate-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="cross_correlate-expanded"><a name="L561"></a><tt class="py-lineno">561</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L562"></a><tt class="py-lineno">562</tt>  <tt class="py-line"><tt class="py-docstring">    Cross correlate a spectrum with a template, working in velocity space. The velocity</tt> </tt>
+<a name="L563"></a><tt class="py-lineno">563</tt>  <tt class="py-line"><tt class="py-docstring">    range is controlled by using step, nsteps and start_dev as:</tt> </tt>
+<a name="L564"></a><tt class="py-lineno">564</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L565"></a><tt class="py-lineno">565</tt>  <tt class="py-line"><tt class="py-docstring">    velocity = np.arange(start_dev - nsteps * step , start_dev + nsteps * step , step)</tt> </tt>
+<a name="L566"></a><tt class="py-lineno">566</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L567"></a><tt class="py-lineno">567</tt>  <tt class="py-line"><tt class="py-docstring">    If two_step is set to True, then it will run twice, and in the second run focus on </tt> </tt>
+<a name="L568"></a><tt class="py-lineno">568</tt>  <tt class="py-line"><tt class="py-docstring">    the velocity where the correlation is at its maximum.</tt> </tt>
+<a name="L569"></a><tt class="py-lineno">569</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L570"></a><tt class="py-lineno">570</tt>  <tt class="py-line"><tt class="py-docstring">    Returns the velocity and the normalized correlation function</tt> </tt>
+<a name="L571"></a><tt class="py-lineno">571</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L572"></a><tt class="py-lineno">572</tt>  <tt class="py-line">     </tt>
+<a name="L573"></a><tt class="py-lineno">573</tt>  <tt class="py-line">    <tt class="py-keyword">def</tt> <tt class="py-def-name">correlate</tt><tt class="py-op">(</tt><tt class="py-param">dvel</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L574"></a><tt class="py-lineno">574</tt>  <tt class="py-line">        <tt class="py-name">rebin_flux</tt> <tt class="py-op">=</tt> <tt class="py-name">interp1d</tt><tt class="py-op">(</tt><tt class="py-name">temp_wave</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt> <tt class="py-number">1</tt> <tt class="py-op">+</tt> <tt class="py-number">1000.</tt> <tt class="py-op">*</tt> <tt class="py-name">dvel</tt> <tt class="py-op">/</tt> <tt id="link-74" class="py-name"><a title="ivs.units.constants" class="py-name" href="#" onclick="return doclink('link-74', 'constants', 'link-13');">constants</a></tt><tt class="py-op">.</tt><tt id="link-75" class="py-name"><a title="ivs.units.constants.cc" class="py-name" href="#" onclick="return doclink('link-75', 'cc', 'link-21');">cc</a></tt> <tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">temp_flux</tt><tt class="py-op">)</tt><tt class="py-op">(</tt><tt class="py-name">obj_wave</tt><tt class="py-op">)</tt> </tt>
+<a name="L575"></a><tt class="py-lineno">575</tt>  <tt class="py-line">        <tt class="py-name">s2</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-76" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-76', 'sqrt', 'link-4');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">rebin_flux</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">rebin_flux</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-comment">#RMS uncertainty</tt> </tt>
+<a name="L576"></a><tt class="py-lineno">576</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-number">1.</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">obj_flux</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">s1</tt> <tt class="py-op">*</tt> <tt class="py-name">s2</tt> <tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt> <tt class="py-name">obj_flux</tt> <tt class="py-op">*</tt> <tt class="py-name">rebin_flux</tt> <tt class="py-op">)</tt> </tt>
+</div><a name="L577"></a><tt class="py-lineno">577</tt>  <tt class="py-line">     </tt>
+<a name="L578"></a><tt class="py-lineno">578</tt>  <tt class="py-line">    <tt class="py-comment">#-- First correlation</tt> </tt>
+<a name="L579"></a><tt class="py-lineno">579</tt>  <tt class="py-line">    <tt class="py-name">s1</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-77" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-77', 'sqrt', 'link-4');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">obj_flux</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">obj_flux</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-comment">#RMS uncertainty</tt> </tt>
+<a name="L580"></a><tt class="py-lineno">580</tt>  <tt class="py-line">    <tt class="py-name">velocity</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-name">start_dev</tt> <tt class="py-op">-</tt> <tt class="py-name">nsteps</tt> <tt class="py-op">*</tt> <tt class="py-name">step</tt> <tt class="py-op">,</tt> <tt class="py-name">start_dev</tt> <tt class="py-op">+</tt> <tt class="py-name">nsteps</tt> <tt class="py-op">*</tt> <tt class="py-name">step</tt> <tt class="py-op">,</tt> <tt class="py-name">step</tt><tt class="py-op">)</tt> </tt>
+<a name="L581"></a><tt class="py-lineno">581</tt>  <tt class="py-line">    <tt class="py-name">correlation</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">correlate</tt><tt class="py-op">(</tt><tt class="py-name">dvel</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">dvel</tt> <tt class="py-keyword">in</tt> <tt class="py-name">velocity</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L582"></a><tt class="py-lineno">582</tt>  <tt class="py-line">     </tt>
+<a name="L583"></a><tt class="py-lineno">583</tt>  <tt class="py-line">    <tt class="py-comment">#-- Possible second correlation</tt> </tt>
+<a name="L584"></a><tt class="py-lineno">584</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">two_step</tt><tt class="py-op">:</tt> </tt>
+<a name="L585"></a><tt class="py-lineno">585</tt>  <tt class="py-line">        <tt class="py-name">start_dev</tt> <tt class="py-op">=</tt> <tt class="py-name">velocity</tt><tt class="py-op">[</tt><tt class="py-name">correlation</tt> <tt class="py-op">==</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">max</tt><tt class="py-op">(</tt><tt class="py-name">correlation</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L586"></a><tt class="py-lineno">586</tt>  <tt class="py-line">        <tt class="py-name">velocity</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-name">start_dev</tt> <tt class="py-op">-</tt> <tt class="py-name">nsteps</tt> <tt class="py-op">*</tt> <tt class="py-name">step</tt> <tt class="py-op">,</tt> <tt class="py-name">start_dev</tt> <tt class="py-op">+</tt> <tt class="py-name">nsteps</tt> <tt class="py-op">*</tt> <tt class="py-name">step</tt> <tt class="py-op">,</tt> <tt class="py-name">step</tt><tt class="py-op">)</tt> </tt>
+<a name="L587"></a><tt class="py-lineno">587</tt>  <tt class="py-line">        <tt class="py-name">correlation</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">correlate</tt><tt class="py-op">(</tt><tt class="py-name">dvel</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">dvel</tt> <tt class="py-keyword">in</tt> <tt class="py-name">velocity</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L588"></a><tt class="py-lineno">588</tt>  <tt class="py-line">     </tt>
+<a name="L589"></a><tt class="py-lineno">589</tt>  <tt class="py-line">    <tt class="py-comment">#-- 'normalize' the correlation function</tt> </tt>
+<a name="L590"></a><tt class="py-lineno">590</tt>  <tt class="py-line">    <tt class="py-name">correlation</tt> <tt class="py-op">=</tt> <tt class="py-name">correlation</tt> <tt class="py-op">/</tt> <tt class="py-name">correlation</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L591"></a><tt class="py-lineno">591</tt>  <tt class="py-line">     </tt>
+<a name="L592"></a><tt class="py-lineno">592</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">velocity</tt><tt class="py-op">,</tt> <tt class="py-name">correlation</tt> </tt>
+</div><a name="L593"></a><tt class="py-lineno">593</tt>  <tt class="py-line"> </tt>
+<a name="get_response"></a><div id="get_response-def"><a name="L594"></a><tt class="py-lineno">594</tt> <a class="py-toggle" href="#" id="get_response-toggle" onclick="return toggle('get_response');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#get_response">get_response</a><tt class="py-op">(</tt><tt class="py-param">instrument</tt><tt class="py-op">=</tt><tt class="py-string">'hermes'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="get_response-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="get_response-expanded"><a name="L595"></a><tt class="py-lineno">595</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L596"></a><tt class="py-lineno">596</tt>  <tt class="py-line"><tt class="py-docstring">    Returns the response curve of the given instrument. Up till now only a HERMES </tt> </tt>
+<a name="L597"></a><tt class="py-lineno">597</tt>  <tt class="py-line"><tt class="py-docstring">    response cruve is available. This response curve is based on 25 spectra of the </tt> </tt>
+<a name="L598"></a><tt class="py-lineno">598</tt>  <tt class="py-line"><tt class="py-docstring">    single sdB star Feige 66, and has a wavelenght range of 3800 to 8000 A.</tt> </tt>
+<a name="L599"></a><tt class="py-lineno">599</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L600"></a><tt class="py-lineno">600</tt>  <tt class="py-line"><tt class="py-docstring">    @param instrument: the instrument of which you want the response curve</tt> </tt>
+<a name="L601"></a><tt class="py-lineno">601</tt>  <tt class="py-line"><tt class="py-docstring">    @type instrument: string</tt> </tt>
+<a name="L602"></a><tt class="py-lineno">602</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L603"></a><tt class="py-lineno">603</tt>  <tt class="py-line">         </tt>
+<a name="L604"></a><tt class="py-lineno">604</tt>  <tt class="py-line">    <tt id="link-78" class="py-name" targets="Variable ivs.catalogs.gator.basedir=ivs.catalogs.gator-module.html#basedir,Variable ivs.catalogs.gcpd.basedir=ivs.catalogs.gcpd-module.html#basedir,Variable ivs.catalogs.mast.basedir=ivs.catalogs.mast-module.html#basedir,Variable ivs.catalogs.vizier.basedir=ivs.catalogs.vizier-module.html#basedir,Variable ivs.sed.filters.basedir=ivs.sed.filters-module.html#basedir,Variable ivs.sed.limbdark.basedir=ivs.sed.limbdark-module.html#basedir,Variable ivs.sed.model.basedir=ivs.sed.model-module.html#basedir,Variable ivs.spectra.model.basedir=ivs.spectra.model-module.html#basedir"><a title="ivs.catalogs.gator.basedir
+ivs.catalogs.gcpd.basedir
+ivs.catalogs.mast.basedir
+ivs.catalogs.vizier.basedir
+ivs.sed.filters.basedir
+ivs.sed.limbdark.basedir
+ivs.sed.model.basedir
+ivs.spectra.model.basedir" class="py-name" href="#" onclick="return doclink('link-78', 'basedir', 'link-78');">basedir</a></tt> <tt class="py-op">=</tt> <tt class="py-string">'spectables/responses/'</tt> </tt>
+<a name="L605"></a><tt class="py-lineno">605</tt>  <tt class="py-line">     </tt>
+<a name="L606"></a><tt class="py-lineno">606</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">instrument</tt> <tt class="py-op">==</tt> <tt class="py-string">'hermes'</tt><tt class="py-op">:</tt> </tt>
+<a name="L607"></a><tt class="py-lineno">607</tt>  <tt class="py-line">        <tt id="link-79" class="py-name" targets="Variable ivs.sed.reddening.basename=ivs.sed.reddening-module.html#basename"><a title="ivs.sed.reddening.basename" class="py-name" href="#" onclick="return doclink('link-79', 'basename', 'link-79');">basename</a></tt> <tt class="py-op">=</tt> <tt class="py-string">'response_Feige66.fits'</tt> </tt>
+<a name="L608"></a><tt class="py-lineno">608</tt>  <tt class="py-line">         </tt>
+<a name="L609"></a><tt class="py-lineno">609</tt>  <tt class="py-line">    <tt class="py-name">response</tt> <tt class="py-op">=</tt> <tt id="link-80" class="py-name"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-80', 'config', 'link-15');">config</a></tt><tt class="py-op">.</tt><tt id="link-81" class="py-name" targets="Function ivs.config.get_datafile()=ivs.config-module.html#get_datafile"><a title="ivs.config.get_datafile" class="py-name" href="#" onclick="return doclink('link-81', 'get_datafile', 'link-81');">get_datafile</a></tt><tt class="py-op">(</tt><tt id="link-82" class="py-name"><a title="ivs.catalogs.gator.basedir
+ivs.catalogs.gcpd.basedir
+ivs.catalogs.mast.basedir
+ivs.catalogs.vizier.basedir
+ivs.sed.filters.basedir
+ivs.sed.limbdark.basedir
+ivs.sed.model.basedir
+ivs.spectra.model.basedir" class="py-name" href="#" onclick="return doclink('link-82', 'basedir', 'link-78');">basedir</a></tt><tt class="py-op">,</tt><tt id="link-83" class="py-name"><a title="ivs.sed.reddening.basename" class="py-name" href="#" onclick="return doclink('link-83', 'basename', 'link-79');">basename</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L610"></a><tt class="py-lineno">610</tt>  <tt class="py-line">     </tt>
+<a name="L611"></a><tt class="py-lineno">611</tt>  <tt class="py-line">    <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt id="link-84" class="py-name"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-84', 'fits', 'link-18');">fits</a></tt><tt class="py-op">.</tt><tt id="link-85" class="py-name" targets="Function ivs.io.fits.read_spectrum()=ivs.io.fits-module.html#read_spectrum"><a title="ivs.io.fits.read_spectrum" class="py-name" href="#" onclick="return doclink('link-85', 'read_spectrum', 'link-85');">read_spectrum</a></tt><tt class="py-op">(</tt><tt class="py-name">response</tt><tt class="py-op">)</tt> </tt>
+<a name="L612"></a><tt class="py-lineno">612</tt>  <tt class="py-line">         </tt>
+<a name="L613"></a><tt class="py-lineno">613</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt> </tt>
+</div><a name="L614"></a><tt class="py-lineno">614</tt>  <tt class="py-line"> </tt>
+<a name="remove_response"></a><div id="remove_response-def"><a name="L615"></a><tt class="py-lineno">615</tt> <a class="py-toggle" href="#" id="remove_response-toggle" onclick="return toggle('remove_response');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.spectra.tools-module.html#remove_response">remove_response</a><tt class="py-op">(</tt><tt class="py-param">wave</tt><tt class="py-op">,</tt> <tt class="py-param">flux</tt><tt class="py-op">,</tt> <tt class="py-param">instrument</tt><tt class="py-op">=</tt><tt class="py-string">'hermes'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="remove_response-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="remove_response-expanded"><a name="L616"></a><tt class="py-lineno">616</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L617"></a><tt class="py-lineno">617</tt>  <tt class="py-line"><tt class="py-docstring">    Divides the provided spectrum by the response curve of the given instrument. Up till now only</tt> </tt>
+<a name="L618"></a><tt class="py-lineno">618</tt>  <tt class="py-line"><tt class="py-docstring">    a HERMES response curve is available.</tt> </tt>
+<a name="L619"></a><tt class="py-lineno">619</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L620"></a><tt class="py-lineno">620</tt>  <tt class="py-line"><tt class="py-docstring">    @param wave: wavelenght array</tt> </tt>
+<a name="L621"></a><tt class="py-lineno">621</tt>  <tt class="py-line"><tt class="py-docstring">    @type wave: numpy array</tt> </tt>
+<a name="L622"></a><tt class="py-lineno">622</tt>  <tt class="py-line"><tt class="py-docstring">    @param flux: flux array</tt> </tt>
+<a name="L623"></a><tt class="py-lineno">623</tt>  <tt class="py-line"><tt class="py-docstring">    @type flux: numpy array</tt> </tt>
+<a name="L624"></a><tt class="py-lineno">624</tt>  <tt class="py-line"><tt class="py-docstring">    @param instrument: the instrument of which you want the response curve</tt> </tt>
+<a name="L625"></a><tt class="py-lineno">625</tt>  <tt class="py-line"><tt class="py-docstring">    @type instrument: string</tt> </tt>
+<a name="L626"></a><tt class="py-lineno">626</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L627"></a><tt class="py-lineno">627</tt>  <tt class="py-line"><tt class="py-docstring">    @return: the new spectrum (wave, flux)</tt> </tt>
+<a name="L628"></a><tt class="py-lineno">628</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: (array, array)</tt> </tt>
+<a name="L629"></a><tt class="py-lineno">629</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L630"></a><tt class="py-lineno">630</tt>  <tt class="py-line">     </tt>
+<a name="L631"></a><tt class="py-lineno">631</tt>  <tt class="py-line">    <tt class="py-comment">#-- get the response curve</tt> </tt>
+<a name="L632"></a><tt class="py-lineno">632</tt>  <tt class="py-line">    <tt class="py-name">wr</tt><tt class="py-op">,</tt> <tt class="py-name">fr</tt> <tt class="py-op">=</tt> <tt id="link-86" class="py-name" targets="Function ivs.sed.filters.get_response()=ivs.sed.filters-module.html#get_response,Function ivs.spectra.tools.get_response()=ivs.spectra.tools-module.html#get_response"><a title="ivs.sed.filters.get_response
+ivs.spectra.tools.get_response" class="py-name" href="#" onclick="return doclink('link-86', 'get_response', 'link-86');">get_response</a></tt><tt class="py-op">(</tt><tt class="py-name">instrument</tt><tt class="py-op">=</tt><tt class="py-name">instrument</tt><tt class="py-op">)</tt> </tt>
+<a name="L633"></a><tt class="py-lineno">633</tt>  <tt class="py-line">    <tt class="py-name">fr_</tt> <tt class="py-op">=</tt> <tt class="py-name">interp1d</tt><tt class="py-op">(</tt><tt class="py-name">wr</tt><tt class="py-op">,</tt> <tt class="py-name">fr</tt><tt class="py-op">,</tt> <tt class="py-name">kind</tt><tt class="py-op">=</tt><tt class="py-string">'linear'</tt><tt class="py-op">)</tt> </tt>
+<a name="L634"></a><tt class="py-lineno">634</tt>  <tt class="py-line">     </tt>
+<a name="L635"></a><tt class="py-lineno">635</tt>  <tt class="py-line">    <tt class="py-comment">#-- select usefull part of the spectrum</tt> </tt>
+<a name="L636"></a><tt class="py-lineno">636</tt>  <tt class="py-line">    <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">flux</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">wr</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">wr</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L637"></a><tt class="py-lineno">637</tt>  <tt class="py-line">    <tt class="py-name">wave</tt> <tt class="py-op">=</tt> <tt class="py-name">wave</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">wr</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">wr</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L638"></a><tt class="py-lineno">638</tt>  <tt class="py-line">     </tt>
+<a name="L639"></a><tt class="py-lineno">639</tt>  <tt class="py-line">    <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">flux</tt> <tt class="py-op">/</tt> <tt class="py-name">fr_</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">)</tt> </tt>
+<a name="L640"></a><tt class="py-lineno">640</tt>  <tt class="py-line">     </tt>
+<a name="L641"></a><tt class="py-lineno">641</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt> </tt>
+</div><a name="L642"></a><tt class="py-lineno">642</tt>  <tt class="py-line">     </tt>
+<a name="L643"></a><tt class="py-lineno">643</tt>  <tt class="py-line"> </tt>
+<a name="L644"></a><tt class="py-lineno">644</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt><tt class="py-op">==</tt><tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L645"></a><tt class="py-lineno">645</tt>  <tt class="py-line">     </tt>
+<a name="L646"></a><tt class="py-lineno">646</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">pylab</tt> <tt class="py-keyword">as</tt> <tt class="py-name">pl</tt> </tt>
+<a name="L647"></a><tt class="py-lineno">647</tt>  <tt class="py-line">    <tt class="py-keyword">from</tt> <tt id="link-87" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-87', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-88" class="py-name"><a title="ivs.io" class="py-name" href="#" onclick="return doclink('link-88', 'io', 'link-17');">io</a></tt> <tt class="py-keyword">import</tt> <tt id="link-89" class="py-name"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-89', 'fits', 'link-18');">fits</a></tt> </tt>
+<a name="L648"></a><tt class="py-lineno">648</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">time</tt> </tt>
+<a name="L649"></a><tt class="py-lineno">649</tt>  <tt class="py-line">     </tt>
+<a name="L650"></a><tt class="py-lineno">650</tt>  <tt class="py-line">    <tt class="py-name">temp</tt> <tt class="py-op">=</tt> <tt class="py-string">'/STER/mercator/hermes/%s/reduced/%s_HRF_OBJ_ext_CosmicsRemoved_log_merged_c.fits'</tt> </tt>
+<a name="L651"></a><tt class="py-lineno">651</tt>  <tt class="py-line">    <tt class="py-name">objlist</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-string">'20090619'</tt><tt class="py-op">,</tt><tt class="py-string">'237033'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20090701'</tt><tt class="py-op">,</tt><tt class="py-string">'240226'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L652"></a><tt class="py-lineno">652</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20090712'</tt><tt class="py-op">,</tt><tt class="py-string">'241334'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20090712'</tt><tt class="py-op">,</tt><tt class="py-string">'241335'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L653"></a><tt class="py-lineno">653</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20100107'</tt><tt class="py-op">,</tt><tt class="py-string">'00268012'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20100120'</tt><tt class="py-op">,</tt><tt class="py-string">'00272619'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L654"></a><tt class="py-lineno">654</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20100120'</tt><tt class="py-op">,</tt><tt class="py-string">'00272620'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20100203'</tt><tt class="py-op">,</tt><tt class="py-string">'00273577'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L655"></a><tt class="py-lineno">655</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20100203'</tt><tt class="py-op">,</tt><tt class="py-string">'00273578'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20100303'</tt><tt class="py-op">,</tt><tt class="py-string">'00275671'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L656"></a><tt class="py-lineno">656</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20100303'</tt><tt class="py-op">,</tt><tt class="py-string">'00275672'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20100410'</tt><tt class="py-op">,</tt><tt class="py-string">'00281505'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L657"></a><tt class="py-lineno">657</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20100519'</tt><tt class="py-op">,</tt><tt class="py-string">'00284636'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20110222'</tt><tt class="py-op">,</tt><tt class="py-string">'00334558'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L658"></a><tt class="py-lineno">658</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20110319'</tt><tt class="py-op">,</tt><tt class="py-string">'00336547'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20110324'</tt><tt class="py-op">,</tt><tt class="py-string">'00339848'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L659"></a><tt class="py-lineno">659</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20110401'</tt><tt class="py-op">,</tt><tt class="py-string">'00342273'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20110402'</tt><tt class="py-op">,</tt><tt class="py-string">'00342363'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L660"></a><tt class="py-lineno">660</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20110406'</tt><tt class="py-op">,</tt><tt class="py-string">'00342699'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20110408'</tt><tt class="py-op">,</tt><tt class="py-string">'00342896'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L661"></a><tt class="py-lineno">661</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20120107'</tt><tt class="py-op">,</tt><tt class="py-string">'00391289'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20120110'</tt><tt class="py-op">,</tt><tt class="py-string">'00391633'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L662"></a><tt class="py-lineno">662</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20120116'</tt><tt class="py-op">,</tt><tt class="py-string">'00392217'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20120127'</tt><tt class="py-op">,</tt><tt class="py-string">'00393151'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L663"></a><tt class="py-lineno">663</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20120209'</tt><tt class="py-op">,</tt><tt class="py-string">'00394175'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20120330'</tt><tt class="py-op">,</tt><tt class="py-string">'00399697'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L664"></a><tt class="py-lineno">664</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20120420'</tt><tt class="py-op">,</tt><tt class="py-string">'00404769'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20120506'</tt><tt class="py-op">,</tt><tt class="py-string">'00406531'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L665"></a><tt class="py-lineno">665</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20130106'</tt><tt class="py-op">,</tt><tt class="py-string">'00445346'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20130215'</tt><tt class="py-op">,</tt><tt class="py-string">'00452556'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L666"></a><tt class="py-lineno">666</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-string">'20130406'</tt><tt class="py-op">,</tt><tt class="py-string">'00457718'</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-op">(</tt><tt class="py-string">'20130530'</tt><tt class="py-op">,</tt><tt class="py-string">'00474128'</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L667"></a><tt class="py-lineno">667</tt>  <tt class="py-line">    <tt class="py-name">mergeList</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">temp</tt><tt class="py-op">%</tt><tt class="py-name">o</tt> <tt class="py-keyword">for</tt> <tt class="py-name">o</tt> <tt class="py-keyword">in</tt> <tt class="py-name">objlist</tt><tt class="py-op">]</tt> </tt>
+<a name="L668"></a><tt class="py-lineno">668</tt>  <tt class="py-line">     </tt>
+<a name="L669"></a><tt class="py-lineno">669</tt>  <tt class="py-line">    <tt class="py-name">t1</tt> <tt class="py-op">=</tt> <tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L670"></a><tt class="py-lineno">670</tt>  <tt class="py-line">    <tt class="py-name">waves</tt><tt class="py-op">,</tt> <tt class="py-name">fluxes</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L671"></a><tt class="py-lineno">671</tt>  <tt class="py-line">    <tt class="py-name">wtotal</tt><tt class="py-op">,</tt> <tt class="py-name">ftotal</tt> <tt class="py-op">=</tt> <tt id="link-90" class="py-name"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-90', 'fits', 'link-18');">fits</a></tt><tt class="py-op">.</tt><tt id="link-91" class="py-name"><a title="ivs.io.fits.read_spectrum" class="py-name" href="#" onclick="return doclink('link-91', 'read_spectrum', 'link-85');">read_spectrum</a></tt><tt class="py-op">(</tt><tt class="py-name">mergeList</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L672"></a><tt class="py-lineno">672</tt>  <tt class="py-line">    <tt class="py-name">wtotal</tt> <tt class="py-op">=</tt> <tt class="py-name">wtotal</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt>  </tt>
+<a name="L673"></a><tt class="py-lineno">673</tt>  <tt class="py-line">    <tt class="py-name">ftotal</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros_like</tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">)</tt> </tt>
+<a name="L674"></a><tt class="py-lineno">674</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">ifile</tt> <tt class="py-keyword">in</tt> <tt class="py-name">mergeList</tt><tt class="py-op">:</tt> </tt>
+<a name="L675"></a><tt class="py-lineno">675</tt>  <tt class="py-line">        <tt class="py-name">w</tt><tt class="py-op">,</tt> <tt class="py-name">f</tt> <tt class="py-op">=</tt> <tt id="link-92" class="py-name"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-92', 'fits', 'link-18');">fits</a></tt><tt class="py-op">.</tt><tt id="link-93" class="py-name"><a title="ivs.io.fits.read_spectrum" class="py-name" href="#" onclick="return doclink('link-93', 'read_spectrum', 'link-85');">read_spectrum</a></tt><tt class="py-op">(</tt><tt class="py-name">ifile</tt><tt class="py-op">)</tt> </tt>
+<a name="L676"></a><tt class="py-lineno">676</tt>  <tt class="py-line">        <tt class="py-name">f</tt> <tt class="py-op">=</tt> <tt class="py-name">f</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L677"></a><tt class="py-lineno">677</tt>  <tt class="py-line">        <tt class="py-name">w</tt> <tt class="py-op">=</tt> <tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L678"></a><tt class="py-lineno">678</tt>  <tt class="py-line">        <tt class="py-name">waves</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt> </tt>
+<a name="L679"></a><tt class="py-lineno">679</tt>  <tt class="py-line">        <tt class="py-name">fluxes</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">f</tt><tt class="py-op">)</tt> </tt>
+<a name="L680"></a><tt class="py-lineno">680</tt>  <tt class="py-line">        <tt class="py-name">ftotal</tt> <tt class="py-op">+=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">interp</tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">,</tt><tt class="py-name">w</tt><tt class="py-op">,</tt><tt class="py-name">f</tt><tt class="py-op">)</tt> </tt>
+<a name="L681"></a><tt class="py-lineno">681</tt>  <tt class="py-line">    <tt class="py-name">t1</tt> <tt class="py-op">=</tt> <tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-name">t1</tt> </tt>
+<a name="L682"></a><tt class="py-lineno">682</tt>  <tt class="py-line">         </tt>
+<a name="L683"></a><tt class="py-lineno">683</tt>  <tt class="py-line">    <tt class="py-name">t2</tt> <tt class="py-op">=</tt> <tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L684"></a><tt class="py-lineno">684</tt>  <tt class="py-line">    <tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt><tt class="py-op">,</tt> <tt class="py-name">accepted</tt><tt class="py-op">,</tt> <tt class="py-name">rejected</tt> <tt class="py-op">=</tt> <tt id="link-94" class="py-name" targets="Function ivs.spectra.tools.merge_cosmic_clipping()=ivs.spectra.tools-module.html#merge_cosmic_clipping"><a title="ivs.spectra.tools.merge_cosmic_clipping" class="py-name" href="#" onclick="return doclink('link-94', 'merge_cosmic_clipping', 'link-94');">merge_cosmic_clipping</a></tt><tt class="py-op">(</tt><tt class="py-name">waves</tt><tt class="py-op">,</tt> <tt class="py-name">fluxes</tt><tt class="py-op">,</tt> <tt id="link-95" class="py-name"><a title="ivs.units.constants.sigma" class="py-name" href="#" onclick="return doclink('link-95', 'sigma', 'link-71');">sigma</a></tt><tt class="py-op">=</tt><tt class="py-number">5.0</tt><tt class="py-op">,</tt> </tt>
+<a name="L685"></a><tt class="py-lineno">685</tt>  <tt class="py-line">                          <tt class="py-name">window</tt><tt class="py-op">=</tt><tt class="py-number">21</tt><tt class="py-op">,</tt> <tt class="py-name">offset</tt><tt class="py-op">=</tt><tt class="py-string">'std'</tt><tt class="py-op">,</tt> <tt class="py-name">base</tt><tt class="py-op">=</tt><tt class="py-string">'average'</tt><tt class="py-op">,</tt> <tt class="py-name">full_output</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L686"></a><tt class="py-lineno">686</tt>  <tt class="py-line">    <tt class="py-name">t2</tt> <tt class="py-op">=</tt> <tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-name">t2</tt> </tt>
+<a name="L687"></a><tt class="py-lineno">687</tt>  <tt class="py-line">     </tt>
+<a name="L688"></a><tt class="py-lineno">688</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-string">'reading '</tt><tt class="py-op">,</tt> <tt class="py-name">t1</tt> </tt>
+<a name="L689"></a><tt class="py-lineno">689</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-string">'processing '</tt><tt class="py-op">,</tt> <tt class="py-name">t2</tt> </tt>
+<a name="L690"></a><tt class="py-lineno">690</tt>  <tt class="py-line">     </tt>
+<a name="L691"></a><tt class="py-lineno">691</tt>  <tt class="py-line">    <tt class="py-name">wrej</tt> <tt class="py-op">=</tt> <tt class="py-name">wtotal</tt><tt class="py-op">[</tt><tt class="py-name">rejected</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">]</tt> </tt>
+<a name="L692"></a><tt class="py-lineno">692</tt>  <tt class="py-line">    <tt class="py-name">frej</tt> <tt class="py-op">=</tt> <tt class="py-name">ftotal</tt><tt class="py-op">[</tt><tt class="py-name">rejected</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">]</tt> </tt>
+<a name="L693"></a><tt class="py-lineno">693</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">wrej</tt><tt class="py-op">)</tt> </tt>
+<a name="L694"></a><tt class="py-lineno">694</tt>  <tt class="py-line">     </tt>
+<a name="L695"></a><tt class="py-lineno">695</tt>  <tt class="py-line">     </tt>
+<a name="L696"></a><tt class="py-lineno">696</tt>  <tt class="py-line">    <tt class="py-name">ftotal</tt> <tt class="py-op">=</tt> <tt class="py-name">ftotal</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L697"></a><tt class="py-lineno">697</tt>  <tt class="py-line">    <tt class="py-name">wtotal</tt> <tt class="py-op">=</tt> <tt class="py-name">wtotal</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt>  </tt>
+<a name="L698"></a><tt class="py-lineno">698</tt>  <tt class="py-line">    <tt class="py-name">flux</tt> <tt class="py-op">=</tt> <tt class="py-name">flux</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L699"></a><tt class="py-lineno">699</tt>  <tt class="py-line">    <tt class="py-name">wave</tt> <tt class="py-op">=</tt> <tt class="py-name">wave</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">&gt;</tt><tt class="py-number">5000</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">&lt;</tt><tt class="py-number">7000</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L700"></a><tt class="py-lineno">700</tt>  <tt class="py-line">     </tt>
+<a name="L701"></a><tt class="py-lineno">701</tt>  <tt class="py-line">    <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt id="link-96" class="py-name" targets="Method ivs.observations.visibility.Ephemeris.plot()=ivs.observations.visibility.Ephemeris-class.html#plot"><a title="ivs.observations.visibility.Ephemeris.plot" class="py-name" href="#" onclick="return doclink('link-96', 'plot', 'link-96');">plot</a></tt><tt class="py-op">(</tt><tt class="py-name">wtotal</tt><tt class="py-op">,</tt> <tt class="py-name">ftotal</tt><tt class="py-op">)</tt> </tt>
+<a name="L702"></a><tt class="py-lineno">702</tt>  <tt class="py-line">    <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt id="link-97" class="py-name"><a title="ivs.observations.visibility.Ephemeris.plot" class="py-name" href="#" onclick="return doclink('link-97', 'plot', 'link-96');">plot</a></tt><tt class="py-op">(</tt><tt class="py-name">wave</tt><tt class="py-op">,</tt> <tt class="py-name">flux</tt><tt class="py-op">)</tt> </tt>
+<a name="L703"></a><tt class="py-lineno">703</tt>  <tt class="py-line">    <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt id="link-98" class="py-name"><a title="ivs.observations.visibility.Ephemeris.plot" class="py-name" href="#" onclick="return doclink('link-98', 'plot', 'link-96');">plot</a></tt><tt class="py-op">(</tt><tt class="py-name">wrej</tt><tt class="py-op">,</tt> <tt class="py-name">frej</tt><tt class="py-op">,</tt> <tt class="py-string">'.r'</tt><tt class="py-op">)</tt> </tt>
+<a name="L704"></a><tt class="py-lineno">704</tt>  <tt class="py-line">    <tt class="py-name">pl</tt><tt class="py-op">.</tt><tt class="py-name">show</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L705"></a><tt class="py-lineno">705</tt>  <tt class="py-line">     </tt>
+<a name="L706"></a><tt class="py-lineno">706</tt>  <tt class="py-line">     </tt>
+<a name="L707"></a><tt class="py-lineno">707</tt>  <tt class="py-line">     </tt>
+<a name="L708"></a><tt class="py-lineno">708</tt>  <tt class="py-line">    <tt class="py-comment">#import doctest</tt> </tt>
+<a name="L709"></a><tt class="py-lineno">709</tt>  <tt class="py-line">    <tt class="py-comment">#import pylab as pl</tt> </tt>
+<a name="L710"></a><tt class="py-lineno">710</tt>  <tt class="py-line">    <tt class="py-comment">#doctest.testmod()</tt> </tt>
+<a name="L711"></a><tt class="py-lineno">711</tt>  <tt class="py-line">    <tt class="py-comment">#pl.show()</tt> </tt>
+<a name="L712"></a><tt class="py-lineno">712</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:12 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,1414 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.statistics.linearregression.LinearModel</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.statistics-module.html">Package&nbsp;statistics</a> ::
+        <a href="ivs.statistics.linearregression-module.html">Module&nbsp;linearregression</a> ::
+        Class&nbsp;LinearModel
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.statistics.linearregression.LinearModel-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class LinearModel</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>A linear model class</p>
+  <p>The class implements a linear model of the form</p>
+  <p><code>y(x) = a_0 * f_0(x) + a_1 * f_1(x) + ... + a_{n-1} 
+  f_{n-1}(x)</code></p>
+  <p>where</p>
+  <ul>
+    <li>
+      y are the responses (observables)
+    </li>
+    <li>
+      x are the covariates
+    </li>
+    <li>
+      a_i are the regression coefficients (to be determined)
+    </li>
+    <li>
+      f_i(x) are the regressors evaluated in the covariates.
+    </li>
+  </ul>
+  <p>Note: LinearModel instances can be added and printed.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">LinearModel</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">regressors</span>,
+        <span class="summary-sig-arg">nameList</span>,
+        <span class="summary-sig-arg">covMatrix</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">regressorsAreWeighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Initialiser of the LinearModel class.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">LinearModel</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#__add__" class="summary-sig-name">__add__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">linearModel</span>)</span><br />
+      Defines operator '+' of two LinearModel instances.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__add__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#designMatrix" class="summary-sig-name">designMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the design matrix of the linear model</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.designMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#_singularValueDecompose" class="summary-sig-name" onclick="show_private();">_singularValueDecompose</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Performs and stores the singular value decomposition of the design 
+      matrix</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel._singularValueDecompose">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#pseudoInverse" class="summary-sig-name">pseudoInverse</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Computes the pseudo-inverse in a robust way</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.pseudoInverse">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#standardCovarianceMatrix" class="summary-sig-name">standardCovarianceMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Computes the standard covariance matrix.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.standardCovarianceMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#conditionNumber" class="summary-sig-name">conditionNumber</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Computes the condition number.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.conditionNumber">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#singularValues" class="summary-sig-name">singularValues</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Return the non-zero singular values as obtained with the singular 
+      value decomposition</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.singularValues">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#hatMatrix" class="summary-sig-name">hatMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Computes the hat matrix.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.hatMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#traceHatMatrix" class="summary-sig-name">traceHatMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the trace of the (possibly weighted) hat matrix.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.traceHatMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">integer</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#degreesOfFreedom" class="summary-sig-name">degreesOfFreedom</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the effective number of degrees of freedom.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.degreesOfFreedom">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#regressorNames" class="summary-sig-name">regressorNames</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the regressor names.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.regressorNames">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">boolean</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#containsRegressorName" class="summary-sig-name">containsRegressorName</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">regressorName</span>)</span><br />
+      Checks if the linear model contains the given regressor.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.containsRegressorName">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">boolean</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#someRegressorNameContains" class="summary-sig-name">someRegressorNameContains</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">someString</span>)</span><br />
+      Checks if a regressor name contains a given substring.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.someRegressorNameContains">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">boolean</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#withIntercept" class="summary-sig-name">withIntercept</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Checks if there is a constant regressor</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.withIntercept">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">integer</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#nObservations" class="summary-sig-name">nObservations</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the number of observations</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.nObservations">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">integer</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#nParameters" class="summary-sig-name">nParameters</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the number of fit coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.nParameters">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">LinearFit</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#fitData" class="summary-sig-name">fitData</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">observations</span>)</span><br />
+      Create and return a LinearFit object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.fitData">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">generator</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#submodels" class="summary-sig-name">submodels</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">Nmin</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">Nmax</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">nested</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">ranks</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">simpleFirst</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Returns a generator capable of generating submodels</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.submodels">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">LinearModel</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#copy" class="summary-sig-name">copy</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns a duplicate of the current LinearModel</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.copy">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearModel-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Generates what is written to the console if the LinearModel is 
+      printed</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">regressors</span>,
+        <span class="sig-arg">nameList</span>,
+        <span class="sig-arg">covMatrix</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">regressorsAreWeighted</span>=<span class="sig-default">False</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Initialiser of the LinearModel class.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([sin(x),x*x], [<span class="py-string">&quot;sin(x)&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>regressors</code></strong> (list or ndarray) - either a list of equally-sized numpy arrays with the regressors 
+          evaluated in the covariates: [f_0(x),f_1(x),f_2(x),...], or an N 
+          x M design matrix (numpy array) where these regressor arrays are 
+          column-stacked, with N the number of regressors, and M the number
+          of data points.</li>
+        <li><strong class="pname"><code>nameList</code></strong> (list) - list of strings of the regressors names. E.g. 
+          [&quot;sin(x)&quot;, &quot;cos(x)&quot;]</li>
+        <li><strong class="pname"><code>covMatrix</code></strong> (ndarray) - square array containing the covariance matrix of the 
+          observations. Weights, and correlations can hence be taken into 
+          account.</li>
+        <li><strong class="pname"><code>regressorsAreWeighted</code></strong> (boolean) - False if regressors are not yet weighted, True otherwise</li>
+    </ul></dd>
+    <dt>Returns: LinearModel</dt>
+        <dd>a LinearModel instance</dd>
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__add__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__add__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">linearModel</span>)</span>
+    <br /><em class="fname">(Addition operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__add__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Defines operator '+' of two LinearModel instances.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm1 = LinearModel([x], [<span class="py-string">&quot;x&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm2 = LinearModel([x**2], [<span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm3 = lm1 + lm2    <span class="py-comment"># the same as LinearModel([x, x**2], [&quot;x&quot;, &quot;x^2&quot;])</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>linearModel</code></strong> (LinearModel class) - a LinearModel instance with the same number of observations as 
+          the linear model in 'self'</li>
+    </ul></dd>
+    <dt>Returns: LinearModel</dt>
+        <dd>a newly created LinearModel object representing a linear model 
+          that is the sum of 'self' and 'linearModel'. 'self' and 
+          'linearModel' are unaltered.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="designMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">designMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.designMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the design matrix of the linear model</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x], [<span class="py-string">&quot;x&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.designMatrix()
+<span class="py-output">array([[   0.  ,    0.  ],</span>
+<span class="py-output">[   2.5 ,    6.25],</span>
+<span class="py-output">[   5.  ,   25.  ],</span>
+<span class="py-output">[   7.5 ,   56.25],</span>
+<span class="py-output">[  10.  ,  100.  ]])</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>a N x M design matrix. If the model is written as y(x) = a_0 * 
+          f_0(x) + a_1 * f_1(x) + ... + a_{n-1} f_{n-1}(x) then the design 
+          matrix A is defined by A_{i,j} = f_i(x_j). N is the number of 
+          regressors, M is the number of data points.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_singularValueDecompose"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_singularValueDecompose</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel._singularValueDecompose">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Performs and stores the singular value decomposition of the design 
+  matrix</p>
+  <p>Private class method, not to be used by the user.</p>
+  <p>The singular value decomposition of the design matrix is defined 
+  as</p>
+  <p><code>X = U * W * V^t </code></p>
+  <p>where</p>
+  <ul>
+    <li>
+      X: M x N design matrix.
+    </li>
+    <li>
+      U: M x M unitary matrix
+    </li>
+    <li>
+      W: M x N diagonal matrix
+    </li>
+    <li>
+      V: N x N unitary matrix
+    </li>
+  </ul>
+  <p>with M the number of observations, and N the number of regressors. 
+  Note that for a unitary matrix A: A^{-1} = A^t</p>
+  <dl class="fields">
+    <dt>Returns:</dt>
+        <dd>nothing</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="pseudoInverse"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pseudoInverse</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.pseudoInverse">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the pseudo-inverse in a robust way</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      The &quot;robustness&quot; is obtained by using a singular value 
+      decomposition of X, and treating the singular values in order to 
+      avoid numerical problems.
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.pseudoInverse()
+<span class="py-output">array([[  8.95460520e-17,   1.63870968e-01,   1.98709677e-01,</span>
+<span class="py-output">          1.04516129e-01,  -1.18709677e-01],</span>
+<span class="py-output">       [ -1.07455262e-17,  -1.80645161e-02,  -2.06451613e-02,</span>
+<span class="py-output">         -7.74193548e-03,   2.06451613e-02]])</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>A numerical safe version of the N x M matrix X^t X)^{-1} X^t 
+          where X is the M x N design matrix, ^t the transpose, ^{-1} the 
+          inverse matrix. The multiplications are matrix multiplications.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="standardCovarianceMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">standardCovarianceMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.standardCovarianceMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the standard covariance matrix.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      The &quot;safeness&quot; is obtained by using a singular value 
+      decomposition of X, and treating the singular values to avoid 
+      numerical problems.
+    </li>
+    <li>
+      The matrix C is the covariance matrix of the regression coefficients 
+      if the signal noise would be i.i.d. with sigma = 1.
+    </li>
+    <li>
+      In the case of sigma != 1, the actual covariance matrix can be 
+      obtained by simply rescaling the standard covariance matrix. See <a 
+      href="ivs.statistics.linearregression.LinearFit-class.html#covarianceMatrix"
+      class="link">LinearFit.covarianceMatrix</a>.
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.standardCovarianceMatrix()
+<span class="py-output">array([[ 0.09135484, -0.01032258],</span>
+<span class="py-output">       [-0.01032258,  0.00123871]])</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>A  numerical safe version of C = (X^t X)^{-1} where X is the 
+          design matrix, ^t the transpose, ^{-1} the inverse matrix. The 
+          multiplications are matrix multiplications.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="conditionNumber"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">conditionNumber</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.conditionNumber">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the condition number.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm..conditionNumber()
+<span class="py-output">35.996606504814814</span></pre>
+  <dl class="fields">
+    <dt>Returns: double</dt>
+        <dd>The ratio of the highest to the lowest singular value, where the 
+          singular values are obtained by singular value decomposition of 
+          the design matrix. A large condition number implies an 
+          ill-conditioned design matrix.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="singularValues"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">singularValues</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.singularValues">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return the non-zero singular values as obtained with the singular 
+  value decomposition</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      the singular values can be used a diagnostic to see how 
+      ill-conditioned the matrix inversion is.
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.singularValues()
+<span class="py-output">array([ 118.34194851,    3.28758625])</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>The non-zero singular values.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="hatMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">hatMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.hatMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Computes the hat matrix.</p>
+  <p>The hat matrix is defined by H = X (X^t X)^{-1} X^t with</p>
+  <ul>
+    <li>
+      X the (weighted) design matrix
+    </li>
+    <li>
+      ^t the transpose,
+    </li>
+    <li>
+      ^{-1} the inverse matrix
+    </li>
+  </ul>
+  <p>and where all multiplications are matrix multiplications. It has the 
+  property that \hat{y} = H * y where</p>
+  <ul>
+    <li>
+      \hat{y} are the (weighted) predictions
+    </li>
+    <li>
+      y the (weighted) observations.
+    </li>
+  </ul>
+  <p>So, it &quot;puts a hat&quot; on the (weighted) observation 
+  vector.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      as the number of data points may be large, this matrix may become so 
+      huge that it no longer fits into your computer's memory
+    </li>
+    <li>
+      for weighted (and/or correlated) observations, the resulting weighted
+      hat matrix does not put a hat on the unweighted observations vector, 
+      only on the weighted one.
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.hatMatrix()
+<span class="py-output">array([[  9.32150093e-32,   1.56705591e-16,   1.79092104e-16,</span>
+<span class="py-output">          6.71595390e-17,  -1.79092104e-16],</span>
+<span class="py-output">       [  1.56705591e-16,   2.96774194e-01,   3.67741935e-01,</span>
+<span class="py-output">          2.12903226e-01,  -1.67741935e-01],</span>
+<span class="py-output">       [  1.79092104e-16,   3.67741935e-01,   4.77419355e-01,</span>
+<span class="py-output">          3.29032258e-01,  -7.74193548e-02],</span>
+<span class="py-output">       [  6.71595390e-17,   2.12903226e-01,   3.29032258e-01,</span>
+<span class="py-output">          3.48387097e-01,   2.70967742e-01],</span>
+<span class="py-output">       [ -1.79092104e-16,  -1.67741935e-01,  -7.74193548e-02,</span>
+<span class="py-output">          2.70967742e-01,   8.77419355e-01]])</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>The hat matrix.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="traceHatMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">traceHatMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.traceHatMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the trace of the (possibly weighted) hat matrix.</p>
+  <p>The computation of the entire MxM hat matrix (M the number of 
+  observations) is avoided to calculate the trace. This is useful when the 
+  number of observations is so high that the hat matrix does no longer fit 
+  into the memory.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      If the hat matrix was computed anyway it will be used.
+    </li>
+    <li>
+      The trace of the hat matrix that puts a hat on the original 
+      observations equals the trace of the hat matrix that puts a hat on 
+      the weighted observations.
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.hatMatrix()
+<span class="py-output">1.9999999999999993</span></pre>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>The trace of the hat matrix.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="degreesOfFreedom"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">degreesOfFreedom</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.degreesOfFreedom">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the effective number of degrees of freedom.</p>
+  <p>The d.o.f. is defined as the trace of the hat matrix. See also: <a 
+  href="http://en.wikipedia.org/wiki/Degrees_of_freedom_(statistics)" 
+  target="_top">Wikipedia</a></p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,5)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x, x**2], [<span class="py-string">&quot;x&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.degreesOfFreedom()
+<span class="py-output">3</span></pre>
+  <dl class="fields">
+    <dt>Returns: integer</dt>
+        <dd>The effective number of degrees of freedom.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="regressorNames"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">regressorNames</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.regressorNames">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the regressor names.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([sin(x),x*x], [<span class="py-string">&quot;sin(x)&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>]) 
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.regressorNames()
+<span class="py-output">[&quot;sin(x)&quot;, &quot;x^2&quot;]</span></pre>
+  <dl class="fields">
+    <dt>Returns: list</dt>
+        <dd>list with strings containing the names of the regressors.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="containsRegressorName"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">containsRegressorName</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">regressorName</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.containsRegressorName">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Checks if the linear model contains the given regressor.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([sin(x), x*x], [<span class="py-string">&quot;sin(x)&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.containsRegressorName(<span class="py-string">&quot;x^2&quot;</span>)
+<span class="py-output">True</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>lm.containsRegressorName(<span class="py-string">&quot;cos(x)&quot;</span>)
+<span class="py-output">False</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>regressorName</code></strong> (string) - name of a regressor</li>
+    </ul></dd>
+    <dt>Returns: boolean</dt>
+        <dd>True if one of the regressor names is identical to the input 
+          'regressorName', else False.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="someRegressorNameContains"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">someRegressorNameContains</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">someString</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.someRegressorNameContains">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Checks if a regressor name contains a given substring.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([sin(x), x*x], [<span class="py-string">&quot;sin(x)&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.someRegressorNameContains(<span class="py-string">&quot;sin&quot;</span>)
+<span class="py-output">True</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>someString</code></strong> (string) - substring to be checked</li>
+    </ul></dd>
+    <dt>Returns: boolean</dt>
+        <dd>True if at least one of the regressor names contains the 
+          substring someString, else return false.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="withIntercept"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">withIntercept</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.withIntercept">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Checks if there is a constant regressor</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([1, x*x], [<span class="py-string">&quot;1&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.withIntercept()
+<span class="py-output">True</span></pre>
+  <dl class="fields">
+    <dt>Returns: boolean</dt>
+        <dd>True if there is a constant regressor (the intercept). False 
+          otherwise.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="nObservations"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">nObservations</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.nObservations">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the number of observations</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,23)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x], [<span class="py-string">&quot;x&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.nObservations()
+<span class="py-output">23</span></pre>
+  <dl class="fields">
+    <dt>Returns: integer</dt>
+        <dd>the number of observations that the LinearModel expects</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="nParameters"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">nParameters</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.nParameters">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the number of fit coefficients</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([sin(x),x*x], [<span class="py-string">&quot;sin(x)&quot;</span>, <span class="py-string">&quot;x^2&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm.nParameters()
+<span class="py-output">2</span></pre>
+  <dl class="fields">
+    <dt>Returns: integer</dt>
+        <dd>the numbero fit coefficients of the linear model</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fitData"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fitData</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">observations</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.fitData">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Create and return a LinearFit object.</p>
+  <p>From this object the user can extract all kinds of quantities related 
+  to the linear fit. See <a 
+  href="ivs.statistics.linearregression.LinearFit-class.html" 
+  class="link">LinearFit</a>.</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x], [<span class="py-string">&quot;x&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>obs = x + normal(0.0, 1.0, 100)         <span class="py-comment"># some simulated observations</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>linearfit = lm.fitData(obs)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>observations</code></strong> (ndarray) - array with the observations y_i.  The size of the array should be
+          compatible with the number of expected observations in the 
+          LinearModel.</li>
+    </ul></dd>
+    <dt>Returns: LinearFit</dt>
+        <dd>a LinearFit instance, containing the fit of the observations with
+          the linear model.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="submodels"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">submodels</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Nmin</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">Nmax</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">nested</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">ranks</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">simpleFirst</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.submodels">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns a generator capable of generating submodels</p>
+  <p>The generator sequentially returns the submodels which are instances 
+  of LinearModel with only a subset of the regressors of the parent model. 
+  The submodels with fewer regressors will always appear first in the list.
+  The order in which the regressors appear in the submodels will be from 
+  low rank to high rank.</p>
+  <p>Examples:</p>
+  <p>If the regressors are [1, x, x**2] then</p>
+  <ul>
+    <li>
+      Nmin=1, nested=False, ranks=None gives the submodels [1], [x], 
+      [x**2], [1,x], [1,x**2], [x,x**2], [1,x,x**2]
+    </li>
+    <li>
+      Nmin=1, Nmax=2, nested=False, ranks=None gives the submodels [1], 
+      [x], [x**2], [1,x], [1,x**2], [x,x**2]
+    </li>
+    <li>
+      Nmin=2, nested=False, ranks=None gives the submodels [1,x], [1,x**2],
+      [x,x**2], [1,x,x**2]
+    </li>
+    <li>
+      Nmin=3, nested=True, ranks=None gives the submodel [1,x,x**2]
+    </li>
+    <li>
+      Nmin=3, nested=True, ranks=[1,0,3] gives the submodel [x,1,x**2]
+    </li>
+    <li>
+      Nmin=2, nested=False, ranks=[1,0,3] gives the submodels [x,1], 
+      [x,x**2], [1,x**2], [x,1,x**2]
+    </li>
+    <li>
+      Nmin=2, nested=True, ranks=[1,0,3] gives the submodels [x,1], 
+      [x,1,x**2]
+    </li>
+  </ul>
+  <p>If the regressors are [1,x,sin(2x),cos(2x)] then</p>
+  <ul>
+    <li>
+      Nmin=3, nested=True, ranks=[0,1,2,2] gives the submodel 
+      [1,x,sin(2x),cos(2x)]
+    </li>
+    <li>
+      Nmin=2, nested=True, ranks=[0,1,2,2] gives the submodels [1,x], 
+      [1,x,sin(2x),cos(2x)]
+    </li>
+    <li>
+      Nmin=2, nested=False, ranks=[0,1,2,2] gives the submodels [1,x], 
+      [1,sin(2x),cos(2x)], [x,sin(2x),cos(2x)], [1,x,sin(2x),cos(2x)]
+    </li>
+    <li>
+      Nmin=1, Nmax=2, nested=False, ranks=[0,1,2,2] gives the submodels 
+      [1], [x], [sin(2x),cos(2x)], [1,x], [1,sin(2x),cos(2x)], 
+      [x,sin(2x),cos(2x)]
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Nmin</code></strong> (integer) - Minimum number of regressors (or groups of equally ranking 
+          regressors). Should be minimal 1.</li>
+        <li><strong class="pname"><code>Nmax</code></strong> (integer) - Maximum number of regressors (or groups of equally ranking 
+          regressors). If == None, it will take the maximum number 
+          possible. Note: if the ranks = [0,1,2,2] then there are maximum 3
+          &quot;groups&quot; of regressors, as the latter 2 regressors will
+          always be taken together.</li>
+        <li><strong class="pname"><code>nested</code></strong> (boolean) - if False: return all possible submodels, i.e. all possible 
+          combinations of regressors. If true: return only nested submodels
+          with combinations of regressors (or groups of equally ranked 
+          regressors) so that a higher ranked regressors will never appear 
+          without the lower ranked regressors</li>
+        <li><strong class="pname"><code>ranks</code></strong> (list with integers) - list with (integer) rankings of the regressors, only the relative
+          ranking of the numbers will be used, so the exact numbers are not
+          important. For example, [1,2,3] has the same result as 
+          [10,24,35]. Regressors having the same rank should always be 
+          included together in a submodel, regardless how the input 
+          parameter 'nested' has been set. In case of nested submodels, a 
+          regressor with a higher rank should never occur without the 
+          regressors with lower rank in the same submodel.</li>
+        <li><strong class="pname"><code>simpleFirst</code></strong> (boolean) - if True: generate the more simple submodels first. if False: 
+          generate the complicated submodels first.</li>
+    </ul></dd>
+    <dt>Returns: generator</dt>
+        <dd>a python generator implementing the yield method</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="copy"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">copy</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.copy">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns a duplicate of the current LinearModel</p>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0,10,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>lm = LinearModel([x], [<span class="py-string">&quot;x&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>lm2 = lm.copy()</pre>
+  <dl class="fields">
+    <dt>Returns: LinearModel</dt>
+        <dd>of duplicate of self. Not a reference, a real copy.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearModel.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generates what is written to the console if the LinearModel is 
+  printed</p>
+  <dl class="fields">
+    <dt>Returns:</dt>
+        <dd>nothing</dd>
+    <dt>Overrides:
+        object.__str__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

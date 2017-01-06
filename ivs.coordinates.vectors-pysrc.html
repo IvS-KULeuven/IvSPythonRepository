@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.coordinates.vectors</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.coordinates-module.html">Package&nbsp;coordinates</a> ::
+        Module&nbsp;vectors
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.coordinates.vectors-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.coordinates.vectors-module.html">Module ivs.coordinates.vectors</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Vector and coordinate identities and transformations</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">General conventions:</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">    - theta is the colatitude, i.e. the angle from the Z-axis</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">    - phi is the longitude</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">Transform cartesian coordinates to spherical coordinates and back</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x,y,z = np.random.uniform(low=-1,high=1,size=(3,10))</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; r,phi,theta = cart2spher_coord(x,y,z)</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x_,y_,z_ = spher2cart_coord(r,phi,theta)</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; np.allclose(x,x_),np.allclose(y,y_),np.allclose(z,z_)</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring">(True, True, True)</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">Transform cartesian vectors to spherical vectors and back</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x0,y0,z0 = np.random.uniform(low=-1,high=1,size=(3,10))</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x1,y1,z1 = np.random.uniform(low=-1,high=1,size=(3,10))</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; r0,phi0,theta0 = cart2spher_coord(x0,y0,z0)</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; r1,phi1,theta1 = cart2spher((x0,y0,z0),(x1,y1,z1))</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x1_,y1_,z1_ = spher2cart((r0,phi0,theta0),(r1,phi1,theta1))</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; np.allclose(x1,x1_),np.allclose(y1,y1_),np.allclose(z1,z1_)</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">(True, True, True)</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">import</tt> <tt id="link-0" class="py-name" targets="Method ivs.units.conversions.Unit.cos()=ivs.units.conversions.Unit-class.html#cos"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-0', 'cos', 'link-0');">cos</a></tt><tt class="py-op">,</tt><tt id="link-1" class="py-name" targets="Method ivs.units.conversions.Unit.sin()=ivs.units.conversions.Unit-class.html#sin"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-1', 'sin', 'link-1');">sin</a></tt><tt class="py-op">,</tt><tt class="py-name">pi</tt><tt class="py-op">,</tt><tt id="link-2" class="py-name" targets="Method ivs.units.conversions.Unit.sqrt()=ivs.units.conversions.Unit-class.html#sqrt"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-2', 'sqrt', 'link-2');">sqrt</a></tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-comment">#{ Coordinate transformations</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"> </tt>
+<a name="spher2cart_coord"></a><div id="spher2cart_coord-def"><a name="L36"></a><tt class="py-lineno"> 36</tt> <a class="py-toggle" href="#" id="spher2cart_coord-toggle" onclick="return toggle('spher2cart_coord');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#spher2cart_coord">spher2cart_coord</a><tt class="py-op">(</tt><tt class="py-param">r</tt><tt class="py-op">,</tt><tt class="py-param">phi</tt><tt class="py-op">,</tt><tt class="py-param">theta</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="spher2cart_coord-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="spher2cart_coord-expanded"><a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring">    Spherical to Cartesian coordinates</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line">    <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-name">r</tt><tt class="py-op">*</tt><tt id="link-3" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-3', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-4" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-4', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">    <tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-name">r</tt><tt class="py-op">*</tt><tt id="link-5" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-5', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-6" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-6', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">    <tt class="py-name">z</tt> <tt class="py-op">=</tt> <tt class="py-name">r</tt><tt class="py-op">*</tt><tt id="link-7" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-7', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">x</tt><tt class="py-op">,</tt><tt class="py-name">y</tt><tt class="py-op">,</tt><tt class="py-name">z</tt> </tt>
+</div><a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"> </tt>
+<a name="cart2spher_coord"></a><div id="cart2spher_coord-def"><a name="L45"></a><tt class="py-lineno"> 45</tt> <a class="py-toggle" href="#" id="cart2spher_coord-toggle" onclick="return toggle('cart2spher_coord');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#cart2spher_coord">cart2spher_coord</a><tt class="py-op">(</tt><tt class="py-param">x</tt><tt class="py-op">,</tt><tt class="py-param">y</tt><tt class="py-op">,</tt><tt class="py-param">z</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="cart2spher_coord-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="cart2spher_coord-expanded"><a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">    theta colatitude</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">    phi longitude</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">    <tt id="link-8" class="py-name" targets="Function ivs.observations.distance.rho()=ivs.observations.distance-module.html#rho,Function ivs.sed.distance.rho()=ivs.sed.distance-module.html#rho"><a title="ivs.observations.distance.rho
+ivs.sed.distance.rho" class="py-name" href="#" onclick="return doclink('link-8', 'rho', 'link-8');">rho</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-9" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-9', 'sqrt', 'link-2');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">+</tt><tt class="py-name">y</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">+</tt><tt class="py-name">z</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">    <tt class="py-name">phi</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arctan2</tt><tt class="py-op">(</tt><tt class="py-name">y</tt><tt class="py-op">,</tt><tt class="py-name">x</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">    <tt class="py-name">theta</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arctan2</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-10" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-10', 'sqrt', 'link-2');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">x</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">+</tt><tt class="py-name">y</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">z</tt><tt class="py-op">)</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-11" class="py-name"><a title="ivs.observations.distance.rho
+ivs.sed.distance.rho" class="py-name" href="#" onclick="return doclink('link-11', 'rho', 'link-8');">rho</a></tt><tt class="py-op">,</tt><tt class="py-name">phi</tt><tt class="py-op">,</tt><tt class="py-name">theta</tt> </tt>
+</div><a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">     </tt>
+<a name="rotate"></a><div id="rotate-def"><a name="L55"></a><tt class="py-lineno"> 55</tt> <a class="py-toggle" href="#" id="rotate-toggle" onclick="return toggle('rotate');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#rotate">rotate</a><tt class="py-op">(</tt><tt class="py-param">x</tt><tt class="py-op">,</tt><tt class="py-param">y</tt><tt class="py-op">,</tt><tt class="py-param">theta</tt><tt class="py-op">,</tt><tt class="py-param">x0</tt><tt class="py-op">=</tt><tt class="py-number">0.</tt><tt class="py-op">,</tt><tt class="py-param">y0</tt><tt class="py-op">=</tt><tt class="py-number">0.</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="rotate-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="rotate-expanded"><a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">    Rotate counter clockwise.</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">    <tt class="py-name">xnew</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-12', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">x</tt> <tt class="py-op">-</tt> <tt id="link-13" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-13', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">y</tt> <tt class="py-op">-</tt> <tt class="py-name">x0</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">    <tt class="py-name">ynew</tt> <tt class="py-op">=</tt> <tt id="link-14" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-14', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">x</tt> <tt class="py-op">+</tt> <tt id="link-15" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-15', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">y</tt> <tt class="py-op">-</tt> <tt class="py-name">y0</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">xnew</tt><tt class="py-op">,</tt><tt class="py-name">ynew</tt> </tt>
+</div><a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-comment">#{ Coordinate vector transformations</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"> </tt>
+<a name="spher2cart"></a><div id="spher2cart-def"><a name="L66"></a><tt class="py-lineno"> 66</tt> <a class="py-toggle" href="#" id="spher2cart-toggle" onclick="return toggle('spher2cart');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#spher2cart">spher2cart</a><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-param">r</tt><tt class="py-op">,</tt><tt class="py-param">phi</tt><tt class="py-op">,</tt><tt class="py-param">theta</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-param">a_r</tt><tt class="py-op">,</tt><tt class="py-param">a_phi</tt><tt class="py-op">,</tt><tt class="py-param">a_theta</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="spher2cart-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="spher2cart-expanded"><a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">    theta is angle from z-axis (colatitude)</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">    phi is longitude</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">    E.g. http://www.engin.brown.edu/courses/en3/Notes/Vector_Web2/Vectors6a/Vectors6a.htm</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; np.random.seed(111)</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; r,phi,theta = np.random.uniform(low=-1,high=1,size=(3,2))</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; a_r,a_phi,a_theta = np.random.uniform(low=-1,high=1,size=(3,2))</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; a_x,a_y,a_z = spher2cart((r,phi,theta),(a_r,a_phi,a_theta))</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">    <tt class="py-name">ax</tt> <tt class="py-op">=</tt> <tt id="link-16" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-16', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-17" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-17', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_r</tt> <tt class="py-op">+</tt> <tt id="link-18" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-18', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-19" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-19', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_theta</tt> <tt class="py-op">-</tt> <tt id="link-20" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-20', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_phi</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">    <tt class="py-name">ay</tt> <tt class="py-op">=</tt> <tt id="link-21" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-21', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-22" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-22', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_r</tt> <tt class="py-op">+</tt> <tt id="link-23" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-23', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-24" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-24', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_theta</tt> <tt class="py-op">+</tt> <tt id="link-25" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-25', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">a_phi</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">    <tt class="py-name">az</tt> <tt class="py-op">=</tt> <tt id="link-26" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-26', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt>         <tt class="py-op">*</tt><tt class="py-name">a_r</tt> <tt class="py-op">-</tt> <tt id="link-27" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-27', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt>         <tt class="py-op">*</tt><tt class="py-name">a_theta</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">ax</tt><tt class="py-op">,</tt><tt class="py-name">ay</tt><tt class="py-op">,</tt><tt class="py-name">az</tt> </tt>
+</div><a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">     </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"> </tt>
+<a name="cart2spher"></a><div id="cart2spher-def"><a name="L84"></a><tt class="py-lineno"> 84</tt> <a class="py-toggle" href="#" id="cart2spher-toggle" onclick="return toggle('cart2spher');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#cart2spher">cart2spher</a><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-param">x0</tt><tt class="py-op">,</tt><tt class="py-param">y0</tt><tt class="py-op">,</tt><tt class="py-param">z0</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-param">x1</tt><tt class="py-op">,</tt><tt class="py-param">y1</tt><tt class="py-op">,</tt><tt class="py-param">z1</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="cart2spher-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="cart2spher-expanded"><a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-docstring">    theta is angle from z-axis (colatitude)</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-docstring">    phi is longitude</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-docstring">    return r,phi,theta</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">    <tt class="py-name">r</tt><tt class="py-op">,</tt><tt class="py-name">phi</tt><tt class="py-op">,</tt><tt class="py-name">theta</tt> <tt class="py-op">=</tt> <tt id="link-28" class="py-name" targets="Function ivs.coordinates.vectors.cart2spher_coord()=ivs.coordinates.vectors-module.html#cart2spher_coord"><a title="ivs.coordinates.vectors.cart2spher_coord" class="py-name" href="#" onclick="return doclink('link-28', 'cart2spher_coord', 'link-28');">cart2spher_coord</a></tt><tt class="py-op">(</tt><tt class="py-name">x0</tt><tt class="py-op">,</tt><tt class="py-name">y0</tt><tt class="py-op">,</tt><tt class="py-name">z0</tt><tt class="py-op">)</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">    <tt class="py-name">ar</tt>     <tt class="py-op">=</tt> <tt id="link-29" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-29', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-30" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-30', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">x1</tt> <tt class="py-op">+</tt> <tt id="link-31" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-31', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-32" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-32', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">y1</tt> <tt class="py-op">+</tt> <tt id="link-33" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-33', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">z1</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">    <tt class="py-name">atheta</tt> <tt class="py-op">=</tt> <tt id="link-34" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-34', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-35" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-35', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">x1</tt> <tt class="py-op">+</tt> <tt id="link-36" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-36', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-37" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-37', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">y1</tt> <tt class="py-op">-</tt> <tt id="link-38" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-38', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">theta</tt><tt class="py-op">)</tt>  <tt class="py-op">*</tt><tt class="py-name">z1</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">    <tt class="py-name">aphi</tt>   <tt class="py-op">=</tt> <tt class="py-op">-</tt><tt id="link-39" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-39', 'sin', 'link-1');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt>          <tt class="py-op">*</tt><tt class="py-name">x1</tt> <tt class="py-op">+</tt> <tt id="link-40" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-40', 'cos', 'link-0');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt>           <tt class="py-op">*</tt><tt class="py-name">y1</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">ar</tt><tt class="py-op">,</tt><tt class="py-name">aphi</tt><tt class="py-op">,</tt><tt class="py-name">atheta</tt> </tt>
+</div><a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-comment">#{ Vector identities</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"> </tt>
+<a name="norm"></a><div id="norm-def"><a name="L101"></a><tt class="py-lineno">101</tt> <a class="py-toggle" href="#" id="norm-toggle" onclick="return toggle('norm');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#norm">norm</a><tt class="py-op">(</tt><tt class="py-param">vec</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="norm-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="norm-expanded"><a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-docstring">    Euclidic norm of a vector (or of a grid of vectors)</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-docstring">    Input vectors should be numpy arrays.</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-41" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-41', 'sqrt', 'link-2');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">vec</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">     </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"> </tt>
+<a name="angle"></a><div id="angle-def"><a name="L110"></a><tt class="py-lineno">110</tt> <a class="py-toggle" href="#" id="angle-toggle" onclick="return toggle('angle');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#angle">angle</a><tt class="py-op">(</tt><tt class="py-param">vec1</tt><tt class="py-op">,</tt><tt class="py-param">vec2</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="angle-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="angle-expanded"><a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-docstring">    Compute angle between two vectors (or between two grids of vectors).</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-docstring">    Input vectors should be numpy arrays.</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-42" class="py-name" targets="Method ivs.units.conversions.Unit.arccos()=ivs.units.conversions.Unit-class.html#arccos"><a title="ivs.units.conversions.Unit.arccos" class="py-name" href="#" onclick="return doclink('link-42', 'arccos', 'link-42');">arccos</a></tt><tt class="py-op">(</tt> <tt class="py-op">(</tt><tt class="py-name">vec1</tt><tt class="py-op">*</tt><tt class="py-name">vec2</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt id="link-43" class="py-name" targets="Function ivs.coordinates.vectors.norm()=ivs.coordinates.vectors-module.html#norm"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-43', 'norm', 'link-43');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">vec1</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-44" class="py-name"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-44', 'norm', 'link-43');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">vec2</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">  </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">  </tt>
+<a name="cos_angle"></a><div id="cos_angle-def"><a name="L119"></a><tt class="py-lineno">119</tt> <a class="py-toggle" href="#" id="cos_angle-toggle" onclick="return toggle('cos_angle');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.coordinates.vectors-module.html#cos_angle">cos_angle</a><tt class="py-op">(</tt><tt class="py-param">vec1</tt><tt class="py-op">,</tt><tt class="py-param">vec2</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="cos_angle-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="cos_angle-expanded"><a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">    Compute cosine of angle between two vectors (or between two grids of vectors).</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"><tt class="py-docstring">    Input vectors should be numpy arrays.</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">vec1</tt><tt class="py-op">*</tt><tt class="py-name">vec2</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">axis</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt id="link-45" class="py-name"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-45', 'norm', 'link-43');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">vec1</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt id="link-46" class="py-name"><a title="ivs.coordinates.vectors.norm" class="py-name" href="#" onclick="return doclink('link-46', 'norm', 'link-43');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">vec2</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"><tt class="py-comment">#}</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line"> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt><tt class="py-op">==</tt><tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">pylab</tt> <tt class="py-keyword">as</tt> <tt class="py-name">pl</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:12 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,1446 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.limbdark</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;limbdark
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.limbdark-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module limbdark</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface to the limb-darkening library.</p>
+  <h1 class="heading">Section 1. Basic interface</h1>
+    <p>Retrieve limb darkening coeffcients and goodness of fit 
+    parameters:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>coefs,fac,ssr,idiff = get_coeffs(teff=10000,logg=4.0,<span class="py-string">'JOHNSON.V'</span>,law=<span class="py-string">'claret'</span>)</pre>
+    <p>When you need this for a large grid of parameters, consider using 
+    <code class="link">get_itable</code>. The available laws are 
+    <code>claret</code>, <code>linear</code>, <code>logarithmic</code>, 
+    <code>quadratic</code> and <code>power</code>.</p>
+    <p>Retrieve a normalised passband-integrated limb darkening profile 
+    via:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,intensities = get_limbdarkening(teff=10000,logg=4.0,photbands=[<span class="py-string">'JOHNSON.V'</span>],normalised=True)</pre>
+    <p>and fit a particular law via:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>coeffs,ssr,idiff = fit_law(mu,intensities[:,0],law=<span class="py-string">'claret'</span>,fitmethod=<span class="py-string">'equidist_mu_leastsq'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(coeffs)
+<span class="py-output">[ 2.00943266 -3.71261279  4.25469623 -1.70466934]</span></pre>
+    <p>You can evaluate this law on a particular angle-sampling grid:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mus = np.linspace(0,1,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>mu_law = ld_claret(mus,coeffs)</pre>
+    <p>Or on a disk-sampling grid:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rs = np.linspace(0,1,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>r_law = ld_claret(_mu(rs),coeffs)</pre>
+    <p>Make a simple plot:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.subplot(121),pl.title(<span class="py-string">'Angle-sampled'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(mu,intensities,<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(mus,mu_law,<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p,q = pl.subplot(122),pl.title(<span class="py-string">'Disk-sampled'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(_r(mu),intensities,<span class="py-string">'ko-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(rs,r_law,<span class="py-string">'r-'</span>,lw=2)</pre>
+<center><img src='../images/ivs_limbdark_basic.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Fit comparison</h1>
+    <p>You can fit a limb darkening law in various ways: using different 
+    laws, different optimizers and different x-coordinates (limb angle mu 
+    or radius). In the figure below, you can see the influence of some of 
+    these choices:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>laws = [<span class="py-string">'claret'</span>,<span class="py-string">'linear'</span>,<span class="py-string">'logarithmic'</span>,<span class="py-string">'quadratic'</span>,<span class="py-string">'power'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>fitmethods = [<span class="py-string">'equidist_mu_leastsq'</span>,<span class="py-string">'equidist_r_leastsq'</span>,<span class="py-string">'leastsq'</span>]</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>r,rs = _r(mu),_r(mus)
+<span class="py-prompt">&gt;&gt;&gt; </span>integ_mu = np.trapz(intensities[:,0],x=mu)
+<span class="py-prompt">&gt;&gt;&gt; </span>integ_r = np.trapz(intensities[:,0],x=r)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,fitmethod <span class="py-keyword">in</span> enumerate(fitmethods):
+<span class="py-more">... </span>    p = pl.subplot(3,2,2*i+1)
+<span class="py-more">... </span>    p = pl.title(fitmethod)
+<span class="py-more">... </span>    p = pl.plot(mu,intensities[:,0],<span class="py-string">'ko-'</span>)
+<span class="py-more">... </span>    p = pl.xlabel(<span class="py-string">'$\mu$ = cos(limb angle)'</span>)
+<span class="py-more">... </span>    p = pl.ylabel(<span class="py-string">'Normalised intensity'</span>)
+<span class="py-more">... </span>    p = pl.subplot(3,2,2*i+2)
+<span class="py-more">... </span>    p = pl.title(fitmethod)
+<span class="py-more">... </span>    p = pl.plot(r,intensities[:,0],<span class="py-string">'ko-'</span>)
+<span class="py-more">... </span>    p = pl.xlabel(<span class="py-string">'r'</span>)
+<span class="py-more">... </span>    p = pl.ylabel(<span class="py-string">'Normalised intensity'</span>)
+<span class="py-more">... </span>    <span class="py-keyword">for</span> law <span class="py-keyword">in</span> laws:
+<span class="py-more">... </span>        cl,ssr,idiff = fit_law(mu,intensities[:,0],law=law,fitmethod=fitmethod)
+<span class="py-more">... </span>        <span class="py-keyword">print</span>(<span class="py-string">&quot;{:12s} ({:19s}): {}&quot;</span>.format(law,fitmethod,cl))
+<span class="py-more">... </span>        Imus = globals()[<span class="py-string">'ld_{}'</span>.format(law)](mus,cl)
+<span class="py-more">... </span>        p = pl.subplot(3,2,2*i+1)
+<span class="py-more">... </span>        idiff = (np.trapz(Imus,x=mus)-integ_mu)/integ_mu
+<span class="py-more">... </span>        p = pl.plot(mus,Imus,<span class="py-string">'-'</span>,lw=2,label=<span class="py-string">&quot;{} ({:.3f},{:.3f}%)&quot;</span>.format(law,ssr,idiff*100))
+<span class="py-more">... </span>        p = pl.subplot(3,2,2*i+2)
+<span class="py-more">... </span>        idiff = (np.trapz(Imus,x=rs)-integ_r)/integ_r
+<span class="py-more">... </span>        p = pl.plot(rs,Imus,<span class="py-string">'-'</span>,lw=2,label=<span class="py-string">&quot;{} ({:.3f},{:.3}%)&quot;</span>.format(law,ssr,idiff*100))
+<span class="py-more">... </span>    p = pl.subplot(3,2,2*i+1)
+<span class="py-more">... </span>    leg = pl.legend(loc=<span class="py-string">'best'</span>,fancybox=True,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-more">... </span>    leg.get_frame().set_alpha(0.5)
+<span class="py-more">... </span>    p = pl.subplot(3,2,2*i+2)
+<span class="py-more">... </span>    leg = pl.legend(loc=<span class="py-string">'best'</span>,fancybox=True,prop=dict(size=<span class="py-string">'small'</span>))
+<span class="py-more">... </span>    leg.get_frame().set_alpha(0.5)
+<span class="py-output">claret       (equidist_mu_leastsq): [ 2.00943266 -3.71261279  4.25469623 -1.70466934]</span>
+<span class="py-output">linear       (equidist_mu_leastsq): [ 0.48655636]</span>
+<span class="py-output">divide by zero encountered in log</span>
+<span class="py-output">invalid value encountered in multiply</span>
+<span class="py-output">logarithmic  (equidist_mu_leastsq): [ 0.6  0. ]</span>
+<span class="py-output">quadratic    (equidist_mu_leastsq): [ 0.21209044  0.36591797]</span>
+<span class="py-output">power        (equidist_mu_leastsq): [ 0.29025864]</span>
+<span class="py-output">claret       (equidist_r_leastsq ): [ 1.99805089 -3.04504952  3.02780048 -1.09105603]</span>
+<span class="py-output">linear       (equidist_r_leastsq ): [ 0.42641628]</span>
+<span class="py-output">logarithmic  (equidist_r_leastsq ): [ 0.6  0. ]</span>
+<span class="py-output">quadratic    (equidist_r_leastsq ): [ 0.28650391  0.24476527]</span>
+<span class="py-output">power        (equidist_r_leastsq ): [ 0.31195553]</span>
+<span class="py-output">claret       (leastsq            ): [  3.49169665  -8.96767096  11.16873314  -4.72869922]</span>
+<span class="py-output">linear       (leastsq            ): [ 0.57180245]</span>
+<span class="py-output">logarithmic  (leastsq            ): [ 0.6  0. ]</span>
+<span class="py-output">quadratic    (leastsq            ): [ 0.00717934  0.65416204]</span>
+<span class="py-output">power        (leastsq            ): [ 0.27032565]</span></pre>
+<center><img src='../images/ivs_limbdark_fitcomp.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Author: Pieter Degroote, with thanks to Steven Bloemen.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Interface to the library</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#set_defaults" class="summary-sig-name">set_defaults</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Set defaults of this module</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#set_defaults">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_gridnames" class="summary-sig-name">get_gridnames</a>()</span><br />
+      Return a list of available grid names.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_gridnames">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_grid_dimensions" class="summary-sig-name">get_grid_dimensions</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the possible effective temperatures and gravities from a 
+      grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_grid_dimensions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(3x1Darray,3Darray,interp_func)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_grid_mesh" class="summary-sig-name">get_grid_mesh</a>(<span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Return InterpolatingFunction spanning the available grid of 
+      atmosphere models.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_grid_mesh">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_file" class="summary-sig-name">get_file</a>(<span class="summary-sig-arg">integrated</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the filename containing the specified SED grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_file">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array, array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_table" class="summary-sig-name">get_table</a>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">star</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">flux_units</span>=<span class="summary-sig-default">'erg/cm2/s/AA/sr'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve the specific intensity of a model atmosphere.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_table">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_itable2"></a><span class="summary-sig-name">get_itable2</span>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">theta</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mu</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">absolute</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      mu=1 is center of disk</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_itable2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_limbdarkening" class="summary-sig-name">get_limbdarkening</a>(<span class="summary-sig-arg">teff</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logg</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">z</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">normalised</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve a limb darkening law for a specific star and specific 
+      bandpass.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_limbdarkening">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_coeffs" class="summary-sig-name">get_coeffs</a>(<span class="summary-sig-arg">teff</span>,
+        <span class="summary-sig-arg">logg</span>,
+        <span class="summary-sig-arg">photband</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'claret'</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'equidist_r_leastsq'</span>)</span><br />
+      Retrieve limb darkening coefficients on the fly.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_coeffs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_ld_grid_dimensions"></a><span class="summary-sig-name">get_ld_grid_dimensions</span>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Returns the gridpoints of the limbdarkening grid (not unique values).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_ld_grid_dimensions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#intensity_moment" class="summary-sig-name">intensity_moment</a>(<span class="summary-sig-arg">coeffs</span>,
+        <span class="summary-sig-arg">ll</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Calculate the intensity moment (see Townsend 2003, eq.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#intensity_moment">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#_get_itable_markers" class="summary-sig-name" onclick="show_private();">_get_itable_markers</a>(<span class="summary-sig-arg">photband</span>,
+        <span class="summary-sig-arg">gridfile</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>)</span><br />
+      Get a list of markers to more easily retrieve integrated fluxes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_get_itable_markers">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Limbdarkening laws</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_eval"></a><span class="summary-sig-name">ld_eval</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Evaluate Claret's limb darkening law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_eval">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_claret"></a><span class="summary-sig-name">ld_claret</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Claret's limb darkening law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_claret">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_linear"></a><span class="summary-sig-name">ld_linear</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Linear or linear cosine law</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_linear">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_nonlinear"></a><span class="summary-sig-name">ld_nonlinear</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Nonlinear or logarithmic law</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_nonlinear">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_logarithmic"></a><span class="summary-sig-name">ld_logarithmic</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Nonlinear or logarithmic law</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_logarithmic">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_quadratic"></a><span class="summary-sig-name">ld_quadratic</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Quadratic law</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_quadratic">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_uniform"></a><span class="summary-sig-name">ld_uniform</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Uniform law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_uniform">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ld_power"></a><span class="summary-sig-name">ld_power</span>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">coeffs</span>)</span><br />
+      Power law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ld_power">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Fitting routines (thanks to Steven Bloemen)</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#fit_law" class="summary-sig-name">fit_law</a>(<span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">Imu</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'claret'</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'equidist_r_leastsq'</span>)</span><br />
+      Fit an LD law to a sampled set of limb angles/intensities.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#fit_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#fit_law_to_grid" class="summary-sig-name">fit_law_to_grid</a>(<span class="summary-sig-arg">photband</span>,
+        <span class="summary-sig-arg">vrads</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">ebvs</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">zs</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'claret'</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'equidist_r_leastsq'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Gets the grid and fits LD law to all the models.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#fit_law_to_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="generate_grid"></a><span class="summary-sig-name">generate_grid</span>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">vrads</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">ebvs</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">zs</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'claret'</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'equidist_r_leastsq'</span>,
+        <span class="summary-sig-arg">outfile</span>=<span class="summary-sig-default">'mygrid.fits'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#generate_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_r"></a><span class="summary-sig-name">_r</span>(<span class="summary-sig-arg">mu</span>)</span><br />
+      Convert mu to r coordinates</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_r">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_mu"></a><span class="summary-sig-name">_mu</span>(<span class="summary-sig-arg">r_</span>)</span><br />
+      Convert r to mu coordinates</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_mu">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ldres_fmin"></a><span class="summary-sig-name">ldres_fmin</span>(<span class="summary-sig-arg">coeffs</span>,
+        <span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">Imu</span>,
+        <span class="summary-sig-arg">law</span>)</span><br />
+      Residual function for Nelder-Mead optimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ldres_fmin">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="ldres_leastsq"></a><span class="summary-sig-name">ldres_leastsq</span>(<span class="summary-sig-arg">coeffs</span>,
+        <span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">Imu</span>,
+        <span class="summary-sig-arg">law</span>)</span><br />
+      Residual function for Levenberg-Marquardt optimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#ldres_leastsq">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#_I_ls" class="summary-sig-name" onclick="show_private();">_I_ls</a>(<span class="summary-sig-arg">ll</span>,
+        <span class="summary-sig-arg">ss</span>)</span><br />
+      Limb darkening moments (Dziembowski 1977, Townsend 2002)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_I_ls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.limbdark-module.html#get_ld_grid" class="summary-sig-name">get_ld_grid</a>(<span class="summary-sig-arg">photband</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve an interpolating grid for the LD coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_ld_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SED.LIMBDARK&quot;)">logging.getLogger(&quot;SED.LIMBDARK&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sed.limbdark-module.html#defaults" class="summary-name">defaults</a> = <code title="dict(grid= 'kurucz', odfnew= False, z=+ 0.0, vturb= 2, alpha= False, n\
+over= False)">dict(grid= 'kurucz', odfnew= False, z=+ 0.0, vturb=<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basedir"></a><span class="summary-name">basedir</span> = <code title="'ldtables'">'ldtables'</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="set_defaults"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">set_defaults</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#set_defaults">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set defaults of this module</p>
+  <p>If you give no keyword arguments, the default values will be 
+  reset.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_gridnames"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_gridnames</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_gridnames">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return a list of available grid names.</p>
+  <dl class="fields">
+    <dt>Returns: list of str</dt>
+        <dd>list of grid names</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_grid_dimensions"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_grid_dimensions</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_grid_dimensions">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the possible effective temperatures and gravities from a 
+  grid.</p>
+  <dl class="fields">
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>effective temperatures, gravities</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_grid_mesh"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_grid_mesh</span>(<span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_grid_mesh">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return InterpolatingFunction spanning the available grid of atmosphere
+  models.</p>
+  <p>WARNING: the grid must be entirely defined on a mesh grid, but it does
+  not need to be equidistant.</p>
+  <p>It is thus the user's responsibility to know whether the grid is 
+  evenly spaced in logg and teff (e.g. this is not so for the CMFGEN 
+  models).</p>
+  <p>You can supply your own wavelength range, since the grid models' 
+  resolution are not necessarily homogeneous. If not, the first wavelength 
+  array found in the grid will be used as a template.</p>
+  <p>It might take a long a time and cost a lot of memory if you load the 
+  entire grid. Therefor, you can also set range of temperature and 
+  gravity.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength to define the grid on</li>
+        <li><strong class="pname"><code>teffrange</code></strong> (tuple of floats) - starting and ending of the grid in teff</li>
+        <li><strong class="pname"><code>loggrange</code></strong> (tuple of floats) - starting and ending of the grid in logg</li>
+    </ul></dd>
+    <dt>Returns: (3x1Darray,3Darray,interp_func)</dt>
+        <dd>wavelengths, teffs, loggs and fluxes of grid, and the 
+          interpolating function</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_file"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_file</span>(<span class="sig-arg">integrated</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_file">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the filename containing the specified SED grid.</p>
+  <p>The keyword arguments are specific to the kind of grid you're 
+  using.</p>
+  <p>Basic keywords are 'grid' for the name of the grid, and 'z' for 
+  metallicity. For other keywords, see the source code.</p>
+  <p>Available grids and example keywords:</p>
+  <ul>
+    <li>
+      grid='kurucz93': * metallicity (z): m01 is -0.1 log metal abundance 
+      relative to solar (solar abundances from Anders and Grevesse 1989) * 
+      metallicity (z): p01 is +0.1 log metal abundance relative to solar 
+      (solar abundances from Anders and Grevesse 1989) * alpha enhancement 
+      (alpha): True means alpha enhanced (+0.4) * turbulent velocity 
+      (vturb): vturb in km/s * nover= True means no overshoot * odfnew=True
+      means no overshoot but with better opacities and abundances
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>integrated</code></strong> (boolean) - choose integrated version of the grid</li>
+        <li><strong class="pname"><code>grid</code></strong> (str) - gridname (default Kurucz)</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>gridfile</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_table"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_table</span>(<span class="sig-arg">teff</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">logg</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">star</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">flux_units</span>=<span class="sig-default">'erg/cm2/s/AA/sr'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_table">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve the specific intensity of a model atmosphere.</p>
+  <p>ebv is reddening vrad is radial velocity: positive is redshift, 
+  negative is blueshift (km/s!)</p>
+  <p>extra kwargs are for reddening</p>
+  <p>You get limb angles, wavelength and a table. The shape of the table is
+  (N_wave,N_mu).</p>
+  <p>WARNING: wave and flux units cannot be specificed for the moment.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,wave,table = get_table(10000,4.0)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>ax1 = pl.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'E(B-V)=0, vrad=0'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.gca()
+<span class="py-prompt">&gt;&gt;&gt; </span>ax.set_color_cycle([pl.cm.spectral(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.linspace(0,1,len(mu))])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,table)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(700,15000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(1e3,1e8)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,wave,table = get_table(10000,4.0,ebv=0.5)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222,sharex=ax1,sharey=ax1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'E(B-V)=0.5, vrad=0'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.gca()
+<span class="py-prompt">&gt;&gt;&gt; </span>ax.set_color_cycle([pl.cm.spectral(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.linspace(0,1,len(mu))])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,table)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(700,15000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(1e3,1e8)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,wave,table = get_table(10000,4.0,vrad=-1000.)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(223,sharex=ax1,sharey=ax1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'E(B-V)=0., vrad=-10000.'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.gca()
+<span class="py-prompt">&gt;&gt;&gt; </span>ax.set_color_cycle([pl.cm.spectral(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.linspace(0,1,len(mu))])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,table)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(700,15000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(1e3,1e8)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,wave,table = get_table(10000,4.0,vrad=-1000.,ebv=0.5)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(224,sharex=ax1,sharey=ax1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'E(B-V)=0.5, vrad=-10000.'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>ax = pl.gca()
+<span class="py-prompt">&gt;&gt;&gt; </span>ax.set_color_cycle([pl.cm.spectral(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.linspace(0,1,len(mu))])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,table)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(700,15000)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(1e3,1e8)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,wave,table = get_table(10050,4.12)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>pl.gca().set_color_cycle([pl.cm.spectral(i) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> np.linspace(0,1,len(mu))])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.loglog(wave,table)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effective temperature (K)</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - log surface gravity (cgs, dex)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening (mag)</li>
+        <li><strong class="pname"><code>vrad</code></strong> (float) - radial velocity (for doppler shifting) (km/s)</li>
+    </ul></dd>
+    <dt>Returns: array, array, array</dt>
+        <dd>mu angles, wavelengths, table (Nwave x Nmu)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_limbdarkening"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_limbdarkening</span>(<span class="sig-arg">teff</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">logg</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">z</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">normalised</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_limbdarkening">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve a limb darkening law for a specific star and specific 
+  bandpass.</p>
+  <p>Possibility to include reddening via EB-V parameter. If not given, 
+  reddening will not be performed...</p>
+  <p>You choose your own reddening function.</p>
+  <p>See e.g. Heyrovsky et al., 2007</p>
+  <p>If you specify one angle (mu in radians), it will take the closest 
+  match from the grid.</p>
+  <p>Mu = cos(theta) where theta is the angle between the surface and the 
+  line of sight. mu=1 means theta=0 means center of the star.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teff,logg = 5000,4.5
+<span class="py-prompt">&gt;&gt;&gt; </span>mu,intensities = get_limbdarkening(teff=teff,logg=logg,photbands=[<span class="py-string">'JOHNSON.V'</span>])</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>system</code></strong> (string) - bandpass system</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of strings) - bandpass filters</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening coefficient</li>
+        <li><strong class="pname"><code>vrad</code></strong> (float) - radial velocity (+ is redshift, - is blueshift)</li>
+        <li><strong class="pname"><code>mu</code></strong> (float) - specificy specific angle</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_coeffs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_coeffs</span>(<span class="sig-arg">teff</span>,
+        <span class="sig-arg">logg</span>,
+        <span class="sig-arg">photband</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">law</span>=<span class="sig-default">'claret'</span>,
+        <span class="sig-arg">fitmethod</span>=<span class="sig-default">'equidist_r_leastsq'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_coeffs">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve limb darkening coefficients on the fly.</p>
+  <p>This is particularly useful if you only need a few and speed is not 
+  really a problem (although this function is nearly instantaneous, looping
+  over it will expose that it's actually pretty slow).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effective temperature</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - logarithmic gravity (cgs)</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of strings) - bandpass filters</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening coefficient</li>
+        <li><strong class="pname"><code>vrad</code></strong> (float) - radial velocity (+ is redshift, - is blueshift)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="intensity_moment"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">intensity_moment</span>(<span class="sig-arg">coeffs</span>,
+        <span class="sig-arg">ll</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#intensity_moment">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the intensity moment (see Townsend 2003, eq. 39).</p>
+  <p>Test analytical versus numerical implementation:</p>
+  <p>#&gt;&gt;&gt; photband = 'JOHNSON.V' #&gt;&gt;&gt; l,logg = 2.,4.0 
+  #&gt;&gt;&gt; gridfile = 'tables/ikurucz93_z0.0_k2_ld.fits' #&gt;&gt;&gt;
+  mu = np.linspace(0,1,100000) #&gt;&gt;&gt; P_l = legendre(l)(mu) 
+  #&gt;&gt;&gt; check = [] #&gt;&gt;&gt; for teff in 
+  np.linspace(9000,12000,19): #...    a1x,a2x,a3x,a4x,I_x1 = 
+  get_itable(gridfile,teff=teff,logg=logg,mu=1,photband=photband,evaluate=False)
+  #...    coeffs = [a1x,a2x,a3x,a4x,I_x1] #...    Ix_mu = 
+  ld_claret(mu,coeffs) #...    Ilx1 = I_x1*np.trapz(P_l*mu*Ix_mu,x=mu) #...
+  a0x = 1 - a1x - a2x - a3x - a4x #...    limb_coeffs = 
+  [a0x,a1x,a2x,a3x,a4x] #...    Ilx2 = 0 #...    for r,ar in 
+  enumerate(limb_coeffs): #...        s = 1 + r/2. #...        myIls = 
+  _I_ls(l,s) #...        Ilx2 += ar*myIls #...    Ilx2 = I_x1*Ilx2 #...    
+  Ilx3 = intensity_moment(teff,logg,photband,coeffs) #...    
+  check.append(abs(Ilx1-Ilx2)&lt;0.1) #...    
+  check.append(abs(Ilx1-Ilx3)&lt;0.1) #&gt;&gt;&gt; np.all(np.array(check))
+  #True</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>teff</code></strong> (float) - effecitve temperature (K)</li>
+        <li><strong class="pname"><code>logg</code></strong> (float) - log of surface gravity (cgs)</li>
+        <li><strong class="pname"><code>ll</code></strong> (float) - degree of the mode</li>
+        <li><strong class="pname"><code>photband</code></strong> (list of strings ( or iterable container)) - photometric passbands</li>
+        <li><strong class="pname"><code>full_output</code></strong> (boolean) - if True, returns intensity, coefficients and integrals separately</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>intensity moment</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fit_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fit_law</span>(<span class="sig-arg">mu</span>,
+        <span class="sig-arg">Imu</span>,
+        <span class="sig-arg">law</span>=<span class="sig-default">'claret'</span>,
+        <span class="sig-arg">fitmethod</span>=<span class="sig-default">'equidist_r_leastsq'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#fit_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Fit an LD law to a sampled set of limb angles/intensities.
+
+In my (Pieter) experience, C{fitmethod='equidist_r_leastsq' seems
+appropriate for the Kurucz models.
+
+Make sure the intensities are normalised!
+
+&gt;&gt;&gt; mu,intensities = get_limbdarkening(teff=10000,logg=4.0,photbands=['JOHNSON.V'],normalised=True)
+&gt;&gt;&gt; p = pl.figure()
+&gt;&gt;&gt; p = pl.plot(mu,intensities[:,0],'ko-')
+&gt;&gt;&gt; cl,ssr,rdiff = fit_law(mu,intensities[:,0],law='claret')
+
+&gt;&gt;&gt; mus = np.linspace(0,1,1000)
+&gt;&gt;&gt; Imus = ld_claret(mus,cl)
+&gt;&gt;&gt; p = pl.plot(mus,Imus,'r-',lw=2)
+
+
+
+@return: coefficients, sum of squared residuals,relative flux difference between prediction and model integrated intensity
+@rtype: array, float, float
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="fit_law_to_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fit_law_to_grid</span>(<span class="sig-arg">photband</span>,
+        <span class="sig-arg">vrads</span>=<span class="sig-default">[0]</span>,
+        <span class="sig-arg">ebvs</span>=<span class="sig-default">[0]</span>,
+        <span class="sig-arg">zs</span>=<span class="sig-default">[0]</span>,
+        <span class="sig-arg">law</span>=<span class="sig-default">'claret'</span>,
+        <span class="sig-arg">fitmethod</span>=<span class="sig-default">'equidist_r_leastsq'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#fit_law_to_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Gets the grid and fits LD law to all the models.</p>
+  <p>Does not use mu=0 point in the fitting process.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_I_ls"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_I_ls</span>(<span class="sig-arg">ll</span>,
+        <span class="sig-arg">ss</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_I_ls">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Limb darkening moments (Dziembowski 1977, Townsend 2002)</p>
+  <p>Recursive implementation.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>_I_ls(0,0.5)
+<span class="py-output">0.6666666666666666</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>_I_ls(1,0.5)
+<span class="py-output">0.4</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>_I_ls(2,0.5)
+<span class="py-output">0.09523809523809523</span></pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_ld_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_ld_grid</span>(<span class="sig-arg">photband</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#get_ld_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve an interpolating grid for the LD coefficients</p>
+  <p>Check outcome:</p>
+  <p>#&gt;&gt;&gt; bands = ['GENEVA.U', 'GENEVA.B', 'GENEVA.G', 'GENEVA.V']
+  #&gt;&gt;&gt; f_ld_grid = get_ld_grid(bands) #&gt;&gt;&gt; ff = 
+  pyfits.open(_atmos['file']) #&gt;&gt;&gt; 
+  all(ff['GENEVA.U'].data[257][2:]==f_ld_grid(ff['GENEVA.U'].data[257][0],ff['GENEVA.U'].data[257][1])[0:5])
+  #True #&gt;&gt;&gt; 
+  all(ff['GENEVA.G'].data[257][2:]==f_ld_grid(ff['GENEVA.G'].data[257][0],ff['GENEVA.G'].data[257][1])[10:15])
+  #True #&gt;&gt;&gt; ff.close()</p>
+  <p>#Make some plots:</p>
+  <p>#&gt;&gt;&gt; photband = ['GENEVA.V'] #&gt;&gt;&gt; f_ld = 
+  get_ld_grid(photband) #&gt;&gt;&gt; logg = 4.0 #&gt;&gt;&gt; mu = 
+  linspace(0,1,100) #&gt;&gt;&gt; p = figure() #&gt;&gt;&gt; p = 
+  gcf().canvas.set_window_title('test of function &lt;get_ld_grid&gt;') 
+  #&gt;&gt;&gt; for teff in linspace(9000,12000,19): #...    out = 
+  f_ld(teff,logg) #...    a1x,a2x,a3x,a4x, I_x1 = 
+  out.reshape((len(photband),5)).T #...    p = subplot(221);p = 
+  title('Interpolation of absolute intensities') #...    p = 
+  plot(teff,I_x1,'ko') #...    p = subplot(222);p = title('Interpolation of
+  LD coefficients') #...    p = 
+  scatter(4*[teff],[a1x,a2x,a3x,a4x],c=range(4),vmin=0,vmax=3,cmap=cm.spectral,edgecolors='none')
+  #...    p = subplot(223);p = title('Without absolute intensity') #...    
+  p = plot(mu,ld_eval(mu,[a1x,a2x,a3x,a4x]),'-') #...    p = subplot(224);p
+  = title('With absolute intensity') #...    p = 
+  plot(mu,I_x1*ld_eval(mu,[a1x,a2x,a3x,a4x]),'-')</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_itable_markers"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_itable_markers</span>(<span class="sig-arg">photband</span>,
+        <span class="sig-arg">gridfile</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.limbdark-pysrc.html#_get_itable_markers">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get a list of markers to more easily retrieve integrated fluxes.</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="defaults"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">defaults</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+dict(grid= 'kurucz', odfnew= False, z=+ 0.0, vturb= 2, alpha= False, n<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+over= False)
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

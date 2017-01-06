@@ -1,0 +1,1025 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.units.conversions.Unit</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.units-module.html">Package&nbsp;units</a> ::
+        <a href="ivs.units.conversions-module.html">Module&nbsp;conversions</a> ::
+        Class&nbsp;Unit
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.units.conversions.Unit-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Unit</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>Class to calculate with numbers (and uncertainties) containing 
+  units.</p>
+  <p>You can put Units in an array and calculate with them. It is then 
+  allowed to mix Units with and without uncertainties. It is also allowed 
+  to mix Units with different units in one array, though some operations 
+  (e.g. sum) will not be possible.</p>
+  <p>Initalisation is done via (see <a 
+  href="ivs.units.conversions.Unit-class.html#__init__" 
+  class="link">__init__</a> for more options):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>a = Unit(2.,<span class="py-string">'m'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>b = Unit(4.,<span class="py-string">'km'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>c = Unit(3.,<span class="py-string">'cm2'</span>)</pre>
+  <p>And you can calculate via:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> a*b
+<span class="py-output">8000.0 m2</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> a/c
+<span class="py-output">6666.66666667 m-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> a+b
+<span class="py-output">4002.0 m</span></pre>
+  <p><b>Example 1:</b> You want to calculate the equatorial velocity of the
+  Sun:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>distance = Unit(2*np.pi,<span class="py-string">'Rsol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>time = Unit(22.,<span class="py-string">'d'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> (distance/time)
+<span class="py-output">2299.03495719 m1 s-1</span></pre>
+  <p>or directly to km/s:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> (distance/time).convert(<span class="py-string">'km/s'</span>)
+<span class="py-output">2.29903495719 km/s</span></pre>
+  <p>and with uncertainties:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>distance = Unit((2*np.pi,0.1),<span class="py-string">'Rsol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> (distance/time).convert(<span class="py-string">'km/s'</span>)
+<span class="py-output">2.29903495719+/-0.0365902777778 km/s</span></pre>
+  <p><b>Example 2</b>: The surface gravity of the Sun:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>G = Unit(<span class="py-string">'GG'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>M = Unit(<span class="py-string">'Msol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>R = Unit(<span class="py-string">'Rsol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>logg = np.log10((G*M/R**2).convert(<span class="py-string">'cgs'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> logg
+<span class="py-output">4.43830739117</span></pre>
+  <p>or</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>G = Unit(<span class="py-string">'GG'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>M = Unit(1.,<span class="py-string">'Msol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>R = Unit(1.,<span class="py-string">'Rsol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>logg = np.log10((G*M/R**2).convert(<span class="py-string">'cgs'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> logg
+<span class="py-output">4.43830739117</span></pre>
+  <p>or</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>old = set_convention(<span class="py-string">'cgs'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>G = Unit(<span class="py-string">'GG'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>M = Unit((1.,0.01),<span class="py-string">'Msol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>R = Unit((1.,0.01),<span class="py-string">'Rsol'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>logg = np.log10(G*M/R**2)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> logg
+<span class="py-output">4.43830739117+/-0.00971111983789</span></pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>old = set_convention(<span class="py-string">'SI'</span>)</pre>
+  <p><b>Example 3</b>: The speed of light in vacuum:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>eps0 = Unit(<span class="py-string">'eps0'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>mu0 = Unit(<span class="py-string">'mu0'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>cc = Unit(<span class="py-string">'cc'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>cc_ = 1./np.sqrt(eps0*mu0)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> eps0
+<span class="py-output">8.85418781762e-12 F m-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> mu0
+<span class="py-output">1.2566370614e-06 T m A-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> cc
+<span class="py-output">299792458.0 m s-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> cc_
+<span class="py-output">299792458.004 m1 s-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> cc_/cc
+<span class="py-output">1.00000000001</span></pre>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">a new object with type S, a subtype of T</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__new__" class="summary-sig-name">__new__</a>(<span class="summary-sig-arg">cls</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Create a new Unit instance.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__new__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">value</span>,
+        <span class="summary-sig-arg">unit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Different ways to initialize a Unit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#convert" class="summary-sig-name">convert</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">unit</span>,
+        <span class="summary-sig-arg">compress</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Convert this Unit to different units.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.convert">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="compress"></a><span class="summary-sig-name">compress</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Compress current unit to a more readable version.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.compress">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="as_tuple"></a><span class="summary-sig-name">as_tuple</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.as_tuple">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_value"></a><span class="summary-sig-name">get_value</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns (value,error) in case of uncertainties.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.get_value">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__getitem__"></a><span class="summary-sig-name">__getitem__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">key</span>)</span><br />
+      Implements indexing, [0] returns value, [1] return unit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__getitem__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__lt__"></a><span class="summary-sig-name">__lt__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Compare SI-values of Units with eacht other.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__lt__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__radd__"></a><span class="summary-sig-name">__radd__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__radd__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__add__" class="summary-sig-name">__add__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Add a Unit to a Unit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__add__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__sub__"></a><span class="summary-sig-name">__sub__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Subtract a Unit from a Unit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__sub__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__rsub__"></a><span class="summary-sig-name">__rsub__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Subtract a Unit from a Unit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__rsub__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__mul__" class="summary-sig-name">__mul__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Multiply a Unit with something.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__mul__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__rmul__"></a><span class="summary-sig-name">__rmul__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__rmul__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__div__" class="summary-sig-name">__div__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span><br />
+      Divide two units.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__div__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__rdiv__"></a><span class="summary-sig-name">__rdiv__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">other</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__rdiv__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__pow__" class="summary-sig-name">__pow__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">power</span>)</span><br />
+      Raise a unit to a power:</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__pow__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="sin"></a><span class="summary-sig-name">sin</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.sin">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="cos"></a><span class="summary-sig-name">cos</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.cos">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="tan"></a><span class="summary-sig-name">tan</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.tan">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="arcsin"></a><span class="summary-sig-name">arcsin</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.arcsin">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="arccos"></a><span class="summary-sig-name">arccos</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.arccos">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="arctan"></a><span class="summary-sig-name">arctan</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.arctan">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="log10"></a><span class="summary-sig-name">log10</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.log10">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="log"></a><span class="summary-sig-name">log</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.log">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="exp"></a><span class="summary-sig-name">exp</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.exp">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="sqrt"></a><span class="summary-sig-name">sqrt</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.sqrt">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      str(x)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.units.conversions.Unit-class.html#__repr__" class="summary-sig-name">__repr__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      repr(x)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__repr__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__new__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__new__</span>(<span class="sig-arg">cls</span>,
+        <span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__new__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Create a new Unit instance.</p>
+  <p>Overriding the default __new__ method makes sure that it is possible 
+  to initialize a Unit with an existing Unit instance. In that case, the 
+  original instance will simply be returned, and the __init__ functions is 
+  smart enough that it will not re-initialize the class instance.</p>
+  <dl class="fields">
+    <dt>Returns: a new object with type S, a subtype of T</dt>
+    <dt>Overrides:
+        object.__new__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">value</span>,
+        <span class="sig-arg">unit</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Different ways to initialize a Unit.</p>
+  <p>Without uncertainties:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x1 = Unit(5.,<span class="py-string">'m'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>x4 = Unit((5.,<span class="py-string">'m'</span>))
+<span class="py-prompt">&gt;&gt;&gt; </span>x5 = Unit(5.,<span class="py-string">'length'</span>)</pre>
+  <p>The latter only works with the basic names ('length', 'time', 
+  'temperature', etc..., and assures that the value is interpreted 
+  correctly in the current convention (SI,cgs...)</p>
+  <p>With uncertainties:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x2 = Unit((5.,1.),<span class="py-string">'m'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>x3 = Unit((5.,1.,<span class="py-string">'m'</span>))</pre>
+  <p>Initiating with an existing instance will not do anything (not even 
+  making a copy! Only a new reference to the original object is made):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x6 = Unit(x3)</pre>
+  <p>This is the output from printing the examples above:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x1
+<span class="py-output">5.0 m</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x2
+<span class="py-output">5.0+/-1.0 m</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x3
+<span class="py-output">5.0+/-1.0 m</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x4
+<span class="py-output">5.0 m</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x5
+<span class="py-output">5.0 m</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> x6
+<span class="py-output">5.0+/-1.0 m</span></pre>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="convert"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">convert</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">unit</span>,
+        <span class="sig-arg">compress</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.convert">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert this Unit to different units.</p>
+  <p>By default, the converted unit will be compressed (i.e. it will 
+  probably not consist of only basic units, but be more readable).</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__add__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__add__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">other</span>)</span>
+    <br /><em class="fname">(Addition operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__add__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Add a Unit to a Unit.</p>
+  <p>You can add a non-Unit to a Unit only if the Unit has an empty unit 
+  string.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__mul__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__mul__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">other</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__mul__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Multiply a Unit with something.</p>
+  <p>If `something' is a Unit, simply join the two Unit strings and call <a
+  href="ivs.units.conversions-module.html#breakdown" 
+  class="link">breakdown</a> to collect.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__div__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__div__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">other</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__div__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Divide two units.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = Unit(5.,<span class="py-string">'m15'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = Unit(2.5,<span class="py-string">'m6.5'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(x/y)
+<span class="py-output">2.0 m8.5</span></pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__pow__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__pow__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">power</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__pow__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Raise a unit to a power:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = Unit(5.,<span class="py-string">'m'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(x**0.5)
+<span class="py-output">2.2360679775 m0.5</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(x**-1)
+<span class="py-output">0.2 m-1</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(x**3)
+<span class="py-output">125.0 m3</span></pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = Unit(9.,<span class="py-string">'m11'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(x**0.5)
+<span class="py-output">3.0 m5.5</span></pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>str(x)</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__str__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__repr__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__repr__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.units.conversions-pysrc.html#Unit.__repr__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>repr(x)</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__repr__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

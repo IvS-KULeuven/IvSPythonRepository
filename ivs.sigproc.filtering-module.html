@@ -1,0 +1,874 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.filtering</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        Module&nbsp;filtering
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.filtering-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module filtering</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html">source&nbsp;code</a></span></p>
+<p>Filter non-equidistant signals (spectra, timeseries...).</p>
+  <p>Currently implemented:</p>
+  <ul>
+    <li>
+      Gaussian
+    </li>
+    <li>
+      Sinc
+    </li>
+    <li>
+      Box
+    </li>
+    <li>
+      Iterative Nonlinear filter
+    </li>
+  </ul>
+  <p>Example usage:</p>
+  <p>Generate some data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,150,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>x_= np.linspace(0,150,100)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = np.sin(2*pi/20.*x)+np.random.normal(size=len(x))</pre>
+  <p>Apply some filter:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,pnts = filter_signal(x,y,<span class="py-string">&quot;gauss&quot;</span>,sigma=1)
+<span class="py-prompt">&gt;&gt;&gt; </span>x2,y2,pnts = filter_signal(x,y,<span class="py-string">&quot;pijpers&quot;</span>,delta=1)
+<span class="py-prompt">&gt;&gt;&gt; </span>x3,y3,pnts = filter_signal(x,y,<span class="py-string">&quot;box&quot;</span>,window_width=10)
+<span class="py-prompt">&gt;&gt;&gt; </span>x3_,y3_,pnts = filter_signal(x,y,<span class="py-string">&quot;box&quot;</span>,window_width=10,x_template=x_,threads=2)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x1,y1,<span class="py-string">'ro'</span>,mec=<span class="py-string">'r'</span>,label=<span class="py-string">'Gauss'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x2,y2,<span class="py-string">'bo'</span>,mec=<span class="py-string">'b'</span>,label=<span class="py-string">'Pijpers'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x3,y3,<span class="py-string">'go'</span>,mec=<span class="py-string">'g'</span>,label=<span class="py-string">'Box'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x3_,y3_,<span class="py-string">'gs'</span>,label=<span class="py-string">'Box with template'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend()</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="test"></a><span class="summary-sig-name">test</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#test">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Main filter program for convolution-based filters</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">tuple</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#filter_signal" class="summary-sig-name">filter_signal</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">ftype</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">step</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">x_template</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Filter a signal.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#filter_signal">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8"  class="private">
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Basic functions for convolution-based filters</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#_fixed_window" class="summary-sig-name" onclick="show_private();">_fixed_window</a>(<span class="summary-sig-arg">window_width</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Define general window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#_fixed_window">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convolution-based filter kernels and Windows</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#gauss_window" class="summary-sig-name">gauss_window</a>(<span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">limit</span>=<span class="summary-sig-default">4.</span>)</span><br />
+      Define Gaussian_window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#gauss_window">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#gauss_kernel" class="summary-sig-name">gauss_kernel</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">(0,-1)</span>,
+        <span class="summary-sig-arg">norm_weights</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Define Gaussian kernel.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#gauss_kernel">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#mad" class="summary-sig-name">mad</a>(<span class="summary-sig-arg">a</span>,
+        <span class="summary-sig-arg">c</span>=<span class="summary-sig-default">0.6745</span>)</span><br />
+      Median Absolute Deviation of a 1D array:</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#mad">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#inl_window" class="summary-sig-name">inl_window</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Defines the INL window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#inl_window">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#inl_kernel" class="summary-sig-name">inl_kernel</a>(<span class="summary-sig-arg">times_in</span>,
+        <span class="summary-sig-arg">signal_in</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">c</span>=<span class="summary-sig-default">0.6745</span>,
+        <span class="summary-sig-arg">sig_level</span>=<span class="summary-sig-default">3.</span>,
+        <span class="summary-sig-arg">tolerance</span>=<span class="summary-sig-default">0.01</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">(0,-1)</span>,
+        <span class="summary-sig-arg">window_width</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Iterative Nonlinear Filter (Aigrain).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#inl_kernel">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#pijpers_window" class="summary-sig-name">pijpers_window</a>(<span class="summary-sig-arg">delta</span>=<span class="summary-sig-default">1.</span>)</span><br />
+      Defines the window for the Pijpers filter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#pijpers_window">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#pijpers_kernel" class="summary-sig-name">pijpers_kernel</a>(<span class="summary-sig-arg">times_in</span>,
+        <span class="summary-sig-arg">signal_in</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">limit</span>=<span class="summary-sig-default">0.000001</span>,
+        <span class="summary-sig-arg">delta</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">gamma</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">r</span>=<span class="summary-sig-default">0.0001</span>,
+        <span class="summary-sig-arg">index0</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">indexn</span>=<span class="summary-sig-default">-1</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">(0,-1)</span>,
+        <span class="summary-sig-arg">norm_weights</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Defines the Pijpers (2006) filter kernel.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#pijpers_kernel">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(float,float)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#box_window" class="summary-sig-name">box_window</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Defines the window for the box-filter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#box_window">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.filtering-module.html#box_kernel" class="summary-sig-name">box_kernel</a>(<span class="summary-sig-arg">times_in</span>,
+        <span class="summary-sig-arg">signal_in</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">window_width</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">(0,-1)</span>,
+        <span class="summary-sig-arg">norm_weights</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Defines the Box filter kernel (moving average).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#box_kernel">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;TS.FILTERING&quot;)">logging.getLogger(&quot;TS.FILTERING&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="filter_signal"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">filter_signal</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">ftype</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">step</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">x_template</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#filter_signal">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Filter a signal.</p>
+  <p>Handles equidistant and non-equidistant data. <code>x</code> 
+  coordinate array must be monotonically increasing, but does not need to 
+  be strict monotonically increasing (e.g. their can be duplicate 
+  <code>x</code> coordinates).</p>
+  <p>It is possible to define a new template <code>x</code> coordinate 
+  array on which to filter to signal <code>y</code>.</p>
+  <p>For some filters, it is possible to set an adjustable window: that is,
+  you can give an array to the <code>window</code> parameter, but it needs 
+  to be the same length as <code>x_template</code>.</p>
+  <p>Example usage:</p>
+  <p>Generate some data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> time
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,150,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = np.sin(2*np.pi/20.*x)+np.random.normal(size=len(x))</pre>
+  <p>Apply some filter:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>c0 = time.time()
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,pnts = filter_signal(x,y,<span class="py-string">&quot;gauss&quot;</span>,sigma=1)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> time.time()-c0
+<span class="py-prompt">&gt;&gt;&gt; </span>c0 = time.time()
+<span class="py-prompt">&gt;&gt;&gt; </span>x1,y1,pnts = filter_signal(x,y,<span class="py-string">&quot;gauss&quot;</span>,sigma=1,threads=2)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> time.time()-c0</pre>
+  <p>Output parameter <code>pnts</code> shows you how many points of the 
+  original signal were used to compute the given point. E.g. for a box 
+  filter, it will give the number of points over which was averaged.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>ftype</code></strong> (string) - one of 'gauss','pijpers','box','inl'</li>
+    </ul></dd>
+    <dt>Returns: tuple</dt>
+        <dd>output from the used filter: typically (x, y, pnts)</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@defaults_filtering</code></li>
+        <li><code>@parallel_pergram</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_fixed_window"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_fixed_window</span>(<span class="sig-arg">window_width</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#_fixed_window">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Define general window</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>window limits</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss_window"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss_window</span>(<span class="sig-arg">sigma</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">limit</span>=<span class="sig-default">4.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#gauss_window">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Define Gaussian_window</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>window limits</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss_kernel</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">t</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">(0,-1)</span>,
+        <span class="sig-arg">norm_weights</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#gauss_kernel">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Define Gaussian kernel.
+
+#Import necessary modules:
+    #&gt;&gt;&gt; from pylab import plot,figure,title,subplot
+    #&gt;&gt;&gt; from sigproc.timeseries import tfreq
+
+#Generate some data:
+    #&gt;&gt;&gt; x = linspace(0,150,10000)
+    #&gt;&gt;&gt; y = random.normal(size=len(x))
+
+#Apply Gaussian filter twice, subtract and calculate periodogram:
+    #&gt;&gt;&gt; y1,pnts = filter_signal(x,y,&quot;gauss&quot;,sigma=1)
+    #&gt;&gt;&gt; y2,pnts = filter_signal(x,y,&quot;gauss&quot;,sigma=3)
+
+#Plot the results:
+    #&gt;&gt;&gt; p=figure(figsize=(8,18))
+    #&gt;&gt;&gt; p=subplot(311);p=title(&quot;GAUSSIAN FILTER&quot;)
+    #&gt;&gt;&gt; p=plot(x,y,'ko')
+    #&gt;&gt;&gt; p=plot(x,y1,'r-',linewidth=2)
+    #&gt;&gt;&gt; p=plot(x,y2,'b-',linewidth=2)
+    #&gt;&gt;&gt; p=subplot(312)
+    #&gt;&gt;&gt; p=plot(x,y1-y2,'ko')
+    #&gt;&gt;&gt; p=subplot(313)
+    #&gt;&gt;&gt; p=plot(per1[0],per1[1],'k-')
+    #&gt;&gt;&gt; p=plot(per2[0],per2[1],'r-')
+
+@rtype: (ndarray,)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="mad"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">mad</span>(<span class="sig-arg">a</span>,
+        <span class="sig-arg">c</span>=<span class="sig-default">0.6745</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#mad">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Median Absolute Deviation of a 1D array:</p>
+  <p>median(abs(a - median(a))) / c</p>
+  <dl class="fields">
+    <dt>Returns: float</dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="inl_window"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">inl_window</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#inl_window">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Defines the INL window</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>window limits</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="inl_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">inl_kernel</span>(<span class="sig-arg">times_in</span>,
+        <span class="sig-arg">signal_in</span>,
+        <span class="sig-arg">t</span>,
+        <span class="sig-arg">c</span>=<span class="sig-default">0.6745</span>,
+        <span class="sig-arg">sig_level</span>=<span class="sig-default">3.</span>,
+        <span class="sig-arg">tolerance</span>=<span class="sig-default">0.01</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">(0,-1)</span>,
+        <span class="sig-arg">window_width</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#inl_kernel">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Iterative Nonlinear Filter (Aigrain).
+
+Example usage:
+
+#Import necessary modules:
+    #&gt;&gt;&gt; from pylab import plot,figure,title,subplot
+    #&gt;&gt;&gt; from sigproc.timeseries import tfreq
+
+#Generate some data:
+    #&gt;&gt;&gt; x = linspace(0,150,10000)
+    #&gt;&gt;&gt; y = sin(2*pi*x/20.*x)+random.normal(size=len(x))
+
+#Apply INL filter twice, subtract and calculate periodogram:
+    #&gt;&gt;&gt; y1,pnts1,mads = filter_signal(x,y,&quot;inl&quot;,window_width=1)
+    #&gt;&gt;&gt; y2,pnts2,mads = filter_signal(x,y,&quot;inl&quot;,window_width=10)
+    #&gt;&gt;&gt; freq1,per1,stat1 = tfreq.scargle(x,y,norm='amplitude',fn=4)
+    #&gt;&gt;&gt; freq2,per2,stat2 = tfreq.scargle(x,y1-y2,norm='amplitude',fn=4)
+
+#Plot the results:
+    #&gt;&gt;&gt; p=figure(figsize=(8,18))
+    #&gt;&gt;&gt; p=subplot(311);p=title(&quot;INL FILTER&quot;)
+    #&gt;&gt;&gt; p=plot(x,y,'ko')
+    #&gt;&gt;&gt; p=plot(x,y1,'r-',linewidth=2)
+    #&gt;&gt;&gt; p=plot(x,y2,'b-',linewidth=2)
+    #&gt;&gt;&gt; p=subplot(312)
+    #&gt;&gt;&gt; p=plot(x,y1-y2,'ko')
+    #&gt;&gt;&gt; p=subplot(313)
+    #&gt;&gt;&gt; p=plot(per1[0],per1[1],'k-')
+    #&gt;&gt;&gt; p=plot(per2[0],per2[1],'r-')
+
+@rtype: (ndarray,ndarray)
+@return: continuum,sigma
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="pijpers_window"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pijpers_window</span>(<span class="sig-arg">delta</span>=<span class="sig-default">1.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#pijpers_window">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Defines the window for the Pijpers filter.</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>window limits</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="pijpers_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">pijpers_kernel</span>(<span class="sig-arg">times_in</span>,
+        <span class="sig-arg">signal_in</span>,
+        <span class="sig-arg">t</span>,
+        <span class="sig-arg">limit</span>=<span class="sig-default">0.000001</span>,
+        <span class="sig-arg">delta</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">gamma</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">r</span>=<span class="sig-default">0.0001</span>,
+        <span class="sig-arg">index0</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">indexn</span>=<span class="sig-default">-1</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">(0,-1)</span>,
+        <span class="sig-arg">norm_weights</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#pijpers_kernel">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Defines the Pijpers (2006) filter kernel.
+
+Equals box-multiplying in the frequency domain.
+
+Example usage:
+
+#Import necessary modules:
+    #&gt;&gt;&gt; from pylab import plot,figure,title,subplot
+    #&gt;&gt;&gt; from sigproc.timeseries import tfreq
+
+#Generate some data:
+    #&gt;&gt;&gt; x = linspace(0,150,10000)
+    #&gt;&gt;&gt; y = random.normal(size=len(x))
+
+#Apply Gaussian filter twice, subtract and calculate periodogram:
+    #&gt;&gt;&gt; y1,pnts1 = filter_signal(x,y,&quot;pijpers&quot;,delta=1)
+    #&gt;&gt;&gt; y2,pnts2 = filter_signal(x,y,&quot;pijpers&quot;,delta=3)
+    #&gt;&gt;&gt; freq1,per1,stat1 = tfreq.scargle(x,y,norm='amplitude',fn=4)
+    #&gt;&gt;&gt; freq2,per2,stat2 = tfreq.scargle(x,y1-y2,norm='amplitude',fn=4)
+
+#Plot the results:
+    #&gt;&gt;&gt; p=figure(figsize=(8,18))
+    #&gt;&gt;&gt; p=subplot(311);p=title(&quot;PIJPERS FILTER&quot;)
+    #&gt;&gt;&gt; p=plot(x,y,'ko')
+    #&gt;&gt;&gt; p=plot(x,y1,'r-',linewidth=2)
+    #&gt;&gt;&gt; p=plot(x,y2,'b-',linewidth=2)
+    #&gt;&gt;&gt; p=subplot(312)
+    #&gt;&gt;&gt; p=plot(x,y1-y2,'ko')
+    #&gt;&gt;&gt; p=subplot(313)
+    #&gt;&gt;&gt; p=plot(per1[0],per1[1],'k-')
+    #&gt;&gt;&gt; p=plot(per2[0],per2[1],'r-')
+
+@rtype: (ndarray,)
+@return: convolved signal
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="box_window"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box_window</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#box_window">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Defines the window for the box-filter.</p>
+  <dl class="fields">
+    <dt>Returns: (float,float)</dt>
+        <dd>window limits</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="box_kernel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box_kernel</span>(<span class="sig-arg">times_in</span>,
+        <span class="sig-arg">signal_in</span>,
+        <span class="sig-arg">t</span>,
+        <span class="sig-arg">window_width</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">(0,-1)</span>,
+        <span class="sig-arg">norm_weights</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.filtering-pysrc.html#box_kernel">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Defines the Box filter kernel (moving average).
+
+Equals sinc-multiplication of frequency domain.
+
+Example usage:
+
+#Import necessary modules:
+    #&gt;&gt;&gt; from pylab import plot,figure,title,subplot
+    #&gt;&gt;&gt; from sigproc.timeseries import tfreq
+
+#Generate some data:
+    #&gt;&gt;&gt; x = linspace(0,150,10000)
+    #&gt;&gt;&gt; y = random.normal(size=len(x))
+
+#Apply Gaussian filter twice, subtract and calculate periodogram:
+    #&gt;&gt;&gt; y1,pnts = filter_signal(x,y,&quot;box&quot;,window_width=1)
+    #&gt;&gt;&gt; y2,pnts = filter_signal(x,y,&quot;box&quot;,window_width=3)
+
+@rtype: (ndarray,)
+@return: convolved signal
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

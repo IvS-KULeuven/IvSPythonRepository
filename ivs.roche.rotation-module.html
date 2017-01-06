@@ -1,0 +1,899 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.roche.rotation</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.roche-module.html">Package&nbsp;roche</a> ::
+        Module&nbsp;rotation
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.roche.rotation-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module rotation</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.roche.rotation-pysrc.html">source&nbsp;code</a></span></p>
+<p>Roche models of fast and differential rotation</p>
+  <h1 class="heading">Section 1. Non-rotating spherically symmetric single star</h1>
+    <p>The most trivial usage of this module would be to construct a 
+    non-rotating, spherically symmetric single star. All quantities should 
+    be constant over the stellar surface, except of course the projected 
+    ones. We compute this via the zero-rotation limit of the fast rotating 
+    model:</p>
+    <p>First set some parameters: the rotation rate, effective temperature 
+    at the pole, polar radius, mass and viewing angle.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega = 0.00       <span class="py-comment"># ratio to critical velocity</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T_pole = 5500.     <span class="py-comment"># K</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>r_pole = 1.        <span class="py-comment"># solar radii</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M = 1.             <span class="py-comment"># solar mass</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>view_angle = pi/2  <span class="py-comment"># radians</span></pre>
+    <p>Construct a coordinate grid with a resolution of 50 points, covering
+    the whole star. Unravel, so that we have access to 1D coordinate 
+    arrays</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>theta,phi = local.get_grid(50,full=True)
+<span class="py-prompt">&gt;&gt;&gt; </span>thetas,phis = np.ravel(theta),np.ravel(phi)</pre>
+    <p>Calculate the shape of the stellar surface and the local gravity for
+    every point in the grid. This is a 3D vector in Cartesian coordinates, 
+    so reshape all components to match the grid shape. As a reference, also
+    explicitly calculate the polar surface gravity, which is the 
+    z-component of the gravity vector.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>radius = np.array([get_fastrot_roche_radius(itheta,r_pole,omega) <span class="py-keyword">for</span> itheta <span class="py-keyword">in</span> thetas]).reshape(theta.shape)
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([fastrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,omega,M) <span class="py-keyword">for</span> iradius,itheta,iphi <span class="py-keyword">in</span> zip(radius.ravel(),thetas,phis)]).T
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([i.reshape(theta.shape) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> grav_local])
+<span class="py-prompt">&gt;&gt;&gt; </span>g_pole = fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]</pre>
+    <p>Calculate the value of the surface gravity in SI-units:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>grav = vectors.norm(grav_local)</pre>
+    <p>Compute the size of all surface elements, and the angle with respect
+    to the radius vector (should be all zero). The normal to the surface is
+    the negative of the surface gravity vector, which is directed 
+    inwards:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>areas_local,cos_gamma = local.surface_elements((radius,(theta,phi)),-grav_local)</pre>
+    <p>Now we can calculate the local effective temperature (assuming 
+    radiative atmosphere in Von Zeipel law), and bolometric 
+    intensities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teff_local = local.temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
+<span class="py-prompt">&gt;&gt;&gt; </span>ints_local = local.intensity(teff_local,grav,photband=<span class="py-string">'OPEN.BOL'</span>)</pre>
+    <p>Define the line-of-sight vector:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>line_of_sight = np.zeros_like(grav_local)
+<span class="py-prompt">&gt;&gt;&gt; </span>line_of_sight[0] = -sin(view_angle)
+<span class="py-prompt">&gt;&gt;&gt; </span>line_of_sight[2] = -cos(view_angle)</pre>
+    <p>Compute the angles between surface normals and line-of-sight. We do 
+    this in 1D:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>gravity = np.array([igrav.ravel() <span class="py-keyword">for</span> igrav <span class="py-keyword">in</span> grav_local])
+<span class="py-prompt">&gt;&gt;&gt; </span>line_of_sight = np.array([ilos.ravel() <span class="py-keyword">for</span> ilos <span class="py-keyword">in</span> line_of_sight])
+<span class="py-prompt">&gt;&gt;&gt; </span>angles = vectors.angle(-gravity,line_of_sight)
+<span class="py-prompt">&gt;&gt;&gt; </span>mus = cos(angles)</pre>
+    <p>Now compute the bolometric projected intensity, taking care of 
+    limbdarkening effects:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>intens_proj = local.intensity(teff_local.ravel(),grav.ravel(),mus,photband=<span class="py-string">'OPEN.BOL'</span>).reshape(theta.shape)</pre>
+    <p>The total and projected luminosity can then be calculated the 
+    following way:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pi*(ints_local*areas_local*constants.Rsol_cgs**2).sum()/constants.Lsol_cgs
+<span class="py-output">0.992471247895</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pi*np.nansum(intens_proj*areas_local*constants.Rsol_cgs**2)/constants.Lsol_cgs
+<span class="py-output">0.360380373413</span></pre>
+    <p>Now make some plots showing the local quantities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
+<span class="py-prompt">&gt;&gt;&gt; </span>names = <span class="py-string">'Area'</span>,<span class="py-string">'log g'</span>, <span class="py-string">'Teff'</span>, <span class="py-string">'Flux'</span>, <span class="py-string">'Proj. flux'</span>, <span class="py-string">'Angle'</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>rows,cols = 2,3    
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,(quantity,name) <span class="py-keyword">in</span> enumerate(zip(quantities,names)):
+<span class="py-more">... </span>   p = pl.subplot(rows,cols,i+1)
+<span class="py-more">... </span>   p = pl.title(name)
+<span class="py-more">... </span>   q = quantity.ravel()
+<span class="py-more">... </span>   vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
+<span class="py-more">... </span>   <span class="py-keyword">if</span> vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
+<span class="py-more">... </span>   p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors=<span class="py-string">'none'</span>,vmin=vmin,vmax=vmax)
+<span class="py-more">... </span>   p = pl.colorbar()
+<span class="py-more">... </span>   p = pl.xlim(0,360)
+<span class="py-more">... </span>   p = pl.ylim(180,0)</pre>
+<center><img src='../images/ivs_binary_rochepotential_nonrotstar.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Fast and uniformly rotating star</h1>
+    <p>Repeating the same example as above, but now with parameters</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega = 0.98</pre>
+    <p>Gives the figure below:</p>
+<center><img src='../images/ivs_binary_rochepotential_fastrotstar.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Changing the viewing angle to 80 degrees</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>view_angle = 80/180.*pi</pre>
+    <p>gives: Note that the maximum projected intensity is higher than in 
+    the previous example: this is because we view directly at higher 
+    latitudes now, which are hotter than the equator. The least flux is 
+    coming from the equatorial zone.</p>
+<center><img src='../images/ivs_binary_rochepotential_fastrotstar_80incl.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>To generate an image of the star, it is wise to convert the 
+    coordinates to Cartesian coordinates:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'top view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x,y,c=teff_local.ravel(),edgecolors=<span class="py-string">'none'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'side view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(y,z,c=teff_local.ravel(),edgecolors=<span class="py-string">'none'</span>)</pre>
+    <p>The movie below is obtained by calculating the projected intensity 
+    in the line of sight</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>proj_intens,mus = local.projected_intensity(teff_local,grav_local,areas_local,np.array([0,-sin(view_angle),-cos(view_angle)]),photband=<span class="py-string">'OPEN.BOL'</span>)</pre>
+    <p>for different lines of sight, and then for each line of sight 
+    computing the Cartesian coordinates, and finally rotating in Y-Z 
+    plane.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>y,z = vectors.rotate(y,z,-(pi/2-view_angle))</pre>
+<center><img src='../images/ivs_binary_rochepotential_fastrotstar_shape.png' alt='[image example]' width='75%'/></center>
+
+
+
+<center><img src='../images/ivs_binary_rochepotential_fastrot.gif' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 3. Differentially rotating star</h1>
+    <p>The differential rotation rate has to follow the stereotypical 
+    law</p>
+    <p>Omega(theta) = Omega_pole + b * sin(theta)</p>
+    <p>The critical velocity can now easily be  exceeded at the equator, if
+    the rotation rate increases towards the pole.</p>
+    <p>First set some parameters: the rotation rate of the equator and 
+    pole, effective temperature at the pole, polar radius, mass and viewing
+    angle.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>omega_eq = 0.1       <span class="py-comment"># ratio to critical rotation rate (equatorial)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>omega_pl = 0.9       <span class="py-comment"># ratio to critical rotation rate (polar)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>T_pole = 5500.       <span class="py-comment"># K</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>r_pole = 1.0         <span class="py-comment"># solar radii</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>M = 1.               <span class="py-comment"># solar mass</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>view_angle = pi/2    <span class="py-comment"># radians</span></pre>
+    <p>We now do very similar stuff as in Section 1, except for the 
+    different Roche potential. (We can skip making the grid now)</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>radius = np.array([get_diffrot_roche_radius(itheta,r_pole,M,omega_eq,omega_pl) <span class="py-keyword">for</span> itheta <span class="py-keyword">in</span> thetas]).reshape(theta.shape)
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([diffrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,M,omega_eq,omega_pl) <span class="py-keyword">for</span> iradius,itheta,iphi <span class="py-keyword">in</span> zip(radius.ravel(),thetas,phis)]).T
+<span class="py-prompt">&gt;&gt;&gt; </span>grav_local = np.array([i.reshape(theta.shape) <span class="py-keyword">for</span> i <span class="py-keyword">in</span> grav_local])
+<span class="py-prompt">&gt;&gt;&gt; </span>g_pole = diffrot_roche_surface_gravity(r_pole,0,0,r_pole,M,omega_eq,omega_pl)[-1]</pre>
+    <p>Calculate the value of the surface gravity in SI-units:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>grav = vectors.norm(grav_local)</pre>
+    <p>Compute the size of all surface elements, and the angle with respect
+    to the radius vector (should be all zero). The normal to the surface is
+    the negative of the surface gravity vector, which is directed 
+    inwards:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>areas_local,cos_gamma = local.surface_elements((radius,(theta,phi)),-grav_local)</pre>
+    <p>Now we can calculate the local effective temperature (assuming 
+    radiative atmosphere in Von Zeipel law), and bolometric 
+    intensities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teff_local = local.temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
+<span class="py-prompt">&gt;&gt;&gt; </span>ints_local = local.intensity(teff_local,grav,photband=<span class="py-string">'OPEN.BOL'</span>)</pre>
+    <p>Compute the angles between surface normals and line-of-sight. We do 
+    this in 1D:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>gravity = np.array([igrav.ravel() <span class="py-keyword">for</span> igrav <span class="py-keyword">in</span> grav_local])
+<span class="py-prompt">&gt;&gt;&gt; </span>line_of_sight = np.array([ilos.ravel() <span class="py-keyword">for</span> ilos <span class="py-keyword">in</span> line_of_sight])
+<span class="py-prompt">&gt;&gt;&gt; </span>angles = vectors.angle(-gravity,line_of_sight)
+<span class="py-prompt">&gt;&gt;&gt; </span>mus = cos(angles)</pre>
+    <p>Now compute the bolometric projected intensity, taking care of 
+    limbdarkening effects:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>intens_proj = local.intensity(teff_local.ravel(),grav.ravel(),mus,photband=<span class="py-string">'OPEN.BOL'</span>).reshape(theta.shape)</pre>
+    <p>Now make some plots showing the local quantities:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
+<span class="py-prompt">&gt;&gt;&gt; </span>names = <span class="py-string">'Area'</span>,<span class="py-string">'log g'</span>, <span class="py-string">'Teff'</span>, <span class="py-string">'Flux'</span>, <span class="py-string">'Proj. flux'</span>, <span class="py-string">'Angle'</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>rows,cols = 2,3    
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> i,(quantity,name) <span class="py-keyword">in</span> enumerate(zip(quantities,names)):
+<span class="py-more">... </span>   p = pl.subplot(rows,cols,i+1)
+<span class="py-more">... </span>   p = pl.title(name)
+<span class="py-more">... </span>   q = quantity.ravel()
+<span class="py-more">... </span>   vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
+<span class="py-more">... </span>   <span class="py-keyword">if</span> vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
+<span class="py-more">... </span>   p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors=<span class="py-string">'none'</span>,vmin=vmin,vmax=vmax)
+<span class="py-more">... </span>   p = pl.colorbar()
+<span class="py-more">... </span>   p = pl.xlim(0,360)
+<span class="py-more">... </span>   p = pl.ylim(180,0)</pre>
+<center><img src='../images/ivs_binary_rochepotential_diffrotstar.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>To generate an image of the star, it is wise to convert the 
+    coordinates to Cartesian coordinates:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'top view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(x,y,c=teff_local.ravel(),edgecolors=<span class="py-string">'none'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122,aspect=<span class="py-string">'equal'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.title(<span class="py-string">'side view'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(y,z,c=teff_local.ravel(),edgecolors=<span class="py-string">'none'</span>)</pre>
+<center><img src='../images/ivs_binary_rochepotential_diffrotstar_shape.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Fast rotation Roche potential</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">3Xfloat/3Xndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#fastrot_roche_surface_gravity" class="summary-sig-name">fastrot_roche_surface_gravity</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">r_pole</span>,
+        <span class="summary-sig-arg">omega</span>,
+        <span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Calculate components of the local surface gravity of the fast 
+      rotating Roche model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#fastrot_roche_surface_gravity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#get_fastrot_roche_radius" class="summary-sig-name">get_fastrot_roche_radius</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">r_pole</span>,
+        <span class="summary-sig-arg">omega</span>)</span><br />
+      Calculate Roche radius for a fast rotating star.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#get_fastrot_roche_radius">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#critical_angular_velocity" class="summary-sig-name">critical_angular_velocity</a>(<span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">R_pole</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">'Hz'</span>)</span><br />
+      Compute the critical angular velocity (Hz).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#critical_angular_velocity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#critical_velocity" class="summary-sig-name">critical_velocity</a>(<span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">R_pole</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">'km/s'</span>,
+        <span class="summary-sig-arg">definition</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Compute the critical velocity (km/s)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#critical_velocity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Differential rotation Roche potential</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float/ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#diffrot_roche_potential" class="summary-sig-name">diffrot_roche_potential</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">r_pole</span>,
+        <span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">omega_eq</span>,
+        <span class="summary-sig-arg">omega_pole</span>)</span><br />
+      Definition of Roche potential due to differentially rotating star</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_roche_potential">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">3Xfloat/3Xndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#diffrot_roche_surface_gravity" class="summary-sig-name">diffrot_roche_surface_gravity</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">r_pole</span>,
+        <span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">omega_eq</span>,
+        <span class="summary-sig-arg">omega_pole</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Surface gravity from differentially rotation Roche potential.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_roche_surface_gravity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#get_diffrot_roche_radius" class="summary-sig-name">get_diffrot_roche_radius</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">r_pole</span>,
+        <span class="summary-sig-arg">M</span>,
+        <span class="summary-sig-arg">omega_eq</span>,
+        <span class="summary-sig-arg">omega_pole</span>)</span><br />
+      Calculate Roche radius for a differentially rotating star.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#get_diffrot_roche_radius">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#diffrot_law" class="summary-sig-name">diffrot_law</a>(<span class="summary-sig-arg">omega_eq</span>,
+        <span class="summary-sig-arg">omega_pole</span>,
+        <span class="summary-sig-arg">theta</span>)</span><br />
+      Evaluate a differential rotation law of the form Omega = 
+      b1+b2*omega**2</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.rotation-module.html#diffrot_velocity" class="summary-sig-name">diffrot_velocity</a>(<span class="summary-sig-arg">coordinates</span>,
+        <span class="summary-sig-arg">omega_eq</span>,
+        <span class="summary-sig-arg">omega_pole</span>,
+        <span class="summary-sig-arg">R_pole</span>,
+        <span class="summary-sig-arg">M</span>)</span><br />
+      Calculate the velocity vector of every surface element.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_velocity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="fastrot_roche_surface_gravity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fastrot_roche_surface_gravity</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">r_pole</span>,
+        <span class="sig-arg">omega</span>,
+        <span class="sig-arg">M</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#fastrot_roche_surface_gravity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate components of the local surface gravity of the fast rotating
+  Roche model.</p>
+  <p>Input units are solar units. Output units are SI. Omega is fraction of
+  critical velocity.</p>
+  <p>See Cranmer &amp; Owocki, Apj (1995)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>r</code></strong> (float/ndarray) - radius of the surface element to calculate the surface gravity</li>
+        <li><strong class="pname"><code>theta</code></strong> (float/ndarray) - colatitude of surface element</li>
+        <li><strong class="pname"><code>phi</code></strong> (float/ndarray) - longitude of surface element</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius of model</li>
+        <li><strong class="pname"><code>omega</code></strong> (float) - fraction of critical rotation velocity</li>
+        <li><strong class="pname"><code>M</code></strong> (float) - mass of the star</li>
+        <li><strong class="pname"><code>norm</code></strong> (boolean) - compute magnitude of surface gravity (True) or vector (False)</li>
+    </ul></dd>
+    <dt>Returns: 3Xfloat/3Xndarray</dt>
+        <dd>surface gravity magnitude or vector</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_fastrot_roche_radius"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_fastrot_roche_radius</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">r_pole</span>,
+        <span class="sig-arg">omega</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#get_fastrot_roche_radius">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate Roche radius for a fast rotating star.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>theta</code></strong> (float) - angle from rotation axis</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius in solar units</li>
+        <li><strong class="pname"><code>omega</code></strong> - angular velocity (in units of the critical angular velocity)</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>radius at angle theta in solar units</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="critical_angular_velocity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">critical_angular_velocity</span>(<span class="sig-arg">M</span>,
+        <span class="sig-arg">R_pole</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">'Hz'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#critical_angular_velocity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the critical angular velocity (Hz).</p>
+  <p>Definition taken from Cranmer and Owocki, 1995 and equal to</p>
+  <p>Omega_crit = sqrt( 8GM / 27Rp**3 )</p>
+  <p>Example usage (includes conversion to period in days):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>Omega = critical_angular_velocity(1.,1.)
+<span class="py-prompt">&gt;&gt;&gt; </span>P = 2*pi/Omega
+<span class="py-prompt">&gt;&gt;&gt; </span>P = conversions.convert(<span class="py-string">'s'</span>,<span class="py-string">'d'</span>,P)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> <span class="py-string">'Critical rotation period of the Sun: %.3f days'</span>%(P)
+<span class="py-output">Critical rotation period of the Sun: 0.213 days</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>M</code></strong> (float) - mass (solar masses)</li>
+        <li><strong class="pname"><code>R_pole</code></strong> (float) - polar radius (solar radii)</li>
+        <li><strong class="pname"><code>units</code></strong> (string understandable by <a 
+          href="ivs.units.conversions-module.html#convert" 
+          class="link"></a>) - if you wish other units than Hz, you can give them here</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>critical angular velocity in Hz</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="critical_velocity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">critical_velocity</span>(<span class="sig-arg">M</span>,
+        <span class="sig-arg">R_pole</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">'km/s'</span>,
+        <span class="sig-arg">definition</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#critical_velocity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the critical velocity (km/s)</p>
+  <p>Definition 1 from Cranmer and Owocki, 1995:</p>
+  <p>v_c = 2 pi R_eq(omega_c) * omega_c</p>
+  <p>Definition 2 from Townsend 2004:</p>
+  <p>v_c = sqrt ( 2GM/3Rp )</p>
+  <p>which both amount to the same value:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>critical_velocity(1.,1.,definition=1)
+<span class="py-output">356.71131858379499</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>critical_velocity(1.,1.,definition=2)
+<span class="py-output">356.71131858379488</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>M</code></strong> (float) - mass (solar masses)</li>
+        <li><strong class="pname"><code>R_pole</code></strong> (float) - polar radius (solar radii)</li>
+        <li><strong class="pname"><code>units</code></strong> (string understandable by <a 
+          href="ivs.units.conversions-module.html#convert" 
+          class="link">units.conversions.convert</a>) - if you wish other units than Hz, you can give them here</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>critical velocity in km/s</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="diffrot_roche_potential"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">diffrot_roche_potential</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">r_pole</span>,
+        <span class="sig-arg">M</span>,
+        <span class="sig-arg">omega_eq</span>,
+        <span class="sig-arg">omega_pole</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_roche_potential">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Definition of Roche potential due to differentially rotating star</p>
+  <p>We first solve the cubic equation</p>
+  <p><i class="math">re/rp = 1 + f (x^2 + x + 1)/(6x^2)</i></p>
+  <p>where <i class="math">f = re^3 Omega_e^2 / (G M)</i> and   <i 
+  class="math">x = Omega_e / Omega_p</i></p>
+  <p>This transforms to solving</p>
+  <p><i class="math">re^3 + b * re + c = 0</i></p>
+  <p>where <i class="math">b = -1 / (aXrp) and c = 1/(aX),</i> and <i 
+  class="math">a = Omega_e^2/(GM) and X = (x^2 + x + 1)/(6x^2)</i></p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>r</code></strong> (float/ndarray) - radius of the surface element to calculate the surface gravity</li>
+        <li><strong class="pname"><code>theta</code></strong> (float/ndarray) - colatitude of surface element</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius of model</li>
+        <li><strong class="pname"><code>M</code></strong> (float) - mass of the star</li>
+        <li><strong class="pname"><code>omega_eq</code></strong> (float) - fraction of critical rotation velocity at equator</li>
+        <li><strong class="pname"><code>omega_pole</code></strong> (float) - fraction of critical rotation velocity at pole</li>
+    </ul></dd>
+    <dt>Returns: float/ndarray</dt>
+        <dd>roche potential value</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="diffrot_roche_surface_gravity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">diffrot_roche_surface_gravity</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">r_pole</span>,
+        <span class="sig-arg">M</span>,
+        <span class="sig-arg">omega_eq</span>,
+        <span class="sig-arg">omega_pole</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_roche_surface_gravity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Surface gravity from differentially rotation Roche potential.</p>
+  <p>Magnitude is OK, please carefully check direction.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>r</code></strong> (float/ndarray) - radius of the surface element to calculate the surface gravity</li>
+        <li><strong class="pname"><code>theta</code></strong> (float/ndarray) - colatitude of surface element</li>
+        <li><strong class="pname"><code>phi</code></strong> (float/ndarray) - longitude of surface element</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius of model</li>
+        <li><strong class="pname"><code>M</code></strong> (float) - mass of the star</li>
+        <li><strong class="pname"><code>omega_eq</code></strong> (float) - fraction of critical rotation velocity at equator</li>
+        <li><strong class="pname"><code>omega_pole</code></strong> (float) - fraction of critical rotation velocity at pole</li>
+        <li><strong class="pname"><code>norm</code></strong> (boolean) - compute magnitude of surface gravity (True) or vector (False)</li>
+    </ul></dd>
+    <dt>Returns: 3Xfloat/3Xndarray</dt>
+        <dd>surface gravity magnitude or vector</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_diffrot_roche_radius"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_diffrot_roche_radius</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">r_pole</span>,
+        <span class="sig-arg">M</span>,
+        <span class="sig-arg">omega_eq</span>,
+        <span class="sig-arg">omega_pole</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#get_diffrot_roche_radius">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate Roche radius for a differentially rotating star.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>theta</code></strong> (float) - angle from rotation axis</li>
+        <li><strong class="pname"><code>r_pole</code></strong> (float) - polar radius in solar units</li>
+        <li><strong class="pname"><code>M</code></strong> (float) - mass in solar units</li>
+        <li><strong class="pname"><code>omega_eq</code></strong> - equatorial angular velocity (in units of the critical angular 
+          velocity)</li>
+        <li><strong class="pname"><code>omega_pole</code></strong> - polar angular velocity (in units of the critical angular 
+          velocity)</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>radius at angle theta in solar units</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="diffrot_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">diffrot_law</span>(<span class="sig-arg">omega_eq</span>,
+        <span class="sig-arg">omega_pole</span>,
+        <span class="sig-arg">theta</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate a differential rotation law of the form Omega = 
+  b1+b2*omega**2</p>
+  <p>The relative differential rotation rate is the ratio of the rotational
+  shear to the equatorial velocity</p>
+  <p>alpha = omega_eq - omega_pole / omega_eq</p>
+  <p>The units of angular velocity you put in, you get out (i.e. in terms 
+  of the critical angular velocity or not).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>omega_eq</code></strong> (float) - equatorial angular velocity</li>
+        <li><strong class="pname"><code>omega_pole</code></strong> (float) - polar angular velocity</li>
+        <li><strong class="pname"><code>theta</code></strong> (float (radians)) - colatitude (0 at the pole) in radians</li>
+    </ul></dd>
+    <dt>Returns: float</dt>
+        <dd>the angular velocity at colatitude theta</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="diffrot_velocity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">diffrot_velocity</span>(<span class="sig-arg">coordinates</span>,
+        <span class="sig-arg">omega_eq</span>,
+        <span class="sig-arg">omega_pole</span>,
+        <span class="sig-arg">R_pole</span>,
+        <span class="sig-arg">M</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.rotation-pysrc.html#diffrot_velocity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the velocity vector of every surface element.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>coordinates</code></strong> (3xN array) - polar coordinates of stellar surface (phi,theta,radius) make sure
+          the radius is in SI units!</li>
+        <li><strong class="pname"><code>omega_eq</code></strong> (float) - equatorial angular velocity (as a fraction of the critical one)</li>
+        <li><strong class="pname"><code>omega_pole</code></strong> (float) - polar angular velocity (as a fraction of the critical one)</li>
+        <li><strong class="pname"><code>R_pole</code></strong> (float) - polar radius in solar radii</li>
+        <li><strong class="pname"><code>M</code></strong> (float) - stellar mass in solar mass</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>velocity vectors of all surface elements @rtype 3xN array</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

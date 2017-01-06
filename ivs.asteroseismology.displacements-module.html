@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.asteroseismology.displacements</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.asteroseismology-module.html">Package&nbsp;asteroseismology</a> ::
+        Module&nbsp;displacements
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.asteroseismology.displacements-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module displacements</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html">source&nbsp;code</a></span></p>
+<p>Calculate the stellar surface displacements due to pulsations.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Helper functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.displacements-module.html#legendre_" class="summary-sig-name">legendre_</a>(<span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">x</span>)</span><br />
+      Legendre polynomial.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#legendre_">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.displacements-module.html#sph_harm" class="summary-sig-name">sph_harm</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">m</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Spherical harmonic according to Townsend, 2002.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#sph_harm">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.displacements-module.html#dsph_harm_dtheta" class="summary-sig-name">dsph_harm_dtheta</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">m</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Derivative of spherical harmonic wrt colatitude.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#dsph_harm_dtheta">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.displacements-module.html#dsph_harm_dphi" class="summary-sig-name">dsph_harm_dphi</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">m</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Derivative of spherical harmonic wrt longitude.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#dsph_harm_dphi">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="norm_J"></a><span class="summary-sig-name">norm_J</span>(<span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>)</span><br />
+      Normalisation factor</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#norm_J">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="norm_atlp1"></a><span class="summary-sig-name">norm_atlp1</span>(<span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">Omega</span>,
+        <span class="summary-sig-arg">k</span>)</span><br />
+      Omega is actually spin parameter (Omega_rot/omega_freq)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#norm_atlp1">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="norm_atlm1"></a><span class="summary-sig-name">norm_atlm1</span>(<span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">Omega</span>,
+        <span class="summary-sig-arg">k</span>)</span><br />
+      Omega is actually spin parameter (Omega_rot/omega_freq)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#norm_atlm1">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Displacement fields</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.displacements-module.html#radial" class="summary-sig-name">radial</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">t</span>)</span><br />
+      Radial displacement, see Zima 2006.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#radial">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="colatitudinal"></a><span class="summary-sig-name">colatitudinal</span>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">Omega</span>,
+        <span class="summary-sig-arg">k</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#colatitudinal">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="longitudinal"></a><span class="summary-sig-name">longitudinal</span>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">Omega</span>,
+        <span class="summary-sig-arg">k</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#longitudinal">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="surface"></a><span class="summary-sig-name">surface</span>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">Omega</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">asl</span>=<span class="summary-sig-default">0.2</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">1.</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#surface">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="observables"></a><span class="summary-sig-name">observables</span>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">teff</span>,
+        <span class="summary-sig-arg">logg</span>,
+        <span class="summary-sig-arg">l</span>,
+        <span class="summary-sig-arg">m</span>,
+        <span class="summary-sig-arg">t</span>,
+        <span class="summary-sig-arg">Omega</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">asl</span>=<span class="summary-sig-default">0.2</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">delta_T</span>=<span class="summary-sig-default">0.01+0j</span>,
+        <span class="summary-sig-arg">delta_g</span>=<span class="summary-sig-default">0.01+0.5j</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#observables">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="legendre_"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">legendre_</span>(<span class="sig-arg">l</span>,
+        <span class="sig-arg">m</span>,
+        <span class="sig-arg">x</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#legendre_">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Legendre polynomial.</p>
+  <p>Check equation (3) from Townsend, 2002:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>ls,x = [0,1,2,3,4,5],cos(linspace(0,pi,100))
+<span class="py-prompt">&gt;&gt;&gt; </span>check = 0
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> l <span class="py-keyword">in</span> ls:
+<span class="py-more">... </span>    <span class="py-keyword">for</span> m <span class="py-keyword">in</span> range(-l,l+1,1):
+<span class="py-more">... </span>        Ppos = legendre_(l,m,x)
+<span class="py-more">... </span>        Pneg = legendre_(l,-m,x)
+<span class="py-more">... </span>        mycheck = Pneg,(-1)**m * factorial(l-m)/factorial(l+m) * Ppos
+<span class="py-more">... </span>        check += sum(abs(mycheck[0]-mycheck[1])&gt;1e-10)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> check
+<span class="py-output">0</span></pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="sph_harm"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sph_harm</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">l</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">m</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#sph_harm">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Spherical harmonic according to Townsend, 2002.</p>
+  <p>This function is memoized: once a spherical harmonic is computed, the 
+  result is stored in memory</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>theta,phi = mgrid[0:pi:20j,0:2*pi:40j]
+<span class="py-prompt">&gt;&gt;&gt; </span>Ylm20 = sph_harm(theta,phi,2,0)
+<span class="py-prompt">&gt;&gt;&gt; </span>Ylm21 = sph_harm(theta,phi,2,1)
+<span class="py-prompt">&gt;&gt;&gt; </span>Ylm22 = sph_harm(theta,phi,2,2)
+<span class="py-prompt">&gt;&gt;&gt; </span>Ylm2_2 = sph_harm(theta,phi,2,-2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = gcf().canvas.set_window_title(<span class="py-string">'test of function &lt;sph_harm&gt;'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(411);p = title(<span class="py-string">'l=2,m=0'</span>);p = imshow(Ylm20.real,cmap=cm.RdBu)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(412);p = title(<span class="py-string">'l=2,m=1'</span>);p = imshow(Ylm21.real,cmap=cm.RdBu)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(413);p = title(<span class="py-string">'l=2,m=2'</span>);p = imshow(Ylm22.real,cmap=cm.RdBu)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = subplot(414);p = title(<span class="py-string">'l=2,m=-2'</span>);p = imshow(Ylm2_2.real,cmap=cm.RdBu)</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="dsph_harm_dtheta"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">dsph_harm_dtheta</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">l</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">m</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#dsph_harm_dtheta">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Derivative of spherical harmonic wrt colatitude.</p>
+  <p>Using Y_l^m(theta,phi).</p>
+  <p>Equation:</p>
+<pre class="literalblock">
+   sin(theta)*dY/dtheta = (l*J_{l+1}^m * Y_{l+1}^m - (l+1)*J_l^m * Y_{l-1,m})
+</pre>
+  <p>E.g.: Phd thesis of Joris De Ridder</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="dsph_harm_dphi"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">dsph_harm_dphi</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">l</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">m</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#dsph_harm_dphi">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Derivative of spherical harmonic wrt longitude.</p>
+  <p>Using Y_l^m(theta,phi).</p>
+  <p>Equation:</p>
+<pre class="literalblock">
+   dY/dphi = i*m*Y
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="radial"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">radial</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">l</span>,
+        <span class="sig-arg">m</span>,
+        <span class="sig-arg">t</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.displacements-pysrc.html#radial">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Radial displacement, see Zima 2006.</p>
+  <p>t in phase units</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

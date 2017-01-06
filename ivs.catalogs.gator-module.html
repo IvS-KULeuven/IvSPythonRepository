@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.catalogs.gator</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.catalogs-module.html">Package&nbsp;catalogs</a> ::
+        Module&nbsp;gator
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.catalogs.gator-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module gator</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface to the GATOR search engine</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Basic interfaces</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str/ record array, dict, list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#search" class="summary-sig-name">search</a>(<span class="summary-sig-arg">catalog</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Search and retrieve information from a Gator catalog.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list of string tuples</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#list_catalogs" class="summary-sig-name">list_catalogs</a>()</span><br />
+      Return a list of all availabe GATOR catalogues.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#list_catalogs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#get_photometry" class="summary-sig-name">get_photometry</a>(<span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">['dist','ra','dec']</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Download all available photometry from a star to a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#get_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Convenience functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array, dict, list of str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#txt2recarray" class="summary-sig-name">txt2recarray</a>(<span class="summary-sig-arg">filename</span>)</span><br />
+      Read a GATOR outfmt=1__ (ASCII) file into a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#txt2recarray">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#gator2phot" class="summary-sig-name">gator2phot</a>(<span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">results</span>,
+        <span class="summary-sig-arg">units</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">['_r','_RAJ2000','_DEJ2000']</span>)</span><br />
+      Convert/combine Gator record arrays to measurement record arrays.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#gator2phot">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8"  class="private">
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal helper functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">str</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gator-module.html#_get_URI" class="summary-sig-name" onclick="show_private();">_get_URI</a>(<span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ra</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">dec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">radius</span>=<span class="summary-sig-default">1.</span>,
+        <span class="summary-sig-arg">filetype</span>=<span class="summary-sig-default">'1'</span>,
+        <span class="summary-sig-arg">spatial</span>=<span class="summary-sig-default">'cone'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Build GATOR URI from available options.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#_get_URI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;CAT.GATOR&quot;)">logging.getLogger(&quot;CAT.GATOR&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basedir"></a><span class="summary-name">basedir</span> = <code title="os.path.dirname(os.path.abspath(__file__))">os.path.dirname(os.path.abspath(__file__))</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cat_info"></a><span class="summary-name">cat_info</span> = <code title="ConfigParser.ConfigParser()">ConfigParser.ConfigParser()</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">search</span>(<span class="sig-arg">catalog</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Search and retrieve information from a Gator catalog.</p>
+  <p>Two ways to search for data within a catalog <code>name</code>:</p>
+  <ol start="1">
+    <li>
+      You're looking for info on <b>one target</b>, then give the target's 
+      <code>ID</code> or coordinates (<code>ra</code> and 
+      <code>dec</code>), and a search <code>radius</code>.
+    </li>
+    <li>
+      You're looking for information of <b>a whole field</b>, then give the
+      field's coordinates (<code>ra</code> and <code>dec</code>), and 
+      <code>radius</code>.
+    </li>
+  </ol>
+  <p>If you have a list of targets, you need to loop this function.</p>
+  <p>If you supply a filename, the results will be saved to that path, and 
+  you will get the filename back as received from urllib.URLopener (should 
+  be the same as the input name, unless something went wrong).</p>
+  <p>If you don't supply a filename, you should leave <code>filetype</code>
+  to the default <code>tsv</code>, and the results will be saved to a 
+  temporary file and deleted after the function is finished. The content of
+  the file will be read into a dictionary, as well as the units (two 
+  separate dictionaries with the same keys, depending on the colum names in
+  the catalog). The entries in the dictionary are of type 
+  <code>ndarray</code>, and will be converted to a float-array if possible.
+  If not, the array will consist of strings. The comments are also returned
+  as a list of strings.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>catalog</code></strong> (str) - name of a GATOR catalog (e.g. 'II/246/out')</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - name of the file to write the results to (no extension)</li>
+    </ul></dd>
+    <dt>Returns: str/ record array, dict, list of str</dt>
+        <dd>filename / catalog data columns, units, comments</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="list_catalogs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">list_catalogs</span>()</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#list_catalogs">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return a list of all availabe GATOR catalogues.</p>
+  <dl class="fields">
+    <dt>Returns: list of string tuples</dt>
+        <dd>list of gator catalogs and discriptions</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_photometry</span>(<span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">['dist','ra','dec']</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#get_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Download all available photometry from a star to a record array.</p>
+  <p>For extra kwargs, see <a 
+  href="ivs.catalogs.gator-module.html#_get_URI" class="link" 
+  onclick="show_private();">_get_URI</a> and <a 
+  href="ivs.catalogs.gator-module.html#gator2phot" 
+  class="link">gator2phot</a></p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> vizier
+<span class="py-prompt">&gt;&gt;&gt; </span>name = <span class="py-string">'kr cam'</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>master = vizier.get_photometry(name,to_units=<span class="py-string">'erg/s/cm2/AA'</span>,extra_fields=[])
+<span class="py-prompt">&gt;&gt;&gt; </span>master = get_photometry(name,to_units=<span class="py-string">'erg/s/cm2/AA'</span>,extra_fields=[],master=master)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>wise = np.array([<span class="py-string">'WISE'</span> <span class="py-keyword">in</span> photband <span class="py-keyword">and</span> True <span class="py-keyword">or</span> False <span class="py-keyword">for</span> photband <span class="py-keyword">in</span> master[<span class="py-string">'photband'</span>]])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.errorbar(master[<span class="py-string">'cwave'</span>],master[<span class="py-string">'cmeas'</span>],yerr=master[<span class="py-string">'e_cmeas'</span>],fmt=<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.errorbar(master[<span class="py-string">'cwave'</span>][wise],master[<span class="py-string">'cmeas'</span>][wise],yerr=master[<span class="py-string">'e_cmeas'</span>][wise],fmt=<span class="py-string">'ro'</span>,ms=8)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.gca().set_xscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.gca().set_yscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pylab.show()</pre>
+  <p>Other examples: &gt;&gt;&gt; master = 
+  get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
+  &gt;&gt;&gt; master = 
+  get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="txt2recarray"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">txt2recarray</span>(<span class="sig-arg">filename</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#txt2recarray">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read a GATOR outfmt=1__ (ASCII) file into a record array.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - name of the TSV file</li>
+    </ul></dd>
+    <dt>Returns: record array, dict, list of str</dt>
+        <dd>catalog data columns, units, comments</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gator2phot"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gator2phot</span>(<span class="sig-arg">source</span>,
+        <span class="sig-arg">results</span>,
+        <span class="sig-arg">units</span>,
+        <span class="sig-arg">master</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">['_r','_RAJ2000','_DEJ2000']</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#gator2phot">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert/combine Gator record arrays to measurement record arrays.</p>
+  <p>Every line in the combined array represents a measurement in a certain
+  band.</p>
+  <p>This is probably only useful if <code>results</code> contains only 
+  information on one target (or you have to give 'ID' as an extra field, 
+  maybe).</p>
+  <p>The standard columns are:</p>
+  <ol start="1">
+    <li>
+      <code>meas</code>: containing the photometric measurement
+    </li>
+    <li>
+      <code>e_meas</code>: the error on the photometric measurement
+    </li>
+    <li>
+      <code>flag</code>: an optional quality flag
+    </li>
+    <li>
+      <code>unit</code>: the unit of the measurement
+    </li>
+    <li>
+      <code>photband</code>: the photometric passband (FILTER.BAND)
+    </li>
+    <li>
+      <code>source</code>: name of the source catalog
+    </li>
+  </ol>
+  <p>You can add extra information from the Gator catalog via the list of 
+  keys <code>extra_fields</code>.</p>
+  <p>If you give a <code>master</code>, the information will be added to a 
+  previous record array. If not, a new master will be created.</p>
+  <p>The result is a record array with each row a measurement.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>source</code></strong> (str) - name of the Gator source</li>
+        <li><strong class="pname"><code>results</code></strong> (record array) - results from Gator <code>search</code></li>
+        <li><strong class="pname"><code>units</code></strong> (dict) - header of Gator catalog with key name the column name and key 
+          value the units of that column</li>
+        <li><strong class="pname"><code>master</code></strong> (record array) - master record array to add information to</li>
+        <li><strong class="pname"><code>extra_fields</code></strong> (list of str) - any extra columns you want to add information from</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>array with each row a measurement</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_URI"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_URI</span>(<span class="sig-arg">name</span>,
+        <span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ra</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">dec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">radius</span>=<span class="sig-default">1.</span>,
+        <span class="sig-arg">filetype</span>=<span class="sig-default">'1'</span>,
+        <span class="sig-arg">spatial</span>=<span class="sig-default">'cone'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gator-pysrc.html#_get_URI">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Build GATOR URI from available options.</p>
+  <p>Filetype should be one of:</p>
+  <p>6___ returns a program interface in XML 3___ returns a VO Table (XML) 
+  2___ returns SVC (Software handshaking structure) message 1___ returns an
+  ASCII table 0___ returns Gator Status Page in HTML (default)</p>
+  <p>kwargs are to catch unused arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str) - name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')</li>
+        <li><strong class="pname"><code>ID</code></strong> (str) - target name</li>
+        <li><strong class="pname"><code>filetype</code></strong> (str (one of '0','1','2','3','6'... see GATOR site)) - type of the retrieved file</li>
+        <li><strong class="pname"><code>radius</code></strong> (float) - search radius (arcseconds)</li>
+        <li><strong class="pname"><code>ra</code></strong> (float) - target's right ascension</li>
+        <li><strong class="pname"><code>dec</code></strong> (float) - target's declination</li>
+        <li><strong class="pname"><code>spatial</code></strong> (str (one of Cone, Box (NIY), Polygon (NIY), NONE (NIY))) - type of spatial query</li>
+    </ul></dd>
+    <dt>Returns: str</dt>
+        <dd>url</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

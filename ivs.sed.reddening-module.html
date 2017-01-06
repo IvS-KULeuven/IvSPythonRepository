@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.reddening</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;reddening
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.reddening-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module reddening</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.reddening-pysrc.html">source&nbsp;code</a></span></p>
+<p>Definitions of interstellar reddening curves</p>
+  <h1 class="heading">Section 1. General interface</h1>
+    <p>Use the general interface to get different curves:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.r_[1e3:1e5:10]
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> name <span class="py-keyword">in</span> [<span class="py-string">'chiar2006'</span>,<span class="py-string">'fitzpatrick1999'</span>,<span class="py-string">'fitzpatrick2004'</span>,<span class="py-string">'cardelli1989'</span>,<span class="py-string">'seaton1979'</span>]:
+<span class="py-more">... </span>  wave_,mag_ = get_law(name,wave=wave)
+<span class="py-more">... </span>  p = pl.plot(1e4/wave_,mag_,label=name)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(0,10)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0,12)</pre>
+    <p>Use the general interface to get the same curves but with different 
+    Rv:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> Rv <span class="py-keyword">in</span> [2.0,3.1,5.1]:
+<span class="py-more">... </span>  wave_,mag_ = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,Rv=Rv)
+<span class="py-more">... </span>  p = pl.plot(1e4/wave_,mag_,<span class="py-string">'--'</span>,lw=2,label=<span class="py-string">'cardelli1989 Rv=%.1f'</span>%(Rv))
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(0,10)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylim(0,12)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'1/$\lambda$ [1/$\mu$m]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(r<span class="py-string">'Extinction E(B-$\lambda$) [mag]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend(prop=dict(size=<span class="py-string">'small'</span>),loc=<span class="py-string">'lower right'</span>)</pre>
+<center><img src='../images/ivs_sed_reddening_curves.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Individual curve definitions</h1>
+    <p>Get the curves seperately:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave1,mag1 = cardelli1989()
+<span class="py-prompt">&gt;&gt;&gt; </span>wave2,mag2 = chiar2006()
+<span class="py-prompt">&gt;&gt;&gt; </span>wave3,mag3 = seaton1979()
+<span class="py-prompt">&gt;&gt;&gt; </span>wave4,mag4 = fitzpatrick1999()
+<span class="py-prompt">&gt;&gt;&gt; </span>wave5,mag5 = fitzpatrick2004()</pre>
+  <h1 class="heading">Section 3. Normalisations</h1>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.logspace(3,6,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'JOHNSON.V'</span>,<span class="py-string">'JOHNSON.K'</span>]</pre>
+    <p>Retrieve two interstellar reddening laws, normalise them to Av and 
+    see what the ratio between Ak and Av is. Since the <a 
+    href="ivs.sed.reddening-module.html#chiar2006" 
+    class="link">chiar2006</a> law is not defined in the optical, this 
+    procedure actually doesn't make sense for that law. In the case of <a 
+    href="ivs.sed.reddening-module.html#cardelli1989" 
+    class="link">cardelli1989</a>, compute the ratio <code>Ak/Av</code>. 
+    Note that you cannot ask for the <a 
+    href="ivs.sed.reddening-module.html#chiar2006" 
+    class="link">chiar2006</a> to be normalised in the visual, since the 
+    curve is not defined their! If you really want to do that anyway, you 
+    need to derive a Ak/Av factor from another curve (e.g. the <a 
+    href="ivs.sed.reddening-module.html#cardelli1989" 
+    class="link">cardelli1989</a>).</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> name,norm <span class="py-keyword">in</span> zip([<span class="py-string">'chiar2006'</span>,<span class="py-string">'cardelli1989'</span>],[<span class="py-string">'Ak'</span>,<span class="py-string">'Av'</span>]):
+<span class="py-more">... </span>  wave_,mag_ = get_law(name,wave=wave,norm=norm)
+<span class="py-more">... </span>  photwave,photflux = get_law(name,wave=wave,norm=norm,photbands=photbands)
+<span class="py-more">... </span>  p = pl.plot(wave_/1e4,mag_,label=name)
+<span class="py-more">... </span>  p = pl.plot(photwave/1e4,photflux,<span class="py-string">'s'</span>)
+<span class="py-more">... </span>  <span class="py-keyword">if</span> name==<span class="py-string">'cardelli1989'</span>: <span class="py-keyword">print</span> <span class="py-string">'Ak/Av = %.3g'</span>%(photflux[1]/photflux[0])
+<span class="py-output">Ak/Av = 0.114</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_xscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [micron]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Extinction A($\lambda$)/Av [mag]'</span>)</pre>
+<center><img src='../images/ivs_sed_reddening_02.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <p>Compute the Cardelli law normalised to Ak and Av.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_av1,mag_av1 = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,norm=<span class="py-string">'Av'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_av2,mag_av2 = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,norm=<span class="py-string">'Av'</span>,photbands=[<span class="py-string">'JOHNSON.V'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_av1,mag_av1,<span class="py-string">'k-'</span>,lw=2,label=<span class="py-string">'Av'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_av2,mag_av2,<span class="py-string">'ks'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_ak1,mag_ak1 = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,norm=<span class="py-string">'Ak'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_ak2,mag_ak2 = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,norm=<span class="py-string">'Ak'</span>,photbands=[<span class="py-string">'JOHNSON.K'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_ak1,mag_ak1,<span class="py-string">'r-'</span>,lw=2,label=<span class="py-string">'Ak'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_ak2,mag_ak2,<span class="py-string">'rs'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_xscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Wavelength [micron]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Extinction A($\lambda$)/A($\mu$) [mag]'</span>)</pre>
+<center><img src='../images/ivs_sed_reddening_03.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Main interface</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#get_law" class="summary-sig-name">get_law</a>(<span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">norm</span>=<span class="summary-sig-default">'E(B-V)'</span>,
+        <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve an interstellar reddening law.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#get_law">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray (floats)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#redden" class="summary-sig-name">redden</a>(<span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">0.</span>,
+        <span class="summary-sig-arg">rtype</span>=<span class="summary-sig-default">'flux'</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'cardelli1989'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Redden flux or magnitudes</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#redden">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray (floats)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#deredden" class="summary-sig-name">deredden</a>(<span class="summary-sig-arg">flux</span>,
+        <span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photbands</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ebv</span>=<span class="summary-sig-default">0.</span>,
+        <span class="summary-sig-arg">rtype</span>=<span class="summary-sig-default">'flux'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Deredden flux or magnitudes.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#deredden">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Curve definitions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#chiar2006" class="summary-sig-name">chiar2006</a>(<span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">curve</span>=<span class="summary-sig-default">'ism'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Extinction curve at infrared wavelengths from Chiar and Tielens 
+      (2006)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#chiar2006">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#fitzpatrick1999" class="summary-sig-name">fitzpatrick1999</a>(<span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      From Fitzpatrick 1999 (downloaded from ASAGIO database)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#fitzpatrick1999">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#fitzpatrick2004" class="summary-sig-name">fitzpatrick2004</a>(<span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      From Fitzpatrick 2004 (downloaded from FTP)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#fitzpatrick2004">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#donnell1994" class="summary-sig-name">donnell1994</a>(<span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Small improvement on Cardelli 1989 by James E.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#donnell1994">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#cardelli1989" class="summary-sig-name">cardelli1989</a>(<span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">curve</span>=<span class="summary-sig-default">'cardelli'</span>,
+        <span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Construct extinction laws from Cardelli (1989).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#cardelli1989">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(ndarray,ndarray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.reddening-module.html#seaton1979" class="summary-sig-name">seaton1979</a>(<span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Extinction curve from Seaton, 1979.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.reddening-pysrc.html#seaton1979">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SED.RED&quot;)">logging.getLogger(&quot;SED.RED&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basename"></a><span class="summary-name">basename</span> = <code title="os.path.join(os.path.dirname(__file__), 'redlaws')">os.path.join(os.path.dirname(__file__), 'redlaws')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="get_law"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_law</span>(<span class="sig-arg">name</span>,
+        <span class="sig-arg">norm</span>=<span class="sig-default">'E(B-V)'</span>,
+        <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#get_law">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve an interstellar reddening law.</p>
+  <p>Parameter <code>name</code> must be the function name of one of the 
+  laws defined in this module.</p>
+  <p>By default, the law will be interpolated on a grid from 100 angstrom 
+  to 10 micron in steps of 10 angstrom. This can be adjusted with the 
+  parameter <code>wave</code> (array), which <b>must</b> be in angstrom. 
+  You can change the units ouf the returned wavelength array via 
+  <code>wave_units</code>.</p>
+  <p>By default, the curve is normalised with respect to E(B-V) (you get 
+  A(l)/E(B-V)). You can set the <code>norm</code> keyword to Av if you want
+  A(l)/Av. Remember that</p>
+  <p>A(V) = Rv * E(B-V)</p>
+  <p>The parameter <code>Rv</code> is by default 3.1, other reasonable 
+  values lie between 2.0 and 5.1</p>
+  <p>Extra accepted keywords depend on the type of reddening law used.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.r_[1e3:1e5:10]
+<span class="py-prompt">&gt;&gt;&gt; </span>wave,mag = get_law(<span class="py-string">'cardelli1989'</span>,wave=wave,Rv=3.1)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (str, one of the functions defined here) - name of the interstellar law</li>
+        <li><strong class="pname"><code>norm</code></strong> (str (one of E(B-V), Av)) - type of normalisation of the curve</li>
+        <li><strong class="pname"><code>wave_units</code></strong> (str (interpretable for units.conversions.convert)) - wavelength units</li>
+        <li><strong class="pname"><code>photbands</code></strong> (list of strings) - list of photometric passbands</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelength array to interpolate the law on</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelength, reddening magnitude</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="redden"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">redden</span>(<span class="sig-arg">flux</span>,
+        <span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">0.</span>,
+        <span class="sig-arg">rtype</span>=<span class="sig-default">'flux'</span>,
+        <span class="sig-arg">law</span>=<span class="sig-default">'cardelli1989'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#redden">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Redden flux or magnitudes</p>
+  <p>The reddening parameters <code>ebv</code> means E(B-V).</p>
+  <p>If it is negative, we <b>deredden</b>.</p>
+  <p>If you give the keyword <code>wave</code>, it is assumed that you want
+  to (de)redden a <b>model</b>, i.e. a spectral energy distribution.</p>
+  <p>If you give the keyword <code>photbands</code>, it is assumed that you
+  want to (de)redden <b>photometry</b>, i.e. integrated fluxes.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>flux</code></strong> (ndarray (floats)) - fluxes to (de)redden (magnitudes if <code>rtype='mag'</code>)</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray (floats)) - wavelengths matching the fluxes (or give <code>photbands</code>)</li>
+        <li><strong class="pname"><code>photbands</code></strong> (ndarray of str) - photometry bands matching the fluxes (or give <code>wave</code>)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening parameter E(B-V)</li>
+        <li><strong class="pname"><code>rtype</code></strong> (str ('flux' or 'mag')) - type of dereddening (magnituds or fluxes)</li>
+    </ul></dd>
+    <dt>Returns: ndarray (floats)</dt>
+        <dd>(de)reddened flux/magnitude</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="deredden"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">deredden</span>(<span class="sig-arg">flux</span>,
+        <span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photbands</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ebv</span>=<span class="sig-default">0.</span>,
+        <span class="sig-arg">rtype</span>=<span class="sig-default">'flux'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#deredden">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Deredden flux or magnitudes.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>flux</code></strong> (ndarray (floats)) - fluxes to (de)redden (NOT magnitudes)</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray (floats)) - wavelengths matching the fluxes (or give <code>photbands</code>)</li>
+        <li><strong class="pname"><code>photbands</code></strong> (ndarray of str) - photometry bands matching the fluxes (or give <code>wave</code>)</li>
+        <li><strong class="pname"><code>ebv</code></strong> (float) - reddening parameter E(B-V)</li>
+        <li><strong class="pname"><code>rtype</code></strong> (str ('flux' or 'mag')) - type of dereddening (magnituds or fluxes)</li>
+    </ul></dd>
+    <dt>Returns: ndarray (floats)</dt>
+        <dd>(de)reddened flux</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="chiar2006"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">chiar2006</span>(<span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">curve</span>=<span class="sig-default">'ism'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#chiar2006">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Extinction curve at infrared wavelengths from Chiar and Tielens 
+  (2006)</p>
+  <p>We return A(lambda)/E(B-V), by multiplying A(lambda)/Av with Rv.</p>
+  <p>This is only defined for Rv=3.1. If it is different, this will raise 
+  an AssertionError</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <p>UNCERTAIN NORMALISATION</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv</li>
+        <li><strong class="pname"><code>curve</code></strong> (string (one of 'gc' or 'ism', galactic centre or local ISM)) - extinction curve</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fitzpatrick1999"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fitzpatrick1999</span>(<span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#fitzpatrick1999">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>From Fitzpatrick 1999 (downloaded from ASAGIO database)</p>
+  <p>This function returns A(lambda)/A(V).</p>
+  <p>To get A(lambda)/E(B-V), multiply the return value with Rv 
+  (A(V)=Rv*E(B-V))</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv (2.1, 3.1 or 5.0)</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="fitzpatrick2004"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">fitzpatrick2004</span>(<span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#fitzpatrick2004">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>From Fitzpatrick 2004 (downloaded from FTP)</p>
+  <p>This function returns A(lambda)/A(V).</p>
+  <p>To get A(lambda)/E(B-V), multiply the return value with Rv 
+  (A(V)=Rv*E(B-V))</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv (2.1, 3.1 or 5.0)</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="donnell1994"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">donnell1994</span>(<span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#donnell1994">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Small improvement on Cardelli 1989 by James E. O'Donnell (1994).</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelengths to compute the curve on</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="cardelli1989"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">cardelli1989</span>(<span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">curve</span>=<span class="sig-default">'cardelli'</span>,
+        <span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#cardelli1989">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct extinction laws from Cardelli (1989).</p>
+  <p>Improvement in optical by James E. O'Donnell (1994)</p>
+  <p>wavelengths in Angstrom!</p>
+  <p>This function returns A(lambda)/A(V).</p>
+  <p>To get A(lambda)/E(B-V), multiply the return value with Rv 
+  (A(V)=Rv*E(B-V))</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv</li>
+        <li><strong class="pname"><code>curve</code></strong> (string (one of 'cardelli' or 'donnell')) - extinction curve</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelengths to compute the curve on</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="seaton1979"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">seaton1979</span>(<span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">wave</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.reddening-pysrc.html#seaton1979">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Extinction curve from Seaton, 1979.</p>
+  <p>This function returns A(lambda)/A(V).</p>
+  <p>To get A(lambda)/E(B-V), multiply the return value with Rv 
+  (A(V)=Rv*E(B-V))</p>
+  <p>Extra kwags are to catch unwanted keyword arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv</li>
+        <li><strong class="pname"><code>wave</code></strong> (ndarray) - wavelengths to compute the curve on</li>
+    </ul></dd>
+    <dt>Returns: (ndarray,ndarray)</dt>
+        <dd>wavelengths (A), A(lambda)/Av</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@memoized</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

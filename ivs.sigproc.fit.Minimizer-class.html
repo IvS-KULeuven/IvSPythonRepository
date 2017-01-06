@@ -1,0 +1,1123 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.fit.Minimizer</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        <a href="ivs.sigproc.fit-module.html">Module&nbsp;fit</a> ::
+        Class&nbsp;Minimizer
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.fit.Minimizer-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Minimizer</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>A minimizer class on the <a 
+  href="http://cars9.uchicago.edu/software/python/lmfit/index.html" 
+  target="_top">lmfit</a> Python package, which provides a simple, flexible
+  interface to non-linear least-squares optimization, or curve fitting. The
+  package is build around the Levenberg-Marquardt algorithm of scipy, but 2
+  other minimizers: limited memory Broyden-Fletcher-Goldfarb-Shanno and 
+  simulated annealing are partly supported as well. For the 
+  Levenberg-Marquardt algorithm, the estimated uncertainties and 
+  correlation between fitted variables are calculated as well.</p>
+  <p>This minimizer finds the best parameters to fit a given <a 
+  href="ivs.sigproc.fit.Model-class.html" class="link">Model</a> or <a 
+  href="ivs.sigproc.fit.Function-class.html" class="link">Function</a> to a
+  set of data. You only need to provide the Model and data. Weighted 
+  fitting is supported.</p>
+  <p>This minimizer uses the basic residual function:</p>
+<pre class="literalblock">
+   residuals = ( data - model(x) ) * weights
+</pre>
+  <p>If a more advanced residual functions is required, fx when working 
+  with multi dimentional data, the used can specify its own residual 
+  function in the provided Function or Model, or by setting the 
+  <i>resfunc</i> keyword. This residual function needs to be of the 
+  following call sign:</p>
+<pre class="literalblock">
+   resfunc(synth, data, weights=None, errors=None, **kwargs)
+</pre>
+  <h1 class="heading">Functions</h1>
+    <p>A <a href="ivs.sigproc.fit.Function-class.html" 
+    class="link">Function</a> is basicaly a function together with a list 
+    of the parameters that is needs. In the internal representation the 
+    parameters are represented as a Parameters object. However, the user 
+    does not need to now how to handle this, and can just provided or 
+    retrieve the parameter values using arrays. Every fitting parameter are
+    extensions of simple numerical variables with the following 
+    properties:</p>
+    <ul>
+      <li>
+        Parameters can be fixed or floated in the fit.
+      </li>
+      <li>
+        Parameters can be bounded with a minimum and/or maximum value.
+      </li>
+      <li>
+        Parameters can be written as simple mathematical expressions of 
+        other Parameters, using the <a 
+        href="http://newville.github.com/asteval/" target="_top">asteval 
+        module</a>. These values will be re-evaluated at each step in the 
+        fit, so that the expression is satisfied. This gives a simple but 
+        flexible approach to constraining fit variables.
+      </li>
+    </ul>
+  <h1 class="heading">Models</h1>
+    <p>A <a href="ivs.sigproc.fit.Model-class.html" class="link">Model</a> 
+    is a combination of Functions with its own parameter set. The Functions
+    are provided as a list, and a gamma function can be given to describe 
+    how the functions are combined. Methods to handle the parameters in a 
+    model are provided, but the user is recommended handle the parameters 
+    at Function level as the naming of the parameters changes at Model 
+    level.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">model</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">resfunc</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">engine</span>=<span class="summary-sig-default">'leastsq'</span>,
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">kws</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">grid_points</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">grid_params</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Error determination</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#calculate_CI" class="summary-sig-name">calculate_CI</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">parameters</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">sigmas</span>=<span class="summary-sig-default">[0.654,0.95,0.997]</span>,
+        <span class="summary-sig-arg">maxiter</span>=<span class="summary-sig-default">200</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Returns the confidence intervalls of the given parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_CI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">(array, array, 2d array)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#calculate_CI_2D" class="summary-sig-name">calculate_CI_2D</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xpar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ypar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">limits</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ctype</span>=<span class="summary-sig-default">'prob'</span>)</span><br />
+      Calculates the confidence interval for 2 given parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_CI_2D">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array or dict</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#calculate_MC_error" class="summary-sig-name">calculate_MC_error</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">distribution</span>=<span class="summary-sig-default">'gauss'</span>,
+        <span class="summary-sig-arg">short_output</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Use Monte-Carlo simulations to estimate the error of each parameter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_MC_error">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Plotting Functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#plot_fit" class="summary-sig-name">plot_fit</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">1000</span>,
+        <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">legend</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot the original data together with the best fit results.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_fit">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#plot_residuals" class="summary-sig-name">plot_residuals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">legend</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot the residuals of the best fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_residuals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#plot_results" class="summary-sig-name">plot_results</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">1000</span>,
+        <span class="summary-sig-arg">axis</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">legend</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Creates a basic plot with the fit results and corresponding 
+      residuals.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_results">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#plot_confidence_interval" class="summary-sig-name">plot_confidence_interval</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xpar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ypar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">limits</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ctype</span>=<span class="summary-sig-default">'prob'</span>,
+        <span class="summary-sig-arg">filled</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot the confidence interval for 2 given parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_confidence_interval">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#plot_grid_convergence" class="summary-sig-name">plot_grid_convergence</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">xpar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ypar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">chi2lim</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">chi2scale</span>=<span class="summary-sig-default">'log'</span>,
+        <span class="summary-sig-arg">show_colorbar</span>=<span class="summary-sig-default">'True'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot the convergence path of the results from grid_minimize stored in
+      this minimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_grid_convergence">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Advanced attributes</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#minimizer" class="summary-sig-name">minimizer</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">val</span>)</span><br />
+      set minimizer</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.minimizer">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#errors" class="summary-sig-name">errors</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">val</span>)</span><br />
+      set error</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.errors">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#grid" class="summary-sig-name">grid</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      get minimizer grid</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal Functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__getattr__"></a><span class="summary-sig-name">__getattr__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">name</span>)</span><br />
+      allow to reach the attributes of the best fitting minimizer directly</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.__getattr__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_setup_residual_function"></a><span class="summary-sig-name">_setup_residual_function</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Internal function to setup the residual function for the minimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._setup_residual_function">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_setup_jacobian_function"></a><span class="summary-sig-name">_setup_jacobian_function</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Internal function to setup the jacobian function for the minimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._setup_jacobian_function">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_prepare_minimizer"></a><span class="summary-sig-name">_prepare_minimizer</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">fcn_args</span>,
+        <span class="summary-sig-arg">fcn_kws</span>,
+        <span class="summary-sig-arg">grid_points</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">grid_params</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">append</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Internal function to prepare the minimizer</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._prepare_minimizer">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_start_minimize"></a><span class="summary-sig-name">_start_minimize</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">engine</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Internal function that starts all minimizers one by one</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._start_minimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_perturb_input_data"></a><span class="summary-sig-name">_perturb_input_data</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">points</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Internal function to perturb the input data for MC simulations</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._perturb_input_data">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_mc_error_from_parameters"></a><span class="summary-sig-name">_mc_error_from_parameters</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">params</span>)</span><br />
+      Use standard deviation to get the error on a parameter</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer._mc_error_from_parameters">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Minimizer-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      String representation of the Minimizer object</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">model</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">weights</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">resfunc</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">engine</span>=<span class="sig-default">'leastsq'</span>,
+        <span class="sig-arg">args</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">kws</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">grid_points</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">grid_params</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_CI"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_CI</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">parameters</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">sigmas</span>=<span class="sig-default">[0.654,0.95,0.997]</span>,
+        <span class="sig-arg">maxiter</span>=<span class="sig-default">200</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_CI">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the confidence intervalls of the given parameters. This 
+  function uses the F-test method described below to calculate confidence 
+  intervalls. The <i>sigma</i> parameter describes which confidence level 
+  is required in percentage: sigma=0.654 corresponds with the standard 1 
+  sigma level, 0.95 with 2 sigma and 0.997 with 3 sigma.</p>
+  <p>The output is a dictionary containing for each parameter the lower and
+  upper boundary of the asked confidence level. If short_output is True, an
+  array of tupples is returned instead. When only one parameter is given, 
+  and short_output is True, only a tupple of the lower and upper boundary 
+  is returned.</p>
+  <p>The confidence intervalls calculated with this function are stored in 
+  the Model or Function as well.</p>
+  <h1 class="heading">F-test</h1>
+    <p>The F-test is used to compare the null model, which is the best fit 
+    found by the minimizer, with an alternate model, where one of the 
+    parameters is fixed to a specific value. The value is changed util the 
+    differnce between chi2_0 and chi2_f can't be explained by the loss of a
+    degree of freedom with a certain confidence.</p>
+    <p><i class="math">F = (chi2_f / chi2_0 - 1) * (N-P)/P_fix</i></p>
+    <p>N is the number of data-points, P the number of parameter of the 
+    null model. P_fix is the number of fixed parameters (or to be more 
+    clear, the difference of number of parameters betweeen the null model 
+    and the alternate model).</p>
+    <p>This method relies completely on the I(conf_interval) method of the 
+    lmfit package.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>parameters</code></strong> (array of strings) - Names of the parameters to calculate the CIs from (if None, all 
+          parameters are used)</li>
+        <li><strong class="pname"><code>sigmas</code></strong> (array or float) - The probability levels used to calculate the CI</li>
+    </ul></dd>
+    <dt>Returns: dict</dt>
+        <dd>the confidence intervals.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_CI_2D"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_CI_2D</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">xpar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ypar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">res</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">limits</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ctype</span>=<span class="sig-default">'prob'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_CI_2D">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates the confidence interval for 2 given parameters. Both the  
+  confidence interval calculated using the F-test method from the 
+  <i>estimate_error</i> method, and the normal chi squares can be obtained 
+  using the <i>ctype</i> keyword.</p>
+  <p>The confidence intervall is returned as a grid, together with the x 
+  and y distribution of the parameters: (x-values, y-values, grid)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>xname</code></strong> - The parameter on the x axis</li>
+        <li><strong class="pname"><code>yname</code></strong> - The parameter on the y axis</li>
+        <li><strong class="pname"><code>res</code></strong> - The resolution of the grid over which the confidence intervall is
+          calculated</li>
+        <li><strong class="pname"><code>limits</code></strong> - The upper and lower limit on the parameters for which the 
+          confidence intervall is calculated. If None, 5 times the stderr 
+          is used.</li>
+        <li><strong class="pname"><code>ctype</code></strong> - 'prob' for probabilities plot (using F-test), 'chi2' for 
+          chi-squares.</li>
+    </ul></dd>
+    <dt>Returns: (array, array, 2d array)</dt>
+        <dd>the x values, y values and confidence values</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_MC_error"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_MC_error</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">100</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">distribution</span>=<span class="sig-default">'gauss'</span>,
+        <span class="sig-arg">short_output</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.calculate_MC_error">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Use Monte-Carlo simulations to estimate the error of each parameter. 
+  In this approach each datapoint is perturbed by its error, and for each 
+  new dataset best fitting parameters are calculated. The MC error of a 
+  parameter is its deviation over all iterations (points).</p>
+  <p>The errors supplied to this function will overwrite the errors already
+  stored in this Minimizer. If however no errors are supplied, the already 
+  stored ones will be used. For now only symetric errors are supported.</p>
+  <p>Currently all datapoints are considered to have a symetric gaussian 
+  distribution, but in future version more distributions will be 
+  supported.</p>
+  <p>The MC errors are saved in the Model or Function supplied to this 
+  fitter, and can be returned as an array (short_output=True), or as a 
+  dictionary (short_output=False).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>points</code></strong> (int) - The number of itterations</li>
+        <li><strong class="pname"><code>errors</code></strong> (array or float) - Possible new errors on the input data.</li>
+        <li><strong class="pname"><code>distribution</code></strong> (str) - Not yet supported</li>
+        <li><strong class="pname"><code>short_output</code></strong> (bool) - True if you want array, False if you want dictionary</li>
+    </ul></dd>
+    <dt>Returns: array or dict</dt>
+        <dd>The MC errors of all parameters.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_fit"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_fit</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">1000</span>,
+        <span class="sig-arg">axis</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">legend</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_fit">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot the original data together with the best fit results. This method
+  has some functionality to plot multi-dimensional data, but is limited to 
+  2D data which it will plot consecutively allong the specified axis.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>points</code></strong> (int) - Number of points to use when plotting the best fit model.</li>
+        <li><strong class="pname"><code>axis</code></strong> (int) - In case of multi-dim input along which axis to split (0 or 1)</li>
+        <li><strong class="pname"><code>legend</code></strong> (bool) - Display legend on plot</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_residuals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_residuals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">axis</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">legend</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_residuals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot the residuals of the best fit. This method has some functionality
+  to plot multi-dimensional data, but is limited to 2D data which it will 
+  plot consecutively allong the specified axis.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>axis</code></strong> (int) - In case of multi-dim input along which axis to split (0 or 1)</li>
+        <li><strong class="pname"><code>legend</code></strong> (bool) - Display legend on plot</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_results"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_results</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">1000</span>,
+        <span class="sig-arg">axis</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">legend</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_results">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Creates a basic plot with the fit results and corresponding residuals.
+  This method has some functionality to plot multi-dimensional data, but is
+  up till now limited to 2D data which it will plot consecutively allong 
+  the specified axis. Based on the plot_fit and plot_residuals 
+  functions</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>points</code></strong> (int) - Number of points to use when plotting the best fit model.</li>
+        <li><strong class="pname"><code>axis</code></strong> (int) - In case of multi-dim input along which axis to split (0 or 1)</li>
+        <li><strong class="pname"><code>legend</code></strong> (bool) - Display legend on plot</li>
+        <li><strong class="pname"><code>xlabel</code></strong> (str) - label for the x-axis</li>
+        <li><strong class="pname"><code>ylabel</code></strong> (str) - label for the y-axis</li>
+        <li><strong class="pname"><code>title</code></strong> (str) - title of the plot</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_confidence_interval"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_confidence_interval</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">xpar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ypar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">res</span>=<span class="sig-default">10</span>,
+        <span class="sig-arg">limits</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ctype</span>=<span class="sig-default">'prob'</span>,
+        <span class="sig-arg">filled</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_confidence_interval">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot the confidence interval for 2 given parameters. Both the  
+  confidence interval calculated using the F-test method from the 
+  <i>estimate_error</i> method, and the normal chi squares can be  plotted 
+  using the <i>type</i> keyword. In case of chi2, the log10 of the chi 
+  squares is plotted to improve the clarity of the plot.</p>
+  <p>Extra kwargs are passed to <code>confourf</code> or 
+  <code>contour</code>.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>xname</code></strong> - The parameter on the x axis</li>
+        <li><strong class="pname"><code>yname</code></strong> - The parameter on the y axis</li>
+        <li><strong class="pname"><code>res</code></strong> - The resolution of the grid over which the confidence intervall is
+          calculated</li>
+        <li><strong class="pname"><code>limits</code></strong> - The upper and lower limit on the parameters for which the 
+          confidence intervall is calculated. If None, 5 times the stderr 
+          is used.</li>
+        <li><strong class="pname"><code>ctype</code></strong> - 'prob' for probabilities plot (using F-test), 'chi2' for 
+          chisquare plot.</li>
+        <li><strong class="pname"><code>filled</code></strong> - True for filled contour plot, False for normal contour plot</li>
+        <li><strong class="pname"><code>limits</code></strong> - The upper and lower limit on the parameters for which the 
+          confidence intervall is calculated. If None, 5 times the stderr 
+          is used.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_grid_convergence"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_grid_convergence</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">xpar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ypar</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">chi2lim</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">chi2scale</span>=<span class="sig-default">'log'</span>,
+        <span class="sig-arg">show_colorbar</span>=<span class="sig-default">'True'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.plot_grid_convergence">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot the convergence path of the results from grid_minimize stored in 
+  this minimizer. The start values of the two selected parameters are 
+  plotted conected to there final best fit values, while using a color 
+  coding for the chisqr value of the fit result.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>xpar</code></strong> - The parameter on the x axis</li>
+        <li><strong class="pname"><code>ypar</code></strong> - The parameter on the y axis</li>
+        <li><strong class="pname"><code>chi2lim</code></strong> - Optional limit on the chi2 value (in % of the maximum chi2)</li>
+        <li><strong class="pname"><code>chi2scale</code></strong> - Scale for the chi2 values: 'log' or 'linear'</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="minimizer"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">minimizer</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">val</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.minimizer">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>set minimizer</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@minimizer.setter</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="errors"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">errors</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">val</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.errors">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>set error</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@errors.setter</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grid</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>get minimizer grid</p>
+  <dl class="fields">
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@property</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Minimizer.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>String representation of the Minimizer object</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__str__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

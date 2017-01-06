@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.fit.Function</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        <a href="ivs.sigproc.fit-module.html">Module&nbsp;fit</a> ::
+        Class&nbsp;Function
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.fit.Function-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Function</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>Class to define a function with associated parameters. The function 
+  can be evaluated using the <a 
+  href="ivs.sigproc.fit.Function-class.html#evaluate" 
+  class="link">evaluate</a> method. Parameters can be added/updated, 
+  together with boundaries and expressions, and can be hold fixed and 
+  released by adjusting the vary keyword in <a 
+  href="ivs.sigproc.fit.Function-class.html#setup_parameters" 
+  class="link">setup_parameters</a>.</p>
+  <p>The provided function needs to take two arguments. The first one is a 
+  list of parameters, the second is a list of x-values for which the 
+  function will be evaluated. For example if you want to define a quadratic
+  function it will look like:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>func = <span class="py-keyword">lambda</span> pars, x: pars[0] + pars[1] * x + pars[2] * x**2</pre>
+  <p>Functions can be combined using the <a 
+  href="ivs.sigproc.fit.Model-class.html" class="link">Model</a> class, or 
+  can be fitted directly to data using the <a 
+  href="ivs.sigproc.fit.Minimizer-class.html" class="link">Minimizer</a> 
+  class.</p>
+  <p>To improve the fit, a jacobian can be provided as well. However, some 
+  care is nessessary when defining this function. When using the <a 
+  href="ivs.sigproc.fit.Minimizer-class.html" class="link">Minimizer</a> 
+  class to fit a Function to data, the residual function is defined as:</p>
+<pre class="literalblock">
+   residuals = data - Function.evaluate()
+</pre>
+  <p>To derive the jacobian you have to take the derivatives of -1 * 
+  function. Furthermore the derivatives have to be across the rows. For the
+  example quadratic function above, the jacobian would look like:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>jacobian = <span class="py-keyword">lambda</span> pars, x: np.array([-np.ones(len(x)), -x, -x**2]).T</pre>
+  <p>If you get bad results, try flipping all signs. The jacobian does not 
+  really improve the speed of the fitprocess, but it does help to reach the
+  minimum in a more consistent way (see examples).</p>
+  <p>The internal representation of the parameters uses a parameter object 
+  of the <a 
+  href="http://cars9.uchicago.edu/software/python/lmfit/index.html" 
+  target="_top">lmfit</a> package. No knowledge of this repersentation is 
+  required as methods for direct interaction with the parameter values and 
+  other settings are provided. If wanted, the parameters object itself can 
+  be obtained with the <code class="link">parameters</code> attribute.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">function</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">par_names</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">jacobian</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">resfunc</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Create a new Function by providing the function of which it consists 
+      together with the names of each parameter in this function.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Interaction</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">numpy array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#evaluate" class="summary-sig-name">evaluate</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Evaluate the function for the given values and optional the given 
+      parameter object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.evaluate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#evaluate_jacobian" class="summary-sig-name">evaluate_jacobian</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">*args</span>)</span><br />
+      Evaluates the jacobian if that function is provided, using the given 
+      parameter object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.evaluate_jacobian">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#setup_parameters" class="summary-sig-name">setup_parameters</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">value</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">bounds</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vary</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">expr</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Create or adjust a parameter object based on the parameter names and 
+      if provided the values, bounds, vary and expressions.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.setup_parameters">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#update_parameter" class="summary-sig-name">update_parameter</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">parameter</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Updates a specified parameter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.update_parameter">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">numpy arrays</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#get_parameters" class="summary-sig-name">get_parameters</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">parameters</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">error</span>=<span class="summary-sig-default">'stderr'</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the parameter values together with the errors if they exist.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.get_parameters">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Print functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">string</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#param2str" class="summary-sig-name">param2str</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Converts the parameter object of this model to an easy printable 
+      string, including the value, error, boundaries, if the parameter is 
+      varied, and if in the fitting process on of the boundaries was 
+      reached.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.param2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">string</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#correl2str" class="summary-sig-name">correl2str</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Convert the correlations between the different parameters of this 
+      function to an easy printable string.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.correl2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">string</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#ci2str" class="summary-sig-name">ci2str</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Convert the confidence intervals of the parameters of this model to 
+      an easy printable string.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.ci2str">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit.Function-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      String representation of the Function object</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">function</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">par_names</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">jacobian</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">resfunc</span>=<span class="sig-default">None</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Create a new Function by providing the function of which it consists 
+  together with the names of each parameter in this function. You can 
+  specify the jacobian as well.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>function</code></strong> (function) - A function expression</li>
+        <li><strong class="pname"><code>par_names</code></strong> (list of strings) - The names of each parameter of function</li>
+        <li><strong class="pname"><code>jacobian</code></strong> (function) - A function expression for the jacobian of function.</li>
+        <li><strong class="pname"><code>resfunc</code></strong> (function) - Function to calculate the residuals. (Not obligatory)</li>
+    </ul></dd>
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="evaluate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">evaluate</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x</span>,
+        <span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.evaluate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluate the function for the given values and optional the given 
+  parameter object. If no parameter object is given then the parameter 
+  object belonging to the function is used.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#func.evaluate(x, parameters)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#func.evaluate(x)</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (numpy array) - the independant data for which to evaluate the function</li>
+    </ul></dd>
+    <dt>Returns: numpy array</dt>
+        <dd>Function(x), same size as x</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="evaluate_jacobian"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">evaluate_jacobian</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x</span>,
+        <span class="sig-arg">*args</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.evaluate_jacobian">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluates the jacobian if that function is provided, using the given 
+  parameter object. If no parameter object is given then the parameter 
+  object belonging to the function is used.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="setup_parameters"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setup_parameters</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">value</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">bounds</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vary</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">expr</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.setup_parameters">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Create or adjust a parameter object based on the parameter names and 
+  if provided the values, bounds, vary and expressions. Basic checking if 
+  the parameter boundaries are consistent is performed.</p>
+  <p>Example Use:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>setup_parameters(<span class="py-builtin">values</span>=[v1, v2, ...], bounds=[(b1, b2), (b3, b4), ...], vary=[True, False, ...])</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>values</code></strong> (array) - The values of the parameters</li>
+        <li><strong class="pname"><code>bounds</code></strong> (array of tuples) - min and max boundaries on the parameters [(min,max),...]</li>
+        <li><strong class="pname"><code>vary</code></strong> (array) - Boolean array, true to vary a parameter, false to keep it fixed 
+          in the fitting process</li>
+        <li><strong class="pname"><code>exprs</code></strong> (array) - array of expressions that the paramters have to follow</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="update_parameter"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">update_parameter</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">parameter</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.update_parameter">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Updates a specified parameter. The parameter can be given by name or 
+  by index. This method also supports the use of min and max keywords to 
+  set the lower and upper boundary seperatly.</p>
+  <p>Example Use:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>update_parameter(parameter=<span class="py-string">'parname'</span>, value=10.0, min=5.0, vary=True)
+<span class="py-prompt">&gt;&gt;&gt; </span>update_parameter(parameter=2, value=0.15, bounds=(0.10, 0.20))</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_parameters"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_parameters</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">parameters</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">error</span>=<span class="sig-default">'stderr'</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.get_parameters">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the parameter values together with the errors if they exist. 
+  If No fitting has been done, or the errors could not be calculated, None 
+  is returned for the error.</p>
+  <p>The parameters of which the settings should be returned can be given 
+  in <i>parameters</i>. If None is given, all parameters are returned.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>parameters</code></strong> (array) - Parameters to be returned or None for all parameters.</li>
+        <li><strong class="pname"><code>error</code></strong> (string) - Which error to return ('stderr', 'mcerr')</li>
+        <li><strong class="pname"><code>full_output</code></strong> (bool) - When True, also vary, the boundaries and expression are returned</li>
+    </ul></dd>
+    <dt>Returns: numpy arrays</dt>
+        <dd>the parameter values and there errors: value, err, [vary, min, 
+          max, expr]</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="param2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">param2str</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.param2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Converts the parameter object of this model to an easy printable 
+  string, including the value, error, boundaries, if the parameter is 
+  varied, and if in the fitting process on of the boundaries was 
+  reached.</p>
+  <p>The error to be printed can be set with the error keyword. You can 
+  chose from the standard error: 'stderr', the monte carlo error: 'mcerr', 
+  or any of the confidence intervalls that you have calculated by coding 
+  them like: 'ci###'. Fx: 95% (sigma = 0.95) use 'ci95', for 99.7% (sigma =
+  0.997) use 'ci997'. Don't put decimal signs in the ci!</p>
+  <p>The accuracy with which the parameters are printed can be set with the
+  accuracy keyword. And the amount of information that is printed is 
+  determined by full_output. If False, only parameter value and error are 
+  printed, if True also boundaries and vary are shown.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>accuracy</code></strong> (int) - Number of decimal places to print</li>
+        <li><strong class="pname"><code>error</code></strong> (string) - Which error type to print ('stderr', 'mcerr' or 'ci###')</li>
+        <li><strong class="pname"><code>full_output</code></strong> (bool) - Amount of information to print</li>
+    </ul></dd>
+    <dt>Returns: string</dt>
+        <dd>parameters in string format</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="correl2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">correl2str</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.correl2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the correlations between the different parameters of this 
+  function to an easy printable string. The correlations are only printed 
+  if they are larger than a certain provided limit. And the accuracy 
+  keyword sets the amount of decimals to print</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>accuracy</code></strong> - number of decimal places to print</li>
+        <li><strong class="pname"><code>limit</code></strong> - minimum correlation value to print</li>
+    </ul></dd>
+    <dt>Returns: string</dt>
+        <dd>correlation in string format</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="ci2str"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">ci2str</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.ci2str">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the confidence intervals of the parameters of this model to an
+  easy printable string.</p>
+  <p>The accuracy with wich the CIs should be printed can be set with the 
+  accuracy keyword.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>accuracy</code></strong> (int) - Number of decimal places to print</li>
+    </ul></dd>
+    <dt>Returns: string</dt>
+        <dd>confidence intervals in string format</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#Function.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>String representation of the Function object</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__str__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

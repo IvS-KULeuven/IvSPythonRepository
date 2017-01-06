@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.catalogs.gcpd</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.catalogs-module.html">Package&nbsp;catalogs</a> ::
+        Module&nbsp;gcpd
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.catalogs.gcpd-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module gcpd</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html">source&nbsp;code</a></span></p>
+<p>Interface to Geneva's Genaral Catalogue of Photometric Data</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Basic interfaces</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gcpd-module.html#search" class="summary-sig-name">search</a>(<span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Search and retrieve information from the GCPD catalog.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gcpd-module.html#gcpd2phot" class="summary-sig-name">gcpd2phot</a>(<span class="summary-sig-arg">source</span>,
+        <span class="summary-sig-arg">results</span>,
+        <span class="summary-sig-arg">units</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">e_flag</span>=<span class="summary-sig-default">'e_'</span>,
+        <span class="summary-sig-arg">q_flag</span>=<span class="summary-sig-default">'q_'</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convert/combine GCPD record arrays to measurement record arrays.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#gcpd2phot">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gcpd-module.html#get_photometry" class="summary-sig-name">get_photometry</a>(<span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">extra_fields</span>=<span class="summary-sig-default">[]</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Download all available photometry from a star to a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#get_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8"  class="private">
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Internal helper functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.catalogs.gcpd-module.html#_get_URI" class="summary-sig-name" onclick="show_private();">_get_URI</a>(<span class="summary-sig-arg">name</span>=<span class="summary-sig-default">'GENEVA'</span>,
+        <span class="summary-sig-arg">ID</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Build GCPD URI from available options.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#_get_URI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.catalogs.gcpd-module.html#systems" class="summary-name">systems</a> = <code title="{'JOHNSON': 1, 'STROMGREN': 4, 'ARGUE': 10, 'GENEVA': 13, 'KRON': 19, \
+'VILNIUS': 21, 'WOOD': 22, 'WBVR': 78, 'STRAIZYS': 80, 'DDO': 12}">{'JOHNSON': 1, 'STROMGREN': 4, 'ARGUE': 10, 'GENEVA'<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;CAT.VIZIER&quot;)">logging.getLogger(&quot;CAT.VIZIER&quot;)</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="basedir"></a><span class="summary-name">basedir</span> = <code title="os.path.dirname(os.path.abspath(__file__))">os.path.dirname(os.path.abspath(__file__))</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cat_info"></a><span class="summary-name">cat_info</span> = <code title="ConfigParser.ConfigParser()">ConfigParser.ConfigParser()</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">search</span>(<span class="sig-arg">name</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Search and retrieve information from the GCPD catalog.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (string) - name of photometric system</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gcpd2phot"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gcpd2phot</span>(<span class="sig-arg">source</span>,
+        <span class="sig-arg">results</span>,
+        <span class="sig-arg">units</span>,
+        <span class="sig-arg">master</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">e_flag</span>=<span class="sig-default">'e_'</span>,
+        <span class="sig-arg">q_flag</span>=<span class="sig-default">'q_'</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#gcpd2phot">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert/combine GCPD record arrays to measurement record arrays.</p>
+  <p>Every line in the combined array represents a measurement in a certain
+  band.</p>
+  <p>The standard columns are:</p>
+  <ol start="1">
+    <li>
+      <code>meas</code>: containing the photometric measurement
+    </li>
+    <li>
+      <code>e_meas</code>: the error on the photometric measurement
+    </li>
+    <li>
+      <code>flag</code>: an optional quality flag
+    </li>
+    <li>
+      <code>unit</code>: the unit of the measurement
+    </li>
+    <li>
+      <code>photband</code>: the photometric passband (FILTER.BAND)
+    </li>
+    <li>
+      <code>source</code>: name of the source catalog
+    </li>
+  </ol>
+  <p>If you give a <code>master</code>, the information will be added to a 
+  previous record array. If not, a new master will be created.</p>
+  <p>Colors will be expanded, derived from the other columns and added to 
+  the master.</p>
+  <p>The result is a record array with each row a measurement.</p>
+  <p>Extra fields are not available for the GCPD, they will be filled in 
+  with nans.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>source</code></strong> (str) - name of the VizieR source</li>
+        <li><strong class="pname"><code>results</code></strong> (record array) - results from VizieR <code>search</code></li>
+        <li><strong class="pname"><code>units</code></strong> (dict) - header of Vizier catalog with key name the column name and key 
+          value the units of that column</li>
+        <li><strong class="pname"><code>master</code></strong> (record array) - master record array to add information to</li>
+        <li><strong class="pname"><code>e_flag</code></strong> (str) - flag denoting the error on a column</li>
+        <li><strong class="pname"><code>q_flag</code></strong> (str) - flag denoting the quality of a measurement</li>
+        <li><strong class="pname"><code>extra_fields</code></strong> (list of str) - any extra columns you want to add information from</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>array with each row a measurement</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_photometry</span>(<span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">extra_fields</span>=<span class="sig-default">[]</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#get_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Download all available photometry from a star to a record array.</p>
+  <p>Extra fields will not be useful probably.</p>
+  <p>For extra kwargs, see <a href="ivs.catalogs.gcpd-module.html#_get_URI"
+  class="link" onclick="show_private();">_get_URI</a> and <a 
+  href="ivs.catalogs.gcpd-module.html#gcpd2phot" 
+  class="link">gcpd2phot</a></p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_URI"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_URI</span>(<span class="sig-arg">name</span>=<span class="sig-default">'GENEVA'</span>,
+        <span class="sig-arg">ID</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.catalogs.gcpd-pysrc.html#_get_URI">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Build GCPD URI from available options.</p>
+  <p>kwargs are to catch unused arguments.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>name</code></strong> (string (automatically uppercased)) - photometric system name (E.g. JOHNSON, STROMGREN, GENEVA...)</li>
+        <li><strong class="pname"><code>ID</code></strong> (string) - star name (should be resolvable by SIMBAD)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="systems"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">systems</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+{'JOHNSON': 1, 'STROMGREN': 4, 'ARGUE': 10, 'GENEVA': 13, 'KRON': 19, <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+'VILNIUS': 21, 'WOOD': 22, 'WBVR': 78, 'STRAIZYS': 80, 'DDO': 12}
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

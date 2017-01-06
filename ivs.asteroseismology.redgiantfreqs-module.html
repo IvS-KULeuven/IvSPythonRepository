@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.asteroseismology.redgiantfreqs</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.asteroseismology-module.html">Package&nbsp;asteroseismology</a> ::
+        Module&nbsp;redgiantfreqs
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.asteroseismology.redgiantfreqs-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module redgiantfreqs</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html">source&nbsp;code</a></span></p>
+<p>Functions for Red Giant Seismology.</p>
+  <h1 class="heading">Contents:</h1>
+    <p>This library contains several functions which allow to identify 
+    modes in the power-spectra of red giants. For the description of the 
+    pressure modes, the formulism of Mosser et al. 
+    (2011A&amp;A...525L...9M) for the 'Universal Oscillation Pattern' is 
+    available.</p>
+    <p>For the description of the frequencies and rotational splitting of 
+    the mixed dipole modes, the formalism of Mosser et al. 
+    (2012A&amp;A...540A.143M) and (2012arXiv1209.3336M) has been scripted. 
+    To apply this method, one needs to know the value of the true period 
+    spacing. The modulation of the mixing between pressure- and 
+    gravity-dipole modes is described through a Lorentzian profile. This 
+    approach assumes a constant Period Spacing for all radial orders. 
+    Comparing the modelled frequencies with the real frequencies, found in 
+    an spectrum, will work well for the several radial orders but 
+    deviations can be found in other regions of the spectrum. A similar 
+    Lorentzian description is valid for rotational splitting.</p>
+    <h2 class="heading">Contents:</h2>
+      <p>* purePressureMode: calculates the position of the pure pressure 
+      pressure mode of a spherical degree \ell and radial order.</p>
+      <p>* universalPattern: creates an array with the frequencies of all 
+      pure pressure modes with \ell=0,1,2 and 3, whereby the index i 
+      selectes all m odes of the same spherical degree: e.g.: 
+      asymptoticRelation[0] = all \ell=0, asymptoticRelation[2] = all 
+      \ell=2, asymptoticRelation[-1] gives an array with the radial orders 
+      (as float).</p>
+      <p>* asymptoticRelation: returns an array with the frequencies of the
+      pure pressure modes of the pure pressure modes</p>
+      <p>* rotational splitting: calculates the expected rotational 
+      splitting of a dipole mode based on the degree of mixing</p>
+    <h2 class="heading">Example: KIC 4448777</h2>
+      <p>This star is a H-shell burning red giant with rotational 
+      splitting. The powerspectrum can be found here: ...</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> ivs.asteroseismology.redgiantfreqs <span class="py-keyword">as</span> rg
+<span class="py-prompt">&gt;&gt;&gt; </span>centralRadial=  226.868     <span class="py-comment"># [muHz], Frequency of the central radial mode</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>largeSep    = 17.000                <span class="py-comment"># [muHz], large Frequency separation in powerspectrum</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>smallSep    = 2.201                 <span class="py-comment"># [muHz], small Frequency separation in powerspectrum</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>
+<span class="py-prompt">&gt;&gt;&gt; </span>DeltaPg             = 89.9                  <span class="py-comment"># [seconds],    true period spacing of dipole modes</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>dfMax               = 0.45                  <span class="py-comment"># [muHz], normalized rotational splitting (i.e. |freq_{m=0} - freq_{m=+/-1}|</span>
+<span class="py-prompt">&gt;&gt;&gt; </span>
+<span class="py-prompt">&gt;&gt;&gt; </span>qCoupling= 0.15; lambdaParam = 0.5; beParam = 0.08 <span class="py-comment">#Default values</span></pre>
+      <p>First model the frequencies of the pure pressure modes.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>frequenciesUniversalPattern = rg.universalPattern(largeSep, smallSep, centralRadial)</pre>
+      <p>Next, we calculate the frequencies of the mixed dipole modes:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mixedModesPattern = rg.asymptoticRelation(centralRadial,largeSep, DeltaPg, qCoupling)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>rotationalSplittingModulation = rg.symmetricRotationalModulation(dfMax, largeSep, frequenciesUniversalPattern, mixedModesPattern, lambdaParam, beParam)</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.redgiantfreqs-module.html#purePressureMode" class="summary-sig-name">purePressureMode</a>(<span class="summary-sig-arg">nnn</span>,
+        <span class="summary-sig-arg">centralRadial</span>,
+        <span class="summary-sig-arg">largeSep</span>,
+        <span class="summary-sig-arg">smallSep</span>,
+        <span class="summary-sig-arg">epsilon</span>,
+        <span class="summary-sig-arg">ell</span>)</span><br />
+      Calculates and returns the frequency of a single pure pressure mode 
+      for a spherical (\ell=0,1,2, and 3)[Nota Bene: 3 to be implemented].</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#purePressureMode">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.redgiantfreqs-module.html#universalPattern" class="summary-sig-name">universalPattern</a>(<span class="summary-sig-arg">largeSep</span>,
+        <span class="summary-sig-arg">smallSep</span>,
+        <span class="summary-sig-arg">centralRadial</span>,
+        <span class="summary-sig-arg">numberOfRadialOrders</span>=<span class="summary-sig-default">3</span>)</span><br />
+      Calculates and returns an array containing frequencies the 
+      frequencies of the pure pressure modes of the degrees spherical 
+      degrees \ell= 0,1,2 and 3 for a defined range of radial orders.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#universalPattern">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.redgiantfreqs-module.html#asymptoticRelation" class="summary-sig-name">asymptoticRelation</a>(<span class="summary-sig-arg">centralRadial</span>,
+        <span class="summary-sig-arg">largeSep</span>,
+        <span class="summary-sig-arg">DeltaPg</span>,
+        <span class="summary-sig-arg">qCoupling</span>=<span class="summary-sig-default">0.15</span>,
+        <span class="summary-sig-arg">approximationTreshold</span>=<span class="summary-sig-default">0.001</span>,
+        <span class="summary-sig-arg">numberOfRadialOrders</span>=<span class="summary-sig-default">4</span>)</span><br />
+      Calculates and returns the frequencies mixed dipole modes in the 
+      powerspectrum of a red-giant star.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#asymptoticRelation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.asteroseismology.redgiantfreqs-module.html#symmetricRotationalModulation" class="summary-sig-name">symmetricRotationalModulation</a>(<span class="summary-sig-arg">dfMax</span>,
+        <span class="summary-sig-arg">largeSep</span>,
+        <span class="summary-sig-arg">frequenciesUniversalPattern</span>,
+        <span class="summary-sig-arg">mixedModesPattern</span>,
+        <span class="summary-sig-arg">lambdaParam</span>=<span class="summary-sig-default">0.5</span>,
+        <span class="summary-sig-arg">beParam</span>=<span class="summary-sig-default">0.08</span>)</span><br />
+      Calculates and returns rotational splitting</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#symmetricRotationalModulation">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="format"></a><span class="summary-name">format</span> = <code title="''">''</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="datefmt"></a><span class="summary-name">datefmt</span> = <code title="''">''</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('IVS.RG')">logging.getLogger('IVS.RG')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="purePressureMode"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">purePressureMode</span>(<span class="sig-arg">nnn</span>,
+        <span class="sig-arg">centralRadial</span>,
+        <span class="sig-arg">largeSep</span>,
+        <span class="sig-arg">smallSep</span>,
+        <span class="sig-arg">epsilon</span>,
+        <span class="sig-arg">ell</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#purePressureMode">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates and returns the frequency of a single pure pressure mode 
+  for a spherical (\ell=0,1,2, and 3)[Nota Bene: 3 to be implemented].</p>
+  <p>smallSep can be set to an abitrary value if not calculating \ell=2 
+  modes.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>nnn</code></strong> (float or integer) - radial order of the mode with respect to the radial order of the 
+          central radial mode.</li>
+        <li><strong class="pname"><code>largeSep</code></strong> (float) - large Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>smallSep</code></strong> (float) - small Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>centralRadial</code></strong> (float) - Frequency of the central radial mode, in muHz</li>
+        <li><strong class="pname"><code>epsilon</code></strong> (float) - echelle phase shift of the central Radial mode:  epsilon = 
+          centralRadial / largeSep - centralRadial // largeSep</li>
+        <li><strong class="pname"><code>ell</code></strong> (float or integer @return frequency in muHz @rtype float array) - spherical degree of a mode</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="universalPattern"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">universalPattern</span>(<span class="sig-arg">largeSep</span>,
+        <span class="sig-arg">smallSep</span>,
+        <span class="sig-arg">centralRadial</span>,
+        <span class="sig-arg">numberOfRadialOrders</span>=<span class="sig-default">3</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#universalPattern">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates and returns an array containing frequencies the frequencies
+  of the pure pressure modes of the degrees spherical degrees \ell= 0,1,2 
+  and 3 for a defined range of radial orders.</p>
+  <p>When slicing, the index number is equal to the spherical degree \ell, 
+  universalPattern[0] = all \ell=0, universalPattern[2] = all \ell=2, The 
+  number of the radial order is given as output[-1]. If desired, the array 
+  can also be printed to the screen.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>largeSep</code></strong> (float) - large Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>smallSep</code></strong> (float) - small Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>centralRadial</code></strong> (float) - Frequency of the central radial mode, in muHz</li>
+        <li><strong class="pname"><code>numberOfRadialOrders</code></strong> (float or integer
+          <p>@return array with frequencies in muHz, [-1] indicates the 
+          radial order. @rtype float array</p>) - for how many radial orders above and below the Central Radial 
+          Mode should the frequencies be calculated.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="asymptoticRelation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">asymptoticRelation</span>(<span class="sig-arg">centralRadial</span>,
+        <span class="sig-arg">largeSep</span>,
+        <span class="sig-arg">DeltaPg</span>,
+        <span class="sig-arg">qCoupling</span>=<span class="sig-default">0.15</span>,
+        <span class="sig-arg">approximationTreshold</span>=<span class="sig-default">0.001</span>,
+        <span class="sig-arg">numberOfRadialOrders</span>=<span class="sig-default">4</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#asymptoticRelation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates and returns the frequencies mixed dipole modes in the 
+  powerspectrum of a red-giant star.</p>
+  <p>This function the modulation of the mixing between pressure- and 
+  gravity-dipole and derives the frequencies of the mixed modes from 
+  it.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>centralRadial</code></strong> (float) - Frequency of the central radial mode, in muHz</li>
+        <li><strong class="pname"><code>largeSep</code></strong> (float) - large Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>smallSep</code></strong> (float) - small Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>DeltaPg</code></strong> (float) - value of the true period spacing</li>
+        <li><strong class="pname"><code>qCoupling</code></strong> (float) - coupling factor</li>
+        <li><strong class="pname"><code>approximationTreshold</code></strong> (float) - prefiltering of the solution. if modes seem to be missing, 
+          increase this parameter</li>
+        <li><strong class="pname"><code>numberOfRadialOrders</code></strong> (float or integer @return frequencies of the m=0 component of the 
+          mixed dipole modes @rtype float array) - for how many radial orders above and below the Central Radial 
+          Mode should the frequencies be calculated.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="symmetricRotationalModulation"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">symmetricRotationalModulation</span>(<span class="sig-arg">dfMax</span>,
+        <span class="sig-arg">largeSep</span>,
+        <span class="sig-arg">frequenciesUniversalPattern</span>,
+        <span class="sig-arg">mixedModesPattern</span>,
+        <span class="sig-arg">lambdaParam</span>=<span class="sig-default">0.5</span>,
+        <span class="sig-arg">beParam</span>=<span class="sig-default">0.08</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.asteroseismology.redgiantfreqs-pysrc.html#symmetricRotationalModulation">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculates and returns rotational splitting</p>
+  <p>This function the modulation of the mixing between pressure- and 
+  gravity-dipole and derives the frequencies of the mixed modes from 
+  it.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>dfMax</code></strong> (float) - the largest rotational splitting measured for a given star</li>
+        <li><strong class="pname"><code>largeSep</code></strong> (float) - large Frequency separation in powerspectrum, in muHz</li>
+        <li><strong class="pname"><code>frequenciesUniversalPattern</code></strong> (array, float) - output from rg.universalPattern</li>
+        <li><strong class="pname"><code>mixedModesPattern</code></strong> (array, float) - output from rg.asymptoticRelation</li>
+        <li><strong class="pname"><code>lambdaParam</code></strong> (float) - parameter for fitting, Default: lambdaParam = 0.5</li>
+        <li><strong class="pname"><code>beParam</code></strong> (float
+          <p>@return array with the rotational splitting @rtype array, 
+          float</p>) - parameter for fitting, Default: beParam = 0.08</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

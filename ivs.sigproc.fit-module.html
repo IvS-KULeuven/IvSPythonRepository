@@ -1,0 +1,1549 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sigproc.fit</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sigproc-module.html">Package&nbsp;sigproc</a> ::
+        Module&nbsp;fit
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sigproc.fit-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module fit</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html">source&nbsp;code</a></span></p>
+<p>Fit various functions to timeseries.</p>
+  <h1 class="heading">Section 1. Radial velocity data</h1>
+    <h2 class="heading">1.1 BD+29.3070</h2>
+      <p>Fit the orbit of the main sequence companion of the sdB+MS system 
+      BD+29.3070. The radial velocities are obtained from HERMES spectra 
+      using the cross correlation tool of the pipeline.</p>
+      <p>Necessary imports:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.io.ascii <span class="py-keyword">import</span> read2array
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.sigproc <span class="py-keyword">import</span> funclib
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> numpy <span class="py-keyword">as</span> np</pre>
+      <p>Read in the data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data = read2array(<span class="py-string">'/home/jorisv/IVS_python/test_fit/BD+29.3070.dat'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>dates, rv, err = data[:,0], data[:,1], data[:,2]</pre>
+      <p>Import the function we want to fit to the data from the function 
+      library:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel = funclib.kepler_orbit(type=<span class="py-string">'single'</span>)</pre>
+      <p>Setup the starting values of the parameters and the 
+      boundaries:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [1000, dates[0], 0.0, 0.0, (max(rv)-min(rv))/2, np.average(rv)]
+<span class="py-prompt">&gt;&gt;&gt; </span>bounds = [(pars[0]/2, pars[0]*1.5), (data[0][0]-pars[0]/2,data[0][0]+pars[0]/2), (0.0,0.5), (0,2*np.pi), (pars[4]/4,pars[4]*2), (min(rv),max(rv))]
+<span class="py-prompt">&gt;&gt;&gt; </span>vary = [True, True, True, True, True, True]
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel.setup_parameters(<span class="py-builtin">values</span>=pars, bounds=bounds, vary=vary)</pre>
+      <p>Fit the model to the data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>result = minimize(dates, rv, mymodel, weights=1/err)</pre>
+      <p>Print the results:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> mymodel.param2str()
+<span class="py-output">         p = 1012.26 +/- 16.57 </span>
+<span class="py-output">        t0 = 2455423.65 +/- 11.27 </span>
+<span class="py-output">         e = 0.16 +/- 0.01 </span>
+<span class="py-output">     omega = 1.72 +/- 0.08 </span>
+<span class="py-output">         k = 6.06 +/- 0.04 </span>
+<span class="py-output">        v0 = 32.23 +/- 0.09</span></pre>
+      <p>The minimizer already returned errors on the parameters, based on 
+      the Levenberg-Marquardt algorithm of scipy. But we can get more 
+      robust errors by using the <code 
+      class="link">Minimizer.estimate_error</code> method of the minimizer 
+      wich uses an F-test to calculate confidence intervals, fx on the 
+      period and eccentricity of the orbit:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>ci = result.estimate_error(p_names=[<span class="py-string">'p'</span>, <span class="py-string">'e'</span>], sigmas=[0.25,0.65,0.95])
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> confidence2string(ci, accuracy=4)
+<span class="py-output">p                   </span>
+<span class="py-output">                 25.00 %               65.00 %               95.00 %</span>
+<span class="py-output"> -           1006.9878              997.1355              980.7742  </span>
+<span class="py-output"> +           1017.7479             1029.2554             1053.0851  </span>
+<span class="py-output">e                   </span>
+<span class="py-output">                 25.00 %               65.00 %               95.00 %</span>
+<span class="py-output"> -              0.1603                0.1542                0.1433  </span>
+<span class="py-output"> +              0.1667                0.1731                0.1852</span></pre>
+      <p>Now plot the resulting rv curve over the original curve:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(1)
+<span class="py-prompt">&gt;&gt;&gt; </span>result.plot_results()</pre>
+<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_1.png' alt='[image example]' width='75%'/></center>
+
+
+
+      <p>We can use the <a 
+      href="ivs.sigproc.fit.Minimizer-class.html#plot_confidence_interval" 
+      class="link">Minimizer.plot_confidence_interval</a> method to plot 
+      the confidence intervals of two parameters, and show the correlation 
+      between them, fx between the period and T0:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(2)
+<span class="py-prompt">&gt;&gt;&gt; </span>result.plot_confidence_interval(xname=<span class="py-string">'p'</span>,yname=<span class="py-string">'t0'</span>, res=30, filled=True)</pre>
+<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_2.png' alt='[image example]' width='75%'/></center>
+
+
+
+      <p>To get a better idea of how the parameter space behaves we can 
+      start the fitting process from different starting values and see how 
+      they converge. Fx, we will let the fitting process start from 
+      different values for the period and the eccentricity, and then plot 
+      where they converge to</p>
+      <p>Herefore we use the <a 
+      href="ivs.sigproc.fit-module.html#grid_minimize" 
+      class="link">grid_minimize</a> function which has the same input as 
+      the normal minimize function and some extra parameters.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>fitters, startpars, models, chi2s = fit.grid_minimize(dates, rv, mymodel, weights=1/err, points=200, parameters = [<span class="py-string">'p'</span>,<span class="py-string">'e'</span>], return_all=True)</pre>
+      <p>We started fitting from 200 points randomly distributed in period 
+      and eccentricity space, with the boundary values for there parameters
+      as limits.</p>
+      <p>Based on this output we can use the <a 
+      href="ivs.sigproc.fit-module.html#plot_convergence" 
+      class="link">plot_convergence</a> function to plot to which values 
+      each starting point converges.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(3)
+<span class="py-prompt">&gt;&gt;&gt; </span>plot_convergence(startpars, models, chi2s, xpar=<span class="py-string">'p'</span>, ypar=<span class="py-string">'e'</span>)</pre>
+<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_3.png' alt='[image example]' width='75%'/></center>
+
+
+
+    <h2 class="heading">1.2 LSI+65010</h2>
+      <p>Fit orbit of massive X-ray binary LSI+65010, after Grundstrom 
+      2007:</p>
+      <p>Necessary imports:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.catalogs <span class="py-keyword">import</span> vizier
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.timeseries <span class="py-keyword">import</span> pergrams
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.aux <span class="py-keyword">import</span> numpy_ext
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl</pre>
+      <p>Read in the data, and remove the outliers:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = vizier.search(<span class="py-string">'J/ApJ/656/431/table2'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>times,RV = data[<span class="py-string">'HJD'</span>],data[<span class="py-string">'RV'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>keep = RV&lt;-30.
+<span class="py-prompt">&gt;&gt;&gt; </span>times,RV = times[keep],RV[keep]</pre>
+      <p>Find the best frequency using the Kepler periodogram, and fit an 
+      orbit with that frequency using the linear fitting routine.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freqs,ampls = pergrams.kepler(times,RV,fn=0.2)
+<span class="py-prompt">&gt;&gt;&gt; </span>freq = freqs[np.argmax(ampls)]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars1 = kepler(times, RV, freq, output_type=<span class="py-string">'new'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pars1 
+<span class="py-output">[11.581314028141733, 2451060.7517886101, 0.19000000000000003, 1.0069244281466982, 11.915330492005735, -59.178393186003241]</span></pre>
+      <p>Now we want to improve this fit using the nonlinear optimizers, 
+      deriving errors on the parameters on the fly (<b>warning: these 
+      errors are not necessarily realistic!</b>). First, we setup the 
+      model:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel = funclib.kepler_orbit(type=<span class="py-string">'single'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel.setup_parameters(pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>result = minimize(times,RV,mymodel)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars2,e_pars2 = result.model.get_parameters()
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pars2
+<span class="py-output">[  1.15815058e+01   2.45106077e+06   1.94720600e-01   1.02204827e+00</span>
+<span class="py-output">   1.19264204e+01  -5.91827773e+01]</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> mymodel.param2str(accuracy=6)
+<span class="py-output">         p = 11.581506 +/- 0.004104 </span>
+<span class="py-output">        t0 = 2451060.771681 +/- 0.583864 </span>
+<span class="py-output">         e = 0.194721 +/- 0.060980 </span>
+<span class="py-output">     omega = 1.022048 +/- 0.320605 </span>
+<span class="py-output">         k = 11.926420 +/- 0.786787 </span>
+<span class="py-output">        v0 = -59.182777 +/- 0.503345</span></pre>
+      <p>Evaluate the orbital fits, and make phasediagrams of the fits and 
+      the data</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myorbit1 = mymodel.evaluate(times,pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>myorbit2 = mymodel.evaluate(times,pars2)
+<span class="py-prompt">&gt;&gt;&gt; </span>period = result.model.parameters[<span class="py-string">'p'</span>].value
+<span class="py-prompt">&gt;&gt;&gt; </span>phases,phased = evaluate.phasediagram(times,RV,1/period)
+<span class="py-prompt">&gt;&gt;&gt; </span>phases1,phased1 = evaluate.phasediagram(times,myorbit1,1/period)
+<span class="py-prompt">&gt;&gt;&gt; </span>phases2,phased2 = evaluate.phasediagram(times,myorbit2,1/period)</pre>
+      <p>Now plot everything:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>sa1 = np.argsort(phases1)
+<span class="py-prompt">&gt;&gt;&gt; </span>sa2 = np.argsort(phases2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(freqs,ampls,<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Frequency [d$^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Statistic'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases,phased,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases1[sa1],phased1[sa1],<span class="py-string">'r-'</span>,lw=2,label=<span class="py-string">'Linear fit'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases2[sa2],phased2[sa2],<span class="py-string">'b--'</span>,lw=2,label=<span class="py-string">'Optimization'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [km s$^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend()</pre>
+<center><img src='../images/ivs_sigproc_fit_01.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 2. Fitting an absorption line</h1>
+    <p>Here we show how to use 2 gaussians to fit an absorption line with 
+    an emission feature in its core:</p>
+    <p>Setup the two gaussian functions for the fitting process:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss1 = funclib.gauss()
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [-0.75,1.0,0.1,1]
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss1.setup_parameters(<span class="py-builtin">values</span>=pars)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss2 = funclib.gauss()
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.22,1.0,0.01,0.0]
+<span class="py-prompt">&gt;&gt;&gt; </span>vary = [True, True, True, False]
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss2.setup_parameters(<span class="py-builtin">values</span>=pars, vary=vary)</pre>
+    <p>Create the model by summing up the gaussians. As we just want to sum
+    the two gaussian, we do not need to specify an expression for combining
+    the two functions:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel = Model(functions=[gauss1, gauss2])</pre>
+    <p>Create some data with noise on it</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>np.random.seed(1111)
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0.5,1.5, num=1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = mymodel.evaluate(x)
+<span class="py-prompt">&gt;&gt;&gt; </span>noise = np.random.normal(0.0, 0.015, size=len(x))
+<span class="py-prompt">&gt;&gt;&gt; </span>y = y+noise</pre>
+    <p>Change the starting values for the fit parameters:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [-0.70,1.0,0.11,0.95]
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss1.setup_parameters(<span class="py-builtin">values</span>=pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [0.27,1.0,0.005,0.0]
+<span class="py-prompt">&gt;&gt;&gt; </span>vary = [True, True, True, False]
+<span class="py-prompt">&gt;&gt;&gt; </span>gauss2.setup_parameters(<span class="py-builtin">values</span>=pars, vary=vary)</pre>
+    <p>Fit the model to the data &gt;&gt;&gt; result = minimize(x,y, 
+    mymodel)</p>
+    <p>Print the resulting values for the parameters. The errors are very 
+    small as the data only has some small normal distributed noise added to
+    it:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> gauss1.param2str(accuracy=6)
+<span class="py-output">         a = -0.750354 +/- 0.001802 </span>
+<span class="py-output">        mu = 0.999949 +/- 0.000207 </span>
+<span class="py-output">     sigma = 0.099597 +/- 0.000267 </span>
+<span class="py-output">         c = 0.999990 +/- 0.000677</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> gauss2.param2str(accuracy=6)
+<span class="py-output">         a = 0.216054 +/- 0.004485 </span>
+<span class="py-output">        mu = 1.000047 +/- 0.000226 </span>
+<span class="py-output">     sigma = 0.009815 +/- 0.000250 </span>
+<span class="py-output">         c = 0.000000 +/- 0.000000</span></pre>
+    <p>Now plot the results:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(1)
+<span class="py-prompt">&gt;&gt;&gt; </span>result.plot_results()</pre>
+<center><img src='../images/ivs_sigproc_lmfit_gaussian.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 3. Pulsation frequency analysis</h1>
+    <p>Do a frequency analysis of the star HD129929, after Aerts 2004:</p>
+    <p>Read in the data:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = vizier.search(<span class="py-string">'J/A+A/415/241/table1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>times,signal = data[<span class="py-string">'HJD'</span>],data[<span class="py-string">'Umag'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>signal -= signal.mean()</pre>
+    <p>Find the best frequency using the Scargle periodogram, fit an orbit 
+    with that frequency and optimize. Then print the results to the 
+    screen:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freqs,ampls = pergrams.scargle(times,signal,f0=6.4,fn=7)
+<span class="py-prompt">&gt;&gt;&gt; </span>freq = freqs[np.argmax(ampls)]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars1 = sine(times, signal, freq)
+<span class="py-prompt">&gt;&gt;&gt; </span>e_pars1 = e_sine(times,signal, pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars2,e_pars2,gain = optimize(times,signal,pars1,<span class="py-string">'sine'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pl.mlab.rec2txt(numpy_ext.recarr_join(pars1,e_pars1),precision=6)
+<span class="py-output">      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase</span>
+<span class="py-output">   0.000242   0.014795   6.461705   -0.093895   0.000608   0.001319   0.000006   0.089134</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pl.mlab.rec2txt(numpy_ext.recarr_join(pars2,e_pars2),precision=6)
+<span class="py-output">      const       ampl       freq       phase    e_const     e_ampl     e_freq    e_phase</span>
+<span class="py-output">   0.000242   0.014795   6.461705   -0.093895   0.000609   0.001912   0.000000   0.013386</span></pre>
+    <p>Evaluate the sines, and make phasediagrams of the fits and the 
+    data</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>mysine1 = evaluate.sine(times,pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>mysine2 = evaluate.sine(times,pars2)
+<span class="py-prompt">&gt;&gt;&gt; </span>phases,phased = evaluate.phasediagram(times,signal,pars1[<span class="py-string">'freq'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>phases1,phased1 = evaluate.phasediagram(times,mysine1,pars1[<span class="py-string">'freq'</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span>phases2,phased2 = evaluate.phasediagram(times,mysine2,pars1[<span class="py-string">'freq'</span>])</pre>
+    <p>Now plot everything:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>sa1 = np.argsort(phases1)
+<span class="py-prompt">&gt;&gt;&gt; </span>sa2 = np.argsort(phases2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(freqs,ampls,<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Frequency [d$^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [mag]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases,phased,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases1[sa1],phased1[sa1],<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases2[sa2],phased2[sa2],<span class="py-string">'b--'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [mag]'</span>)</pre>
+<center><img src='../images/ivs_sigproc_fit_02.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 4. Exoplanet transit analysis</h1>
+    <p>Find the transits of CoRoT 8b, after Borde 2010.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> urllib
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.io <span class="py-keyword">import</span> ascii
+<span class="py-prompt">&gt;&gt;&gt; </span>url = urllib.URLopener()
+<span class="py-prompt">&gt;&gt;&gt; </span>filen,msg = url.retrieve(<span class="py-string">'http://cdsarc.u-strasbg.fr/viz-bin/nph-Plot/Vgraph/txt?J%2fA%2bA%2f520%2fA66%2f.%2flc_white&amp;F=white&amp;P=0&amp;--bitmap-size&amp;800x400'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>times,signal = ascii.read2array(filen).T
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = signal / np.median(signal)
+<span class="py-prompt">&gt;&gt;&gt; </span>url.close()</pre>
+    <p>Find the best frequency using the Box Least Squares periodogram, fit
+    a transit model with that frequency, optimize and prewhiten.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freqs,ampls = pergrams.box(times,signal,f0=0.16,fn=0.162,df=0.005/times.ptp(),qma=0.05)
+<span class="py-prompt">&gt;&gt;&gt; </span>freq = freqs[np.argmax(ampls)]
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = box(times,signal,freq)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = box(times,signal,freq,b0=pars[<span class="py-string">'ingress'</span>][0]-0.05,bn=pars[<span class="py-string">'egress'</span>][0]+0.05)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> pl.mlab.rec2txt(pars,precision=6)
+<span class="py-output">       freq      depth    ingress     egress       cont</span>
+<span class="py-output">   0.161018   0.005978   0.782028   0.799229   1.000027</span></pre>
+    <p>Evaluate the transits, and make phasediagrams of the fits and the 
+    data</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>transit = evaluate.box(times,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>phases,phased = evaluate.phasediagram(times,signal,freq)
+<span class="py-prompt">&gt;&gt;&gt; </span>phases1,phased1 = evaluate.phasediagram(times,transit,freq)</pre>
+    <p>Now plot everything and print the results to the screen:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>sa1 = np.argsort(phases1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(freqs,ampls,<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Frequency [d$^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Statistic'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases,phased*100,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases1[sa1],phased1[sa1]*100,<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(0.70,0.85)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Depth [%]'</span>)</pre>
+<center><img src='../images/ivs_sigproc_fit_03.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <h1 class="heading">Section 5. Eclipsing binary fit</h1>
+    <p>Splines are not a good way to fit eclipsing binaries, but just for 
+    the sake of showing the use of the periodic spline fitting functions, 
+    we do it anyway.</p>
+    <p>We use the data on CU Cnc of Ribas, 2003:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>data,units,comms = vizier.search(<span class="py-string">'J/A+A/398/239/table1'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>times,signal = data[<span class="py-string">'HJD'</span>],data[<span class="py-string">'Dmag'</span>]</pre>
+  <h1 class="heading">Section 6. Blackbody fit</h1>
+    <p>We generate a single black body curve with Teff=10000. and 
+    scale=1.:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.sed <span class="py-keyword">import</span> model <span class="py-keyword">as</span> sed_model
+<span class="py-prompt">&gt;&gt;&gt; </span>wave_dense = np.logspace(2.6,6,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux_dense = sed_model.blackbody((wave_dense,<span class="py-string">'AA'</span>),10000.)</pre>
+    <p>We simulate 20 datapoints of this model and perturb it a bit:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>wave = np.logspace(3,6,20)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux = sed_model.blackbody((wave,<span class="py-string">'AA'</span>),10000.)
+<span class="py-prompt">&gt;&gt;&gt; </span>error = flux/2.
+<span class="py-prompt">&gt;&gt;&gt; </span>flux += np.random.normal(size=len(wave),scale=error)</pre>
+    <p>Next, we setup a single black body model to fit through the 
+    simulated data. Our initial guess is a temperature of 1000K and a scale
+    of 1:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [1000.,1.]
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel = funclib.blackbody()
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel.setup_parameters(<span class="py-builtin">values</span>=pars)</pre>
+    <p>Fitting and evaluating the fit is as easy as:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>result = minimize(wave,flux, mymodel,weights=1./error)
+<span class="py-prompt">&gt;&gt;&gt; </span>myfit = mymodel.evaluate(wave_dense)</pre>
+    <p>This is the result:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> mymodel.param2str()
+<span class="py-output">             T = 9678.90 +/- 394.26 </span>
+<span class="py-output">         scale = 1.14 +/- 0.17</span></pre>
+    <p>A multiple black body is very similar (we make the errors somewhat 
+    smaller for easier fitting):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>flux2 = sed_model.blackbody((wave,<span class="py-string">'AA'</span>),15000.)
+<span class="py-prompt">&gt;&gt;&gt; </span>flux2+= sed_model.blackbody((wave,<span class="py-string">'AA'</span>),6000.)*10.
+<span class="py-prompt">&gt;&gt;&gt; </span>flux2+= sed_model.blackbody((wave,<span class="py-string">'AA'</span>),3000.)*100.
+<span class="py-prompt">&gt;&gt;&gt; </span>error2 = flux2/10.
+<span class="py-prompt">&gt;&gt;&gt; </span>flux2 += np.random.normal(size=len(wave),scale=error2)</pre>
+    <p>The setup now needs three sets of parameters, which we choose to be 
+    all equal.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = [[1000.,1.],[1000.,1.],[1000.,1.]]
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel = funclib.multi_blackbody(n=3)
+<span class="py-prompt">&gt;&gt;&gt; </span>mymodel.setup_parameters(<span class="py-builtin">values</span>=pars)</pre>
+    <p>Fitting and evaluate is again very easy:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>result = minimize(wave,flux2, mymodel,weights=1./error2)
+<span class="py-prompt">&gt;&gt;&gt; </span>myfit2 = result.model.evaluate(wave_dense)</pre>
+    <p>This is the result:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> mymodel.param2str()
+<span class="py-output">           T_0 = 6155.32 +/- 3338.54 </span>
+<span class="py-output">       scale_0 = 9.54 +/- 23.00 </span>
+<span class="py-output">           T_1 = 3134.37 +/- 714.01 </span>
+<span class="py-output">       scale_1 = 93.40 +/- 17.98 </span>
+<span class="py-output">           T_2 = 14696.40 +/- 568.76 </span>
+<span class="py-output">       scale_2 = 1.15 +/- 0.33</span></pre>
+    <p>And a nice plot of the two cases:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(121)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_dense,flux_dense,<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_dense,myfit,<span class="py-string">'r-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,flux,yerr=error,fmt=<span class="py-string">'bs'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_xscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(122)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(wave_dense,myfit2,<span class="py-string">'r-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,flux2,yerr=error2,fmt=<span class="py-string">'bs'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_xscale(<span class="py-string">'log'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)</pre>
+<center><img src='../images/ivs_sigproc_lmfit_blackbody.png' alt='[image example]' width='75%'/></center>
+
+
+
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Classes</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Classes"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Non-linear improvements</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sigproc.fit.Function-class.html" class="summary-name">Function</a><br />
+      Class to define a function with associated parameters.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sigproc.fit.Model-class.html" class="summary-name">Model</a><br />
+      Class to create a model using different <a 
+        href="ivs.sigproc.fit.Function-class.html" 
+        class="link">Function</a>s each with their associated parameters.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sigproc.fit.Minimizer-class.html" class="summary-name">Minimizer</a><br />
+      A minimizer class on the <a 
+        href="http://cars9.uchicago.edu/software/python/lmfit/index.html" 
+        target="_top">lmfit</a> Python package, which provides a simple, 
+        flexible interface to non-linear least-squares optimization, or 
+        curve fitting.
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Linear fit functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#sine" class="summary-sig-name">sine</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freq</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">constant</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">error</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Fit a harmonic function.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#sine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#periodic_spline" class="summary-sig-name">periodic_spline</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freq</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">order</span>=<span class="summary-sig-default">20</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">3</span>)</span><br />
+      Fit a periodic spline.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#periodic_spline">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#kepler" class="summary-sig-name">kepler</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freq</span>,
+        <span class="summary-sig-arg">sigma</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">wexp</span>=<span class="summary-sig-default">2.</span>,
+        <span class="summary-sig-arg">e0</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">en</span>=<span class="summary-sig-default">0.99</span>,
+        <span class="summary-sig-arg">de</span>=<span class="summary-sig-default">0.01</span>,
+        <span class="summary-sig-arg">output_type</span>=<span class="summary-sig-default">'old'</span>)</span><br />
+      Fit a Kepler orbit to a time series.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#kepler">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#box" class="summary-sig-name">box</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">freq</span>,
+        <span class="summary-sig-arg">b0</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">bn</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">order</span>=<span class="summary-sig-default">50</span>,
+        <span class="summary-sig-arg">t0</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Fit box shaped transits.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#box">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">tuple</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#gauss" class="summary-sig-name">gauss</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">threshold</span>=<span class="summary-sig-default">0.1</span>,
+        <span class="summary-sig-arg">constant</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">init_guess_method</span>=<span class="summary-sig-default">'analytical'</span>,
+        <span class="summary-sig-arg">window</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Fit a Gaussian profile to data using a polynomial fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#gauss">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Error determination</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">Nx4 array(, Nx3 array)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#e_sine" class="summary-sig-name">e_sine</a>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">correlation_correction</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">limit</span>=<span class="summary-sig-default">10000</span>)</span><br />
+      Compute the errors on the parameters from a sine fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#e_sine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Linear improvements</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="diffcorr"></a><span class="summary-sig-name">diffcorr</span>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">func_name</span>,
+        <span class="summary-sig-arg">max_iter</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">tol</span>=<span class="summary-sig-default">1e-6</span>,
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">()</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Differential corrections.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#diffcorr">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Non-linear improvements</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="residuals"></a><span class="summary-sig-name">residuals</span>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">domain</span>,
+        <span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">evalfunc</span>,
+        <span class="summary-sig-arg">weights</span>,
+        <span class="summary-sig-arg">logar</span>,
+        <span class="summary-sig-arg">*args</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#residuals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="residuals_single"></a><span class="summary-sig-name">residuals_single</span>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">domain</span>,
+        <span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">evalfunc</span>,
+        <span class="summary-sig-arg">weights</span>,
+        <span class="summary-sig-arg">logar</span>,
+        <span class="summary-sig-arg">*args</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#residuals_single">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="optimize"></a><span class="summary-sig-name">optimize</span>(<span class="summary-sig-arg">times</span>,
+        <span class="summary-sig-arg">signal</span>,
+        <span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">func_name</span>,
+        <span class="summary-sig-arg">prep_func</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">minimizer</span>=<span class="summary-sig-default">'leastsq'</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">logar</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">()</span>)</span><br />
+      Fit a function to data.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#optimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#minimize" class="summary-sig-name">minimize</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">model</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">resfunc</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">engine</span>=<span class="summary-sig-default">'leastsq'</span>,
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">kws</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">scale_covar</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">iter_cb</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**fit_kws</span>)</span><br />
+      Basic minimizer function using the <a 
+      href="ivs.sigproc.fit.Minimizer-class.html" 
+      class="link">Minimizer</a> class, find values for the parameters so 
+      that the sum-of-squares of <i class="math">(y-model(x))</i> is 
+      minimized.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#minimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">Minimizer object or array of [Minimizer, Model, float]</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#grid_minimize" class="summary-sig-name">grid_minimize</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">model</span>,
+        <span class="summary-sig-arg">errors</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">resfunc</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">engine</span>=<span class="summary-sig-default">'leastsq'</span>,
+        <span class="summary-sig-arg">args</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">kws</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">scale_covar</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">iter_cb</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">parameters</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">return_all</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**fit_kws</span>)</span><br />
+      Grid minimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#grid_minimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;General purpose</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float(,list)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sigproc.fit-module.html#get_correlation_factor" class="summary-sig-name">get_correlation_factor</a>(<span class="summary-sig-arg">residus</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Calculate the correlation facor rho (Schwarzenberg-Czerny, 2003).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#get_correlation_factor">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Print and plot functions</th></tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_calc_length"></a><span class="summary-sig-name">_calc_length</span>(<span class="summary-sig-arg">par</span>,
+        <span class="summary-sig-arg">accuracy</span>,
+        <span class="summary-sig-arg">field</span>=<span class="summary-sig-default">None</span>)</span><br />
+      helper function to calculate the length of the given parameters for 
+      parameters2string</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#_calc_length">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_format_field"></a><span class="summary-sig-name">_format_field</span>(<span class="summary-sig-arg">par</span>,
+        <span class="summary-sig-arg">field</span>,
+        <span class="summary-sig-arg">maxlen</span>=<span class="summary-sig-default">10</span>,
+        <span class="summary-sig-arg">accuracy</span>=<span class="summary-sig-default">2</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#_format_field">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="parameters2string"></a><span class="summary-sig-name">parameters2string</span>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">accuracy</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">error</span>=<span class="summary-sig-default">'stderr'</span>,
+        <span class="summary-sig-arg">output</span>=<span class="summary-sig-default">'result'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Converts a parameter object to string</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#parameters2string">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="correlation2string"></a><span class="summary-sig-name">correlation2string</span>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">accuracy</span>=<span class="summary-sig-default">3</span>,
+        <span class="summary-sig-arg">limit</span>=<span class="summary-sig-default">0.100</span>)</span><br />
+      Converts the correlation of different parameters to string</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#correlation2string">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="confidence2string"></a><span class="summary-sig-name">confidence2string</span>(<span class="summary-sig-arg">parameters</span>,
+        <span class="summary-sig-arg">accuracy</span>=<span class="summary-sig-default">4</span>)</span><br />
+      Converts the confidence intervals to string</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#confidence2string">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_convergence"></a><span class="summary-sig-name">plot_convergence</span>(<span class="summary-sig-arg">startpars</span>,
+        <span class="summary-sig-arg">models</span>,
+        <span class="summary-sig-arg">chi2s</span>,
+        <span class="summary-sig-arg">xpar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ypar</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">clim</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Plot the convergence path of the results from grid_minimize.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#plot_convergence">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('SP.FIT')">logging.getLogger('SP.FIT')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="sine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sine</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freq</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">constant</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">error</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#sine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit a harmonic function.</p>
+  <p>This function is of the form</p>
+  <p>C + \sum_j A_j sin(2pi nu_j (t-t0) + phi_j)</p>
+  <p>where the presence of the constant term is an option. The error bars 
+  on the fitted parameters can also be requested (by Joris De Ridder).</p>
+  <p>(phase in radians!)</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>freq</code></strong> (numpy array or float) - frequencies of the harmonics</li>
+        <li><strong class="pname"><code>sigma</code></strong> (numpy array) - standard error of observations</li>
+        <li><strong class="pname"><code>constant</code></strong> (boolean) - flag, if not None, also fit a constant</li>
+        <li><strong class="pname"><code>error</code></strong> (boolean) - flag, if not None, also compute the errorbars</li>
+        <li><strong class="pname"><code>t0</code></strong> (float) - time zero point.</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>parameters</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="periodic_spline"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">periodic_spline</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freq</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">order</span>=<span class="sig-default">20</span>,
+        <span class="sig-arg">k</span>=<span class="sig-default">3</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#periodic_spline">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit a periodic spline.</p>
+  <p>CAUTION: this definition assumes the proposed period is either small 
+  compared to the total time range, or there are a lot of points per 
+  period.</p>
+  <p>This definition basically phases all the data and constructs an 
+  empirical periodic function through an averaging process per phasebin, 
+  and then performing a splinefit through those points.</p>
+  <p>In order to make the first derivative continuous, we repeat the first 
+  point(s) at the end and the end point(s) at the beginning.</p>
+  <p>The constructed function can than be removed from the original 
+  data.</p>
+  <p>Output is a record array containing the columns 'freq', 'knots', 
+  'coeffs' and 'degree'.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myfreq = 1/20.
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(0,150,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = sin(2*pi*myfreq*times+0.32*2*pi) + np.random.normal(size=len(times))
+<span class="py-prompt">&gt;&gt;&gt; </span>cjs = periodic_spline(times,signal,myfreq,order=30)
+<span class="py-prompt">&gt;&gt;&gt; </span>trend = evaluate.periodic_spline(times,cjs)
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.plot(times,signal,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.plot(times,trend,<span class="py-string">'r-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=pl.title(<span class="py-string">&quot;test:tfit:periodic_spline_fit&quot;</span>)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1d array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1d array) - observation points</li>
+        <li><strong class="pname"><code>freq</code></strong> (float) - frequency of the periodic trend</li>
+        <li><strong class="pname"><code>order</code></strong> (integer) - number of points to use for the spline fit.</li>
+        <li><strong class="pname"><code>k</code></strong> (integer) - order of the spline</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>parameters</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="kepler"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">kepler</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freq</span>,
+        <span class="sig-arg">sigma</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">wexp</span>=<span class="sig-default">2.</span>,
+        <span class="sig-arg">e0</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">en</span>=<span class="sig-default">0.99</span>,
+        <span class="sig-arg">de</span>=<span class="sig-default">0.01</span>,
+        <span class="sig-arg">output_type</span>=<span class="sig-default">'old'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#kepler">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit a Kepler orbit to a time series.</p>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> ivs.timeseries <span class="py-keyword">import</span> pergrams</pre>
+  <p>First set the parameters we want to use:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = tuple([12.456,23456.,0.37,213/180.*pi,98.76,55.])
+<span class="py-prompt">&gt;&gt;&gt; </span>pars = np.rec.array([pars],dtype=[(<span class="py-string">'P'</span>,<span class="py-string">'f8'</span>),(<span class="py-string">'T0'</span>,<span class="py-string">'f8'</span>),(<span class="py-string">'e'</span>,<span class="py-string">'f8'</span>),
+<span class="py-more">... </span>                               (<span class="py-string">'omega'</span>,<span class="py-string">'f8'</span>),(<span class="py-string">'K'</span>,<span class="py-string">'f8'</span>),(<span class="py-string">'gamma'</span>,<span class="py-string">'f8'</span>)])</pre>
+  <p>Then generate the signal and add some noise</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>times = np.linspace(pars[0][<span class="py-string">'T0'</span>],pars[0][<span class="py-string">'T0'</span>]+5*pars[0][<span class="py-string">'P'</span>],100)
+<span class="py-prompt">&gt;&gt;&gt; </span>signalo = evaluate.kepler(times,pars)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = signalo + np.random.normal(scale=20.,size=len(times))</pre>
+  <p>Calculate the periodogram:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>freqs,ampls = pergrams.kepler(times,signal)
+<span class="py-prompt">&gt;&gt;&gt; </span>opars = kepler(times,signal,freqs[np.argmax(ampls)])
+<span class="py-prompt">&gt;&gt;&gt; </span>signalf = evaluate.kepler(times,opars)</pre>
+  <p>And make some plots</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> pylab <span class="py-keyword">as</span> pl
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(221)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(times,signal,<span class="py-string">'ko'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(times,signalo,<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(times,signalf,<span class="py-string">'b--'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(222)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(freqs,ampls,<span class="py-string">'k-'</span>)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1d array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1d array) - observation points</li>
+        <li><strong class="pname"><code>freq</code></strong> (float) - frequency of kepler orbit</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>parameters</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="box"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">box</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">freq</span>,
+        <span class="sig-arg">b0</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">bn</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">order</span>=<span class="sig-default">50</span>,
+        <span class="sig-arg">t0</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#box">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit box shaped transits.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy 1d array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy 1d array) - observation points</li>
+        <li><strong class="pname"><code>freq</code></strong> (float) - frequency of transiting signal</li>
+        <li><strong class="pname"><code>b0</code></strong> (0&lt;float&lt;bn) - minimum start of ingress (in phase)</li>
+        <li><strong class="pname"><code>bn</code></strong> (b0&lt;float&lt;1) - maximum end of egress (in phase)</li>
+        <li><strong class="pname"><code>order</code></strong> (integer) - number of phase bins</li>
+        <li><strong class="pname"><code>t0</code></strong> (float) - zeropoint of times</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>parameters</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gauss"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gauss</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">threshold</span>=<span class="sig-default">0.1</span>,
+        <span class="sig-arg">constant</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">init_guess_method</span>=<span class="sig-default">'analytical'</span>,
+        <span class="sig-arg">window</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#gauss">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Fit a Gaussian profile to data using a polynomial fit.</p>
+  <p>y = A * exp( -(x-mu)**2 / (2*sigma**2))</p>
+  <p>ln(y) = ln(A) - (x-mu)**2 / (2*sigma**2) ln(y) = ln(A) - mu**2 / 
+  (2*sigma**2) + mu / (sigma**2) * x - x**2 / (2*sigma**2)</p>
+  <p>then the parameters are given by</p>
+  <p>p0 =       -  1    / (2*sigma**2) p1 =         mu    / (  sigma**2) p2
+  = ln(A) - mu**2 / (2*sigma**2)</p>
+  <p>Note that not all datapoints are used, but only those above a certain 
+  values (namely 10% of the maximum value), In this way, we reduce the 
+  influence of the continuum and concentrate on the shape of the peak 
+  itself.</p>
+  <p>Afterwards, we perform a non linear least square fit with above 
+  parameters as starting values, but only accept it if the CHI2 has 
+  improved.</p>
+  <p>If a constant has to be fitted, the nonlinear options has to be 
+  True.</p>
+  <p>Example: we generate a Lorentzian curve and fit a Gaussian to it:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-10,10,1000)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = evaluate.lorentz(x,[5.,0.,2.]) + np.random.normal(scale=0.1,size=len(x))
+<span class="py-prompt">&gt;&gt;&gt; </span>pars1,e_pars1 = gauss(x,y)
+<span class="py-prompt">&gt;&gt;&gt; </span>pars2,e_pars2 = gauss(x,y,constant=True)
+<span class="py-prompt">&gt;&gt;&gt; </span>y1 = evaluate.gauss(x,pars1)
+<span class="py-prompt">&gt;&gt;&gt; </span>y2 = evaluate.gauss(x,pars2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y,<span class="py-string">'k-'</span>)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y1,<span class="py-string">'r-'</span>,lw=2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(x,y2,<span class="py-string">'b-'</span>,lw=2)</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (numpy array) - x axis data</li>
+        <li><strong class="pname"><code>y</code></strong> (numpy array) - y axis data</li>
+        <li><strong class="pname"><code>nl</code></strong> (boolean) - flag for performing a non linear least squares fit</li>
+        <li><strong class="pname"><code>constant</code></strong> (boolean) - fit also a constant</li>
+    </ul></dd>
+    <dt>Returns: tuple</dt>
+        <dd>A, mu, sigma (,C)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="e_sine"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">e_sine</span>(<span class="sig-arg">times</span>,
+        <span class="sig-arg">signal</span>,
+        <span class="sig-arg">parameters</span>,
+        <span class="sig-arg">correlation_correction</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">limit</span>=<span class="sig-default">10000</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#e_sine">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the errors on the parameters from a sine fit.</p>
+  <p>Note: errors on the constant are only calculated when the number of 
+  datapoints is below 1000. Otherwise, the matrices involved become to 
+  huge.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>times</code></strong> (numpy array) - time points</li>
+        <li><strong class="pname"><code>signal</code></strong> (numpy array) - observations</li>
+        <li><strong class="pname"><code>parameters</code></strong> (numpy record array) - record array containing the fitted parameters. This should have 
+          columns 'ampl','freq' and 'phase', and optionally 'const'.</li>
+        <li><strong class="pname"><code>correlation_correction</code></strong> (boolean) - set to True if you want to correct for correlation effects</li>
+        <li><strong class="pname"><code>limit</code></strong> (integer) - Calculating the error on the constant requires the calculation of
+          a matrix of size Ndata x Nparam, which takes a long time for 
+          large datasets. The routines skips the estimation of the error on
+          the constant if the timeseries is longer than <code>limit</code> 
+          datapoints</li>
+    </ul></dd>
+    <dt>Returns: Nx4 array(, Nx3 array)</dt>
+        <dd>errors</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="minimize"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">minimize</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">model</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">weights</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">resfunc</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">engine</span>=<span class="sig-default">'leastsq'</span>,
+        <span class="sig-arg">args</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">kws</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">scale_covar</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">iter_cb</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**fit_kws</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#minimize">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Basic minimizer function using the <a 
+  href="ivs.sigproc.fit.Minimizer-class.html" class="link">Minimizer</a> 
+  class, find values for the parameters so that the sum-of-squares of <i 
+  class="math">(y-model(x))</i> is minimized. When the fitting process is 
+  completed, the parameters of the <a 
+  href="ivs.sigproc.fit.Model-class.html" class="link">Model</a> are 
+  updated with the results. If the <i>leastsq</i> engine is used, estimated
+  uncertainties and correlations will be saved to the <a 
+  href="ivs.sigproc.fit.Model-class.html" class="link">Model</a> as well. 
+  Returns a <i>Minimizer</i> object.</p>
+  <h1 class="heading">Fitting engines</h1>
+    <p>By default, the Levenberg-Marquardt algorithm is used for fitting. 
+    While often criticized, including the fact it finds a local minima, 
+    this approach has some distinct advantages. These include being fast, 
+    and well-behaved for most curve- fitting needs, and making it easy to 
+    estimate uncertainties for and correlations between pairs of fit 
+    variables. Alternative fitting algoritms are at least partially 
+    implemented, but not all functions will work with them.</p>
+    <ul>
+      <li>
+        leastsq: <a 
+        href="http://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm" 
+        target="_top">Levenberg-Marquardt</a>, <a 
+        href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html"
+        target="_top">scipy.optimize.leastsq</a>
+      </li>
+      <li>
+        anneal: <a href="http://en.wikipedia.org/wiki/Simulated_annealing."
+        target="_top">Simulated Annealing</a>, <a 
+        href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.anneal.html"
+        target="_top">scipy.optimize.anneal</a>
+      </li>
+      <li>
+        lbfgsb: <a href="http://en.wikipedia.org/wiki/Limited-memory_BFGS" 
+        target="_top">quasi-Newton optimization</a>, <a 
+        href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html"
+        target="_top">scipy.optimize.fmin_l_bfgs_b</a>
+      </li>
+    </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x</code></strong> (numpy array) - the independent data array (x data)</li>
+        <li><strong class="pname"><code>y</code></strong> (numpy array) - the dependent data array (y data)</li>
+        <li><strong class="pname"><code>model</code></strong> - The <i>Model</i> to fit to the data</li>
+        <li><strong class="pname"><code>err</code></strong> - The errors on the y data, same dimentions as y</li>
+        <li><strong class="pname"><code>weights</code></strong> - The weights given to the different y data</li>
+        <li><strong class="pname"><code>resfunc</code></strong> - A function to calculate the residuals, if not provided standard 
+          residual function is used.</li>
+        <li><strong class="pname"><code>engine</code></strong> - Which fitting engine to use: 'leastsq', 'anneal', 'lbfgsb'</li>
+        <li><strong class="pname"><code>kws</code></strong> - Extra keyword arguments to be passed to the model</li>
+        <li><strong class="pname"><code>fit_kws</code></strong> - Extra keyword arguments to be passed to the fitter function</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>(<i>Parameter</i> object, <i>Minimizer</i> object)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="grid_minimize"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grid_minimize</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">model</span>,
+        <span class="sig-arg">errors</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">weights</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">resfunc</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">engine</span>=<span class="sig-default">'leastsq'</span>,
+        <span class="sig-arg">args</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">kws</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">scale_covar</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">iter_cb</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">100</span>,
+        <span class="sig-arg">parameters</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">return_all</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**fit_kws</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#grid_minimize">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Grid minimizer. Offers the posibility to start minimizing from a grid 
+  of starting parameters defined by the used. The number of starting points
+  can be specified, as well as the parameters that are varried. For each 
+  parameter for which the start value should be varied, a minimum and 
+  maximum value should be provided when setting up that parameter. The 
+  starting values are chosen randomly in the range [min,max]. The other 
+  arguments are the same as for the normal <a 
+  href="ivs.sigproc.fit-module.html#minimize" class="link">minimize</a> 
+  function.</p>
+  <p>If parameters are provided that can not be kicked (starting value can 
+  not be varried), they will be removed from the parameters array 
+  automaticaly. If no parameters can be kicked, only one minimize will be 
+  performed independently from the number of points provided. Pay attention
+  with the vary function of the parameters, even if a parameter has vary = 
+  False, it will be kicked by the grid minimizer if it appears in 
+  parameters. This parameter will then be fixed at its new starting 
+  value.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>parameters</code></strong> (array of strings) - The parameters that you want to randomly chose in the fitting 
+          process</li>
+        <li><strong class="pname"><code>points</code></strong> (int) - The number of starting points</li>
+        <li><strong class="pname"><code>return_all</code></strong> (Boolean) - if True, the results of all fits are returned, if False, only the
+          best fit is returned.</li>
+    </ul></dd>
+    <dt>Returns: Minimizer object or array of [Minimizer, Model, float]</dt>
+        <dd>The best minimizer, or all minimizers as [minimizers, newmodels, 
+          chisqrs]</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_correlation_factor"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_correlation_factor</span>(<span class="sig-arg">residus</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sigproc.fit-pysrc.html#get_correlation_factor">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the correlation facor rho (Schwarzenberg-Czerny, 2003).</p>
+  <p>Under white noise assumption, the residus are expected to change sign 
+  every 2 observations (rho=1). Longer distances, 2*rho, are a sign of 
+  correlation.</p>
+  <p>The errors are then underestimated by a factor 1/sqrt(rho).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>residus</code></strong> (numpy array) - residus after the fit</li>
+        <li><strong class="pname"><code>full_output</code></strong> (bool) - if True, the groups of data with same sign will be returned</li>
+    </ul></dd>
+    <dt>Returns: float(,list)</dt>
+        <dd>rho(,same sign groups)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

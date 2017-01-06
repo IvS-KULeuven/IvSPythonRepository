@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.statistics.covellipse</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.statistics-module.html">Package&nbsp;statistics</a> ::
+        Module&nbsp;covellipse
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.statistics.covellipse-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.statistics.covellipse-module.html">Module ivs.statistics.covellipse</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">covellipse package</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Author: Joris De Ridder</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">Sometime people plot an "errorbox" in a 2D diagram while they should actually</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">plot an "error-ellipse". This package allows to draw such an error-ellipse</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">given the 2D covariance matrix of your measurement. The latter also allows</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">to take into account the correlation between the two quantitites.</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">Example:</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">Import the required packages:</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; from numpy import *</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; from numpy.random import multivariate_normal</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; from matplotlib import pylab as p</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; from covellipse import sigmaEllipse</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">For the sake of this example, we make some fake data:</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; covMatrix = array([[2.0, -0.75*sqrt(4)*sqrt(2)],[-0.75*sqrt(4)*sqrt(2), 4.0]])</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; m = multivariate_normal([0,0],covMatrix, 3000)</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">Compute the 2-sigma ellipse, centered around (0,0):</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; x,y=sigmaEllipse(0,0,covMatrix,2)</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">Make a plot of the data as well as the ellipse:</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p.scatter(m[:,0], m[:,1], s=5)</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; p.plot(x,y,linewidth=2) </tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">math</tt> <tt class="py-keyword">import</tt> <tt class="py-name">atan</tt><tt class="py-op">,</tt><tt id="link-0" class="py-name" targets="Method ivs.units.conversions.Unit.sqrt()=ivs.units.conversions.Unit-class.html#sqrt"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-0', 'sqrt', 'link-0');">sqrt</a></tt><tt class="py-op">,</tt><tt class="py-name">pi</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"> </tt>
+<a name="ellipse"></a><div id="ellipse-def"><a name="L40"></a><tt class="py-lineno"> 40</tt> <a class="py-toggle" href="#" id="ellipse-toggle" onclick="return toggle('ellipse');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.statistics.covellipse-module.html#ellipse">ellipse</a><tt class="py-op">(</tt><tt class="py-param">xc</tt><tt class="py-op">,</tt> <tt class="py-param">yc</tt><tt class="py-op">,</tt> <tt class="py-param">a</tt><tt class="py-op">,</tt> <tt class="py-param">b</tt><tt class="py-op">,</tt> <tt class="py-param">phi</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ellipse-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="ellipse-expanded"><a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring">    Returns x and y values of a complete ellipse</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring">    @param xc: x-coordinate of the center of the ellipse</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-docstring">    @type xc: float</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">    @param yc: y-coordinate of the center of the ellipse</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">    @type yc: float</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">    @param a: half the long axis of the ellipse</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-docstring">    @type a: float</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">    @param b: half the small axis of the ellipse</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">    @type b: float</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">    @param phi: angle between long axis and the x-axis (radians)</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring">    @type phi: float    </tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring">    @return: x,y: coordinate arrays of ellipse </tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: tuple of 2 arrays (dtype: float)</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">     </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">    <tt class="py-name">t</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linspace</tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-number">2</tt><tt class="py-op">*</tt><tt class="py-name">pi</tt><tt class="py-op">,</tt><tt class="py-number">100</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">    <tt class="py-name">x</tt> <tt class="py-op">=</tt> <tt class="py-name">xc</tt> <tt class="py-op">+</tt> <tt class="py-name">a</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Method ivs.units.conversions.Unit.cos()=ivs.units.conversions.Unit-class.html#cos"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-1', 'cos', 'link-1');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-2" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-2', 'cos', 'link-1');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt> <tt class="py-op">-</tt> <tt class="py-name">b</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Method ivs.units.conversions.Unit.sin()=ivs.units.conversions.Unit-class.html#sin"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-3', 'sin', 'link-3');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-4" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-4', 'sin', 'link-3');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line">    <tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-name">yc</tt> <tt class="py-op">+</tt> <tt class="py-name">a</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-5" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-5', 'cos', 'link-1');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-6" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-6', 'sin', 'link-3');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">b</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-7" class="py-name"><a title="ivs.units.conversions.Unit.sin" class="py-name" href="#" onclick="return doclink('link-7', 'sin', 'link-3');">sin</a></tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-8" class="py-name"><a title="ivs.units.conversions.Unit.cos" class="py-name" href="#" onclick="return doclink('link-8', 'cos', 'link-1');">cos</a></tt><tt class="py-op">(</tt><tt class="py-name">phi</tt><tt class="py-op">)</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">     </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">x</tt><tt class="py-op">,</tt><tt class="py-name">y</tt> </tt>
+</div><a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line">     </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"> </tt>
+<a name="sigmaEllipse"></a><div id="sigmaEllipse-def"><a name="L68"></a><tt class="py-lineno"> 68</tt> <a class="py-toggle" href="#" id="sigmaEllipse-toggle" onclick="return toggle('sigmaEllipse');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.statistics.covellipse-module.html#sigmaEllipse">sigmaEllipse</a><tt class="py-op">(</tt><tt class="py-param">xc</tt><tt class="py-op">,</tt> <tt class="py-param">yc</tt><tt class="py-op">,</tt> <tt class="py-param">covMatrix</tt><tt class="py-op">,</tt> <tt class="py-param">nSigma</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="sigmaEllipse-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="sigmaEllipse-expanded"><a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">    Return x and y value of the |nSigma|-sigma ellipse</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">    Given a covariance matrix, and the center of the ellipse (xc,yc)</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">    @param xc: x-coordinate of the center of the ellipse</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">    @type xc: float</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">    @param yc: y-coordinate of the center of the ellipse</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">    @type yc: float</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">    @param covMatrix: 2D covariance matrix</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring">    @type covMatrix: 2x2 float nd-array</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">    @param nSigma: the nSigma-contour of the ellipse will be returned   </tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">    @type nSigma: float</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring">    @return: (x,y): the x and y values of the ellipse </tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-docstring">    @rtype: tuple of two float ndarrays</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">    <tt class="py-name">a</tt> <tt class="py-op">=</tt> <tt class="py-name">covMatrix</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">    <tt class="py-name">b</tt> <tt class="py-op">=</tt> <tt class="py-name">covMatrix</tt> <tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">    <tt class="py-name">c</tt> <tt class="py-op">=</tt> <tt class="py-name">b</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">    <tt class="py-name">d</tt> <tt class="py-op">=</tt> <tt class="py-name">covMatrix</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">     </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">    <tt class="py-name">eigenvalue1</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">a</tt><tt class="py-op">+</tt><tt class="py-name">d</tt><tt class="py-op">+</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-9" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-9', 'sqrt', 'link-0');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">a</tt><tt class="py-op">-</tt><tt class="py-name">d</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">+</tt><tt class="py-number">4</tt><tt class="py-op">*</tt><tt class="py-name">b</tt><tt class="py-op">*</tt><tt class="py-name">c</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">    <tt class="py-name">eigenvalue2</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">a</tt><tt class="py-op">+</tt><tt class="py-name">d</tt><tt class="py-op">-</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-10" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-10', 'sqrt', 'link-0');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">a</tt><tt class="py-op">-</tt><tt class="py-name">d</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2</tt><tt class="py-op">+</tt><tt class="py-number">4</tt><tt class="py-op">*</tt><tt class="py-name">b</tt><tt class="py-op">*</tt><tt class="py-name">c</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">     </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">    <tt class="py-name">semimajor</tt> <tt class="py-op">=</tt> <tt id="link-11" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-11', 'sqrt', 'link-0');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">eigenvalue1</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">nSigma</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">    <tt class="py-name">semiminor</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name"><a title="ivs.units.conversions.Unit.sqrt" class="py-name" href="#" onclick="return doclink('link-12', 'sqrt', 'link-0');">sqrt</a></tt><tt class="py-op">(</tt><tt class="py-name">eigenvalue2</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">nSigma</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">     </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">b</tt> <tt class="py-op">==</tt> <tt class="py-number">0.0</tt><tt class="py-op">:</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">        <tt class="py-name">eigenvector1</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt> <tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-name">eigenvector2</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">        <tt class="py-name">phi</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">        <tt class="py-name">eigenvector1</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">b</tt><tt class="py-op">,</tt> <tt class="py-name">eigenvalue1</tt><tt class="py-op">-</tt><tt class="py-name">a</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">        <tt class="py-name">eigenvector2</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">b</tt><tt class="py-op">,</tt> <tt class="py-name">eigenvalue2</tt><tt class="py-op">-</tt><tt class="py-name">a</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt class="py-name">phi</tt> <tt class="py-op">=</tt> <tt class="py-name">atan</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">eigenvalue1</tt><tt class="py-op">-</tt><tt class="py-name">a</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">b</tt><tt class="py-op">)</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">            </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">    <tt class="py-name">x</tt><tt class="py-op">,</tt><tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt id="link-13" class="py-name" targets="Function ivs.statistics.covellipse.ellipse()=ivs.statistics.covellipse-module.html#ellipse"><a title="ivs.statistics.covellipse.ellipse" class="py-name" href="#" onclick="return doclink('link-13', 'ellipse', 'link-13');">ellipse</a></tt><tt class="py-op">(</tt><tt class="py-name">xc</tt><tt class="py-op">,</tt> <tt class="py-name">yc</tt><tt class="py-op">,</tt> <tt class="py-name">semimajor</tt><tt class="py-op">,</tt> <tt class="py-name">semiminor</tt><tt class="py-op">,</tt> <tt class="py-name">phi</tt><tt class="py-op">)</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">     </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">x</tt><tt class="py-op">,</tt><tt class="py-name">y</tt> </tt>
+</div><a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:10 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

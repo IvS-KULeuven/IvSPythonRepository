@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.asteroseismology.redgiantfreqs</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.asteroseismology-module.html">Package&nbsp;asteroseismology</a> ::
+        Module&nbsp;redgiantfreqs
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.asteroseismology.redgiantfreqs-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.asteroseismology.redgiantfreqs-module.html">Module ivs.asteroseismology.redgiantfreqs</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Functions for Red Giant Seismology.</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Contents:</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">=========</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">This library contains several functions which allow to identify modes </tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">in the power-spectra of red giants. For the description of the pressure modes, </tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">the formulism of Mosser et al. (2011A&amp;A...525L...9M) for the 'Universal </tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring">Oscillation Pattern' is available.</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring">For the description of the frequencies and rotational splitting of the mixed </tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">dipole modes, the formalism of Mosser et al. (2012A&amp;A...540A.143M) and (2012arXiv1209.3336M)</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">has been scripted. To apply this method, one needs to know the value of the true </tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">period spacing. The modulation of the mixing between pressure- and gravity-dipole </tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring">modes is described through a Lorentzian profile. This approach assumes a constant </tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring">Period Spacing for all radial orders. Comparing the modelled frequencies with the </tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">real frequencies, found in an spectrum, will work well for the several radial</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring">orders but deviations can be found in other regions of the spectrum.</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">A similar Lorentzian description is valid for rotational splitting.</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">Contents:</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">---------</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">    * purePressureMode: calculates the position of the pure pressure pressure </tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">    mode of a spherical degree \ell and radial order.</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">    * universalPattern: creates an array with the frequencies of all pure pressure</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">    modes with \ell=0,1,2 and 3, whereby the index i selectes all m</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">    odes of the same spherical degree:</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">    e.g.: asymptoticRelation[0] = all \ell=0, asymptoticRelation[2] = all \ell=2, </tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">    asymptoticRelation[-1] gives an array with the radial orders (as float).</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-docstring">    * asymptoticRelation: returns an array with the frequencies of the pure </tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-docstring">    pressure modes of the pure pressure modes </tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-docstring">    * rotational splitting: calculates the expected rotational splitting </tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring">    of a dipole mode based on the degree of mixing</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-docstring">Example: KIC 4448777</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-docstring">--------------------</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring">This star is a H-shell burning red giant with rotational splitting.</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring">The powerspectrum can be found here: ...</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; import ivs.asteroseismology.redgiantfreqs as rg</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; centralRadial=  226.868     # [muHz], Frequency of the central radial mode</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; largeSep    = 17.000                # [muHz], large Frequency separation in powerspectrum</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; smallSep    = 2.201                 # [muHz], small Frequency separation in powerspectrum</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; </tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; DeltaPg             = 89.9                  # [seconds],    true period spacing of dipole modes</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; dfMax               = 0.45                  # [muHz], normalized rotational splitting (i.e. |freq_{m=0} - freq_{m=+/-1}|</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; </tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; qCoupling= 0.15; lambdaParam = 0.5; beParam = 0.08 #Default values</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">First model the frequencies of the pure pressure modes.</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; frequenciesUniversalPattern = rg.universalPattern(largeSep, smallSep, centralRadial)</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring">Next, we calculate the frequencies of the mixed dipole modes:</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; mixedModesPattern = rg.asymptoticRelation(centralRadial,largeSep, DeltaPg, qCoupling)</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; rotationalSplittingModulation = rg.symmetricRotationalModulation(dfMax, largeSep, frequenciesUniversalPattern, mixedModesPattern, lambdaParam, beParam)</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">sys</tt><tt class="py-op">,</tt> <tt class="py-name">math</tt><tt class="py-op">,</tt> <tt class="py-name">os</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">scipy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">scipy</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">pylab</tt> <tt class="py-keyword">as</tt> <tt class="py-name">pl</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt><tt class="py-op">.</tt><tt class="py-name">random</tt> <tt class="py-keyword">as</tt> <tt class="py-name">npr</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">random</tt> <tt class="py-keyword">as</tt> <tt class="py-name">rd</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">time</tt> <tt class="py-keyword">import</tt> <tt class="py-name">gmtime</tt><tt class="py-op">,</tt> <tt class="py-name">strftime</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-0" class="py-name" targets="Function ivs.config.glob()=ivs.config-module.html#glob"><a title="ivs.config.glob" class="py-name" href="#" onclick="return doclink('link-0', 'glob', 'link-0');">glob</a></tt> <tt class="py-keyword">as</tt> <tt id="link-1" class="py-name"><a title="ivs.config.glob" class="py-name" href="#" onclick="return doclink('link-1', 'glob', 'link-0');">glob</a></tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">scipy</tt> <tt class="py-keyword">import</tt> <tt class="py-name">stats</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-comment">#-- define formats</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable ivs.asteroseismology.redgiantfreqs.format=ivs.asteroseismology.redgiantfreqs-module.html#format"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-2', 'format', 'link-2');">format</a></tt>  <tt class="py-op">=</tt> <tt class="py-string">''</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt id="link-3" class="py-name" targets="Variable ivs.asteroseismology.redgiantfreqs.datefmt=ivs.asteroseismology.redgiantfreqs-module.html#datefmt"><a title="ivs.asteroseismology.redgiantfreqs.datefmt" class="py-name" href="#" onclick="return doclink('link-3', 'datefmt', 'link-3');">datefmt</a></tt> <tt class="py-op">=</tt> <tt class="py-string">''</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">basicConfig</tt><tt class="py-op">(</tt><tt id="link-4" class="py-name" targets="Variable ivs.aux.loggers.NullHandler.level=ivs.aux.loggers.NullHandler-class.html#level"><a title="ivs.aux.loggers.NullHandler.level" class="py-name" href="#" onclick="return doclink('link-4', 'level', 'link-4');">level</a></tt><tt class="py-op">=</tt><tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">INFO</tt><tt class="py-op">,</tt><tt id="link-5" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-5', 'format', 'link-2');">format</a></tt><tt class="py-op">=</tt><tt id="link-6" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-6', 'format', 'link-2');">format</a></tt><tt class="py-op">,</tt><tt id="link-7" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.datefmt" class="py-name" href="#" onclick="return doclink('link-7', 'datefmt', 'link-3');">datefmt</a></tt><tt class="py-op">=</tt><tt id="link-8" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.datefmt" class="py-name" href="#" onclick="return doclink('link-8', 'datefmt', 'link-3');">datefmt</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt id="link-9" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-9', 'logger', 'link-9');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">'IVS.RG'</tt><tt class="py-op">)</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"> </tt>
+<a name="purePressureMode"></a><div id="purePressureMode-def"><a name="L92"></a><tt class="py-lineno"> 92</tt> <a class="py-toggle" href="#" id="purePressureMode-toggle" onclick="return toggle('purePressureMode');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.asteroseismology.redgiantfreqs-module.html#purePressureMode">purePressureMode</a><tt class="py-op">(</tt><tt class="py-param">nnn</tt><tt class="py-op">,</tt><tt class="py-param">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-param">largeSep</tt><tt class="py-op">,</tt> <tt class="py-param">smallSep</tt><tt class="py-op">,</tt> <tt class="py-param">epsilon</tt><tt class="py-op">,</tt> <tt class="py-param">ell</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="purePressureMode-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="purePressureMode-expanded"><a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-docstring">    Calculates and returns the frequency of a single pure pressure mode for a spherical (\ell=0,1,2, and 3)[Nota Bene: 3 to be implemented].</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-docstring">    smallSep can be set to an abitrary value if not calculating \ell=2 modes.</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-docstring">        @param nnn: radial order of the mode with respect to the radial order of the central radial mode.</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-docstring">        @type nnn: float or integer</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-docstring">        @param largeSep: large Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-docstring">        @type largeSep: float</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-docstring">        @param smallSep: small Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-docstring">        @type smallSep: float</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-docstring">        @param centralRadial: Frequency of the central radial mode, in muHz</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-docstring">        @type centralRadial: float      </tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring">        @param epsilon: echelle phase shift of the central Radial mode:  epsilon = centralRadial / largeSep - centralRadial // largeSep</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-docstring">        @type epsilon: float</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"><tt class="py-docstring">        @param ell:  spherical degree of a mode</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"><tt class="py-docstring">        @type ell: float or integer</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"><tt class="py-docstring">        @return frequency in muHz</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype float array</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">    <tt class="py-name">ell</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">ell</tt><tt class="py-op">)</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">    <tt class="py-name">nnn</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">)</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">    <tt class="py-name">smallSep</tt> <tt class="py-op">/=</tt> <tt class="py-name">largeSep</tt>  </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">    <tt class="py-name">dominantRadialOrderPressure</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">floor</tt><tt class="py-op">(</tt><tt class="py-name">centralRadial</tt> <tt class="py-op">/</tt> <tt class="py-name">largeSep</tt><tt class="py-op">)</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">    <tt class="py-name">alphaCorr</tt> <tt class="py-op">=</tt> <tt class="py-number">0.015</tt> <tt class="py-op">*</tt> <tt class="py-name">largeSep</tt><tt class="py-op">**</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-number">0.32</tt><tt class="py-op">)</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">ell</tt> <tt class="py-op">==</tt> <tt class="py-number">0.</tt><tt class="py-op">:</tt> <tt class="py-name">constantDEll</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt>               <tt class="py-comment"># for radial modes</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">ell</tt> <tt class="py-op">==</tt> <tt class="py-number">1.</tt><tt class="py-op">:</tt> <tt class="py-name">constantDEll</tt> <tt class="py-op">=</tt> <tt class="py-op">-</tt><tt class="py-op">(</tt><tt class="py-name">ell</tt><tt class="py-op">/</tt><tt class="py-number">2.</tt><tt class="py-op">+</tt><tt class="py-number">0.025</tt><tt class="py-op">)</tt>   <tt class="py-comment"># for dipole modes</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">ell</tt> <tt class="py-op">==</tt> <tt class="py-number">2.</tt><tt class="py-op">:</tt> <tt class="py-name">constantDEll</tt> <tt class="py-op">=</tt> <tt class="py-name">smallSep</tt>          <tt class="py-comment"># for quadrupole modes</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">ell</tt> <tt class="py-op">==</tt> <tt class="py-number">3.</tt><tt class="py-op">:</tt> <tt class="py-name">constantDEll</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt>               <tt class="py-comment"># for radial modes</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">    <tt class="py-name">purePressureModeEll</tt> <tt class="py-op">=</tt> <tt class="py-name">largeSep</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt> <tt class="py-op">(</tt><tt class="py-name">dominantRadialOrderPressure</tt> <tt class="py-op">+</tt> <tt class="py-name">nnn</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">epsilon</tt> <tt class="py-op">-</tt> <tt class="py-name">constantDEll</tt> <tt class="py-op">+</tt> <tt class="py-name">alphaCorr</tt><tt class="py-op">/</tt><tt class="py-number">2.</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2.</tt><tt class="py-op">)</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">purePressureModeEll</tt> </tt>
+</div><a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">     </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line"> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"> </tt>
+<a name="universalPattern"></a><div id="universalPattern-def"><a name="L134"></a><tt class="py-lineno">134</tt> <a class="py-toggle" href="#" id="universalPattern-toggle" onclick="return toggle('universalPattern');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.asteroseismology.redgiantfreqs-module.html#universalPattern">universalPattern</a><tt class="py-op">(</tt><tt class="py-param">largeSep</tt><tt class="py-op">,</tt> <tt class="py-param">smallSep</tt><tt class="py-op">,</tt> <tt class="py-param">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-param">numberOfRadialOrders</tt> <tt class="py-op">=</tt> <tt class="py-number">3</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="universalPattern-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="universalPattern-expanded"><a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line"> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">    <tt class="py-docstring">""" </tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"><tt class="py-docstring">    Calculates and returns an array containing frequencies the frequencies of the pure pressure modes </tt> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line"><tt class="py-docstring">    of the degrees spherical degrees \ell= 0,1,2 and 3 for a defined range of radial orders.  </tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line"><tt class="py-docstring">    When slicing, the index number is equal to the spherical degree \ell, universalPattern[0] = all \ell=0, universalPattern[2] = all \ell=2, </tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line"><tt class="py-docstring">    The number of the radial order is given as output[-1]. If desired, the array can also be printed to the screen.</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line"><tt class="py-docstring">        @param largeSep: large Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line"><tt class="py-docstring">        @type largeSep: float</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"><tt class="py-docstring">        @param smallSep: small Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"><tt class="py-docstring">        @type smallSep: float</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line"><tt class="py-docstring">        @param centralRadial: Frequency of the central radial mode, in muHz</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line"><tt class="py-docstring">        @type centralRadial: float      </tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-docstring">        @param numberOfRadialOrders: for how many radial orders above and below the Central Radial Mode should the frequencies be calculated.</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-docstring">        @type numberOfRadialOrders: float or integer</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line"><tt class="py-docstring">        @return array with frequencies in muHz, [-1] indicates the radial order.</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype float array</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">     </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">    </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line">    <tt class="py-name">epsilon</tt> <tt class="py-op">=</tt> <tt class="py-name">centralRadial</tt> <tt class="py-op">/</tt> <tt class="py-name">largeSep</tt> <tt class="py-op">-</tt> <tt class="py-name">centralRadial</tt> <tt class="py-op">//</tt> <tt class="py-name">largeSep</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">    <tt class="py-name">radialOrderRange</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-name">numberOfRadialOrders</tt><tt class="py-op">,</tt><tt class="py-name">numberOfRadialOrders</tt><tt class="py-op">+</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'float'</tt><tt class="py-op">)</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">    <tt class="py-name">dominantRadialOrderPressure</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">floor</tt><tt class="py-op">(</tt><tt class="py-name">centralRadial</tt><tt class="py-op">/</tt><tt class="py-name">largeSep</tt><tt class="py-op">)</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">    <tt id="link-10" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-10', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'dominantRadialOrderPressure {0}'</tt><tt class="py-op">.</tt><tt id="link-11" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-11', 'format', 'link-2');">format</a></tt><tt class="py-op">(</tt><tt class="py-name">dominantRadialOrderPressure</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">    <tt class="py-name">univPatternPerOrder</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">     </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">nnn</tt> <tt class="py-keyword">in</tt> <tt class="py-name">radialOrderRange</tt><tt class="py-op">:</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">        <tt id="link-12" class="py-name" targets="Function ivs.asteroseismology.displacements.radial()=ivs.asteroseismology.displacements-module.html#radial"><a title="ivs.asteroseismology.displacements.radial" class="py-name" href="#" onclick="return doclink('link-12', 'radial', 'link-12');">radial</a></tt> <tt class="py-op">=</tt>     <tt id="link-13" class="py-name" targets="Function ivs.asteroseismology.redgiantfreqs.purePressureMode()=ivs.asteroseismology.redgiantfreqs-module.html#purePressureMode"><a title="ivs.asteroseismology.redgiantfreqs.purePressureMode" class="py-name" href="#" onclick="return doclink('link-13', 'purePressureMode', 'link-13');">purePressureMode</a></tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">,</tt><tt class="py-name">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-name">largeSep</tt><tt class="py-op">,</tt> <tt class="py-name">smallSep</tt><tt class="py-op">,</tt> <tt class="py-name">epsilon</tt><tt class="py-op">,</tt> <tt class="py-number">0.</tt><tt class="py-op">)</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">        <tt class="py-name">dipole</tt> <tt class="py-op">=</tt>     <tt id="link-14" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.purePressureMode" class="py-name" href="#" onclick="return doclink('link-14', 'purePressureMode', 'link-13');">purePressureMode</a></tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">,</tt><tt class="py-name">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-name">largeSep</tt><tt class="py-op">,</tt> <tt class="py-name">smallSep</tt><tt class="py-op">,</tt> <tt class="py-name">epsilon</tt><tt class="py-op">,</tt> <tt class="py-number">1.</tt><tt class="py-op">)</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">        <tt class="py-name">quadrupole</tt> <tt class="py-op">=</tt> <tt id="link-15" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.purePressureMode" class="py-name" href="#" onclick="return doclink('link-15', 'purePressureMode', 'link-13');">purePressureMode</a></tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">,</tt><tt class="py-name">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-name">largeSep</tt><tt class="py-op">,</tt> <tt class="py-name">smallSep</tt><tt class="py-op">,</tt> <tt class="py-name">epsilon</tt><tt class="py-op">,</tt> <tt class="py-number">2.</tt><tt class="py-op">)</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">        <tt class="py-name">septupole</tt> <tt class="py-op">=</tt>  <tt id="link-16" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.purePressureMode" class="py-name" href="#" onclick="return doclink('link-16', 'purePressureMode', 'link-13');">purePressureMode</a></tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">,</tt><tt class="py-name">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-name">largeSep</tt><tt class="py-op">,</tt> <tt class="py-name">smallSep</tt><tt class="py-op">,</tt> <tt class="py-name">epsilon</tt><tt class="py-op">,</tt> <tt class="py-number">3.</tt><tt class="py-op">)</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line">         </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">        <tt class="py-name">univPatternPerOrder</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt id="link-17" class="py-name"><a title="ivs.asteroseismology.displacements.radial" class="py-name" href="#" onclick="return doclink('link-17', 'radial', 'link-12');">radial</a></tt><tt class="py-op">,</tt><tt class="py-name">dipole</tt><tt class="py-op">,</tt><tt class="py-name">quadrupole</tt><tt class="py-op">,</tt><tt class="py-name">septupole</tt><tt class="py-op">,</tt><tt class="py-name">nnn</tt><tt class="py-op">+</tt><tt class="py-name">dominantRadialOrderPressure</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">     </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line">    <tt class="py-name">univPatternPerOrder</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">univPatternPerOrder</tt><tt class="py-op">,</tt> <tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'float'</tt><tt class="py-op">)</tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">     </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line">  </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line">    <tt id="link-18" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-18', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'radial\t\tdipole\t\tquadrupole\tseptupole\tRadial Order (Pressure)'</tt><tt class="py-op">)</tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line">    <tt id="link-19" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-19', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'--------------------------------------------------------------------------------------'</tt><tt class="py-op">)</tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">modeValue</tt> <tt class="py-keyword">in</tt> <tt class="py-name">univPatternPerOrder</tt><tt class="py-op">:</tt> <tt id="link-20" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-20', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'{0:.3f}\t\t{1:.3f}\t\t{2:.3f}\t\t{3:.3f}\t\t{4}'</tt><tt class="py-op">.</tt><tt id="link-21" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-21', 'format', 'link-2');">format</a></tt><tt class="py-op">(</tt><tt class="py-name">modeValue</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">modeValue</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">modeValue</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">modeValue</tt><tt class="py-op">[</tt><tt class="py-number">3</tt><tt class="py-op">]</tt><tt class="py-op">,</tt><tt class="py-name">modeValue</tt><tt class="py-op">[</tt><tt class="py-number">4</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">    <tt id="link-22" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-22', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'--------------------------------------------------------------------------------------'</tt><tt class="py-op">)</tt>   </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">univPatternPerOrder</tt><tt class="py-op">.</tt><tt class="py-name">T</tt> </tt>
+</div><a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">     </tt>
+<a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line"> </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line"> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line"> </tt>
+<a name="asymptoticRelation"></a><div id="asymptoticRelation-def"><a name="L185"></a><tt class="py-lineno">185</tt> <a class="py-toggle" href="#" id="asymptoticRelation-toggle" onclick="return toggle('asymptoticRelation');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.asteroseismology.redgiantfreqs-module.html#asymptoticRelation">asymptoticRelation</a><tt class="py-op">(</tt><tt class="py-param">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-param">largeSep</tt><tt class="py-op">,</tt> <tt class="py-param">DeltaPg</tt><tt class="py-op">,</tt> <tt class="py-param">qCoupling</tt><tt class="py-op">=</tt> <tt class="py-number">0.15</tt><tt class="py-op">,</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">                       <tt class="py-param">approximationTreshold</tt><tt class="py-op">=</tt><tt class="py-number">0.001</tt><tt class="py-op">,</tt> <tt class="py-param">numberOfRadialOrders</tt> <tt class="py-op">=</tt> <tt class="py-number">4</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="asymptoticRelation-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="asymptoticRelation-expanded"><a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">    <tt class="py-docstring">""" Calculates and returns the frequencies mixed dipole modes in the powerspectrum of a red-giant star.</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"><tt class="py-docstring">    This function the modulation of the mixing between pressure- and gravity-dipole and derives the frequencies of the mixed modes from it.</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line"><tt class="py-docstring">        @param centralRadial: Frequency of the central radial mode, in muHz</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"><tt class="py-docstring">        @type centralRadial: float      </tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line"><tt class="py-docstring">        @param largeSep: large Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line"><tt class="py-docstring">        @type largeSep: float</tt> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line"><tt class="py-docstring">        @param smallSep: small Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line"><tt class="py-docstring">        @type smallSep: float</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line"><tt class="py-docstring">        @param DeltaPg: value of the true period spacing</tt> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line"><tt class="py-docstring">        @type DeltaPg: float</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line"><tt class="py-docstring">        @param qCoupling: coupling factor</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"><tt class="py-docstring">        @type qCoupling: float</tt> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line"><tt class="py-docstring">        </tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line"><tt class="py-docstring">        @param approximationTreshold: prefiltering of the solution. if modes seem to be missing, increase this parameter</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line"><tt class="py-docstring">        @type approximationTreshold:float</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line"><tt class="py-docstring">        @param numberOfRadialOrders: for how many radial orders above and below the Central Radial Mode should the frequencies be calculated.</tt> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line"><tt class="py-docstring">        @type numberOfRadialOrders: float or integer    </tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"><tt class="py-docstring">        @return frequencies of the m=0 component of the mixed dipole modes</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype float array</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line">     </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line">    <tt class="py-name">DeltaPg</tt> <tt class="py-op">/=</tt> <tt class="py-number">10.</tt><tt class="py-op">**</tt><tt class="py-number">6.</tt> </tt>
+<a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line">    <tt class="py-name">epsilon</tt> <tt class="py-op">=</tt> <tt class="py-name">centralRadial</tt> <tt class="py-op">/</tt> <tt class="py-name">largeSep</tt> <tt class="py-op">-</tt> <tt class="py-name">centralRadial</tt> <tt class="py-op">//</tt> <tt class="py-name">largeSep</tt> </tt>
+<a name="L212"></a><tt class="py-lineno">212</tt>  <tt class="py-line">    <tt class="py-name">radialOrderRange</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-name">numberOfRadialOrders</tt><tt class="py-op">,</tt><tt class="py-name">numberOfRadialOrders</tt><tt class="py-op">+</tt><tt class="py-number">1.</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'float'</tt><tt class="py-op">)</tt> </tt>
+<a name="L213"></a><tt class="py-lineno">213</tt>  <tt class="py-line">    <tt class="py-name">dominantRadialOrderPressure</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">floor</tt><tt class="py-op">(</tt><tt class="py-name">centralRadial</tt><tt class="py-op">/</tt><tt class="py-name">largeSep</tt><tt class="py-op">)</tt> </tt>
+<a name="L214"></a><tt class="py-lineno">214</tt>  <tt class="py-line">    <tt class="py-name">univPatternPerOrder</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt><tt class="py-op">;</tt> <tt class="py-name">positionMixedModes</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L215"></a><tt class="py-lineno">215</tt>  <tt class="py-line">    <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L216"></a><tt class="py-lineno">216</tt>  <tt class="py-line">    <tt id="link-23" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.asteroseismology.redgiantfreqs.logger
+ivs.asteroseismology.solarosc.logger
+ivs.aux.decorators.logger
+ivs.catalogs.coralie.logger
+ivs.catalogs.corot.logger
+ivs.catalogs.crossmatch.logger
+ivs.catalogs.gator.logger
+ivs.catalogs.gcpd.logger
+ivs.catalogs.hermes.logger
+ivs.catalogs.hipparcos.logger
+ivs.catalogs.kepler.logger
+ivs.catalogs.mast.logger
+ivs.catalogs.p7.logger
+ivs.catalogs.sesame.logger
+ivs.catalogs.vizier.logger
+ivs.io.ascii.logger
+ivs.io.fits.logger
+ivs.io.hdf5.logger
+ivs.observations.distance.logger
+ivs.observations.visibility.logger
+ivs.roche.binary.logger
+ivs.sed.builder.logger
+ivs.sed.creategrids.logger
+ivs.sed.decorators.logger
+ivs.sed.distance.logger
+ivs.sed.extinctionmodels.logger
+ivs.sed.filters.logger
+ivs.sed.fit.logger
+ivs.sed.limbdark.logger
+ivs.sed.model.logger
+ivs.sed.reddening.logger
+ivs.sigproc.evaluate.logger
+ivs.sigproc.filtering.logger
+ivs.sigproc.fit.logger
+ivs.sigproc.funclib.logger
+ivs.spectra.linelists.logger
+ivs.spectra.model.logger
+ivs.spectra.tools.logger
+ivs.stellar_evolution.adipls.logger
+ivs.stellar_evolution.fileio.logger
+ivs.stellar_evolution.gyre.logger
+ivs.stellar_evolution.puls.logger
+ivs.timeseries.decorators.logger
+ivs.timeseries.freqanalyse.logger
+ivs.timeseries.keplerorbit.logger
+ivs.timeseries.pergrams.logger
+ivs.timeseries.windowfunctions.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-23', 'logger', 'link-9');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">'calculating dipole mixed modes for {0} radial ordres ...'</tt><tt class="py-op">.</tt><tt id="link-24" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-24', 'format', 'link-2');">format</a></tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">radialOrderRange</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L217"></a><tt class="py-lineno">217</tt>  <tt class="py-line"> </tt>
+<a name="L218"></a><tt class="py-lineno">218</tt>  <tt class="py-line"> </tt>
+<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">nnn</tt> <tt class="py-keyword">in</tt> <tt class="py-name">radialOrderRange</tt><tt class="py-op">:</tt> </tt>
+<a name="L220"></a><tt class="py-lineno">220</tt>  <tt class="py-line">        <tt class="py-name">valueDipole</tt> <tt class="py-op">=</tt>  <tt id="link-25" class="py-name"><a title="ivs.asteroseismology.redgiantfreqs.purePressureMode" class="py-name" href="#" onclick="return doclink('link-25', 'purePressureMode', 'link-13');">purePressureMode</a></tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">,</tt><tt class="py-name">centralRadial</tt><tt class="py-op">,</tt> <tt class="py-name">largeSep</tt><tt class="py-op">,</tt> <tt class="py-number">2.</tt><tt class="py-op">,</tt> <tt class="py-name">epsilon</tt><tt class="py-op">,</tt> <tt class="py-number">1.</tt><tt class="py-op">)</tt> </tt>
+<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line">        <tt class="py-name">freqRange</tt> <tt class="py-op">=</tt>    <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linspace</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">centralRadial</tt><tt class="py-op">+</tt><tt class="py-name">largeSep</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">-</tt><tt class="py-number">0.25</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt>  <tt class="py-op">(</tt><tt class="py-name">centralRadial</tt><tt class="py-op">+</tt><tt class="py-name">largeSep</tt><tt class="py-op">*</tt><tt class="py-op">(</tt><tt class="py-name">nnn</tt><tt class="py-op">+</tt><tt class="py-number">1.25</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-number">100000</tt><tt class="py-op">)</tt> </tt>
+<a name="L222"></a><tt class="py-lineno">222</tt>  <tt class="py-line">        <tt class="py-name">equalityLine</tt> <tt class="py-op">=</tt> <tt class="py-name">freqRange</tt><tt class="py-op">/</tt><tt class="py-name">largeSep</tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line">        <tt class="py-name">arcTerm</tt> <tt class="py-op">=</tt> <tt class="py-name">largeSep</tt> <tt class="py-op">/</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">pi</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-26" class="py-name" targets="Method ivs.units.conversions.Unit.arctan()=ivs.units.conversions.Unit-class.html#arctan"><a title="ivs.units.conversions.Unit.arctan" class="py-name" href="#" onclick="return doclink('link-26', 'arctan', 'link-26');">arctan</a></tt><tt class="py-op">(</tt> <tt class="py-name">qCoupling</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt id="link-27" class="py-name" targets="Method ivs.units.conversions.Unit.tan()=ivs.units.conversions.Unit-class.html#tan"><a title="ivs.units.conversions.Unit.tan" class="py-name" href="#" onclick="return doclink('link-27', 'tan', 'link-27');">tan</a></tt><tt class="py-op">(</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">pi</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">DeltaPg</tt><tt class="py-op">*</tt><tt class="py-name">freqRange</tt><tt class="py-op">)</tt> <tt class="py-op">)</tt> <tt class="py-op">)</tt>         </tt>
+<a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line">        <tt class="py-comment">#print 'nnn',nnn,', pure pressure dipole',valueDipole,min(freqRange),max(freqRange)</tt> </tt>
+<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line">         </tt>
+<a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line">        <tt class="py-comment"># distance to equalityLine</tt> </tt>
+<a name="L227"></a><tt class="py-lineno">227</tt>  <tt class="py-line">        <tt class="py-name">residualsToEquealityLine</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">freqRange</tt><tt class="py-op">/</tt><tt class="py-name">largeSep</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-name">valueDipole</tt><tt class="py-op">+</tt><tt class="py-name">arcTerm</tt><tt class="py-op">)</tt><tt class="py-op">/</tt><tt class="py-name">largeSep</tt><tt class="py-op">-</tt><tt class="py-name">equalityLine</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-comment"># Frequenz Abstand der moeglichen Mixed Modes zur _equalityLine_</tt> </tt>
+<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"> </tt>
+<a name="L229"></a><tt class="py-lineno">229</tt>  <tt class="py-line">        <tt class="py-comment"># filtering for the close modes, speeds up the process</tt> </tt>
+<a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line">        <tt class="py-name">filteredResidualsToEquealityLine</tt> <tt class="py-op">=</tt> <tt class="py-name">residualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-op">,</tt><tt class="py-op">(</tt><tt class="py-name">residualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">&lt;</tt> <tt class="py-name">approximationTreshold</tt><tt class="py-op">/</tt><tt class="py-number">1.</tt><tt class="py-op">)</tt><tt class="py-op">]</tt>    <tt class="py-comment"># nur die, die nahe genug an der Mixed Mode liegen</tt> </tt>
+<a name="L231"></a><tt class="py-lineno">231</tt>  <tt class="py-line">         </tt>
+<a name="L232"></a><tt class="py-lineno">232</tt>  <tt class="py-line">        <tt class="py-string">""" # plotting the method to solve the implicit formula</tt> </tt>
+<a name="L233"></a><tt class="py-lineno">233</tt>  <tt class="py-line"><tt class="py-string">        pl.figure(num=2)</tt> </tt>
+<a name="L234"></a><tt class="py-lineno">234</tt>  <tt class="py-line"><tt class="py-string">        pl.plot(freqRange/largeSep,equalityLine,'r', alpha=0.5)</tt> </tt>
+<a name="L235"></a><tt class="py-lineno">235</tt>  <tt class="py-line"><tt class="py-string">        pl.plot(valueDipole/largeSep,valueDipole/largeSep,'mo')</tt> </tt>
+<a name="L236"></a><tt class="py-lineno">236</tt>  <tt class="py-line"><tt class="py-string">        pl.plot(freqRange/largeSep,(valueDipole+arcTerm)/largeSep,'b', alpha=0.5)</tt> </tt>
+<a name="L237"></a><tt class="py-lineno">237</tt>  <tt class="py-line"><tt class="py-string">        pl.plot(residualsToEquealityLine[0],residualsToEquealityLine[1],'k', alpha=0.5)</tt> </tt>
+<a name="L238"></a><tt class="py-lineno">238</tt>  <tt class="py-line"><tt class="py-string">        pl.plot(filteredResidualsToEquealityLine[0],filteredResidualsToEquealityLine[1])</tt> </tt>
+<a name="L239"></a><tt class="py-lineno">239</tt>  <tt class="py-line"><tt class="py-string">        #"""</tt> </tt>
+<a name="L240"></a><tt class="py-lineno">240</tt>  <tt class="py-line"> </tt>
+<a name="L241"></a><tt class="py-lineno">241</tt>  <tt class="py-line">        <tt class="py-comment"># find the closest mode to line of equility</tt> </tt>
+<a name="L242"></a><tt class="py-lineno">242</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">jjj</tt> <tt class="py-keyword">in</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">filteredResidualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L243"></a><tt class="py-lineno">243</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">filteredResidualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-name">jjj</tt><tt class="py-op">]</tt> <tt class="py-op">&gt;=</tt> <tt class="py-number">0.</tt> <tt class="py-keyword">and</tt> <tt class="py-name">filteredResidualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">,</tt><tt class="py-name">jjj</tt><tt class="py-op">+</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">&lt;=</tt> <tt class="py-number">0.</tt><tt class="py-op">:</tt> </tt>
+<a name="L244"></a><tt class="py-lineno">244</tt>  <tt class="py-line">                    <tt class="py-name">modePosition</tt> <tt class="py-op">=</tt> <tt class="py-name">scipy</tt><tt class="py-op">.</tt><tt class="py-name">average</tt><tt class="py-op">(</tt><tt class="py-name">filteredResidualsToEquealityLine</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">jjj</tt><tt class="py-op">:</tt><tt class="py-name">jjj</tt><tt class="py-op">+</tt><tt class="py-number">2</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">*</tt><tt class="py-name">largeSep</tt> </tt>
+<a name="L245"></a><tt class="py-lineno">245</tt>  <tt class="py-line">                    <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-number">0.</tt> </tt>
+<a name="L246"></a><tt class="py-lineno">246</tt>  <tt class="py-line">                    <tt class="py-comment">#modePositionError = average(filteredResidualsToEquealityLine[1,jjj:jjj+2])*largeSep # deviation to 0.00 (i.e. error of assumption in muHz)</tt> </tt>
+<a name="L247"></a><tt class="py-lineno">247</tt>  <tt class="py-line">                    <tt class="py-name">positionMixedModes</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">modePosition</tt><tt class="py-op">)</tt> </tt>
+<a name="L248"></a><tt class="py-lineno">248</tt>  <tt class="py-line"> </tt>
+<a name="L249"></a><tt class="py-lineno">249</tt>  <tt class="py-line">    <tt class="py-name">dipoleMixedModes</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">positionMixedModes</tt><tt class="py-op">,</tt> <tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'float'</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">T</tt> </tt>
+<a name="L250"></a><tt class="py-lineno">250</tt>  <tt class="py-line"> </tt>
+<a name="L251"></a><tt class="py-lineno">251</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">dipoleMixedModes</tt> </tt>
+</div><a name="L252"></a><tt class="py-lineno">252</tt>  <tt class="py-line"> </tt>
+<a name="L253"></a><tt class="py-lineno">253</tt>  <tt class="py-line"> </tt>
+<a name="L254"></a><tt class="py-lineno">254</tt>  <tt class="py-line"> </tt>
+<a name="L255"></a><tt class="py-lineno">255</tt>  <tt class="py-line"> </tt>
+<a name="L256"></a><tt class="py-lineno">256</tt>  <tt class="py-line"> </tt>
+<a name="symmetricRotationalModulation"></a><div id="symmetricRotationalModulation-def"><a name="L257"></a><tt class="py-lineno">257</tt> <a class="py-toggle" href="#" id="symmetricRotationalModulation-toggle" onclick="return toggle('symmetricRotationalModulation');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.asteroseismology.redgiantfreqs-module.html#symmetricRotationalModulation">symmetricRotationalModulation</a><tt class="py-op">(</tt><tt class="py-param">dfMax</tt><tt class="py-op">,</tt> <tt class="py-param">largeSep</tt><tt class="py-op">,</tt> <tt class="py-param">frequenciesUniversalPattern</tt><tt class="py-op">,</tt> <tt class="py-param">mixedModesPattern</tt><tt class="py-op">,</tt> <tt class="py-param">lambdaParam</tt> <tt class="py-op">=</tt> <tt class="py-number">0.5</tt><tt class="py-op">,</tt> <tt class="py-param">beParam</tt> <tt class="py-op">=</tt> <tt class="py-number">0.08</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="symmetricRotationalModulation-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="symmetricRotationalModulation-expanded"><a name="L258"></a><tt class="py-lineno">258</tt>  <tt class="py-line">    <tt class="py-docstring">""" Calculates and returns rotational splitting</tt> </tt>
+<a name="L259"></a><tt class="py-lineno">259</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L260"></a><tt class="py-lineno">260</tt>  <tt class="py-line"><tt class="py-docstring">    This function the modulation of the mixing between pressure- and gravity-dipole and derives the frequencies of the mixed modes from it.</tt> </tt>
+<a name="L261"></a><tt class="py-lineno">261</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L262"></a><tt class="py-lineno">262</tt>  <tt class="py-line"><tt class="py-docstring">        @param dfMax: the largest rotational splitting measured for a given star</tt> </tt>
+<a name="L263"></a><tt class="py-lineno">263</tt>  <tt class="py-line"><tt class="py-docstring">        @type dfMax: float</tt> </tt>
+<a name="L264"></a><tt class="py-lineno">264</tt>  <tt class="py-line"><tt class="py-docstring">        @param largeSep: large Frequency separation in powerspectrum, in muHz</tt> </tt>
+<a name="L265"></a><tt class="py-lineno">265</tt>  <tt class="py-line"><tt class="py-docstring">        @type largeSep: float</tt> </tt>
+<a name="L266"></a><tt class="py-lineno">266</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L267"></a><tt class="py-lineno">267</tt>  <tt class="py-line"><tt class="py-docstring">        @param frequenciesUniversalPattern: output from rg.universalPattern</tt> </tt>
+<a name="L268"></a><tt class="py-lineno">268</tt>  <tt class="py-line"><tt class="py-docstring">        @type frequenciesUniversalPattern: array, float</tt> </tt>
+<a name="L269"></a><tt class="py-lineno">269</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L270"></a><tt class="py-lineno">270</tt>  <tt class="py-line"><tt class="py-docstring">        @param mixedModesPattern: output from rg.asymptoticRelation</tt> </tt>
+<a name="L271"></a><tt class="py-lineno">271</tt>  <tt class="py-line"><tt class="py-docstring">        @type mixedModesPattern: array, float</tt> </tt>
+<a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line"><tt class="py-docstring">        @param lambdaParam: parameter for fitting, Default: lambdaParam = 0.5</tt> </tt>
+<a name="L274"></a><tt class="py-lineno">274</tt>  <tt class="py-line"><tt class="py-docstring">        @type lambdaParam: float</tt> </tt>
+<a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L276"></a><tt class="py-lineno">276</tt>  <tt class="py-line"><tt class="py-docstring">        @param beParam:  parameter for fitting, Default: beParam = 0.08</tt> </tt>
+<a name="L277"></a><tt class="py-lineno">277</tt>  <tt class="py-line"><tt class="py-docstring">        @type beParam: float</tt> </tt>
+<a name="L278"></a><tt class="py-lineno">278</tt>  <tt class="py-line"><tt class="py-docstring">        </tt> </tt>
+<a name="L279"></a><tt class="py-lineno">279</tt>  <tt class="py-line"><tt class="py-docstring">        @return array with the rotational splitting </tt> </tt>
+<a name="L280"></a><tt class="py-lineno">280</tt>  <tt class="py-line"><tt class="py-docstring">        @rtype array, float</tt> </tt>
+<a name="L281"></a><tt class="py-lineno">281</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L282"></a><tt class="py-lineno">282</tt>  <tt class="py-line"> </tt>
+<a name="L283"></a><tt class="py-lineno">283</tt>  <tt class="py-line"> </tt>
+<a name="L284"></a><tt class="py-lineno">284</tt>  <tt class="py-line">     </tt>
+<a name="L285"></a><tt class="py-lineno">285</tt>  <tt class="py-line">    <tt class="py-name">radialModes</tt> <tt class="py-op">=</tt>         <tt class="py-name">frequenciesUniversalPattern</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt> </tt>
+<a name="L286"></a><tt class="py-lineno">286</tt>  <tt class="py-line">    <tt class="py-name">pureDipolePressure</tt> <tt class="py-op">=</tt>    <tt class="py-name">frequenciesUniversalPattern</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L287"></a><tt class="py-lineno">287</tt>  <tt class="py-line">    <tt class="py-name">mixedDipoleMode</tt> <tt class="py-op">=</tt>        <tt class="py-name">mixedModesPattern</tt> </tt>
+<a name="L288"></a><tt class="py-lineno">288</tt>  <tt class="py-line">     </tt>
+<a name="L289"></a><tt class="py-lineno">289</tt>  <tt class="py-line">    <tt class="py-name">rotationalCentreMode</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt><tt class="py-op">;</tt> <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L290"></a><tt class="py-lineno">290</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">nnn</tt> <tt class="py-keyword">in</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">arange</tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">radialModes</tt><tt class="py-op">.</tt><tt class="py-name">T</tt><tt class="py-op">)</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L291"></a><tt class="py-lineno">291</tt>  <tt class="py-line">        <tt class="py-name">pureDipole</tt> <tt class="py-op">=</tt>    <tt class="py-name">pureDipolePressure</tt><tt class="py-op">[</tt> <tt class="py-op">(</tt><tt class="py-name">pureDipolePressure</tt> <tt class="py-op">&gt;</tt> <tt class="py-name">radialModes</tt><tt class="py-op">[</tt><tt class="py-name">nnn</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">pureDipolePressure</tt> <tt class="py-op">&lt;</tt> <tt class="py-name">radialModes</tt><tt class="py-op">[</tt><tt class="py-name">nnn</tt><tt class="py-op">+</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L292"></a><tt class="py-lineno">292</tt>  <tt class="py-line">        <tt class="py-name">mixedDipoles</tt><tt class="py-op">=</tt>    <tt class="py-name">mixedDipoleMode</tt><tt class="py-op">[</tt> <tt class="py-op">(</tt><tt class="py-name">mixedDipoleMode</tt> <tt class="py-op">&gt;</tt> <tt class="py-name">radialModes</tt><tt class="py-op">[</tt><tt class="py-name">nnn</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&amp;</tt> <tt class="py-op">(</tt><tt class="py-name">mixedDipoleMode</tt> <tt class="py-op">&lt;</tt> <tt class="py-name">radialModes</tt><tt class="py-op">[</tt><tt class="py-name">nnn</tt><tt class="py-op">+</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">]</tt>  </tt>
+<a name="L293"></a><tt class="py-lineno">293</tt>  <tt class="py-line"> </tt>
+<a name="L294"></a><tt class="py-lineno">294</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">mode</tt> <tt class="py-keyword">in</tt> <tt class="py-name">mixedDipoles</tt><tt class="py-op">:</tt> </tt>
+<a name="L295"></a><tt class="py-lineno">295</tt>  <tt class="py-line">            <tt class="py-name">modulationProfile</tt> <tt class="py-op">=</tt> <tt class="py-number">1.</tt><tt class="py-op">-</tt> <tt class="py-name">lambdaParam</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-number">1.</tt> <tt class="py-op">+</tt> <tt class="py-op">(</tt> <tt class="py-op">(</tt><tt class="py-name">mode</tt> <tt class="py-op">-</tt> <tt class="py-name">pureDipole</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-op">(</tt><tt class="py-name">beParam</tt><tt class="py-op">*</tt><tt class="py-name">largeSep</tt><tt class="py-op">)</tt> <tt class="py-op">)</tt><tt class="py-op">**</tt><tt class="py-number">2.</tt> <tt class="py-op">)</tt> </tt>
+<a name="L296"></a><tt class="py-lineno">296</tt>  <tt class="py-line">            <tt class="py-name">rotationalCentreMode</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">mode</tt><tt class="py-op">)</tt>  </tt>
+<a name="L297"></a><tt class="py-lineno">297</tt>  <tt class="py-line">            <tt class="py-name">rotationalSplitting</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">modulationProfile</tt><tt class="py-op">)</tt><tt class="py-comment"># i.e., frequency of m=0 component, symmetric rotational splitting df. m=0 +/- df</tt> </tt>
+<a name="L298"></a><tt class="py-lineno">298</tt>  <tt class="py-line"> </tt>
+<a name="L299"></a><tt class="py-lineno">299</tt>  <tt class="py-line">    <tt class="py-name">rotationalCentreMode</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">rotationalCentreMode</tt><tt class="py-op">)</tt> </tt>
+<a name="L300"></a><tt class="py-lineno">300</tt>  <tt class="py-line">    <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">rotationalSplitting</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">T</tt><tt class="py-op">*</tt><tt class="py-name">dfMax</tt> </tt>
+<a name="L301"></a><tt class="py-lineno">301</tt>  <tt class="py-line">    <tt class="py-comment">#print shape(rotationalCentreMode),shape(rotationalSplitting)</tt> </tt>
+<a name="L302"></a><tt class="py-lineno">302</tt>  <tt class="py-line">    <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">vstack</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">rotationalCentreMode</tt><tt class="py-op">,</tt><tt class="py-name">rotationalSplitting</tt><tt class="py-op">)</tt><tt class="py-op">)</tt>   </tt>
+<a name="L303"></a><tt class="py-lineno">303</tt>  <tt class="py-line">    <tt class="py-name">rotationalSplitting</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">array</tt><tt class="py-op">(</tt><tt class="py-name">rotationalSplitting</tt><tt class="py-op">,</tt> <tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'float'</tt><tt class="py-op">)</tt> </tt>
+<a name="L304"></a><tt class="py-lineno">304</tt>  <tt class="py-line">     </tt>
+<a name="L305"></a><tt class="py-lineno">305</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">rotationalSplitting</tt> </tt>
+</div><a name="L306"></a><tt class="py-lineno">306</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

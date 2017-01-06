@@ -1,0 +1,1246 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.statistics.linearregression.LinearFit</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.statistics-module.html">Package&nbsp;statistics</a> ::
+        <a href="ivs.statistics.linearregression-module.html">Module&nbsp;linearregression</a> ::
+        Class&nbsp;LinearFit
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.statistics.linearregression.LinearFit-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class LinearFit</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit">source&nbsp;code</a></span></p>
+<center>
+
+</center>
+<hr />
+<p>A class that allows to easily extract the fit coefficients, covariance
+  matrix, predictions, residuals, etc.</p>
+  <p>Remarks: LinearFit instances can be printed</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">LinearFit</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">linearModel</span>,
+        <span class="summary-sig-arg">observations</span>)</span><br />
+      Initialises the LinearFit instance</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#observations" class="summary-sig-name">observations</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the observations</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.observations">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#regressionCoefficients" class="summary-sig-name">regressionCoefficients</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the regression coefficients.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.regressionCoefficients">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#sumSqResiduals" class="summary-sig-name">sumSqResiduals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the sum of the squared residuals</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.sumSqResiduals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#residualVariance" class="summary-sig-name">residualVariance</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Estimates the variance of the residuals of the time series.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.residualVariance">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#covarianceMatrix" class="summary-sig-name">covarianceMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the covariance matrix of the fit coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.covarianceMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#correlationMatrix" class="summary-sig-name">correlationMatrix</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the correlation matrix of the fit coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.correlationMatrix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#errorBars" class="summary-sig-name">errorBars</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the formal error bars of the fit coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.errorBars">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">tuple</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#confidenceIntervals" class="summary-sig-name">confidenceIntervals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">alpha</span>)</span><br />
+      Returns the symmetric (1-alpha) confidence interval around the fit 
+      coefficients E.g.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.confidenceIntervals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#t_values" class="summary-sig-name">t_values</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the formal t-values of the fit coefficients</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.t_values">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#regressorTtest" class="summary-sig-name">regressorTtest</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">alpha</span>)</span><br />
+      Performs a hypothesis T-test on each of the regressors Null 
+      hypothesis: H0 : fit coefficient == 0 Alternative hypothesis : H1 : 
+      fit coefficient != 0</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.regressorTtest">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#predictions" class="summary-sig-name">predictions</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the predicted (fitted) values</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.predictions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#residuals" class="summary-sig-name">residuals</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns an array with the residuals.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.residuals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#coefficientOfDetermination" class="summary-sig-name">coefficientOfDetermination</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the coefficient of determination</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.coefficientOfDetermination">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#BICvalue" class="summary-sig-name">BICvalue</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the Bayesian Information Criterion value.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.BICvalue">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#AICvalue" class="summary-sig-name">AICvalue</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the 2nd order Akaike Information Criterion value</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.AICvalue">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">double</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#Fstatistic" class="summary-sig-name">Fstatistic</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Returns the F-statistic, commonly used to assess the fit.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.Fstatistic">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">boolean</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#FstatisticTest" class="summary-sig-name">FstatisticTest</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">alpha</span>,
+        <span class="summary-sig-arg">weighted</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Performs a hypothesis F-test on the fit</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.FstatisticTest">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#summary" class="summary-sig-name">summary</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">outputStream</span>=<span class="summary-sig-default">sys.stdout</span>)</span><br />
+      Writes some basic results of fitting the model to the observations.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.summary">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#__str__" class="summary-sig-name">__str__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Returns the string written by printing the LinearFit object</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.__str__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">ndarray</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.statistics.linearregression.LinearFit-class.html#evaluate" class="summary-sig-name">evaluate</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">regressors</span>)</span><br />
+      Evaluates your current best fit in regressors evaluated in new 
+      covariates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.evaluate">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">linearModel</span>,
+        <span class="sig-arg">observations</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Initialises the LinearFit instance</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>linearModel</code></strong> (LinearModel) - a LinearModel instance</li>
+        <li><strong class="pname"><code>observations</code></strong> (ndarray) - the observations. The size of the array must be compatible with 
+          the number of observations that the linearModel expects.</li>
+    </ul></dd>
+    <dt>Returns: LinearFit</dt>
+        <dd>a LinearFit instance</dd>
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="observations"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">observations</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.observations">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the observations</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      if no covariance matrix of the observations was specified for the 
+      model, the &quot;decorrelated&quot; observations are identical to the
+      original observations.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If false return the original observations, if True, return de 
+          decorrelated observations.</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>the observations that were used to initialize the LinearFit 
+          instance</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="regressionCoefficients"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">regressionCoefficients</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.regressionCoefficients">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the regression coefficients.</p>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>the fit coefficients</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="sumSqResiduals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sumSqResiduals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.sumSqResiduals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the sum of the squared residuals</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If false the unweighted residuals are used, if True, the weighted
+          ones are used.</li>
+    </ul></dd>
+    <dt>Returns: double</dt>
+        <dd>the sum of the squared residuals</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="residualVariance"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">residualVariance</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.residualVariance">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Estimates the variance of the residuals of the time series.</p>
+  <p>As normalization the degrees of freedom is used</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If false the unweighted residuals are used, if True, the weighted
+          ones are used.</li>
+    </ul></dd>
+    <dt>Returns: double</dt>
+        <dd>the variance of the residuals</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="covarianceMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">covarianceMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.covarianceMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the covariance matrix of the fit coefficients</p>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>the MxM covariance matrix of the fit coefficients with M the 
+          number of fit coefficients</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="correlationMatrix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">correlationMatrix</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.correlationMatrix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the correlation matrix of the fit coefficients</p>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>the MxM correlation matrix of the fit coefficients with M the 
+          number of fit coefficients</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="errorBars"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">errorBars</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.errorBars">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the formal error bars of the fit coefficients</p>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>The square root of the diagonal of the covariance matrix</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="confidenceIntervals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">confidenceIntervals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">alpha</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.confidenceIntervals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the symmetric (1-alpha) confidence interval around the fit 
+  coefficients E.g. if alpha = 0.05, the 95% symmetric confidence interval 
+  is returned.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      The formula used assumes that the noise on the observations is 
+      independently, identically and gaussian distributed.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>alpha</code></strong> (double) - confidence level in ]0,1[</li>
+    </ul></dd>
+    <dt>Returns: tuple</dt>
+        <dd>the arrays lowerBounds[0..K-1] and upperBounds[0..K-1] which 
+          contain respectively the lower and the upper bounds of the 
+          symmetric interval around the fit coefficients, where K is the 
+          number of fit coeffs.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="t_values"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">t_values</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.t_values">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the formal t-values of the fit coefficients</p>
+  <dl class="fields">
+    <dt>Returns: ndarray</dt>
+        <dd>t-values = fit coefficients divided by their formal error bars</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="regressorTtest"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">regressorTtest</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">alpha</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.regressorTtest">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Performs a hypothesis T-test on each of the regressors Null 
+  hypothesis: H0 : fit coefficient == 0 Alternative hypothesis : H1 : fit 
+  coefficient != 0</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      This test assumes that the noise is independently, identically, and 
+      gaussian distributed. It is not robust against this assumption.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>alpha</code></strong> (double) - significance level of the hypothesis test. In ]0,1[. E.g.: alpha 
+          = 0.05</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>a boolean array of length K with K the number of regressors. 
+          &quot;True&quot; if the null hypothesis was rejected for the 
+          regressor, &quot;False&quot; otherwise.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="predictions"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">predictions</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.predictions">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the predicted (fitted) values</p>
+  <p>It concerns the predictions for the original observations, not the 
+  decorrelated ones.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      If no covariance matrix of the observations was specified for the 
+      model, the weighted predictions are identical to the unweighted ones.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If True/False, the predictions for the decorrelated/original 
+          observations will be used.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="residuals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">residuals</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.residuals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns an array with the residuals. Residuals = observations minus 
+  the predictions</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      If no covariance matrix of the observations was specified for the 
+      model, the weighted residuals are identical to the unweighted ones.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If True/False, the residuals for the decorrelated/original 
+          observations will be used.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="coefficientOfDetermination"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">coefficientOfDetermination</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.coefficientOfDetermination">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the coefficient of determination</p>
+  <p>The coeff of determination is defined by  1 - S1 / S2 with</p>
+  <ul>
+    <li>
+      S1 the sum of squared residuals: S1 = rac{\sum_{i=1}^N (y_i - 
+      \hat{y}_i)^2}
+    </li>
+    <li>
+      S2 the sample variance w.r.t. the mean: S2 = rac{\sum_{i=1}^N (y_i -
+      \overline{y})^2}
+    </li>
+    <li>
+      If there is no intercept term in the model, then S2 is computed S2 = 
+      rac{\sum_{i=1}^N (y_i)^2}
+    </li>
+  </ul>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      If no covariance matrix of the observations was specified for the 
+      model, the weighted coeff of determination is identical to the 
+      unweighted one.
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If True/False, the residuals for the decorrelated/original 
+          observations will be used.</li>
+    </ul></dd>
+    <dt>Returns: double</dt>
+        <dd>coefficient of determination</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="BICvalue"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">BICvalue</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.BICvalue">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the Bayesian Information Criterion value.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      Also called the Schwartz Information Criterion (SIC)
+    </li>
+    <li>
+      Gaussian noise is assumed, with unknown variance sigma^2
+    </li>
+    <li>
+      Constant terms in the log-likelihood are omitted
+    </li>
+  </ul>
+  <p>TODO: . make a weighted version</p>
+  <dl class="fields">
+    <dt>Returns: double</dt>
+        <dd>BIC value</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="AICvalue"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">AICvalue</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.AICvalue">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the 2nd order Akaike Information Criterion value</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      Gaussian noise is assumed, with unknown variance sigma^2
+    </li>
+    <li>
+      Constant terms in the log-likelihood were omitted
+    </li>
+    <li>
+      If the number of observations equals the number of parameters + 1 
+      then the 2nd order AIC is not defined. In this case the method gives 
+      a nan.
+    </li>
+  </ul>
+  <p>TODO: . make a weighted version</p>
+  <dl class="fields">
+    <dt>Returns: double</dt>
+        <dd>AIC value</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="Fstatistic"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">Fstatistic</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.Fstatistic">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the F-statistic, commonly used to assess the fit.</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      if no covariance matrix of the observations was specified for the 
+      model, the weighted F-statistic is identical to the unweighted one
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If True/False, the residuals for the decorrelated/original 
+          observations will be used.</li>
+    </ul></dd>
+    <dt>Returns: double</dt>
+        <dd>the F-statistic</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="FstatisticTest"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">FstatisticTest</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">alpha</span>,
+        <span class="sig-arg">weighted</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.FstatisticTest">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Performs a hypothesis F-test on the fit</p>
+  <p>Null hypothesis: H0 : all fit coefficients == 0 Alternative hypothesis
+  : H1 : at least one fit coefficient != 0</p>
+  <p>Stated otherwise (with R^2 the coefficient of determination): Null 
+  hypothesis: H0 : R^2 == 0 Alternative hypothesis: H1: R^2 != 0</p>
+  <p>Remarks:</p>
+  <ul>
+    <li>
+      if no covariance matrix of the observations was specified for the 
+      model, the weighted F-test is identical to the unweighted one
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>alpha</code></strong> (double) - significance level of the hypothesis test. In ]0,1[.</li>
+        <li><strong class="pname"><code>weighted</code></strong> (boolean) - If True/False, the weighted/not-weighted F-statistic will be 
+          used.</li>
+    </ul></dd>
+    <dt>Returns: boolean</dt>
+        <dd>&quot;True&quot; if null hypothesis was rejected, 
+          &quot;False&quot; otherwise</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="summary"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">summary</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">outputStream</span>=<span class="sig-default">sys.stdout</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.summary">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Writes some basic results of fitting the model to the 
+  observations.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>outputStream</code></strong> (stream class. The .write() method is used.) - defaulted to the standard output console, but can be replaced by 
+          another open stream, like a file stream.</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>nothing</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__str__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__str__</span>(<span class="sig-arg">self</span>)</span>
+    <br /><em class="fname">(Informal representation operator)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.__str__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Returns the string written by printing the LinearFit object</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__str__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="evaluate"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">evaluate</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">regressors</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.statistics.linearregression-pysrc.html#LinearFit.evaluate">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Evaluates your current best fit in regressors evaluated in new 
+  covariates.</p>
+  <p>Remark:</p>
+  <ul>
+    <li>
+      The new regressor functions should be exactly the same ones as you 
+      used to define the linear model. They should only be evaluated in new
+      covariates. This is not checked for!
+    </li>
+  </ul>
+  <p>Example:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>noise = array([0.44, -0.48, 0.26, -2.00, -0.93, 2.21, -0.57, -2.04, -1.09, 1.53])
+<span class="py-prompt">&gt;&gt;&gt; </span>x = linspace(0, 5, 10)
+<span class="py-prompt">&gt;&gt;&gt; </span>obs = 2.0 + 3.0 * exp(x) + noise
+<span class="py-prompt">&gt;&gt;&gt; </span>myModel = LinearModel([ones(10), exp(x)], [<span class="py-string">&quot;1&quot;</span>, <span class="py-string">&quot;exp(x)&quot;</span>])
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(myModel)
+<span class="py-output">Model: y = a_0 + a_1 * exp(x)</span>
+<span class="py-output">Expected number of observations: 10</span></pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>myFit = myModel.fitData(obs)
+<span class="py-prompt">&gt;&gt;&gt; </span>xnew = linspace(-5.0, +5.0, 20)
+<span class="py-prompt">&gt;&gt;&gt; </span>y = myFit.evaluate([ones_like(xnew), exp(xnew)])
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span>(y)
+<span class="py-output">[ 1.53989966 1.55393018 1.57767944 1.61787944 1.68592536</span>
+<span class="py-output">  1.80110565 1.99606954 2.32608192 2.8846888 3.83023405</span>
+<span class="py-output">  5.43074394 8.13990238 12.72565316 20.48788288 33.62688959</span>
+<span class="py-output">  55.86708392 93.51271836 157.23490405 265.09646647 447.67207215]</span></pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>regressors</code></strong> (either a list or an ndarray) - either a list of equally-sized numpy arrays with the regressors 
+          evaluated in the new covariates: 
+          [f_0(xnew),f_1(xnew),f_2(xnew),...], or an N x M design matrix 
+          (numpy array) where these regressor arrays are column-stacked, 
+          with N the number of regressors, and M the number of data points.</li>
+    </ul></dd>
+    <dt>Returns: ndarray</dt>
+        <dd>the linear model evaluated in the new regressors</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

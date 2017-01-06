@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.roche.local</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.roche-module.html">Package&nbsp;roche</a> ::
+        Module&nbsp;local
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.roche.local-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module local</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.roche.local-pysrc.html">source&nbsp;code</a></span></p>
+<p>Derive local quantities such as effective temperature and surface 
+  gravity for Roche potentials.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#surface_normals" class="summary-sig-name">surface_normals</a>(<span class="summary-sig-arg">r</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">grid</span>,
+        <span class="summary-sig-arg">gtype</span>=<span class="summary-sig-default">'spher'</span>)</span><br />
+      Numerically compute surface normals of a grid (in absence of 
+      analytical alternative).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#surface_normals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Gridding functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#get_grid" class="summary-sig-name">get_grid</a>(<span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Construct a coordinate grid</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#get_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#stitch_grid" class="summary-sig-name">stitch_grid</a>(<span class="summary-sig-arg">theta</span>,
+        <span class="summary-sig-arg">phi</span>,
+        <span class="summary-sig-arg">*quant</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Stitch a grid together that was originally defined on 1 quadrant.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#stitch_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Derivation of local quantities</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#surface_elements" class="summary-sig-name">surface_elements</a>(<span class="summary-sig-arg">(r, mygrid)</span>,
+        <span class="summary-sig-arg">(surfnormal_x, surfnormal_y, surfnormal_z)</span>,
+        <span class="summary-sig-arg">gtype</span>=<span class="summary-sig-default">'spher'</span>)</span><br />
+      Compute surface area of elements in a grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#surface_elements">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#temperature" class="summary-sig-name">temperature</a>(<span class="summary-sig-arg">surface_gravity</span>,
+        <span class="summary-sig-arg">g_pole</span>,
+        <span class="summary-sig-arg">T_pole</span>,
+        <span class="summary-sig-arg">beta</span>=<span class="summary-sig-default">1.</span>)</span><br />
+      Calculate local temperature.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#temperature">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#intensity" class="summary-sig-name">intensity</a>(<span class="summary-sig-arg">teff</span>,
+        <span class="summary-sig-arg">grav</span>,
+        <span class="summary-sig-arg">mu</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">photband</span>=<span class="summary-sig-default">'OPEN.BOL'</span>)</span><br />
+      Calculate local intensity.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#intensity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#projected_intensity" class="summary-sig-name">projected_intensity</a>(<span class="summary-sig-arg">teff</span>,
+        <span class="summary-sig-arg">gravity</span>,
+        <span class="summary-sig-arg">areas</span>,
+        <span class="summary-sig-arg">line_of_sight</span>,
+        <span class="summary-sig-arg">photband</span>=<span class="summary-sig-default">'OPEN.BOL'</span>)</span><br />
+      Compute projected intensity in the line of sight.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#projected_intensity">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.roche.local-module.html#project" class="summary-sig-name">project</a>(<span class="summary-sig-arg">star</span>,
+        <span class="summary-sig-arg">view_long</span>=<span class="summary-sig-default">(0,0,0)</span>,
+        <span class="summary-sig-arg">view_lat</span>=<span class="summary-sig-default">(pi/2,0,0)</span>,
+        <span class="summary-sig-arg">photband</span>=<span class="summary-sig-default">'OPEN.BOL'</span>,
+        <span class="summary-sig-arg">only_visible</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">plot_sort</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">scale_factor</span>=<span class="summary-sig-default">1.</span>)</span><br />
+      Project and transform coordinates and vectors to align with the 
+      line-of-sight.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.roche.local-pysrc.html#project">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="get_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_grid</span>(<span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#get_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Construct a coordinate grid</p>
+  <p>If you give two resolutions, the first is for theta, the second for 
+  phi</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>args</code></strong> (integer) - one or two integers indicating number of grid points in theta and
+          phi direction</li>
+        <li><strong class="pname"><code>gtype</code></strong> (str) - grid type ('spher' or 'delaunay')</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>theta,phi(,grid)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="stitch_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">stitch_grid</span>(<span class="sig-arg">theta</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">*quant</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#stitch_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Stitch a grid together that was originally defined on 1 quadrant.</p>
+  <p>We add the three other quandrants.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="surface_normals"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">surface_normals</span>(<span class="sig-arg">r</span>,
+        <span class="sig-arg">phi</span>,
+        <span class="sig-arg">theta</span>,
+        <span class="sig-arg">grid</span>,
+        <span class="sig-arg">gtype</span>=<span class="sig-default">'spher'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#surface_normals">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Numerically compute surface normals of a grid (in absence of 
+  analytical alternative).</p>
+  <p>Also computes the surface elements, making <a 
+  href="ivs.roche.local-module.html#surface_elements" 
+  class="link">surface_elements</a> obsolete.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="surface_elements"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">surface_elements</span>(<span class="sig-arg">(r, mygrid)</span>,
+        <span class="sig-arg">(surfnormal_x, surfnormal_y, surfnormal_z)</span>,
+        <span class="sig-arg">gtype</span>=<span class="sig-default">'spher'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#surface_elements">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute surface area of elements in a grid.</p>
+  <p>theta,phi must be generated like mgrid(theta_range,phi_range)</p>
+  <p>usually, the surfnormals are acquired via differentiation of a gravity
+  potential, and is then equal to the *negative* of the local surface 
+  gravity.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="temperature"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">temperature</span>(<span class="sig-arg">surface_gravity</span>,
+        <span class="sig-arg">g_pole</span>,
+        <span class="sig-arg">T_pole</span>,
+        <span class="sig-arg">beta</span>=<span class="sig-default">1.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#temperature">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate local temperature.</p>
+  <p>beta is gravity darkening parameter.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="intensity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">intensity</span>(<span class="sig-arg">teff</span>,
+        <span class="sig-arg">grav</span>,
+        <span class="sig-arg">mu</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">photband</span>=<span class="sig-default">'OPEN.BOL'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#intensity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate local intensity.</p>
+  <p>beta is gravity darkening parameter.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="projected_intensity"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">projected_intensity</span>(<span class="sig-arg">teff</span>,
+        <span class="sig-arg">gravity</span>,
+        <span class="sig-arg">areas</span>,
+        <span class="sig-arg">line_of_sight</span>,
+        <span class="sig-arg">photband</span>=<span class="sig-default">'OPEN.BOL'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#projected_intensity">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute projected intensity in the line of sight.</p>
+  <p>gravity is vector directed inwards in the star line of sight is 
+  vector.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="project"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">project</span>(<span class="sig-arg">star</span>,
+        <span class="sig-arg">view_long</span>=<span class="sig-default">(0,0,0)</span>,
+        <span class="sig-arg">view_lat</span>=<span class="sig-default">(pi/2,0,0)</span>,
+        <span class="sig-arg">photband</span>=<span class="sig-default">'OPEN.BOL'</span>,
+        <span class="sig-arg">only_visible</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">plot_sort</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">scale_factor</span>=<span class="sig-default">1.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.roche.local-pysrc.html#project">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Project and transform coordinates and vectors to align with the 
+  line-of-sight.</p>
+  <p>Parameter <code>star</code> should be a record array containing fields
+  'teff','gravx', 'gravy','gravz','areas','vx','vy','vz'</p>
+  <p>and either you suply ('r','theta','phi') or ('x','y','z')</p>
+  <p>The XY direction is then the line-of-sight, and the YZ plane is the 
+  plane of the sky.</p>
+  <p>An extra column 'projflux' and 'eyeflux' will be added. Projected flux
+  takes care of limb darkening, and projected surface area. Eye flux only 
+  takes care of limbdarkening, and should only be used for plotting 
+  reasons.</p>
+  <p>view_long[0] of 0 means looking in the XY line, pi means looking in 
+  the YX line. view_lat[0] of pi/2 means edge on, 0 or pi is pole-on.</p>
+  <p>This function updates all Cartesian coordinates present in the star, 
+  but not the polar coordinates! The projected fluxes are added as a field 
+  'projflux' to the returned record array.</p>
+  <p>If you set 'only_visible' to True, only the information on the visible
+  parts of the star will be contained.</p>
+  <p>If you set 'plot_sort' to True, the arrays will be returned in a 
+  sorted order, where the areas at the back come first. This is especially 
+  handy for plotting.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>view_long</code></strong> (tuple floats  (radians,x,y)) - longitude viewing angle (radians) and coordinate zeropoint</li>
+        <li><strong class="pname"><code>view_lat</code></strong> (tuple floats (radians,x,z)) - inclination viewing angle (radians) and coordinate zeropoint</li>
+        <li><strong class="pname"><code>photband</code></strong> (string) - photometric passband</li>
+        <li><strong class="pname"><code>only_visible</code></strong> (boolean) - flag to return only information on visible surface elements</li>
+        <li><strong class="pname"><code>plot_sort</code></strong> (boolean) - flag to sort the surface elements from back to front</li>
+        <li><strong class="pname"><code>star</code></strong> (numpy record array)</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,1326 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.units.constants</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.units-module.html">Package&nbsp;units</a> ::
+        Module&nbsp;constants
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.units.constants-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module constants</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.units.constants-pysrc.html">source&nbsp;code</a></span></p>
+<p>List of physical constants (SI, CGS and solar)</p>
+  <p>Many constants are taken from NIST 
+  (http://physics.nist.gov/cuu/Constants/index.html)</p>
+  <p>Others have their explicit reference listed.</p>
+  <p>See also <a href="ivs.units.conversions-module.html" 
+  class="link">ivs.units.conversions</a> for advanced options, such as 
+  change the base units are changing the values of the fundamental 
+  constants to conventions used by other programs.</p>
+  <p>Their are two ways one can use the modules in this module:</p>
+  <ol start="1">
+    <li>
+      Just use the raw SI values in your script (e.g. 
+      <code>constants.Msol</code>. For convenience, also the cgs values of 
+      most constants are given, and accessbile via adding the postfix 
+      <code>'_cgs'</code>, e.g. <code>constants.Msol_cgs</code>.
+    </li>
+    <li>
+      If you <b>always</b> want to use cgs values and thus want the default
+      values to be cgs without bothering with the postfixes, you can change
+      the values of the constants to meet a particular convention via <a 
+      href="ivs.units.conversions-module.html#set_convention" 
+      class="link">conversions.set_convention</a>. After calling 
+      <code>conversions.set_convention('cgs')</code>, the value of 
+      <code>constants.Msol</code> will be given in grams instead of 
+      kilograms.
+    </li>
+  </ol>
+  <p>The safest way of getting the units of the constants exactly as you 
+  want them to be in a script, is via explicitly converting them to the 
+  right convention, e.g.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>Msol = conversions.convert(constants.Msol_units,<span class="py-string">'g'</span>,constants.Msol)</pre>
+  <p>This is independent of the way the conventions are set.</p>
+
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_current_convention"></a><span class="summary-name">_current_convention</span> = <code title="'SI'">'SI'</code>
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_current_values"></a><span class="summary-name">_current_values</span> = <code title="'standard'">'standard'</code>
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_current_frequency"></a><span class="summary-name">_current_frequency</span> = <code title="'rad'">'rad'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cc"></a><span class="summary-name">cc</span> = <code title="299792458.">299792458.</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cc_air"></a><span class="summary-name">cc_air</span> = <code title="cc/ 1.0002773">cc/ 1.0002773</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol"></a><span class="summary-name">Msol</span> = <code title="1.988547e30">1.988547e30</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol"></a><span class="summary-name">Rsol</span> = <code title="6.95508e8">6.95508e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Lsol"></a><span class="summary-name">Lsol</span> = <code title="3.846e26">3.846e26</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Tsol"></a><span class="summary-name">Tsol</span> = <code title="5779.5747">5779.5747</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="agesol"></a><span class="summary-name">agesol</span> = <code title="1.44221e+17">1.44221e+17</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mearth"></a><span class="summary-name">Mearth</span> = <code title="5.9742e24">5.9742e24</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rearth"></a><span class="summary-name">Rearth</span> = <code title="6371.e3">6371.e3</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mjup"></a><span class="summary-name">Mjup</span> = <code title="1.8986e27">1.8986e27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rjup"></a><span class="summary-name">Rjup</span> = <code title="6.9911e7">6.9911e7</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mlun"></a><span class="summary-name">Mlun</span> = <code title="7.346e22">7.346e22</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="au"></a><span class="summary-name">au</span> = <code title="149597870700.">149597870700.</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="pc"></a><span class="summary-name">pc</span> = <code title="3.085677581503e+16">3.085677581503e+16</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="ly"></a><span class="summary-name">ly</span> = <code title="9.460730472580800e+15">9.460730472580800e+15</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hh"></a><span class="summary-name">hh</span> = <code title="6.6260689633e-34">6.6260689633e-34</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hhbar"></a><span class="summary-name">hhbar</span> = <code title="1.05457162853e-34">1.05457162853e-34</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="kB"></a><span class="summary-name">kB</span> = <code title="1.380650424e-23">1.380650424e-23</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NA"></a><span class="summary-name">NA</span> = <code title="6.0221417930e23">6.0221417930e23</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="sigma"></a><span class="summary-name">sigma</span> = <code title="5.67040040e-8">5.67040040e-8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG"></a><span class="summary-name">GG</span> = <code title="6.67384e-11">6.67384e-11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GGMsol"></a><span class="summary-name">GGMsol</span> = <code title="1.32712442099e20">1.32712442099e20</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="RR"></a><span class="summary-name">RR</span> = <code title="8.31447215">8.31447215</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="aa"></a><span class="summary-name">aa</span> = <code title="7.5657e-16">7.5657e-16</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="a0"></a><span class="summary-name">a0</span> = <code title="52.9177e-12">52.9177e-12</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="ke"></a><span class="summary-name">ke</span> = <code title="8.9875517873681764e9">8.9875517873681764e9</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="eps0"></a><span class="summary-name">eps0</span> = <code title="8.854187817620e-12">8.854187817620e-12</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="mu0"></a><span class="summary-name">mu0</span> = <code title="1.2566370614e-6">1.2566370614e-6</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="alpha"></a><span class="summary-name">alpha</span> = <code title="137.036">137.036</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="me"></a><span class="summary-name">me</span> = <code title="9.1093829140e-31">9.1093829140e-31</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="qe"></a><span class="summary-name">qe</span> = <code title="-1.60217656535e-19">-1.60217656535e-19</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="mp"></a><span class="summary-name">mp</span> = <code title="1.67262177774e-27">1.67262177774e-27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="qp"></a><span class="summary-name">qp</span> = <code title="1.60217656535e-19">1.60217656535e-19</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cc_units"></a><span class="summary-name">cc_units</span> = <code title="'m s-1'">'m s-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cc_air_units"></a><span class="summary-name">cc_air_units</span> = <code title="'m s-1'">'m s-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_units"></a><span class="summary-name">Msol_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol_units"></a><span class="summary-name">Rsol_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Lsol_units"></a><span class="summary-name">Lsol_units</span> = <code title="'kg m2 s-3'">'kg m2 s-3'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Tsol_units"></a><span class="summary-name">Tsol_units</span> = <code title="'K'">'K'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="agesol_units"></a><span class="summary-name">agesol_units</span> = <code title="'s'">'s'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mearth_units"></a><span class="summary-name">Mearth_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rearth_units"></a><span class="summary-name">Rearth_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mjup_units"></a><span class="summary-name">Mjup_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rjup_units"></a><span class="summary-name">Rjup_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mlun_units"></a><span class="summary-name">Mlun_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="au_units"></a><span class="summary-name">au_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="pc_units"></a><span class="summary-name">pc_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="ly_units"></a><span class="summary-name">ly_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hh_units"></a><span class="summary-name">hh_units</span> = <code title="'kg m2 s-1'">'kg m2 s-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hhbar_units"></a><span class="summary-name">hhbar_units</span> = <code title="'kg m2 s-1'">'kg m2 s-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="kB_units"></a><span class="summary-name">kB_units</span> = <code title="'kg m2 s-2 K-1'">'kg m2 s-2 K-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NA_units"></a><span class="summary-name">NA_units</span> = <code title="'mol-1'">'mol-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="sigma_units"></a><span class="summary-name">sigma_units</span> = <code title="'kg s-3 K-4'">'kg s-3 K-4'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_units"></a><span class="summary-name">GG_units</span> = <code title="'m3 kg-1 s-2'">'m3 kg-1 s-2'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GGMsol_units"></a><span class="summary-name">GGMsol_units</span> = <code title="'m3 s-2'">'m3 s-2'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="RR_units"></a><span class="summary-name">RR_units</span> = <code title="'kg m2 s-2 K-1 mol-1'">'kg m2 s-2 K-1 mol-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="aa_units"></a><span class="summary-name">aa_units</span> = <code title="'kg m-1 s-2 K-4'">'kg m-1 s-2 K-4'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="a0_units"></a><span class="summary-name">a0_units</span> = <code title="'m'">'m'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="ke_units"></a><span class="summary-name">ke_units</span> = <code title="'N m2 C-2'">'N m2 C-2'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="eps0_units"></a><span class="summary-name">eps0_units</span> = <code title="'F m-1'">'F m-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="mu0_units"></a><span class="summary-name">mu0_units</span> = <code title="'T m A-1'">'T m A-1'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="alpha_units"></a><span class="summary-name">alpha_units</span> = <code title="''">''</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="me_units"></a><span class="summary-name">me_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="qe_units"></a><span class="summary-name">qe_units</span> = <code title="'C'">'C'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="mp_units"></a><span class="summary-name">mp_units</span> = <code title="'kg'">'kg'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="qp_units"></a><span class="summary-name">qp_units</span> = <code title="'C'">'C'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="cc_cgs"></a><span class="summary-name">cc_cgs</span> = <code title="29979245800.">29979245800.</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_cgs"></a><span class="summary-name">Msol_cgs</span> = <code title="1.988547e33">1.988547e33</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol_cgs"></a><span class="summary-name">Rsol_cgs</span> = <code title="6.95508e10">6.95508e10</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Lsol_cgs"></a><span class="summary-name">Lsol_cgs</span> = <code title="3.846e33">3.846e33</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mearth_cgs"></a><span class="summary-name">Mearth_cgs</span> = <code title="5.9742e27">5.9742e27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rearth_cgs"></a><span class="summary-name">Rearth_cgs</span> = <code title="6371e5">6371e5</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mjup_cgs"></a><span class="summary-name">Mjup_cgs</span> = <code title="1.8986e30">1.8986e30</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rjup_cgs"></a><span class="summary-name">Rjup_cgs</span> = <code title="6.9911e9">6.9911e9</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mlun_cgs"></a><span class="summary-name">Mlun_cgs</span> = <code title="7.346e25">7.346e25</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="au_cgs"></a><span class="summary-name">au_cgs</span> = <code title="149597.870700e8">149597.870700e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="pc_cgs"></a><span class="summary-name">pc_cgs</span> = <code title="3.085677581503e+18">3.085677581503e+18</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="ly_cgs"></a><span class="summary-name">ly_cgs</span> = <code title="9.4605284e+17">9.4605284e+17</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hh_cgs"></a><span class="summary-name">hh_cgs</span> = <code title="6.6260689633e-27">6.6260689633e-27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="hhbar_cgs"></a><span class="summary-name">hhbar_cgs</span> = <code title="1.05457162853e-27">1.05457162853e-27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="kB_cgs"></a><span class="summary-name">kB_cgs</span> = <code title="1.380650424e-16">1.380650424e-16</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="sigma_cgs"></a><span class="summary-name">sigma_cgs</span> = <code title="5.67040040e-5">5.67040040e-5</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_cgs"></a><span class="summary-name">GG_cgs</span> = <code title="6.67384e-8">6.67384e-8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GGMsol_cgs"></a><span class="summary-name">GGMsol_cgs</span> = <code title="1.32712442099e26">1.32712442099e26</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="RR_cgs"></a><span class="summary-name">RR_cgs</span> = <code title="8.31447215e7">8.31447215e7</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="aa_cgs"></a><span class="summary-name">aa_cgs</span> = <code title="7.5657e-15">7.5657e-15</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="a0_cgs"></a><span class="summary-name">a0_cgs</span> = <code title="52.9177e-10">52.9177e-10</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_sol"></a><span class="summary-name">Msol_sol</span> = <code title="1.">1.</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_sol"></a><span class="summary-name">GG_sol</span> = <code title="3.944620808727e-07">3.944620808727e-07</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GGMsol_sol"></a><span class="summary-name">GGMsol_sol</span> = <code title="3.944620719386e-27">3.944620719386e-27</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mabs_sol"></a><span class="summary-name">Mabs_sol</span> = <code title="4.75">4.75</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mapp_sol"></a><span class="summary-name">Mapp_sol</span> = <code title="-26.74">-26.74</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="numax_sol"></a><span class="summary-name">numax_sol</span> = <code title="3120., 5., 'muHz'">3120., 5., 'muHz'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Deltanu0_sol"></a><span class="summary-name">Deltanu0_sol</span> = <code title="134.88, 0.04, 'muHz'">134.88, 0.04, 'muHz'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="dnu01_sol"></a><span class="summary-name">dnu01_sol</span> = <code title="6.14, 0.10, 'muHz'">6.14, 0.10, 'muHz'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="dnu02_sol"></a><span class="summary-name">dnu02_sol</span> = <code title="9.00, 0.06, 'muHz'">9.00, 0.06, 'muHz'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_cles"></a><span class="summary-name">GG_cles</span> = <code title="6.6742e-11">6.6742e-11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_cles"></a><span class="summary-name">Msol_cles</span> = <code title="1.9884e30">1.9884e30</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_eggleton"></a><span class="summary-name">GG_eggleton</span> = <code title="6.6672e-11">6.6672e-11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_eggleton"></a><span class="summary-name">Msol_eggleton</span> = <code title="1.9891e30">1.9891e30</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol_eggleton"></a><span class="summary-name">Rsol_eggleton</span> = <code title="6.9598e8">6.9598e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_mesa"></a><span class="summary-name">GG_mesa</span> = <code title="6.67428e-11">6.67428e-11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_mesa"></a><span class="summary-name">Msol_mesa</span> = <code title="1.9892e30">1.9892e30</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol_mesa"></a><span class="summary-name">Rsol_mesa</span> = <code title="6.9598e8">6.9598e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Lsol_mesa"></a><span class="summary-name">Lsol_mesa</span> = <code title="3.8418e26">3.8418e26</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mearth_mesa"></a><span class="summary-name">Mearth_mesa</span> = <code title="5.9764e24">5.9764e24</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rearth_mesa"></a><span class="summary-name">Rearth_mesa</span> = <code title="6.37e6">6.37e6</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="au_mesa"></a><span class="summary-name">au_mesa</span> = <code title="1.495978921e11">1.495978921e11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Rsol_esta"></a><span class="summary-name">Rsol_esta</span> = <code title="6.9599e8">6.9599e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Lsol_esta"></a><span class="summary-name">Lsol_esta</span> = <code title="3.846e26">3.846e26</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GGMsol_esta"></a><span class="summary-name">GGMsol_esta</span> = <code title="1.32712438e20">1.32712438e20</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="GG_esta"></a><span class="summary-name">GG_esta</span> = <code title="6.6716823e-11">6.6716823e-11</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Msol_esta"></a><span class="summary-name">Msol_esta</span> = <code title="1.98919e8">1.98919e8</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Tsol_esta"></a><span class="summary-name">Tsol_esta</span> = <code title="5777.54">5777.54</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="n"></a><span class="summary-name">n</span> = <code title="1.0086649242">1.0086649242</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="H1"></a><span class="summary-name">H1</span> = <code title="1.0078250321">1.0078250321</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="H2"></a><span class="summary-name">H2</span> = <code title="2.0141017781">2.0141017781</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="H3"></a><span class="summary-name">H3</span> = <code title="3.0160492681">3.0160492681</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="He3"></a><span class="summary-name">He3</span> = <code title="3.0160293091">3.0160293091</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="He4"></a><span class="summary-name">He4</span> = <code title="4.0026032501">4.0026032501</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Li6"></a><span class="summary-name">Li6</span> = <code title="6.015122306509">6.015122306509</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Li7"></a><span class="summary-name">Li7</span> = <code title="7.016004073506">7.016004073506</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Be7"></a><span class="summary-name">Be7</span> = <code title="7.016929269506">7.016929269506</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Be8"></a><span class="summary-name">Be8</span> = <code title="8.00530509538">8.00530509538</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="B8"></a><span class="summary-name">B8</span> = <code title="8.0246067271188">8.0246067271188</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Be9"></a><span class="summary-name">Be9</span> = <code title="9.012182248405">9.012182248405</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="B9"></a><span class="summary-name">B9</span> = <code title="9.01332889191047">9.01332889191047</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="B10"></a><span class="summary-name">B10</span> = <code title="10.012937097349">10.012937097349</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="B11"></a><span class="summary-name">B11</span> = <code title="11.009305514405">11.009305514405</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="C12"></a><span class="summary-name">C12</span> = <code title="12.000000000">12.000000000</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="C13"></a><span class="summary-name">C13</span> = <code title="13.0033548385">13.0033548385</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="N13"></a><span class="summary-name">N13</span> = <code title="13.005738584289">13.005738584289</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="C14"></a><span class="summary-name">C14</span> = <code title="14.0032419914">14.0032419914</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="N14"></a><span class="summary-name">N14</span> = <code title="14.0030740072">14.0030740072</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="O14"></a><span class="summary-name">O14</span> = <code title="14.00859528780">14.00859528780</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="N15"></a><span class="summary-name">N15</span> = <code title="15.00010897312">15.00010897312</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="O15"></a><span class="summary-name">O15</span> = <code title="15.003065460540">15.003065460540</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="O16"></a><span class="summary-name">O16</span> = <code title="15.9949146223">15.9949146223</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="O17"></a><span class="summary-name">O17</span> = <code title="16.999131501223">16.999131501223</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="F17"></a><span class="summary-name">F17</span> = <code title="17.002095238266">17.002095238266</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="O18"></a><span class="summary-name">O18</span> = <code title="17.999160413851">17.999160413851</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="F18"></a><span class="summary-name">F18</span> = <code title="18.000937665636">18.000937665636</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="F19"></a><span class="summary-name">F19</span> = <code title="18.99840320575">18.99840320575</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Ne19"></a><span class="summary-name">Ne19</span> = <code title="19.001879726612">19.001879726612</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Ne20"></a><span class="summary-name">Ne20</span> = <code title="19.9924401763">19.9924401763</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Ne21"></a><span class="summary-name">Ne21</span> = <code title="20.99384674443">20.99384674443</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Na21"></a><span class="summary-name">Na21</span> = <code title="20.997655100751">20.997655100751</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Ne22"></a><span class="summary-name">Ne22</span> = <code title="21.991385500252">21.991385500252</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Na22"></a><span class="summary-name">Na22</span> = <code title="21.994436633482">21.994436633482</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Na23"></a><span class="summary-name">Na23</span> = <code title="22.989769657262">22.989769657262</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mg23"></a><span class="summary-name">Mg23</span> = <code title="22.9941248281353">22.9941248281353</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mg24"></a><span class="summary-name">Mg24</span> = <code title="23.985041874258">23.985041874258</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mg25"></a><span class="summary-name">Mg25</span> = <code title="24.985837000261">24.985837000261</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Al25"></a><span class="summary-name">Al25</span> = <code title="24.990428531760">24.990428531760</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Mg26"></a><span class="summary-name">Mg26</span> = <code title="25.982592999264">25.982592999264</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Al26"></a><span class="summary-name">Al26</span> = <code title="25.986891675268">25.986891675268</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Al27"></a><span class="summary-name">Al27</span> = <code title="26.981538407238">26.981538407238</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Si27"></a><span class="summary-name">Si27</span> = <code title="26.986704124264">26.986704124264</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Si28"></a><span class="summary-name">Si28</span> = <code title="27.976926494216">27.976926494216</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Si29"></a><span class="summary-name">Si29</span> = <code title="28.976494680219">28.976494680219</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="P29"></a><span class="summary-name">P29</span> = <code title="28.981801337807">28.981801337807</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="Si30"></a><span class="summary-name">Si30</span> = <code title="29.973770179221">29.973770179221</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="P30"></a><span class="summary-name">P30</span> = <code title="29.978313768482">29.978313768482</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="P31"></a><span class="summary-name">P31</span> = <code title="30.973761487269">30.973761487269</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

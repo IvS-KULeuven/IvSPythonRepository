@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.creategrids</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;creategrids
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.creategrids-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module creategrids</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.creategrids-pysrc.html">source&nbsp;code</a></span></p>
+<p>Create photometric and spectral grid.</p>
+  <p>It is possible to run this module from the terminal, e.g., to generate
+  a limb darkening grid. All input is automatically processed, so there are
+  a few tweaks you need to take into account when supplying parameters. 
+  Some of them are explained in the <a 
+  href="ivs.aux.argkwargparser-module.html" 
+  class="link">ivs.aux.argkwargparser</a> module.</p>
+  <p>Examples:</p>
+<pre class="literalblock">
+   $:&gt; python creategrids.py calc_limbdark_grid 'responses=[&quot;OPEN.BOL&quot;,&quot;MOST.V&quot;,&quot;GENEVA&quot;]' ebvs=[0.05] outfile=mygrid.fits
+</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Helper functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.creategrids-module.html#get_responses" class="summary-sig-name">get_responses</a>(<span class="summary-sig-arg">responses</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">add_spectrophotometry</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">wave</span>=<span class="summary-sig-default">(0,np.inf)</span>)</span><br />
+      Get a list of response functions and their information.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#get_responses">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Limb darkening coefficients</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.creategrids-module.html#calc_limbdark_grid" class="summary-sig-name">calc_limbdark_grid</a>(<span class="summary-sig-arg">responses</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrads</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">ebvs</span>=<span class="summary-sig-default">[0]</span>,
+        <span class="summary-sig-arg">zs</span>=<span class="summary-sig-default">[0.]</span>,
+        <span class="summary-sig-arg">ld_law</span>=<span class="summary-sig-default">'claret'</span>,
+        <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'equidist_r_leastsq'</span>,
+        <span class="summary-sig-arg">outfile</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">force</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Calculate a grid of limb-darkening coefficients.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#calc_limbdark_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Integrated photometry</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.creategrids-module.html#calc_integrated_grid" class="summary-sig-name">calc_integrated_grid</a>(<span class="summary-sig-arg">threads</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">ebvs</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">law</span>=<span class="summary-sig-default">'fitzpatrick2004'</span>,
+        <span class="summary-sig-arg">Rv</span>=<span class="summary-sig-default">3.1</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">'Flambda'</span>,
+        <span class="summary-sig-arg">responses</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">update</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">add_spectrophotometry</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Integrate an entire SED grid over all passbands and save to a FITS 
+      file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#calc_integrated_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_grid"></a><span class="summary-sig-name">update_grid</span>(<span class="summary-sig-arg">gridfile</span>,
+        <span class="summary-sig-arg">responses</span>,
+        <span class="summary-sig-arg">threads</span>=<span class="summary-sig-default">10</span>)</span><br />
+      Add passbands to an existing grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#update_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="fix_grid"></a><span class="summary-sig-name">fix_grid</span>(<span class="summary-sig-arg">grid</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#fix_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('IVS.SED.CREATE')">logging.getLogger('IVS.SED.CREATE')</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="get_responses"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_responses</span>(<span class="sig-arg">responses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">add_spectrophotometry</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">wave</span>=<span class="sig-default">(0,np.inf)</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#get_responses">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Get a list of response functions and their information.</p>
+  <p>You can specify bandpass systems (e.g. GENEVA) and then all Geveva 
+  filters will be collected. You can also specific specific bandpasses 
+  (e.g. GENEVA.V), in which case only that one will be returned. The 
+  default <code>None</code> returns all systems except some Hubble 
+  ones.</p>
+  <p>You can also set responses to <code>None</code> and give a wavelength 
+  range for filter selection.</p>
+  <p>Example input for <code>responses</code> are:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>responses = [<span class="py-string">'GENEVA.V'</span>,<span class="py-string">'2MASS.J'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>responses = [<span class="py-string">'GENEVA'</span>,<span class="py-string">'2MASS.J'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>responses = [<span class="py-string">'BOXCAR'</span>,<span class="py-string">'STROMGREN'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>responses = None</pre>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>responses</code></strong> (list of str) - a list of filter systems of passbands</li>
+        <li><strong class="pname"><code>add_spectrophotometry</code></strong> (bool) - add spectrophotometric filters to the filter list</li>
+        <li><strong class="pname"><code>wave</code></strong> (tuple (float,float)) - wavelength range</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calc_limbdark_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calc_limbdark_grid</span>(<span class="sig-arg">responses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrads</span>=<span class="sig-default">[0]</span>,
+        <span class="sig-arg">ebvs</span>=<span class="sig-default">[0]</span>,
+        <span class="sig-arg">zs</span>=<span class="sig-default">[0.]</span>,
+        <span class="sig-arg">ld_law</span>=<span class="sig-default">'claret'</span>,
+        <span class="sig-arg">fitmethod</span>=<span class="sig-default">'equidist_r_leastsq'</span>,
+        <span class="sig-arg">outfile</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">force</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#calc_limbdark_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate a grid of limb-darkening coefficients.</p>
+  <p>You  need to specify a list of response curves, and a grid of radial 
+  velocity (<code>vrads</code>), metallicity (<code>z</code>) and reddening
+  (<code>ebvs</code>) points. You can choose which <code>law</code> to fit 
+  and with which <code>fitmethod</code>. Extra kwargs specify the 
+  properties of the atmosphere grid to be used.</p>
+  <p>If you give a gridfile that already exists, the current file is simply
+  updated with the new passbands, i.e. all overlapping response curves will
+  not be recomputed. Unless you set <code>force=True</code>, in which case 
+  previous calculations will be overwritten. You'd probably only want to 
+  update or overwrite existing files if you use the same 
+  <code>vrads</code>, <code>ebvs</code>, <code>zs</code> etc...</p>
+  <p>The generated FITS file has the following structure:</p>
+  <ol start="1">
+    <li>
+      The primary HDU is empty. The primary header contains only the fit 
+      routine (FIT), LD law (LAW) and used grid (GRID)
+    </li>
+    <li>
+      Each table extension has the name of the photometric passband (e.g. 
+      &quot;GENEVA.V&quot;. Each record in the table extension has the 
+      following columns: Teff, logg, ebv, vrad, z (the grid points) and a1,
+      a2, a3, a4 (the limb darkening coefficients) and Imu1 (the intensity 
+      in the center of the disk) and SRS, dint (fit evaluation parameters, 
+      see <a href="ivs.sed.limbdark-module.html" 
+      class="link">ivs.sed.limbdark</a>). Although the system and filter 
+      can be derived from the extension name, there are also separate 
+      entries in the header for &quot;SYSTEM&quot; and &quot;FILTER&quot;.
+    </li>
+  </ol>
+  <p>Example usage:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>calc_limbdark_grid([<span class="py-string">'MOST.V'</span>,<span class="py-string">'GENEVA'</span>],vrads=[0],ebvs=[0.06],zs=[0,0],    ...  law=<span class="py-string">'claret'</span>,fitmethod=<span class="py-string">'equidist_r_leastsq'</span>,outfile=<span class="py-string">'HD261903.fits'</span>)</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="calc_integrated_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calc_integrated_grid</span>(<span class="sig-arg">threads</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">ebvs</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">law</span>=<span class="sig-default">'fitzpatrick2004'</span>,
+        <span class="sig-arg">Rv</span>=<span class="sig-default">3.1</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">'Flambda'</span>,
+        <span class="sig-arg">responses</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">update</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">add_spectrophotometry</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.creategrids-pysrc.html#calc_integrated_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Integrate an entire SED grid over all passbands and save to a FITS 
+  file.</p>
+  <p>The output file can be used to fit SEDs more efficiently, since 
+  integration over the passbands has already been carried out.</p>
+  <p>WARNING: this function can take a loooooong time to compute!</p>
+  <p>Extra keywords can be used to specify the grid.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>threads</code></strong> - number of threads @type threads; integer, 'max', 'half' or 'safe'</li>
+        <li><strong class="pname"><code>ebvs</code></strong> (numpy array) - reddening parameters to include</li>
+        <li><strong class="pname"><code>law</code></strong> (string (valid law name, see <code>reddening.py</code>)) - interstellar reddening law to use</li>
+        <li><strong class="pname"><code>Rv</code></strong> (float) - Rv value for reddening law</li>
+        <li><strong class="pname"><code>units</code></strong> (str, one of 'Flambda','Fnu') - choose to work in 'Flambda' or 'Fnu'</li>
+        <li><strong class="pname"><code>responses</code></strong> (list of strings) - respons curves to add (if None, add all)</li>
+        <li><strong class="pname"><code>update</code></strong> (boolean) - if true append to existing FITS file, otherwise overwrite 
+          possible existing file.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

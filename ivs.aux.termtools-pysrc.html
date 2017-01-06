@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.aux.termtools</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.aux-module.html">Package&nbsp;aux</a> ::
+        Module&nbsp;termtools
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.aux.termtools-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="ivs.aux.termtools-module.html">Module ivs.aux.termtools</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Tools for cursor and color control in the terminal</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Example usage (this does not work in the documentation):</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; print green('this text is green')</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">this text is green</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; print blink('this text blinks')+' this text does not blink'</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">this text blinks this text does not blink</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">You can combine all the possibilities, as the functions are generated on the fly:</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">&gt;&gt;&gt; print blink_green_bgred_bold('blinking green bold text on red background')</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">blinking green bold text on red background</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">__future__</tt> <tt class="py-keyword">import</tt> <tt class="py-name">print_function</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">functools</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">inspect</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">sys</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">types</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">subprocess</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">time</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable ivs.aux.termtools.RED=ivs.aux.termtools-module.html#RED"><a title="ivs.aux.termtools.RED" class="py-name" href="#" onclick="return doclink('link-0', 'RED', 'link-0');">RED</a></tt><tt class="py-op">=</tt><tt class="py-string">"\[\033[0;35m\]"</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt id="link-1" class="py-name" targets="Variable ivs.aux.termtools.YELLOW=ivs.aux.termtools-module.html#YELLOW"><a title="ivs.aux.termtools.YELLOW" class="py-name" href="#" onclick="return doclink('link-1', 'YELLOW', 'link-1');">YELLOW</a></tt><tt class="py-op">=</tt><tt class="py-string">"\[\033[0;33m\]"</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable ivs.aux.termtools.instructs=ivs.aux.termtools-module.html#instructs"><a title="ivs.aux.termtools.instructs" class="py-name" href="#" onclick="return doclink('link-2', 'instructs', 'link-2');">instructs</a></tt> <tt class="py-op">=</tt> <tt class="py-op">{</tt><tt class="py-string">'black'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[30m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line">          <tt class="py-string">'red'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[31m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line">          <tt class="py-string">'green'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[32m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line">          <tt class="py-string">'yellow'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[33m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line">          <tt class="py-string">'blue'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[34m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line">          <tt class="py-string">'magenta'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[35m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line">          <tt class="py-string">'cyan'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[36m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line">          <tt class="py-string">'white'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[37m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line">          <tt class="py-string">'bgblack'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[40m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line">          <tt class="py-string">'bgred'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[41m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line">          <tt class="py-string">'bggreen'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[42m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">          <tt class="py-string">'bgyellow'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[43m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">          <tt class="py-string">'bgblue'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[44m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">          <tt class="py-string">'bgmagenta'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[45m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line">          <tt class="py-string">'bgcyan'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[46m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">          <tt class="py-string">'bgwhite'</tt><tt class="py-op">:</tt><tt class="py-string">"\033[47m"</tt><tt class="py-op">,</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">          <tt class="py-string">'blink'</tt><tt class="py-op">:</tt><tt class="py-string">'\033[5m'</tt><tt class="py-op">,</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">          <tt class="py-string">'underline'</tt><tt class="py-op">:</tt><tt class="py-string">'\033[4m'</tt><tt class="py-op">,</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">          <tt class="py-string">'bold'</tt><tt class="py-op">:</tt><tt class="py-string">'\033[1m'</tt><tt class="py-op">,</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">          <tt class="py-string">'reset'</tt><tt class="py-op">:</tt><tt class="py-string">'\033[m'</tt><tt class="py-op">}</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
+<a name="overwrite_line"></a><div id="overwrite_line-def"><a name="L47"></a><tt class="py-lineno"> 47</tt> <a class="py-toggle" href="#" id="overwrite_line-toggle" onclick="return toggle('overwrite_line');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools-module.html#overwrite_line">overwrite_line</a><tt class="py-op">(</tt><tt class="py-param">message</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="overwrite_line-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="overwrite_line-expanded"><a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-docstring">    Save cursor at current position, clear current line, print the message and reset the cursor.</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-docstring">    @param message: message to print to the screen</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-docstring">    @type message: str</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">    <tt id="link-3" class="py-name" targets="Variable ivs.aux.progressMeter.ProgressMeter.ESC=ivs.aux.progressMeter.ProgressMeter-class.html#ESC,Variable ivs.makedoc.ESC=ivs.makedoc-module.html#ESC"><a title="ivs.aux.progressMeter.ProgressMeter.ESC
+ivs.makedoc.ESC" class="py-name" href="#" onclick="return doclink('link-3', 'ESC', 'link-3');">ESC</a></tt><tt class="py-op">=</tt><tt class="py-name">chr</tt><tt class="py-op">(</tt><tt class="py-number">27</tt><tt class="py-op">)</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt><tt class="py-op">(</tt><tt class="py-string">'{ESC}[s{ESC}[2K{message}{ESC}[u'</tt><tt class="py-op">.</tt><tt id="link-4" class="py-name" targets="Variable ivs.asteroseismology.redgiantfreqs.format=ivs.asteroseismology.redgiantfreqs-module.html#format"><a title="ivs.asteroseismology.redgiantfreqs.format" class="py-name" href="#" onclick="return doclink('link-4', 'format', 'link-4');">format</a></tt><tt class="py-op">(</tt><tt id="link-5" class="py-name"><a title="ivs.aux.progressMeter.ProgressMeter.ESC
+ivs.makedoc.ESC" class="py-name" href="#" onclick="return doclink('link-5', 'ESC', 'link-3');">ESC</a></tt><tt class="py-op">=</tt><tt id="link-6" class="py-name"><a title="ivs.aux.progressMeter.ProgressMeter.ESC
+ivs.makedoc.ESC" class="py-name" href="#" onclick="return doclink('link-6', 'ESC', 'link-3');">ESC</a></tt><tt class="py-op">,</tt><tt class="py-name">message</tt><tt class="py-op">=</tt><tt class="py-name">message</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">end</tt><tt class="py-op">=</tt><tt class="py-string">''</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">     </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"> </tt>
+<a name="line_at_a_time"></a><div id="line_at_a_time-def"><a name="L58"></a><tt class="py-lineno"> 58</tt> <a class="py-toggle" href="#" id="line_at_a_time-toggle" onclick="return toggle('line_at_a_time');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools-module.html#line_at_a_time">line_at_a_time</a><tt class="py-op">(</tt><tt class="py-param">fileobj</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="line_at_a_time-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="line_at_a_time-expanded"><a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-docstring">    Return one line at a time from a file-like object.</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; #p1 = subprocess.Popen('ls',shell=True,stdout=subprocess.PIPE)</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; #for line in line_at_a_time(p1.stdout):</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">    ... #    print 'next line:',line.strip()</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; #retcode = p1.wait()</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring">    use C{os.kill(p1.pid,SIGKILL)} to with C{SIGKILL} from C{signal} standard</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring">    module to kill the process.</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">    return model_number</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring">    Works around the iter behavior of pipe files in</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">    Python 2.x, e.g., instead of "for line in file" you can</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    write "for line in line_at_a_time(file)"</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line">    <tt class="py-keyword">while</tt> <tt class="py-name">True</tt><tt class="py-op">:</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">        <tt class="py-name">line</tt> <tt class="py-op">=</tt> <tt class="py-name">fileobj</tt><tt class="py-op">.</tt><tt class="py-name">readline</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">line</tt><tt class="py-op">:</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">        <tt class="py-keyword">yield</tt> <tt class="py-name">line</tt>     </tt>
+</div><a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"> </tt>
+<a name="subprocess_timeout"></a><div id="subprocess_timeout-def"><a name="L82"></a><tt class="py-lineno"> 82</tt> <a class="py-toggle" href="#" id="subprocess_timeout-toggle" onclick="return toggle('subprocess_timeout');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools-module.html#subprocess_timeout">subprocess_timeout</a><tt class="py-op">(</tt><tt class="py-param">command</tt><tt class="py-op">,</tt> <tt class="py-param">time_out</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="subprocess_timeout-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="subprocess_timeout-expanded"><a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-docstring">    Kill a running subprocess after a certain amount of time.</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-docstring">    Command represents the command for the process you would give in a terminal e.g. 'ls -l' in a terminal becomes ["ls", "-l"] or 'firefox' becomes ["firefox"]'; time_out is expressed in seconds. If the process did not complete before time_out, the process is killed.</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-docstring">    @param command: command to run</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt class="py-docstring">    @type command: str</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">    <tt class="py-comment"># launching the command</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">    <tt class="py-name">c</tt> <tt class="py-op">=</tt> <tt class="py-name">subprocess</tt><tt class="py-op">.</tt><tt class="py-name">Popen</tt><tt class="py-op">(</tt><tt class="py-name">command</tt><tt class="py-op">)</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">    <tt class="py-comment"># now waiting for the command to complete</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">    <tt class="py-name">t</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">    <tt class="py-keyword">while</tt> <tt class="py-name">t</tt> <tt class="py-op">&lt;</tt> <tt class="py-name">time_out</tt> <tt class="py-keyword">and</tt> <tt class="py-name">c</tt><tt class="py-op">.</tt><tt class="py-name">poll</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">sleep</tt><tt class="py-op">(</tt><tt class="py-number">1</tt><tt class="py-op">)</tt>  <tt class="py-comment"># (comment 1)</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">        <tt class="py-name">t</tt> <tt class="py-op">+=</tt> <tt class="py-number">1</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">    <tt class="py-comment"># there are two possibilities for the while to have stopped:</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">c</tt><tt class="py-op">.</tt><tt class="py-name">poll</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt class="py-comment"># in the case the process did not complete, we kill it</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-name">c</tt><tt class="py-op">.</tt><tt class="py-name">terminate</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">        <tt class="py-comment"># and fill the return code with some error value</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt class="py-name">returncode</tt> <tt class="py-op">=</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt>  <tt class="py-comment"># (comment 2)</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt>                  </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">        <tt class="py-comment"># in the case the process completed normally</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">        <tt class="py-name">returncode</tt> <tt class="py-op">=</tt> <tt class="py-name">c</tt><tt class="py-op">.</tt><tt class="py-name">poll</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">returncode</tt> </tt>
+</div><a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"> </tt>
+<a name="CallInstruct"></a><div id="CallInstruct-def"><a name="L115"></a><tt class="py-lineno">115</tt> <a class="py-toggle" href="#" id="CallInstruct-toggle" onclick="return toggle('CallInstruct');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="ivs.aux.termtools.CallInstruct-class.html">CallInstruct</a><tt class="py-op">:</tt> </tt>
+</div><div id="CallInstruct-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="CallInstruct-expanded"><a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line"><tt class="py-docstring">    Generate a callable function on-the-fly.</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"><tt class="py-docstring">    The function takes text as an input and will first print all the terminal</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-docstring">    instructions, then the text and then reset the terminal settings to the</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">    normal value.</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="CallInstruct.__init__"></a><div id="CallInstruct.__init__-def"><a name="L123"></a><tt class="py-lineno">123</tt> <a class="py-toggle" href="#" id="CallInstruct.__init__-toggle" onclick="return toggle('CallInstruct.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.CallInstruct-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">instr</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="CallInstruct.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="CallInstruct.__init__-expanded"><a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"><tt class="py-docstring">        Remember which instructions to print.</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">instr</tt> <tt class="py-op">=</tt> <tt class="py-name">instr</tt> </tt>
+</div><a name="CallInstruct.__call__"></a><div id="CallInstruct.__call__-def"><a name="L128"></a><tt class="py-lineno">128</tt> <a class="py-toggle" href="#" id="CallInstruct.__call__-toggle" onclick="return toggle('CallInstruct.__call__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.CallInstruct-class.html#__call__">__call__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt><tt class="py-param">text</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="CallInstruct.__call__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="CallInstruct.__call__-expanded"><a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"><tt class="py-docstring">        Print the instructions, the text and reset the terminal.</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-string">""</tt><tt class="py-op">.</tt><tt class="py-name">join</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt id="link-7" class="py-name"><a title="ivs.aux.termtools.instructs" class="py-name" href="#" onclick="return doclink('link-7', 'instructs', 'link-2');">instructs</a></tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">instr</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-string">'_'</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">text</tt> <tt class="py-op">+</tt> <tt class="py-string">'\033[m'</tt> </tt>
+</div></div><a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line"> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line"> </tt>
+<a name="MemoryMonitor"></a><div id="MemoryMonitor-def"><a name="L136"></a><tt class="py-lineno">136</tt> <a class="py-toggle" href="#" id="MemoryMonitor-toggle" onclick="return toggle('MemoryMonitor');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="ivs.aux.termtools.MemoryMonitor-class.html">MemoryMonitor</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MemoryMonitor-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="MemoryMonitor-expanded"><a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"> </tt>
+<a name="MemoryMonitor.__init__"></a><div id="MemoryMonitor.__init__-def"><a name="L138"></a><tt class="py-lineno">138</tt> <a class="py-toggle" href="#" id="MemoryMonitor.__init__-toggle" onclick="return toggle('MemoryMonitor.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.MemoryMonitor-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">username</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MemoryMonitor.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MemoryMonitor.__init__-expanded"><a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line">        <tt class="py-docstring">"""Create new MemoryMonitor instance."""</tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">username</tt> <tt class="py-op">=</tt> <tt class="py-name">username</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">time</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">free</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">used</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line">     </tt>
+<a name="MemoryMonitor.usage"></a><div id="MemoryMonitor.usage-def"><a name="L145"></a><tt class="py-lineno">145</tt> <a class="py-toggle" href="#" id="MemoryMonitor.usage-toggle" onclick="return toggle('MemoryMonitor.usage');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.MemoryMonitor-class.html#usage">usage</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MemoryMonitor.usage-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MemoryMonitor.usage-expanded"><a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line">        <tt class="py-docstring">"""Return int containing memory used by user's processes."""</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line">        <tt class="py-comment">#self.process = subprocess.Popen("ps -u %s -o rss | awk '{sum+=$1} END {print sum}'" % self.username,</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">        <tt class="py-comment">#                                shell=True,</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">        <tt class="py-comment">#                               stdout=subprocess.PIPE,</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line">        <tt class="py-comment">#                                )</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line">        <tt class="py-name">process</tt> <tt class="py-op">=</tt> <tt class="py-name">subprocess</tt><tt class="py-op">.</tt><tt class="py-name">Popen</tt><tt class="py-op">(</tt><tt class="py-string">"free -mto"</tt><tt class="py-op">,</tt><tt class="py-name">shell</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">,</tt><tt class="py-name">stdout</tt><tt class="py-op">=</tt><tt class="py-name">subprocess</tt><tt class="py-op">.</tt><tt class="py-name">PIPE</tt><tt class="py-op">)</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">time</tt><tt class="py-op">.</tt><tt class="py-name">time</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">        <tt class="py-name">used</tt><tt class="py-op">,</tt><tt class="py-name">free</tt> <tt class="py-op">=</tt> <tt class="py-name">process</tt><tt class="py-op">.</tt><tt class="py-name">communicate</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-string">'\n'</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">2</tt><tt class="py-op">:</tt><tt class="py-number">4</tt><tt class="py-op">]</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">free</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">free</tt><tt class="py-op">)</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">used</tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">used</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">         </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line"> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line"> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line"> </tt>
+<a name="Wrapper"></a><div id="Wrapper-def"><a name="L160"></a><tt class="py-lineno">160</tt> <a class="py-toggle" href="#" id="Wrapper-toggle" onclick="return toggle('Wrapper');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="ivs.aux.termtools.Wrapper-class.html">Wrapper</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="Wrapper-expanded"><a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">  <tt class="py-docstring">"""</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line"><tt class="py-docstring">  Wrap the module so that the C{getattr} function can be redefined.</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line"><tt class="py-docstring">  """</tt> </tt>
+<a name="Wrapper.__init__"></a><div id="Wrapper.__init__-def"><a name="L164"></a><tt class="py-lineno">164</tt> <a class="py-toggle" href="#" id="Wrapper.__init__-toggle" onclick="return toggle('Wrapper.__init__');">-</a><tt class="py-line">  <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.Wrapper-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">wrapped</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper.__init__-collapsed" style="display:none;" pad="+++" indent="++++++"></div><div id="Wrapper.__init__-expanded"><a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">    <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped</tt> <tt class="py-op">=</tt> <tt class="py-name">wrapped</tt> </tt>
+</div><a name="Wrapper.__getattr__"></a><div id="Wrapper.__getattr__-def"><a name="L166"></a><tt class="py-lineno">166</tt> <a class="py-toggle" href="#" id="Wrapper.__getattr__-toggle" onclick="return toggle('Wrapper.__getattr__');">-</a><tt class="py-line">  <tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.aux.termtools.Wrapper-class.html#__getattr__">__getattr__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">name</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper.__getattr__-collapsed" style="display:none;" pad="+++" indent="++++++"></div><div id="Wrapper.__getattr__-expanded"><a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">    <tt class="py-comment"># Perform custom logic here</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line">    <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">      <tt class="py-keyword">return</tt> <tt class="py-name">getattr</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped</tt><tt class="py-op">,</tt> <tt class="py-name">name</tt><tt class="py-op">)</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt> <tt class="py-name">AttributeError</tt><tt class="py-op">:</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line">      <tt class="py-keyword">return</tt> <tt id="link-8" class="py-name" targets="Class ivs.aux.termtools.CallInstruct=ivs.aux.termtools.CallInstruct-class.html"><a title="ivs.aux.termtools.CallInstruct" class="py-name" href="#" onclick="return doclink('link-8', 'CallInstruct', 'link-8');">CallInstruct</a></tt><tt class="py-op">(</tt><tt class="py-name">name</tt><tt class="py-op">)</tt> <tt class="py-comment"># Some sensible default</tt> </tt>
+</div></div><a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line"> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line"><tt class="py-comment">#-- Wrap the module so that the C{getattr} function can be redefined.</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line"><tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">modules</tt><tt class="py-op">[</tt><tt class="py-name">__name__</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt id="link-9" class="py-name" targets="Class ivs.aux.termtools.Wrapper=ivs.aux.termtools.Wrapper-class.html"><a title="ivs.aux.termtools.Wrapper" class="py-name" href="#" onclick="return doclink('link-9', 'Wrapper', 'link-9');">Wrapper</a></tt><tt class="py-op">(</tt><tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">modules</tt><tt class="py-op">[</tt><tt class="py-name">__name__</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:10 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.timeseries.windowfunctions</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.timeseries-module.html">Package&nbsp;timeseries</a> ::
+        Module&nbsp;windowfunctions
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.timeseries.windowfunctions-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module windowfunctions</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html">source&nbsp;code</a></span></p>
+<p>Window functions.</p>
+  <p>A window with a high dynamic range is a window that can distinguish 
+  peaks in a broad range of amplitudes. Usually, this goes together with 
+  loss in resolution and detection power (higher noise).</p>
+  <p>Example usage: calculate the window function of timeseries, using 
+  different windows.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> tfreq
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> pylab <span class="py-keyword">import</span> figure,show,legend,plot,xlim
+<span class="py-prompt">&gt;&gt;&gt; </span>times = linspace(0,150,10000)
+<span class="py-prompt">&gt;&gt;&gt; </span>signal = ones(len(times))
+<span class="py-prompt">&gt;&gt;&gt; </span>windows = [<span class="py-string">'rectangular'</span>,<span class="py-string">'hann'</span>,<span class="py-string">'hamming'</span>,<span class="py-string">'cosine'</span>,<span class="py-string">'bartlett'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span>windows += [<span class="py-string">'nuttall'</span>,<span class="py-string">'blackman-harris'</span>]
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> window <span class="py-keyword">in</span> windows:
+<span class="py-more">... </span>  pergram = tfreq.scargle(times,signal,fn=1.5,df=0.0005,norm=<span class="py-string">'amplitude'</span>,window=window)[1]
+<span class="py-more">... </span>  p=figure(1)
+<span class="py-more">... </span>  p=plot(pergram[0],pergram[1],<span class="py-string">'-'</span>,label=window)
+<span class="py-more">... </span>  p=figure(2)
+<span class="py-more">... </span>  p=plot(log10(pergram[0]),log10(pergram[1]),<span class="py-string">'-'</span>,label=window)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=figure(1);p=legend();p=xlim(0,1.5)
+<span class="py-prompt">&gt;&gt;&gt; </span>p=figure(2);p=legend(loc=<span class="py-string">'lower left'</span>);p=xlim(-2.5,-0.3)</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="test"></a><span class="summary-sig-name">test</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#test">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Main wrapper</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="getWindowFunction"></a><span class="summary-sig-name">getWindowFunction</span>(<span class="summary-sig-arg">name</span>,
+        <span class="summary-sig-arg">times</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#getWindowFunction">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Low dynamic range</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="rectangular"></a><span class="summary-sig-name">rectangular</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Rectangular (no) window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#rectangular">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Moderate dynamic range</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="hamming"></a><span class="summary-sig-name">hamming</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Hamming window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#hamming">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="hann"></a><span class="summary-sig-name">hann</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Hann or Hanning window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#hann">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="cosine"></a><span class="summary-sig-name">cosine</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Cosine window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#cosine">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="bartlett"></a><span class="summary-sig-name">bartlett</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Bartlett window (zero valued end-points)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#bartlett">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;High dynamic range</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="nuttall"></a><span class="summary-sig-name">nuttall</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Nuttall window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#nuttall">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="blackman_harris"></a><span class="summary-sig-name">blackman_harris</span>(<span class="summary-sig-arg">times</span>)</span><br />
+      Blackman Harris window</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.timeseries.windowfunctions-pysrc.html#blackman_harris">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;IVS.TS.WINF&quot;)">logging.getLogger(&quot;IVS.TS.WINF&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

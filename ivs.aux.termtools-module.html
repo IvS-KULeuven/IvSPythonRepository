@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.aux.termtools</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.aux-module.html">Package&nbsp;aux</a> ::
+        Module&nbsp;termtools
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.aux.termtools-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module termtools</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.aux.termtools-pysrc.html">source&nbsp;code</a></span></p>
+<p>Tools for cursor and color control in the terminal</p>
+  <p>Example usage (this does not work in the documentation):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> green(<span class="py-string">'this text is green'</span>)
+<span class="py-output">this text is green</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> blink(<span class="py-string">'this text blinks'</span>)+<span class="py-string">' this text does not blink'</span>
+<span class="py-output">this text blinks this text does not blink</span></pre>
+  <p>You can combine all the possibilities, as the functions are generated 
+  on the fly:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">print</span> blink_green_bgred_bold(<span class="py-string">'blinking green bold text on red background'</span>)
+<span class="py-output">blinking green bold text on red background</span></pre>
+
+<!-- ==================== CLASSES ==================== -->
+<a name="section-Classes"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Classes</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Classes"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.aux.termtools.CallInstruct-class.html" class="summary-name">CallInstruct</a><br />
+      Generate a callable function on-the-fly.
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.aux.termtools.MemoryMonitor-class.html" class="summary-name">MemoryMonitor</a>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.aux.termtools.Wrapper-class.html" class="summary-name">Wrapper</a><br />
+      Wrap the module so that the <code>getattr</code> function can be 
+        redefined.
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.aux.termtools-module.html#overwrite_line" class="summary-sig-name">overwrite_line</a>(<span class="summary-sig-arg">message</span>)</span><br />
+      Save cursor at current position, clear current line, print the 
+      message and reset the cursor.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.aux.termtools-pysrc.html#overwrite_line">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.aux.termtools-module.html#line_at_a_time" class="summary-sig-name">line_at_a_time</a>(<span class="summary-sig-arg">fileobj</span>)</span><br />
+      Return one line at a time from a file-like object.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.aux.termtools-pysrc.html#line_at_a_time">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.aux.termtools-module.html#subprocess_timeout" class="summary-sig-name">subprocess_timeout</a>(<span class="summary-sig-arg">command</span>,
+        <span class="summary-sig-arg">time_out</span>)</span><br />
+      Kill a running subprocess after a certain amount of time.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.aux.termtools-pysrc.html#subprocess_timeout">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="RED"></a><span class="summary-name">RED</span> = <code title="&quot;\[\033[0;35m\]&quot;">&quot;\[\033[0;35m\]&quot;</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="YELLOW"></a><span class="summary-name">YELLOW</span> = <code title="&quot;\[\033[0;33m\]&quot;">&quot;\[\033[0;33m\]&quot;</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.aux.termtools-module.html#instructs" class="summary-name">instructs</a> = <code title="{'black': &quot;\033[30m&quot;, 'red': &quot;\033[31m&quot;, 'green': &quot;\033[32m&quot;, 'yellow'\
+: &quot;\033[33m&quot;, 'blue': &quot;\033[34m&quot;, 'magenta': &quot;\033[35m&quot;, 'cyan': &quot;\033\
+[36m&quot;, 'white': &quot;\033[37m&quot;, 'bgblack': &quot;\033[40m&quot;, 'bgred': &quot;\033[41m&quot;\
+, 'bggreen': &quot;\033[42m&quot;, 'bgyellow': &quot;\033[43m&quot;, 'bgblue': &quot;\033[44m&quot;,\
+ 'bgmagenta': &quot;\033[45m&quot;, 'bgcyan': &quot;\033[46m&quot;, 'bgwhite': &quot;\033[47m&quot;,\
+ 'blink': '\033[5m', 'underline': '\033[4m', 'bold': '\033[1m', 'reset\
+': '\033[m'}">{'black': &quot;\033[30m&quot;, 'red': &quot;\033[31m&quot;, 'green': <code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="overwrite_line"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">overwrite_line</span>(<span class="sig-arg">message</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.aux.termtools-pysrc.html#overwrite_line">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Save cursor at current position, clear current line, print the message
+  and reset the cursor.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>message</code></strong> (str) - message to print to the screen</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="line_at_a_time"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">line_at_a_time</span>(<span class="sig-arg">fileobj</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.aux.termtools-pysrc.html#line_at_a_time">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return one line at a time from a file-like object.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#p1 = subprocess.Popen('ls',shell=True,stdout=subprocess.PIPE)</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#for line in line_at_a_time(p1.stdout):</span>
+<span class="py-more">... </span><span class="py-comment">#    print 'next line:',line.strip()</span>
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-comment">#retcode = p1.wait()</span></pre>
+  <p>use <code>os.kill(p1.pid,SIGKILL)</code> to with <code>SIGKILL</code> 
+  from <code>signal</code> standard module to kill the process.</p>
+  <p>return model_number Works around the iter behavior of pipe files in 
+  Python 2.x, e.g., instead of &quot;for line in file&quot; you can write 
+  &quot;for line in line_at_a_time(file)&quot;</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="subprocess_timeout"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">subprocess_timeout</span>(<span class="sig-arg">command</span>,
+        <span class="sig-arg">time_out</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.aux.termtools-pysrc.html#subprocess_timeout">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Kill a running subprocess after a certain amount of time.</p>
+  <p>Command represents the command for the process you would give in a 
+  terminal e.g. 'ls -l' in a terminal becomes [&quot;ls&quot;, 
+  &quot;-l&quot;] or 'firefox' becomes [&quot;firefox&quot;]'; time_out is 
+  expressed in seconds. If the process did not complete before time_out, 
+  the process is killed.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>command</code></strong> (str) - command to run</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="instructs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">instructs</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+{'black': &quot;\033[30m&quot;, 'red': &quot;\033[31m&quot;, 'green': &quot;\033[32m&quot;, 'yellow'<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+: &quot;\033[33m&quot;, 'blue': &quot;\033[34m&quot;, 'magenta': &quot;\033[35m&quot;, 'cyan': &quot;\033<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+[36m&quot;, 'white': &quot;\033[37m&quot;, 'bgblack': &quot;\033[40m&quot;, 'bgred': &quot;\033[41m&quot;<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+, 'bggreen': &quot;\033[42m&quot;, 'bgyellow': &quot;\033[43m&quot;, 'bgblue': &quot;\033[44m&quot;,<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ 'bgmagenta': &quot;\033[45m&quot;, 'bgcyan': &quot;\033[46m&quot;, 'bgwhite': &quot;\033[47m&quot;,<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ 'blink': '\033[5m', 'underline': '\033[4m', 'bold': '\033[1m', 'reset<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+': '\033[m'}
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

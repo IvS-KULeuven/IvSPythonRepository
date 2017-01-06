@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.io.fits</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.io-module.html">Package&nbsp;io</a> ::
+        Module&nbsp;fits
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.io.fits-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module fits</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.io.fits-pysrc.html">source&nbsp;code</a></span></p>
+<p>Read and write FITS files.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Input</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array(, dict)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#read_spectrum" class="summary-sig-name">read_spectrum</a>(<span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">return_header</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Read a standard 1D spectrum from the primary HDU of a FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#read_spectrum">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array, array, array, array(, header)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#read_corot" class="summary-sig-name">read_corot</a>(<span class="summary-sig-arg">fits_file</span>,
+        <span class="summary-sig-arg">return_header</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">type_data</span>=<span class="summary-sig-default">'hel'</span>,
+        <span class="summary-sig-arg">remove_flagged</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Read CoRoT data from a CoRoT FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#read_corot">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#read_fuse" class="summary-sig-name">read_fuse</a>(<span class="summary-sig-arg">ff</span>,
+        <span class="summary-sig-arg">combine</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">return_header</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Read FUSE spectrum.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#read_fuse">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#read_iue" class="summary-sig-name">read_iue</a>(<span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">return_header</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Read IUE spectrum</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#read_iue">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Generic reading</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#read2recarray" class="summary-sig-name">read2recarray</a>(<span class="summary-sig-arg">fits_file</span>,
+        <span class="summary-sig-arg">ext</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">return_header</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Read the contents of a FITS file to a record array.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#read2recarray">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Output</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#write_primary" class="summary-sig-name">write_primary</a>(<span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">data</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">header_dict</span>=<span class="summary-sig-default">{}</span>)</span><br />
+      Initiate a FITS file by writing to the primary HDU.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#write_primary">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#write_recarray" class="summary-sig-name">write_recarray</a>(<span class="summary-sig-arg">recarr</span>,
+        <span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">header_dict</span>=<span class="summary-sig-default">{}</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">{}</span>,
+        <span class="summary-sig-arg">ext</span>=<span class="summary-sig-default">'new'</span>,
+        <span class="summary-sig-arg">close</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Write or add a record array to a FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#write_recarray">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.io.fits-module.html#write_array" class="summary-sig-name">write_array</a>(<span class="summary-sig-arg">arr</span>,
+        <span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">names</span>=<span class="summary-sig-default">()</span>,
+        <span class="summary-sig-arg">units</span>=<span class="summary-sig-default">()</span>,
+        <span class="summary-sig-arg">header_dict</span>=<span class="summary-sig-default">{}</span>,
+        <span class="summary-sig-arg">ext</span>=<span class="summary-sig-default">'new'</span>,
+        <span class="summary-sig-arg">close</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Write or add an array to a FITS file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.io.fits-pysrc.html#write_array">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;IO.FITS&quot;)">logging.getLogger(&quot;IO.FITS&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="read_spectrum"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_spectrum</span>(<span class="sig-arg">filename</span>,
+        <span class="sig-arg">return_header</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#read_spectrum">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read a standard 1D spectrum from the primary HDU of a FITS file.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - FITS filename</li>
+        <li><strong class="pname"><code>return_header</code></strong> (bool) - return header information as dictionary</li>
+    </ul></dd>
+    <dt>Returns: array, array(, dict)</dt>
+        <dd>wavelength, flux(, header)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_corot"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_corot</span>(<span class="sig-arg">fits_file</span>,
+        <span class="sig-arg">return_header</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">type_data</span>=<span class="sig-default">'hel'</span>,
+        <span class="sig-arg">remove_flagged</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#read_corot">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read CoRoT data from a CoRoT FITS file.</p>
+  <p>Both SISMO and EXO data are recognised and extracted accordingly.</p>
+  <p>type_data is one of:</p>
+  <ul>
+    <li>
+      type_data='raw'
+    </li>
+    <li>
+      type_data='hel': heliocentric unequidistant
+    </li>
+    <li>
+      type_data='helreg': heliocentric equidistant
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>fits_file</code></strong> (string) - CoRoT FITS file name</li>
+        <li><strong class="pname"><code>return_header</code></strong> (bool) - return header information as dictionary</li>
+        <li><strong class="pname"><code>type_data</code></strong> (string (one of 'raw','hel' or 'helreg')) - type of data to return</li>
+        <li><strong class="pname"><code>remove_flagged</code></strong> (True) - remove flagged datapoints</li>
+    </ul></dd>
+    <dt>Returns: array, array, array, array(, header)</dt>
+        <dd>CoRoT data (times, flux, error, flags)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_fuse"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_fuse</span>(<span class="sig-arg">ff</span>,
+        <span class="sig-arg">combine</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">return_header</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#read_fuse">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read FUSE spectrum.</p>
+  <p>Modified JD: JD-2400000.5.</p>
+  <p>Do 'EXPEND'-'EXPSTART'</p>
+  <p>V_GEOCEN,V_HELIO</p>
+  <p>ANO: all night only: data obtained during orbital night (highest SNR 
+  when airglow is not an issue) ALL: all: highest SNR with minimal airglow 
+  contamination</p>
+  <p>Preference of ANO over ALL for science purpose.</p>
+  <p>Use TTAGfcal files.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="read_iue"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read_iue</span>(<span class="sig-arg">filename</span>,
+        <span class="sig-arg">return_header</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#read_iue">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Read IUE spectrum
+
+Instrumental profiles: http://starbrite.jpl.nasa.gov/pds/viewInstrumentProfile.jsp?INSTRUMENT_ID=LWR&amp;INSTRUMENT_HOST_ID=IUE
+
+Better only use .mxlo for reliable absolute calibration!!
+
+LWP
+
+- Large-aperture spectral resolution is best between 2700 and 2900 A
+with an average FWHM of 5.2 A and decreases to approximately 8.0 A on
+either side of this range. Small-aperture resolution is optimal
+between 2400 and 3000 A with an average FWHM of 5.5 A and decreases to
+8.1 A at the extreme wavelengths.
+
+SWP
+
+- The best resolution occurs around 1200 A, with a FWHM of 4.6 A in the
+large aperture and 3.0 A in the small aperture, and gradually worsens
+towards longer wavelengths: 6.7 A at 1900 A in the large aperture and
+6.3 A in the small. On average, the small-aperture resolution is
+approximately 10% better than the large-aperture resolution.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="read2recarray"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read2recarray</span>(<span class="sig-arg">fits_file</span>,
+        <span class="sig-arg">ext</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">return_header</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#read2recarray">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read the contents of a FITS file to a record array.</p>
+  <p>Should add a test that the strings were not chopped of...</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="write_primary"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_primary</span>(<span class="sig-arg">filename</span>,
+        <span class="sig-arg">data</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">header_dict</span>=<span class="sig-default">{}</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#write_primary">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Initiate a FITS file by writing to the primary HDU.</p>
+  <p>If data is not given, a 1x1 zero array will be added.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="write_recarray"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_recarray</span>(<span class="sig-arg">recarr</span>,
+        <span class="sig-arg">filename</span>,
+        <span class="sig-arg">header_dict</span>=<span class="sig-default">{}</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">{}</span>,
+        <span class="sig-arg">ext</span>=<span class="sig-default">'new'</span>,
+        <span class="sig-arg">close</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#write_recarray">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Write or add a record array to a FITS file.</p>
+  <p>If 'filename' refers to an existing file, the record array will be 
+  added (ext='new') to the HDUlist or replace an existing HDU 
+  (ext=integer). Else, a new file will be created.</p>
+  <p>Units can be given as a dictionary with keys the same names as the 
+  column names of the record array.</p>
+  <p>A header_dictionary can be given, it is used to update an existing 
+  header or create a new one if the extension is new.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="write_array"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_array</span>(<span class="sig-arg">arr</span>,
+        <span class="sig-arg">filename</span>,
+        <span class="sig-arg">names</span>=<span class="sig-default">()</span>,
+        <span class="sig-arg">units</span>=<span class="sig-default">()</span>,
+        <span class="sig-arg">header_dict</span>=<span class="sig-default">{}</span>,
+        <span class="sig-arg">ext</span>=<span class="sig-default">'new'</span>,
+        <span class="sig-arg">close</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.io.fits-pysrc.html#write_array">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Write or add an array to a FITS file.</p>
+  <p>If 'filename' refers to an existing file, the list of arrays will be 
+  added (ext='new') to the HDUlist or replace an existing HDU 
+  (ext=integer). Else, a new file will be created.</p>
+  <p>Names and units should be given as a list of strings, in the same 
+  order as the list of arrays.</p>
+  <p>A header_dictionary can be given, it is used to update an existing 
+  header or create a new one if the extension is new.</p>
+  <p>Instead of writing the file, you can give a hdulist and append to it. 
+  Supply a HDUList for 'filename', and set close=False</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

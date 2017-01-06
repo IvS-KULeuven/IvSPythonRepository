@@ -1,0 +1,1222 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.sed.fit</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.sed-module.html">Package&nbsp;sed</a> ::
+        Module&nbsp;fit
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.sed.fit-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module fit</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.sed.fit-pysrc.html">source&nbsp;code</a></span></p>
+<p>Fit SED models to observed data using various approaches.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;PCA functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">N-D numpy array,(1Darray,1Darray,1Darray)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#get_PCA_grid" class="summary-sig-name">get_PCA_grid</a>(<span class="summary-sig-arg">colors</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">3</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">(-np.inf,np.inf)</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Transform a flux grid to a colour grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">N-D array, N-D array, (1D array, 1D array)</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#get_PCA" class="summary-sig-name">get_PCA</a>(<span class="summary-sig-arg">A</span>)</span><br />
+      Find the principal components of a color grid.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">n-tuple</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#calibrate_PCA" class="summary-sig-name">calibrate_PCA</a>(<span class="summary-sig-arg">T</span>,
+        <span class="summary-sig-arg">pars</span>,
+        <span class="summary-sig-arg">function</span>=<span class="summary-sig-default">'linear'</span>)</span><br />
+      Define the interpretations of the principal components.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#calibrate_PCA">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">list of lists</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#get_PCA_parameters" class="summary-sig-name">get_PCA_parameters</a>(<span class="summary-sig-arg">obsT</span>,
+        <span class="summary-sig-arg">calib</span>,
+        <span class="summary-sig-arg">P</span>,
+        <span class="summary-sig-arg">means</span>,
+        <span class="summary-sig-arg">stds</span>,
+        <span class="summary-sig-arg">e_obsT</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">mc</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Derive fundamental parameters of a sample of observations given a 
+      PCA.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA_parameters">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Grid search</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float,float,float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#stat_chi2" class="summary-sig-name">stat_chi2</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">colors</span>,
+        <span class="summary-sig-arg">syn</span>,
+        <span class="summary-sig-arg">full_output</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Calculate Chi2 and compute angular diameter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#stat_chi2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="generate_grid_single_pix"></a><span class="summary-sig-name">generate_grid_single_pix</span>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate a grid of parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid_single_pix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#generate_grid_pix" class="summary-sig-name">generate_grid_pix</a>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate a grid of parameters for 1 or more stars.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid_pix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#generate_grid_single" class="summary-sig-name">generate_grid_single</a>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate grid points at which to fit an interpolated grid of SEDs.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid_single">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">record array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#generate_grid" class="summary-sig-name">generate_grid</a>(<span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">teffrange</span>=<span class="summary-sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">(-inf,inf)</span>,
+        <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="summary-sig-arg">radiusrange</span>=<span class="summary-sig-default">((1,1),(0.1,10.))</span>,
+        <span class="summary-sig-arg">grids</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">res</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">clear_memory</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">type</span>=<span class="summary-sig-default">'single'</span>,
+        <span class="summary-sig-arg">primary_hottest</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate grid points at which to fit an interpolated grid of SEDs.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Fitting: grid search</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#igrid_search_pix" class="summary-sig-name">igrid_search_pix</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">constraints</span>=<span class="summary-sig-default">{}</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Run over gridpoints and evaluate model <code>model_func</code> via 
+      <code>stat_func</code>.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#igrid_search_pix">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">4/5X1d array</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#igrid_search" class="summary-sig-name">igrid_search</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Run over gridpoints and evaluate model <code>model_func</code> via 
+      <code>stat_func</code>.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#igrid_search">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Fitting: minimizer</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_parameter_dict"></a><span class="summary-sig-name">create_parameter_dict</span>(<span class="summary-sig-arg">**pars</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#create_parameter_dict">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_get_info_from_minimizer"></a><span class="summary-sig-name">_get_info_from_minimizer</span>(<span class="summary-sig-arg">minimizers</span>,
+        <span class="summary-sig-arg">startpars</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">**fitkws</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#_get_info_from_minimizer">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_iminimize_model"></a><span class="summary-sig-name">_iminimize_model</span>(<span class="summary-sig-arg">varlist</span>,
+        <span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kws</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#_iminimize_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_iminimize_residuals"></a><span class="summary-sig-name">_iminimize_residuals</span>(<span class="summary-sig-arg">synth</span>,
+        <span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#_iminimize_residuals">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#iminimize" class="summary-sig-name">iminimize</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">return_minimizer</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      minimizer based on the sigproc.fit lmfit minimizer.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#iminimize">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#calculate_iminimize_CI" class="summary-sig-name">calculate_iminimize_CI</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">0.66</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Calculate the confidence intervalls for every parameter.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#calculate_iminimize_CI">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.sed.fit-module.html#calculate_iminimize_CI2D" class="summary-sig-name">calculate_iminimize_CI2D</a>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">xpar</span>,
+        <span class="summary-sig-arg">ypar</span>,
+        <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Calculate a 2D confidence grid for the given parameters.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#calculate_iminimize_CI2D">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="iminimize2"></a><span class="summary-sig-name">iminimize2</span>(<span class="summary-sig-arg">meas</span>,
+        <span class="summary-sig-arg">e_meas</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">*args</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.sed.fit-pysrc.html#iminimize2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;SED.FIT&quot;)">logging.getLogger(&quot;SED.FIT&quot;)</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="get_PCA_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_PCA_grid</span>(<span class="sig-arg">colors</span>,
+        <span class="sig-arg">res</span>=<span class="sig-default">3</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">(-np.inf,np.inf)</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Transform a flux grid to a colour grid.</p>
+  <p>The resulting grid is actually log10(flux ratio) instead of flux 
+  ratio! This works better in the PCA.</p>
+  <p>Extra keyword arguments can be used to set the atmosphere model.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>colors</code></strong> (list of strings) - list of desired colours (['GENEVA.U-B','STROMGREN.M1'...])</li>
+        <li><strong class="pname"><code>res</code></strong> (integer) - resolution in E(B-V)</li>
+        <li><strong class="pname"><code>teffrange</code></strong> (tuple) - range of Teffs to use</li>
+        <li><strong class="pname"><code>loggrange</code></strong> (tuple) - range of loggs to use</li>
+        <li><strong class="pname"><code>ebvrange</code></strong> (tuple) - range of E(B-V)s to use</li>
+    </ul></dd>
+    <dt>Returns: N-D numpy array,(1Darray,1Darray,1Darray)</dt>
+        <dd>log10(colorgrid), (teffs,loggs,ebvs)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_PCA"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_PCA</span>(<span class="sig-arg">A</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Find the principal components of a color grid.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>A</code></strong> - color grid obtained via <code>get_PCA_grid</code>. @type A. numpy
+          N-D array</li>
+    </ul></dd>
+    <dt>Returns: N-D array, N-D array, (1D array, 1D array)</dt>
+        <dd>PCA loadings, PCA scores, (column means, column standard devs)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="calibrate_PCA"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calibrate_PCA</span>(<span class="sig-arg">T</span>,
+        <span class="sig-arg">pars</span>,
+        <span class="sig-arg">function</span>=<span class="sig-default">'linear'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#calibrate_PCA">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Define the interpretations of the principal components.</p>
+  <p>T are the PCA scores, pars a list of axes (e.g. teff, logg and 
+  ebv).</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>T</code></strong> (N-D array) - PCA scores</li>
+        <li><strong class="pname"><code>pars</code></strong> (list of 1D arrays) - real-life axes</li>
+    </ul></dd>
+    <dt>Returns: n-tuple</dt>
+        <dd>Rbf interpolating function</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_PCA_parameters"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_PCA_parameters</span>(<span class="sig-arg">obsT</span>,
+        <span class="sig-arg">calib</span>,
+        <span class="sig-arg">P</span>,
+        <span class="sig-arg">means</span>,
+        <span class="sig-arg">stds</span>,
+        <span class="sig-arg">e_obsT</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">mc</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#get_PCA_parameters">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Derive fundamental parameters of a sample of observations given a 
+  PCA.</p>
+  <p>Monte Carlo simulations are only available when you give 1 target.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>obsT</code></strong> (list of lists) - observed colours of the sample</li>
+        <li><strong class="pname"><code>calib</code></strong> (list of Rbf functions) - PCA calibration obtained via <code>calibrate_PCA</code></li>
+        <li><strong class="pname"><code>P</code></strong> (N-D array) - PCA loadings</li>
+        <li><strong class="pname"><code>means</code></strong> (numpy array) - means of PCA grid</li>
+        <li><strong class="pname"><code>stds</code></strong> (numpy array) - standard deviations of PCA grid</li>
+        <li><strong class="pname"><code>mc</code></strong> (integer) - number of MonteCarlo simulations</li>
+    </ul></dd>
+    <dt>Returns: list of lists</dt>
+        <dd>list of fundamental parameters</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="stat_chi2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">stat_chi2</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">colors</span>,
+        <span class="sig-arg">syn</span>,
+        <span class="sig-arg">full_output</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#stat_chi2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate Chi2 and compute angular diameter.</p>
+  <p>Colors and absolute fluxes are used to compute the Chi2, only absolute
+  fluxes are used to compute angular diameter. If no absolute fluxes are 
+  given, the angular diameter is set to 0.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>meas</code></strong> (1D array) - array of measurements</li>
+        <li><strong class="pname"><code>e_meas</code></strong> (1D array) - array containing measurements errors</li>
+        <li><strong class="pname"><code>colors</code></strong> (1D boolean array) - boolean array separating colors (True) from absolute fluxes 
+          (False)</li>
+        <li><strong class="pname"><code>syn</code></strong> (1D array) - synthetic fluxes and colors</li>
+        <li><strong class="pname"><code>full_output</code></strong> (boolean) - set to True if you want individual chisq</li>
+    </ul></dd>
+    <dt>Returns: float,float,float</dt>
+        <dd>chi-square, scale, e_scale</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="generate_grid_pix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generate_grid_pix</span>(<span class="sig-arg">photbands</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">clear_memory</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid_pix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generate a grid of parameters for 1 or more stars. Based on the 
+  generate_grid_single_pix method. The radius of the components is based on
+  the masses if given, otherwise on the radrange arguments. If masses are 
+  given the radrange arguments are ignored, meaning that the returned 
+  radius can be outside those limits. If only 1 component is provided no 
+  radius will be returned.</p>
+  <p>This function can handle multiple components in the same way as a 
+  single component. parameter ranges are provided as 
+  &lt;parname&gt;&lt;component&gt;range=(...,...). fx: teffrange = (5000, 
+  10000), loggrange = (3.5, 4.5), teff2range = (10000, 20000), logg2range =
+  (5.5, 6.0)</p>
+  <p>For the first (or only) component both no component number (teffrange)
+  or 1 as component number (teff1range) can be used.</p>
+  <p>Returns a dictionary with for each parameter that has a range 
+  provided, an array of values. In the case of multiple components, the 
+  radius will be returned even is no radius ranges are provided.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="generate_grid_single"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generate_grid_single</span>(<span class="sig-arg">photbands</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">zrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">res</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">clear_memory</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid_single">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generate grid points at which to fit an interpolated grid of SEDs.</p>
+  <p>If <code>points=None</code>, the points are chosen on the predefined 
+  grid points. Otherwise, <code>points</code> grid points will be 
+  generated, uniformly distributed between the ranges defined by 
+  <code>teffrange</code>, <code>loggrange</code> and <code>ebvrange</code>.
+  If you set the resolution to <code>2</code>, one out of every two points 
+  will be selected.</p>
+  <p>Extra keyword arguments can be used to give more details on the 
+  atmosphere models to use.</p>
+  <p>Colors are automatically detected.</p>
+  <p>You can fix one parameter e.g. via setting 
+  teffrange=(10000,10000).</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'GENEVA.G'</span>,<span class="py-string">'GENEVA.B-V'</span>]</pre>
+  <p>Start a figure:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>rows,cols = 2,4</pre>
+  <p>On the grid points, but only one in every 100 points (otherwise we 
+  have over a million points):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,res=100)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,1+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Randomly distributed over the grid's ranges:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,2+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Confined to a small area in the grid's range:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8000,10000),loggrange=(4.1,4.2),zrange=(0,inf),ebvrange=(1.,2),points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,3)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,3+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Confined to a small area in the grid's range with some parameters 
+  fixed:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8765,8765),loggrange=(4.1,4.2),zrange=(0,0),ebvrange=(1,2),points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,4)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,4+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+<center><img src='../images/ivs_sed_fit_grids.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>photbands</code></strong> (list of strings) - a list of photometric passbands, corresponding each measurement</li>
+        <li><strong class="pname"><code>teffrange</code></strong> (2-tuple) - range of temperatures to use</li>
+        <li><strong class="pname"><code>loggrange</code></strong> (2-tuple) - range of surface gravities to use</li>
+        <li><strong class="pname"><code>ebvrange</code></strong> (2-tuple) - range of reddenings to use</li>
+        <li><strong class="pname"><code>points</code></strong> (int) - points to sample (when None, predefined grid points are used)</li>
+        <li><strong class="pname"><code>res</code></strong> (int) - resolution of the original grid (the higher, the coarser)</li>
+        <li><strong class="pname"><code>clear_memory</code></strong> (boolean) - flag to clear memory from previously loaded SED tables. If you 
+          set it to False, you can easily get an overloaded memory!</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>record array containing the searched grid, chi-squares and scale 
+          factors</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="generate_grid"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">generate_grid</span>(<span class="sig-arg">photbands</span>,
+        <span class="sig-arg">teffrange</span>=<span class="sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="sig-arg">loggrange</span>=<span class="sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="sig-arg">ebvrange</span>=<span class="sig-default">(-inf,inf)</span>,
+        <span class="sig-arg">zrange</span>=<span class="sig-default">((-inf,inf),(-inf,inf))</span>,
+        <span class="sig-arg">radiusrange</span>=<span class="sig-default">((1,1),(0.1,10.))</span>,
+        <span class="sig-arg">grids</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">res</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">clear_memory</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">type</span>=<span class="sig-default">'single'</span>,
+        <span class="sig-arg">primary_hottest</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#generate_grid">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Generate grid points at which to fit an interpolated grid of SEDs.</p>
+  <p>If <code>points=None</code>, the points are chosen on the predefined 
+  grid points. Otherwise, <code>points</code> grid points will be 
+  generated, uniformly distributed between the ranges defined by 
+  <code>teffrange</code>, <code>loggrange</code> and <code>ebvrange</code>.
+  If you set the resolution to <code>2</code>, one out of every two points 
+  will be selected.</p>
+  <p>Setting <code>primary_hottest</code> makes sure that, when doing a 
+  binary fit, that the the effective temperature of the first star is 
+  hotter than the second.</p>
+  <p>Extra keyword arguments can be used to give more details on the 
+  atmosphere models to use.</p>
+  <p>Colors are automatically detected.</p>
+  <p>You can fix one parameter e.g. via setting 
+  teffrange=(10000,10000).</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>photbands = [<span class="py-string">'GENEVA.G'</span>,<span class="py-string">'GENEVA.B-V'</span>]</pre>
+  <p>Start a figure:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure()
+<span class="py-prompt">&gt;&gt;&gt; </span>rows,cols = 2,4</pre>
+  <p>On the grid points, but only one in every 100 points (otherwise we 
+  have over a million points):</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,res=100)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,1)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,1+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Randomly distributed over the grid's ranges:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,2)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,2+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Confined to a small area in the grid's range:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8000,10000),loggrange=(4.1,4.2),zrange=(0,inf),ebvrange=(1.,2),points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,3)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,3+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+  <p>Confined to a small area in the grid's range with some parameters 
+  fixed:</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>teffs,loggs,ebvs,zs = generate_grid(photbands,teffrange=(8765,8765),loggrange=(4.1,4.2),zrange=(0,0),ebvrange=(1,2),points=10000)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,4)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(pl.xlim()[::-1]);p = pl.ylim(pl.ylim()[::-1])
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Teff'</span>);p = pl.ylabel(<span class="py-string">'Logg'</span>)</pre>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.subplot(rows,cols,4+cols)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.scatter(ebvs,zs,c=teffs,s=(loggs+2)*10,edgecolors=<span class="py-string">'none'</span>,cmap=pl.cm.spectral)
+<span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'E(B-V)'</span>);p = pl.ylabel(<span class="py-string">'Z'</span>)</pre>
+<center><img src='../images/ivs_sed_fit_grids.png' alt='[image example]' width='75%'/></center>
+
+
+
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>photbands</code></strong> (list of strings) - a list of photometric passbands, corresponding each measurement</li>
+        <li><strong class="pname"><code>teffrange</code></strong> (2-tuple) - range of temperatures to use</li>
+        <li><strong class="pname"><code>loggrange</code></strong> (2-tuple) - range of surface gravities to use</li>
+        <li><strong class="pname"><code>ebvrange</code></strong> (2-tuple) - range of reddenings to use</li>
+        <li><strong class="pname"><code>points</code></strong> (int) - points to sample (when None, predefined grid points are used)</li>
+        <li><strong class="pname"><code>res</code></strong> (int) - resolution of the original grid (the higher, the coarser)</li>
+        <li><strong class="pname"><code>clear_memory</code></strong> (boolean) - flag to clear memory from previously loaded SED tables. If you 
+          set it to False, you can easily get an overloaded memory!</li>
+    </ul></dd>
+    <dt>Returns: record array</dt>
+        <dd>record array containing the searched grid, chi-squares and scale 
+          factors</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="igrid_search_pix"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">igrid_search_pix</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">constraints</span>=<span class="sig-default">{}</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#igrid_search_pix">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Run over gridpoints and evaluate model <code>model_func</code> via 
+  <code>stat_func</code>.</p>
+  <p>The measurements are defined via <code>meas, e_meas, photbands, 
+  colors</code> and should be 1d arrays of equal length. 
+  <code>colors</code> should be a boolean array, <code>photbands</code> 
+  should be a string array.</p>
+  <p>The grid points are defined via <code>args</code>. <code>args</code> 
+  should be a tuple of 1x? dimensional arrays of equal length. For single 
+  stars, this is typically effective temperatures, loggs, reddenings and 
+  metallicities. For multiple systems, (at least some of the) previously 
+  mentioned parameters are typically doubled, and radius ratios are added. 
+  Remember to specify the <code>model_func</code> to match single or 
+  multiple systems.</p>
+  <p>At each grid point, the pre-calculated photometry will be retrieved 
+  via the keyword <code>model_func</code> and compared to the measurements 
+  via the function definded via <code>stat_func</code>. This function 
+  should be of the same form as <a href="ivs.sed.fit-module.html#stat_chi2"
+  class="link">stat_chi2</a>.</p>
+  <p>Extra arguments are passed to <a 
+  href="ivs.sed.decorators-module.html#parallel_gridsearch" 
+  class="link">parallel_gridsearch</a> for parallelization and to 
+  {model_func} for further specification of grids etc.</p>
+  <p>The index array is returned to trace the results after 
+  parallelization.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>meas</code></strong> (1D numpy array of floats) - the measurements that have to be compared with the models</li>
+        <li><strong class="pname"><code>e_meas</code></strong> (1D numpy array of floats) - errors on the measurements</li>
+        <li><strong class="pname"><code>photbands</code></strong> (1D numpy array of strings) - names of the photometric passbands</li>
+        <li><strong class="pname"><code>model_func</code></strong> (function) - function to translate parameters to synthetic (model) data</li>
+        <li><strong class="pname"><code>stat_func</code></strong> (function) - function to evaluate the fit</li>
+    </ul></dd>
+    <dt>Returns: array</dt>
+        <dd>(chi squares, scale factors, error on scale factors, absolute 
+          luminosities (R=1Rsol)</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="igrid_search"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">igrid_search</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">*args</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#igrid_search">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Run over gridpoints and evaluate model <code>model_func</code> via 
+  <code>stat_func</code>.</p>
+  <p>The measurements are defined via <code>meas, e_meas, photbands, 
+  colors</code> and should be 1d arrays of equal length. 
+  <code>colors</code> should be a boolean array, <code>photbands</code> 
+  should be a string array.</p>
+  <p>The grid points are defined via <code>args</code>. <code>args</code> 
+  should be a tuple of 1x? dimensional arrays of equal length. For single 
+  stars, this is typically effective temperatures, loggs, reddenings and 
+  metallicities. For multiple systems, (at least some of the) previously 
+  mentioned parameters are typically doubled, and radius ratios are added. 
+  Remember to specify the <code>model_func</code> to match single or 
+  multiple systems.</p>
+  <p>At each grid point, the pre-calculated photometry will be retrieved 
+  via the keyword <code>model_func</code> and compared to the measurements 
+  via the function definded via <code>stat_func</code>. This function 
+  should be of the same form as <a href="ivs.sed.fit-module.html#stat_chi2"
+  class="link">stat_chi2</a>.</p>
+  <p>Extra arguments are passed to <a 
+  href="ivs.sed.decorators-module.html#parallel_gridsearch" 
+  class="link">parallel_gridsearch</a> for parallelization and to 
+  {model_func} for further specification of grids etc.</p>
+  <p>The index array is returned to trace the results after 
+  parallelization.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>meas</code></strong> (1D numpy array of floats) - the measurements that have to be compared with the models</li>
+        <li><strong class="pname"><code>e_meas</code></strong> (1D numpy array of floats) - errors on the measurements</li>
+        <li><strong class="pname"><code>photbands</code></strong> (1D numpy array of strings) - names of the photometric passbands</li>
+        <li><strong class="pname"><code>model_func</code></strong> (function) - function to translate parameters to synthetic (model) data</li>
+        <li><strong class="pname"><code>stat_func</code></strong> (function) - function to evaluate the fit</li>
+    </ul></dd>
+    <dt>Returns: 4/5X1d array</dt>
+        <dd>(chi squares, scale factors, error on scale factors, absolute 
+          luminosities (R=1Rsol), index</dd>
+    <dt>Decorators:</dt>
+    <dd><ul class="nomargin-top">
+        <li><code>@parallel_gridsearch</code></li>
+        <li><code>@make_parallel</code></li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="iminimize"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">iminimize</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">points</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">return_minimizer</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#iminimize">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>minimizer based on the sigproc.fit lmfit minimizer. provide the 
+  observed data, the fitting model, residual function and parameter 
+  information about the variables, and this function will return the best 
+  fit parameters together with extra information about the fit.</p>
+  <p>if the fitkws keyword is supplied, this dict will be made available to
+  the model_func (fit model) during the fitting process. The order of the 
+  parameters will also be made available as the 'pnames' keyword.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_iminimize_CI"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_iminimize_CI</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">CI_limit</span>=<span class="sig-default">0.66</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#calculate_iminimize_CI">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the confidence intervalls for every parameter. When ci 
+  fails, the boundaries are returned as ci.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="calculate_iminimize_CI2D"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">calculate_iminimize_CI2D</span>(<span class="sig-arg">meas</span>,
+        <span class="sig-arg">e_meas</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">xpar</span>,
+        <span class="sig-arg">ypar</span>,
+        <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.sed.fit-pysrc.html#calculate_iminimize_CI2D">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate a 2D confidence grid for the given parameters. You can 
+  provide limits on the parameters yourself, if none are provided, the 
+  function will take care of it, but it might crash if the limits are 
+  outside the model range. returns: x vals, y vals, ci values</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:08 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

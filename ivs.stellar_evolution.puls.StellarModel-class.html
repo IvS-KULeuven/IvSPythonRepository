@@ -1,0 +1,1165 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.stellar_evolution.puls.StellarModel</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.stellar_evolution-module.html">Package&nbsp;stellar_evolution</a> ::
+        <a href="ivs.stellar_evolution.puls-module.html">Module&nbsp;puls</a> ::
+        Class&nbsp;StellarModel
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.stellar_evolution.puls.StellarModel-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class StellarModel</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel">source&nbsp;code</a></span></p>
+<p>Class facilitating reading in of stellar models from different codes, 
+  and calculating frequencies with different codes,</p>
+  <p>Warning: try to first do the computations, then the plotting. It seems
+  that you need to be careful with the order in which you call the OSCLIB 
+  routines.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Built-in functions</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">star_model</span>,
+        <span class="summary-sig-arg">unit</span>=<span class="summary-sig-default">'cy d-1'</span>,
+        <span class="summary-sig-arg">codes</span>=<span class="summary-sig-default">('losc','adipls')</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Read in the stellar model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__len__"></a><span class="summary-sig-name">__len__</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.__len__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__getitem__"></a><span class="summary-sig-name">__getitem__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">key</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.__getitem__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#_init_losc" class="summary-sig-name" onclick="show_private();">_init_losc</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Convert the stellar profiles to input that LOSC understands.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel._init_losc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#_get_current_losc_model" class="summary-sig-name" onclick="show_private();">_get_current_losc_model</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Return model currently stored in LOSC.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel._get_current_losc_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_init_adipls"></a><span class="summary-sig-name">_init_adipls</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Convert the stellar profiles to input that ADIPLS understands</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel._init_adipls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Code-independent interface</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="validate_model"></a><span class="summary-sig-name">validate_model</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.validate_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfreqs" class="summary-sig-name">compute_eigenfreqs</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrees</span>,
+        <span class="summary-sig-arg">codes</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">(1.,'d-1')</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">(12.,'d-1')</span>,
+        <span class="summary-sig-arg">nscan</span>=<span class="summary-sig-default">1000</span>,
+        <span class="summary-sig-arg">fspacing</span>=<span class="summary-sig-default">'p'</span>,
+        <span class="summary-sig-arg">boundary</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">adiabatic</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Compute eigenfrequencies for all available methods.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfuncs" class="summary-sig-name">compute_eigenfuncs</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrees</span>,
+        <span class="summary-sig-arg">modes</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">codes</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Compute eigenfunctions for all available methods.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">float, float, float</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#asymptotic_gmode_period_spacing" class="summary-sig-name">asymptotic_gmode_period_spacing</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x_core</span>=<span class="summary-sig-default">0.3</span>,
+        <span class="summary-sig-arg">x_upper_limit</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">ell</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Compute the asymptotic gmode period spacing (see e.g.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.asymptotic_gmode_period_spacing">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#gmode_cutoff" class="summary-sig-name">gmode_cutoff</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">ell</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">unit</span>=<span class="summary-sig-default">'rad/s'</span>)</span><br />
+      Calculate the gmode cut-off frequency.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.gmode_cutoff">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#match" class="summary-sig-name">match</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">template</span>=<span class="summary-sig-default">'losc'</span>,
+        <span class="summary-sig-arg">tol</span>=<span class="summary-sig-default">1.</span>)</span><br />
+      Match frequencies.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.match">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#get_photometry" class="summary-sig-name">get_photometry</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">photbands</span>,
+        <span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">(10.,'pc')</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Retrieve colors for this stellar model.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.get_photometry">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Resampling</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#resample" class="summary-sig-name">resample</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">increase</span>=<span class="summary-sig-default">2</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'simple'</span>,
+        <span class="summary-sig-arg">mode_type</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">n_new</span>=<span class="summary-sig-default">5000</span>,
+        <span class="summary-sig-arg">int_method</span>=<span class="summary-sig-default">'poly'</span>,
+        <span class="summary-sig-arg">x</span>=<span class="summary-sig-default">'radius'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Resample the current mesh.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.resample">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="resample_adipls"></a><span class="summary-sig-name">resample_adipls</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">n_new</span>=<span class="summary-sig-default">5000.</span>,
+        <span class="summary-sig-arg">mode_type</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">cleanup</span>=<span class="summary-sig-default">True</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.resample_adipls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Plotting routines</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_model"></a><span class="summary-sig-name">plot_model</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_pulsation_model"></a><span class="summary-sig-name">plot_pulsation_model</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>=<span class="summary-sig-default">'x'</span>,
+        <span class="summary-sig-arg">color_cycle</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">codes</span>=<span class="summary-sig-default">['losc','adipls']</span>)</span><br />
+      Plot the profiles that are used to calculate pulsations.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_pulsation_model">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#plot_frequencies" class="summary-sig-name">plot_frequencies</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">'losc'</span>,
+        <span class="summary-sig-arg">degree</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">graph_type</span>=<span class="summary-sig-default">'frequency'</span>,
+        <span class="summary-sig-arg">x</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">outfile</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Plot of computed frequencies.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_frequencies">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_frequency_matching"></a><span class="summary-sig-name">plot_frequency_matching</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">'losc'</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_frequency_matching">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_eigenfuncs"></a><span class="summary-sig-name">plot_eigenfuncs</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">master</span>=<span class="summary-sig-default">'losc'</span>,
+        <span class="summary-sig-arg">degree</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_eigenfuncs">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_weight_functions"></a><span class="summary-sig-name">plot_weight_functions</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">prefix</span>=<span class="summary-sig-default">''</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_weight_functions">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="plot_density_temperature_profile"></a><span class="summary-sig-name">plot_density_temperature_profile</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_density_temperature_profile">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Code-dependent interface</th></tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfreqs_losc" class="summary-sig-name">compute_eigenfreqs_losc</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrees</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">(1.,'cy d-1')</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">(12.,'cy d-1')</span>,
+        <span class="summary-sig-arg">ires</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">n</span>=<span class="summary-sig-default">500</span>,
+        <span class="summary-sig-arg">ind</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">mmax</span>=<span class="summary-sig-default">50</span>,
+        <span class="summary-sig-arg">typecomp</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Compute eigenfrequencies with the LOSC code.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs_losc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfuncs_losc" class="summary-sig-name">compute_eigenfuncs_losc</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degree</span>,
+        <span class="summary-sig-arg">modes</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ires</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">typecomp</span>=<span class="summary-sig-default">1</span>)</span><br />
+      Compute eigenfunctions with the LOSC code.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs_losc">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfreqs_adipls" class="summary-sig-name">compute_eigenfreqs_adipls</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrees</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">(1.,'cy d-1')</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">(12.,'cy d-1')</span>,
+        <span class="summary-sig-arg">nf</span>=<span class="summary-sig-default">1000</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Compute eigenfrequencies with ADIPLS.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs_adipls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="compute_eigenfuncs_adipls"></a><span class="summary-sig-name">compute_eigenfuncs_adipls</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degree</span>,
+        <span class="summary-sig-arg">modes</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Compute eigenfunctions with adipls.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs_adipls">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="compute_eigenfreqs_gyre"></a><span class="summary-sig-name">compute_eigenfreqs_gyre</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrees</span>,
+        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">(1.,'cy d-1')</span>,
+        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">(12,'cy d-1')</span>,
+        <span class="summary-sig-arg">nf</span>=<span class="summary-sig-default">500</span>,
+        <span class="summary-sig-arg">verbose</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">adiabatic</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Compute eigenfrequencies with GYRE.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs_gyre">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.stellar_evolution.puls.StellarModel-class.html#compute_eigenfuncs_gyre" class="summary-sig-name">compute_eigenfuncs_gyre</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degree</span>)</span><br />
+      The eigenfunctions y_1 ...</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs_gyre">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">star_model</span>,
+        <span class="sig-arg">unit</span>=<span class="sig-default">'cy d-1'</span>,
+        <span class="sig-arg">codes</span>=<span class="sig-default">('losc','adipls')</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Read in the stellar model.</p>
+  <p>We set the model in physical units.</p>
+  <ul>
+    <li>
+      .mod files are OSC files
+    </li>
+    <li>
+      .dat files are CLES files
+    </li>
+    <li>
+      .log files are MESA files
+    </li>
+  </ul>
+  <p>Global parameters should be:</p>
+  <ul>
+    <li>
+      boundary condition
+    </li>
+  </ul>
+  <p>Preferably, star_model is a filename of a recognised stellar evolution
+  code. Otherwise, it must be a tuple containing global parameters and 
+  local parameters, in the right (cgs) units.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_init_losc"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_init_losc</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel._init_losc">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert the stellar profiles to input that LOSC understands.</p>
+  <p>This effectively initiates LOSC, except for calling the meshing</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_get_current_losc_model"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_get_current_losc_model</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel._get_current_losc_model">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return model currently stored in LOSC.</p>
+  <p>S1 = x S2 = q/x**3 S3 = R*P_r/(G*M*rho_r) S4 = 4*pi*R**3*rho_r/M S5 = 
+  G1 S6 = np.zeros(len(r))</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfreqs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfreqs</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrees</span>,
+        <span class="sig-arg">codes</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">(1.,'d-1')</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">(12.,'d-1')</span>,
+        <span class="sig-arg">nscan</span>=<span class="sig-default">1000</span>,
+        <span class="sig-arg">fspacing</span>=<span class="sig-default">'p'</span>,
+        <span class="sig-arg">boundary</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">adiabatic</span>=<span class="sig-default">True</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute eigenfrequencies for all available methods.</p>
+  <p>Remember the values of the keyword arguments, they will be duplicated 
+  when computing eigenfunctions.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfuncs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfuncs</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrees</span>,
+        <span class="sig-arg">modes</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">codes</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute eigenfunctions for all available methods.</p>
+  <p>Remember the values of the keyword arguments, they will be duplicated 
+  when computing eigenfunctions.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="asymptotic_gmode_period_spacing"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">asymptotic_gmode_period_spacing</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x_core</span>=<span class="sig-default">0.3</span>,
+        <span class="sig-arg">x_upper_limit</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">ell</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.asymptotic_gmode_period_spacing">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute the asymptotic gmode period spacing (see e.g. Brassard 
+  1992).</p>
+  <p>Brassard et al., 1992, eq. 40:</p>
+<pre class="literalblock">
+   Pi_{H,l} = 2pi**2/L/int( |N|/x dx,x=d..1)
+</pre>
+  <p>with <code>L = sqrt(l*(l+1))</code> and <code>|N|</code> the absolute 
+  value of the Brunt Vaisalaa frequency.</p>
+  <p>This holds for a star with a a convective core and a radiative 
+  envelope.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>x_core</code></strong> (float between 0 and 1) - location of the boundary of the convective core.</li>
+        <li><strong class="pname"><code>x_upper_limit</code></strong> (boolean) - if <code>True</code>, <code>x_core</code> is interpreted as an 
+          upper limit on the convective core, and the exact value will be 
+          chosen equal to the maximum value of the relative radius where 
+          there is convection</li>
+        <li><strong class="pname"><code>ell</code></strong> (integer) - degree of the mode (ell&gt;=1)</li>
+    </ul></dd>
+    <dt>Returns: float, float, float</dt>
+        <dd>value of the asymptotic period spacing, value of the boundary of 
+          the convective core, bouyancy radius</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="gmode_cutoff"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gmode_cutoff</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">ell</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">unit</span>=<span class="sig-default">'rad/s'</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.gmode_cutoff">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Calculate the gmode cut-off frequency.</p>
+  <p>See e.g. Hansen et al. 1985, ApJ, 297, 544</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="match"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">match</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">template</span>=<span class="sig-default">'losc'</span>,
+        <span class="sig-arg">tol</span>=<span class="sig-default">1.</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.match">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Match frequencies.</p>
+  <p>Tolerance in percentage (unitless).</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="get_photometry"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">get_photometry</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">photbands</span>,
+        <span class="sig-arg">distance</span>=<span class="sig-default">(10.,'pc')</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.get_photometry">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Retrieve colors for this stellar model.</p>
+  <p>To retrieve absolute bolometric magnitude, set distance to 10 pc.</p>
+  <dl class="fields">
+    <dt>Returns:</dt>
+        <dd>fluxes and bolometric magnitude at 10 pc</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="resample"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">resample</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">increase</span>=<span class="sig-default">2</span>,
+        <span class="sig-arg">method</span>=<span class="sig-default">'simple'</span>,
+        <span class="sig-arg">mode_type</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">n_new</span>=<span class="sig-default">5000</span>,
+        <span class="sig-arg">int_method</span>=<span class="sig-default">'poly'</span>,
+        <span class="sig-arg">x</span>=<span class="sig-default">'radius'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.resample">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Resample the current mesh.</p>
+  <p>Methods:</p>
+  <ul>
+    <li>
+      <code>method='simple'</code>: simple smoothed repartition of x 
+      vector. Possible interpolation schemes are 
+      <code>int_method='linear'</code> and <code>int_method='poly'</code>.
+    </li>
+    <li>
+      <code>method='g'</code>: repartition of x vector is weighted with 
+      Brunt- Vaisalaa frequency and distance to the core. Possible 
+      interpolation schemes are <code>linear</code> and <code>poly</code>.
+    </li>
+    <li>
+      <code>method='p'</code>:
+    </li>
+  </ul>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>increase</code></strong> - increase the resolution of the mesh with this factor.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="plot_frequencies"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_frequencies</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">master</span>=<span class="sig-default">'losc'</span>,
+        <span class="sig-arg">degree</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">graph_type</span>=<span class="sig-default">'frequency'</span>,
+        <span class="sig-arg">x</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">outfile</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.plot_frequencies">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Plot of computed frequencies.</p>
+  <p>if <code>outfile</code> is a string, the period spacings will be 
+  written to a file</p>
+  <p>graph_type: 'frequency', 'period', 'period spacing'</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfreqs_losc"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfreqs_losc</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrees</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">(1.,'cy d-1')</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">(12.,'cy d-1')</span>,
+        <span class="sig-arg">ires</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">n</span>=<span class="sig-default">500</span>,
+        <span class="sig-arg">ind</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">mmax</span>=<span class="sig-default">50</span>,
+        <span class="sig-arg">typecomp</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs_losc">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute eigenfrequencies with the LOSC code.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>f0</code></strong> - approximate start frequency</li>
+        <li><strong class="pname"><code>fn</code></strong> - approximate end frequency</li>
+        <li><strong class="pname"><code>ires</code></strong> - type of mesh for computation of the eigenfrequencies, 1 to 
+          optimize for p modes, 2 for g modes and 3 for p and g modes</li>
+        <li><strong class="pname"><code>n</code></strong> - number of subintervals in scanomaga</li>
+        <li><strong class="pname"><code>ind</code></strong> - type of grid: 1 is equidistant in frequency space (for p modes), 
+          2 is equidistant in period space (for g modes)</li>
+        <li><strong class="pname"><code>mmax</code></strong> - maximum number of approximate eigenfrequencies to compute.</li>
+        <li><strong class="pname"><code>typecomp</code></strong> - type of computations, 1 for normal computation, which is 
+          recommended, and type=2 if convergence is difficult to obtain.</li>
+        <li><strong class="pname"><code>unit</code></strong> - units to put in the 'frequency' output column</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfuncs_losc"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfuncs_losc</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degree</span>,
+        <span class="sig-arg">modes</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ires</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">typecomp</span>=<span class="sig-default">1</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs_losc">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute eigenfunctions with the LOSC code.</p>
+  <p>Also compute horizontal and vertical displacements. In the book of 
+  Aerts et al., these are known as $      ilde{\ksi}_r$ and $     
+  ilde{\ksi}_h$.</p>
+  <p>WARNING: the OSC manual notes that this is valid 'near the centre', 
+  but is actually a pretty fuzzy sentence...</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>ires</code></strong> - type of mesh for computation of the eigenfrequencies, 1 to 
+          optimize for p modes, 2 for g modes and 3 for p and g modes</li>
+        <li><strong class="pname"><code>nres</code></strong> - the number of added points increases with n. This parameter 
+          should be increased as the complexity of the model increases</li>
+        <li><strong class="pname"><code>typecomp</code></strong> - type of computations, 1 for normal computation, which is 
+          recommended, and type=2 if convergence is difficult to obtain.</li>
+    </ul></dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfreqs_adipls"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfreqs_adipls</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrees</span>,
+        <span class="sig-arg">f0</span>=<span class="sig-default">(1.,'cy d-1')</span>,
+        <span class="sig-arg">fn</span>=<span class="sig-default">(12.,'cy d-1')</span>,
+        <span class="sig-arg">nf</span>=<span class="sig-default">1000</span>,
+        <span class="sig-arg">verbose</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfreqs_adipls">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Compute eigenfrequencies with ADIPLS.</p>
+  <p>Possible keyword arguments are described in ADIPLS documentation.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="compute_eigenfuncs_gyre"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">compute_eigenfuncs_gyre</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degree</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.stellar_evolution.puls-pysrc.html#StellarModel.compute_eigenfuncs_gyre">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>The eigenfunctions y_1 ... y_6 produced by GYRE have the following 
+  meanings:</p>
+  <p>y_1 = (xi_r/r) x^{-lambda_0} y_2 = (p'/[rho g r] + Phi'/gr) 
+  x^{-lambda_0} y_3 = Phi'/gr x^{-lambda_0} y_4 = 1/g dPhi'/dr 
+  x^{-lambda_0} y_5 = delta S/c_p x^{-lambda_0-2} y_6 = delta L_rad/L_* 
+  x^{-lambda_0-3}</p>
+  <p>Here, x = r/R_*, while lambda_0 = 0 for radial modes and lambda_0 = 
+  l-2 for non-radial modes.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Jan  6 12:11:09 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
