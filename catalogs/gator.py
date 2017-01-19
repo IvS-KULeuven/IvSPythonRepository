@@ -10,7 +10,7 @@ import numpy as np
 
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.sed import filters
 from ivs.units import conversions
 

@@ -135,7 +135,7 @@ but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
 delete the .phot file or set C{force=True} when calling L{get_photometry}. 
 
-The content of the .phot file is most easily read using the L{ivs.io.ascii.read2recarray}
+The content of the .phot file is most easily read using the L{ivs.inout.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
@@ -575,9 +575,9 @@ from ivs import config
 from ivs.aux import numpy_ext
 from ivs.aux import termtools
 from ivs.aux.decorators import memoized,clear_memoization
-from ivs.io import ascii
-from ivs.io import fits
-from ivs.io import hdf5
+from ivs.inout import ascii
+from ivs.inout import fits
+from ivs.inout import hdf5
 from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import fit

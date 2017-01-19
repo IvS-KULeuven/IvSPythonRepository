@@ -25,7 +25,7 @@ from ivs.aux import numpy_ext
 from ivs.aux import progressMeter
 from ivs.aux import loggers
 from ivs.aux import argkwargparser
-from ivs.io import ascii
+from ivs.inout import ascii
 
 from scipy.spatial import KDTree
 

@@ -530,7 +530,7 @@ from ivs.units.uncertainties.unumpy import log10,log,exp,sqrt
 from ivs.units.uncertainties.unumpy import sin,cos,tan
 from ivs.units.uncertainties.unumpy import arcsin,arccos,arctan
 from ivs.sed import filters
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 

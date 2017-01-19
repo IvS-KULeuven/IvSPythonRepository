@@ -1,14 +1,14 @@
 import os
 import h5py
 import numpy as np
-from ivs.io import hdf5
+from ivs.inout import hdf5
 
 import unittest
 
 class HDF5TestCase(unittest.TestCase):
     
     def testWriteDict(self):
-        """ io.hdf5.write_dict() """
+        """ inout.hdf5.write_dict() """
         data = {}
         data['number'] = 12.30
         data['list'] = [45, 78.36]
@@ -64,7 +64,7 @@ class HDF5TestCase(unittest.TestCase):
             os.remove('test.hdf5')
         
     def testReadDict(self):
-        """ io.hdf5.read2dict() """
+        """ inout.hdf5.read2dict() """
         
         if os.path.isfile('test.hdf5'):
             os.remove('test.hdf5')

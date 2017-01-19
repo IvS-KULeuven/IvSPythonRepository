@@ -742,7 +742,7 @@ if __name__=="__main__":
     import pylab as pl
     import sys
     from ivs.aux import argkwargparser
-    from ivs.io import ascii
+    from ivs.inout import ascii
     
     #-- if no arguments are given, we just do a test run
     if not sys.argv[1:]:
