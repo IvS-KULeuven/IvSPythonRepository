@@ -354,7 +354,7 @@ def bhmie(wavelength, refrel, nang=2, radius=0.1):
     return np.array(qext, dtype=float), np.array(qsca, dtype=float), np.array(qback, dtype=float), np.array(gsca, dtype=float)
 
 if __name__ == '__main__':
-    from ivs.io.ascii import read2array
+    from ivs.inout.ascii import read2array
     lnk        = read2array("/home/kristofs/python/IVSdata/optical_constants/alumino-silicates/A/ca2al2sio7_02.91_0000_001.lnk")
     wavelength = lnk[:,0]
     refrel     = lnk[:,1] + lnk[:,2]*complex(0,1)

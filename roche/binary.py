@@ -228,8 +228,8 @@ from ivs.sed import limbdark
 from ivs.spectra import model as spectra_model
 from ivs.roche import local
 from ivs.aux import loggers
-from ivs.io import ascii
-from ivs.io import fits
+from ivs.inout import ascii
+from ivs.inout import fits
 
 logger = logging.getLogger("BIN.ROCHE")
 

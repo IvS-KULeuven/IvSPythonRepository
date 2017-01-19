@@ -12,8 +12,8 @@ try:
     import pyosclib
 except:
     print "LOSC is not available"
-from ivs.io import ascii
-from ivs.io import hdf5
+from ivs.inout import ascii
+from ivs.inout import hdf5
 from ivs.stellar_evolution import fileio
 from ivs.stellar_evolution import adipls
 from ivs.stellar_evolution import gyre

@@ -8,8 +8,8 @@ import logging
 import numpy as np
 from ivs.catalogs import mast
 from ivs.units import conversions
-from ivs.io import ascii
-from ivs.io import fits
+from ivs.inout import ascii
+from ivs.inout import fits
 from ivs import config
 
 logger = logging.getLogger("CAT.KEPLER")

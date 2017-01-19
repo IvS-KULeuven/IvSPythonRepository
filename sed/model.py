@@ -315,8 +315,8 @@ import itertools
 import functools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
-from ivs.io import ascii
-from ivs.io import fits
+from ivs.inout import ascii
+from ivs.inout import fits
 from ivs.sigproc import interpol
 from ivs.catalogs import sesame
 import reddening

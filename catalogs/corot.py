@@ -12,7 +12,7 @@ import numpy as np
 from ivs.aux import loggers
 from ivs.catalogs import sesame
 from ivs.catalogs import vizier
-from ivs.io import fits
+from ivs.inout import fits
 from ivs import config
 
 logger = logging.getLogger("CAT.COROT")
