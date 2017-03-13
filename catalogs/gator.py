@@ -439,7 +439,6 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
 
 if __name__=="__main__":
     import vizier
-    from ivs.misc import loggers
     logger = loggers.get_basic_logger("")
     #-- example 1
     #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)

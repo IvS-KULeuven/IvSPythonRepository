@@ -1234,7 +1234,7 @@ if __name__=="__main__":
     
     
     sys.exit()
-    from ivs.misc import loggers
+    from ivs.aux import loggers
     from pylab import *
     from numpy import *
     logger = loggers.get_basic_logger()
