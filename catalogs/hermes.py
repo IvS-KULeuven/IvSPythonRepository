@@ -1055,7 +1055,7 @@ def make_data_overview():
         14. airmass
         15. filename
     
-    This file can most easily be read with the L{ivs.io.ascii} module and the
+    This file can most easily be read with the L{ivs.inout.ascii} module and the
     command:
     
     >>> hermes_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
