@@ -290,10 +290,7 @@ import sys
 import glob
 import logging
 import copy
-try:
-    import pyfits as pf
-except:
-    import astropy.io.fits as pf
+import pyfits
 import time
 import numpy as np
 try:
@@ -555,7 +552,7 @@ def get_file(integrated=False,**kwargs):
         - grid='marcsjorissensp': high resolution spectra from 4000 to 25000 A of (online available) MARCS grid computed by A. Jorissen 
         with turbospectrum v12.1.1 in late 2012, then converted to the Kurucz wavelength grid (by S. Bloemen and M. Hillen).
     
-    @param integrated: choose integrated version of the grid
+    @param integrated: choose integrated version of the gridcopy2scratch
     @type integrated: boolean
     @keyword grid: gridname (default Kurucz)
     @type grid: str
@@ -677,7 +674,7 @@ def get_file(integrated=False,**kwargs):
         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
-    
+        
     elif grid=='tmapsdb':
         # grids for sdB star fitting (JorisV)
         if integrated:
@@ -697,6 +694,16 @@ def get_file(integrated=False,**kwargs):
         else:
             postfix = ''
         basename = 'kurucz_z%s_sdB%s.fits'%(z,postfix)
+    elif grid=='kuruczpagb':
+        # grids for post-AGB star fitting (MichelH)
+        if not isinstance(z,str): z = '%.1f'%(z)
+        if integrated:
+            postfix = '_lawfitzpatrick2004_Rv'
+            if not isinstance(Rv,str): Rv = '{:.2f}'.format(Rv)
+            postfix+= Rv
+        else:
+            postfix = ''
+        basename = 'kurucz_pAGB_z%s_sed%s.fits'%(z,postfix)
     
     elif grid=='tmaptest':
         """ Grids exclusively for testing purposes"""
@@ -1064,7 +1071,7 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     
     if rad != None:
         flux = rad**2 * flux
-    
+
     return wave,flux
 
 
@@ -1336,7 +1343,7 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
                                      flux_units=flux_units,**kwargs)
     
     #-- run over all fluxes and sum them, we do not need to multiply with the radius
-    #   as the radius is provided as an argument to get_itable_single.
+    #   as the radius is provided as an argument to itable_single_pix.
     fluxes, Labs = [],[]                                
     for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
         trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
@@ -1411,7 +1418,8 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
     you need to give an array with all equal values. The reason is that the
     script can try to minimize the number of interpolations, by fixing a
     variable on a grid point. The fluxes on the other gridpoints will then not 
-    be loaded or not interpolated over.
+    be interpolated over. These parameter also have to be listed with the 
+    additional C{exc_interpolpar} keyword.
     
     >>> teffs = np.linspace(5000,7000,100)
     >>> loggs = np.linspace(4.0,4.5,100)
@@ -1432,13 +1440,15 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
     
     Thanks to Steven Bloemen for the core implementation of the interpolation
     algorithm.
+    
+    The addition of the exc_interpolpar keyword was done by Michel Hillen (Jan 2016).
     """
     
     #-- setup some standard values when they are not provided
-    ebv = np.array([0 for i in teff]) if ebv == None else ebv
-    z = np.array([0.for i in teff]) if z == None else z
-    rv = np.array([3.1 for i in teff]) if rv == None else rv
-    vrad = np.array([0 for i in teff]) if vrad == None else vrad
+    ebv = np.array([0 for i in teff]) if ebv is None else ebv
+    z = np.array([0.for i in teff]) if z is None else z
+    rv = np.array([3.1 for i in teff]) if rv is None else rv
+    vrad = np.array([0 for i in teff]) if vrad is None else vrad
     
     #for var in ['teff','logg','ebv','z','rv','vrad']:
         #if not hasattr(locals()[var],'__iter__'):
@@ -1448,7 +1458,8 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
     vrad = 0
     N = 1
     clear_memory = kwargs.pop('clear_memory',False)
-    for var in ['teff','logg','ebv','z','rv','vrad']:
+    #variables = kwargs.pop('variables',['teff','logg','ebv','z','rv','vrad'])                             # !!!
+    for var in ['teff','logg','ebv','z','rv','vrad']:                                       # !!!
         if not hasattr(locals()[var],'__iter__'):
             kwargs.setdefault(var+'range',(locals()[var],locals()[var]))
         else:
@@ -1456,14 +1467,46 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
             
     #-- retrieve structured information on the grid (memoized)
     axis_values,gridpnts,pixelgrid,cols = _get_pix_grid(photbands,
-                            include_Labs=True,clear_memory=clear_memory,**kwargs)
+                            include_Labs=True,clear_memory=clear_memory,**kwargs)     # !!!
+    
+    #-- Remove parameters from the grid if it is requested that these should not be interpolated 
+    #-- (with the exc_interpolpar keyword). This can only work if the requested values of 
+    #-- these parameters all correspond to a single point in the original grid!
+    #-- we check whether this condition is fulfilled
+    #-- if not, then the parameter is not excluded from the interpolation 
+    #-- and a warning is raised to the log
+    for var in kwargs.get('exc_interpolpar',[]): # e.g. for Kurucz, var can be anything in ['teff','logg','ebv','z']
+        # retrieve the unique values in var
+        var_uniquevalue = np.unique(np.array(locals()[var]))   
+        # if there is more than one unique value in var, then our condition is not fulfilled
+        if len(var_uniquevalue) > 1:                           
+            logger.warning('{} is requested to be excluded from interpolation, although fluxes for more than one value are requested!?'.format(var))
+        else:
+            # retrieve the index of var in the 'pixelgrid' and 'cols' arrays of the original grid
+            var_index = np.where(cols == var)[0]                   
+            # retrieve the index of the unique value in the original grid
+            var_uniquevalue_index = np.where(axis_values[var_index] == var_uniquevalue[0])[0]   
+            # if the unique value does not correspond to a grid point of the original grid, then we only raise a warning
+            if len(var_uniquevalue_index) == 0:                    
+                logger.warning('{} can only be excluded from interpolation, as requested, if its values are all equal to an actual grid point!'.format(var))
+            else:
+                # remove var from the list of variables in the original grid
+                trash = axis_values.pop(var_index)                 
+                cols = np.delete(cols,[var_index])
+                # since we do not know the axis of var in advance, we devise a clever way to
+                # bring it to the first axis by transposing the array
+                indices = [x for x in range(pixelgrid.ndim)]       
+                indices.remove(var_index)                          
+                indices.insert(0,var_index)                         
+                pixelgrid = np.transpose(pixelgrid, indices)       
+                # now we select the subgrid corresponding to the requested value of var
+                pixelgrid = pixelgrid[var_uniquevalue_index[0]]       
+    
     #-- prepare input:
     values = np.zeros((len(cols),N))
     for i,col in enumerate(cols):
         values[i] = locals()[col]
-    
     pars = 10**interpol.interpolate(values,axis_values,pixelgrid)
-    
     flux,Labs = pars[:-1],pars[-1]
     
     #-- Take radius into account when provided
@@ -1477,7 +1520,7 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
         model = get_table(teff=teff,logg=logg,ebv=ebv,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='AA':
-            wave = wave = conversions.convert('AA',wave_units,wave,**kwargs)
+            wave = conversions.convert('AA',wave_units,wave,**kwargs)
         return wave,flux,Labs
     else:
         return flux,Labs
@@ -1487,7 +1530,6 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
     """
     Super fast grid interpolator for multiple tables, completely based on get_itable_pix.
     """
-    
     #-- Find the parameters provided and store them separately.
     values, parameters, components = {}, set(), set()
     for key in kwargs.keys():
@@ -1496,13 +1538,11 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
             values[key] = kwargs.pop(key)
             parameters.add(par)
             components.add(comp)
-    
     #-- If there is only one component, we can directly return the result
     if len(components) == 1:
         kwargs.update(values)
         return get_itable_single_pix(photbands=photbands,wave_units=wave_units,
                                      flux_units=flux_units,**kwargs)
-    
     #-- run over all fluxes and sum them, we do not need to multiply with the radius
     #   as the radius is provided as an argument to itable_single_pix.
     fluxes, Labs = [],[]                                
@@ -1517,7 +1557,6 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
                                      
         fluxes.append(f)
         Labs.append(L)
-    
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs,axis=0)
     
@@ -1528,9 +1567,8 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
         model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='AA':
-            wave = wave = conversions.convert('AA',wave_units,wave)
+            wave = conversions.convert('AA',wave_units,wave)
         return wave,fluxes,Labs
-    
     return fluxes,Labs   
 
 
@@ -2342,8 +2380,8 @@ def _get_pix_grid(photbands,
         clear_memoization(keys=['ivs.sed.model'])
         
     #-- remove Rv and z from the grid keywords
-    trash = kwargs.pop('Rv', 0.0)
-    trash = kwargs.pop('z', 0.0)
+    trash = kwargs.pop('Rv', '*')
+    trash = kwargs.pop('z', '*')
     gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
@@ -2353,13 +2391,6 @@ def _get_pix_grid(photbands,
     #-- collect information from all the grid files
     for gridfile in gridfiles:
         with pyfits.open(gridfile) as ff:
-            # Fix duplicate column names
-            had_columns = []
-            for key in ff[1].header.keys():
-                if key[:5]=='TTYPE' and not ff[1].header[key] in had_columns:
-                    had_columns.append(ff[1].header[key])
-                elif key[:5]=='TTYPE':
-                    ff[1].header[key] += '-1'
             #-- make an alias for further reference
             ext = ff[1]
             #-- we already cut the grid here, in order not to take too much memory
