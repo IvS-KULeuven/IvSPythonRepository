@@ -40,7 +40,7 @@ class Database(dict):
     Example:
     
     >>> import os
-    >>> from ivs.io import database
+    >>> from ivs.inout import database
     >>> filename = 'mytest.db'
     >>> db = database.Database(filename)
     No database present at mytest.db. Creating a new one.

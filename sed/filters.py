@@ -326,7 +326,7 @@ from ivs import config
 from ivs.aux.decorators import memoized
 from ivs.aux import decorators
 from ivs.aux import loggers
-from ivs.io import ascii
+from ivs.inout import ascii
 
 basedir = os.path.dirname(__file__)
 

@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import pyfits
 from ivs.catalogs import sesame
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import loggers
 from ivs import config
 

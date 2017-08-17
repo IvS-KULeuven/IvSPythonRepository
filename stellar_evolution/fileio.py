@@ -12,9 +12,9 @@ import pyfits
 import numpy as np
 import pylab as pl
 #import pycles
-from ivs.io import ascii
-from ivs.io import fits
-from ivs.io import hdf5
+from ivs.inout import ascii
+from ivs.inout import fits
+from ivs.inout import hdf5
 from ivs.units import conversions
 from ivs.units import constants
 from ivs.aux import numpy_ext as ne

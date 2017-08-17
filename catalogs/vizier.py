@@ -96,9 +96,9 @@ import ConfigParser
 from scipy.spatial import KDTree
 
 #-- IvS repository
-from ivs.io import ascii
-from ivs.io import fits
-from ivs.io import http
+from ivs.inout import ascii
+from ivs.inout import fits
+from ivs.inout import http
 from ivs.units import conversions
 from ivs.aux import loggers
 from ivs.aux import numpy_ext

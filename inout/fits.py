@@ -335,11 +335,16 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     #-- create the table HDU
     cols = []
     for i,name in enumerate(recarr.dtype.names):
-        format = recarr.dtype[i].str.lower().replace('|','').replace('s','a').replace('>','')
+        #format = recarr.dtype[i].str.lower().replace('|','').replace('s','a').replace('>','')
+        #format = format.replace('b1','L').replace('<','')
+        format = recarr.dtype[i].str.lower().replace('|','').replace('>','')
         format = format.replace('b1','L').replace('<','')
+        if 's' in format:                                                                                                              # Changes to be compatible with Pyfits version 3.3
+            format = format.replace('s','') + 'A'                                                                                       # Changes to be compatible with Pyfits version 3.3
         unit = name in units and units[name] or 'NA'
         cols.append(pyfits.Column(name=name,format=format,array=recarr[name],unit=unit))
-    tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    tbhdu = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(cols))
+    #tbhdu = pyfits.new_table(pyfits.ColDefs(cols))                                                                                        # Changes to be compatible with Pyfits version 3.3
     
     #-- take care of the header:
     if len(header_dict):
@@ -348,9 +353,11 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
                 key_ = 'HIERARCH '+key
             else:
                 key_ = key
-            tbhdu.header.update(key_,header_dict[key])
+            #tbhdu.header.update(key_,header_dict[key])                                                                                          # Changes to be compatible with Pyfits version 3.3
+            tbhdu.header[key_] = header_dict[key]
         if ext!='new':
-            tbhdu.header.update('EXTNAME',ext)
+            #tbhdu.header.update('EXTNAME',ext)                                                                                                      # Changes to be compatible with Pyfits version 3.3
+            tbhdu.header['EXTNAME'] = ext
     
     
     #   put it in the right place
@@ -410,7 +417,8 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
         else:
             unit = 'NA'
         cols.append(pyfits.Column(name=name,format=format,array=arr[i],unit=unit))
-    tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    #tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
+    tbhdu = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(cols))                                                                            # Changes to be compatible with Pyfits version 3.3
     
     #   put it in the right place
     if ext=='new' or ext==len(hdulist):
@@ -422,7 +430,8 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            hdulist[ext].header.update(key,header_dict[key])
+            #hdulist[ext].header.update(key,header_dict[key])                                                                                              # Changes to be compatible with Pyfits version 3.3
+            hdulist[ext].header[key] = header_dict[key]
     
     if close:
         hdulist.close()

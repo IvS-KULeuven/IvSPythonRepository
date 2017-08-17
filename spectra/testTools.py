@@ -1,6 +1,6 @@
 import numpy as np
 import pylab as pl
-from ivs.io import fits
+from ivs.inout import fits
 from ivs.spectra import tools
 
 import unittest

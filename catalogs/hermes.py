@@ -26,7 +26,7 @@ Keep only those with a long enough exposure time:
 Now read in all the data, and plot the spectra. First, we need an extra module
 to read the FITS file and the plotting package.
 
->>> from ivs.io import fits
+>>> from ivs.inout import fits
 >>> import pylab as pl
 
 Then we can easily plot the relevant data:
@@ -158,7 +158,7 @@ from xml.etree import ElementTree as ET
 from collections import defaultdict
 
 from ivs.catalogs import sesame
-from ivs.io import ascii, fits
+from ivs.inout import ascii, fits
 from ivs.aux import loggers
 from ivs.observations import airmass
 from ivs.observations.barycentric_correction import helcorr
@@ -1055,7 +1055,7 @@ def make_data_overview():
         14. airmass
         15. filename
     
-    This file can most easily be read with the L{ivs.io.ascii} module and the
+    This file can most easily be read with the L{ivs.inout.ascii} module and the
     command:
     
     >>> hermes_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')

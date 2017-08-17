@@ -23,7 +23,7 @@ from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import reddening
 from ivs.sed import limbdark
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import argkwargparser
 from ivs.aux import loggers
 

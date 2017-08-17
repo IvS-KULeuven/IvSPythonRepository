@@ -5,7 +5,7 @@ import getpass
 import numpy as np
 import pylab as pl
 from ivs.catalogs import hermes
-from ivs.io import fits
+from ivs.inout import fits
 
 import unittest
 try:

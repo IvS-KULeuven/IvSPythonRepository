@@ -89,7 +89,7 @@ from ivs.units import conversions
 from ivs.units import constants
 
 from ivs import config
-from ivs.io import fits
+from ivs.inout import fits
 from scipy.interpolate import interp1d
 
 logger = logging.getLogger("SPEC.TOOLS")
@@ -644,7 +644,7 @@ def remove_response(wave, flux, instrument='hermes'):
 if __name__=="__main__":
     
     import pylab as pl
-    from ivs.io import fits
+    from ivs.inout import fits
     import time
     
     temp = '/STER/mercator/hermes/%s/reduced/%s_HRF_OBJ_ext_CosmicsRemoved_log_merged_c.fits'

@@ -21,8 +21,8 @@ from ivs.aux import xmlparser
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
 from ivs.aux.decorators import retry_http
-from ivs.io import ascii
-from ivs.io import http
+from ivs.inout import ascii
+from ivs.inout import http
 from ivs.units import conversions
 from ivs.catalogs import vizier
 from ivs.catalogs import sesame
