@@ -318,7 +318,7 @@ magnitudes etc).
 """
 import os
 import glob
-import pyfits
+#import astropy.io.fits as pf
 import logging
 import numpy as np
 

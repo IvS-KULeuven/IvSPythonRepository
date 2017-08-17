@@ -572,7 +572,7 @@ import Image
 import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
-import pyfits
+import astropy.io.fits as pf
 
 from ivs import config
 from ivs.aux import numpy_ext
@@ -2021,7 +2021,7 @@ class SED(object):
             #-- get the metallicity right
             files = model.get_file(z='*')
             if type(files) == str: files = [files] #files needs to be a list!
-            metals = np.array([pyfits.getheader(ff)['Z'] for ff in files])
+            metals = np.array([pf.getheader(ff)['Z'] for ff in files])
             metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
             scale = self.results[mtype]['CI']['scale']
             #-- get (approximated) reddened and unreddened model
@@ -3469,7 +3469,7 @@ class SED(object):
         #if not os.path.isfile(filename):
             #logger.warning('No previous results saved to FITS file {:s}'.format(filename))
             #return False
-        #ff = pyfits.open(filename)
+        #ff = pf.open(filename)
         
         ##-- observed photometry
         #fields = ff['data'].columns.names
@@ -3572,7 +3572,7 @@ class SED(object):
         if not os.path.isfile(filename):
             logger.warning('No previous results saved to FITS file {:s}'.format(filename))
             return False
-        ff = pyfits.open(filename)
+        ff = pf.open(filename)
         
         #-- observed photometry
         fields = ff['data'].columns.names
@@ -4224,7 +4224,7 @@ class PulsatingSED(SED):
                 #-- get the metallicity right
                 files = model.get_file(z='*')
                 if type(files) == str: files = [files] #files needs to be a list!
-                metals = np.array([pyfits.getheader(ff)['Z'] for ff in files])
+                metals = np.array([pf.getheader(ff)['Z'] for ff in files])
                 metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
                 
                 for i in range(len(unique_phases)-1):
@@ -4457,7 +4457,7 @@ class Calibrator(SED):
         index = names.index(ID)
         #--retrieve fitsfile information
         if library in ['ngsl','calspec']:
-            fits_file = pyfits.open(fits_files[index])
+            fits_file = pf.open(fits_files[index])
             wave = fits_file[1].data.field('wavelength')
             flux = fits_file[1].data.field('flux')
             fits_file.close()

@@ -3,7 +3,7 @@ Retrieve data from the P7 photometer.
 """
 import logging
 import os
-import pyfits
+import astropy.io.fits as pf
 import numpy as np
 from ivs.aux import loggers
 from ivs.catalogs import sesame
@@ -52,7 +52,7 @@ def getP7Data(ID=None,code=None,include_nans=True):
         code = _geneva_name_resolver(ID=ID)
         
     catfile = config.get_datafile('catalogs/p7','p7photometry.fits')
-    ff = pyfits.open(catfile)
+    ff = pf.open(catfile)
 
     valid = ff[1].data.field('CODE')==code
     hjd = ff[1].data.field('HJD')[valid]

@@ -5,7 +5,7 @@ Read and write FITS files.
 import gzip
 import logging
 import os
-import pyfits
+import astropy.io.fits as pf
 
 import numpy as np
 from ivs.aux import loggers
@@ -27,8 +27,8 @@ def read_spectrum(filename, return_header=False):
     @return: wavelength, flux(, header)
     @rtype: array, array(, dict)
     """
-    flux = pyfits.getdata(filename)
-    header = pyfits.getheader(filename)
+    flux = pf.getdata(filename)
+    header = pf.getheader(filename)
     
     #-- Make the equidistant wavelengthgrid using the Fits standard info
     #   in the header
@@ -74,7 +74,7 @@ def read_corot(fits_file,  return_header=False, type_data='hel',
     """
     #-- read in the FITS file
     # headers: ['DATE', 'DATEJD', 'DATEHEL', 'STATUS', 'WHITEFLUX', 'WHITEFLUXDEV', 'BG', 'CORREC']
-    fits_file_    = pyfits.open(fits_file)
+    fits_file_    = pf.open(fits_file)
     if fits_file_[0].header['hlfccdid'][0]=='A':
         times,flux,error,flags = fits_file_[type_data].data.field(0),\
                                  fits_file_[type_data].data.field(1),\
@@ -138,7 +138,7 @@ def read_fuse(ff,combine=True,return_header=False):
     
     Use TTAGfcal files.
     """
-    ff = pyfits.open(ff)
+    ff = pf.open(ff)
     hdr = ff[0].header
     if hdr['SRC_TYPE']=='EE':
         logger.warning("Warning: %s is not thrustworty (see manual)"%(ff))
@@ -191,7 +191,7 @@ def read_iue(filename,return_header=False):
 
     
     """
-    ff = pyfits.open(filename)
+    ff = pf.open(filename)
     header = ff[0].header
     if os.path.splitext(filename)[1]=='.mxlo':
         try:
@@ -254,8 +254,8 @@ def read2recarray(fits_file,ext=1,return_header=False):
     """
     dtype_translator = dict(L=np.bool,D=np.float64,E=np.float32,J=np.int)
     if isinstance(fits_file,str):
-        ff = pyfits.open(fits_file)
-    elif isinstance(fits_file,pyfits.HDUList):
+        ff = pf.open(fits_file)
+    elif isinstance(fits_file,pf.HDUList):
         ff = fits_file
     data = ff[ext].data
     names = ff[ext].columns.names
@@ -297,7 +297,7 @@ def write_primary(filename,data=None,header_dict={}):
     """
     if data is None:
         data = np.array([[0]])
-    hdulist = pyfits.HDUList([pyfits.PrimaryHDU(data)])
+    hdulist = pf.HDUList([pf.PrimaryHDU(data)])
     for key in header_dict:
         hdulist[0].header.update(key,header_dict[key])
     hdulist.writeto(filename)
@@ -322,12 +322,12 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     is_file = isinstance(filename,str) and os.path.isfile(filename)
     if isinstance(filename,str) and not os.path.isfile(filename):
         primary = np.array([[0]])
-        hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
+        hdulist = pf.HDUList([pf.PrimaryHDU(primary)])
         hdulist.writeto(filename)
         hdulist.close()
     
     if is_file or isinstance(filename,str):
-        hdulist = pyfits.open(filename,mode='update')
+        hdulist = pf.open(filename,mode='update')
     else:
         hdulist = filename
           
@@ -335,16 +335,13 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     #-- create the table HDU
     cols = []
     for i,name in enumerate(recarr.dtype.names):
-        #format = recarr.dtype[i].str.lower().replace('|','').replace('s','a').replace('>','')
-        #format = format.replace('b1','L').replace('<','')
         format = recarr.dtype[i].str.lower().replace('|','').replace('>','')
         format = format.replace('b1','L').replace('<','')
         if 's' in format:                                                                                                              # Changes to be compatible with Pyfits version 3.3
             format = format.replace('s','') + 'A'                                                                                       # Changes to be compatible with Pyfits version 3.3
         unit = name in units and units[name] or 'NA'
-        cols.append(pyfits.Column(name=name,format=format,array=recarr[name],unit=unit))
-    tbhdu = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(cols))
-    #tbhdu = pyfits.new_table(pyfits.ColDefs(cols))                                                                                        # Changes to be compatible with Pyfits version 3.3
+        cols.append(pf.Column(name=name,format=format,array=recarr[name],unit=unit))
+    tbhdu = pf.BinTableHDU.from_columns(pf.ColDefs(cols))
     
     #-- take care of the header:
     if len(header_dict):
@@ -353,10 +350,8 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
                 key_ = 'HIERARCH '+key
             else:
                 key_ = key
-            #tbhdu.header.update(key_,header_dict[key])                                                                                          # Changes to be compatible with Pyfits version 3.3
             tbhdu.header[key_] = header_dict[key]
         if ext!='new':
-            #tbhdu.header.update('EXTNAME',ext)                                                                                                      # Changes to be compatible with Pyfits version 3.3
             tbhdu.header['EXTNAME'] = ext
     
     
@@ -395,11 +390,11 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     """
     if isinstance(filename,str) and not os.path.isfile(filename):
             primary = np.array([[0]])
-            hdulist = pyfits.HDUList([pyfits.PrimaryHDU(primary)])
+            hdulist = pf.HDUList([pf.PrimaryHDU(primary)])
             hdulist.writeto(filename)
             
     if isinstance(filename,str):
-        hdulist = pyfits.open(filename,mode='update')
+        hdulist = pf.open(filename,mode='update')
     else:
         hdulist = filename
     
@@ -416,9 +411,8 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
             unit = units[i]
         else:
             unit = 'NA'
-        cols.append(pyfits.Column(name=name,format=format,array=arr[i],unit=unit))
-    #tbhdu = pyfits.new_table(pyfits.ColDefs(cols))
-    tbhdu = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(cols))                                                                            # Changes to be compatible with Pyfits version 3.3
+        cols.append(pf.Column(name=name,format=format,array=arr[i],unit=unit))
+    tbhdu = pf.BinTableHDU.from_columns(pf.ColDefs(cols))                                                                            # Changes to be compatible with Pyfits version 3.3
     
     #   put it in the right place
     if ext=='new' or ext==len(hdulist):
@@ -430,7 +424,6 @@ def write_array(arr,filename,names=(),units=(),header_dict={},ext='new',close=Tr
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            #hdulist[ext].header.update(key,header_dict[key])                                                                                              # Changes to be compatible with Pyfits version 3.3
             hdulist[ext].header[key] = header_dict[key]
     
     if close:

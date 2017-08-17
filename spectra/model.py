@@ -40,7 +40,7 @@ Now take care of the plot details
 import os
 import logging
 import copy
-import pyfits
+import astropy.io.fits as pf
 import inspect
 from ivs import config
 from ivs.units import constants
@@ -184,7 +184,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     gridfile = get_file(**kwargs)
     template_wave = kwargs.pop('wave',None)
     
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     
     try:
         #-- extenstion name as in fits files prepared by Steven
@@ -258,7 +258,7 @@ def get_grid_dimensions(**kwargs):
     @return: effective temperatures, gravities
     """
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teffs = []
     loggs = []
     for mod in ff[1:]:
@@ -321,7 +321,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     #-- run over teff and logg, and interpolate the models onto the supplied
     #   wavelength range
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     for i,teff in enumerate(teffs):
         for j,logg in enumerate(loggs):
             try:

@@ -88,7 +88,7 @@ import urllib
 import logging
 import os
 import itertools
-import pyfits
+import astropy.io.fits as pf
 import tarfile
 import tempfile
 import shutil
@@ -169,7 +169,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     
     WARNING: when retrieving a FITS file, ViZieR sometimes puts weird formats
     into the header ('3F10.6E' in the 2MASS catalog), which cannot be read by
-    the C{pyfits} module. These columns are actually multi-dimensional vectors.
+    the C{astropy.io.fits} module. These columns are actually multi-dimensional vectors.
     One option is to download to another format, or to restrict the columns with
     C{out_all=None}.
     
@@ -190,8 +190,9 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     
         Now read in the FITS-file and plot the contents
         
-        >>> #import pyfits,pylab
-        >>> #ff = pyfits.open('2mass_test.fits')
+        >>> #import pylab
+        >>> #import astropy.io.fits as pf
+        >>> #ff = pf.open('2mass_test.fits')
         >>> #p = pylab.gcf().canvas.set_window_title('test of <search>')
         >>> #p = pylab.scatter(ff[1].data.field('_RAJ2000'),ff[1].data.field('_DEJ2000'),c=ff[1].data.field('Jmag'),s=(20-ff[1].data.field('Jmag'))**2,cmap=pylab.cm.hot_r,edgecolors='none')
         >>> #p = pylab.colorbar()
@@ -270,7 +271,7 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     #   individual catalogs to retrieve their title.
     if filetype=='fits':
         mycats = {}
-        ff = pyfits.open(filen)
+        ff = pf.open(filen)
         for ext in range(1,len(ff)):            
             name = ff[ext].header['CDS-name']
             results,units,comms = search(name,ID=ID,**kwargs)

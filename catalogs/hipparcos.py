@@ -9,11 +9,11 @@ from __future__ import with_statement
 import httplib
 import logging
 import os
-import pyfits
+#import astropy.io.fits as pf
 import numpy as np
 from ivs.aux import loggers
 from ivs.catalogs import sesame
-from ivs.inout import fits
+#from ivs.inout import fits
 from ivs import config
         
 logger = logging.getLogger("CAT.HIP")

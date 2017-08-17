@@ -8,7 +8,7 @@ import glob
 import os
 import logging
 import numpy as np
-import pyfits
+import astropy.io.fits as pf
 from ivs.catalogs import sesame
 from ivs.inout import ascii
 from ivs.aux import loggers
@@ -82,7 +82,7 @@ def make_data_overview():
                         filename=os.path.realpath(obj_file))
         contents['date-avg'] = 'nan'
         try:
-            header = pyfits.getheader(obj_file)
+            header = pf.getheader(obj_file)
         except:
             continue
         if 'ESO OBS TEXP' in header:     contents['exptime'] = float(header['ESO OBS TEXP'])

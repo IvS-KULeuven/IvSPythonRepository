@@ -8,7 +8,7 @@ import logging
 import struct
 import os
 import glob
-import pyfits
+import astropy.io.fits as pf
 import numpy as np
 import pylab as pl
 #import pycles
@@ -644,7 +644,7 @@ def read_starmodel(filename,do_standardize=True,units='cgs',values='auto',**kwar
     old_settings = np.seterr(invalid='ignore',divide='ignore')
     if isinstance(filename,str):
         basename,ext = os.path.splitext(filename)
-    elif isinstance(filename,pyfits.HDUList):
+    elif isinstance(filename,pf.HDUList):
         ext = '.fits'
     else:
         starg,starl = filename

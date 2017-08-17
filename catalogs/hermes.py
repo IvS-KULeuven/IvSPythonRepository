@@ -150,7 +150,7 @@ import getpass
 import datetime
 import subprocess
 import numpy as np
-import pyfits
+import astropy.io.fits as pf
 
 import copy
 from lxml import etree
@@ -254,7 +254,7 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
     Look up the 'telalt' value in the FITS headers of all these files via a fast
     list comprehension:
     
-    >>> telalts = [pyfits.getheader(fname)['telalt'] for fname in myselection['filename']]
+    >>> telalts = [pf.getheader(fname)['telalt'] for fname in myselection['filename']]
     
     Search for all data of HD50230 taken in the night of 22 September 2009:
     
@@ -417,9 +417,9 @@ def merge_hermes_spectra(objlist, wscalelist=None, **kwargs):
         exptime, bjd = 0, np.zeros(len(objlist))
         waves, fluxes = np.zeros((55,4608, len(objlist))), np.zeros((55,4608, len(wscalelist)))
         for i, (ofile, wfile) in enumerate(zip(objlist, wscalelist)):
-            odata = pyfits.getdata(ofile, 0).T # The flux has format (4608, 55) thus is transposed
-            oheader = pyfits.getheader(ofile, 0)
-            wdata = pyfits.getdata(wfile, 0)
+            odata = pf.getdata(ofile, 0).T # The flux has format (4608, 55) thus is transposed
+            oheader = pf.getheader(ofile, 0)
+            wdata = pf.getdata(wfile, 0)
             fluxes[:,:,i] = odata
             waves[:,:,i] = wdata
             exptime += oheader['exptime']
@@ -431,7 +431,7 @@ def merge_hermes_spectra(objlist, wscalelist=None, **kwargs):
             wave, flux = sptools.merge_cosmic_clipping(waves[i,:,:].T, fluxes[i,:,:].T, **kwargs)
             mflux[i] = flux
         
-    header = pyfits.getheader(objlist[0], 0)
+    header = pf.getheader(objlist[0], 0)
     header['exptime'] = exptime
     #header['bjd'] = np.average(bjd)
     
@@ -478,7 +478,7 @@ def make_mask_file(wavelength,depth,filename='mymask.fits'):
     @type depth: 1D numpy array
     """
     data = np.array([wavelength,depth]).T
-    hdulist = pyfits.PrimaryHDU(data)
+    hdulist = pf.PrimaryHDU(data)
     hdulist.writeto(filename)
 
 
@@ -752,7 +752,7 @@ def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
         os.mkdir(redDir)
     
     #-- Get unseq.
-    header = pyfits.getheader(filename)
+    header = pf.getheader(filename)
     if 'unseq' in kwargs:
         unseq = kwargs.pop('unseq')
         logger.debug('Using provided sequence number: {:}'.format(unseq))
@@ -1002,7 +1002,7 @@ class HermesCCF(object):
         "Read the *_AllCCF.fits file "
         self.filename = filename
         
-        hdu = pyfits.open(filename)
+        hdu = pf.open(filename)
         
         #-- header of original observation
         self.header = hdu[0].header
@@ -1113,7 +1113,7 @@ def make_data_overview():
                         bjd=np.nan,exptime=np.nan,pmtotal=np.nan,airmass=np.nan,
                         filename=os.path.realpath(obj_file))
         contents['date-avg'] = 'nan'
-        header = pyfits.getheader(obj_file)
+        header = pf.getheader(obj_file)
         for key in contents:
             if key in header and key in ['unseq','prog_id']:
                 try: contents[key] = int(header[key])

@@ -290,7 +290,7 @@ import sys
 import glob
 import logging
 import copy
-import pyfits
+import astropy.io.fits as pf
 import time
 import numpy as np
 try:
@@ -1026,7 +1026,7 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     gridfile = get_file(**kwargs)
     
     #-- read the file:
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     #-- a possible grid is the one where only selected stellar models are
     #   present. In that case, we there is no need for interpolation or
     #   other stuff.
@@ -1710,7 +1710,7 @@ def get_grid_dimensions(**kwargs):
     @return: effective temperatures, gravities
     """
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teffs = []
     loggs = []
     for mod in ff[1:]:
@@ -1739,7 +1739,7 @@ def get_igrid_dimensions(**kwargs):
     @return: effective temperatures, surface, gravities, E(B-V)s
     """
     gridfile = get_file(integrated=True,**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teffs = ff[1].data.field('TEFF')
     loggs = ff[1].data.field('LOGG')
     ebvs  = ff[1].data.field('EBV')
@@ -1812,7 +1812,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
         #-- run over teff and logg, and interpolate the models onto the supplied
         #   wavelength range
         gridfile = get_file(**kwargs)
-        ff = pyfits.open(gridfile)
+        ff = pf.open(gridfile)
         for i,teff in enumerate(teffs):
             for j,logg in enumerate(loggs):
                 try:
@@ -1844,7 +1844,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
         #-- run over teff and logg, and interpolate the models onto the supplied
         #   wavelength range
         gridfile = get_file(**kwargs)
-        ff = pyfits.open(gridfile)
+        ff = pf.open(gridfile)
         if wave is not None:
             fluxes = np.zeros((len(teffs),len(wave)))
         for i,(teff,logg) in enumerate(zip(teffs,loggs)):
@@ -1884,7 +1884,7 @@ def list_calibrators(library='calspec'):
     
     names = []
     for ff in files:
-        name = pyfits.getheader(ff)[targname]
+        name = pf.getheader(ff)[targname]
         #star_info = sesame.search(name)
         #if not star_info:
         #    continue
@@ -1923,7 +1923,7 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     calfile = None
     for ff in files:
         #-- check if the name matches with the given one
-        fits_file = pyfits.open(ff)
+        fits_file = pf.open(ff)
         header = fits_file[0].header
         if name in ff or name in header[targname]:
             #-- maybe the target is correct, but the 'model version' is not
@@ -2309,7 +2309,7 @@ def _get_itable_markers(photbands,
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
     #-- sort gridfiles per metallicity
-    metals_sa = np.argsort([pyfits.getheader(ff,1)['z'] for ff in gridfiles])
+    metals_sa = np.argsort([pf.getheader(ff,1)['z'] for ff in gridfiles])
     gridfiles = np.array(gridfiles)[metals_sa]
     flux = []
     gridpnts = []
@@ -2318,7 +2318,7 @@ def _get_itable_markers(photbands,
     
     #-- collect information
     for gridfile in gridfiles:
-        ff = pyfits.open(gridfile)
+        ff = pf.open(gridfile)
         ext = ff[1]
         z = ff[1].header['z']
         if z<zrange[0] or zrange[1]<z:
@@ -2390,7 +2390,7 @@ def _get_pix_grid(photbands,
     grid_names = np.array(variables)
     #-- collect information from all the grid files
     for gridfile in gridfiles:
-        with pyfits.open(gridfile) as ff:
+        with pf.open(gridfile) as ff:
             #-- make an alias for further reference
             ext = ff[1]
             #-- we already cut the grid here, in order not to take too much memory

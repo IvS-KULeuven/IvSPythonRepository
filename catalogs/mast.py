@@ -14,7 +14,7 @@ import ConfigParser
 import shutil
 
 import numpy as np
-import pyfits
+import astropy.io.fits as pf
 
 from ivs.sed import filters
 from ivs.aux import xmlparser
@@ -465,7 +465,7 @@ def get_dss_image(ID,ra=None,dec=None,width=5,height=5):
     url  = urllib.URLopener()
     myurl = "http://archive.stsci.edu/cgi-bin/dss_search?ra=%s&dec=%s&equinox=J2000&height=%s&generation=%s&width=%s&format=FITS"%(ra,dec,height,'2i',width)
     out = url.retrieve(myurl)
-    data1 = pyfits.getdata(out[0])
+    data1 = pf.getdata(out[0])
     #-- reset timeout to original value
     socket.setdefaulttimeout(timeout)
     return data1,(ra,dec),(width/60.,height/60.)
