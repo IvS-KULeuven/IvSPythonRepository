@@ -7,7 +7,7 @@ are mainly convenience functions specifically for that class, but can be used
 outside of the SED class if you know what you're doing.
 
 Table of contents:
-    
+
     1. Retrieving and plotting photometry of a target
     2. Where/what is my target?
     3. SED fitting using a grid based approach
@@ -134,14 +134,14 @@ Once a .phot file is written and L{get_photometry} is called again for the same
 target, the script will B{not retrieve the photometry from the internet again},
 but will use the contents of the file instead. The purpose is minimizing network
 traffic and maximizing speed. If you want to refresh the search, simply manually
-delete the .phot file or set C{force=True} when calling L{get_photometry}. 
+delete the .phot file or set C{force=True} when calling L{get_photometry}.
 
 The content of the .phot file is most easily read using the L{ivs.inout.ascii.read2recarray}
 function. Be careful, as it contains both absolute fluxes as flux ratios.
 
 >>> data = ascii.read2recarray('HD180642.phot')
 
-Notice that in the C{.phot} files, also a C{comment} column is added. You can 
+Notice that in the C{.phot} files, also a C{comment} column is added. You can
 find translation of some of the flags here (i.e. upper limit, extended source etc..),
 or sometimes just additional remarks on variability etc. Not all catalogs have
 this feature implemented, so you are still responsible yourself for checking
@@ -230,7 +230,7 @@ we know are not so trustworthy:
 You can L{include}/L{exclude} photoemtry based on name, wavelength range, source and index,
 and only select absolute photometry or colors (L{include_abs},L{include_colors}).
 When working in interactive mode, in particular the index is useful. Print the
-current set of photometry to the screen with 
+current set of photometry to the screen with
 
 >>> print(photometry2str(mysed.master,color=True,index=True))
 
@@ -281,9 +281,9 @@ You can automatically make plots of (most plotting functions take C{colors=True/
 as an argument so you can make e.g. the 'color' SED and 'absolute value' SED):
 
     1. the grid (see L{SED.plot_grid})
-    2. the SED (see L{SED.plot_sed}) 
+    2. the SED (see L{SED.plot_sed})
     3. the fit statistics (see L{SED.plot_chi2})
-    
+
 To change the grid, load the L{ivs.sed.model} module and call
 L{ivs.sed.model.set_defaults} with appropriate arguments. See that module for
 conventions on the grid structure when adding custom grids.
@@ -302,14 +302,14 @@ that the true probability region can be larger or smaller!
 Subsection 3.2 Binary star - ### W.I.P ###
 --------------------------
 
-The SED class can create SEDs for multiple stars as well. There are 2 options 
+The SED class can create SEDs for multiple stars as well. There are 2 options
 available, the multiple SED fit which in theory can handle any number of stars,
-and the binary SED fit which is for binaries only, and uses the mass of both 
+and the binary SED fit which is for binaries only, and uses the mass of both
 components to restrict the radii when combining two model SEDs.
 
 As an example we take the system PG1104+243, which consists of a subdwarf B star,
 and a G2 type mainsequence star. The photometry from the standard catalogues that
-are build in this class, is of to low quality, so we use photometry obtained from 
+are build in this class, is of to low quality, so we use photometry obtained from
 U{the subdwarf database<http://catserver.ing.iac.es/sddb/>}.
 
 >>> mysed = SED('PG1104+243')
@@ -368,86 +368,86 @@ B{whole fitted grid}: in the above case, the extensions of the FITS file contain
 the following information (we print part of each header)::
 
     EXTNAME = 'DATA    '
-    XTENSION= 'BINTABLE'           / binary table extension                         
-    BITPIX  =                    8 / array data type                                
-    NAXIS   =                    2 / number of array dimensions                     
-    NAXIS1  =                  270 / length of dimension 1                          
-    NAXIS2  =                   67 / length of dimension 2                          
-    TTYPE1  = 'meas    '                                                                                                                   
-    TTYPE2  = 'e_meas  '                                                            
-    TTYPE3  = 'flag    '                                                            
-    TTYPE4  = 'unit    '                                                            
-    TTYPE5  = 'photband'                                                            
-    TTYPE6  = 'source  '                                                            
-    TTYPE7  = '_r      '                                                            
-    TTYPE8  = '_RAJ2000'                                                            
-    TTYPE9  = '_DEJ2000'                                                            
-    TTYPE10 = 'cwave   '                                                            
-    TTYPE11 = 'cmeas   '                                                            
-    TTYPE12 = 'e_cmeas '                                                            
-    TTYPE13 = 'cunit   '                                                            
-    TTYPE14 = 'color   '                                                            
-    TTYPE15 = 'include '                                                            
-    TTYPE16 = 'synflux '                                                            
-    TTYPE17 = 'mod_eff_wave'                                                        
-    TTYPE18 = 'chi2    '                                                            
+    XTENSION= 'BINTABLE'           / binary table extension
+    BITPIX  =                    8 / array data type
+    NAXIS   =                    2 / number of array dimensions
+    NAXIS1  =                  270 / length of dimension 1
+    NAXIS2  =                   67 / length of dimension 2
+    TTYPE1  = 'meas    '
+    TTYPE2  = 'e_meas  '
+    TTYPE3  = 'flag    '
+    TTYPE4  = 'unit    '
+    TTYPE5  = 'photband'
+    TTYPE6  = 'source  '
+    TTYPE7  = '_r      '
+    TTYPE8  = '_RAJ2000'
+    TTYPE9  = '_DEJ2000'
+    TTYPE10 = 'cwave   '
+    TTYPE11 = 'cmeas   '
+    TTYPE12 = 'e_cmeas '
+    TTYPE13 = 'cunit   '
+    TTYPE14 = 'color   '
+    TTYPE15 = 'include '
+    TTYPE16 = 'synflux '
+    TTYPE17 = 'mod_eff_wave'
+    TTYPE18 = 'chi2    '
 
-    EXTNAME = 'MODEL   '      
-    XTENSION= 'BINTABLE'           / binary table extension                         
-    BITPIX  =                    8 / array data type                                
-    NAXIS   =                    2 / number of array dimensions                     
-    NAXIS1  =                   24 / length of dimension 1                          
-    NAXIS2  =                 1221 / length of dimension 2                                                                                
-    TTYPE1  = 'wave    '                                                            
-    TUNIT1  = 'A       '                                                            
-    TTYPE2  = 'flux    '                                                            
-    TUNIT2  = 'erg/s/cm2/AA'                                                         
-    TTYPE3  = 'dered_flux'                                                          
-    TUNIT3  = 'erg/s/cm2/AA'                                                         
-    TEFFL   =    23000.68377498454                                                  
-    TEFF    =    23644.49138963689                                                  
-    TEFFU   =    29999.33189058337                                                  
-    LOGGL   =    3.014445328877565                                                  
-    LOGG    =    4.984788506855546                                                  
-    LOGGU   =    4.996095055525759                                                  
-    EBVL    =   0.4703171900728142                                                  
-    EBV     =   0.4933185398871652                                                  
-    EBVU    =   0.5645144879211454                                                  
-    ZL      =   -2.499929434601112                                                  
-    Z       =   0.4332336811329144     
-    ZU      =   0.4999776537652627                                                  
-    SCALEL  = 2.028305798068863E-20                                                 
-    SCALE   = 2.444606991671813E-20                                                 
-    SCALEU  = 2.830281842143698E-20                                                                                               
-    LABSL   =    250.9613352757437                                                  
-    LABS    =     281.771013453664                                                  
-    LABSU   =    745.3149766772975                                                  
-    CHISQL  =    77.07958742733673                                                  
-    CHISQ   =    77.07958742733673                                                  
-    CHISQU  =    118.8587169011471                                                      
-    CI_RAWL =   0.9999999513255379                                                  
-    CI_RAW  =   0.9999999513255379                                                  
-    CI_RAWU =   0.9999999999999972                                                  
-    CI_RED  =   0.5401112973063139                                                  
-    CI_REDL =   0.5401112973063139                                                  
-    CI_REDU =   0.9500015229597392                                                  
-    
-    EXTNAME = 'IGRID_SEARCH' 
-    XTENSION= 'BINTABLE'           / binary table extension                         
-    BITPIX  =                    8 / array data type                                
-    NAXIS   =                    2 / number of array dimensions                     
-    NAXIS1  =                   80 / length of dimension 1                          
-    NAXIS2  =                99996 / length of dimension 2                          
-    TTYPE1  = 'teff    '                                                            
-    TTYPE2  = 'logg    '                                                            
-    TTYPE3  = 'ebv     '                                                            
-    TTYPE4  = 'z       '                                                            
-    TTYPE5  = 'chisq   '                                                            
-    TTYPE6  = 'scale   '                                                            
-    TTYPE7  = 'escale '                                                            
-    TTYPE8  = 'Labs    '                                                            
-    TTYPE9  = 'CI_raw  '                                                            
-    TTYPE10 = 'CI_red  '                                                            
+    EXTNAME = 'MODEL   '
+    XTENSION= 'BINTABLE'           / binary table extension
+    BITPIX  =                    8 / array data type
+    NAXIS   =                    2 / number of array dimensions
+    NAXIS1  =                   24 / length of dimension 1
+    NAXIS2  =                 1221 / length of dimension 2
+    TTYPE1  = 'wave    '
+    TUNIT1  = 'A       '
+    TTYPE2  = 'flux    '
+    TUNIT2  = 'erg/s/cm2/AA'
+    TTYPE3  = 'dered_flux'
+    TUNIT3  = 'erg/s/cm2/AA'
+    TEFFL   =    23000.68377498454
+    TEFF    =    23644.49138963689
+    TEFFU   =    29999.33189058337
+    LOGGL   =    3.014445328877565
+    LOGG    =    4.984788506855546
+    LOGGU   =    4.996095055525759
+    EBVL    =   0.4703171900728142
+    EBV     =   0.4933185398871652
+    EBVU    =   0.5645144879211454
+    ZL      =   -2.499929434601112
+    Z       =   0.4332336811329144
+    ZU      =   0.4999776537652627
+    SCALEL  = 2.028305798068863E-20
+    SCALE   = 2.444606991671813E-20
+    SCALEU  = 2.830281842143698E-20
+    LABSL   =    250.9613352757437
+    LABS    =     281.771013453664
+    LABSU   =    745.3149766772975
+    CHISQL  =    77.07958742733673
+    CHISQ   =    77.07958742733673
+    CHISQU  =    118.8587169011471
+    CI_RAWL =   0.9999999513255379
+    CI_RAW  =   0.9999999513255379
+    CI_RAWU =   0.9999999999999972
+    CI_RED  =   0.5401112973063139
+    CI_REDL =   0.5401112973063139
+    CI_REDU =   0.9500015229597392
+
+    EXTNAME = 'IGRID_SEARCH'
+    XTENSION= 'BINTABLE'           / binary table extension
+    BITPIX  =                    8 / array data type
+    NAXIS   =                    2 / number of array dimensions
+    NAXIS1  =                   80 / length of dimension 1
+    NAXIS2  =                99996 / length of dimension 2
+    TTYPE1  = 'teff    '
+    TTYPE2  = 'logg    '
+    TTYPE3  = 'ebv     '
+    TTYPE4  = 'z       '
+    TTYPE5  = 'chisq   '
+    TTYPE6  = 'scale   '
+    TTYPE7  = 'escale '
+    TTYPE8  = 'Labs    '
+    TTYPE9  = 'CI_raw  '
+    TTYPE10 = 'CI_red  '
 
 
 Subsection 3.4 Loading SED fits  ### BROKEN ###
@@ -498,7 +498,7 @@ diameter. The following relations hold::
 Where C{radius} and C{distance} have equal units. The true absolute luminosity
 (solar units) is related to the absolute luminosity from the SED (solar units)
 via the radius (solar units)::
-    
+
     >> L_abs_true = L_abs * radius**2
 
 Finally, the angular diameter can be computed via::
@@ -512,7 +512,7 @@ If the star shows clear solar-like oscillations, you can use the nu_max give an
 independent constraint on the surface gravity, given the effective temperature of
 the model (you are free to give errors or not, just keep in mind that in the
 former case, you will get an array of Uncertainties rather than floats)::
-    
+
     >> teff = 4260.,'K'
     >> nu_max = 38.90,0.86,'muHz'
     >> logg_slo = conversions.derive_logg_slo(teff,nu_max,unit='[cm/s2'])
@@ -522,7 +522,7 @@ estimate of the radius::
 
     >> Deltanu0 = 4.80,0.02,'muHz'
     >> R_slo = conversions.derive_radius_slo(numax,Deltanu0,teff,unit='Rsol')
-    
+
 Then from the radius, you can get both the absolute luminosity and distance to
 your star.
 
@@ -533,7 +533,7 @@ From the parallax, you can get an estimate of the distance. This is, however,
 dependent on some prior assumptions such as the shape of the galaxy and the
 distribution of stars. To estimate the probability density value due to
 a measured parallax of a star at particular distance, you can call L{distance.distprob}::
-    
+
     >> gal_latitude = 0.5
     >> plx = 3.14,0.5
     >> d_prob = distance.distprob(d,gal_latitude,plx)
@@ -568,7 +568,7 @@ import json
 
 import pylab as pl
 from matplotlib import mlab
-import Image
+#import Image                        ### TODO - maybe remove
 import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
@@ -610,9 +610,9 @@ logger = logging.getLogger("SED.BUILD")
 def fix_master(master,e_default=None):
     """
     Clean/extend/fix record array received from C{get_photometry}.
-    
+
     This function does a couple of things:
-    
+
         1. Adds common but uncatalogized colors like 2MASS.J-H if not already
            present. WARNING: these colors can mix values from the same system
            but from different catalogs!
@@ -627,7 +627,7 @@ def fix_master(master,e_default=None):
         value are untrostworthy because the calibration error is larger than that.
         7. USNOB1 and ANS photometry are set the have a minimum error of 30%
         due to uncertainties in response curves.
-    
+
     @param master: record array containing photometry. This should have the fields
     'meas','e_meas','unit','photband','source','_r','_RAJ2000','DEJ2000',
     'cmeas','e_cmeas','cwave','cunit'
@@ -640,7 +640,7 @@ def fix_master(master,e_default=None):
     """
     #-- we recognize uncalibrated stuff as those for which no absolute flux was
     #   obtained, and remove them:
-    master = master[-np.isnan(master['cmeas'])]
+    master = master[~np.isnan(master['cmeas'])]
     cats = np.array([ph.split('.')[0] for ph in master['source']])
     set_cats = sorted(set(cats))
     #-- add common uncatalogized colors:
@@ -651,7 +651,7 @@ def fix_master(master,e_default=None):
     add_rows = []
     for cat in set_cats:
         master_ = master[cats==cat]
-    
+
         for color in ['2MASS.J-H','2MASS.KS-H','TD1.1565-1965','TD1.2365-1965','TD1.2365-2740',
                   'JOHNSON.J-H','JOHNSON.K-H','JOHNSON.B-V','JOHNSON.U-B','JOHNSON.R-V','JOHNSON.I-V',
                   'GALEX.FUV-NUV','TYCHO2.BT-VT','WISE.W1-W2','WISE.W3-W2','WISE.W4-W3',
@@ -663,17 +663,17 @@ def fix_master(master,e_default=None):
             system,band = color.split('.')
             band0,band1 = band.split('-')
             band0,band1 = '%s.%s'%(system,band0),'%s.%s'%(system,band1)
-        
+
             if band0 in master_['photband'] and band1 in master_['photband'] and not color in master_['photband']:
                 #-- where are the bands located?
                 index0 = list(master_['photband']).index(band0)
                 index1 = list(master_['photband']).index(band1)
-                
+
                 #-- start a new row to add the color
                 row = list(master_[index1])
                 row[columns.index('photband')] = color
                 row[columns.index('cwave')] = np.nan
-                
+
                 #-- it could be a magnitude difference
                 if master_['unit'][index0]=='mag':
                     row[columns.index('meas')] = master_['meas'][index0]-master_['meas'][index1]
@@ -692,7 +692,7 @@ def fix_master(master,e_default=None):
                 row[columns.index('cunit')] = 'flux_ratio'
                 add_rows.append(tuple(row))
     master = numpy_ext.recarr_addrows(master,add_rows)
-    
+
     #-- add an extra column with a flag to distinguish colors from absolute
     #   fluxes, and a column with flags to include/exclude photometry
     #   By default, exclude photometry if the effective wavelength is above
@@ -705,7 +705,7 @@ def fix_master(master,e_default=None):
     else:
         iscolor = [filters.is_color(photband) for photband in master['photband']]
         master['color'] = iscolor
-    #-- add an extra column with indices to distinguish different data sets, e.g. based 
+    #-- add an extra column with indices to distinguish different data sets, e.g. based
     #   on photometric phase.
     if not 'phase' in master.dtype.names:
         extra_cols = [[0]*len(master['meas'])]
@@ -718,17 +718,17 @@ def fix_master(master,e_default=None):
         master['e_cmeas'][no_error] = np.abs(e_default*master['cmeas'][no_error])
         small_error = master['e_cmeas']<(0.01*np.abs(master['cmeas']))
         master['e_cmeas'][small_error] = 0.01*np.abs(master['cmeas'][small_error])
-    
+
     #-- the measurements from USNOB1 are not that good because the response
     #   curve is approximated by the JOHNSON filter. Set the errors to min 30%
     #   The same holds for ANS: here, the transmission curves are very uncertain
     for i,photband in enumerate(master['photband']):
         if 'USNOB1' in photband or 'ANS' in photband:
             master['e_cmeas'][i] = max(0.30*master['cmeas'][i],master['e_cmeas'][i])
-    
+
     #-- remove negative fluxes
     master = master[master['cmeas']>0]
-    
+
     return master
 
 
@@ -736,43 +736,43 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
     """
     Exclude/include photometric passbands containing one of the strings listed in
     photbands.
-    
+
     This function will set the flags in the 'include' field of the extended
     master record array.
-    
+
     Colours also have a wavelength in this function, and it is defined as the
     average wavelength of the included bands (doesn't work for stromgren C1 and M1).
-    
+
     include=False excludes photometry based on the input parameters.
     include=True includes photometry based on the input parameters.
-    
+
     Some examples:
-    
+
         1. Exclude all measurements::
-        
+
         >> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
-    
+
         2. Include all TD1 fluxes and colors::
-        
+
         >> decide_phot(master,names=['TD1'],ptype='all',include=True)
-    
+
         3. Include all V band measurements from all systems (but not the colors)::
-        
+
         >> decide_phot(master,names=['.V'],ptype='abs',include=True)
-    
+
         4. Include all Geneva colors and exclude Geneva magnitudes::
-        
+
         >> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
         >> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
-    
+
         5. Exclude all infrared measurements beyond 1 micron::
-        
+
         >> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
-    
+
         6. Include all AKARI measurements below 10 micron::
-        
+
         >> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
-    
+
     @param master: record array containing all photometry
     @type master: numpy record array
     @param names: strings excerpts to match filters
@@ -790,7 +790,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
     @type include: boolean
     @return: master record array with adapted 'include' flags
     @rtype: numpy record array
-    """ 
+    """
     #-- exclude/include passbands based on their names
     if names is not None:
         logger.info('%s photometry based on photband containining one of %s'%((include and 'Include' or "Exclude"),names))
@@ -814,7 +814,7 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
                 master['include'][index] = include
         #-- exclude/include passbands based on their wavelength
         if not ptype=='col':
-            master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include    
+            master['include'][(wrange[0]<master['cwave']) & (master['cwave']<wrange[1])] = include
     #-- exclude/include passbands based on their source
     if sources is not None:
         logger.info('%s photometry based on source catalog in %s'%((include and 'Include' or "Exclude"),sources))
@@ -830,20 +830,20 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
         indices = np.array(indices,int)
         if not indices.shape: indices = indices.reshape(1)
         master['include'][indices] = include
-    
+
 
 def photometry2str(master,comment='',sort='photband',color=False,index=False):
     """
     String representation of master record array.
-    
+
     Sorting is disabled when C{index=True}.
-    
+
     @param master: master record array containing photometry
     @type master: numpy record array
     """
     if sort and not index:
         master = master[np.argsort(master[sort])]
-    
+
     templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s}'
     templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s}'
     header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','CUNIT','SOURCE']
@@ -855,7 +855,7 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
         templateh = '{:3s} '+templateh
         templated = '{:3d} '+templated
         header = ['NR']+header
-        
+
     txt = [comment+templateh.format(*header)]
     txt.append(comment+'='*170)
     columns = [master[col.lower()] for col in header if not col=='NR']
@@ -877,7 +877,7 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #"""
     #Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
     #function.
-    
+
     #@return: Rbf interpolation function
     #@rtype: Rbf interpolation function
     #"""
@@ -903,16 +903,16 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #logger.info('Interpolation of Schaller 1992 evolutionary tracks to compute radii')
     #return mygrid
 
-    
-    
-    
-    
+
+
+
+
 
 
 #def get_radii(teffs,loggs):
     #"""
     #Retrieve radii from stellar evolutionary tracks from Schaller 1992.
-    
+
     #@param teffs: model effective temperatures
     #@type teffs: numpy array
     #@param loggs: model surface gravities
@@ -929,8 +929,8 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #"""
     #Calculate distances and radii of a target given its parallax and location
     #in the galaxy.
-    
-    
+
+
     #"""
     ##-- compute distance up to 25 kpc, which is about the maximum distance from
     ##   earth to the farthest side of the Milky Way galaxy
@@ -960,41 +960,41 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
 class SED(object):
     """
     Class that facilitates the use of the ivs.sed module.
-    
+
     This class is meant to be an easy interface to many of the ivs.sed module's
     functionality.
-    
+
     The most important attributes of SED are:
-    
+
         1. C{sed.ID}: star's identification (str)
         2. C{sed.photfile}: name of the file containing all photometry (str)
         3. C{sed.info}: star's information from Simbad (dict)
         4. C{sed.master}: photometry data (record array)
         5. C{sed.results}: results and summary of the fitting process (dict)
-    
+
     After fitting, e.g. via calling L{igrid_search}, you can call L{get_model}
     to retrieve the full SED matching the best fitting parameters (or, rather,
     closely matching them, see the documentation).
-        
+
     """
     def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,load_hdf5=True,label=''):
         """
         Initialize SED class.
-        
+
         Different ways to initialize:
-        
+
         B{1. If no previous data are saved:}
-        
+
         >>> mysed = SED('HD129929')
-        
+
         B{2. If previous data exists:}
-        
+
         >>> #mysed = SED(photfile='HD129929.phot') # will set ID with 'oname' field from SIMBAD
         >>> #mysed = SED(ID='bla', photfile='HD129929.phot') # Sets custom ID
-        
+
         The C{ID} variable is used internally to look up data, so it should be
         something SIMBAD understands and that designates the target.
-        
+
         @param plx: parallax (and error) of the object
         @type plx: tuple (plx,e_plx)
         """
@@ -1011,7 +1011,7 @@ class SED(object):
             #   coordinates, which are not available from SESAME.
         else:
             self.photfile = photfile
-        
+
         #-- load information from the photometry file if it exists
         if not os.path.isfile(self.photfile):
             try:
@@ -1029,11 +1029,11 @@ class SED(object):
                 try:
                     self.info['jradeg'],self.info['jdedeg'] = ra,dec = corot.resolve(corot_id)
                     gal = conversions.convert('equatorial','galactic',(ra,dec),epoch='2000')
-                    self.info['galpos'] = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180    
+                    self.info['galpos'] = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
                     logger.info('Resolved position via CoRoT EXO catalog')
                 except:
                     logger.warning("Star %s not recognised by CoRoT"%(os.path.basename(ID)))
-                    
+
             if plx is not None:
                 if not 'plx' in self.info:
                     self.info['plx'] = {}
@@ -1053,16 +1053,16 @@ class SED(object):
             self.load_fits()
         if load_hdf5:
             self.load_hdf5()
-            
+
         #-- prepare for information on fitting processes
         self.CI_limit = 0.95
-        
+
     def __repr__(self):
         """
         Machine readable string representation of an SED object.
         """
         return "SED('{}')".format(self.ID)
-    
+
     def __str__(self):
         """
         Human readable string representation of an SED object.
@@ -1090,16 +1090,16 @@ class SED(object):
         if hasattr(self,'master'):
             txt.append(photometry2str(self.master,color=True))
         return "\n".join(txt)
-        
+
     #{ Handling photometric data
     def get_photometry(self,radius=None,ra=None,dec=None,
                        include=None,exclude=None,force=False,
                        units='erg/s/cm2/AA'):
         """
         Search photometry on the net or from the phot file if it exists.
-        
+
         For bright stars, you can set radius a bit higher...
-        
+
         @param radius: search radius (arcseconds)
         @type radius: float.
         """
@@ -1122,29 +1122,29 @@ class SED(object):
             if 'jradeg' in self.info:
                 master['_RAJ2000'] -= self.info['jradeg']
                 master['_DEJ2000'] -= self.info['jdedeg']
-            
+
             #-- fix the photometry: set default errors to 2% and print it to the
             #   screen
             self.master = fix_master(master,e_default=0.1)
             logger.info('\n'+photometry2str(master))
-            
+
             #-- write to file
             self.save_photometry()
-    
+
     def get_spectrophotometry(self,directory=None,force_download=False):
         """
         Retrieve and combine spectra.
-        
+
         B{WARNING:} this function creates FUSE and DIR directories!
         """
         if directory is None and os.path.dirname(self.ID) == '':
             directory = os.getcwd()
         elif os.path.dirname(self.ID) != '':
             directory = os.path.dirname(self.ID)
-            
+
         if not os.path.isdir(directory):
             os.mkdir(directory)
-            
+
         #-- add spectrophotometric filters to the set
         photbands = filters.add_spectrophotometric_filters(R=200,lambda0=950,lambdan=3350)
         if hasattr(self,'master') and self.master is not None and not force_download:
@@ -1159,14 +1159,14 @@ class SED(object):
                 out1 = []
         else:
             out1 = glob.glob(fuse_direc+'/*')
-        #-- IUE spectra    
+        #-- IUE spectra
         if not os.path.isdir(iue_direc) or force_download:
             out2 = vizier.get_IUE_spectra(ID=os.path.basename(self.ID),directory=iue_direc,select='lo')
             if out2 is None:
                 out2 = []
         else:
             out2 = glob.glob(iue_direc+'/*')
-        #-- read them in to combine    
+        #-- read them in to combine
         list_of_spectra = [fits.read_fuse(ff)[:3] for ff in out1]
         list_of_spectra+= [fits.read_iue(ff)[:3] for ff in out2]
         #-- combine
@@ -1176,25 +1176,25 @@ class SED(object):
         units = ['erg/s/cm2/AA']*N
         source = ['specphot']*N
         self.add_photometry_fromarrays(flux,err,units,photbands,source,flags=nspec)
-        
+
         #-- write to file
         self.master = fix_master(self.master,e_default=0.1)
         logger.info('\n'+photometry2str(self.master))
         self.save_photometry()
-        
-            
-            
-    
+
+
+
+
     def exclude(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (any) photometry from fitting process.
-        
+
         If called without arguments, all photometry will be excluded.
         """
         if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='all')
-    
+
     def exclude_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (color) photometry from fitting process.
@@ -1202,14 +1202,14 @@ class SED(object):
         if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,0)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='col')
-    
+
     def exclude_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Exclude (absolute) photometry from fitting process.
         """
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=False,ptype='abs')
-    
-    
+
+
     def include(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (any) photometry in fitting process.
@@ -1217,32 +1217,32 @@ class SED(object):
         if names is None and wrange is None and sources is None and indices is None:
             wrange = (-np.inf,np.inf)
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='all')
-    
+
     def include_colors(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (color) photometry in fitting process.
         """
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='col')
-    
+
     def include_abs(self,names=None,wrange=None,sources=None,indices=None):
         """
         Include (absolute) photometry in fitting process.
         """
         decide_phot(self.master,names=names,wrange=wrange,sources=sources,indices=indices,include=True,ptype='abs')
-    
+
     def set_photometry_scheme(self,scheme,infrared=(1,'micron')):
         """
         Set a default scheme of colors/absolute values to fit the SED.
-        
+
         Possible values:
-            
+
             1. scheme = 'abs': means excluding all colors, including all absolute values
             2. scheme = 'color': means including all colors, excluding all absolute values
             3. scheme = 'combo': means inculding all colors, and one absolute value per
             system (the one with the smallest relative error)
             4. scheme = 'irfm': means mimic infrared flux method: choose absolute values
             in the infrared (define with C{infrared}), and colours in the optical
-        
+
         @param infrared: definition of start of infrared for infrared flux method
         @type infrared: tuple (value <float>, unit <str>)
         """
@@ -1293,17 +1293,17 @@ class SED(object):
                 elif not is_infrared:
                     self.master['include'][i] = False
             use_colors = sum(self.master['include'] & self.master['color'])
-            use_abs = sum(self.master['include'] & -self.master['color'])
+            use_abs = sum(self.master['include'] & ~self.master['color'])
             logger.info('Fitting procedure will use colors (%d) < %.3g%s < absolute values (%d)'%(use_colors,infrared[0],infrared[1],use_abs))
-        
-    
+
+
     def add_photometry_fromarrays(self,meas,e_meas,units,photbands,source,flags=None,phases=None):
         """
         Add photometry from numpy arrays
-        
+
         By default unflagged, and at the ra and dec of the star. No color and
         included.
-        
+
         @param meas: original measurements (fluxes, magnitudes...)
         @type meas: array
         @param e_meas: error on original measurements in same units as C{meas}
@@ -1329,9 +1329,9 @@ class SED(object):
             _to_unit = 'erg/s/cm2/AA'
         else:
             _to_unit = self.master['cunit'][0]
-            
+
         extra_master = np.zeros(len(meas),dtype=self.master.dtype)
-        
+
         for i,(m,e_m,u,p,s,f) in enumerate(zip(meas,e_meas,units,photbands,source,flags)):
             photsys,photband = p.split('.')
             if filters.is_color(p):
@@ -1362,7 +1362,7 @@ class SED(object):
                 extra_master['bibcode'][i] = '-'
             if 'comments' in extra_master.dtype.names:
                 extra_master['comments'][i] = '-'
-        
+
         logger.info('Original measurements:\n%s'%(photometry2str(self.master)))
         logger.info('Appending:\n%s'%(photometry2str(extra_master)))
         self.master = fix_master(np.hstack([self.master,extra_master]),e_default=0.1)
@@ -1371,14 +1371,14 @@ class SED(object):
 
     #}
     #{ Additional information
-    
+
     def is_target(self,name):
         """
         Check if this SED represents the object `name'.
-        
+
         Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
         checking for "V* V836 Cen", which is the same target.
-        
+
         @param name: object name
         @type name: str
         @return: True if this object instance represent the target "name".
@@ -1392,34 +1392,34 @@ class SED(object):
             return False
         if oname==self.info['oname']:
             return True
-    
+
     def has_photfile(self):
         """
         Check if this SED has a phot file.
-        
+
         @return: True if this object instance has a photfile
         @rtype: bool
         """
         return os.path.isfile(self.photfile)
-    
+
     def get_distance_from_plx(self,plx=None,lutz_kelker=True,unit='pc'):
         """
         Get the probability density function for the distance, given a parallax.
-        
+
         If no parallax is given, the catalogue value will be used. If that one
         is also not available, a ValueError will be raised.
-        
+
         Parallax must be given in mas.
-        
+
         If the parallax is a float without uncertainty, an uncertainty of 0 will
         be assumed.
-        
+
         If C{lutz_kelker=True}, a probability density function will be given for
         the distance, otherwise the distance is computed from simply inverting
         the parallax.
-        
+
         Distance is returned in parsec (pc).
-        
+
         @return: distance
         @rtype: (float,float)
         """
@@ -1444,7 +1444,7 @@ class SED(object):
             dist = (conversions.Unit(plx,'kpc-1')**-1).convert(unit)
             logger.info('Computed distance to target via parallax inversion: {:s}'.format(dist))
             return dist.get_value()
-    
+
     def get_interstellar_reddening(self,distance=None, Rv=3.1):
         """
         Under construction.
@@ -1458,24 +1458,24 @@ class SED(object):
             if ext is not None:
                 output[model] = ext/Rv
         return output
-    
+
     def get_angular_diameter(self):
         """
         Under construction.
         """
         raise NotImplementedError
-    
+
     def compute_distance(self,mtype='igrid_search'):
         """
         Compute distance from radius and angular diameter (scale factor).
-        
+
         The outcome is added to the C{results} attribute::
-        
+
             distance = r/sqrt(scale)
-        
+
         This particularly useful when you added constraints from solar-like
         oscillations (L{add_constraint_slo}).
-        
+
         @return: distance,uncertainty (pc)
         @rtype: (float,float)
         """
@@ -1484,37 +1484,37 @@ class SED(object):
         e_radius = grid['e_radius']
         scale = grid['scale']
         e_scale = grid['escale']
-        
+
         radius = conversions.unumpy.uarray([radius,e_radius])
         scale = conversions.unumpy.uarray([scale,e_scale])
-        
+
         distance = radius/scale**0.5
         distance = conversions.convert('Rsol','pc',distance)
         distance,e_distance = conversions.unumpy.nominal_values(distance),\
                       conversions.unumpy.std_devs(distance)
         self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
                         ['distance','e_distance'],[distance,e_distance])
-        d,e_d = distance.mean(),distance.std() 
+        d,e_d = distance.mean(),distance.std()
         logger.info("Computed distance from R and scale: {0}+/-{1} pc".format(d,e_d))
         return d,e_d
-    
-    
-    
-    
+
+
+
+
     #}
-    
+
     def generate_ranges(self,start_from='igrid_search',distribution='uniform',**kwargs):   #type='single',
         """
         Generate sensible search range for each parameter.
         """
         limits = {}
         exist_previous = (start_from in self.results and 'CI' in self.results[start_from])
-        
+
         #-- run over all parnames, and generate the parameters ranges for each
         #   component:
         #   (1) if a previous parameter search is done and the user has not set
         #       the parameters range, derive a sensible parameter range from the
-        #       previous results. 
+        #       previous results.
         #   (2) if no previous search is done, use infinite upper and lower bounds
         #   (3) if ranges are given, use those. Cycle over them, and use the
         #       strategy from (1) if no parameter ranges are given for a specific
@@ -1535,7 +1535,7 @@ class SED(object):
                 #-- else we can derive a better parameter range
                 else:
                     parrange = (self.results[start_from]['CI'][lkey],
-                                        self.results[start_from]['CI'][ukey])                      
+                                        self.results[start_from]['CI'][ukey])
             elif parrange is None:
                 parrange = (-np.inf,np.inf)
 
@@ -1550,13 +1550,13 @@ class SED(object):
         #   the type if it was given, or gives the type when it needed to be derived
         logger.info('Parameter ranges calculated starting from {0:s} and using distribution {1:s}.'.format(start_from,distribution))
         return limits
-    
+
     #{ Fitting routines
-    
+
     def clip_grid(self,mtype='igrid_search',CI_limit=None):
         """
         Clip grid on CI limit, to save memory.
-        
+
         @param mtype: type or results to clip
         @type mtype: str
         @param CI_limit: confidence limit to clip on
@@ -1568,27 +1568,27 @@ class SED(object):
         new_grid = new_grid[new_grid['ci_red']<=CI_limit]
         self.results[mtype]['grid'] = new_grid
         logger.info("Clipped grid at {:.6f}%".format(CI_limit*100))
-    
+
     def collect_results(self, grid=None, fitresults=None, mtype='igrid_search', selfact='chisq', **kwargs):
         """creates record array(s) of all fit results and removes the failures"""
-        
+
         gridnames = sorted(grid.keys())
         fitnames = sorted(fitresults.keys())
         pardtypes = [(name,'f8') for name in gridnames]+[(name,'f8') for name in fitnames]
         pararrays = [grid[name] for name in gridnames]+[fitresults[name] for name in fitnames]
 
         grid_results = np.rec.fromarrays(pararrays,dtype=pardtypes)
-        
+
         #-- exclude failures
         failures = np.isnan(grid_results[selfact])
         if sum(failures):
             logger.info('Excluded {0} failed results (nan)'.format(sum(failures)))
-            grid_results = grid_results[-failures]
-        
+            grid_results = grid_results[~failures]
+
         #-- make room for chi2 statistics
         grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
         grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
-        
+
         #-- take the previous results into account if they exist:
         if not mtype in self.results:
             self.results[mtype] = {}
@@ -1598,19 +1598,19 @@ class SED(object):
             ex_grid = np.rec.fromarrays([self.results[mtype]['grid'][exname] for exname in ex_names],
                                         names=ex_names)
             grid_results = np.hstack([ex_grid,grid_results])
-            
-        #-- inverse sort according to chisq: this means the best models are at the end 
+
+        #-- inverse sort according to chisq: this means the best models are at the end
         #   (mainly for plotting reasons, so that the best models are on top).
         sa = np.argsort(grid_results[selfact])[::-1]
         grid_results = grid_results[sa]
-        
+
         self.results[mtype]['grid'] = grid_results
-        
+
         logger.info('Total of %d grid points, best chisq=%s'%(len(grid_results), grid_results[-1]))
-    
+
     def calculateDF(self, **ranges):
         """ Calculates the degrees of freedom from the given ranges"""
- 
+
         df, df_info = 1, ['theta']
         for range_name in ranges:
             if re.search('ebv\d?range$', range_name):
@@ -1624,22 +1624,22 @@ class SED(object):
                 df_info.append(range_name[0:-5])
         df_info.sort()
         logger.info('Degrees of freedom = {} ({})'.format(df,', '.join(df_info)))
-        
-        return df, df_info 
-    
+
+        return df, df_info
+
     def calculate_statistics(self, df=None, ranges=None, mtype='igrid_search', selfact='chisq'):
         """
         Calculates the Chi2 and reduced Chi2 based on nr of observations and degrees of
         freedom. If df is not provided, tries to calculate df from the fitting ranges.
         """
-        
+
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
             df,df_info = self.calculateDF(**ranges)
         elif df == None:
             logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
             df = 5
-        
+
         #-- Do the statistics
         N = sum(self.master['include'])
         k = N-df
@@ -1647,22 +1647,22 @@ class SED(object):
             logger.warning('Not enough data to compute CHI2: it will not make sense')
             k = 1
         logger.info('Calculated statistics based on df={0} and Nobs={1}'.format(df,N))
-            
+
         #-- Rescale if needed and compute confidence intervals
         results = self.results[mtype]['grid']
         factor = max(results[selfact][-1]/k,1)
         logger.warning('CHI2 rescaling factor equals %g'%(factor))
         results['ci_raw'] = scipy.stats.distributions.chi2.cdf(results[selfact],k)
         results['ci_red'] = scipy.stats.distributions.chi2.cdf(results[selfact]/factor,k)
-        
+
         #-- Store the results
         self.results[mtype]['grid'] = results
         self.results[mtype]['factor'] = factor
-    
+
     def calculate_confidence_intervals(self,mtype='igrid_search',chi2_type='red',CI_limit=None):
         """
         Compute confidence interval of all columns in the results grid.
-        
+
         @param mtype: type of results to compute confidence intervals of
         @type mtype: str
         @param chi2_type: type of chi2 (raw or reduced)
@@ -1684,17 +1684,17 @@ class SED(object):
             cilow.append(grid_results[name][region].min())
             value.append(grid_results[name][-1])
             cihigh.append(grid_results[name][region].max())
-        
+
         return dict(name=grid_results.dtype.names, value=value, cilow=cilow, cihigh=cihigh)
-    
+
     def store_confidence_intervals(self, mtype='igrid_search', name=None, value=None, cilow=None, \
                                    cihigh=None, **kwargs):
         """
         Saves the provided confidence intervals in the result dictionary of self.
-        The provided confidence intervals will be saved in a dictionary: 
+        The provided confidence intervals will be saved in a dictionary:
         self.results[mtype]['CI'] with as key for the value the name, for cilow:
         name_l and for cihigh: name_u.
-        
+
         @param mtype: the search type
         @type mtype: str
         @param name: names of the parameters
@@ -1716,21 +1716,21 @@ class SED(object):
                 logger.info('CI %s: %g <= %g <= %g'%(name,cil,val,cih))
             except Exception:
                 logger.info('CI %s: nan <= %g <= nan'%(name,val))
-    
-    
+
+
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,
                           zrange=(0,0),rvrange=(3.1,3.1),vradrange=(0,0),
                           df=None,CI_limit=None,set_model=True,exc_interpolpar=[],**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
-        
+
         If called consecutively, the ranges will be set to the CI_limit of previous
         estimations, unless set explicitly.
-        
+
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
-        
-        There is an option to exclude a certain parameter from the interpolation. This is done by 
+
+        There is an option to exclude a certain parameter from the interpolation. This is done by
         including it in a list attached to the keyword 'exc_interpolpar', e.g. exc_interpolpar = ['z'].
         """
         if CI_limit is None or CI_limit > 1.0:
@@ -1748,12 +1748,12 @@ class SED(object):
                 if ranges[var+'range'][0] != ranges[var+'range'][1]:
                     raise IOError, 'Exclusion of parameters from interpolation is only possible if the lower and upper ranges of those ranges are equal to an actual grid point.'
         #-- build the grid, run over the grid and calculate the CHI2
-        pars = fit.generate_grid_pix(self.master['photband'][include_grid],points=points,**ranges) 
+        pars = fit.generate_grid_pix(self.master['photband'][include_grid],points=points,**ranges)
         pars['exc_interpolpar'] = exc_interpolpar
         #for var in ['teff','logg','ebv','z','rv','vrad']:
             #if ranges[var+'range'][0] == ranges[var+'range'][1]:
                 #insertpars[var] = ranges[var+'range'][0]
-        
+
         chisqs,scales,e_scales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],**pars)
@@ -1769,8 +1769,8 @@ class SED(object):
         #-- remember the best model
         if set_model: self.set_best_model()
     def generate_fit_param(self, start_from='igrid_search', **pars):
-        """ 
-        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        generates a dictionary with parameter information that can be handled by fit.iminimize
         """
         result = dict()
         for key in pars.keys():
@@ -1789,11 +1789,11 @@ class SED(object):
                     result[key+"_value"] = pars[key]
                 elif pars[key] == None and not key+"_value" in result:
                     result[key+"_value"] = self.results[start_from]['CI'][key]
-                    
-        return result    
-                                                                  
+
+        return result
+
     def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
-        
+
         #-- Get the best fit parameters and ranges
         pars = {}
         skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
@@ -1804,27 +1804,27 @@ class SED(object):
                 pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
                                        self.results[mtype]['CI'][name+"_u"]]
         pars.update(kwargs)
-        pars = self.generate_fit_param(**pars)        
-        
+        pars = self.generate_fit_param(**pars)
+
         #-- calculate the confidence intervalls
         include_grid = self.master['include']
         ci = fit.calculate_iminimize_CI(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
                              CI_limit=CI_limit,constraints=self.constraints, **pars)
-        
+
         #-- Add the scale factor
         ci['name'] = np.append(ci['name'], 'scale')
         ci['value'] = np.append(ci['value'], self.results[mtype]['grid']['scale'][-1])
         ci['cilow'] = np.append(ci['cilow'], min(self.results[mtype]['grid']['scale']))
         ci['cihigh'] = np.append(ci['cihigh'], max(self.results[mtype]['grid']['scale']))
-        
+
         logger.info('Calculated %s%% confidence intervalls for all parameters'%(CI_limit))
-        
+
         self.store_confidence_intervals(mtype='iminimize', **ci)
-    
+
     def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, res=10, **kwargs):
-        
+
         #-- get the best fitting parameters
         pars = {}
         skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
@@ -1835,24 +1835,24 @@ class SED(object):
                 pars[name+"range"] = [self.results[mtype]['CI'][name+"_l"],\
                                        self.results[mtype]['CI'][name+"_u"]]
         pars.update(kwargs)
-        pars = self.generate_fit_param(**pars)  
-        
+        pars = self.generate_fit_param(**pars)
+
         logger.info('Calculating 2D confidence intervalls for %s--%s'%(xpar,ypar))
-        
+
         #-- calculate the confidence intervalls
         include_grid = self.master['include']
         x,y,chi2, raw, red = fit.calculate_iminimize_CI2D(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
                              self.master['photband'][include_grid],
-                             xpar, ypar, limits=limits, res=res, 
+                             xpar, ypar, limits=limits, res=res,
                              constraints=self.constraints, **pars)
-        
+
         #-- store the CI
         if not 'CI2D' in self.results[mtype]: self.results[mtype]['CI2D'] = {}
         self.results[mtype]['CI2D'][xpar+"-"+ypar] = dict(x=x, y=y, ci_chi2=chi2,\
                                                            ci_raw=raw, ci_red=red)
-        
-    
+
+
     def _get_imin_ci(self, mtype='iminimize',**ranges):
         """ returns ci information for store_confidence_intervals """
         names, values, cil, cih = [],[],[],[]
@@ -1866,16 +1866,16 @@ class SED(object):
         values.append(self.results[mtype]['grid']['scale'][-1])
         cil.append(min(self.results[mtype]['grid']['scale']))
         cih.append(max(self.results[mtype]['grid']['scale']))
-        return dict(name=names, value=values, cilow=cil, cihigh=cih)    
-    
+        return dict(name=names, value=values, cilow=cil, cihigh=cih)
+
     def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
                      loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
-                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
+                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None,
                      calc_ci=False, set_model=True, **kwargs):
-        """ 
+        """
         Basic minimizer method for SED fitting implemented using the lmfit library from sigproc.fit
         """
-        
+
         #-- set defaults limits and starting values
         ranges = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
                              ebvrange=ebvrange,zrange=zrange,rvrange=rvrange,\
@@ -1883,43 +1883,43 @@ class SED(object):
         pars = self.generate_fit_param(teff=teff, logg=logg, ebv=ebv, z=z, \
                             rv=rv, vrad=vrad, start_from=start_from, **ranges)
         fitkws = dict(distance=distance) if distance != None else dict()
-        
+
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'% \
         (photometry2str(self.master[include_grid])))
-        
+
         #-- pass all ranges and starting values to the fitter
         grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
                                             self.master['e_cmeas'][include_grid],
                                             self.master['photband'][include_grid],
                                             fitkws=fitkws, points=points,**pars)
-        
+
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
         fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
         self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
-        
+
         #-- Do the statistics
         self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
-        
+
         #-- Store the confidence intervals
         ci = self._get_imin_ci(mtype='iminimize',**ranges)
         self.store_confidence_intervals(mtype='iminimize', **ci)
         if calc_ci:
             self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
-        
+
         #-- remember the best model
         if set_model: self.set_best_model(mtype='iminimize')
-        
-        
+
+
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='igrid_search',\
                  distribution='uniform',points=None,fitmethod='fmin',disturb=True):
-        
+
         limits = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,\
                                       ebvrange=ebvrange,zrange=zrange,distribution=distribution,\
                                       start_from=start_from)
-        
+
         #-- grid search on all include data: extract the best CHI2
         include = self.master['include']
         meas = self.master['cmeas'][include]
@@ -1929,13 +1929,13 @@ class SED(object):
             emeas = self.master['e_cmeas'][include]*1e-6
         photbands = self.master['photband'][include]
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include])))
-        
+
         #-- generate initial guesses
-        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],type='single',points=points+25,**limits)         
+        teffs,loggs,ebvs,zs,radii = fit.generate_grid(self.master['photband'][include],type='single',points=points+25,**limits)
         NrPoints = len(teffs)>points and points or len(teffs)
         firstoutput = np.zeros((len(teffs)-NrPoints,9))
         output = np.zeros((NrPoints,9))
-        
+
         #-- fit the original data a number of times
         for i,(teff,logg,ebv,z) in enumerate(zip(teffs[NrPoints:],loggs[NrPoints:],ebvs[NrPoints:],zs[NrPoints:])):
             try:
@@ -1944,20 +1944,20 @@ class SED(object):
                 firstoutput[i,0] = warnflag
             except IOError:
                 firstoutput[i,0] = 3
-        
+
         logger.info("{0}/{1} fits on original data failed (max func call)".format(sum(firstoutput[:,0]==1),firstoutput.shape[0]))
         logger.info("{0}/{1} fits on original failed (max iter)".format(sum(firstoutput[:,0]==2),firstoutput.shape[0]))
         logger.info("{0}/{1} fits on original data failed (outside of grid)".format(sum(firstoutput[:,0]==3),firstoutput.shape[0]))
-        
+
         #-- retrieve the best fitting result and make it the first entry of output
         keep = (firstoutput[:,0]==0) & (firstoutput[:,1]>0)
         best = firstoutput[keep,-2].argmin()
         output[-1,:] = firstoutput[keep][best,:]
-        
+
         # calculate the factor with which to multiply the scale
         #factor = np.sqrt(output[-1,5]/len(meas))
         #print factor
-        
+
         #-- now do the actual Monte Carlo simulation
         for i,(teff,logg,ebv,z) in enumerate(zip(teffs[:NrPoints-1],loggs[:NrPoints-1],ebvs[:NrPoints-1],zs[:NrPoints-1])):
             newmeas = meas + np.random.normal(scale=emeas) #*factor)
@@ -1967,18 +1967,18 @@ class SED(object):
                 output[i,0] = warnflag
             except IOError:
                 output[i,0] = 3
-                
+
         logger.info("{0}/{1} MC simulations failed (max func call)".format(sum(output[:,0]==1),NrPoints))
         logger.info("{0}/{1} MC simulations failed (max iter)".format(sum(output[:,0]==2),NrPoints))
         logger.info("{0}/{1} MC simulations failed (outside of grid)".format(sum(output[:,0]==3),NrPoints))
-        
+
         #-- remove nonsense results
         keep = (output[:,0]==0) & (output[:,1]>0)
         output = output[keep]
         output = np.rec.fromarrays(output[:,1:-1].T,names=['teff','logg','ebv','z','labs','chisq','scale'])
         #-- derive confidence intervals and median values
         #print np.median(output[:,1:],axis=0)
-        
+
         self.results['imc'] = {}
         self.results['imc']['CI'] = {}
         self.results['imc']['grid'] = output
@@ -1994,29 +1994,29 @@ class SED(object):
                                                            self.results['imc']['CI'][name+'_u']))
         self.set_best_model(mtype='imc')
 
-    
+
     #}
-    
+
     #{ Interfaces
-    
+
     def clear(self):
         """
         Clear the results.
         """
         self.results = {}
-    
+
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',**kwargs):
         """
         Get reddenend and unreddened model
         """
         logger.info('Interpolating approximate full SED of best model')
-        
+
         #-- synthetic flux
         include = self.master['include']
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
-        
+
         if ('igrid_search' in mtype) | ('iminimize' in mtype): #mtype in ['igrid_search', 'iminimize']:
             #-- get the metallicity right
             files = model.get_file(z='*')
@@ -2041,16 +2041,16 @@ class SED(object):
                                ebv=self.results[mtype]['CI']['ebv'],
                                z=self.results[mtype]['CI']['z'],
                                photbands=self.master['photband'][keep])
- 
+
             flux,flux_ur = flux*scale,flux_ur*scale
-                
+
             synflux[keep] = synflux_
-        
+
             #synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
             #                          logg=self.results[mtype]['CI']['logg'],
             #                          ebv=self.results[mtype]['CI']['ebv'],
             #                          photbands=self.master['photband'])
-            synflux[-self.master['color']] *= scale
+            synflux[~self.master['color']] *= scale
             chi2 = (self.master['cmeas']-synflux)**2/self.master['e_cmeas']**2
             #-- calculate effective wavelengths of the photometric bands via the model
             #   values
@@ -2058,16 +2058,16 @@ class SED(object):
             self.results[mtype]['model'] = wave,flux,flux_ur
             self.results[mtype]['synflux'] = eff_waves,synflux,self.master['photband']
             self.results[mtype]['chi2'] = chi2
-    
+
     def set_model(self,wave,flux,label='manual',unique_phase=None):
         """
         Manually set the best SED model.
-        
+
         This is particularly useful when working with calibrators for which there
         is an observed SED.
-        
+
         The label will be used to store the model in the C{results} attribute.
-        
+
         @param wave: wavelength array (angstrom)
         @type wave: ndarray
         @param flux: flux array (erg/s/cm2/AA)
@@ -2083,24 +2083,24 @@ class SED(object):
         else:
             include = self.master['include']
         synflux = np.zeros(len(photbands))
-        
+
         #-- compute synthetic photometry
-        synflux[(-is_color) & include] = model.synthetic_flux(wave,flux,photbands[(-is_color) & include])
+        synflux[(~is_color) & include] = model.synthetic_flux(wave,flux,photbands[(~is_color) & include])
         synflux[is_color & include] = model.synthetic_color(wave,flux,photbands[is_color & include])
         chi2 = (self.master['cmeas']-synflux)**2/self.master['e_cmeas']**2
         eff_waves = filters.eff_wave(photbands)
-        
+
         if not label in self.results:
             self.results[label] = {}
         self.results[label]['model'] = wave,flux,flux
         self.results[label]['synflux'] = eff_waves,synflux,photbands
         self.results[label]['chi2'] = chi2
         logger.debug('Stored model SED in {}'.format(label))
-    
+
     def get_model(self,label='igrid_search'):
         """
         Retrieve the best SED model.
-        
+
         B{Warning}: the grid search interpolation is also done with interpolation
         in metallicity, while this is not the case for the best full SED model.
         Interpolation of the full SED is only done in teff/logg, and the
@@ -2116,31 +2116,31 @@ class SED(object):
         """
         wave,flux,urflux = self.results[label]['model']
         return wave,flux,urflux
-    
+
     def sample_gridsearch(self,mtype='igrid_search',NrSamples=1,df=None,selfact='chisq'):
         """
         Retrieve an element from the results of a grid search according to the derived probability.
-        
+
         An array of length "NrSamples" containing 'grid-indices' is returned, so the actual parameter values
         of the corresponding model can be retrieved from the results dictionary.
-        
+
         @param NrSamples: the number of samples you wish to draw
         @type NrSamples: int
         """
         #-- this function is only checked to work with the results of an igrid_search
         if not 'igrid_search' in mtype:
             return None
-        
+
         ranges = self.generate_ranges(teffrange=None,loggrange=None,ebvrange=None,\
                             zrange=None,rvrange=None,vradrange=None,start_from=mtype)
-        
+
         #-- If nessessary calculate degrees of freedom from the ranges
         if df == None and ranges != None:
             df,df_info = self.calculateDF(**ranges)
         elif df == None:
             logger.warning('Cannot compute degrees of freedom!!! CHI2 might not make sense. (using df=5)')
             df = 5
-        
+
         #-- Do the statistics
         N = sum(self.master['include'])
         k = N-df
@@ -2149,24 +2149,24 @@ class SED(object):
             k = 1
         logger.info('Statistics based on df={0} and Nobs={1}'.format(df,N))
         factor = max(self.results[mtype]['grid'][selfact][-1]/k,1)
-        
+
         #-- Compute the pdf and cdf
         probdensfunc = scipy.stats.distributions.chi2.pdf(self.results[mtype]['grid'][selfact]/factor,k)
         cumuldensfunc = probdensfunc.cumsum()
-        
+
         #-- Uniformly sample the cdf, to get a sampling according to the pdf
         sample = pl.uniform(cumuldensfunc[0],cumuldensfunc[-1],NrSamples)
         indices = np.zeros(NrSamples,int)
         for i in xrange(NrSamples):
             indices[i] = (abs(cumuldensfunc-sample[i])).argmin()
         return indices
-    
+
     def chi2(self,select=None,reduced=False,label='igrid_search'):
         """
         Calculate chi2 of best model.
-        
+
         TEMPORARY!!! API WILL CHANGE!!!
-        
+
         This function is not called anywhere in the builder.
         """
         #-- select photometry
@@ -2180,30 +2180,30 @@ class SED(object):
         photbands = master['photband']
         is_color = master['color']
         synflux = np.zeros(len(photbands))
-        
+
         wave,flux,urflux = self.get_model(label=label)
-        synflux[-is_color] = model.synthetic_flux(wave,flux,photbands[-is_color])
+        synflux[~is_color] = model.synthetic_flux(wave,flux,photbands[~is_color])
         synflux[is_color] = model.synthetic_color(wave,flux,photbands[is_color])
         x2 = (master['cmeas']-synflux)**2/master['e_cmeas']**2
         x2 = x2.mean()
         return x2
-        
+
     #}
     #{ Add constraints
-    
+
     def add_constraint_distance(self,distance=None,mtype='igrid_search',**kwargs):
         """
         Use the distance to compute additional information.
-        
+
         Compute radii, absolute luminosities and masses, and add them to the
         results.
-        
+
         Extra kwargs go to L{get_distance_from_plx}.
-        
+
         B{Warning:} after calling this function, the C{labs} column in the grid
         is actually absolutely calibrated and reflects the true absolute
         luminosity instead of the absolute luminosity assuming 1 solar radius.
-        
+
         @param distance: distance in solar units and error
         @type distance: tuple (float,float)
         @param mtype: type of results to add the information to
@@ -2213,7 +2213,7 @@ class SED(object):
             kwargs['lutz_kelker'] = False # we can't handle asymmetric error bars
             kwargs['unit'] = 'Rsol'
             distance = self.get_distance_from_plx(**kwargs)
-        
+
         #-- compute the radius, absolute luminosity and mass: note that there is
         #   an uncertainty on the scaling factor *and* on the distance!
         scale = conversions.unumpy.uarray([self.results[mtype]['grid']['scale'],\
@@ -2223,7 +2223,7 @@ class SED(object):
         labs = self.results[mtype]['grid']['labs']*radius**2
         mass = conversions.derive_mass((self.results[mtype]['grid']['logg'],'[cm/s2]'),\
                                       (radius,'Rsol'),unit='Msol')
-                                      
+
         #-- store the results in the grid
         mass,e_mass = conversions.unumpy.nominal_values(mass),\
                       conversions.unumpy.std_devs(mass)
@@ -2241,18 +2241,18 @@ class SED(object):
         else:
             self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
                      labels,data)
-                     
+
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
         logger.info('Added constraint: distance (improved luminosity, added info on radius and mass)')
-    
+
     def add_constraint_slo(self,numax,Deltanu0,mtype='igrid_search',chi2_type='red'):
         """
         Use diagnostics from solar-like oscillations to put additional constraints on the parameters.
-        
+
         If the results are constrained with the distance before L{add_constraint_distance},
         then these results are combined with the SLO constraints.
-        
+
         @param numax: frequency of maximum amplitude
         @type numax: 3-tuple (value,error,unit)
         @param Deltanu0: large separation (l=0)
@@ -2267,17 +2267,17 @@ class SED(object):
         logg = grid['logg']
         pvalues = [1-grid['ci_'+chi2_type]]
         names = ['ci_'+chi2_type+'_phot']
-        
+
         #-- we *always* have a logg, that's the way SEDs work:
         logg_slo = conversions.derive_logg_slo((teff,'K'),numax)
         logg_slo,e_logg_slo = conversions.unumpy.nominal_values(logg_slo),\
                       conversions.unumpy.std_devs(logg_slo)
         #   compute the probabilities: scale to standard normal
         logg_prob = scipy.stats.distributions.norm.sf(abs(logg_slo-logg)/e_logg_slo)
-        
+
         pvalues.append(logg_prob)
-        names.append('ci_logg_slo')        
-        
+        names.append('ci_logg_slo')
+
         #-- but we only sometimes have a radius (viz. when the distance is
         #   known). There is an uncertainty on that radius!
         radius_slo = conversions.derive_radius_slo(numax,Deltanu0,(teff,'K'),unit='Rsol')
@@ -2317,41 +2317,41 @@ class SED(object):
             grid = pl.mlab.rec_append_fields(grid,['radius','e_radius','e_labs','mass','e_mass','distance','e_distance'],\
                                         [radius_slo,e_radius_slo,e_labs,mass,e_mass,distance,e_distance])
             logger.info('Added constraint: {0:s} via slo, improved luminosity'.format(', '.join(['radius','e_radius','e_labs','mass','e_mass'])))
-            
+
         #-- combine p values using Fisher's method
         combined_pvals = evaluate.fishers_method(pvalues)
-        
+
         #-- add the information to the grid
         self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
                      names,pvalues)
-        
+
         #-- and replace the original confidence intervals, and re-order
         self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
         sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
         self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
-        
+
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
         logger.info('Added constraint: {0:s} via slo and replaced ci_{1:s} with combined CI'.format(', '.join(names),chi2_type))
-                      
+
     def add_constraint_reddening(self,distance=None,ebv=None,e_ebv=0.1,Rv=3.1,\
                 model=None,mtype='igrid_search',chi2_type='red',upper_limit=False):
         """
         Use reddening maps to put additional constraints on the parameters.
-                
+
         This constraint assumes that, if C{upper_limit=False}, given the
         distance to target, the reddening from the reddening maps is similar to
         the one derived from the SED. All models where this is not the case will
         be deemed improbable.
-        
+
         If C{upper_limit=True}, all models with an E(B-V) value above C{ebv}
         will be considered improbable.
-        
+
         When you don't set C{ebv}, the value will, by default, be derived from
         Drimmel maps if C{upper_limit=False} and from Schlegel if
         C{upper_limit=True}. You can change this behaviour by setting C{model}
         manually.
-                
+
         @param distance: distance and uncertainty in parsec
         @type distance: tuple (float,float)
         @param ebv: E(B-V) reddening in magnitude
@@ -2393,22 +2393,22 @@ class SED(object):
             grid['ci_'+chi2_type] = 1-combined_pvals
         else:
             grid['ci_'+chi2_type] = np.where(ebvs<=ebv,grid['ci_'+chi2_type],1.)
-        
+
         #-- and replace the original confidence intervals, and re-order
         sa = np.argsort(grid['ci_'+chi2_type])[::-1]
         self.results[mtype]['grid'] = grid[sa]
-        
+
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
         logger.info('Added constraint: E(B-V)={0}+/-{1}'.format(ebv,e_ebv))
-    
+
     def add_constraint_angular_diameter(self,angdiam):
         raise NotImplementedError
-        
+
     def add_constraint_mass(self,mass,mtype='igrid_search',chi2_type='red'):
         """
         Add constraints on the mass.
-        
+
         C{mass} must be a tuple, if the second element is smaller than the first,
         it is assumed to be (mu,sigma) from a normal distribution. If the second
         element is larger than the first, it is assumed to be (lower, upper)
@@ -2424,15 +2424,15 @@ class SED(object):
             grid['ci_'+chi2_type] = 1-combined_pvals
         else:
             grid['ci_'+chi2_type] = np.where((masses<=mass[0]) | (mass[1]<=masses),1.,grid['ci_'+chi2_type])
-        
+
         #-- and replace the original confidence intervals, and re-order
         sa = np.argsort(grid['ci_'+chi2_type])[::-1]
         self.results[mtype]['grid'] = grid[sa]
-        
+
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
         logger.info('Added constraint: mass={0}+/-{1}'.format(*mass))
-        
+
     def add_constraint_evolution_models(self,models='siess2000',\
                ylabels=['age','labs','radius'],e_y=None,
                function='linear',mtype='igrid_search',chi2_type='red'):
@@ -2440,10 +2440,10 @@ class SED(object):
         Use stellar evolutionary models to put additional constraints on the parameters.
         """
         grid = self.results[mtype]['grid']
-        
+
         #-- make sure y's and ylabels are iterable
         if isinstance(ylabels,str):
-            ylabels = [ylabels]        
+            ylabels = [ylabels]
         #-- cycle over all yvalues and compute the pvalues
         pvalues = [1-grid['ci_'+chi2_type]]
         add_info = []
@@ -2485,7 +2485,7 @@ class SED(object):
             pl.scatter(grid['teff'],grid['logg'],c=y_computed,edgecolors='none',cmap=pl.cm.spectral)
             pl.colorbar()
             pvalues.append(y_prob)
-        
+
         pl.figure()
         pl.subplot(221)
         pl.title('p1')
@@ -2508,7 +2508,7 @@ class SED(object):
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
-        
+
         #-- combine p values using Fisher's method
         combined_pvals = evaluate.fishers_method(pvalues)
         pl.subplot(224)
@@ -2518,8 +2518,8 @@ class SED(object):
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
-        pl.show()    
-        
+        pl.show()
+
         #-- add the information to the grid (assume that if there one label
         #   not in there already, none of them are
         if not 'c_'+ylabels[0] in grid.dtype.names:
@@ -2529,31 +2529,31 @@ class SED(object):
         else:
             for info,ylabel in zip(add_info,ylabels):
                 self.results[mtype]['grid']['c_'+ylabel] = add_info
-        
+
         #-- and replace the original confidence intervals, and re-order
         self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
-        
+
         sa = np.argsort(self.results[mtype]['grid']['ci_'+chi2_type])[::-1]
         self.results[mtype]['grid'] = self.results[mtype]['grid'][sa]
-        
+
         #-- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
-        logger.info('Added constraint: {0:s} via stellar models and replaced ci_{1:s} with combined CI'.format(', '.join(ylabels),chi2_type))    
-    
-    
+        logger.info('Added constraint: {0:s} via stellar models and replaced ci_{1:s} with combined CI'.format(', '.join(ylabels),chi2_type))
+
+
     #}
-    
+
     #{ Plotting routines
-    
+
     def _label_dict(self, param):
         """
         Returns the label belonging to a certain parameter
-        
+
         If the label is not present, the function will just return param.
         """
         #split parameter in param name and componentent number
         param, component = re.findall('(.*?)(\d?$)', param)[0]
-        
+
         ldict = dict(teff='Effective temperature [K]',\
                     z='log (Metallicity Z [$Z_\odot$]) [dex]',\
                     logg=r'log (surface gravity [cm s$^{-2}$]) [dex]',\
@@ -2572,31 +2572,31 @@ class SED(object):
             return param #+ " - " + component
         else:
             return param
-    
+
     @standalone_figure
     def plot_grid(self,x='teff',y='logg',ptype='ci_red',mtype='igrid_search',limit=0.95,d=None,**kwargs):
         """
         Plot grid as scatter plot
-        
+
         PrameterC{ptype} sets the colors of the scattered points (e.g., 'ci_red','z','ebv').
-        
+
         Example usage:
-        
+
         First set the SED:
-        
+
         >>> mysed = SED('HD180642')
         >>> mysed.load_fits()
-        
+
         Then make the plots:
-        
+
         >>> p = pl.figure()
         >>> p = pl.subplot(221);mysed.plot_grid(limit=None)
         >>> p = pl.subplot(222);mysed.plot_grid(x='ebv',y='z',limit=None)
         >>> p = pl.subplot(223);mysed.plot_grid(x='teff',y='ebv',limit=None)
         >>> p = pl.subplot(224);mysed.plot_grid(x='logg',y='z',limit=None)
-        
+
         ]]include figure]]ivs_sed_builder_plot_grid_01.png]
-        
+
         """
         #-- if no distance is set, derive the most likely distance from the plx:
         #if d is None:
@@ -2617,7 +2617,7 @@ class SED(object):
                                            #(radius,'Rsol'),unit='Msol')
         #-- compute angular diameter
         theta = 2*conversions.convert('sr','mas',self.results[mtype]['grid']['scale'])
-        
+
         if limit is not None:
             region = self.results[mtype]['grid']['ci_red']<=limit
         else:
@@ -2632,7 +2632,7 @@ class SED(object):
         else:
             colors = ptype[region]
             ptype = 'custom variable'
-        
+
         if 'ci_' in ptype.lower():
             colors *= 100.
             vmin = colors.min()
@@ -2640,23 +2640,23 @@ class SED(object):
         else:
             vmin = kwargs.pop('vmin',colors.min())
             vmax = kwargs.pop('vmax',colors.max())
-        
+
         #-- define abbrevation for plotting
         if x in self.results[mtype]['grid'].dtype.names:
             X = self.results[mtype]['grid'][x]
         else:
             X = locals()[x]
-            
+
         if y in self.results[mtype]['grid'].dtype.names:
             Y = self.results[mtype]['grid'][y]
         else:
             Y = locals()[y]
-        
+
         #-- make the plot
         if mtype == 'imc':
             pl.hexbin(X,Y,mincnt=1,cmap=pl.cm.spectral)  #bins='log'
             ptype = 'mc'
-                        
+
             #-- set the limits
             pl.xlim(X.max(),X.min())
             pl.ylim(Y.max(),Y.min())
@@ -2673,7 +2673,7 @@ class SED(object):
                 #colors = self.results[mtype]['grid'][ptype][region]
             #else:
                 #colors = locals()[ptype][region]
-            
+
             #if 'ci' in ptype:
                 #colors *= 100.
                 #vmin = colors.min()
@@ -2681,7 +2681,7 @@ class SED(object):
             #else:
                 #vmin = kwargs.pop('vmin',colors.min())
                 #vmax = kwargs.pop('vmax',colors.max())
-            
+
             #-- grid scatter plot
             pl.scatter(X[region],Y[region],
                  c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
@@ -2689,28 +2689,28 @@ class SED(object):
             pl.xlim(X[region].max(),X[region].min())
             pl.ylim(Y[region].max(),Y[region].min())
             cbar = pl.colorbar()
-            
+
         #-- mark best value
         pl.plot(X[-1],Y[-1],'r+',ms=40,mew=3)
-        
+
         pl.xlabel(self._label_dict(x))
         pl.ylabel(self._label_dict(y))
         cbar.set_label(self._label_dict(ptype))
-        
+
         logger.info('Plotted %s-%s diagram of %s'%(x,y,ptype))
-    
+
     @standalone_figure
     def plot_CI2D(self,xpar='teff',ypar='logg',mtype='iminimize', ptype='ci_red',**kwargs):
         """
-        Plot a 2D confidence intervall calculated using the CI2D computation 
+        Plot a 2D confidence intervall calculated using the CI2D computation
         from calculate_iminimize_CI2D. Make sure you first calculate the grid
         you want using the calculate_iminimize_CI2D function.
         """
-        
+
         grid = self.results[mtype]['CI2D'][xpar+"-"+ypar][ptype]
         x = self.results[mtype]['CI2D'][xpar+"-"+ypar]['x']
         y = self.results[mtype]['CI2D'][xpar+"-"+ypar]['y']
-        
+
         if ptype == 'ci_red' or ptype == 'ci_raw':
             grid = grid*100.0
             levels = np.linspace(0,100,25)
@@ -2719,32 +2719,32 @@ class SED(object):
             grid = np.log10(grid)
             levels = np.linspace(np.min(grid), np.max(grid), 25)
             ticks = np.round(np.linspace(np.min(grid), np.max(grid), 11), 2)
-        
+
         pl.contourf(x,y,grid,levels,**kwargs)
         pl.xlabel(self._label_dict(xpar))
         pl.ylabel(self._label_dict(ypar))
         cbar = pl.colorbar(fraction=0.08,ticks=ticks)
         cbar.set_label(ptype!='ci_chi2' and r'Probability' or r'$^{10}$log($\chi^2$)')
-        
-        
-        
-        
+
+
+
+
 
     @standalone_figure
     def plot_data(self,colors=False, plot_unselected=True,
                   unit_wavelength='angstrom',unit_flux=None,**kwargs):
         """
         Plot only the SED data.
-        
+
         Extra kwargs are passed to plotting functions.
-        
+
         The decorator provides an keyword C{savefig}. When set to C{True}, an
         image name is generated automatically (very long!), and the figure is
         closed. When set to a string, the image is saved with that name, and
         the figure is closed. When C{savefig} is not given, the image will
         stay open so that the user can still access all plot elements and do
         further enhancements.
-        
+
         @param colors: if False, plot absolute values, otherwise plot colors
         (flux ratios)
         @type colors: boolean
@@ -2762,11 +2762,11 @@ class SED(object):
         iscolor = np.array(master['color'],bool)
         photbands = master['photband']
         indices = np.arange(len(master))
-        
+
         allsystems = np.array([i.split('.')[0] for i in photbands])
         systems = sorted(set(allsystems))
         color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(systems))]
-        
+
         if not colors:
             color_cycle = itertools.cycle(color_cycle)
             pl.gca().set_xscale('log',nonposx='clip')
@@ -2776,7 +2776,7 @@ class SED(object):
             mf = []
             # plot photometric systems in different colors
             for system in systems:
-                keep = (allsystems==system) & -iscolor
+                keep = (allsystems==system) & ~iscolor
                 if keep.sum():
                     # plot each photometric points separately, so that we could
                     # use it interactively. Label them all with a unique ID
@@ -2816,33 +2816,33 @@ class SED(object):
         leg.get_frame().set_alpha(0.5)
         pl.grid()
         pl.title(self.ID)
-            
-    
+
+
     @standalone_figure
     def plot_sed(self,colors=False,mtype='igrid_search',plot_redded=True,plot_deredded=False,
             plot_unselected=True,wave_units='AA',flux_units='erg/s/cm2',**kwargs):
         """
         Plot a fitted SED together with the data.
-        
+
         Example usage:
-        
+
         First set the SED:
-        
+
         >>> mysed = SED('HD180642')
         >>> mysed.load_fits()
-        
+
         Then make the plots:
-        
+
         >>> p = pl.figure()
         >>> p = pl.subplot(121)
         >>> mysed.plot_sed(colors=False)
         >>> p = pl.subplot(122)
         >>> mysed.plot_sed(colors=True)
-        
+
         ]]include figure]]ivs_sed_builder_plot_sed_01.png]
         """
         annotation = kwargs.pop('annotation',True)
-        
+
         def plot_sed_getcolors(master,color_dict=None):
             myphotbands = [iphotb.split('.')[1] for iphotb in master['photband'][master['color']]]
             if not myphotbands:  #-- If there are no colours none can be returned (added by joris 30-01-2012)
@@ -2857,10 +2857,10 @@ class SED(object):
             y = master['cmeas']
             e_y = master['e_cmeas']
             return x,y,e_y,color_dict
-            
-        
+
+
         x__,y__,e_y__,color_dict = plot_sed_getcolors(self.master)
-        
+
         #-- get the color cycle
         systems = np.array([system.split('.')[0] for system in self.master['photband']],str)
         set_systems = sorted(list(set(systems)))
@@ -2870,7 +2870,7 @@ class SED(object):
             color_cycle = itertools.cycle([pl.cm.spectral(j) for j in plotcolorvalues[selectedcolorinds]])
         else:
             color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
-                
+
         #-- for plotting reasons, we translate every color to an integer
         for system in set_systems:
             color = color_cycle.next()
@@ -2909,14 +2909,14 @@ class SED(object):
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
                     y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
-                    x = conversions.convert('AA',wave_units,x)    
-                    
+                    x = conversions.convert('AA',wave_units,x)
+
                 p = pl.errorbar(x,y,yerr=e_y,fmt='o',label=system,
                                 capsize=10,ms=7,color=color,**kwargs)
-            
+
             #-- exclude:
             label = np.any(keep) and '_nolegend_' or system
-            keep = (systems==system) & (self.master['color']==colors) & -self.master['include']
+            keep = (systems==system) & (self.master['color']==colors) & ~self.master['include']
             if sum(keep) and plot_unselected:
                 if colors:
                     x,y,e_y,color_dict = plot_sed_getcolors(self.master[keep],color_dict)
@@ -2927,25 +2927,25 @@ class SED(object):
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
                     y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
-                    x = conversions.convert('AA',wave_units,x)    
+                    x = conversions.convert('AA',wave_units,x)
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
-        
+
         #-- only set logarithmic scale if absolute fluxes are plotted
         #   and only plot the real model then
         if not colors:
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             pl.gca().set_autoscale_on(False)
-        
+
             #-- the model
             if mtype in self.results and 'model' in self.results[mtype]:
                 wave,flux,flux_ur = self.results[mtype]['model']
-                
+
                 flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
                 flux_ur = conversions.convert('erg/s/cm2/AA',flux_units,flux_ur,wave=(wave,'AA'))
-                wave = conversions.convert('AA',wave_units,wave)    
-                
+                wave = conversions.convert('AA',wave_units,wave)
+
                 if plot_redded:
                     pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
@@ -2959,7 +2959,7 @@ class SED(object):
             pl.ylabel(r'Flux ratio')
             pl.xlabel('Color name')
             pl.xlim(min(xticks)-0.5,max(xticks)+0.5)
-        
+
         pl.grid()
         if colors:
             leg = pl.legend(loc='best',prop=dict(size='x-small'),numpoints=1)
@@ -2994,35 +2994,35 @@ class SED(object):
 	f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\t'+str(metallicity)+'\n')
 	f.closed'''
 
-        
-        
-    @standalone_figure    
+
+
+    @standalone_figure
     def plot_chi2(self,colors=False,mtype='igrid_search',**kwargs):
         """
         Plot chi2 statistic for every datapoint included in the fit.
-        
+
         To plot the statistic from the included absolute values, set
         C{colors=False}.
-        
+
         To plot the statistic from the included colors, set C{colors=True}.
-        
+
         Example usage:
-        
+
         First set the SED:
-        
+
         >>> mysed = SED('HD180642')
         >>> mysed.load_fits()
-        
+
         Then make the plots:
-        
+
         >>> p = pl.figure()
         >>> p = pl.subplot(121)
         >>> mysed.plot_chi2(colors=False)
         >>> p = pl.subplot(122)
         >>> mysed.plot_chi2(colors=True)
-        
+
         ]]include figure]]ivs_sed_builder_plot_chi2_01.png]
-        
+
         @param colors: flag to distinguish between colors and absolute values
         @type colors: boolean
         """
@@ -3032,7 +3032,7 @@ class SED(object):
         else:
             uniquephase = None
             phase = False
-        
+
         include_grid = self.master['include']
         systems = np.array([system.split('.')[0] for system in self.master['photband'][include_grid]],str)
         set_systems = sorted(list(set(systems)))
@@ -3066,17 +3066,17 @@ class SED(object):
             logger.info('Plotted CHI2 of %s'%(colors and 'colors' or 'absolute fluxes'))
         else:
             logger.info('%s not in results, no plot could be made.'%(mtype))
-        
-        
-    @standalone_figure    
+
+
+    @standalone_figure
     def plot_distance(self,mtype='igrid_search'):
         try:
             #-- necessary information
             (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
             (d,dprob) = self.results['igrid_search']['d']
-            
+
             ax_d = pl.gca()
-                   
+
             gal = self.info['galpos']
             #-- the plot
             dzoom = dprob>1e-4
@@ -3106,7 +3106,7 @@ class SED(object):
             logger.info('Plotted distance/reddening')
         except KeyError:
             logger.info('No distance/reddening plotted due to KeyError.')
-    
+
     @standalone_figure
     def plot_grid_model(self,ptype='prob'):
         """
@@ -3118,7 +3118,7 @@ class SED(object):
         (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
         (d,dprob) = self.results['igrid_search']['d']
         gal = self.info['galpos']
-        
+
         n = 75000
         region = self.results['igrid_search']['grid']['ci_red']<0.95
         total_prob = 100-(1-self.results['igrid_search']['grid']['ci_red'][cutlogg][-n:])*d_prob_models*100
@@ -3136,14 +3136,14 @@ class SED(object):
         cbar = pl.colorbar()
         pl.xlabel('log (effective temperature [K]) [dex]')
         pl.ylabel(r'log (surface gravity [cm s$^{-2}$]) [dex]')
-        
+
         if ptype=='prob':
             cbar.set_label('Probability (incl. plx) [%]')
         elif ptype=='radii':
             cbar.set_label('Model radii [$R_\odot$]')
         logger.info('Plotted teff-logg diagram of models (%s)'%(ptype))
-        
-        
+
+
     @standalone_figure
     def plot_MW_side(self):
         im = Image.open(config.get_datafile('images','NRmilkyway.tif'))
@@ -3165,7 +3165,7 @@ class SED(object):
         pl.ylim(startv,endv)
         pl.xticks([])
         pl.yticks([])
-    
+
     @standalone_figure
     def plot_MW_top(self):
         im = Image.open(config.get_datafile('images','topmilkyway.jpg'))
@@ -3178,7 +3178,7 @@ class SED(object):
         gal = self.info['galpos']
         pl.plot(2800,1720,'ro',ms=10)
         pl.plot([2800,-5000*np.sin(gal[0]/180.*np.pi)+2800],[1720,5000*np.cos(gal[0]/180.*np.pi)+1720],'r-',lw=2)
-        
+
         #-- necessary information
         if 'igrid_search' in self.results and 'd_mod' in self.results['igrid_search']:
             (d_models,d_prob_models,radii) = self.results['igrid_search']['d_mod']
@@ -3186,20 +3186,20 @@ class SED(object):
         else:
             d = np.linspace(0,1000,2)
             dprob = np.zeros(len(d))
-        
+
         x = d/10.*1.3
         y = dprob*1000.
         theta = gal[0]/180.*np.pi + np.pi/2.
         x_ = np.cos(theta)*x - np.sin(theta)*y + 2800
         y_ = np.sin(theta)*x + np.cos(theta)*y + 1720
-    
+
         pl.plot(x_,y_,'r-',lw=2)
         index = np.argmax(y)
         pl.plot(np.cos(theta)*x[index] + 2800,np.sin(theta)*x[index] + 1720,'rx',ms=15,mew=2)
-    
+
         pl.xlim(xlims)
         pl.ylim(ylims)
-    
+
     @standalone_figure
     def plot_finderchart(self,cmap_photometry=pl.cm.spectral,window_size=5.):
         """
@@ -3218,7 +3218,7 @@ class SED(object):
             toplot = self.master[keep_this]
             systems = np.array([system.split('.')[0] for system in toplot['photband']],str)
             set_systems = sorted(list(set(systems)))
-            color_cycle = itertools.cycle([cmap_photometry(j) for j in np.linspace(0, 1.0, len(set_systems))])    
+            color_cycle = itertools.cycle([cmap_photometry(j) for j in np.linspace(0, 1.0, len(set_systems))])
             for system in set_systems:
                 color = color_cycle.next()
                 keep = systems==system
@@ -3231,11 +3231,11 @@ class SED(object):
             pl.xlim(xlims)
             pl.ylim(ylims)
             pl.xlabel(r'Right ascension $\alpha$ [arcmin]')
-            pl.ylabel(r'Declination $\delta$ [arcmin]')    
+            pl.ylabel(r'Declination $\delta$ [arcmin]')
         except:
             logger.warning('No image found of %s'%(self.ID))
             pass
-        
+
         if 'pm' in self.info:
             logger.info("Found proper motion info")
             ppm_ra,ppm_de = (self.info['pm']['pmRA'],self.info['pm']['epmRA']),(self.info['pm']['pmDE'],self.info['pm']['epmDE'])
@@ -3256,9 +3256,9 @@ class SED(object):
             else:
                 max_distance = 1000.
                 e_max_distance = 100.
-            
+
             tang_velo = 'Tan. vel. at %.0f+/-%.0f pc: '%(max_distance,e_max_distance)
-            
+
             max_distance = conversions.convert('pc','km',max_distance,e_max_distance)
             ppm_ra = conversions.convert('mas/yr','rad/s',*ppm_ra)
             ppm_de = conversions.convert('mas/yr','rad/s',*ppm_de)
@@ -3266,16 +3266,16 @@ class SED(object):
             x = unumpy.uarray([ppm_ra[0],ppm_ra[1]])
             y = unumpy.uarray([ppm_de[0],ppm_de[1]])
             velocity = max_distance*utan( usqrt(x**2+y**2))
-            
-            
+
+
             pl.annotate(tang_velo + '%s km/s'%(velocity),xy=(0.05,0.2),xycoords='axes fraction',color='red')
             if 'Vel' in self.info and 'v' in self.info['Vel']:
                 rad_velo = 'Rad. vel.: %.1f'%(self.info['Vel']['v'])
                 if 'e' in self.info['Vel']:
                     rad_velo += '+/-%.1f'%(self.info['Vel']['e'])
                 pl.annotate(rad_velo+' km/s',xy=(0.05,0.15),xycoords='axes fraction',color='red')
-    
-                
+
+
     def make_plots(self):
         """
         Make all available plots
@@ -3288,29 +3288,29 @@ class SED(object):
         pl.subplot(rows,cols,2);self.plot_grid(ptype='ebv')
         pl.subplot(rows,cols,3);self.plot_grid(ptype='z')
         pl.subplot(rows,cols,4);self.plot_distance()
-        
+
         pl.subplot(3,2,3);self.plot_sed(colors=False)
         pl.subplot(3,2,5);self.plot_sed(colors=True)
-        
+
         pl.subplot(rows,cols,7);self.plot_chi2(colors=False)
         pl.subplot(rows,cols,11);self.plot_chi2(colors=True)
-        
+
         #pl.subplot(rows,cols,8);self.plot_grid_model(ptype='prob')
         #pl.subplot(rows,cols,12);self.plot_grid_model(ptype='radii')
-        
+
         pl.figure(figsize=(12,12))
         pl.axes([0,0.0,1.0,0.5]);self.plot_MW_side()
         pl.axes([0,0.5,0.5,0.5]);self.plot_MW_top()
         pl.axes([0.5,0.5,0.5,0.5]);self.plot_finderchart()
-    
+
     #}
-    
+
     #{Input and output
-    
+
     def save_photometry(self,photfile=None):
         """
         Save master photometry to a file.
-        
+
         @param photfile: name of the photfile. Defaults to C{starname.phot}.
         @type photfile: str
         """
@@ -3325,11 +3325,11 @@ class SED(object):
             if not 'comments' in self.master.dtype.names:
                 self.master = vizier.quality_check(self.master,self.ID)
         ascii.write_array(self.master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
-    
+
     def load_photometry(self,photfile=None):
         """
         Load the contents of the photometry file to the master record.
-        
+
         @param photfile: name of the photfile. Defaults to the value of C{self.photfile}.
         @type photfile: str
         """
@@ -3338,7 +3338,7 @@ class SED(object):
         logger.info('Load photometry from file %s'%(self.photfile))
         self.master,comments = ascii.read2recarray(self.photfile,return_comments=True)
         #self.info = json.loads(comments[-3])                                                                                           #### HE COMENTADO ESTO PARA QUE NO SE ATASQUE
-        
+
         ## to make the builder backwards-compatible with files made with an older version that did not implement a 'phases' column yet
         if 'phase' not in self.master.dtype.names:
             extra_cols = [[0]*len(self.master['meas'])]
@@ -3351,16 +3351,16 @@ class SED(object):
             if 'comments' in names:
                 lastnames.append('comments')
                 names.remove('comments')
-            
+
             lastrecords = self.master[lastnames]
             self.master = numpy_ext.recarr_addcols(self.master[names],extra_cols,extradtype)
             self.master = numpy_ext.recarr_join(self.master,lastrecords)
-        
-    
+
+
     def save_fits(self,filename=None,overwrite=True):
         """
-        Save content of SED object to a FITS file. 
-        
+        Save content of SED object to a FITS file.
+
         The .fits file will contain the following extensions if they are present in the object:
            1) data (all previously collected photometric data = content of .phot file)
            2) model_igrid_search (full best model SED table from grid_search)
@@ -3369,14 +3369,14 @@ class SED(object):
            5) model_imc (full best model SED table from monte carlo)
            6) imc (CI from monte carlo = actual monte carlo samples)
            7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
-        
+
         @param filename: name of SED FITS file
         @type filename: string
         @param overwrite: overwrite old FITS file if true
         @type overwrite: boolean
-        
+
         Example usage:
-        
+
         >>> #mysed.save_fits()
         >>> #mysed.save_fits(filename='myname.fits')
         """
@@ -3386,7 +3386,7 @@ class SED(object):
             if os.path.isfile(filename):
                 os.remove(filename)
                 logger.info('Old FITS file removed')
-                
+
         #-- write primary header
         #prim_header = {}
         #for key in self.info:
@@ -3394,16 +3394,16 @@ class SED(object):
                 #continue
             #prim_header[key] = self.info[key]
         #fits.write_recarray(np.array([[0]]),filename,header_dict=prim_header,ext=0)
-        
+
         #-- write master data
         master = self.master.copy()
         fits.write_recarray(master,filename,header_dict=dict(extname='data'))
-        
+
         #-- write the rest
         for mtype in self.results:#['igrid_search','imc']:
             eff_waves,synflux,photbands = self.results[mtype]['synflux']
             chi2 = self.results[mtype]['chi2']
-            
+
             results_modeldict = dict(extname='model_'+mtype)
             results_griddict = dict(extname=mtype)
             keys = sorted(self.results[mtype])
@@ -3412,15 +3412,15 @@ class SED(object):
                     for ikey in self.results[mtype][key]:
                         if '_l' not in ikey and '_u' not in ikey and ikey != 'chisq':
                             results_modeldict[ikey] = self.results[mtype][key][ikey]
-                        results_griddict[ikey] = self.results[mtype][key][ikey]    
+                        results_griddict[ikey] = self.results[mtype][key][ikey]
                 if key=='factor':
                     results_griddict[key] = self.results[mtype][key]
-            
+
             fits.write_array(list(self.results[mtype]['model']),filename,
                             names=('wave','flux','dered_flux'),
                             units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
                             header_dict=results_modeldict)
-            
+
             index = 1
             while index > 0:
                 headerdict = results_modeldict.copy()
@@ -3433,23 +3433,23 @@ class SED(object):
                              header_dict=headerdict)
                     index += 1
                 else:
-                    index = 0                    
-            
+                    index = 0
+
             if 'grid' in self.results[mtype]:
                 fits.write_recarray(self.results[mtype]['grid'],filename,header_dict=results_griddict)
-            
+
             results = np.rec.fromarrays([synflux,eff_waves,chi2],dtype=[('synflux','f8'),('mod_eff_wave','f8'),('chi2','f8')])
-            
+
             fits.write_recarray(results,filename,header_dict=dict(extname='synflux_'+mtype))
-        
+
         logger.info('Results saved to FITS file: %s'%(filename))
-        
-    
+
+
     #def load_fits2(self,filename=None):
         #"""
-        #Load a previously made SED FITS file. Only works for SEDs saved with 
+        #Load a previously made SED FITS file. Only works for SEDs saved with
         #the save_fits function after 14.06.2012.
-        
+
         #The .fits file can contain the following extensions:
            #1) data (all previously collected photometric data = content of .phot file)
            #2) model_igrid_search (full best model SED table from grid_search)
@@ -3458,7 +3458,7 @@ class SED(object):
            #5) model_imc (full best model SED table from monte carlo)
            #6) imc (CI from monte carlo = actual monte carlo samples)
            #7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
-        
+
         #@param filename: name of SED FITS file
         #@type filename: string
         #@rtype: bool
@@ -3470,7 +3470,7 @@ class SED(object):
             #logger.warning('No previous results saved to FITS file {:s}'.format(filename))
             #return False
         #ff = pf.open(filename)
-        
+
         ##-- observed photometry
         #fields = ff['data'].columns.names
         #master = np.rec.fromarrays([ff['data'].data.field(field) for field in fields],names=','.join(fields))
@@ -3480,15 +3480,15 @@ class SED(object):
                 #for j,element in enumerate(master[name]):
                     #master[name][j] = element.strip()
         #self.master = master
-        
+
         ##-- add dictionary that will contain the results
         #if not hasattr(self,'results'):
             #self.results = {}
-        
+
         ##-- grid search and MC results
         #mtypes = [ext.header['extname'] for ext in ff[1:]]
         #mtypes = list(set(mtypes) - set(['data']))
-        
+
         #for mtype in mtypes:
             #if mtype.startswith('i'):
                 #continue
@@ -3500,7 +3500,7 @@ class SED(object):
             #self.results[mtype][prefix] = np.array(ff[prefix+'_'+mtype].data.field('wave'),dtype='float64'),np.array(ff[prefix+'_'+mtype].data.field('flux'),dtype='float64'),np.array(ff[prefix+'_'+mtype].data.field('dered_flux'),dtype='float64')
             #self.results[mtype]['chi2'] = np.array(ff['synflux_'+mtype].data.field('chi2'),dtype='float64')
             #self.results[mtype]['synflux'] = np.array(ff['synflux_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff['synflux_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
-            
+
         #searchmtypes = []
         #for mtype in mtypes:
             #if 'igrid_search' in mtype:
@@ -3509,8 +3509,8 @@ class SED(object):
                 #searchmtypes.append(mtype)
             #elif 'imc' in mtype:
                 #searchmtypes.append(mtype)
-        
-        #for mtype in searchmtypes: #['igrid_search','iminimize','imc']:        
+
+        #for mtype in searchmtypes: #['igrid_search','iminimize','imc']:
             #try:
                 #fields = ff[mtype].columns.names
                 #master = np.rec.fromarrays([ff[mtype].data.field(field) for field in fields],names=','.join(fields))
@@ -3519,7 +3519,7 @@ class SED(object):
                 #self.results[mtype]['grid'] = master
                 #if 'factor' in ff[mtype].header:
                     #self.results[mtype]['factor'] = np.array([ff[mtype].header['factor']])[0]
-                
+
                 #headerkeys = ff[mtype].header.ascardlist().keys()
                 #for key in headerkeys[::-1]:
                     #for badkey in ['xtension','bitpix','naxis','pcount','gcount','tfields','ttype','tform','tunit','factor','extname']:
@@ -3532,27 +3532,27 @@ class SED(object):
                     #self.results[mtype]['CI'][key.lower()] = np.array([ff[mtype].header[key]])[0]
             #except KeyError:
                 #continue
-        
+
         ##self.results['igrid_search'] = {}
         ##fields = ff['igrid_search'].columns.names
         ##master = np.rec.fromarrays([ff['igrid_search'].data.field(field) for field in fields],names=','.join(fields))
         ##self.results['igrid_search']['grid'] = master
         ##self.results['igrid_search']['factor'] = ff['igrid_search'].header['factor']
-        
+
         ##self.results['model'] = ff[2].data.field('wave'),ff[2].data.field('flux'),ff[2].data.field('dered_flux')
         ##self.results['chi2'] = ff[4].data.field('chi2')
         ##self.results['synflux'] = ff[4].data.field('mod_eff_wave'),ff[4].data.field('synflux'),ff[1].data.field('photband')
-                
+
         #ff.close()
-        
+
         #logger.info('Loaded previous results from FITS file: %s'%(filename))
         #return filename
-    
+
     def load_fits(self,filename=None):
         """
-        Load a previously made SED FITS file. Only works for SEDs saved with 
+        Load a previously made SED FITS file. Only works for SEDs saved with
         the save_fits function after 14.06.2012.
-        
+
         The .fits file can contain the following extensions:
            1) data (all previously collected photometric data = content of .phot file)
            2) model_igrid_search (full best model SED table from grid_search)
@@ -3561,7 +3561,7 @@ class SED(object):
            5) model_imc (full best model SED table from monte carlo)
            6) imc (CI from monte carlo = actual monte carlo samples)
            7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
-        
+
         @param filename: name of SED FITS file
         @type filename: string
         @rtype: bool
@@ -3573,26 +3573,26 @@ class SED(object):
             logger.warning('No previous results saved to FITS file {:s}'.format(filename))
             return False
         ff = pf.open(filename)
-        
+
         #-- observed photometry
         fields = ff['data'].columns.names
         master = np.rec.fromarrays([ff['data'].data.field(field) for field in fields],names=','.join(fields))
-        
+
         #-- remove the whitespace in columns with strings added by fromarrays
         for i,name in enumerate(master.dtype.names):
             if master.dtype[i].str.count('S'):
                 for j,element in enumerate(master[name]):
                     master[name][j] = element.strip()
         self.master = master
-        
+
         #-- add dictionary that will contain the results
         if not hasattr(self,'results'):
             self.results = {}
-        
+
         #-- grid search and MC results
         mtypes = [ext.header['extname'] for ext in ff[1:]]
         mtypes = list(set(mtypes) - set(['data','DATA']))
-                
+
         for mtype in mtypes:
             mtype = mtype.lower()
             if mtype.startswith('i'):
@@ -3606,7 +3606,7 @@ class SED(object):
                     self.results[mtype]['grid'] = master
                     if 'factor' in ff[mtype].header:
                         self.results[mtype]['factor'] = np.array([ff[mtype].header['factor']])[0]
-                    
+
                     headerkeys = ff[mtype].header.keys() #ascardlist().keys()
                     for key in headerkeys[::-1]:
                         for badkey in ['xtension','bitpix','naxis','pcount','gcount','tfields','ttype','tform','tunit','factor','extname']:
@@ -3630,15 +3630,15 @@ class SED(object):
                 elif 'synflux' in prefix:
                     self.results[mtype]['chi2'] = np.array(ff[prefix+'_'+mtype].data.field('chi2'),dtype='float64')
                     self.results[mtype][prefix] = np.array(ff[prefix+'_'+mtype].data.field('mod_eff_wave'),dtype='float64'),np.array(ff[prefix+'_'+mtype].data.field('synflux'),dtype='float64'),self.master['photband']
-         
+
         ff.close()
-        
+
         logger.info('Loaded previous results from FITS file: %s'%(filename))
         return filename
-    
+
     def save_hdf5(self, filename=None, update=True):
         """
-        Save content of SED object to a HDF5 file. (HDF5 is the successor of FITS files, 
+        Save content of SED object to a HDF5 file. (HDF5 is the successor of FITS files,
         providing a clearer structure of the saved content.)
         This way of saving is more thorough that save_fits(), fx. the CI2D confidence
         intervals are not save to a fits file, but are saved to a hdf5 file.
@@ -3646,7 +3646,7 @@ class SED(object):
             - sed.master (photometry)
             - sed.results (results from all fitting methods)
             - sed.constraints (extra constraints on the fits)
-        
+
         @param filename: name of SED FITS file
         @type filename: string
         @param update: if True, an existing file will be updated with the current information, if
@@ -3655,24 +3655,24 @@ class SED(object):
         @return: the name of the output HDF5 file.
         @rtype: string
         """
-        
+
         if filename is None:
             filename = str(os.path.splitext(self.photfile)[0]+'.hdf5')
-        
+
         data = dict()
         data['master'] = self.master
         data['results'] = self.results
         data['constraints'] = self.constraints
-        
+
         hdf5.write_dict(data, filename, update=update)
-        
+
         logger.info('Results saved to HDF5 file: %s'%(filename))
-        return filename    
-                
+        return filename
+
     def load_hdf5(self,filename=None):
         """
         Load a previously made SED from HDF5 file.
-        
+
         @param filename: name of SED FITS file
         @type filename: string
         @return: True if HDF5 file could be loaded
@@ -3683,27 +3683,27 @@ class SED(object):
         if not os.path.isfile(filename):
             logger.warning('No previous results saved to HFD5 file {:s}'.format(filename))
             return False
-            
+
         data = hdf5.read2dict(filename)
-        
+
         self.master = data.get('master', {})
         self.results = data.get('results', {})
         self.constraints = data.get('constraints', {})
-        
+
         logger.info('Loaded previous results from HDF5 file: %s'%(filename))
         logger.debug('Loaded following datasets from HDF5 file:\n %s'%(data.keys()))
         return True
-            
+
     def save_bibtex(self):
         """
         Convert the bibcodes in a phot file to a bibtex file.
-        
+
         The first line in the bibtex file contains a \citet command citing
         all photometry.
         """
         filename = os.path.splitext(self.photfile)[0]+'.bib'
         crossmatch.make_bibtex(self.master,filename=filename)
-    
+
     def save_summary(self,filename=None,CI_limit=None,method='igrid_search',chi2type='ci_red'):
         """
         Save a summary of the results to an ASCII file.
@@ -3711,10 +3711,10 @@ class SED(object):
         #-- open the summary file to write the results
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.sum'
-        
+
         if CI_limit is None:
             CI_limit = self.CI_limit
-        
+
         #-- gather the results:
         grid_results = self.results[method]['grid']
         start_CI = np.argmin(np.abs(grid_results[chi2type]-CI_limit))
@@ -3736,14 +3736,14 @@ class SED(object):
         used_photbands = '#'+photbands+'\n'
         used_references = '#'+references
         comments = used_photometry+used_atmosphere+used_photbands+used_references
-        
+
         contents = np.array([results]).T
         contents = np.rec.fromarrays(contents,names=names)
         ascii.write_array(contents,filename,auto_width=True,header=True,
                           comments=comments.split('\n'),mode='a',use_float='%g')
-        
+
         logger.info('Saved summary to {0}'.format(filename))
-        
+
 
     def save_important_info(self,filename=None,CI_limit=None,method='igrid_search',chi2type='ci_red'):
         """
@@ -3752,10 +3752,10 @@ class SED(object):
         #-- open the summary file to write the results
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.sum'
-        
+
         if CI_limit is None:
             CI_limit = self.CI_limit
-        
+
         #-- gather the results:
         grid_results = self.results[method]['grid']
         start_CI = np.argmin(np.abs(grid_results[chi2type]-CI_limit))
@@ -3771,18 +3771,18 @@ class SED(object):
                        grid_results[name][start_CI:].max()
             #names += [name+'_l',name,name+'_u']
             results += ["%.3f"%lv,"%.3f"%cv,"%.3f"%uv]
-        
+
         contents = np.array([results]).T
         contents = np.rec.fromarrays(contents)
         ascii.write_array(contents,filename,auto_width=True,mode='a',use_float='%g')
-        
+
         logger.info('Saved summary to {0}'.format(filename))
-        
-    
+
+
     #}
 
 class BinarySED(SED):
-    
+
     def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,load_hdf5=True,label='', **kwargs):
         """
         Setup the Binary sed in the same way as a normal SED.
@@ -3791,10 +3791,10 @@ class BinarySED(SED):
         """
         super(BinarySED, self).__init__(ID=ID,photfile=photfile,plx=plx,label=label,\
                                              load_fits=load_fits,load_hdf5=load_hdf5)
-        
+
         self.set_constraints(**kwargs)
-        
-    
+
+
     def set_constraints(self, **kwargs):
         """
         Add constraints that are used when fitting the Binary SED. Up till now the following
@@ -3803,12 +3803,12 @@ class BinarySED(SED):
             - distance (in Rsol)
         TODO: This function should in the future accept Units.
         """
-        
+
         if 'masses' in kwargs:
             self.constraints['masses'] = kwargs['masses']
         if 'distance' in kwargs:
             self.constraints['distance'] = kwargs['distance']
-    
+
     def constraints2str(self):
         """
         Summarizes all constraints in a string.
@@ -3818,24 +3818,24 @@ class BinarySED(SED):
             res += "Using constraint: %s = %s\n"%(key, self.constraints[key])
         res = res[:-1]
         return res
-    
+
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,\
                     zrange=None,rvrange=((3.1,3.1),(3.1,3.1)),vradrange=((0,0),(0,0)),\
                     radrange=(None,None),compare=True,df=None,CI_limit=None,\
                     set_model=True, distance=None,**kwargs):
         """
         Fit fundamental parameters using a (pre-integrated) grid search.
-        
+
         If called consecutively, the ranges will be set to the CI_limit of previous
         estimations, unless set explicitly.
-        
+
         If called for the first time, the ranges will be +/- np.inf by defaults,
         unless set explicitly.
         """
-        
+
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
-            
+
         #-- set defaults limits
         ranges = self.generate_ranges(teffrange=teffrange[0],\
                         loggrange=loggrange[0],ebvrange=ebvrange[0],\
@@ -3844,51 +3844,51 @@ class BinarySED(SED):
                         logg2range=loggrange[1],ebv2range=ebvrange[1],\
                         z2range=zrange[1],rv2range=rvrange[1],vrad2range=vradrange[1],
                         rad2range=radrange[1])
-        
+
         #-- grid search on all include data: extract the best CHI2
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%\
                    (photometry2str(self.master[include_grid])))
-        
+
         logger.info('The following constraints are included in the fitting process:\n%s'%\
                    (self.constraints2str()))
 
         #-- build the grid, run over the grid and calculate the CHI2
         masses = self.constraints.get('masses', None)
-        pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges) 
-        
+        pars = fit.generate_grid_pix(self.master['photband'][include_grid], masses=masses, points=points, **ranges)
+
         chisqs,scales,escales,lumis = fit.igrid_search_pix(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],
-                             self.master['photband'][include_grid], 
+                             self.master['photband'][include_grid],
                              model_func=model.get_itable_pix,constraints=self.constraints,
                              **pars)
         fitres = dict(chisq=chisqs, scale=scales, escale=escales, labs=lumis)
-        
+
         #-- collect all the results in a record array
         self.collect_results(grid=pars, fitresults=fitres, mtype='igrid_search')
-                   
+
         #-- do the statistics
         self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search')
-        
+
         #-- compute the confidence intervals
         ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',\
                                                                      CI_limit=CI_limit)
         self.store_confidence_intervals(mtype='igrid_search', **ci)
-        
+
         #-- remember the best model
         if set_model: self.set_best_model()
-    
+
     def generate_fit_param(self, start_from='igrid_search', **pars):
-        """ 
-        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        generates a dictionary with parameter information that can be handled by fit.iminimize
         """
         masses = self.constraints.get('masses', None)
         result = super(BinarySED, self).generate_fit_param(start_from=start_from, **pars)
-        
+
         #-- Couple ebv and rv of both components
         result['ebv2_expr'] = 'ebv'
         result['rv2_expr'] = 'rv'
-        
+
         if masses != None:
             #-- Couple the radii to the masses
             G, Msol, Rsol = constants.GG_cgs, constants.Msol_cgs, constants.Rsol_cgs
@@ -3902,17 +3902,17 @@ class BinarySED(SED):
         else:
             result['rad_value'] = self.results[start_from]['CI']['rad']
             result['rad2_value'] = self.results[start_from]['CI']['rad2']
-        
+
         return result
-    
+
     def iminimize(self, teff=(None,None), logg=(None,None), ebv=(None,None), z=(None,None),
                   rv=(None,None), vrad=(0,0), teffrange=(None,None), loggrange=(None,None),
                   ebvrange=(None,None), zrange=(None,None), rvrange=(None,None),
-                  vradrange=(None,None), radrange=(None,None), compare=True, df=None, 
+                  vradrange=(None,None), radrange=(None,None), compare=True, df=None,
                   distance=None, start_from='igrid_search', points=None, CI_limit=None,
                   calc_ci=True, set_model=True, **kwargs):
-        """ Binary minimizer """ 
-        
+        """ Binary minimizer """
+
         ranges = self.generate_ranges(teffrange=teffrange[0],\
                         loggrange=loggrange[0],ebvrange=ebvrange[0],\
                         zrange=zrange[0],rvrange=rvrange[0],vradrange=vradrange[0],
@@ -3924,47 +3924,47 @@ class BinarySED(SED):
                             rv=rv[0], vrad=vrad[0],teff2=teff[1],logg2=logg[1],\
                             ebv2=ebv[1],z2=z[1],rv2=rv[1],vrad2=vrad[1], \
                             start_from=start_from, **ranges)
-        
+
         #-- Print the used data and constraints
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%\
                    (photometry2str(self.master[include_grid])))
         logger.info('The following constraints are included in the fitting process:\n%s'%\
                    (self.constraints2str()))
-        
+
         #-- pass all ranges and starting values to the fitter
         kick_list = ['teff', 'logg', 'teff2', 'logg2', 'ebv']
         grid, chisq, nfev, scale, lumis = fit.iminimize(self.master['cmeas'][include_grid],
                self.master['e_cmeas'][include_grid], self.master['photband'][include_grid],
                points=points, kick_list=kick_list, constraints=self.constraints, **pars)
-        
+
         logger.info('Minimizer Succes with startpoints=%s, chi2=%s, nfev=%s'%(len(chisq), chisq[0], nfev[0]))
         #-- handle the results
         fitres = dict(chisq=chisq, nfev=nfev, scale=scale, labs=lumis)
         self.collect_results(grid=grid, fitresults=fitres, mtype='iminimize', selfact='chisq')
-        
+
         #-- Do the statistics
         self.calculate_statistics(df=5, ranges=ranges, mtype='iminimize', selfact='chisq')
-        
+
         #-- Store the confidence intervals
         ci = self._get_imin_ci(mtype='iminimize',**ranges)
         self.store_confidence_intervals(mtype='iminimize', **ci)
         if calc_ci:
             self.calculate_iminimize_CI(mtype='iminimize', CI_limit=CI_limit)
-        
+
         #-- remember the best model
-        if set_model: self.set_best_model(mtype='iminimize') 
-    
-    
+        if set_model: self.set_best_model(mtype='iminimize')
+
+
     def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
         """
         Calculate the confidence intervals for each parameter using the lmfit
-        calculate confidence interval method. 
-        
-        The calculated confidence intervals are stored in the results['CI'] 
-        dictionary. If the method fails, or if the asked CI is outside the 
+        calculate confidence interval method.
+
+        The calculated confidence intervals are stored in the results['CI']
+        dictionary. If the method fails, or if the asked CI is outside the
         provided ranges, those ranges will be set as CI.
-        
+
         This method works in the same way as for a single SED, but it adds
         the mass as an extra constraint if the mass of both components is stored.
         """
@@ -3972,37 +3972,37 @@ class BinarySED(SED):
         super(BinarySED, self).calculate_iminimize_CI(mtype=mtype, CI_limit=CI_limit,\
                                          masses=masses, constraints=self.constraints,\
                                          **kwargs)
-    
+
     def calculate_iminimize_CI2D(self,xpar, ypar, mtype='iminimize', limits=None, res=10, **kwargs):
         """
         Calculated 2 dimentional confidence intervals for the given parameters,
-        using lmfit methods. 
-        
-        The calculated confidence intervals are stored in the results['CI2D'] 
+        using lmfit methods.
+
+        The calculated confidence intervals are stored in the results['CI2D']
         dictionary.
-        
+
         This method works in the same way as for a single SED, but it adds
         the mass as an extra constraint if the mass of both components is stored.
         """
         masses = self.constraints.get('masses',None)
         super(BinarySED, self).calculate_iminimize_CI2D(xpar, ypar, mtype=mtype,\
                                  limits=limits, res=res, masses=masses, **kwargs)
-    
+
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004', **kwargs):
         """
         Get reddenend and unreddened model
         """
         logger.info('Interpolating approximate full SED of best model')
-        
+
         #-- synthetic flux
         include = self.master['include']
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
-        
+
         if mtype in ['igrid_search', 'iminimize']:
             scale = self.results[mtype]['CI']['scale']
-            
+
             #-- get (approximated) reddened and unreddened model
             wave,flux = model.get_table_multiple(teff=(self.results[mtype]['CI']['teff'],self.results[mtype]['CI']['teff2']),
                                     logg=(self.results[mtype]['CI']['logg'],self.results[mtype]['CI']['logg2']),
@@ -4021,9 +4021,9 @@ class BinarySED(SED):
                     pars[key] = self.results[mtype]['CI'][key]
             synflux_,pars = model.get_itable(photbands=self.master['photband'][keep], **pars)
             flux,flux_ur = flux*scale,flux_ur*scale
-                
+
             synflux[keep] = synflux_
-        
+
             synflux[-self.master['color']] *= scale
             chi2 = (self.master['cmeas']-synflux)**2/self.master['e_cmeas']**2
             #-- calculate effective wavelengths of the photometric bands via the model
@@ -4035,7 +4035,7 @@ class BinarySED(SED):
 
 
 class PulsatingSED(SED):
-    
+
     def __init__(self,ID=None,photfile=None,plx=None,load_fits=True,load_hdf5=True,label='', **kwargs):
         """
         Setup the Binary sed in the same way as a normal SED.
@@ -4044,22 +4044,22 @@ class PulsatingSED(SED):
         """
         super(PulsatingSED, self).__init__(ID=ID,photfile=photfile,plx=plx,label=label,\
                                              load_fits=load_fits,load_hdf5=load_hdf5)
-        
+
         self.set_constraints(**kwargs)
-        
-    
+
+
     def set_constraints(self, **kwargs):
         """
         Add constraints that are used when fitting the Pulsating SED. Up till now the following
         contraints are supported (and in fact needed to do a fitting):
             - deltaTeff (in K)
             - deltaLogg (in dex)
-        For each 'phase' additional to the zeroth phase, a tuple containing a lower and upper limit 
+        For each 'phase' additional to the zeroth phase, a tuple containing a lower and upper limit
         needs to be added to the deltaTeff and deltaLogg list. These limits have a sign!
-        
+
         TODO: This function should in the future accept Units.
         """
-        
+
         #if 'mass' in kwargs:
         #    self.constraints['mass'] = kwargs['mass']
         #if 'distance' in kwargs:
@@ -4074,7 +4074,7 @@ class PulsatingSED(SED):
             print deltaLogg
             for i in range(len(deltaTeff)):
                 self.constraints['delta{}Logg'.format(i+1)] = deltaLogg[i]
-            
+
     def constraints2str(self):
         """
         Summarizes all constraints in a string.
@@ -4084,36 +4084,36 @@ class PulsatingSED(SED):
             res += "Using constraint: %s = %s\n"%(key, self.constraints[key])
         res = res[:-1]
         return res
-    
+
     def igrid_search(self,points=100000,teffrange=None,loggrange=None,ebvrange=None,\
                     zrange=None,rvrange=(3.1,3.1),vradrange=None,df=None,CI_limit=None,\
                     set_model=True, distance=None,**kwargs):
         """
         Fit fundamental parameters at various phases simultaneously, using a (pre-integrated) grid search.
-            
+
         Parameter ranges only need to be provided for the first 'phase', but be aware that
-        these ranges should encompass the parameters of your star at all phases! The part of the 
-        parameter space that falls outside the box defined for the first 'phase' is not 
+        these ranges should encompass the parameters of your star at all phases! The part of the
+        parameter space that falls outside the box defined for the first 'phase' is not
         probed at other phases, even though the defined constraints would in principle allow it.
-                
+
         """
-        
+
         if CI_limit is None or CI_limit > 1.0:
             CI_limit = self.CI_limit
-        
+
         ##-- the data sets
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%\
                    (photometry2str(self.master[include_grid])))
-        
+
         phase_indices = self.master['phase']
         unique_phases = np.unique(phase_indices)
         logger.info('Data sets with the following phase indices are included in the fitting process:\n%s'%\
                    (str(unique_phases)))
-            
+
         ##-- set defaults limits
         ranges = self.generate_ranges(teffrange=teffrange,loggrange=loggrange,ebvrange=ebvrange,zrange=zrange,rvrange=rvrange,vradrange=vradrange)
-                    
+
         ##-- the constraints used in the fit
         logger.info('The following constraints are included in the fitting process:\n%s'%\
                    (self.constraints2str()))
@@ -4123,17 +4123,17 @@ class PulsatingSED(SED):
         newkwargs.update(self.constraints)
         pars = fit.generate_grid_pix_pulsating2(self.master['photband'][include_grid],\
                                                 points=points, unique_phases=unique_phases,\
-                                                **newkwargs) 
-        
+                                                **newkwargs)
+
         chisqs,scales,escales,lumis = fit.igrid_search_pix2(self.master['cmeas'][include_grid],
                              self.master['e_cmeas'][include_grid],\
                              self.master['photband'][include_grid],phases=self.master['phase'][include_grid],\
                              unique_phases=unique_phases,model_func=model.get_itable_pix,\
                              constraints=self.constraints,stat_func=fit.stat_chi2b,\
                              **pars)
-              
+
         ##-- collect all the results in record arrays, remove the points that fall
-        #    out of the model grid (the nan in chisqs), do the statistics and 
+        #    out of the model grid (the nan in chisqs), do the statistics and
         #    compute the confidence intervals
         for i in range(len(unique_phases)):
             fitres = dict(chisq=chisqs[:,i], scale=scales[:,i], escale=escales[:,i], labs=lumis[:,i])
@@ -4141,18 +4141,18 @@ class PulsatingSED(SED):
             for key in pars.keys():
                 partpars[key] = pars[key][:,i]
             self.collect_results(grid=partpars, fitresults=fitres, mtype='igrid_search_{}'.format(unique_phases[i]))
-                   
+
             ##-- do the statistics
             self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search_{}'.format(unique_phases[i]))
-        
+
             ##-- compute the confidence intervals
             ci = self.calculate_confidence_intervals(mtype='igrid_search_{}'.format(unique_phases[i]),\
                                                      chi2_type='red',CI_limit=CI_limit)
             self.store_confidence_intervals(mtype='igrid_search_{}'.format(unique_phases[i]), **ci)
-            
+
             ##-- remember the best model
             if set_model: self.set_best_model(mtype='igrid_search_{}'.format(unique_phases[i]))
-        
+
         ##-- collect the results of the all-inclusive fit
         index = len(unique_phases)
         fitres = dict(chisq=chisqs[:,index], scale=scales[:,index], escale=escales[:,index], labs=lumis[:,index])
@@ -4167,51 +4167,51 @@ class PulsatingSED(SED):
             allpars['logg{}'.format(i+1)] = pars['logg'][:,i+1]
             ranges['teff{}range'.format(i+1)] = self.constraints['delta{}Teff'.format(i+1)]
             ranges['logg{}range'.format(i+1)] = self.constraints['delta{}Logg'.format(i+1)]
-            
+
         self.collect_results(grid=allpars, fitresults=fitres, mtype='igrid_search_all')
-        
+
         ##-- do the statistics of the all-inclusive fit
         self.calculate_statistics(df=df, ranges=ranges, mtype='igrid_search_all')
-        
+
         ##-- compute the confidence intervals of the all-inclusive fit
         ci = self.calculate_confidence_intervals(mtype='igrid_search_all',\
                                                  chi2_type='red',CI_limit=CI_limit)
         self.store_confidence_intervals(mtype='igrid_search_all', **ci)
-        
+
         ##-- remember the best model
         if set_model: self.set_best_model(mtype='igrid_search_all')
-    
+
     def generate_fit_param(self, start_from='igrid_search', **pars):
-        """ 
-        generates a dictionary with parameter information that can be handled by fit.iminimize 
+        """
+        generates a dictionary with parameter information that can be handled by fit.iminimize
         """
         raise NotImplementedError
-    
+
     def calculate_iminimize_CI(self, mtype='iminimize', CI_limit=0.66, **kwargs):
         raise NotImplementedError
-    
+
     def calculate_iminimize_CI2D(self, xpar, ypar, mtype='iminimize', limits=None, res=10, **kwargs):
         raise NotImplementedError
-    
+
     def iminimize(self, teff=None, logg=None, ebv=None, z=0, rv=3.1, vrad=0, teffrange=None,
                      loggrange=None, ebvrange=None, zrange=None, rvrange=None, vradrange=None,
-                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None, 
+                     points=None, distance=None, start_from='igrid_search',df=None, CI_limit=None,
                      calc_ci=False, set_model=True, **kwargs):
         raise NotImplementedError
-    
+
     def imc(self,teffrange=None,loggrange=None,ebvrange=None,zrange=None,start_from='igrid_search',\
                  distribution='uniform',points=None,fitmethod='fmin',disturb=True):
         raise NotImplementedError
-    
+
     def set_best_model(self,mtype='igrid_search',law='fitzpatrick2004',**kwargs):
         """
         Get reddenend and unreddened model
         """
         super(PulsatingSED, self).set_best_model(mtype=mtype,law=law,**kwargs)
-        
+
         if '_all' in mtype:
             logger.info('Interpolating approximate full SED of best model at additional phases.')
-            
+
             #-- synthetic flux
             include = self.master['include']
             phases = self.master['phase']
@@ -4219,14 +4219,14 @@ class PulsatingSED(SED):
             synflux = self.results[mtype]['synflux'][1]
             keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
             keep = keep & include
-            
+
             if ('igrid_search' in mtype) | ('iminimize' in mtype): #mtype in ['igrid_search', 'iminimize']:
                 #-- get the metallicity right
                 files = model.get_file(z='*')
                 if type(files) == str: files = [files] #files needs to be a list!
                 metals = np.array([pf.getheader(ff)['Z'] for ff in files])
                 metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
-                
+
                 for i in range(len(unique_phases)-1):
                     keep = keep & (phases == unique_phases[i+1])
                     scale = self.results[mtype]['CI']['scale{}'.format(i+1)]
@@ -4247,11 +4247,11 @@ class PulsatingSED(SED):
                                    ebv=self.results[mtype]['CI']['ebv'],
                                    z=self.results[mtype]['CI']['z'],
                                    photbands=self.master['photband'][keep])
- 
+
                     flux,flux_ur = flux*scale,flux_ur*scale
-                    
+
                     synflux[keep] = synflux_
-            
+
                     #synflux,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
                     #                          logg=self.results[mtype]['CI']['logg'],
                     #                          ebv=self.results[mtype]['CI']['ebv'],
@@ -4264,28 +4264,28 @@ class PulsatingSED(SED):
                     self.results[mtype]['model{}'.format(i+1)] = wave,flux,flux_ur
                     self.results[mtype]['synflux'] = eff_waves,synflux,self.master['photband']
                     self.results[mtype]['chi2'] = chi2
-        
+
     @standalone_figure
     def plot_sed(self,colors=False,mtype='igrid_search',plot_redded=True,plot_deredded=False,
             plot_unselected=True,wave_units='AA',flux_units='erg/s/cm2',**kwargs):
         """
         Plot a fitted SED together with the data.
-        
+
         Example usage:
-        
+
         First set the SED:
-        
+
         >>> mysed = SED('HD180642')
         >>> mysed.load_fits()
-        
+
         Then make the plots:
-        
+
         >>> p = pl.figure()
         >>> p = pl.subplot(121)
         >>> mysed.plot_sed(colors=False)
         >>> p = pl.subplot(122)
         >>> mysed.plot_sed(colors=True)
-        
+
         ]]include figure]]ivs_sed_builder_plot_sed_01.png]
         """
         if 'phase' in kwargs:
@@ -4295,7 +4295,7 @@ class PulsatingSED(SED):
             uniquephase = None
             phase = False
         annotation = kwargs.pop('annotation',True)
-        
+
         def plot_sed_getcolors(master,color_dict=None):
             myphotbands = [iphotb.split('.')[1] for iphotb in master['photband'][master['color']]]
             if not myphotbands:  #-- If there are no colours none can be returned (added by joris 30-01-2012)
@@ -4310,21 +4310,21 @@ class PulsatingSED(SED):
             y = master['cmeas']
             e_y = master['e_cmeas']
             return x,y,e_y,color_dict
-            
-        
+
+
         x__,y__,e_y__,color_dict = plot_sed_getcolors(self.master)
-        
+
         #-- get the color cycle
         systems = np.array([system.split('.')[0] for system in self.master['photband']],str)
         set_systems = sorted(list(set(systems)))
-        
+
         if ('absolutesymbolcolor' in kwargs) and (kwargs.pop('absolutesymbolcolor') == True):
             sortedphotsystems,plotcolorvalues = filters.get_plotsymbolcolorinfo()
             selectedcolorinds = np.array([np.where(sortedphotsystems == system)[0][0] for system in set_systems])
             color_cycle = itertools.cycle([pl.cm.spectral(j) for j in plotcolorvalues[selectedcolorinds]])
         else:
             color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
-        
+
         #-- for plotting reasons, we translate every color to an integer
         for system in set_systems:
             color = color_cycle.next()
@@ -4359,12 +4359,12 @@ class PulsatingSED(SED):
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
                     y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
-                    x = conversions.convert('AA',wave_units,x)    
-                    
-                    
+                    x = conversions.convert('AA',wave_units,x)
+
+
                 p = pl.errorbar(x,y,yerr=e_y,fmt='o',label=system,
                                 capsize=10,ms=7,color=color,**kwargs)
-            
+
             #-- exclude:
             label = np.any(keep) and '_nolegend_' or system
             keep = (systems==system) & (self.master['color']==colors) & -self.master['include']
@@ -4380,30 +4380,30 @@ class PulsatingSED(SED):
                     y = self.master['cmeas'][keep]
                     e_y = self.master['e_cmeas'][keep]
                     y,e_y = conversions.convert('erg/s/cm2/AA',flux_units,y,e_y,wave=(x,'AA'))
-                    x = conversions.convert('AA',wave_units,x)    
+                    x = conversions.convert('AA',wave_units,x)
                 pl.errorbar(x,y,yerr=e_y,fmt='o',label=label,
                             capsize=10,ms=7,mew=2,color=color,mfc='1',mec=color,**kwargs)
-        
+
         #-- only set logarithmic scale if absolute fluxes are plotted
         #   and only plot the real model then
         if not colors:
             pl.gca().set_xscale('log',nonposx='clip')
             pl.gca().set_yscale('log',nonposy='clip')
             pl.gca().set_autoscale_on(False)
-        
+
             #-- the model
             if phase & (uniquephase != 0):
                 modelname = 'model{}'.format(uniquephase)
             else:
                 modelname = 'model'
-            
+
             if mtype in self.results and modelname in self.results[mtype]:
                 wave,flux,flux_ur = self.results[mtype][modelname]
-                
+
                 flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
                 flux_ur = conversions.convert('erg/s/cm2/AA',flux_units,flux_ur,wave=(wave,'AA'))
-                wave = conversions.convert('AA',wave_units,wave)    
-                
+                wave = conversions.convert('AA',wave_units,wave)
+
                 if plot_redded:
                     pl.plot(wave,flux,'r-',**kwargs)
                 if plot_deredded:
@@ -4417,7 +4417,7 @@ class PulsatingSED(SED):
             pl.ylabel(r'Flux ratio')
             pl.xlabel('Color name')
             pl.xlim(min(xticks)-0.5,max(xticks)+0.5)
-        
+
         pl.grid()
         if colors:
             leg = pl.legend(loc='best',prop=dict(size='x-small'))
@@ -4447,7 +4447,7 @@ class PulsatingSED(SED):
 	f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\n'+'\t'+str(metallicity)+'\n')
 	f.closed'''
 
-    
+
 class Calibrator(SED):
     """
     Convenience class for a photometric standard star or calibrator.
@@ -4467,7 +4467,7 @@ class Calibrator(SED):
         photfile = phot_files[index]
         super(Calibrator,self).__init__(photfile=photfile,plx=plx,load_fits=load_fits,label=label)
         self.set_model(wave,flux)
-        
+
 
 class SampleSEDs(object):
     """
@@ -4476,7 +4476,7 @@ class SampleSEDs(object):
     def __init__(self,targets,**kwargs):
         """
         Initialize a sample.
-        
+
         This can be done either with a list of IDs or with a list of SED
         instances. The SED must exist! That is, for each ID, there must be a
         phot or FITS file.
@@ -4499,24 +4499,24 @@ class SampleSEDs(object):
             self.seds.append(mysed)
             self.targets.append(mysed.ID)
         logger.info("Loaded {} SEDs".format(len(self.seds)))
-    
+
     def __iter__(self):
         """
         Allow iteration over the SED instances.
         """
         for sed in self.seds:
             yield sed
-    
+
     def __len__(self):
         """
         The length of a SampleSEDs instance is the number SED instances.
         """
         return len(self.seds)
-    
+
     def __getitem__(self,key):
         """
         Implements various ways to get individual seds.
-        
+
         Allows integer indexing, slicing, indexing with integer and boolean arrays.
         """
         #-- via slicing
@@ -4540,7 +4540,7 @@ class SampleSEDs(object):
             #-- that's all I can come up with
             else:
                 raise TypeError("Cannot use arrays of type {} for indexing".format(key.dtype))
-    
+
     def summarize(self):
         #-- collect the names of all the different sources
         sources = {}
@@ -4586,11 +4586,11 @@ class SampleSEDs(object):
         for i,name in enumerate(output.dtype.names):
             output[name] = summary[i]
         return output
-    
+
     def get_data(self,source,photband,label=None):
         """
         Get all data on a particular passband from a particular source.
-        
+
         If label is not None, synthetic flux from a model will be added to the
         columns.
         """
@@ -4620,7 +4620,7 @@ class SampleSEDs(object):
         output = np.rec.fromrecords(records,names=dtypes.names)
         output = np.array(output,dtype=dtypes)
         return output
-    
+
     def get_confidence_interval(self,parameter='teff',mtype='igrid_search'):
         values = np.zeros((len(self),3))
         for i,sed in enumerate(self):
@@ -4630,8 +4630,8 @@ class SampleSEDs(object):
             values[i,2] = sed.results[mtype]['CI'][parameter+'_u']
             sed.clear()
         return values
-        
-        
+
+
 
 
 if __name__ == "__main__":
@@ -4639,7 +4639,7 @@ if __name__ == "__main__":
     import doctest
     import pprint
     from ivs.aux import loggers
-    
+
     if not sys.argv[1:]:
         doctest.testmod()
         pl.show()
@@ -4661,7 +4661,7 @@ if __name__ == "__main__":
             os.unlink(mysed.photfile)
             logger.info('Removed %s'%(mysed.photfile))
     raise SystemExit
-    
+
     #-- clean up
     if os.path.isfile('HD180642.fits'):
         os.remove('HD180642.fits')
@@ -4738,7 +4738,7 @@ if __name__ == "__main__":
         pl.ylim(pars[:,2].min(),pars[:,2].max())
         pl.colorbar()
     pl.show()
-    
+
 
 
 

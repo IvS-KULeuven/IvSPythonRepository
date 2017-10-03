@@ -18,7 +18,7 @@ from numpy.linalg import LinAlgError
 
 from scipy.optimize import leastsq as scipy_leastsq
 from scipy.optimize import fmin as scipy_fmin
-from scipy.optimize import anneal as scipy_anneal
+#from scipy.optimize import anneal as scipy_anneal              #TODO remove scipy_anneal AND  def anneal() as they are not used?
 from scipy.optimize.lbfgsb import fmin_l_bfgs_b as scipy_lbfgsb
 
 # check for scipy.optimize.minimize
@@ -264,7 +264,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
         self.update_constraints()
         self.__prepared = True
 
-    def anneal(self, schedule='cauchy', **kws):
+        '''def anneal(self, schedule='cauchy', **kws):
         """
         use simulated annealing
         """
@@ -281,7 +281,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
         print("WARNING:  scipy anneal appears unusable!")
         saout = scipy_anneal(self.penalty, self.vars, **sakws)
         self.sa_out = saout
-        return
+        return'''
 
     def lbfgsb(self, **kws):
         """
@@ -516,7 +516,7 @@ def minimize(fcn, params, method='leastsq', args=None, kws=None,
     return fitter
 
 def make_paras_and_func(fcn, x0, used_kwargs=None):
-    """nach 
+    """nach
     A function which takes a function a makes a parameters-dict
     for it.
 
@@ -530,7 +530,7 @@ def make_paras_and_func(fcn, x0, used_kwargs=None):
     defaults = args[-1]
     len_def = len(defaults) if defaults is not None else 0
     # have_defaults = args[-len(defaults):]
-    
+
     args_without_defaults = len(args[0])- len_def
 
     if len(x0) < args_without_defaults:
@@ -549,13 +549,13 @@ def make_paras_and_func(fcn, x0, used_kwargs=None):
     def func(para):
         "wrapped func"
         kwdict = {}
-        
+
         for arg in used_kwargs.keys():
             kwdict[arg] = para[arg].value
 
         vals = [para[i].value for i in p]
         return fcn(*vals[:len(x0)], **kwdict)
-        
+
     return p, func
 
 

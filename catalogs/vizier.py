@@ -31,7 +31,7 @@ ra=237.1, dec=-10.10
 
 >>> filename = search('I/311/hip2',ra=237.1,dec=-10.10,radius=60.,filename='vanleeuwen.tsv')
 
-Search for the presence of a target in the catalog. The downloaded file will 
+Search for the presence of a target in the catalog. The downloaded file will
 contain no rows if the target is not in the catalog. If more than one target are
 in the search radius around the target, there will be more than one row. They
 are ordered via distance to the target, so it's probably the first one you need.
@@ -55,7 +55,7 @@ negative H-K index, you can do
 
 >>> data,units,comms = search('II/246/out',ra=237.1,dec=-10.10,radius=600.)
 >>> selection = (data['Hmag'] - data['Kmag']) < 0
->>> data = data[selection] 
+>>> data = data[selection]
 
 You can also read in a data file you've previously downloaded via
 
@@ -142,21 +142,21 @@ def change_mirror():
 def search(name,filetype='tsv',filename=None,**kwargs):
     """
     Search and retrieve information from a VizieR catalog.
-    
+
     Two ways to search for data within a catalog C{name}:
-        
+
         1. You're looking for info on B{one target}, then give the target's
         C{ID} or coordinates (C{ra} and C{dec}), and a search C{radius}.
-    
+
         2. You're looking for information of B{a whole field}, then give the
         field's coordinates (C{ra} and C{dec}), and C{radius}.
-    
+
     If you have a list of targets, you need to loop this function.
-    
+
     If you supply a filename, the results will be saved to that path, and you
     will get the filename back as received from urllib.URLopener (should be the
     same as the input name, unless something went wrong).
-    
+
     If you don't supply a filename, you should leave C{filetype} to the default
     C{tsv}, and the results will be saved to a temporary
     file and deleted after the function is finished. The content of the file
@@ -166,30 +166,30 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     be converted to a float-array (no integers, we need to support nans) if
     possible. If not, the array will consist of strings. The comments are also
     returned as a list of strings.
-    
+
     WARNING: when retrieving a FITS file, ViZieR sometimes puts weird formats
     into the header ('3F10.6E' in the 2MASS catalog), which cannot be read by
     the C{astropy.io.fits} module. These columns are actually multi-dimensional vectors.
     One option is to download to another format, or to restrict the columns with
     C{out_all=None}.
-    
+
     Example usage:
-    
+
         1. Look for the Geneva V magnitude and coordinates of Vega in the GENEVA
         catalog of Rufener.
-    
+
         >>> results,units,comms = search('II/169/main',ID='vega',radius=60.)
         >>> print "Vega: Vmag = %.3f %s, RA = %.2f %s, DEC = %.2f %s"%(results['Vmag'],units['Vmag'],results['_RAJ2000'],units['_RAJ2000'],results['_DEJ2000'],units['_DEJ2000'])
         Vega: Vmag = 0.061 mag, RA = 279.24 deg, DEC = 38.77 deg
-    
+
         2. Search for all targets in the 2MASS catalog in a particular field.
         Download the results to a FITS file, read the file, and plot the results
         to the screen.
-    
+
         >>> #filename = search('II/246/out',ra=100.79,dec=0.70,radius=1000.,filetype='fits',filename='2mass_test',out_all=None)
-    
+
         Now read in the FITS-file and plot the contents
-        
+
         >>> #import pylab
         >>> #import astropy.io.fits as pf
         >>> #ff = pf.open('2mass_test.fits')
@@ -200,8 +200,8 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         >>> #p,q = pylab.xlabel('RA [deg]'),pylab.ylabel('DEC [deg]')
         >>> #ff.close()
         >>> #os.remove('2mass_test.fits')
-        
-    
+
+
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
     @param filetype: type of the file to write the results to ('tsv' if no file desired)
@@ -217,10 +217,10 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         filetype = os.path.splitext(filename)[1][1:]
     elif filename is not None:
         filename = '%s.%s'%(filename,filetype)
-    
+
     #-- gradually build URI
     base_url = _get_URI(name=name,**kwargs)
-    
+
     #-- prepare to open URI
     url = urllib.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
@@ -229,7 +229,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         logger.info('Querying ViZieR source %s and downloading to %s'%(name,filen))
         url.close()
         return filen
-    
+
     #   otherwise, we read everything into a dictionary
     if filetype=='tsv':
         try:
@@ -240,17 +240,17 @@ def search(name,filetype='tsv',filename=None,**kwargs):
         url.close()
         logger.info('Querying ViZieR source %s (%d)'%(name,(results is not None and len(results) or 0)))
         return results,units,comms
-    
+
 
 def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     """
     Print and return all catalogs containing information on the star.
-    
+
     If you give C{filetype} and C{filename}, all information will be downloaded
     to that file.
-    
+
     Extra kwargs: see L{_get_URI}.
-    
+
     @param ID: identification of the star
     @type ID: str
     @keyword filetype: type of the output file ('fits','tsv','csv'...)
@@ -262,17 +262,17 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     @rtype: dictionary
     """
     base_url = _get_URI(ID=ID,filetype='fits',**kwargs)
-    
+
     #-- download the file
     url = urllib.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
-    
+
     #-- if it is a FITS file, we extract all catalog IDs. We download the
     #   individual catalogs to retrieve their title.
     if filetype=='fits':
         mycats = {}
         ff = pf.open(filen)
-        for ext in range(1,len(ff)):            
+        for ext in range(1,len(ff)):
             name = ff[ext].header['CDS-name']
             results,units,comms = search(name,ID=ID,**kwargs)
             for line in comms:
@@ -281,34 +281,34 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
                     break
             mycats[name] = title
             logger.info('%25s %s'%(name,title))
-            
+
             photometry = [col for col in units.keys() if 'mag' in units[col]]
             rv = [col for col in units.keys() if 'rv' in col.lower()]
             vsini = [col for col in units.keys() if 'sin' in col.lower()]
             sptype = [col for col in units.keys() if col.lower()=='sp' or col.lower()=='sptype']
             fund = [col for col in units.keys() if 'logg' in col.lower() or 'teff' in col.lower()]
-            
+
         ff.close()
         url.close()
         return mycats
     else:
         url.close()
-        return filen        
+        return filen
 
 
 def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
     """
     Crossmatch two vizier catalogs via a fast KDTree.
-    
+
     The limit for these catalogs is probably somewhere between ~100000 entries,
     so make sure your catalogs do not contain to many targets. You can always
     do a subselection via the keyword arguments (e.g. give ra, dec and radius).
-    
+
     An output tsv file will be written (by default named 'source1__source2',
     which can be read in via C{tsv2recarray} for further analysis.
-    
+
     tolerance is in arcseconds.
-    
+
     Extra keyword arguments are passed to C{search}. Column names of second
     source will be appended with postfix '_2', to avoid clashes of double-defined
     column headers.
@@ -316,29 +316,29 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
     #-- construct default filename.
     if output_file is None:
         output_file = "__".join([source1,source2]).replace('/','_').replace('+','')+'.tsv'
-    
+
     #-- download the two catalogs
     cat1,units1,comms1 = search(source1,**kwargs)
     cat2,units2,comms2 = search(source2,**kwargs)
-    
+
     logger.info('Start Vizier Xmatch')
     coords1 = np.array([cat1['_RAJ2000'],cat1['_DEJ2000']]).T
     coords2 = np.array([cat2['_RAJ2000'],cat2['_DEJ2000']]).T
-    
+
     logger.info('Building KDTree of shape %d,%d'%coords1.shape)
     tree = KDTree(coords1)
-    
+
     logger.info('Querying KDTree with %d entries'%(len(coords2)))
     distance,order = tree.query(coords2)
-    
+
     keep = distance<(tol/(60.))
-    
+
     logger.info('Matched %d points (tol<%.3g arcsec)'%(sum(keep),tol))
 
     #-- this the subset matching both catalogues
     cat1 = cat1[order[keep]]
     cat2 = cat2[keep]
-    
+
     #-- now write it to a vizier-like file...
     #-- first append '2' to each column name of the second source in the
     #   comments, to make sure there are no doubles.
@@ -351,17 +351,17 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
     units2_ = {}
     for key in units2: units2_[key+'_2'] = units2[key]
     cat2.dtype.names = [name+'_2' for name in cat2.dtype.names]
-    
-    
+
+
     ff = open(output_file,'w')
     ff.write('\n#'.join(comms1))
     ff.write('\n#'.join(comms2))
-    
+
     names1 = list(cat1.dtype.names)
     names2 = list(cat2.dtype.names)
     dtypes = [(name,cat1.dtype[names1.index(name)].str) for name in names1]
     dtypes += [(name,cat2.dtype[names2.index(name)].str) for name in names2]
-    
+
     ff.write('\n')
     for nr,i in enumerate(dtypes):
         ff.write(str(i[0]))
@@ -373,16 +373,16 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
         else:
             raise ValueError,'this cannot be'
         if nr<(len(dtypes)-1): ff.write('\t')
-        
+
     ff.write('\n')
     ff.write('\t'.join(['---']*len(dtypes)))
     ff.write('\n')
-    
+
     for row1,row2 in itertools.izip(cat1,cat2):
         ff.write('\t'.join([str(x) for x in row1])+'\t')
         ff.write('\t'.join([str(x) for x in row2])+'\n')
-    
-    ff.close()    
+
+    ff.close()
 
 
 
@@ -394,18 +394,18 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
 def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low',**kwargs):
     """
     Download IUE spectra.
-    
+
     If you want to download all the spectral files, set C{directory='/home/user/'}
     or whatever. All the tarfiles will be downloaded to this directory, they
     will be untarred, science data extracted and all unnecessary files and
     directories will be deleted. If you don't set a directory, it will default
     to the CWD.
-    
+
     If you don't wish to unzip them, set unzip=False
-    
+
     DEPRECATED: If you don't give a directory, the function will return a list
     of all extracted spectra (no data files are kept).
-    
+
     You can retrieve the contents of the vizier catalog via {cat_info=True}. The
     files will not be downloaded in this case.
     """
@@ -417,21 +417,21 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
         direc = directory
         if not os.path.isdir(direc):
             os.mkdir(direc)
-        
+
     output = []
     #-- construct the download link form the camera and image data
     data,units,comments = search('VI/110/inescat/',ID=ID,**kwargs)
-    
+
     if cat_info:
         return data,units,comments
-    
+
     if data is None:
         return output
-    
+
     for spectrum in data:
         download_link = "http://archive.stsci.edu/cgi-bin/iue_retrieve?iue_mark=%s%05d&mission=iue&action=Download_MX"%(spectrum['Camera'].strip(),int(spectrum['Image']))
         logger.info('IUE spectrum %s/%s: %s'%(spectrum['Camera'],spectrum['Image'],download_link))
-    
+
         #-- prepare to download the spectra to a temparorary file
         if directory is not None:
             filename = download_link.split('iue_mark=')[1].split('&')[0]
@@ -482,7 +482,7 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
                 os.rmdir(dirname)
                 logger.debug("Deleted left over (empty) directory %s"%(dirname))
         if filename is None: url.close()
-        
+
         #-- only read in the data if they need to be extracted
         if directory is not None and outfile:
             output.append(outfile)
@@ -493,15 +493,15 @@ def get_IUE_spectra(ID=None,directory=None,unzip=True,cat_info=False,select='low
             output.append([wavelength,flux,error,header])
         else:
             logger.info('Unsuccesfull extraction of %s'%(outfile))
-        
+
     return output
-    
+
 def get_UVSST_spectrum(units='erg/s/cm2/AA',**kwargs):
     """
     Get a spectrum from the UVSST spectrograph onboard TD1.
-    
+
     From vizier catalog III/39A.
-    
+
     Also have a look at II/86/suppl.
     """
     kwargs.setdefault('out_max',10)
@@ -529,9 +529,9 @@ def get_UVSST_spectrum(units='erg/s/cm2/AA',**kwargs):
 def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=False,**kwargs):
     """
     Download all available photometry from a star to a record array.
-    
+
     For extra kwargs, see L{_get_URI} and L{vizier2phot}
-    
+
     """
     kwargs['ID'] = ID
     to_units = kwargs.pop('to_units','erg/s/cm2/AA')
@@ -580,12 +580,12 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
-    
+
     if master_ is not None and master is not None:
         master = numpy_ext.recarr_addrows(master_,master.tolist())
     elif master is None:
         master = master_
-    
+
     #-- and return the results
     return master
 
@@ -593,7 +593,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
 def quality_check(master,ID=None,return_master=True,**kwargs):
     """
     Perform quality checks on downloaded data.
-    
+
     This function translates flags in to words, and looks up additional
     information in selected catalogs.
     """
@@ -637,11 +637,11 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
             if flag==2: messages[i] = '; '.join([messages[i],'fair'])
             if flag==1: messages[i] = '; '.join([messages[i],'on limit'])
             if flag==0: messages[i] = '; '.join([messages[i],'not detected'])
-    
+
     #-- for other targets, we need to query additional information
     sources_with_quality_check = ['B/denis/denis','II/311/wise','II/246/out']
     sources = set(list(master['source'])) & set(sources_with_quality_check)
-    
+
     denis_image_flags = {'01':'clouds during observation',
                          '02':'electronic Read-out problem',
                          '04':'internal temperature problem',
@@ -677,8 +677,8 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                          'B':'high quality (B)',
                          'C':'high quality (C)',
                          'D':'high quality (D)'}
-    
-    
+
+
     indices = np.arange(len(master))
     logger.info('Checking source catalogs for additional information')
     for source in sorted(sources):
@@ -692,16 +692,16 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                     continue
                 flag = float(results[0][iflag])
                 if np.isnan(flag):
-                    messages[index] = '; '.join([messages[index],'high quality'])
+                    messages[index[0]] = '; '.join([messages[index[0]],'high quality'])
                     continue
                 flag = '{0:04d}'.format(int(flag))
                 image_flag = flag[:2]
                 source_flag = flag[2:]
                 #-- keep track for output
                 if image_flag in denis_image_flags:
-                    messages[index] = '; '.join([messages[index],denis_image_flags[image_flag]])
+                    messages[index[0]] = '; '.join([messages[index[0]],denis_image_flags[image_flag]])
                 if source_flag in denis_source_flags:
-                    messages[index] = '; '.join([messages[index],denis_source_flags[source_flag]]) 
+                    messages[index[0]] = '; '.join([messages[index[0]],denis_source_flags[source_flag]])
         if source=='II/311/wise':
             conf = results[0]['ccf']
             var = results[0]['var']
@@ -712,10 +712,10 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                     logger.warning("Skipping WISE flags, don't know what to do with {}".format(index))
                     continue
                 if conf[i]!=' ' and conf[i] in wise_conf_flag:
-                    messages[index] = '; '.join([messages[index],wise_conf_flag[conf[i].lower()]])
+                    messages[index[0]] = '; '.join([messages[index[0]],wise_conf_flag[conf[i].lower()]])
                 if var[i]!=' ':
-                    messages[index] = '; '.join([messages[index],wise_var_flag[var[i].lower()]])
-                messages[index] = '; '.join([messages[index],(ex==0 and 'point source' or 'extended source')])
+                    messages[index[0]] = '; '.join([messages[index[0]],wise_var_flag[var[i].lower()]])
+                messages[index[0]] = '; '.join([messages[index[0]],(ex==0 and 'point source' or 'extended source')])
         if source=='II/246/out':
             flag = results[0]['Qflg'].strip()
             for i,photband in enumerate(['2MASS.J','2MASS.H','2MASS.KS']):
@@ -723,9 +723,9 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
                     index = indices[(master['source']==source) & (master['photband']==photband)]
                     if not len(index):
                         continue
-                    messages[index] = '; '.join([messages[index],twomass_qual_flag[flag[i]]])
-            
-    
+                    messages[index[0]] = '; '.join([messages[index[0]],twomass_qual_flag[flag[i]]])
+
+
     #-- strip first '; ':
     for i in range(len(messages)):
         if messages[i]:
@@ -733,7 +733,7 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
         else:
             messages[i] = '-'
         messages[i] = messages[i].replace(' ','_')
-    
+
     #-- perhaps we want to return the master record array with an extra column
     messages = np.rec.fromarrays([messages],names=['comments'])
     if return_master and not 'comments' in master.dtype.names:
@@ -743,9 +743,9 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
         return master
     else:
         return messages
-                            
-            
-    
+
+
+
 
 
 
@@ -753,7 +753,7 @@ def quality_check(master,ID=None,return_master=True,**kwargs):
 def tsv2recarray(filename):
     """
     Read a Vizier tsv (tab-sep) file into a record array.
-    
+
     @param filename: name of the TSV file
     @type filename: str
     @return: catalog data columns, units, comments
@@ -771,7 +771,7 @@ def tsv2recarray(filename):
         #   themselves (so called vectors). In those cases, we interpret
         #   the contents as a long string
         formats = np.zeros_like(data[0])
-        for line in comms:                  
+        for line in comms:
             line = line.split('\t')
             if len(line)<3: continue
             for i,key in enumerate(data[0]):
@@ -798,7 +798,7 @@ def tsv2recarray(filename):
              #-- fix unit name
              #if source in cat_info.sections() and cat_info.has_option(source,data[1,i]):
              #   units[key] = cat_info.get(source,data[1,i])
-             #else:  
+             #else:
              units[key] = data[1,i]
         #-- define columns for record array and construct record array
         cols = [np.cast[dtypes[i]](cols[i]) for i in range(len(cols))]
@@ -808,36 +808,36 @@ def tsv2recarray(filename):
 def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fields=None,take_mean=False):
     """
     Convert/combine VizieR record arrays to measurement record arrays.
-    
+
     Every line in the combined array represents a measurement in a certain band.
-    
+
     This is probably only useful if C{results} contains only information on
     one target (or you have to give 'ID' as an extra field, maybe).
-    
+
     The standard columns are:
-    
+
         1. C{meas}: containing the photometric measurement
         2. C{e_meas}: the error on the photometric measurement
         3. C{flag}: an optional quality flag
         4. C{unit}: the unit of the measurement
         5. C{photband}: the photometric passband (FILTER.BAND)
         6. C{source}: name of the source catalog
-    
+
     You can add extra information from the VizieR catalog via the list of keys
     C{extra_fields}.
-    
+
     If you give a C{master}, the information will be added to a previous
     record array. If not, a new master will be created.
-    
+
     Colors will be expanded, derived from the other columns and added to the
     master.
-    
+
     The result is a record array with each row a measurement.
-    
+
     Example usage:
-    
+
     First look for all photometry of Vega in all VizieR catalogs:
-    
+
     >>> from ivs.sed import filters
     >>> import pylab
     >>> master = None
@@ -845,10 +845,10 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     ...     results,units,comms = search(source,ID='vega',radius=60.)
     ...     if results is not None:
     ...         master = vizier2phot(source,results,units,master,extra_fields=['_r','_RAJ2000','_DEJ2000'])
-    
+
     Keep only observations we have an measurement and error of, convert every
     observation to 'Jy' and keep track of the results to plot.
-    
+
     >>> master = master[(-np.isnan(master['e_meas'])) & (-np.isnan(master['meas']))]
     >>> eff_waves = filters.eff_wave(master['photband'])
     >>> myvalue,e_myvalue = conversions.nconvert(master['unit'],'erg/s/cm2/AA',master['meas'],master['e_meas'],photband=master['photband'])
@@ -910,13 +910,13 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             WISE.W2  1.143e+00+/- 1.900e-02         mag  8.428e-13  Jy 279.24  38.78  3.276             II/311/wise
             WISE.W3 -6.700e-02+/- 8.000e-03         mag  6.930e-14  Jy 279.24  38.78  3.276             II/311/wise
             WISE.W4 -1.270e-01+/- 6.000e-03         mag  5.722e-15  Jy 279.24  38.78  3.276             II/311/wise
-                
+
     Make a quick plot:
-    
+
     >>> p = pylab.figure()
     >>> p = pylab.loglog(eff_waves,myvalue,'ko')
     >>> p = pylab.show()
-    
+
     @param source: name of the VizieR source
     @type source: str
     @param results: results from VizieR C{search}
@@ -939,11 +939,11 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         q_flag = cat_info.get(source,'q_flag')
     if cat_info.has_option(source,'e_flag'):
         e_flag = cat_info.get(source,'e_flag')
-    
+
     #-- basic dtypes
     dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
-    
+
     #-- extra can be added:
     names = list(results.dtype.names)
 
@@ -953,13 +953,13 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
                 dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
             else:
                 dtypes.append((e_dtype,'f8'))
-    
+
     #-- create empty master if not given
     newmaster = False
     if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
         newmaster = True
-    
+
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
@@ -1003,35 +1003,35 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
     master_ = _breakup_colours(master_)
     #-- combine and return
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
-    
-    #-- skip first line from building 
+
+    #-- skip first line from building
     if newmaster: master = master[1:]
     return master
-    
+
 
 
 def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fields=None):
     """
     Convert/combine VizieR record arrays to measurement record arrays.
-    
+
     This is probably only useful if C{results} contains only information on
     one target (or you have to give 'ID' as an extra field, maybe).
-    
+
     The standard columns are:
-    
+
         1. C{meas}: containing the measurement of a fundamental parameter
         2. C{e_meas}: the error on the measurement of a fundamental parameter
         3. C{flag}: an optional quality flag
         4. C{unit}: the unit of the measurement
         5. C{source}: name of the source catalog
-    
+
     If a target appears more than once in a catalog, only the first match will
     be added.
-    
+
     The result is a record array with each row a measurement.
-    
+
     Example usage:
-    
+
     >>> master = None
     >>> for source in cat_info_fund.sections():
     ...     results,units,comms = search(source,ID='AzV 79',radius=60.)
@@ -1043,7 +1043,7 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
           Teff  7.304e+03+/-       nan           K  12.67 -72.83  0.002         B/pastel/pastel
           logg  2.000e+00+/-       nan     [cm/s2]  12.67 -72.83  0.002         B/pastel/pastel
         [Fe/H] -8.700e-01+/-       nan       [Sun]  12.67 -72.83  0.002         B/pastel/pastel
-    
+
     @param source: name of the VizieR source
     @type source: str
     @param results: results from VizieR C{search}
@@ -1066,23 +1066,23 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         q_flag = cat_info_fund.get(source,'q_flag')
     if cat_info_fund.has_option(source,'e_flag'):
         e_flag = cat_info_fund.get(source,'e_flag')
-    
+
     #-- basic dtypes
     dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','a30'),
               ('source','a50'),('name','a50')]
-    
+
     #-- extra can be added:
     names = list(results.dtype.names)
     if extra_fields is not None:
         for e_dtype in extra_fields:
             dtypes.append((e_dtype,results.dtype[names.index(e_dtype)].str))
-    
+
     #-- create empty master if not given
     newmaster = False
     if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
         newmaster = True
-    
+
     #-- add fluxes and magnitudes to the record array
     for key in cat_info_fund.options(source):
         if key in ['e_flag','q_flag']:
@@ -1108,8 +1108,8 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
             rows.append(tuple([col[i] for col in cols]))
         #print master
         master = np.core.records.fromrecords(master.tolist()+rows,dtype=dtypes)
-    
-    #-- skip first line from building 
+
+    #-- skip first line from building
     if newmaster: master = master[1:]
     return master
 
@@ -1117,7 +1117,7 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
 def catalog2bibcode(catalog):
     """
     Retrieve the ADS bibcode of a ViZieR catalog.
-    
+
     @param catalog: name of the catalog (e.g. II/306/sdss8)
     @type catalog: str
     @return: bibtex code
@@ -1143,7 +1143,7 @@ def catalog2bibcode(catalog):
 def bibcode2bibtex(bibcode):
     """
     Retrieve the bibtex entry of an ADS bibcode.
-    
+
     @param bibcode: bibcode (e.g. C{2011yCat.2306....0A})
     @type bibcode: str
     @return: bibtex entry
@@ -1165,7 +1165,7 @@ def bibcode2bibtex(bibcode):
 def catalog2bibtex(catalog):
     """
     Retrieve the bibtex entry of a catalog.
-    
+
     @param catalog: name of the catalog (e.g. II/306/sdss8)
     @type catalog: str
     @return: bibtex entry
@@ -1174,7 +1174,7 @@ def catalog2bibtex(catalog):
     bibcode = catalog2bibcode(catalog)
     bibtex = bibcode2bibtex(bibcode)
     return bibtex
-    
+
 
 #}
 
@@ -1186,12 +1186,12 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
                      filetype='tsv',sort='_r',constraints=None,**kwargs):
     """
     Build Vizier URI from available options.
-    
+
     kwargs are to catch unused arguments.
-    
+
     @param name: name of a ViZieR catalog (e.g. 'II/246/out')
     @type name: str
-    @param filetype: type of the retrieved file 
+    @param filetype: type of the retrieved file
     @type filetype: str (one of 'tsv','csv','ascii'... see ViZieR site)
     @param oc: coordinates
     @type oc: str (one of 'deg'...)
@@ -1216,7 +1216,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     if constraints is not None:
         for constr in constraints:
             base_url += '&%s'%(constr)
-    
+
     if ID is not None:
         #-- if the ID is given in the form 'J??????+??????', derive the
         #   coordinates of the target from the name.
@@ -1226,8 +1226,8 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
             ra = '%02d+%02d+%.2f'%ra
             dec = '+%+02d+%02d+%.2f'%dec
             ID = None
-    
-    
+
+
     if name:    base_url += '&-source=%s'%(name)
     if out_all: base_url += '&-out.all'
     if out_max: base_url += '&-out.max=%s'%(out_max)
@@ -1241,7 +1241,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
 def _breakup_colours(master):
     """
     From colors and one magnitude measurement, derive the other magnitudes.
-    
+
     @param master: master record array from vizier2phot.
     @type master: record array
     @return: master with added magnitudes
@@ -1251,24 +1251,24 @@ def _breakup_colours(master):
     photbands = list(master['photband'])
     for i,photband in enumerate(photbands):
         system,color = photband.split('.')
-        
+
         ########################################################################
         #-- NORMAL COLORS
         ########################################################################
-        if '-' in color: # we have a colour            
+        if '-' in color: # we have a colour
             #-- in which column are the measurements (and error) located?
             index_meas, index_emeas = names.index('meas'),names.index('e_meas')
             index_band = names.index('photband')
             row = list(master[i])
             meas,e_meas = row[index_meas],row[index_emeas]
-            
+
             band1,band2 = ['%s.%s'%(system,band) for band in color.split('-')]
             band1_present = band1 in photbands
             band2_present = band2 in photbands
-            
+
             if band1_present and not band2_present:
                 #-- which row do we need to compute the component of the colour?
-                index1 = photbands.index(band1)    
+                index1 = photbands.index(band1)
                 row1 = list(master[index1])
                 row1[index_meas] = row1[index_meas] - row[index_meas]
                 errs = np.array([row[index_emeas],row1[index_emeas]],float)
@@ -1281,7 +1281,7 @@ def _breakup_colours(master):
                 master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
             elif band2_present and not band1_present:
                 #-- which row do we need to compute the component of the colour?
-                index1 = photbands.index(band2)    
+                index1 = photbands.index(band2)
                 row1 = list(master[index1])
                 row1[index_meas] = row[index_meas] + row1[index_meas]
                 errs = np.array([row[index_emeas],row1[index_emeas]],float)
@@ -1292,7 +1292,7 @@ def _breakup_colours(master):
                 row1[index_band] = band1
                 master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
                 logger.debug("Added band %s = %s + %s (b)"%(band1,band2,photband))
-        
+
         ########################################################################
         #-- STROMGREN COLORS
         ########################################################################
@@ -1344,17 +1344,17 @@ def _breakup_colours(master):
                 row1[index_emeas] = np.sqrt(e_meas**2 + 2*e_v**2 + e_b**2)
                 master = np.core.records.fromrecords(master.tolist()+[tuple(row1)],dtype=master.dtype)
                 logger.debug("Added band STROMGREN.U (c1)")
-        
-        
-        
-        
+
+
+
+
     return master
-    
+
 
 def test():
     """
     Execute all docstrings.
-    
+
     >>> import pylab
     >>> p = pylab.show()
     """
