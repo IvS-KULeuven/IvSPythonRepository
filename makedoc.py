@@ -6,12 +6,12 @@ The documentation will be stored in the subdirectory "doc/html" of the IvS root
 directory (i.e. where this file is located). If previously generated
 documentation exists, it will be overwriten.
 
-The main page of the documenation can be found in "doc/html/index.html".
+The main page of the documentation can be found in "doc/html/index.html".
 
 Updating the documentation is a simple as rerunning the script, you do not need
 to delete the results from the previous run.
 
-For more command-line options, see 
+For more command-line options, see
 
     $:> python makedoc.py -h
 """
@@ -72,7 +72,7 @@ if not os.path.isdir('doc/images'):
 
 #-- we can't do everything in a generic way just yet, we first treat the
 #   exception to the general rule.
-shutil.move('doc/html/ivs.timeseries.freqanalyse-module.html','doc/html/ivs.timeseries.freqanalyse-module_.html')
+'''shutil.move('doc/html/ivs.timeseries.freqanalyse-module.html','doc/html/ivs.timeseries.freqanalyse-module_.html')
 ff = open('doc/html/ivs.timeseries.freqanalyse-module_.html','r')
 oo = open('doc/html/ivs.timeseries.freqanalyse-module.html','w')
 ESC = chr(27)
@@ -87,7 +87,7 @@ for line in ff.readlines():
         oo.write(line)
 ff.close()
 oo.close()
-os.remove('doc/html/ivs.timeseries.freqanalyse-module_.html')
+os.remove('doc/html/ivs.timeseries.freqanalyse-module_.html')'''
 
 #-- now run through all the other ones. We need to explicitly treat line breaks.
 files = sorted(glob.glob('doc/html/*module.html'))
@@ -96,10 +96,10 @@ for myfile in files:
     shutil.move(myfile,myfile+'_')
     ff = open(myfile+'_','r')
     oo = open(myfile,'w')
-    
+
     line_break = False
     for line in ff.readlines():
-        
+
         if ']include figure]' in line or line_break:
             filename = line.split(']')[-2].strip()
             oo.write(r"<center><img src='../images/{}' alt='[image example]' width='{}%'/></center>".format(filename,args.width)+'\n\n')
@@ -108,13 +108,13 @@ for myfile in files:
             termtools.overwrite_line(message)
             oo.write('\n\n')
             line_break = False
-        
+
         elif ']include' in line:
             line_break = True
-            
+
         else:
             oo.write(line)
-        
+
     ff.close()
     oo.close()
     os.remove(myfile+'_')
