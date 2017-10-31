@@ -300,7 +300,7 @@ underestimated, it could be that the rescaling factor is also wrong, which means
 that the true probability region can be larger or smaller!
 
 Subsection 3.2 Binary star - ### W.I.P ###
---------------------------
+------------------------------------------
 
 The SED class can create SEDs for multiple stars as well. There are 2 options
 available, the multiple SED fit which in theory can handle any number of stars,
@@ -451,7 +451,7 @@ the following information (we print part of each header)::
 
 
 Subsection 3.4 Loading SED fits  ### BROKEN ###
--------------------------------
+-----------------------------------------------
 
 Unfortunately this is not yet working properly!
 
