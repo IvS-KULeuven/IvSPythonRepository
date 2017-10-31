@@ -1,22 +1,33 @@
 Documentation
 -------------
 
-* You can find the latest documentation at https://ivs-kuleuven.github.io/IvSPythonRepository/index.html
+* You can online documentation at https://ivs-kuleuven.github.io/IvSPythonRepository/index.html
+
+* The repository also comes ready to produce local documentation, instructions can be found below.
 
 Installation
 ------------
 
-* Clone the git repository to create a local copy in an "ivs" folder.
+* Clone the git repository to create a local copy as a folder called "ivs". Make sure the directory is re-named as "ivs".
 
     $ cd python/
-    $ git clone https://github.com/JorisDeRidder/IvSPythonRepository.git ivs
+    $ git clone https://github.com/mike-ivs/IvSPythonRepository.git ivs
 
-  This will clone all repository files in the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients.
+  This will clone all repository files into the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients. These are found in the IvS-internal directory "/STER/pythonrepo".
 
-* Updating your own clone of the IvS python repository to the most recent version can be done with
+* Updating your own clone of the IvS python repository to the most recent version can be done with:
 
     $ cd ivs
     $ git pull
+
+* The IvS repository now comes with an Anaconda python environment file to help avoid user problems with the python modules. To create the repository anaconda environment run the following commands:
+
+    $ cd ivs
+    $ conda create --file IvS_YYMMDD.yml -n ivs_repo
+
+Where IvS_YYMMDD.yml is replaced with the name of the corresponding ".yml" file in ~/ivs. If you do not use anaconda you can find the repository dependencies in this file. Make sure to activate your environment each time before using the repository, either by sourcing it in your .bash_profile or running:
+
+    $ source activate ivs_repo
 
 * The IvS Python repository contains mostly python routines. Some of the time-critical
 functions, however, are written in fortran. To compile them you can run
@@ -27,7 +38,7 @@ If you want to specify your own fortran compiler you can do so with
 
     $ python config.py compile f77
 
-Note: sometimes the compilation process fails. If so, try to compile spectra/pyrotin4.f manually, and then retry the automatic compilation:
+Note: This requires the F2PY module which has previously caused problems... Sometimes the compilation process may fail. If so, try to compile spectra/pyrotin4.f manually, and then retry the automatic compilation (repeat for all troublesome files):
 
     $ cd spectra/
     $ f2py --fcompiler=gfortran -c pyrotin4.f -m pyrotin4
