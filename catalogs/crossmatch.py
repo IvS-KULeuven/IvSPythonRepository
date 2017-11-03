@@ -3,11 +3,11 @@
 Crossmatch catalogs for data on one target, or crossmatch entire catalogs.
 
 This module is callable from the command line. E.g., simply type::
-    
+
     $:> python crossmatch.py get_photometry ID=HD180642
 
 or ask for help on any function::
-    
+
     $:> python crossmatch.py get_photometry --help
 """
 import logging
@@ -35,9 +35,9 @@ def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
          exclude=None,**kwargs):
     """
     Collect photometry from different sources.
-    
+
     The output consists of a record array containing the following keys:
-    
+
     'meas': the measurement's value directly from the catalog in original units
     'e_meas': the error on the measurements
     'flag': any flags that are associated with the measurement in a catalog
@@ -48,43 +48,43 @@ def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
     'cmeas': converted measurement (to C{to_units})
     'e_cmeas': error on converted measurment
     'cunit': converted unit
-    
+
     Be aware that some of the values can be 'nan': e.g. sometimes no error is
     listed in the catalog, or no flag. Also the 'cwave' column will be nan for
     all photometric colours (e.g. B-V)
-    
+
     If you define C{extra_fields}, make sure all the {get_photometry} know how
     to handle it: probably some default values need to be inserted if these
     extra columns are not available in some catalog. It is safest just to leave
     it blank.
-    
+
     You can include or exclude search sources via C{include} and C{exclude}.
     When given, these should be a list containing strings. The default is to
     include C{gator}, C{vizier} and C{gcpd}.
-    
+
     Extra keyword arguments are passed to each C{get_photometry} functions in
     this package's modules.
-    
+
     Example usage:
-    
+
         1. You want to download all available photometry and write the results to
         an ASCII file for later reference.
-    
+
         >>> master = get_photometry('vega')
         >>> ascii.write_array(master,header=True,auto_width=True)
-    
+
         2. You want to plot the raw, unmodelled SED of an object:
-    
+
         >>> master = get_photometry('vega')
         >>> pl.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')
         >>> pl.gca().set_xscale('log',nonposx='clip')
         >>> pl.gca().set_yscale('log',nonposy='clip')
-        
+
     We made no difference between colors (B-V) and magnitude (V), because the
     'cwave' for colors is 'nan', so they will not be plotted anyway.The final
     two lines are just to correct errorbars that go below zero in a logarithmic
     plot.
-    
+
     @param ID: the target's name, understandable by SIMBAD
     @type ID: str
     @param to_units: units to convert everything to.
@@ -99,14 +99,14 @@ def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
     #-- make sure all catalog names are lower case
     if include is not None: include = [i.lower() for i in include]
     if exclude is not None: exclude = [i.lower() for i in exclude]
-    
+
     #-- check which sources to include/exclude
     searchables = ['gator','vizier','gcpd','mast']
     if include is not None:
         searchables = include
     if exclude is not None:
         searchables = list( set(searchables)- set(exclude))
-    
+
     #-- and search photometry
     if 'mast' in searchables:
         kwargs['master'] = mast.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
@@ -126,12 +126,12 @@ def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
             kwargs['master'] = vizier.get_photometry(take_mean=True,extra_fields=extra_fields,constraints=['Name={0}'.format(catname)],sources=['J/A+A/380/609/table{0}'.format(tnr) for tnr in range(2,5)],sort=None,**kwargs)
         #-- then query normal catalogs
         kwargs['master'] = vizier.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
-        
-        
+
+
     if 'gcpd' in searchables:
         kwargs['master'] = gcpd.get_photometry(ID=ID,to_units=to_units,extra_fields=extra_fields,**kwargs)
     master = kwargs['master']
-    
+
     #-- now make a summary of the contents:
     photbands = [phot.split('.')[0]  for phot in master['photband']]
     contents = [(i,photbands.count(i)) for i in sorted(list(set(photbands)))]
@@ -142,7 +142,7 @@ def get_photometry(ID=None,to_units='erg/s/cm2/AA',extra_fields=[],include=None,
 def add_bibcodes(master):
     """
     Add bibcodes to a master record.
-    
+
     @param master: master record of photometry
     @type master: numpy record array
     @return: master record of photometry with additional column
@@ -188,8 +188,8 @@ def make_bibtex(master,filename):
             except IOError:
                 logger.info('Error retrieving bibtex for {0}'.format(bibcode))
 
-        
-    
+
+
 
 
 def xmatch(coords1,coords2):
@@ -198,13 +198,13 @@ def xmatch(coords1,coords2):
     """
     tree = KDTree(coords1)
     distance,order = tree.query(coords2)
-    
+
     match_success = distance<(tol/(60.))
-    
-    
+
+
     #-- first tuple contains matches (cat1,cat2)
     #   second tuple contains mismatches (cat1,cat2)
-    #   so you if you call the function via 
+    #   so you if you call the function via
     #   >>> match,mismatch = xmatch(coord1,coord2)
     #   you probably want to do something like
     #   >>> matched_cat1,matched_cat2 = cat1[match[0]],cat2[match[1]]
@@ -218,7 +218,7 @@ def xmatch(coords1,coords2):
 def photometry2str(master):
     """
     String representation of master record array
-    
+
     @param master: master record array containing photometry
     @type master: numpy record array
     """
@@ -227,11 +227,11 @@ def photometry2str(master):
     txt+= '#=========================================================================================================================\n'
     for i,j,k,l,m,n,o,p in zip(master['photband'],master['meas'],master['e_meas'],master['unit'],master['cwave'],master['cmeas'],master['e_cmeas'],master['source']):
         txt+='%20s %12g %12g %12s %10.0f %12g %12g erg/s/cm2/AA %s\n'%(i,j,k,l,m,n,o,p)
-    return txt    
+    return txt
 
 if __name__=="__main__":
     logger = loggers.get_basic_logger()
-    
+
     method,args,kwargs = argkwargparser.parse()
     print_help = '--help' in args or '-h' in args
     if print_help:
@@ -239,7 +239,7 @@ if __name__=="__main__":
     else:
         master = globals()[method](*args,**kwargs)
         print photometry2str(master)
-        
-    
+
+
 
     #xmatch_vizier('II/169/main','B/pastel/pastel')
