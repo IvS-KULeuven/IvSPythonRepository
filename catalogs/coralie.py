@@ -20,13 +20,13 @@ logger.addHandler(loggers.NullHandler)
 def search(ID,radius=1.,filename=None):
     """
     Retrieve datafiles from the Coralie catalogue.
-    
+
     We search on coordinates, pulled from SIMBAD. If the star ID is not
     recognised, a string search is performed to match the 'targ name' field in the
     FITS headers.
-    
+
     Only the s1d_A data are searched.
-    
+
     @param ID: ID of the star, understandable by SIMBAD
     @type ID: str
     @param radius: search radius around the coordinates
@@ -45,17 +45,17 @@ def search(ID,radius=1.,filename=None):
     else:
         keep = [((re.compile(ID).search(objectn) is not None) and True or False) for objectn in data['object']]
         keep = np.array(keep)
-    
+
     data = data[keep]
-    
+
     logger.info('Found %d spectra'%(len(data)))
-    
+
     if filename is not None:
         ascii.write_array(data,filename,auto_width=True,header=True)
     else:
         return data
-    
-    
+
+
 
 
 def make_data_overview():
@@ -68,7 +68,7 @@ def make_data_overview():
         for name in files:
             if 's1d_A' in name:
                 obj_files.append(os.path.join(root,name))
-    
+
     #-- and summarize the contents in a tab separated file (some columns contain spaces)
     outfile = open('CoralieFullDataOverview.tsv','w')
     outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime date-avg filename\n')
@@ -92,7 +92,7 @@ def make_data_overview():
         if 'ESO TEL TARG ALPHA' in header:    contents['ra']  = float(header['ESO TEL TARG ALPHA'])
         if 'ESO TEL TARG DELTA' in header:    contents['dec'] = float(header['ESO TEL TARG DELTA'])
         if 'ESO OBS TARG NAME' in header:     contents['object'] = header['ESO OBS TARG NAME']
-            
+
         outfile.write('%(unseq)d\t%(prog_id)d\t%(obsmode)s\t%(bvcor)f\t%(observer)s\t%(object)s\t%(ra)f\t%(dec)f\t%(bjd)f\t%(exptime)f\t%(date-avg)s\t%(filename)s\n'%contents)
         outfile.flush()
     outfile.close()

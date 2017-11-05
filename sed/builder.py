@@ -568,7 +568,7 @@ import json
 
 import pylab as pl
 from matplotlib import mlab
-#import Image                        ### TODO - maybe remove
+from PIL import Image
 import numpy as np
 import scipy.stats
 from scipy.interpolate import Rbf
@@ -600,9 +600,10 @@ from ivs.units.uncertainties.unumpy import sqrt as usqrt
 from ivs.units.uncertainties.unumpy import tan as utan
 from ivs.sigproc import evaluate
 try:
-    from ivs.stellar_evolution import evolutionmodels
+    from ivs.stellar_evolution import evolutionmodels #This module has now been removed, perhaps future re-implementation if demanded
 except ImportError:
-    print("Warning: no evolution models available (probably not important)")
+    print("Warning: The ivs.stellar_evolution module has been removed from the repository as of 03.11.2017.")
+    print("         Stellar evolution models are no longer available to use.")
 
 logger = logging.getLogger("SED.BUILD")
 #logger.setLevel(10)

@@ -1,9 +1,9 @@
 Documentation
 -------------
 
-* You can online documentation at https://ivs-kuleuven.github.io/IvSPythonRepository/index.html
+* You can read online documentation at https://ivs-kuleuven.github.io/IvSPythonRepository/index.html
 
-* The repository also comes ready to produce local documentation, instructions can be found below.
+*(Recommended) The repository also comes ready to produce local documentation, instructions can be found below.
 
 Installation
 ------------
@@ -23,11 +23,23 @@ Installation
 * The IvS repository now comes with an Anaconda python environment file to help avoid user problems with the python modules. To create the repository anaconda environment run the following commands:
 
     $ cd ivs
-    $ conda create --file IvS_YYMMDD.yml -n ivs_repo
+    $ conda env create -f IvS_YYMMDD.yml
 
 Where IvS_YYMMDD.yml is replaced with the name of the corresponding ".yml" file in ~/ivs. If you do not use anaconda you can find the repository dependencies in this file. Make sure to activate your environment each time before using the repository, either by sourcing it in your .bash_profile or running:
 
     $ source activate ivs_repo
+
+* Make sure that your python path points to the directory above the ivs folder:
+
+  If your python repository is in, e.g., ~/python/ivs/ , you can put in your .bash_profile:
+
+    export PYTHONPATH=/home/YOURNAME/python:$PYTHONPATH
+
+Warning: don't put ~/python/ivs in your Python path, but just ~/python.
+
+Once added to the PYTHONPATH you can import ivs modules using, for example:
+
+    >>> from ivs.statistics import linearregression
 
 * The IvS Python repository contains mostly python routines. Some of the time-critical
 functions, however, are written in fortran. To compile them you can run
@@ -45,18 +57,7 @@ Note: This requires the F2PY module which has previously caused problems... Some
     $ cd ../
     $ python config.py compile
 
-* In the config file you may also change the paths where the data catalogs (variable: data_dir) can be found, if you are not using the default locations.
-
-* Make sure that your python path points to the ivs folder, so that you can simply import
-using, for example:
-
-    >>> from ivs.statistics import linearregression
-
-  If your python repository is in, e.g., ~/python/ivs/ , you can put in your .bash_profile:
-
-    export PYTHONPATH=/home/YOURNAME/python:$PYTHONPATH
-
-Warning: don't put ~/python/ivs in your Python path, but just ~/python.
+* In the config file you may also change the paths where the data catalogs (variable: data_dir) can be found, if you are not using the default locations (i.e. you are outside the institute).
 
 
 * To generate the documentation, simply run the script

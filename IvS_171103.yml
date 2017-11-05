@@ -20,7 +20,8 @@ dependencies:
 - h5py=2.7.0=np113py27_0
 - hdf5=1.8.17=2
 - icu=54.1=0
-- jpeg=9b=0
+- jpeg=8d=2
+- lcms=1.19=0
 - libffi=3.2.1=1
 - libgcc=5.2.0=0
 - libgfortran=3.0.0=1
@@ -33,6 +34,7 @@ dependencies:
 - numpy=1.13.1=py27_0
 - openssl=1.0.2l=0
 - pcre=8.39=1
+- pil=1.1.7=py27_2
 - pip=9.0.1=py27_1
 - pixman=0.34.0=0
 - py=1.4.34=py27_0
@@ -43,7 +45,7 @@ dependencies:
 - python=2.7.13=0
 - python-dateutil=2.6.1=py27_0
 - pytz=2017.2=py27_0
-- qt=5.6.2=5
+- qt=5.6.2=2
 - readline=6.2=2
 - scipy=0.19.1=np113py27_0
 - setuptools=36.4.0=py27_1
@@ -54,3 +56,5 @@ dependencies:
 - tk=8.5.18=0
 - wheel=0.29.0=py27_0
 - zlib=1.2.11=0
+prefix: /lhome/mike/anaconda2/envs/ivs_repo
+

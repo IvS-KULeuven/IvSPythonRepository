@@ -1,3 +1,4 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ["catalogs", "inout", "misc", "statistics", "timeseries", "units","sed","binaries"]
+__all__ = [ "coralie", "corot","crossmatch", "gator", "gcpd",
+           "hermes","hipparcos", "kepler", "mast","p7","sesame","trilegal","vizier"]
