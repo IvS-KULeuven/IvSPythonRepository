@@ -56,5 +56,3 @@ dependencies:
 - tk=8.5.18=0
 - wheel=0.29.0=py27_0
 - zlib=1.2.11=0
-prefix: /lhome/mike/anaconda2/envs/ivs_repo
-
