@@ -629,7 +629,7 @@ def gal_uvw(distance=None, lsr=None, ra=None, dec=None, pmra=None, pmdec=None, v
   cosd = np.cos(np.deg2rad(dec))
   sind = np.sin(np.deg2rad(dec))
   cosa = np.cos(np.deg2rad(ra))
-  sina = sin(numpy.deg2rad(ra))
+  sina = np.sin(np.deg2rad(ra))
   k    = 4.74047
   a_g  = np.array([[0.0548755604, +0.4941094279, -0.8676661490], [0.8734370902, -0.4448296300, -0.1980763734], [0.4838350155, 0.7469822445, +0.4559837762]])  
   vec1 = vrad
@@ -822,7 +822,7 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
   
   if not radian:   
     ra_rad  = np.deg2rad(ra)
-    dec_rad = np/deg2rad(dec)
+    dec_rad = np.deg2rad(dec)
   else:   
     ra_rad  = ra
     dec_rad = dec
