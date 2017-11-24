@@ -29,6 +29,8 @@ dependencies:
 - libpng=1.6.30=1
 - libxcb=1.12=1
 - libxml2=2.9.4=0
+- libxslt=1.1.29=0
+- lxml=3.8.0=py27_0
 - matplotlib=2.0.2=np113py27_0
 - mkl=2017.0.3=0
 - numpy=1.13.1=py27_0
@@ -56,3 +58,4 @@ dependencies:
 - tk=8.5.18=0
 - wheel=0.29.0=py27_0
 - zlib=1.2.11=0
+
