@@ -811,7 +811,7 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
     Converted for use at IvS (K. Smolders)
   """
   scal = True
-  if np.isinstance(ra0, np.ndarray):
+  if isinstance(ra0, np.ndarray):
     ra   = ra0.copy()  
     dec  = dec0.copy()
     scal = False
