@@ -11,9 +11,9 @@ Installation
 * Clone the git repository to create a local copy as a folder called "ivs". Make sure the directory is re-named as "ivs".
 
     $ cd python/
-    $ git clone https://github.com/mike-ivs/IvSPythonRepository.git ivs
+    $ git clone https://github.com/IvS-KULeuven/IvSPythonRepository.git ivs
 
-  This will clone all repository files into the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients. These are found in the IvS-internal directory "/STER/pythonrepo".
+  This will clone all repository files into the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients. The directories of these files can be found, and specified, in ~ivs/config.py.
 
 * Updating your own clone of the IvS python repository to the most recent version can be done with:
 
@@ -23,9 +23,9 @@ Installation
 * The IvS repository now comes with an Anaconda python environment file to help avoid user problems with the python modules. To create the repository anaconda environment run the following commands:
 
     $ cd ivs
-    $ conda env create -f IvS_YYMMDD.yml
+    $ conda env create -f IvS_repo.yml
 
-Where IvS_YYMMDD.yml is replaced with the name of the corresponding ".yml" file in ~/ivs. If you do not use anaconda you can find the repository dependencies in this file. Make sure to activate your environment each time before using the repository, either by sourcing it in your .bash_profile or running:
+If you do not use anaconda you can find the repository dependencies in this file. Make sure to activate your environment each time before using the repository, either by sourcing it in your .bash_profile or running:
 
     $ source activate ivs_repo
 
