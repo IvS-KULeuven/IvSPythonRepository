@@ -33,7 +33,7 @@ import pylab as pl
 from numpy import inf
 
 from ivs import config
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import loggers
 
 logger = logging.getLogger("SPEC.LINELIST")

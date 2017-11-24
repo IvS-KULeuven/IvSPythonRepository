@@ -112,10 +112,7 @@ Author: Pieter Degroote, with thanks to Steven Bloemen.
 import logging
 import os
 import itertools
-try:
-    import pyfits as pf
-except:
-    import astropy.io.fits as pf
+import astropy.io.fits as pf
 import numpy as np
 from scipy.optimize import leastsq,fmin
 from scipy.interpolate import splrep, splev
@@ -178,7 +175,7 @@ def get_grid_dimensions(**kwargs):
     @return: effective temperatures, gravities
     """
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teffs = []
     loggs = []
     for mod in ff[1:]:
@@ -233,7 +230,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     
     if wave is not None:
         table = np.zeros((len(teffs),len(wave),18))
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         mod_name = "T%05d_logg%01.02f" %(teff,logg)
         mod = ff[mod_name]
@@ -407,7 +404,7 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     gridfile = get_file(**kwargs)
     
     #-- read the file:
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     
     teff = float(teff)
     logg = float(logg)
@@ -478,7 +475,7 @@ def _get_itable_markers(photband,gridfile,
     """
     clear_memoization()
     
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     ext = ff[photband]
     columns = ext.columns.names
     names = ['teff','logg']
@@ -600,7 +597,7 @@ def get_ld_grid_dimensions(**kwargs):
     gridfile = get_file(**kwargs)
     #-- the teff and logg range is the same for every extension, so just
     #   take the first one
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teff_,logg_ = ff[1].data.field('Teff'),ff[1].data.field('logg')
     ff.close()
     return teff_,logg_
@@ -830,11 +827,11 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
              law='claret',fitmethod='equidist_r_leastsq',outfile='mygrid.fits',**kwargs):
     
     if os.path.isfile(outfile):
-        hdulist = pyfits.open(outfile,mode='update')
+        hdulist = pf.open(outfile,mode='update')
         existing_bands = [ext.header['extname'] for ext in hdulist[1:]]
     else:
-        hdulist = pyfits.HDUList([])
-        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        hdulist = pf.HDUList([])
+        hdulist.append(pf.PrimaryHDU(np.array([[0,0]])))
         existing_bands = []
 
     hd = hdulist[0].header
@@ -849,18 +846,18 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
         pars,coeffs,Imu1s = fit_law_to_grid(photband,vrads=vrads,ebvs=ebvs,zs=zs,**kwargs)
         cols = []
 
-        cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
-        cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
-        cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
-        cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
-        cols.append(pyfits.Column(name="z"   , format='E', array=pars[:,4]))
+        cols.append(pf.Column(name='Teff', format='E', array=pars[:,0]))
+        cols.append(pf.Column(name="logg", format='E', array=pars[:,1]))
+        cols.append(pf.Column(name="ebv" , format='E', array=pars[:,2]))
+        cols.append(pf.Column(name="vrad", format='E', array=pars[:,3]))
+        cols.append(pf.Column(name="z"   , format='E', array=pars[:,4]))
         for col in range(coeffs.shape[1]):
-            cols.append(pyfits.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
-        cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
-        cols.append(pyfits.Column(name='SRS', format='E', array=Imu1s[:,1]))
-        cols.append(pyfits.Column(name='dint', format='E', array=Imu1s[:,2]))
+            cols.append(pf.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
+        cols.append(pf.Column(name='Imu1', format='E', array=Imu1s[:,0]))
+        cols.append(pf.Column(name='SRS', format='E', array=Imu1s[:,1]))
+        cols.append(pf.Column(name='dint', format='E', array=Imu1s[:,2]))
 
-        newtable = pyfits.new_table(pyfits.ColDefs(cols))
+        newtable = pf.new_table(pf.ColDefs(cols))
         newtable.header.update('EXTNAME', photband, "SYSTEM.FILTER")
         newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
         newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
@@ -928,7 +925,7 @@ def get_ld_grid(photband,**kwargs):
     
     #>>> bands = ['GENEVA.U', 'GENEVA.B', 'GENEVA.G', 'GENEVA.V']
     #>>> f_ld_grid = get_ld_grid(bands)
-    #>>> ff = pyfits.open(_atmos['file'])
+    #>>> ff = pf.open(_atmos['file'])
     #>>> all(ff['GENEVA.U'].data[257][2:]==f_ld_grid(ff['GENEVA.U'].data[257][0],ff['GENEVA.U'].data[257][1])[0:5])
     #True
     #>>> all(ff['GENEVA.G'].data[257][2:]==f_ld_grid(ff['GENEVA.G'].data[257][0],ff['GENEVA.G'].data[257][1])[10:15])
@@ -965,7 +962,7 @@ def get_ld_grid(photband,**kwargs):
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
     #-- fill the grid
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     for pp,iband in enumerate(photband):
         teffs = ff[iband].data.field('Teff')
         loggs = ff[iband].data.field('logg')
@@ -989,7 +986,7 @@ def _get_itable_markers(photband,gridfile,
     """
     clear_memoization()
     
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     ext = ff[photband]
     columns = ext.columns.names
     names = ['teff','logg']

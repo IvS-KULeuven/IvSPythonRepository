@@ -7,12 +7,12 @@ check out http://nsted.ipac.caltech.edu/
 import logging
 import os
 import urllib
-import pyfits
+import astropy.io.fits as pf
 import numpy as np
 from ivs.aux import loggers
 from ivs.catalogs import sesame
 from ivs.catalogs import vizier
-from ivs.io import fits
+from ivs.inout import fits
 from ivs import config
 
 logger = logging.getLogger("CAT.COROT")
@@ -35,7 +35,7 @@ def get_sismo_data(ID):
     data = []
         
     if isinstance(ID,str) and os.path.isfile(ID):
-        header = pyfits.getheader(ID)
+        header = pf.getheader(ID)
         times,flux,error,flags = fits.read_corot(ID)
         data.append([times,flux,error,flags])
     else:
@@ -53,7 +53,7 @@ def get_sismo_data(ID):
         catfiles = config.glob((os.sep).join(['catalogs','corot','sismo']),'*.fits')
         for catfile in catfiles:
             try:
-                header = pyfits.getheader(catfile)
+                header = pf.getheader(catfile)
             except IOError:
                 continue
             if header['starname']==ID or header['corotid'].replace(' ','')=='%s'%(ID):
@@ -85,7 +85,7 @@ def get_exo_data(ID,type_data='white'):
     header = None
     data = []
     if isinstance(ID,str) and os.path.isfile(ID):
-        header = pyfits.getheader(ID)
+        header = pf.getheader(ID)
         times,flux,error,flags = fits.read_corot(ID)
         data.append([times,flux,error,flags])
     else:
@@ -100,7 +100,7 @@ def get_exo_data(ID,type_data='white'):
             url = urllib.URLopener()
             filen,msg = url.retrieve(filename)
             try:
-                header = pyfits.getheader(filen)
+                header = pf.getheader(filen)
             except IOError:
                 continue
             times,flux,error,flags = fits.read_corot(filen,type_data=type_data)

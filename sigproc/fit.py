@@ -12,7 +12,7 @@ tool of the pipeline.
 
 Necessary imports:
 
->>> from ivs.io.ascii import read2array
+>>> from ivs.inout.ascii import read2array
 >>> from ivs.sigproc import funclib
 >>> import numpy as np
 
@@ -290,7 +290,7 @@ Section 4. Exoplanet transit analysis
 Find the transits of CoRoT 8b, after Borde 2010.
 
 >>> import urllib
->>> from ivs.io import ascii
+>>> from ivs.inout import ascii
 >>> url = urllib.URLopener()
 >>> filen,msg = url.retrieve('http://cdsarc.u-strasbg.fr/viz-bin/nph-Plot/Vgraph/txt?J%2fA%2bA%2f520%2fA66%2f.%2flc_white&F=white&P=0&--bitmap-size&800x400')
 >>> times,signal = ascii.read2array(filen).T
