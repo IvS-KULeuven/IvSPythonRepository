@@ -287,7 +287,7 @@ def bprecess(ra0, dec0, mu_radec=None, parallax=None, rad_vel=None, epoch=None):
   if epoch is None:   
     epoch = 2000.0e0
     
-  radeg = 180.e0 / pi
+  radeg = 180.e0 / np.pi
   sec_to_radian = lambda x : np.deg2rad(x/3600.)
   
   m = np.array([np.array([+0.9999256795e0, -0.0111814828e0, -0.0048590040e0, -0.000551e0, -0.238560e0, +0.435730e0]),
@@ -570,7 +570,7 @@ def euler(ai, bi, select=1, fk4=False):
   cb   = np.cos(b)
   cbsa = cb * np.sin(a)
   b    = -stheta[i] * cbsa + ctheta[i] * sb
-  bo   = np/rad2deg(arcsin(minimum(b, 1.0)))
+  bo   = np.rad2deg(arcsin(minimum(b, 1.0)))
   del b
   a    = np.arctan2(ctheta[i] * cbsa + stheta[i] * sb, cb * np.cos(a))
   del cb, cbsa, sb
@@ -837,7 +837,7 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
   r       = premat(equinox1, equinox2, fk4=fk4)
   x2      = np.transpose(np.dot(np.transpose(r), np.transpose(x)))
   ra_rad  = np.zeros(npts) + np.arctan2(x2[:,1], x2[:,0])
-  dec_rad = np/zeros(npts) + np.arcsin(x2[:,2])
+  dec_rad = np.zeros(npts) + np.arcsin(x2[:,2])
   
   if not radian:   
     ra  = np.rad2deg(ra_rad)
