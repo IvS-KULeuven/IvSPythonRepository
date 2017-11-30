@@ -174,7 +174,6 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="generate_ranges"></a><span class="summary-sig-name">generate_ranges</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">type</span>=<span class="summary-sig-default">'single'</span>,
         <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'igrid_search'</span>,
         <span class="summary-sig-arg">distribution</span>=<span class="summary-sig-default">'uniform'</span>,
         <span class="summary-sig-arg">**kwargs</span>)</span><br />
@@ -407,7 +406,8 @@
         <span class="summary-sig-arg">units</span>,
         <span class="summary-sig-arg">photbands</span>,
         <span class="summary-sig-arg">source</span>,
-        <span class="summary-sig-arg">flags</span>=<span class="summary-sig-default">None</span>)</span><br />
+        <span class="summary-sig-arg">flags</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">phases</span>=<span class="summary-sig-default">None</span>)</span><br />
       Add photometry from numpy arrays</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_photometry_fromarrays">source&nbsp;code</a></span>
@@ -565,7 +565,7 @@
         <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
         <span class="summary-sig-arg">selfact</span>=<span class="summary-sig-default">'chisq'</span>,
         <span class="summary-sig-arg">**kwargs</span>)</span><br />
-      creates a record array of all fit results and removes the failurs</td>
+      creates record array(s) of all fit results and removes the failures</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.collect_results">source&nbsp;code</a></span>
             
@@ -676,6 +676,7 @@
         <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">set_model</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">exc_interpolpar</span>=<span class="summary-sig-default">[]</span>,
         <span class="summary-sig-arg">**kwargs</span>)</span><br />
       Fit fundamental parameters using a (pre-integrated) grid search.</td>
           <td align="right" valign="top">
@@ -816,7 +817,7 @@
         <span class="summary-sig-arg">loggrange</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">ebvrange</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">zrange</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'imc'</span>,
+        <span class="summary-sig-arg">start_from</span>=<span class="summary-sig-default">'igrid_search'</span>,
         <span class="summary-sig-arg">distribution</span>=<span class="summary-sig-default">'uniform'</span>,
         <span class="summary-sig-arg">points</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">fitmethod</span>=<span class="summary-sig-default">'fmin'</span>,
@@ -879,7 +880,8 @@
           <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#set_model" class="summary-sig-name">set_model</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">wave</span>,
         <span class="summary-sig-arg">flux</span>,
-        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">'manual'</span>)</span><br />
+        <span class="summary-sig-arg">label</span>=<span class="summary-sig-default">'manual'</span>,
+        <span class="summary-sig-arg">unique_phase</span>=<span class="summary-sig-default">None</span>)</span><br />
       Manually set the best SED model.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_model">source&nbsp;code</a></span>
@@ -915,6 +917,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#sample_gridsearch" class="summary-sig-name">sample_gridsearch</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
         <span class="summary-sig-arg">NrSamples</span>=<span class="summary-sig-default">1</span>,
         <span class="summary-sig-arg">df</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">selfact</span>=<span class="summary-sig-default">'chisq'</span>)</span><br />
@@ -1179,6 +1182,7 @@
           <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_sed" class="summary-sig-name">plot_sed</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">False</span>,
         <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">plot_redded</span>=<span class="summary-sig-default">True</span>,
         <span class="summary-sig-arg">plot_deredded</span>=<span class="summary-sig-default">False</span>,
         <span class="summary-sig-arg">plot_unselected</span>=<span class="summary-sig-default">True</span>,
         <span class="summary-sig-arg">wave_units</span>=<span class="summary-sig-default">'AA'</span>,
@@ -1202,7 +1206,8 @@
         <tr>
           <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#plot_chi2" class="summary-sig-name">plot_chi2</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">colors</span>=<span class="summary-sig-default">False</span>,
-        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
+        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
       Plot chi2 statistic for every datapoint included in the fit.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_chi2">source&nbsp;code</a></span>
@@ -1469,16 +1474,18 @@
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">str</span>
+      <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="ivs.sed.builder.SED-class.html#ci2str" class="summary-sig-name">ci2str</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">mtype</span>=<span class="summary-sig-default">'igrid_search'</span>)</span><br />
-      Prints the stored confidence intervals of the given mtype, the 
-      confidence intervals are sorted alfabetically.</td>
+          <td><span class="summary-sig"><a name="save_important_info"></a><span class="summary-sig-name">save_important_info</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">CI_limit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">method</span>=<span class="summary-sig-default">'igrid_search'</span>,
+        <span class="summary-sig-arg">chi2type</span>=<span class="summary-sig-default">'ci_red'</span>)</span><br />
+      Save a summary of the results to an ASCII file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.ci2str">source&nbsp;code</a></span>
+            <span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.save_important_info">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -1755,7 +1762,8 @@
         <span class="sig-arg">units</span>,
         <span class="sig-arg">photbands</span>,
         <span class="sig-arg">source</span>,
-        <span class="sig-arg">flags</span>=<span class="sig-default">None</span>)</span>
+        <span class="sig-arg">flags</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">phases</span>=<span class="sig-default">None</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.add_photometry_fromarrays">source&nbsp;code</a></span>&nbsp;
@@ -2023,6 +2031,7 @@
         <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">CI_limit</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">set_model</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">exc_interpolpar</span>=<span class="sig-default">[]</span>,
         <span class="sig-arg">**kwargs</span>)</span>
   </h3>
   </td><td align="right" valign="top"
@@ -2035,6 +2044,9 @@
   previous estimations, unless set explicitly.</p>
   <p>If called for the first time, the ranges will be +/- np.inf by 
   defaults, unless set explicitly.</p>
+  <p>There is an option to exclude a certain parameter from the 
+  interpolation. This is done by including it in a list attached to the 
+  keyword 'exc_interpolpar', e.g. exc_interpolpar = ['z'].</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -2049,7 +2061,8 @@
   <h3 class="epydoc"><span class="sig"><span class="sig-name">set_model</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">wave</span>,
         <span class="sig-arg">flux</span>,
-        <span class="sig-arg">label</span>=<span class="sig-default">'manual'</span>)</span>
+        <span class="sig-arg">label</span>=<span class="sig-default">'manual'</span>,
+        <span class="sig-arg">unique_phase</span>=<span class="sig-default">None</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.set_model">source&nbsp;code</a></span>&nbsp;
@@ -2113,6 +2126,7 @@
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">sample_gridsearch</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
         <span class="sig-arg">NrSamples</span>=<span class="sig-default">1</span>,
         <span class="sig-arg">df</span>=<span class="sig-default">None</span>,
         <span class="sig-arg">selfact</span>=<span class="sig-default">'chisq'</span>)</span>
@@ -2154,6 +2168,7 @@
   
   <p>Calculate chi2 of best model.</p>
   <p>TEMPORARY!!! API WILL CHANGE!!!</p>
+  <p>This function is not called anywhere in the builder.</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -2452,6 +2467,7 @@
   <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_sed</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">colors</span>=<span class="sig-default">False</span>,
         <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">plot_redded</span>=<span class="sig-default">True</span>,
         <span class="sig-arg">plot_deredded</span>=<span class="sig-default">False</span>,
         <span class="sig-arg">plot_unselected</span>=<span class="sig-default">True</span>,
         <span class="sig-arg">wave_units</span>=<span class="sig-default">'AA'</span>,
@@ -2497,7 +2513,8 @@
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">plot_chi2</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">colors</span>=<span class="sig-default">False</span>,
-        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
+        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.plot_chi2">source&nbsp;code</a></span>&nbsp;
@@ -2723,7 +2740,7 @@
   
   <pre class="literalblock">
 
-Save content of SED object to a FITS file. 
+Save content of SED object to a FITS file.
 
 The .fits file will contain the following extensions if they are present in the object:
    1) data (all previously collected photometric data = content of .phot file)
@@ -2766,7 +2783,7 @@ Example usage:
   
   <pre class="literalblock">
 
-Load a previously made SED FITS file. Only works for SEDs saved with 
+Load a previously made SED FITS file. Only works for SEDs saved with
 the save_fits function after 14.06.2012.
 
 The .fits file can contain the following extensions:
@@ -2879,33 +2896,6 @@ The .fits file can contain the following extensions:
   </dl>
 </td></tr></table>
 </div>
-<a name="ci2str"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">ci2str</span>(<span class="sig-arg">self</span>,
-        <span class="sig-arg">mtype</span>=<span class="sig-default">'igrid_search'</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="ivs.sed.builder-pysrc.html#SED.ci2str">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Prints the stored confidence intervals of the given mtype, the 
-  confidence intervals are sorted alfabetically.</p>
-  <dl class="fields">
-    <dt>Parameters:</dt>
-    <dd><ul class="nomargin-top">
-        <li><strong class="pname"><code>mtype</code></strong> (str) - the search type for which to show the ci</li>
-    </ul></dd>
-    <dt>Returns: str</dt>
-        <dd>The confidence intervals in a string</dd>
-  </dl>
-</td></tr></table>
-</div>
 <br />
 <!-- ==================== NAVIGATION BAR ==================== -->
 <table class="navbar" border="0" width="100%" cellpadding="0"
@@ -2933,7 +2923,7 @@ The .fits file can contain the following extensions:
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Tue Nov 14 05:27:18 2017
+    Generated by Epydoc 3.0.1 on Thu Nov 30 11:24:17 2017
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

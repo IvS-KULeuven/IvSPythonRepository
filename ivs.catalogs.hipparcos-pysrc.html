@@ -68,14 +68,14 @@
 <a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">httplib</tt> </tt>
 <a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">logging</tt> </tt>
 <a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
-<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">pyfits</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-comment">#import astropy.io.fits as pf</tt> </tt>
 <a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
 <a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package ivs=ivs-module.html"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-0', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package ivs.aux=ivs.aux-module.html"><a title="ivs.aux" class="py-name" href="#" onclick="return doclink('link-1', 'aux', 'link-1');">aux</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Module ivs.aux.loggers=ivs.aux.loggers-module.html"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-2', 'loggers', 'link-2');">loggers</a></tt> </tt>
 <a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-3" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-3', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-4" class="py-name" targets="Package ivs.catalogs=ivs.catalogs-module.html"><a title="ivs.catalogs" class="py-name" href="#" onclick="return doclink('link-4', 'catalogs', 'link-4');">catalogs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-5" class="py-name" targets="Module ivs.catalogs.sesame=ivs.catalogs.sesame-module.html"><a title="ivs.catalogs.sesame" class="py-name" href="#" onclick="return doclink('link-5', 'sesame', 'link-5');">sesame</a></tt> </tt>
-<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-6" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-6', 'ivs', 'link-0');">ivs</a></tt><tt class="py-op">.</tt><tt id="link-7" class="py-name" targets="Package ivs.io=ivs.io-module.html"><a title="ivs.io" class="py-name" href="#" onclick="return doclink('link-7', 'io', 'link-7');">io</a></tt> <tt class="py-keyword">import</tt> <tt id="link-8" class="py-name" targets="Module ivs.io.fits=ivs.io.fits-module.html"><a title="ivs.io.fits" class="py-name" href="#" onclick="return doclink('link-8', 'fits', 'link-8');">fits</a></tt> </tt>
-<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-9" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-9', 'ivs', 'link-0');">ivs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-10" class="py-name" targets="Module ivs.config=ivs.config-module.html"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-10', 'config', 'link-10');">config</a></tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-comment">#from ivs.inout import fits</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-6" class="py-name"><a title="ivs" class="py-name" href="#" onclick="return doclink('link-6', 'ivs', 'link-0');">ivs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Module ivs.config=ivs.config-module.html"><a title="ivs.config" class="py-name" href="#" onclick="return doclink('link-7', 'config', 'link-7');">config</a></tt> </tt>
 <a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line">         </tt>
-<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt id="link-11" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.io.ascii.logger=ivs.io.ascii-module.html#logger,Variable ivs.io.fits.logger=ivs.io.fits-module.html#logger,Variable ivs.io.hdf5.logger=ivs.io.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.stellar_evolution.adipls.logger=ivs.stellar_evolution.adipls-module.html#logger,Variable ivs.stellar_evolution.fileio.logger=ivs.stellar_evolution.fileio-module.html#logger,Variable ivs.stellar_evolution.gyre.logger=ivs.stellar_evolution.gyre-module.html#logger,Variable ivs.stellar_evolution.puls.logger=ivs.stellar_evolution.puls-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt id="link-8" class="py-name" targets="Variable ivs.asteroseismology.granulation.logger=ivs.asteroseismology.granulation-module.html#logger,Variable ivs.asteroseismology.redgiantfreqs.logger=ivs.asteroseismology.redgiantfreqs-module.html#logger,Variable ivs.asteroseismology.solarosc.logger=ivs.asteroseismology.solarosc-module.html#logger,Variable ivs.aux.decorators.logger=ivs.aux.decorators-module.html#logger,Variable ivs.catalogs.coralie.logger=ivs.catalogs.coralie-module.html#logger,Variable ivs.catalogs.corot.logger=ivs.catalogs.corot-module.html#logger,Variable ivs.catalogs.crossmatch.logger=ivs.catalogs.crossmatch-module.html#logger,Variable ivs.catalogs.gator.logger=ivs.catalogs.gator-module.html#logger,Variable ivs.catalogs.gcpd.logger=ivs.catalogs.gcpd-module.html#logger,Variable ivs.catalogs.hermes.logger=ivs.catalogs.hermes-module.html#logger,Variable ivs.catalogs.hipparcos.logger=ivs.catalogs.hipparcos-module.html#logger,Variable ivs.catalogs.kepler.logger=ivs.catalogs.kepler-module.html#logger,Variable ivs.catalogs.mast.logger=ivs.catalogs.mast-module.html#logger,Variable ivs.catalogs.p7.logger=ivs.catalogs.p7-module.html#logger,Variable ivs.catalogs.sesame.logger=ivs.catalogs.sesame-module.html#logger,Variable ivs.catalogs.vizier.logger=ivs.catalogs.vizier-module.html#logger,Variable ivs.inout.ascii.logger=ivs.inout.ascii-module.html#logger,Variable ivs.inout.fits.logger=ivs.inout.fits-module.html#logger,Variable ivs.inout.hdf5.logger=ivs.inout.hdf5-module.html#logger,Variable ivs.observations.distance.logger=ivs.observations.distance-module.html#logger,Variable ivs.observations.visibility.logger=ivs.observations.visibility-module.html#logger,Variable ivs.roche.binary.logger=ivs.roche.binary-module.html#logger,Variable ivs.sed.builder.logger=ivs.sed.builder-module.html#logger,Variable ivs.sed.creategrids.logger=ivs.sed.creategrids-module.html#logger,Variable ivs.sed.decorators.logger=ivs.sed.decorators-module.html#logger,Variable ivs.sed.distance.logger=ivs.sed.distance-module.html#logger,Variable ivs.sed.extinctionmodels.logger=ivs.sed.extinctionmodels-module.html#logger,Variable ivs.sed.filters.logger=ivs.sed.filters-module.html#logger,Variable ivs.sed.fit.logger=ivs.sed.fit-module.html#logger,Variable ivs.sed.limbdark.logger=ivs.sed.limbdark-module.html#logger,Variable ivs.sed.model.logger=ivs.sed.model-module.html#logger,Variable ivs.sed.reddening.logger=ivs.sed.reddening-module.html#logger,Variable ivs.sigproc.evaluate.logger=ivs.sigproc.evaluate-module.html#logger,Variable ivs.sigproc.filtering.logger=ivs.sigproc.filtering-module.html#logger,Variable ivs.sigproc.fit.logger=ivs.sigproc.fit-module.html#logger,Variable ivs.sigproc.funclib.logger=ivs.sigproc.funclib-module.html#logger,Variable ivs.spectra.linelists.logger=ivs.spectra.linelists-module.html#logger,Variable ivs.spectra.model.logger=ivs.spectra.model-module.html#logger,Variable ivs.spectra.tools.logger=ivs.spectra.tools-module.html#logger,Variable ivs.timeseries.decorators.logger=ivs.timeseries.decorators-module.html#logger,Variable ivs.timeseries.freqanalyse.logger=ivs.timeseries.freqanalyse-module.html#logger,Variable ivs.timeseries.keplerorbit.logger=ivs.timeseries.keplerorbit-module.html#logger,Variable ivs.timeseries.pergrams.logger=ivs.timeseries.pergrams-module.html#logger,Variable ivs.timeseries.windowfunctions.logger=ivs.timeseries.windowfunctions-module.html#logger,Variable ivs.units.conversions.logger=ivs.units.conversions-module.html#logger"><a title="ivs.asteroseismology.granulation.logger
 ivs.asteroseismology.redgiantfreqs.logger
 ivs.asteroseismology.solarosc.logger
 ivs.aux.decorators.logger
@@ -91,9 +91,9 @@ ivs.catalogs.mast.logger
 ivs.catalogs.p7.logger
 ivs.catalogs.sesame.logger
 ivs.catalogs.vizier.logger
-ivs.io.ascii.logger
-ivs.io.fits.logger
-ivs.io.hdf5.logger
+ivs.inout.ascii.logger
+ivs.inout.fits.logger
+ivs.inout.hdf5.logger
 ivs.observations.distance.logger
 ivs.observations.visibility.logger
 ivs.roche.binary.logger
@@ -114,17 +114,13 @@ ivs.sigproc.funclib.logger
 ivs.spectra.linelists.logger
 ivs.spectra.model.logger
 ivs.spectra.tools.logger
-ivs.stellar_evolution.adipls.logger
-ivs.stellar_evolution.fileio.logger
-ivs.stellar_evolution.gyre.logger
-ivs.stellar_evolution.puls.logger
 ivs.timeseries.decorators.logger
 ivs.timeseries.freqanalyse.logger
 ivs.timeseries.keplerorbit.logger
 ivs.timeseries.pergrams.logger
 ivs.timeseries.windowfunctions.logger
-ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-11', 'logger', 'link-11');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"CAT.HIP"</tt><tt class="py-op">)</tt> </tt>
-<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt id="link-12" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-8', 'logger', 'link-8');">logger</a></tt> <tt class="py-op">=</tt> <tt class="py-name">logging</tt><tt class="py-op">.</tt><tt class="py-name">getLogger</tt><tt class="py-op">(</tt><tt class="py-string">"CAT.HIP"</tt><tt class="py-op">)</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt id="link-9" class="py-name"><a title="ivs.asteroseismology.granulation.logger
 ivs.asteroseismology.redgiantfreqs.logger
 ivs.asteroseismology.solarosc.logger
 ivs.aux.decorators.logger
@@ -140,9 +136,9 @@ ivs.catalogs.mast.logger
 ivs.catalogs.p7.logger
 ivs.catalogs.sesame.logger
 ivs.catalogs.vizier.logger
-ivs.io.ascii.logger
-ivs.io.fits.logger
-ivs.io.hdf5.logger
+ivs.inout.ascii.logger
+ivs.inout.fits.logger
+ivs.inout.hdf5.logger
 ivs.observations.distance.logger
 ivs.observations.visibility.logger
 ivs.roche.binary.logger
@@ -163,18 +159,14 @@ ivs.sigproc.funclib.logger
 ivs.spectra.linelists.logger
 ivs.spectra.model.logger
 ivs.spectra.tools.logger
-ivs.stellar_evolution.adipls.logger
-ivs.stellar_evolution.fileio.logger
-ivs.stellar_evolution.gyre.logger
-ivs.stellar_evolution.puls.logger
 ivs.timeseries.decorators.logger
 ivs.timeseries.freqanalyse.logger
 ivs.timeseries.keplerorbit.logger
 ivs.timeseries.pergrams.logger
 ivs.timeseries.windowfunctions.logger
-ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-12', 'logger', 'link-11');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">addHandler</tt><tt class="py-op">(</tt><tt id="link-13" class="py-name"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-13', 'loggers', 'link-2');">loggers</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name" targets="Class ivs.asteroseismology.granulation.NullHandler=ivs.asteroseismology.granulation.NullHandler-class.html,Class ivs.asteroseismology.solarosc.NullHandler=ivs.asteroseismology.solarosc.NullHandler-class.html,Class ivs.aux.loggers.NullHandler=ivs.aux.loggers.NullHandler-class.html"><a title="ivs.asteroseismology.granulation.NullHandler
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-9', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">addHandler</tt><tt class="py-op">(</tt><tt id="link-10" class="py-name"><a title="ivs.aux.loggers" class="py-name" href="#" onclick="return doclink('link-10', 'loggers', 'link-2');">loggers</a></tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Class ivs.asteroseismology.granulation.NullHandler=ivs.asteroseismology.granulation.NullHandler-class.html,Class ivs.asteroseismology.solarosc.NullHandler=ivs.asteroseismology.solarosc.NullHandler-class.html,Class ivs.aux.loggers.NullHandler=ivs.aux.loggers.NullHandler-class.html"><a title="ivs.asteroseismology.granulation.NullHandler
 ivs.asteroseismology.solarosc.NullHandler
-ivs.aux.loggers.NullHandler" class="py-name" href="#" onclick="return doclink('link-14', 'NullHandler', 'link-14');">NullHandler</a></tt><tt class="py-op">)</tt> </tt>
+ivs.aux.loggers.NullHandler" class="py-name" href="#" onclick="return doclink('link-11', 'NullHandler', 'link-11');">NullHandler</a></tt><tt class="py-op">)</tt> </tt>
 <a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"> </tt>
 <a name="getHipData"></a><div id="getHipData-def"><a name="L22"></a><tt class="py-lineno"> 22</tt> <a class="py-toggle" href="#" id="getHipData-toggle" onclick="return toggle('getHipData');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="ivs.catalogs.hipparcos-module.html#getHipData">getHipData</a><tt class="py-op">(</tt><tt class="py-param">ID</tt><tt class="py-op">,</tt><tt class="py-param">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'ep'</tt><tt class="py-op">,</tt><tt class="py-param">outputFileName</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
 </div><div id="getHipData-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="getHipData-expanded"><a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"> </tt>
@@ -245,16 +237,16 @@ ivs.aux.loggers.NullHandler" class="py-name" href="#" onclick="return doclink('l
 <a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">    <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
 <a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">        <tt class="py-name">hipnr</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">)</tt> </tt>
 <a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt> <tt class="py-name">ValueError</tt><tt class="py-op">:</tt> </tt>
-<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">        <tt class="py-name">info</tt> <tt class="py-op">=</tt> <tt id="link-15" class="py-name"><a title="ivs.catalogs.sesame" class="py-name" href="#" onclick="return doclink('link-15', 'sesame', 'link-5');">sesame</a></tt><tt class="py-op">.</tt><tt id="link-16" class="py-name" targets="Function ivs.catalogs.coralie.search()=ivs.catalogs.coralie-module.html#search,Function ivs.catalogs.gator.search()=ivs.catalogs.gator-module.html#search,Function ivs.catalogs.gcpd.search()=ivs.catalogs.gcpd-module.html#search,Function ivs.catalogs.hermes.search()=ivs.catalogs.hermes-module.html#search,Function ivs.catalogs.mast.search()=ivs.catalogs.mast-module.html#search,Function ivs.catalogs.sesame.search()=ivs.catalogs.sesame-module.html#search,Function ivs.catalogs.vizier.search()=ivs.catalogs.vizier-module.html#search"><a title="ivs.catalogs.coralie.search
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">        <tt class="py-name">info</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name"><a title="ivs.catalogs.sesame" class="py-name" href="#" onclick="return doclink('link-12', 'sesame', 'link-5');">sesame</a></tt><tt class="py-op">.</tt><tt id="link-13" class="py-name" targets="Function ivs.catalogs.coralie.search()=ivs.catalogs.coralie-module.html#search,Function ivs.catalogs.gator.search()=ivs.catalogs.gator-module.html#search,Function ivs.catalogs.gcpd.search()=ivs.catalogs.gcpd-module.html#search,Function ivs.catalogs.hermes.search()=ivs.catalogs.hermes-module.html#search,Function ivs.catalogs.mast.search()=ivs.catalogs.mast-module.html#search,Function ivs.catalogs.sesame.search()=ivs.catalogs.sesame-module.html#search,Function ivs.catalogs.vizier.search()=ivs.catalogs.vizier-module.html#search"><a title="ivs.catalogs.coralie.search
 ivs.catalogs.gator.search
 ivs.catalogs.gcpd.search
 ivs.catalogs.hermes.search
 ivs.catalogs.mast.search
 ivs.catalogs.sesame.search
-ivs.catalogs.vizier.search" class="py-name" href="#" onclick="return doclink('link-16', 'search', 'link-16');">search</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">db</tt><tt class="py-op">=</tt><tt class="py-string">'S'</tt><tt class="py-op">)</tt> </tt>
+ivs.catalogs.vizier.search" class="py-name" href="#" onclick="return doclink('link-13', 'search', 'link-13');">search</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">db</tt><tt class="py-op">=</tt><tt class="py-string">'S'</tt><tt class="py-op">)</tt> </tt>
 <a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">        <tt class="py-name">IDs</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">alias</tt> <tt class="py-keyword">for</tt> <tt class="py-name">alias</tt> <tt class="py-keyword">in</tt> <tt class="py-name">info</tt><tt class="py-op">[</tt><tt class="py-string">'alias'</tt><tt class="py-op">]</tt> <tt class="py-keyword">if</tt> <tt class="py-string">'HIP'</tt> <tt class="py-keyword">in</tt> <tt class="py-name">alias</tt><tt class="py-op">]</tt> </tt>
 <a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">IDs</tt><tt class="py-op">)</tt><tt class="py-op">!=</tt><tt class="py-number">1</tt><tt class="py-op">:</tt> </tt>
-<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">            <tt id="link-17" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">            <tt id="link-14" class="py-name"><a title="ivs.asteroseismology.granulation.logger
 ivs.asteroseismology.redgiantfreqs.logger
 ivs.asteroseismology.solarosc.logger
 ivs.aux.decorators.logger
@@ -270,9 +262,9 @@ ivs.catalogs.mast.logger
 ivs.catalogs.p7.logger
 ivs.catalogs.sesame.logger
 ivs.catalogs.vizier.logger
-ivs.io.ascii.logger
-ivs.io.fits.logger
-ivs.io.hdf5.logger
+ivs.inout.ascii.logger
+ivs.inout.fits.logger
+ivs.inout.hdf5.logger
 ivs.observations.distance.logger
 ivs.observations.visibility.logger
 ivs.roche.binary.logger
@@ -293,16 +285,12 @@ ivs.sigproc.funclib.logger
 ivs.spectra.linelists.logger
 ivs.spectra.model.logger
 ivs.spectra.tools.logger
-ivs.stellar_evolution.adipls.logger
-ivs.stellar_evolution.fileio.logger
-ivs.stellar_evolution.gyre.logger
-ivs.stellar_evolution.puls.logger
 ivs.timeseries.decorators.logger
 ivs.timeseries.freqanalyse.logger
 ivs.timeseries.keplerorbit.logger
 ivs.timeseries.pergrams.logger
 ivs.timeseries.windowfunctions.logger
-ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-17', 'logger', 'link-11');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">error</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for %s not possible. Reason: no HIP number resolved"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-14', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">error</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for %s not possible. Reason: no HIP number resolved"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
 <a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> </tt>
 <a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">        <tt class="py-name">hipnr</tt> <tt class="py-op">=</tt> <tt class="py-name">IDs</tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-string">' '</tt><tt class="py-op">)</tt><tt class="py-op">[</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
 <a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">     </tt>
@@ -312,7 +300,7 @@ ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('
 <a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">    <tt class="py-name">conn</tt><tt class="py-op">.</tt><tt class="py-name">request</tt><tt class="py-op">(</tt><tt class="py-string">"GET"</tt><tt class="py-op">,</tt> <tt class="py-name">webpage</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">hipnr</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
 <a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">    <tt class="py-name">response</tt> <tt class="py-op">=</tt> <tt class="py-name">conn</tt><tt class="py-op">.</tt><tt class="py-name">getresponse</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">response</tt><tt class="py-op">.</tt><tt class="py-name">reason</tt> <tt class="py-op">!=</tt> <tt class="py-string">"OK"</tt><tt class="py-op">:</tt> </tt>
-<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt id="link-18" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt id="link-15" class="py-name"><a title="ivs.asteroseismology.granulation.logger
 ivs.asteroseismology.redgiantfreqs.logger
 ivs.asteroseismology.solarosc.logger
 ivs.aux.decorators.logger
@@ -328,9 +316,9 @@ ivs.catalogs.mast.logger
 ivs.catalogs.p7.logger
 ivs.catalogs.sesame.logger
 ivs.catalogs.vizier.logger
-ivs.io.ascii.logger
-ivs.io.fits.logger
-ivs.io.hdf5.logger
+ivs.inout.ascii.logger
+ivs.inout.fits.logger
+ivs.inout.hdf5.logger
 ivs.observations.distance.logger
 ivs.observations.visibility.logger
 ivs.roche.binary.logger
@@ -351,19 +339,15 @@ ivs.sigproc.funclib.logger
 ivs.spectra.linelists.logger
 ivs.spectra.model.logger
 ivs.spectra.tools.logger
-ivs.stellar_evolution.adipls.logger
-ivs.stellar_evolution.fileio.logger
-ivs.stellar_evolution.gyre.logger
-ivs.stellar_evolution.puls.logger
 ivs.timeseries.decorators.logger
 ivs.timeseries.freqanalyse.logger
 ivs.timeseries.keplerorbit.logger
 ivs.timeseries.pergrams.logger
 ivs.timeseries.windowfunctions.logger
-ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-18', 'logger', 'link-11');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">error</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for HIP%s not possible. Reason: %s"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">hipnr</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">response</tt><tt class="py-op">.</tt><tt class="py-name">reason</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-15', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">error</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for HIP%s not possible. Reason: %s"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">hipnr</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">response</tt><tt class="py-op">.</tt><tt class="py-name">reason</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
 <a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> </tt>
 <a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
-<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt id="link-19" class="py-name"><a title="ivs.asteroseismology.granulation.logger
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt id="link-16" class="py-name"><a title="ivs.asteroseismology.granulation.logger
 ivs.asteroseismology.redgiantfreqs.logger
 ivs.asteroseismology.solarosc.logger
 ivs.aux.decorators.logger
@@ -379,9 +363,9 @@ ivs.catalogs.mast.logger
 ivs.catalogs.p7.logger
 ivs.catalogs.sesame.logger
 ivs.catalogs.vizier.logger
-ivs.io.ascii.logger
-ivs.io.fits.logger
-ivs.io.hdf5.logger
+ivs.inout.ascii.logger
+ivs.inout.fits.logger
+ivs.inout.hdf5.logger
 ivs.observations.distance.logger
 ivs.observations.visibility.logger
 ivs.roche.binary.logger
@@ -402,18 +386,14 @@ ivs.sigproc.funclib.logger
 ivs.spectra.linelists.logger
 ivs.spectra.model.logger
 ivs.spectra.tools.logger
-ivs.stellar_evolution.adipls.logger
-ivs.stellar_evolution.fileio.logger
-ivs.stellar_evolution.gyre.logger
-ivs.stellar_evolution.puls.logger
 ivs.timeseries.decorators.logger
 ivs.timeseries.freqanalyse.logger
 ivs.timeseries.keplerorbit.logger
 ivs.timeseries.pergrams.logger
 ivs.timeseries.windowfunctions.logger
-ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-19', 'logger', 'link-11');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for HIP%s: OK"</tt> <tt class="py-op">%</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">hipnr</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('link-16', 'logger', 'link-8');">logger</a></tt><tt class="py-op">.</tt><tt class="py-name">info</tt><tt class="py-op">(</tt><tt class="py-string">"Data retrieval for HIP%s: OK"</tt> <tt class="py-op">%</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">hipnr</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
 <a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">         </tt>
-<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-name">contents</tt> <tt class="py-op">=</tt> <tt class="py-name">response</tt><tt class="py-op">.</tt><tt id="link-20" class="py-name" targets="Method ivs.io.database.Database.read()=ivs.io.database.Database-class.html#read"><a title="ivs.io.database.Database.read" class="py-name" href="#" onclick="return doclink('link-20', 'read', 'link-20');">read</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-name">contents</tt> <tt class="py-op">=</tt> <tt class="py-name">response</tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Method ivs.inout.database.Database.read()=ivs.inout.database.Database-class.html#read"><a title="ivs.inout.database.Database.read" class="py-name" href="#" onclick="return doclink('link-17', 'read', 'link-17');">read</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-name">conn</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">     </tt>
 <a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">    <tt class="py-comment"># Parse the webpage, to remove the html codes (line starts with &lt;").</tt> </tt>
@@ -453,7 +433,7 @@ ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('
 <a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line">                <tt class="py-comment">#-- correct for empty fields</tt> </tt>
 <a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line">                <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">tuple</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">entry</tt><tt class="py-op">.</tt><tt class="py-name">replace</tt><tt class="py-op">(</tt><tt class="py-string">' '</tt><tt class="py-op">,</tt><tt class="py-string">''</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-string">''</tt> <tt class="py-keyword">and</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">nan</tt> <tt class="py-keyword">or</tt> <tt class="py-name">entry</tt><tt class="py-op">)</tt> <tt class="py-keyword">for</tt> <tt class="py-name">entry</tt> <tt class="py-keyword">in</tt> <tt class="py-name">data</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
 <a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">outputFileName</tt><tt class="py-op">:</tt> </tt>
-<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">                <tt class="py-name">outputFile</tt><tt class="py-op">.</tt><tt id="link-21" class="py-name" targets="Method ivs.aux.decorators.LogPrinter.write()=ivs.aux.decorators.LogPrinter-class.html#write"><a title="ivs.aux.decorators.LogPrinter.write" class="py-name" href="#" onclick="return doclink('link-21', 'write', 'link-21');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">line</tt> <tt class="py-op">+</tt> <tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">                <tt class="py-name">outputFile</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name" targets="Method ivs.aux.decorators.LogPrinter.write()=ivs.aux.decorators.LogPrinter-class.html#write"><a title="ivs.aux.decorators.LogPrinter.write" class="py-name" href="#" onclick="return doclink('link-18', 'write', 'link-18');">write</a></tt><tt class="py-op">(</tt><tt class="py-name">line</tt> <tt class="py-op">+</tt> <tt class="py-string">"\n"</tt><tt class="py-op">)</tt> </tt>
 <a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">outputFileName</tt><tt class="py-op">:</tt> </tt>
 <a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line">        <tt class="py-name">outputFile</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
 <a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">     </tt>
@@ -484,7 +464,7 @@ ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('
 </div><div id="getEpochData-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="getEpochData-expanded"><a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
 <a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line"><tt class="py-docstring">    Convenience function to retrieve epoch data.</tt> </tt>
 <a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
-<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-22" class="py-name" targets="Function ivs.catalogs.hipparcos.getHipData()=ivs.catalogs.hipparcos-module.html#getHipData"><a title="ivs.catalogs.hipparcos.getHipData" class="py-name" href="#" onclick="return doclink('link-22', 'getHipData', 'link-22');">getHipData</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'ep'</tt><tt class="py-op">,</tt><tt class="py-name">outputFileName</tt><tt class="py-op">=</tt><tt class="py-name">outputFileName</tt><tt class="py-op">)</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-19" class="py-name" targets="Function ivs.catalogs.hipparcos.getHipData()=ivs.catalogs.hipparcos-module.html#getHipData"><a title="ivs.catalogs.hipparcos.getHipData" class="py-name" href="#" onclick="return doclink('link-19', 'getHipData', 'link-19');">getHipData</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'ep'</tt><tt class="py-op">,</tt><tt class="py-name">outputFileName</tt><tt class="py-op">=</tt><tt class="py-name">outputFileName</tt><tt class="py-op">)</tt> </tt>
 </div><a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line"> </tt>
 <a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line"> </tt>
 <a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line"> </tt>
@@ -494,7 +474,7 @@ ivs.units.conversions.logger" class="py-name" href="#" onclick="return doclink('
 </div><div id="getIntermediateData-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="getIntermediateData-expanded"><a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
 <a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"><tt class="py-docstring">    Convenience function to retrieve intermediate data.</tt> </tt>
 <a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
-<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-23" class="py-name"><a title="ivs.catalogs.hipparcos.getHipData" class="py-name" href="#" onclick="return doclink('link-23', 'getHipData', 'link-22');">getHipData</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'i'</tt><tt class="py-op">,</tt><tt class="py-name">outputFileName</tt><tt class="py-op">=</tt><tt class="py-name">outputFileName</tt><tt class="py-op">)</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-20" class="py-name"><a title="ivs.catalogs.hipparcos.getHipData" class="py-name" href="#" onclick="return doclink('link-20', 'getHipData', 'link-19');">getHipData</a></tt><tt class="py-op">(</tt><tt class="py-name">ID</tt><tt class="py-op">,</tt><tt class="py-name">dtype</tt><tt class="py-op">=</tt><tt class="py-string">'i'</tt><tt class="py-op">,</tt><tt class="py-name">outputFileName</tt><tt class="py-op">=</tt><tt class="py-name">outputFileName</tt><tt class="py-op">)</tt> </tt>
 </div><a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line"> </tt><script type="text/javascript">
 <!--
 expandto(location.href);
@@ -528,7 +508,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Tue Nov 14 05:27:20 2017
+    Generated by Epydoc 3.0.1 on Thu Nov 30 11:24:22 2017
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

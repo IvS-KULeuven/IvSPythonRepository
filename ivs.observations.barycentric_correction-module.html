@@ -1,0 +1,1057 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>ivs.observations.barycentric_correction</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="ivs-module.html">Package&nbsp;ivs</a> ::
+        <a href="ivs.observations-module.html">Package&nbsp;observations</a> ::
+        Module&nbsp;barycentric_correction
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="ivs.observations.barycentric_correction-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module barycentric_correction</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html">source&nbsp;code</a></span></p>
+<p>Compute the influence of earth's orbit around the sun, and absolute 
+  stellar velocities</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#baryvel" class="summary-sig-name">baryvel</a>(<span class="summary-sig-arg">dje</span>,
+        <span class="summary-sig-arg">deq</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Calculates heliocentric and barycentric velocity components of Earth.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#baryvel">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#bprecess" class="summary-sig-name">bprecess</a>(<span class="summary-sig-arg">ra0</span>,
+        <span class="summary-sig-arg">dec0</span>,
+        <span class="summary-sig-arg">mu_radec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">parallax</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">rad_vel</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">epoch</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Precess positions from J2000.0 (FK5) to B1950.0 (FK4)</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#bprecess">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#convolve" class="summary-sig-name">convolve</a>(<span class="summary-sig-arg">image</span>,
+        <span class="summary-sig-arg">psf</span>,
+        <span class="summary-sig-arg">ft_psf</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ft_image</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">no_ft</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">correlate</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">auto_correlation</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Convolution of an image with a Point Spread Function (PSF)
+The default is to compute the convolution using a product of Fourier transforms (for speed).</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#convolve">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="cv_coord"></a><span class="summary-sig-name">cv_coord</span>(<span class="summary-sig-arg">a</span>,
+        <span class="summary-sig-arg">b</span>,
+        <span class="summary-sig-arg">c</span>,
+        <span class="summary-sig-arg">fr</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">to</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">degr</span>=<span class="summary-sig-default">False</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#cv_coord">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#daycnv" class="summary-sig-name">daycnv</a>(<span class="summary-sig-arg">xjd</span>)</span><br />
+      Converts Julian dates to Gregorian calendar dates</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#daycnv">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#euler" class="summary-sig-name">euler</a>(<span class="summary-sig-arg">ai</span>,
+        <span class="summary-sig-arg">bi</span>,
+        <span class="summary-sig-arg">select</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">fk4</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Transform between Galactic, celestial, and ecliptic coordinates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#euler">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#gal_uvw" class="summary-sig-name">gal_uvw</a>(<span class="summary-sig-arg">distance</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">lsr</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">ra</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">dec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">pmra</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">pmdec</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">vrad</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">plx</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Calculate the Galactic space velocity (U,V,W) of star</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#gal_uvw">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#helcorr" class="summary-sig-name">helcorr</a>(<span class="summary-sig-arg">ra2000</span>,
+        <span class="summary-sig-arg">dec2000</span>,
+        <span class="summary-sig-arg">jd</span>,
+        <span class="summary-sig-arg">obs_long</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">obs_lat</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">obs_alt</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">debug</span>=<span class="summary-sig-default">False</span>)</span><br />
+      calculates heliocentric Julian date, baricentric and heliocentric radial
+velocity corrections from:</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#helcorr">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#helio_jd" class="summary-sig-name">helio_jd</a>(<span class="summary-sig-arg">date</span>,
+        <span class="summary-sig-arg">ra</span>,
+        <span class="summary-sig-arg">dec</span>,
+        <span class="summary-sig-arg">b1950</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">time_diff</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Convert geocentric (reduced) Julian date to heliocentric Julian date</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#helio_jd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#precess" class="summary-sig-name">precess</a>(<span class="summary-sig-arg">ra0</span>,
+        <span class="summary-sig-arg">dec0</span>,
+        <span class="summary-sig-arg">equinox1</span>,
+        <span class="summary-sig-arg">equinox2</span>,
+        <span class="summary-sig-arg">doprint</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">fk4</span>=<span class="summary-sig-default">False</span>,
+        <span class="summary-sig-arg">radian</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Precess coordinates from EQUINOX1 to EQUINOX2.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#precess">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#precess_xyz" class="summary-sig-name">precess_xyz</a>(<span class="summary-sig-arg">x</span>,
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">z</span>,
+        <span class="summary-sig-arg">equinox1</span>,
+        <span class="summary-sig-arg">equinox2</span>)</span><br />
+      Precess equatorial geocentric rectangular coordinates.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#precess_xyz">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#premat" class="summary-sig-name">premat</a>(<span class="summary-sig-arg">equinox1</span>,
+        <span class="summary-sig-arg">equinox2</span>,
+        <span class="summary-sig-arg">fk4</span>=<span class="summary-sig-default">False</span>)</span><br />
+      Return the precession matrix needed to go from EQUINOX1 to EQUINOX2.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#premat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#sphdist" class="summary-sig-name">sphdist</a>(<span class="summary-sig-arg">ra1</span>,
+        <span class="summary-sig-arg">dec1</span>,
+        <span class="summary-sig-arg">ra2</span>,
+        <span class="summary-sig-arg">dec2</span>)</span><br />
+      Measures the spherical distance in degrees.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#sphdist">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="ivs.observations.barycentric_correction-module.html#xyz" class="summary-sig-name">xyz</a>(<span class="summary-sig-arg">date</span>,
+        <span class="summary-sig-arg">equinox</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Calculate geocentric X,Y, and Z  and velocity coordinates of the Sun</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#xyz">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="baryvel"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">baryvel</span>(<span class="sig-arg">dje</span>,
+        <span class="sig-arg">deq</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#baryvel">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Calculates heliocentric and barycentric velocity components of Earth.
+
+This function takes into account the Earth-Moon motion, and is useful for
+radial velocity work to an accuracy of  ~1 m/s.
+
+dvel_hel, dvel_bary = baryvel(dje, deq)
+ 
+Inputs:
+@param dje: Julian ephemeris date.
+@type dje: array
+@param deq: epoch of mean equinox of dvelh and dvelb. If deq = 0 then deq is assumed to be equal to dje
+@type deq: float
+@return: heliocentric and barycentric velocity components in km/s (The 3-vectors dvelh and dvelb are given in a right-handed coordinate system with the +X axis toward the Vernal Equinox, and +Z axis toward the celestial pole.)
+@rtype: array (2X3)          
+
+Functions called:
+  premat() -- computes precession matrix
+  
+NOTES:
+  Algorithm taken from FORTRAN program of Stumpff (1980, A&amp;A Suppl, 41,1)
+  Stumpf claimed an accuracy of 42 cm/s for the velocity. A comparison with
+  the JPL FORTRAN planetary ephemeris program PLEPH found agreement to within
+  about 65 cm/s between 1986 and 1994
+ 
+REVISION HISTORY:
+  Jeff Valenti,  U.C. Berkeley    Translated BARVEL.FOR to IDL.
+  W. Landsman, Cleaned up program sent by Chris McCarthy (SfSU) June 1994
+  Converted to IDL V5.0   W. Landsman   September 1997
+  Added /JPL keyword  W. Landsman   July 2001
+  Documentation update W. Landsman Dec 2005
+  Converted to Python S. Koposov 2009-2010
+  Adapted for IvS library
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="bprecess"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">bprecess</span>(<span class="sig-arg">ra0</span>,
+        <span class="sig-arg">dec0</span>,
+        <span class="sig-arg">mu_radec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">parallax</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">rad_vel</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">epoch</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#bprecess">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Precess positions from J2000.0 (FK5) to B1950.0 (FK4)
+
+Calculates the mean place of a star at B1950.0 on the FK4 system from the mean
+place at J2000.0 on the FK5 system.
+
+Input:
+  @param ra0: J2000 right ascension in degrees
+  @type ra0: N array
+  @param dec0: J2000 declination in degrees
+  @type dec0: N array
+  @keyword mu_radec: array containing the proper motion in seconds of arc per tropical *century* in right ascension and declination.
+  @type mu_radec: 2xN array
+  @keyword parallax: array giving stellar parallax (seconds of arc)
+  @type parallax: N array
+  @keyword rad_vel: array giving radial velocity in km/s
+  @type rad_vel: N array
+  @keyword epoch: scalar giving epoch of original observations, default 2000. This keyword value is only used if mu_radec is not given
+  @type epoch:
+  @return: The corresponding B1950 right ascension and declination in *degrees*.
+  @rtype: N array, N array
+  
+NOTES:
+  The algorithm is taken from the Explanatory Supplement to the Astronomical Almanac 1992, page 186. Also see Aoki et al (1983), A&amp;A, 128,263
+  
+  BPRECESS distinguishes between the following two cases:
+  (1) The proper motion is known and non-zero
+  (2) the proper motion is unknown or known to be exactly zero (i.e.
+      extragalactic radio sources).   In this case, the reverse of the
+      algorithm in Appendix 2 of Aoki et al. (1983) is used to ensure that the
+      output proper motion is exactly zero. Better precision can be achieved
+      in this case by inputting the epoch of the original observations.
+      
+REVISION HISTORY:
+  Written (W. Landsman, october 1992)
+  Vectorized (W. Landsman, february, 1994)
+  Treat case where proper motion not known or exactly zero  (november 1994)
+  Handling of arrays larger than 32767   (Lars L. Christensen, march 1995)
+  Converted to IDL V5.0   (W. Landsman, september 1997)
+  Fixed bug where A term not initialized for vector input (W. Landsman, february 2000)
+  Converted to python (Sergey Koposov, july 2010)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="convolve"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">convolve</span>(<span class="sig-arg">image</span>,
+        <span class="sig-arg">psf</span>,
+        <span class="sig-arg">ft_psf</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ft_image</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">no_ft</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">correlate</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">auto_correlation</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#convolve">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Convolution of an image with a Point Spread Function (PSF)
+The default is to compute the convolution using a product of Fourier transforms (for speed).
+
+Inputs:
+  @param image: 2-D array (matrix) to be convolved with psf
+  @type image: array
+  @param psf: the Point Spread Function, (size &lt; or = to size of image).
+  @type psf array
+  @keyword ft_psf: passes out/in the Fourier transform of the PSF, (so that it can be re-used the next time function is called).
+  @type ft_psc: bool
+  @param ft_image: passes out/in the Fourier transform of image.
+  @type ft_image: bool
+  @param correlate: uses the conjugate of the Fourier transform of PSF to compute the cross-correlation of image and PSF (equivalent to IDL function convol() with NO rotation of PSF)
+  @type correlate: bool
+  @param auto_corr: computes the auto-correlation function of image using FFT.
+  @type auto_corr: bool
+
+METHOD:
+  When using FFT, PSF is centered &amp; expanded to size of image.
+
+HISTORY:
+  Written (Frank Varosi, 1992)
+  Appropriate precision type for result depending on input image (Markus Hundertmark, february 2006)
+  Fix the bug causing the recomputation of FFT(psf) and/or FFT(image) (Sergey Koposov, december 2006)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="daycnv"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">daycnv</span>(<span class="sig-arg">xjd</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#daycnv">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+ Converts Julian dates to Gregorian calendar dates
+ 
+ @param xjd: Julian date, positive double precision scalar or vector
+ @type: array
+ 
+OUTPUTS:
+  YR: Year (Integer)
+  MN: Month (Integer)
+  DAY: Day (Integer)
+  HR: Hours and fractional hours (Real). If XJD is a vector, then YR,MN,DAY and HR will be vectors of the same length.
+  
+REVISION HISTORY:
+  Converted to IDL from Yeoman's Comet Ephemeris Generator, B. Pfarr, STX, 6/16/88
+  Converted to IDL V5.0   W. Landsman   September 1997
+ 
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="euler"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">euler</span>(<span class="sig-arg">ai</span>,
+        <span class="sig-arg">bi</span>,
+        <span class="sig-arg">select</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">fk4</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#euler">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Transform between Galactic, celestial, and ecliptic coordinates.
+
+Input:
+  @param ai: Input longitude in degrees
+  @type ai: float
+  @param bi: Input latitude in degrees
+  @type bi: float
+  @keyword select: Integer (1-6) specifying type of coordinate transformation.
+  @type select: int 1-6
+  @keyword fk4: set the fk4, otherwise use J2000
+  @type fk4: bool
+  
+SELECT   From          To        |   SELECT      From            To
+ 1     RA-Dec (2000)  Galactic   |     4       Ecliptic      RA-Dec
+ 2     Galactic       RA-DEC     |     5       Ecliptic      Galactic
+ 3     RA-Dec         Ecliptic   |     6       Galactic      Ecliptic
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="gal_uvw"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">gal_uvw</span>(<span class="sig-arg">distance</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">lsr</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">ra</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">dec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">pmra</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">pmdec</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">vrad</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">plx</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#gal_uvw">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Calculate the Galactic space velocity (U,V,W) of star
+
+Calculates the Galactic space velocity U, V, W of star given its
+(1) coordinates, (2) proper motion, (3) distance (or parallax), and (4) radial velocity.
+
+OUTPUT PARAMETERS:
+  U - Velocity (km/s) positive toward the Galactic *anti*center
+  V - Velocity (km/s) positive in the direction of Galactic rotation
+  W - Velocity (km/s) positive toward the North Galactic Pole
+INPUT KEYWORDS:
+  User must supply a position, proper motion,radial velocity and distance
+  (or parallax).    Either scalars or vectors can be supplied.
+ (1) Position:
+  RA - Right Ascension in *Degrees*
+  Dec - Declination in *Degrees*
+ (2) Proper Motion
+  PMRA = Proper motion in RA in arc units (typically milli-arcseconds/yr)
+  PMDEC = Proper motion in Declination (typically mas/yr)
+ (3) Radial Velocity
+  VRAD = radial velocity in km/s
+ (4) Distance or Parallax
+  DISTANCE - distance in parsecs
+             or
+  PLX - parallax with same distance units as proper motion measurements
+        typically milliarcseconds (mas)
+
+REVISION HISTORY:
+  Written, W. Landsman                       December   2000
+  fix the bug occuring if the input arrays are longer than 32767
+    and update the Sun velocity           Sergey Koposov June 2008
+    vectorization of the loop -- performance on large arrays
+    is now 10 times higher                Sergey Koposov December 2008
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="helcorr"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">helcorr</span>(<span class="sig-arg">ra2000</span>,
+        <span class="sig-arg">dec2000</span>,
+        <span class="sig-arg">jd</span>,
+        <span class="sig-arg">obs_long</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">obs_lat</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">obs_alt</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">debug</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#helcorr">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+calculates heliocentric Julian date, baricentric and heliocentric radial
+velocity corrections from:
+
+INPUT:
+@param ra2000: Right ascension of object for epoch 2000.0 (hours)
+@type ra2000: float
+@param dec2000: declination of object for epoch 2000.0 (degrees)
+@type dec2000: float
+@param jd: julian date for the middle of exposure
+@type jd: float
+@keyword obs_long: longitude of observatory (degrees, western direction is positive)
+@type obs_long: float
+@keyword obs_lat: latitude of observatory (degrees)
+@type obs_lat: float
+@keyword obs_alt: altitude of observatory (meters)
+@type obs_alt: float
+
+Algorithms used are taken from the IRAF task noao.astutils.rvcorrect
+and some procedures of the IDL Astrolib are used as well.
+Accuracy is about 0.5 seconds in time and about 1 m/s in velocity.
+
+History:
+written by Peter Mittermayer, Nov 8,2003
+2005-January-13   Kudryavtsev   Made more accurate calculation of the sideral time.
+                                Conformity with MIDAS compute/barycorr is checked.
+2005-June-20      Kochukhov Included precession of RA2000 and DEC2000 to current epoch
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="helio_jd"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">helio_jd</span>(<span class="sig-arg">date</span>,
+        <span class="sig-arg">ra</span>,
+        <span class="sig-arg">dec</span>,
+        <span class="sig-arg">b1950</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">time_diff</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#helio_jd">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Convert geocentric (reduced) Julian date to heliocentric Julian 
+  date</p>
+  <p>This procedure correct for the extra light travel time between the 
+  Earth and the Sun. An online calculator for this quantity is available at
+  http://www.physics.sfasu.edu/astro/javascript/hjd.html</p>
+  <p>Input:</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>date</code></strong> (float) - Reduced Julian date (= JD - 2400000)</li>
+        <li><strong class="pname"><code>ra</code></strong> (float) - J2000 right ascension in DEGREES (unless B1950 keyword is set)</li>
+        <li><strong class="pname"><code>dec</code></strong> (float) - J2000 declination in DEGREES (unless B1950 keyword is set)</li>
+        <li><strong class="pname"><code>b1950</code></strong> (bool) - if set, then input coordinates are assumed to be in equinox B1950
+          coordinates</li>
+        <li><strong class="pname"><code>time_diff</code></strong> (bool) - if set, then HELIO_JD() returns the time difference (heliocentric
+          JD - geocentric JD ) in seconds</li>
+    </ul></dd>
+    <dt>Returns:</dt>
+        <dd>heliocentric reduced Julian date.  If time_diff is True, then 
+          helio_jd() instead returns the time difference in seconds between
+          the geocentric and heliocentric Julian date.</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="precess"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">precess</span>(<span class="sig-arg">ra0</span>,
+        <span class="sig-arg">dec0</span>,
+        <span class="sig-arg">equinox1</span>,
+        <span class="sig-arg">equinox2</span>,
+        <span class="sig-arg">doprint</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">fk4</span>=<span class="sig-default">False</span>,
+        <span class="sig-arg">radian</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#precess">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Precess coordinates from EQUINOX1 to EQUINOX2.
+
+For interactive display, one can use the procedure ASTRO which calls PRECESS
+or use the /PRINT keyword. The default (RA,DEC) system is FK5 based on epoch
+J2000.0 but FK4 based on B1950.0 is available via the /FK4 keyword.
+
+Input:
+  @param ra0: Input right ascension in DEGREES
+  @type ra0: float
+  @param dec0: Input declination in degrees
+  @type dec0: float
+  @param equinox1: first equinox
+  @type equinox1: float
+  @param equinox2: second equinox
+  @type equinox2: float
+  @keyword fk4: If this keyword is set and non-zero, the FK4 (B1950.0) system will be used otherwise FK5 (J2000.0) will be used instead.
+  @type fk4: float
+  @keyword radian: If this keyword is set, input is in radian instead of degrees
+  @type radian
+  
+Restrictions:
+  Accuracy of precession decreases for declination values near 90 degrees.
+  PRECESS should not be used more than 2.5 centuries from 2000 on the FK5 system (1950.0 on the FK4 system).
+
+Procedure:
+  Algorithm from Computational Spherical Astronomy by Taff (1983), p24. (FK4).
+  FK5 constants from &quot;Astronomical Almanac Explanatory Supplement 1992, page 104 Table 3.211.1.
+
+Revision history
+  Written, Wayne Landsman, STI Corporation  August 1986
+  Correct negative output RA values   February 1989
+  Provided FK5 (J2000.0)  I. Freedman   January 1994
+  Precession Matrix computation now in PREMAT   W. Landsman June 1994
+  Work for arrays, not just vectors (W. Landsman, september 2003)
+  Convert to Python (S. Koposov, july 2010)
+  Converted for use at IvS (K. Smolders)
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="precess_xyz"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">precess_xyz</span>(<span class="sig-arg">x</span>,
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">z</span>,
+        <span class="sig-arg">equinox1</span>,
+        <span class="sig-arg">equinox2</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#precess_xyz">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Precess equatorial geocentric rectangular coordinates.
+
+Input:
+@param x: heliocentric rectangular x-coordinates
+@type x: float
+@param y: heliocentric rectangular y-coordinates
+@type y: float
+@param z: heliocentric rectangular z-coordinates
+@type z: float
+@param equinox1: first equinox
+@type equinox1: float
+@param equinox2: second equinox
+@type equinox2: float
+
+NOTES:
+  The equatorial geocentric rectangular coords are converted to RA and Dec,
+  precessed in the normal way, then changed back to x, y and z using unit
+  vectors.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="premat"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">premat</span>(<span class="sig-arg">equinox1</span>,
+        <span class="sig-arg">equinox2</span>,
+        <span class="sig-arg">fk4</span>=<span class="sig-default">False</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#premat">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Return the precession matrix needed to go from EQUINOX1 to EQUINOX2.
+
+This matrix is used by the procedures PRECESS and BARYVEL to precess astronomical coordinates
+@param equinox1: Original equinox of coordinates, numeric scalar.
+@type equinox1: float
+@param equinox2: Equinox of precessed coordinates.
+@type equinox2: float
+@return: double precision 3 x 3 precession matrix, used to precess equatorial rectangular coordinates
+@rtype: 3 by 3 array
+@keyword fk4: If this keyword is set, the FK4 (B1950.0) system precession angles are used to compute the precession matrix. The default is to use FK5 (J2000.0) precession angles
+
+Revision history:
+  Written, Wayne Landsman, HSTX Corporation, June 1994
+  Converted to IDL V5.0   W. Landsman   September 1997
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="sphdist"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">sphdist</span>(<span class="sig-arg">ra1</span>,
+        <span class="sig-arg">dec1</span>,
+        <span class="sig-arg">ra2</span>,
+        <span class="sig-arg">dec2</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#sphdist">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Measures the spherical distance in degrees. The input has to be in 
+  degrees too</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="xyz"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">xyz</span>(<span class="sig-arg">date</span>,
+        <span class="sig-arg">equinox</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.observations.barycentric_correction-pysrc.html#xyz">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Calculate geocentric X,Y, and Z  and velocity coordinates of the Sun
+
+Calculates geocentric X,Y, and Z vectors and velocity coordinates
+(dx, dy and dz) of the Sun.   (The positive X axis is directed towards the
+equinox, the y-axis, towards the point on the equator at right ascension 6h,
+and the z axis toward the north pole of the equator). Typical position
+accuracy is &lt;1e-4 AU (15000 km).
+
+Input:
+@param date: reduced julian date (=JD - 2400000)
+@type date: float
+@keyword equinox: equinox of output. Default is 1950.
+@type equinox: float
+
+Output:
+  x,y,z: scalars or vectors giving heliocentric rectangular coordinates
+         (in A.U) for each date supplied. Note that sqrt(x^2 + y^2 + z^2)
+         gives the Earth-Sun distance for the given date.
+  xvel, yvel, zvel: velocity vectors corresponding to X, Y and Z.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="ivs-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Nov 30 11:24:15 2017
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

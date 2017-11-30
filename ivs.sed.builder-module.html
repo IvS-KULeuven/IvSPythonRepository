@@ -73,10 +73,13 @@
       SED fitting using a grid based approach
       <ul>
         <li>
+          Binar star ### W.I.P ###
+        </li>
+        <li>
           Saving SED fits
         </li>
         <li>
-          Loading SED fits
+          Loading SED fits ### BROKEN ###
         </li>
       </ul>
     </li>
@@ -224,9 +227,9 @@
     <code>force=True</code> when calling <code 
     class="link">get_photometry</code>.</p>
     <p>The content of the .phot file is most easily read using the <a 
-    href="ivs.io.ascii-module.html#read2recarray" 
-    class="link">ivs.io.ascii.read2recarray</a> function. Be careful, as it
-    contains both absolute fluxes as flux ratios.</p>
+    href="ivs.inout.ascii-module.html#read2recarray" 
+    class="link">ivs.inout.ascii.read2recarray</a> function. Be careful, as
+    it contains both absolute fluxes as flux ratios.</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>data = ascii.read2recarray(<span class="py-string">'HD180642.phot'</span>)</pre>
     <p>Notice that in the <code>.phot</code> files, also a 
@@ -424,7 +427,7 @@
       errorbars are underestimated, it could be that the rescaling factor 
       is also wrong, which means that the true probability region can be 
       larger or smaller!</p>
-    <h2 class="heading">Subsection 3.2 Binary star</h2>
+    <h2 class="heading">Subsection 3.2 Binary star - ### W.I.P ###</h2>
       <p>The SED class can create SEDs for multiple stars as well. There 
       are 2 options available, the multiple SED fit which in theory can 
       handle any number of stars, and the binary SED fit which is for 
@@ -487,88 +490,89 @@
       the following information (we print part of each header):</p>
 <pre class="literalblock">
    EXTNAME = 'DATA    '
-   XTENSION= 'BINTABLE'           / binary table extension                         
-   BITPIX  =                    8 / array data type                                
-   NAXIS   =                    2 / number of array dimensions                     
-   NAXIS1  =                  270 / length of dimension 1                          
-   NAXIS2  =                   67 / length of dimension 2                          
-   TTYPE1  = 'meas    '                                                                                                                   
-   TTYPE2  = 'e_meas  '                                                            
-   TTYPE3  = 'flag    '                                                            
-   TTYPE4  = 'unit    '                                                            
-   TTYPE5  = 'photband'                                                            
-   TTYPE6  = 'source  '                                                            
-   TTYPE7  = '_r      '                                                            
-   TTYPE8  = '_RAJ2000'                                                            
-   TTYPE9  = '_DEJ2000'                                                            
-   TTYPE10 = 'cwave   '                                                            
-   TTYPE11 = 'cmeas   '                                                            
-   TTYPE12 = 'e_cmeas '                                                            
-   TTYPE13 = 'cunit   '                                                            
-   TTYPE14 = 'color   '                                                            
-   TTYPE15 = 'include '                                                            
-   TTYPE16 = 'synflux '                                                            
-   TTYPE17 = 'mod_eff_wave'                                                        
-   TTYPE18 = 'chi2    '                                                            
+   XTENSION= 'BINTABLE'           / binary table extension
+   BITPIX  =                    8 / array data type
+   NAXIS   =                    2 / number of array dimensions
+   NAXIS1  =                  270 / length of dimension 1
+   NAXIS2  =                   67 / length of dimension 2
+   TTYPE1  = 'meas    '
+   TTYPE2  = 'e_meas  '
+   TTYPE3  = 'flag    '
+   TTYPE4  = 'unit    '
+   TTYPE5  = 'photband'
+   TTYPE6  = 'source  '
+   TTYPE7  = '_r      '
+   TTYPE8  = '_RAJ2000'
+   TTYPE9  = '_DEJ2000'
+   TTYPE10 = 'cwave   '
+   TTYPE11 = 'cmeas   '
+   TTYPE12 = 'e_cmeas '
+   TTYPE13 = 'cunit   '
+   TTYPE14 = 'color   '
+   TTYPE15 = 'include '
+   TTYPE16 = 'synflux '
+   TTYPE17 = 'mod_eff_wave'
+   TTYPE18 = 'chi2    '
 
-   EXTNAME = 'MODEL   '      
-   XTENSION= 'BINTABLE'           / binary table extension                         
-   BITPIX  =                    8 / array data type                                
-   NAXIS   =                    2 / number of array dimensions                     
-   NAXIS1  =                   24 / length of dimension 1                          
-   NAXIS2  =                 1221 / length of dimension 2                                                                                
-   TTYPE1  = 'wave    '                                                            
-   TUNIT1  = 'A       '                                                            
-   TTYPE2  = 'flux    '                                                            
-   TUNIT2  = 'erg/s/cm2/AA'                                                         
-   TTYPE3  = 'dered_flux'                                                          
-   TUNIT3  = 'erg/s/cm2/AA'                                                         
-   TEFFL   =    23000.68377498454                                                  
-   TEFF    =    23644.49138963689                                                  
-   TEFFU   =    29999.33189058337                                                  
-   LOGGL   =    3.014445328877565                                                  
-   LOGG    =    4.984788506855546                                                  
-   LOGGU   =    4.996095055525759                                                  
-   EBVL    =   0.4703171900728142                                                  
-   EBV     =   0.4933185398871652                                                  
-   EBVU    =   0.5645144879211454                                                  
-   ZL      =   -2.499929434601112                                                  
-   Z       =   0.4332336811329144     
-   ZU      =   0.4999776537652627                                                  
-   SCALEL  = 2.028305798068863E-20                                                 
-   SCALE   = 2.444606991671813E-20                                                 
-   SCALEU  = 2.830281842143698E-20                                                                                               
-   LABSL   =    250.9613352757437                                                  
-   LABS    =     281.771013453664                                                  
-   LABSU   =    745.3149766772975                                                  
-   CHISQL  =    77.07958742733673                                                  
-   CHISQ   =    77.07958742733673                                                  
-   CHISQU  =    118.8587169011471                                                      
-   CI_RAWL =   0.9999999513255379                                                  
-   CI_RAW  =   0.9999999513255379                                                  
-   CI_RAWU =   0.9999999999999972                                                  
-   CI_RED  =   0.5401112973063139                                                  
-   CI_REDL =   0.5401112973063139                                                  
-   CI_REDU =   0.9500015229597392                                                  
-   
-   EXTNAME = 'IGRID_SEARCH' 
-   XTENSION= 'BINTABLE'           / binary table extension                         
-   BITPIX  =                    8 / array data type                                
-   NAXIS   =                    2 / number of array dimensions                     
-   NAXIS1  =                   80 / length of dimension 1                          
-   NAXIS2  =                99996 / length of dimension 2                          
-   TTYPE1  = 'teff    '                                                            
-   TTYPE2  = 'logg    '                                                            
-   TTYPE3  = 'ebv     '                                                            
-   TTYPE4  = 'z       '                                                            
-   TTYPE5  = 'chisq   '                                                            
-   TTYPE6  = 'scale   '                                                            
-   TTYPE7  = 'escale '                                                            
-   TTYPE8  = 'Labs    '                                                            
-   TTYPE9  = 'CI_raw  '                                                            
-   TTYPE10 = 'CI_red  '                                                            
+   EXTNAME = 'MODEL   '
+   XTENSION= 'BINTABLE'           / binary table extension
+   BITPIX  =                    8 / array data type
+   NAXIS   =                    2 / number of array dimensions
+   NAXIS1  =                   24 / length of dimension 1
+   NAXIS2  =                 1221 / length of dimension 2
+   TTYPE1  = 'wave    '
+   TUNIT1  = 'A       '
+   TTYPE2  = 'flux    '
+   TUNIT2  = 'erg/s/cm2/AA'
+   TTYPE3  = 'dered_flux'
+   TUNIT3  = 'erg/s/cm2/AA'
+   TEFFL   =    23000.68377498454
+   TEFF    =    23644.49138963689
+   TEFFU   =    29999.33189058337
+   LOGGL   =    3.014445328877565
+   LOGG    =    4.984788506855546
+   LOGGU   =    4.996095055525759
+   EBVL    =   0.4703171900728142
+   EBV     =   0.4933185398871652
+   EBVU    =   0.5645144879211454
+   ZL      =   -2.499929434601112
+   Z       =   0.4332336811329144
+   ZU      =   0.4999776537652627
+   SCALEL  = 2.028305798068863E-20
+   SCALE   = 2.444606991671813E-20
+   SCALEU  = 2.830281842143698E-20
+   LABSL   =    250.9613352757437
+   LABS    =     281.771013453664
+   LABSU   =    745.3149766772975
+   CHISQL  =    77.07958742733673
+   CHISQ   =    77.07958742733673
+   CHISQU  =    118.8587169011471
+   CI_RAWL =   0.9999999513255379
+   CI_RAW  =   0.9999999513255379
+   CI_RAWU =   0.9999999999999972
+   CI_RED  =   0.5401112973063139
+   CI_REDL =   0.5401112973063139
+   CI_REDU =   0.9500015229597392
+
+   EXTNAME = 'IGRID_SEARCH'
+   XTENSION= 'BINTABLE'           / binary table extension
+   BITPIX  =                    8 / array data type
+   NAXIS   =                    2 / number of array dimensions
+   NAXIS1  =                   80 / length of dimension 1
+   NAXIS2  =                99996 / length of dimension 2
+   TTYPE1  = 'teff    '
+   TTYPE2  = 'logg    '
+   TTYPE3  = 'ebv     '
+   TTYPE4  = 'z       '
+   TTYPE5  = 'chisq   '
+   TTYPE6  = 'scale   '
+   TTYPE7  = 'escale '
+   TTYPE8  = 'Labs    '
+   TTYPE9  = 'CI_raw  '
+   TTYPE10 = 'CI_red  '
 </pre>
-    <h2 class="heading">Subsection 3.4 Loading SED fits</h2>
+    <h2 class="heading">Subsection 3.4 Loading SED fits  ### BROKEN ###</h2>
+      <p>Unfortunately this is not yet working properly!</p>
       <p>Once saved, you can load the contents of the FITS file again into 
       an SED object via</p>
 <pre class="py-doctest">
@@ -694,6 +698,13 @@
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
         <a href="ivs.sed.builder.BinarySED-class.html" class="summary-name">BinarySED</a>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="ivs.sed.builder.PulsatingSED-class.html" class="summary-name">PulsatingSED</a>
     </td>
   </tr>
 <tr>
@@ -1056,7 +1067,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Tue Nov 14 05:27:16 2017
+    Generated by Epydoc 3.0.1 on Thu Nov 30 11:24:15 2017
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

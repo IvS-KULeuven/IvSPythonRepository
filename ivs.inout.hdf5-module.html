@@ -3,7 +3,7 @@
           "DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>ivs.stellar_evolution.adipls</title>
+  <title>ivs.inout.hdf5</title>
   <link rel="stylesheet" href="epydoc.css" type="text/css" />
   <script type="text/javascript" src="epydoc.js"></script>
 </head>
@@ -38,8 +38,8 @@
     <td width="100%">
       <span class="breadcrumbs">
         <a href="ivs-module.html">Package&nbsp;ivs</a> ::
-        <a href="ivs.stellar_evolution-module.html">Package&nbsp;stellar_evolution</a> ::
-        Module&nbsp;adipls
+        <a href="ivs.inout-module.html">Package&nbsp;inout</a> ::
+        Module&nbsp;hdf5
       </span>
     </td>
     <td>
@@ -49,14 +49,23 @@
     onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
         <tr><td align="right"><span class="options"
             >[<a href="frames.html" target="_top">frames</a
-            >]&nbsp;|&nbsp;<a href="ivs.stellar_evolution.adipls-module.html"
+            >]&nbsp;|&nbsp;<a href="ivs.inout.hdf5-module.html"
             target="_top">no&nbsp;frames</a>]</span></td></tr>
       </table>
     </td>
   </tr>
 </table>
 <!-- ==================== MODULE DESCRIPTION ==================== -->
-<h1 class="epydoc">Module adipls</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.stellar_evolution.adipls-pysrc.html">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Module hdf5</h1><p class="nomargin-top"><span class="codelink"><a href="ivs.inout.hdf5-pysrc.html">source&nbsp;code</a></span></p>
+<p>Read and write HDF5 files.</p>
+  <p>HDF5 is a data model, library, and file format for storing and 
+  managing data. It supports an unlimited variety of datatypes, and is 
+  designed for flexible and efficient I/O and for high volume and complex 
+  data. HDF5 is portable and is extensible, allowing applications to evolve
+  in their use of HDF5. The HDF5 Technology suite includes tools and 
+  applications for managing, manipulating, viewing, and analyzing data in 
+  the HDF5 format. http://alfven.org/wp/hdf5-for-python/</p>
+
 <!-- ==================== FUNCTIONS ==================== -->
 <a name="section-Functions"></a>
 <table class="summary" border="1" cellpadding="3"
@@ -74,22 +83,19 @@
     </table>
   </td>
 </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Input</th></tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
+      <span class="summary-type">dict</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="ivs.stellar_evolution.adipls-module.html#make_adipls_inputfile" class="summary-sig-name">make_adipls_inputfile</a>(<span class="summary-sig-arg">model_name</span>=<span class="summary-sig-default">'model'</span>,
-        <span class="summary-sig-arg">degree</span>=<span class="summary-sig-default">0</span>,
-        <span class="summary-sig-arg">f0</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">fn</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">nf</span>=<span class="summary-sig-default">1000</span>,
-        <span class="summary-sig-arg">fspacing</span>=<span class="summary-sig-default">'square'</span>,
-        <span class="summary-sig-arg">**kwargs</span>)</span><br />
-      Prepare an input file for ADIPLS.</td>
+          <td><span class="summary-sig"><a href="ivs.inout.hdf5-module.html#read2dict" class="summary-sig-name">read2dict</a>(<span class="summary-sig-arg">filename</span>)</span><br />
+      Read the filestructure of a hdf5 file to a dictionary.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="ivs.stellar_evolution.adipls-pysrc.html#make_adipls_inputfile">source&nbsp;code</a></span>
+            <span class="codelink"><a href="ivs.inout.hdf5-pysrc.html#read2dict">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -97,19 +103,22 @@
       
     </td>
   </tr>
+<tr bgcolor="#e8f0f8" >
+  <th colspan="2" class="group-header"
+    >&nbsp;&nbsp;&nbsp;&nbsp;Output</th></tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="make_redistrb_inputfile"></a><span class="summary-sig-name">make_redistrb_inputfile</span>(<span class="summary-sig-arg">model_name</span>=<span class="summary-sig-default">'model'</span>,
-        <span class="summary-sig-arg">nn</span>=<span class="summary-sig-default">5000</span>,
-        <span class="summary-sig-arg">mode_type</span>=<span class="summary-sig-default">'gp'</span>,
-        <span class="summary-sig-arg">**kwargs</span>)</span><br />
-      Prepare an input file for ADIPLS's redistrb tool.</td>
+          <td><span class="summary-sig"><a href="ivs.inout.hdf5-module.html#write_dict" class="summary-sig-name">write_dict</a>(<span class="summary-sig-arg">data</span>,
+        <span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">update</span>=<span class="summary-sig-default">True</span>,
+        <span class="summary-sig-arg">attr_types</span>=<span class="summary-sig-default">[]</span>)</span><br />
+      Write the content of a dictionary to a hdf5 file.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="ivs.stellar_evolution.adipls-pysrc.html#make_redistrb_inputfile">source&nbsp;code</a></span>
+            <span class="codelink"><a href="ivs.inout.hdf5-pysrc.html#write_dict">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -139,7 +148,7 @@
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger('STAR.ADIPLS')">logging.getLogger('STAR.ADIPLS')</code>
+        <a name="logger"></a><span class="summary-name">logger</span> = <code title="logging.getLogger(&quot;IO.HDF5&quot;)">logging.getLogger(&quot;IO.HDF5&quot;)</code>
     </td>
   </tr>
 </table>
@@ -161,30 +170,65 @@
   </td>
 </tr>
 </table>
-<a name="make_adipls_inputfile"></a>
+<a name="read2dict"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_adipls_inputfile</span>(<span class="sig-arg">model_name</span>=<span class="sig-default">'model'</span>,
-        <span class="sig-arg">degree</span>=<span class="sig-default">0</span>,
-        <span class="sig-arg">f0</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">fn</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">nf</span>=<span class="sig-default">1000</span>,
-        <span class="sig-arg">fspacing</span>=<span class="sig-default">'square'</span>,
-        <span class="sig-arg">**kwargs</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">read2dict</span>(<span class="sig-arg">filename</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="ivs.stellar_evolution.adipls-pysrc.html#make_adipls_inputfile">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="ivs.inout.hdf5-pysrc.html#read2dict">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <p>Prepare an input file for ADIPLS.</p>
-  <p>fspacing is uniform in 'square'd frequency, 'frequency' or 
-  'period'.</p>
+  <p>Read the filestructure of a hdf5 file to a dictionary.</p>
   <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>filename</code></strong> (str) - the name of the hdf5 file to read</li>
+    </ul></dd>
+    <dt>Returns: dict</dt>
+        <dd>dictionary with read filestructure</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="write_dict"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">write_dict</span>(<span class="sig-arg">data</span>,
+        <span class="sig-arg">filename</span>,
+        <span class="sig-arg">update</span>=<span class="sig-default">True</span>,
+        <span class="sig-arg">attr_types</span>=<span class="sig-default">[]</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="ivs.inout.hdf5-pysrc.html#write_dict">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Write the content of a dictionary to a hdf5 file. The dictionary can 
+  contain other nested dictionaries, this file stucture will be maintained 
+  in the saved hdf5 file.</p>
+  <p>Pay attention to the fact that the data type of lists might change 
+  when writing to hdf5. Lists are stored as numpy arrays, thus all items in
+  a list are converted to the same type: ['bla', 1, 24.5] will become 
+  ['bla', '1', '24.5']. Upt till now there is nothing in place to check 
+  this, or correct it when reading a hdf5 file.</p>
+  <dl class="fields">
+    <dt>Parameters:</dt>
+    <dd><ul class="nomargin-top">
+        <li><strong class="pname"><code>data</code></strong> (dict) - the dictionary to write to file</li>
+        <li><strong class="pname"><code>filename</code></strong> (str) - the name of the hdf5 file to write to</li>
+        <li><strong class="pname"><code>update</code></strong> (bool) - True if you want to update an existing file, False to overwrite</li>
+        <li><strong class="pname"><code>attr_types</code></strong> (List of types) - the data types that you want to save as an attribute instead of a
+          dataset. (standard everything is saved as dataset.)</li>
+    </ul></dd>
   </dl>
 </td></tr></table>
 </div>
@@ -215,7 +259,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Tue Nov 14 05:27:17 2017
+    Generated by Epydoc 3.0.1 on Thu Nov 30 11:24:15 2017
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
