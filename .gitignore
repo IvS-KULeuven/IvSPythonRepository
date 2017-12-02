@@ -11,7 +11,7 @@
 # HTML files of the documentation
 
 doc/html/*
-docs
+docs/build
 
 # Packages
 
