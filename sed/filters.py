@@ -318,11 +318,9 @@ magnitudes etc).
 """
 import os
 import glob
-#import astropy.io.fits as pf
 import logging
 import numpy as np
 
-from ivs import config
 from ivs.aux.decorators import memoized
 from ivs.aux import decorators
 from ivs.aux import loggers
@@ -340,19 +338,19 @@ custom_filters = {'_prefer_file':True}
 def get_response(photband):
     """
     Retrieve the response curve of a photometric system 'SYSTEM.FILTER'
-    
+
     OPEN.BOL represents a bolometric open filter.
-    
+
     Example usage:
-    
+
     >>> p = pl.figure()
     >>> for band in ['J','H','KS']:
     ...    p = pl.plot(*get_response('2MASS.%s'%(band)))
-    
+
     If you defined a custom filter with the same name as an existing one and
     you want to use that one in the future, set C{prefer_file=False} in the
     C{custom_filters} module dictionary.
-    
+
     @param photband: photometric passband
     @type photband: str ('SYSTEM.FILTER')
     @return: (wavelength [A], response)
@@ -361,7 +359,7 @@ def get_response(photband):
     photband = photband.upper()
     prefer_file = custom_filters['_prefer_file']
     if photband=='OPEN.BOL':
-        return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])    
+        return np.array([1,1e10]),np.array([1/(1e10-1),1/(1e10-1)])
     #-- either get from file or get from dictionary
     photfile = os.path.join(basedir,'filters',photband)
     photfile_is_file = os.path.isfile(photfile)
@@ -382,7 +380,7 @@ def get_response(photband):
 def create_custom_filter(wave,peaks,range=(3000,4000),sigma=3.):
     """
     Create a custom filter as a sum of Gaussians.
-    
+
     @param wave: wavelength to evaluate the profile on
     @type wave: ndarray
     @param peaks: heights of the peaks
@@ -405,7 +403,7 @@ def create_custom_filter(wave,peaks,range=(3000,4000),sigma=3.):
 def add_custom_filter(wave,response,**kwargs):
     """
     Add a custom filter to the set of predefined filters.
-    
+
     Extra keywords are:
         'eff_wave', 'type',
         'vegamag', 'vegamag_lit',
@@ -414,10 +412,10 @@ def add_custom_filter(wave,response,**kwargs):
         'Flam0', 'Flam0_units', 'Flam0_lit',
         'Fnu0', 'Fnu0_units', 'Fnu0_lit',
         'source'
-        
+
     default C{type} is 'CCD'.
     default C{photband} is 'CUSTOM.FILTER'
-    
+
     @param wave: wavelength (angstrom)
     @type wave: ndarray
     @param response: response
@@ -455,7 +453,7 @@ def add_custom_filter(wave,response,**kwargs):
 def set_prefer_file(prefer_file=True):
     """
     Set whether to prefer files or custom filters when both exist.
-    
+
     @param prefer_file: boolean
     @type prefer_file: bool
     """
@@ -488,12 +486,12 @@ def add_spectrophotometric_filters(R=200.,lambda0=950.,lambdan=3350.):
 def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     """
     List available response curves.
-    
+
     Specify a glob string C{name} and/or a wavelength range to make a selection
     of all available curves. If nothing is supplied, all curves will be returned.
-    
+
     @param name: list all curves containing this string
-    @type name: str 
+    @type name: str
     @param wave_range: list all curves within this wavelength range (A)
     @type wave_range: (float, float)
     @return: list of curve files
@@ -518,7 +516,7 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
 def is_color(photband):
     """
     Return true if the photometric passband is actually a color.
-    
+
     @param photband: name of the photometric passband
     @type photband: string
     @return: True or False
@@ -535,7 +533,7 @@ def is_color(photband):
 def get_color_photband(photband):
     """
     Retrieve the photometric bands from color
-    
+
     @param photband: name of the photometric passband
     @type photband: string
     @return: tuple of strings
@@ -556,16 +554,16 @@ def get_color_photband(photband):
 def make_color(photband):
     """
     Make a color from a color name and fluxes.
-    
+
     You get two things: a list of photbands that are need to construct the color,
     and a function which you need to pass fluxes to compute the color.
-    
+
     >>> bands, func = make_color('JOHNSON.B-V')
     >>> print(bands)
     ('JOHNSON.B', 'JOHNSON.V')
     >>> print(func(2,3.))
     0.666666666667
-    
+
     @return: photbands, function to construct color
     @rtype: tuple,callable
     """
@@ -586,17 +584,17 @@ def make_color(photband):
 def eff_wave(photband,model=None,det_type=None):
     """
     Return the effective wavelength of a photometric passband.
-    
+
     The effective wavelength is defined as the average wavelength weighed with
     the response curve.
-    
+
     >>> eff_wave('2MASS.J')
     12393.093155655277
-    
+
     If you give model fluxes as an extra argument, the wavelengths will take
-    these into account to calculate the `true' effective wavelength (e.g., 
+    these into account to calculate the `true' effective wavelength (e.g.,
     Van Der Bliek, 1996), eq 2.
-    
+
     @param photband: photometric passband
     @type photband: str ('SYSTEM.FILTER') or array/list of str
     @param model: model wavelength and fluxes
@@ -604,7 +602,7 @@ def eff_wave(photband,model=None,det_type=None):
     @return: effective wavelength [A]
     @rtype: float or numpy array
     """
-    
+
     #-- if photband is a string, it's the name of a photband: put it in a container
     #   but unwrap afterwards
     if isinstance(photband,unicode):
@@ -615,7 +613,7 @@ def eff_wave(photband,model=None,det_type=None):
     #-- else, it is a container
     else:
         single_band = False
-        
+
     my_eff_wave = []
     for iphotband in photband:
         try:
@@ -637,28 +635,28 @@ def eff_wave(photband,model=None,det_type=None):
                 is_response = response>1e-10
                 start_response,end_response = wave[is_response].min(),wave[is_response].max()
                 fluxm = np.sqrt(10**np.interp(np.log10(wave),np.log10(model[0]),np.log10(model[1])))
-                
+
                 if det_type=='CCD':
                     this_eff_wave = np.sqrt(np.trapz(wave*fluxm*response,x=wave) / np.trapz(fluxm*response/wave,x=wave))
                 elif det_type=='BOL':
-                    this_eff_wave = np.sqrt(np.trapz(fluxm*response,x=wave) / np.trapz(fluxm*response/wave**2,x=wave))     
+                    this_eff_wave = np.sqrt(np.trapz(fluxm*response,x=wave) / np.trapz(fluxm*response/wave**2,x=wave))
         #-- if the photband is not defined:
         except IOError:
             this_eff_wave = np.nan
         my_eff_wave.append(this_eff_wave)
-    
+
     if single_band:
         my_eff_wave = my_eff_wave[0]
     else:
         my_eff_wave = np.array(my_eff_wave,float)
-    
+
     return my_eff_wave
 
 @memoized
 def get_info(photbands=None):
     """
     Return a record array containing all filter information.
-    
+
     The record arrays contains following columns:
         - photband
         - eff_wave
@@ -669,7 +667,7 @@ def get_info(photbands=None):
         - Flam0, Flam0_units, Flam0_lit
         - Fnu0, Fnu0_units, Fnu0_lit,
         - source
-    
+
     @param photbands: list of photbands to get the information from. The input
     order is equal to the output order. If C{None}, all filters are returned.
     @type photbands: iterable container (list, tuple, 1Darray)
@@ -683,7 +681,7 @@ def get_info(photbands=None):
         if 'zp' in custom_filters[iph]:
             zp = np.hstack([zp,custom_filters[iph]['zp']])
     zp = zp[np.argsort(zp['photband'])]
-    
+
     #-- list photbands in order given, and remove those that do not have
     #   zeropoints etc.
     if photbands is not None:
@@ -691,7 +689,7 @@ def get_info(photbands=None):
         zp = zp[order]
         keep = (zp['photband']==photbands)
         zp = zp[keep]
-    
+
     return zp
 
 
@@ -701,10 +699,10 @@ def get_info(photbands=None):
 def update_info(zp=None):
     """
     Update information in zeropoint file, e.g. after calibration.
-    
+
     Call first L{ivs.sed.model.calibrate} without arguments, and pass the output
     to this function.
-    
+
     @param zp: updated contents from C{zeropoints.dat}
     @type zp: recarray
     """
@@ -721,7 +719,7 @@ def update_info(zp=None):
         logger.info('No new calibrations; previous information on existing response curves is copied')
     else:
         logger.info('Received new calibrations contents of zeropoints.dat will be updated')
-    
+
     #-- update info on previously non existing response curves
     new_zp = np.zeros(len(resp_files),dtype=zp.dtype)
     logger.info('Found {} new response curves, adding them with default information'.format(len(resp_files)))
@@ -738,7 +736,7 @@ def update_info(zp=None):
     zp = np.hstack([zp,new_zp])
     sa = np.argsort(zp['photband'])
     ascii.write_array(zp[sa],'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]],use_float='%g')
-    
+
 
 
 if __name__=="__main__":
@@ -748,7 +746,7 @@ if __name__=="__main__":
         import doctest
         doctest.testmod()
         pl.show()
-    
+
     else:
         import itertools
         responses = list_response()

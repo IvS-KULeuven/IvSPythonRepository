@@ -571,13 +571,11 @@ from matplotlib import mlab
 from PIL import Image
 import numpy as np
 import scipy.stats
-from scipy.interpolate import Rbf
 import astropy.io.fits as pf
 
 from ivs import config
 from ivs.aux import numpy_ext
 from ivs.aux import termtools
-from ivs.aux.decorators import memoized,clear_memoization
 from ivs.inout import ascii
 from ivs.inout import fits
 from ivs.inout import hdf5

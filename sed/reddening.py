@@ -110,31 +110,31 @@ basename = os.path.join(os.path.dirname(__file__),'redlaws')
 def get_law(name,norm='E(B-V)',wave_units='AA',photbands=None,**kwargs):
     """
     Retrieve an interstellar reddening law.
-    
+
     Parameter C{name} must be the function name of one of the laws defined in
     this module.
-    
+
     By default, the law will be interpolated on a grid from 100 angstrom to
     10 micron in steps of 10 angstrom. This can be adjusted with the parameter
     C{wave} (array), which B{must} be in angstrom. You can change the units
     ouf the returned wavelength array via C{wave_units}.
-    
+
     By default, the curve is normalised with respect to E(B-V) (you get
     A(l)/E(B-V)). You can set the C{norm} keyword to Av if you want A(l)/Av.
     Remember that
-    
+
     A(V) = Rv * E(B-V)
-    
+
     The parameter C{Rv} is by default 3.1, other reasonable values lie between
     2.0 and 5.1
-    
+
     Extra accepted keywords depend on the type of reddening law used.
-    
+
     Example usage:
-    
+
     >>> wave = np.r_[1e3:1e5:10]
     >>> wave,mag = get_law('cardelli1989',wave=wave,Rv=3.1)
-    
+
     @param name: name of the interstellar law
     @type name: str, one of the functions defined here
     @param norm: type of normalisation of the curve
@@ -151,18 +151,18 @@ def get_law(name,norm='E(B-V)',wave_units='AA',photbands=None,**kwargs):
     #-- get the inputs
     wave_ = kwargs.pop('wave',None)
     Rv = kwargs.setdefault('Rv',3.1)
-    
+
     #-- get the curve
     wave,mag = globals()[name.lower()](**kwargs)
     wave_orig,mag_orig = wave.copy(),mag.copy()
-    
+
     #-- interpolate on user defined grid
     if wave_ is not None:
         if wave_units != 'AA':
             wave_ = conversions.convert(wave_units,'AA',wave_)
         mag = np.interp(wave_,wave,mag,right=0)
         wave = wave_
-           
+
     #-- pick right normalisation: convert to A(lambda)/Av if needed
     if norm.lower()=='e(b-v)':
         mag *= Rv
@@ -176,34 +176,34 @@ def get_law(name,norm='E(B-V)',wave_units='AA',photbands=None,**kwargs):
         norm_reddening = model.synthetic_flux(wave_orig,mag_orig,[norm])[0]
         logger.info('Normalisation via %s: Av/%s = %.6g'%(norm,norm,1./norm_reddening))
         mag /= norm_reddening
-    
+
     #-- maybe we want the curve in photometric filters
     if photbands is not None:
         mag = model.synthetic_flux(wave,mag,photbands)
         wave = filters.get_info(photbands)['eff_wave']
-    
-    
+
+
     #-- set the units of the wavelengths
     if wave_units != 'AA' and photbands is not None:
         wave = conversions.convert('AA',wave_units,wave)
-    
+
     return wave,mag
 
 
 def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',**kwargs):
     """
     Redden flux or magnitudes
-    
+
     The reddening parameters C{ebv} means E(B-V).
-    
+
     If it is negative, we B{deredden}.
-    
+
     If you give the keyword C{wave}, it is assumed that you want to (de)redden
     a B{model}, i.e. a spectral energy distribution.
-    
+
     If you give the keyword C{photbands}, it is assumed that you want to (de)redden
     B{photometry}, i.e. integrated fluxes.
-    
+
     @param flux: fluxes to (de)redden (magnitudes if C{rtype='mag'})
     @type flux: ndarray (floats)
     @param wave: wavelengths matching the fluxes (or give C{photbands})
@@ -219,7 +219,7 @@ def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',
     """
     if photbands is not None:
         wave = filters.get_info(photbands)['eff_wave']
-        
+
     old_settings =  np.seterr(all='ignore')
     wave, reddeningMagnitude = get_law(law,wave=wave,**kwargs)
 
@@ -238,7 +238,7 @@ def redden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',law='cardelli1989',
 def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
     """
     Deredden flux or magnitudes.
-    
+
     @param flux: fluxes to (de)redden (NOT magnitudes)
     @type flux: ndarray (floats)
     @param wave: wavelengths matching the fluxes (or give C{photbands})
@@ -253,7 +253,7 @@ def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
     @rtype: ndarray (floats)
     """
     return redden(flux,wave=wave,photbands=photbands,ebv=-ebv,rtype=rtype,**kwargs)
-    
+
 
 #}
 
@@ -262,16 +262,16 @@ def deredden(flux,wave=None,photbands=None,ebv=0.,rtype='flux',**kwargs):
 def chiar2006(Rv=3.1,curve='ism',**kwargs):
     """
     Extinction curve at infrared wavelengths from Chiar and Tielens (2006)
-    
+
     We return A(lambda)/E(B-V), by multiplying A(lambda)/Av with Rv.
-    
+
     This is only defined for Rv=3.1. If it is different, this will raise an
     AssertionError
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     UNCERTAIN NORMALISATION
-    
+
     @param Rv: Rv
     @type Rv: float
     @param curve: extinction curve
@@ -280,7 +280,7 @@ def chiar2006(Rv=3.1,curve='ism',**kwargs):
     @rtype: (ndarray,ndarray)
     """
     source = os.path.join(basename,'Chiar2006.red')
-    
+
     #-- check Rv
     assert(Rv==3.1)
     wavelengths,gc,ism = ascii.read2array(source).T
@@ -302,13 +302,13 @@ def chiar2006(Rv=3.1,curve='ism',**kwargs):
 def fitzpatrick1999(Rv=3.1,**kwargs):
     """
     From Fitzpatrick 1999 (downloaded from ASAGIO database)
-    
+
     This function returns A(lambda)/A(V).
-    
+
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     @param Rv: Rv (2.1, 3.1 or 5.0)
     @type Rv: float
     @return: wavelengths (A), A(lambda)/Av
@@ -319,22 +319,22 @@ def fitzpatrick1999(Rv=3.1,**kwargs):
     myfile = os.path.join(basename,filename)
     wave,alam_ebv = ascii.read2array(myfile).T
     alam_av = alam_ebv/Rv
-    
+
     logger.info('Fitzpatrick1999 curve with Rv=%.2f'%(Rv))
-    
+
     return wave,alam_av
 
 @memoized
 def fitzpatrick2004(Rv=3.1,**kwargs):
     """
     From Fitzpatrick 2004 (downloaded from FTP)
-    
+
     This function returns A(lambda)/A(V).
-    
+
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     @param Rv: Rv (2.1, 3.1 or 5.0)
     @type Rv: float
     @return: wavelengths (A), A(lambda)/Av
@@ -343,9 +343,9 @@ def fitzpatrick2004(Rv=3.1,**kwargs):
     filename = 'Fitzpatrick2004_Rv_%.1f.red'%(Rv)
     myfile = os.path.join(basename,filename)
     wave_inv,elamv_ebv = ascii.read2array(myfile,skip_lines=15).T
-    
+
     logger.info('Fitzpatrick2004 curve with Rv=%.2f'%(Rv))
-    
+
     return 1e4/wave_inv[::-1],((elamv_ebv+Rv)/Rv)[::-1]
 
 
@@ -353,9 +353,9 @@ def fitzpatrick2004(Rv=3.1,**kwargs):
 def donnell1994(**kwargs):
     """
     Small improvement on Cardelli 1989 by James E. O'Donnell (1994).
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     @keyword Rv: Rv
     @type Rv: float
     @keyword wave: wavelengths to compute the curve on
@@ -370,17 +370,17 @@ def donnell1994(**kwargs):
 def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     """
     Construct extinction laws from Cardelli (1989).
-    
+
     Improvement in optical by James E. O'Donnell (1994)
-    
+
     wavelengths in Angstrom!
-    
+
     This function returns A(lambda)/A(V).
-    
+
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     @param Rv: Rv
     @type Rv: float
     @param curve: extinction curve
@@ -392,17 +392,17 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     """
     if wave is None:
         wave = np.r_[100.:100000.:10]
-    
+
     all_x = 1./(wave/1.0e4)
     alam_aV = np.zeros_like(all_x)
-    
+
     #-- infrared
     infrared = all_x<1.1
     x = all_x[infrared]
     ax = +0.574*x**1.61
     bx = -0.527*x**1.61
     alam_aV[infrared] = ax + bx/Rv
-    
+
     #-- optical
     optical = (1.1<=all_x) & (all_x<3.3)
     x = all_x[optical]
@@ -420,7 +420,7 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     else:
         raise ValueError,'curve %s not found'%(curve)
     alam_aV[optical] = ax + bx/Rv
-    
+
     #-- ultraviolet
     ultraviolet = (3.3<=all_x) & (all_x<8.0)
     x = all_x[ultraviolet]
@@ -431,16 +431,16 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
     ax = +1.752 - 0.316*x - 0.104 / ((x-4.67)**2 + 0.341) + Fax
     bx = -3.090 + 1.825*x + 1.206 / ((x-4.62)**2 + 0.263) + Fbx
     alam_aV[ultraviolet] = ax + bx/Rv
-    
+
     #-- far UV
     fuv = 8.0<=all_x
     x = all_x[fuv]
     ax = -1.073 - 0.628*(x-8) + 0.137*(x-8)**2 - 0.070*(x-8)**3
     bx = 13.670 + 4.257*(x-8) - 0.420*(x-8)**2 + 0.374*(x-8)**3
     alam_aV[fuv] = ax + bx/Rv
-    
+
     logger.info('%s curve with Rv=%.2f'%(curve.title(),Rv))
-    
+
     return wave,alam_aV
 
 
@@ -448,13 +448,13 @@ def cardelli1989(Rv=3.1,curve='cardelli',wave=None,**kwargs):
 def seaton1979(Rv=3.1,wave=None,**kwargs):
     """
     Extinction curve from Seaton, 1979.
-    
+
     This function returns A(lambda)/A(V).
-    
+
     To get A(lambda)/E(B-V), multiply the return value with Rv (A(V)=Rv*E(B-V))
-    
+
     Extra kwags are to catch unwanted keyword arguments.
-    
+
     @param Rv: Rv
     @type Rv: float
     @param wave: wavelengths to compute the curve on
@@ -463,33 +463,33 @@ def seaton1979(Rv=3.1,wave=None,**kwargs):
     @rtype: (ndarray,ndarray)
     """
     if wave is None: wave = np.r_[1000.:10000.:10]
-    
+
     all_x = 1e4/(wave)
     alam_aV = np.zeros_like(all_x)
-    
+
     #-- far infrared
     x_ = np.r_[1.0:2.8:0.1]
     X_ = np.array([1.36,1.44,1.84,2.04,2.24,2.44,2.66,2.88,3.14,3.36,3.56,3.77,3.96,4.15,4.26,4.40,4.52,4.64])
     fir = all_x<=2.7
     alam_aV[fir] = np.interp(all_x[fir][::-1],x_,X_,left=0)[::-1]
-    
+
     #-- infrared
     infrared = (2.70<=all_x) & (all_x<3.65)
     x = all_x[infrared]
     alam_aV[infrared] = 1.56 + 1.048*x + 1.01 / ( (x-4.60)**2 + 0.280)
-    
+
     #-- optical
     optical = (3.65<=all_x) & (all_x<7.14)
     x = all_x[optical]
     alam_aV[optical] = 2.29 + 0.848*x + 1.01 / ( (x-4.60)**2 + 0.280)
-    
+
     #-- ultraviolet
     ultraviolet = (7.14<=all_x) & (all_x<=10)
     x = all_x[ultraviolet]
     alam_aV[ultraviolet] = 16.17 - 3.20*x + 0.2975*x**2
-    
+
     logger.info('Seaton curve with Rv=%.2f'%(Rv))
-    
+
     return wave,alam_aV/Rv
 
 #}

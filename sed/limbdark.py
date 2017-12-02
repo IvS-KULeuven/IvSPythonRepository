@@ -140,7 +140,7 @@ basedir = 'ldtables'
 def set_defaults(**kwargs):
     """
     Set defaults of this module
-    
+
     If you give no keyword arguments, the default values will be reset.
     """
     clear_memoization(keys=['ivs.sed.ld'])
@@ -149,18 +149,18 @@ def set_defaults(**kwargs):
                 alpha=False,nover=False,                  # KURUCZ
                 He=97,                                    # WD
                 t=1.0,a=0.0,c=0.5,m=1.0,co=1.05)          # MARCS and COMARCS
-    
+
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
             logger.info('Set %s to %s'%(key,kwargs[key]))
-        
+
 
 
 def get_gridnames():
     """
     Return a list of available grid names.
-    
+
     @return: list of grid names
     @rtype: list of str
     """
@@ -170,7 +170,7 @@ def get_gridnames():
 def get_grid_dimensions(**kwargs):
     """
     Retrieve the possible effective temperatures and gravities from a grid.
-    
+
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
     """
@@ -189,20 +189,20 @@ def get_grid_dimensions(**kwargs):
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of atmosphere models.
-    
+
     WARNING: the grid must be entirely defined on a mesh grid, but it does not
     need to be equidistant.
-    
+
     It is thus the user's responsibility to know whether the grid is evenly
     spaced in logg and teff (e.g. this is not so for the CMFGEN models).
-    
+
     You can supply your own wavelength range, since the grid models'
     resolution are not necessarily homogeneous. If not, the first wavelength
     array found in the grid will be used as a template.
-        
+
     It might take a long a time and cost a lot of memory if you load the entire
     grid. Therefor, you can also set range of temperature and gravity.
-    
+
     @param wave: wavelength to define the grid on
     @type wave: ndarray
     @param teffrange: starting and ending of the grid in teff
@@ -223,11 +223,11 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     if loggrange is not None:
         sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
         loggs = loggs[sa]
-        
+
     #-- run over teff and logg, and interpolate the models onto the supplied
     #   wavelength range
     gridfile = get_file(**kwargs)
-    
+
     if wave is not None:
         table = np.zeros((len(teffs),len(wave),18))
     ff = pf.open(gridfile)
@@ -257,12 +257,12 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 def get_file(integrated=False,**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
-    
+
     The keyword arguments are specific to the kind of grid you're using.
-    
+
     Basic keywords are 'grid' for the name of the grid, and 'z' for metallicity.
     For other keywords, see the source code.
-    
+
     Available grids and example keywords:
         - grid='kurucz93':
                     * metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
@@ -271,7 +271,7 @@ def get_file(integrated=False,**kwargs):
                     * turbulent velocity (vturb): vturb in km/s
                     * nover= True means no overshoot
                     * odfnew=True means no overshoot but with better opacities and abundances
-    
+
     @param integrated: choose integrated version of the grid
     @type integrated: boolean
     @keyword grid: gridname (default Kurucz)
@@ -283,7 +283,7 @@ def get_file(integrated=False,**kwargs):
     grid = kwargs.get('grid',defaults['grid'])
     if os.path.isfile(grid):
         return grid
-    
+
     #-- general
     z = kwargs.get('z',defaults['z'])
     #-- only for Kurucz
@@ -291,7 +291,7 @@ def get_file(integrated=False,**kwargs):
     odfnew = kwargs.get('odfnew',defaults['odfnew'])
     alpha = kwargs.get('alpha',defaults['alpha'])
     nover = kwargs.get('nover',defaults['nover'])
-    
+
     #-- figure out what grid to use
     if grid=='kurucz':
         if not isinstance(z,str): z = '%.1f'%(z)
@@ -306,7 +306,7 @@ def get_file(integrated=False,**kwargs):
             basename = 'kurucz93_z%s_k%snover_ld.fits'%(z,vturb)
     else:
         basename = grid
-    
+
     #-- retrieve the absolute path of the file and check if it exists:
     if not '*' in basename:
         if integrated:
@@ -319,9 +319,9 @@ def get_file(integrated=False,**kwargs):
         if integrated:
             grid = config.glob(basedir,'i'+basename)
         else:
-            grid = config.glob(basedir,basename)    
+            grid = config.glob(basedir,basename)
     logger.debug('Selected %s'%(grid))
-    
+
     return grid
 
 
@@ -330,19 +330,19 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
               wave_units='AA',flux_units='erg/cm2/s/AA/sr',**kwargs):
     """
     Retrieve the specific intensity of a model atmosphere.
-    
+
     ebv is reddening
     vrad is radial velocity: positive is redshift, negative is blueshift (km/s!)
-    
+
     extra kwargs are for reddening
-    
+
     You get limb angles, wavelength and a table. The shape of the table is
     (N_wave,N_mu).
-    
+
     WARNING: wave and flux units cannot be specificed for the moment.
-        
+
     >>> mu,wave,table = get_table(10000,4.0)
-    
+
     >>> p = pl.figure()
     >>> ax1 = pl.subplot(221)
     >>> p = pl.title('E(B-V)=0, vrad=0')
@@ -351,9 +351,9 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     >>> p = pl.loglog(wave,table)
     >>> p = pl.xlim(700,15000)
     >>> p = pl.ylim(1e3,1e8)
-    
+
     >>> mu,wave,table = get_table(10000,4.0,ebv=0.5)
-    
+
     >>> p = pl.subplot(222,sharex=ax1,sharey=ax1)
     >>> p = pl.title('E(B-V)=0.5, vrad=0')
     >>> ax = pl.gca()
@@ -361,9 +361,9 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     >>> p = pl.loglog(wave,table)
     >>> p = pl.xlim(700,15000)
     >>> p = pl.ylim(1e3,1e8)
-    
+
     >>> mu,wave,table = get_table(10000,4.0,vrad=-1000.)
-    
+
     >>> p = pl.subplot(223,sharex=ax1,sharey=ax1)
     >>> p = pl.title('E(B-V)=0., vrad=-10000.')
     >>> ax = pl.gca()
@@ -371,9 +371,9 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     >>> p = pl.loglog(wave,table)
     >>> p = pl.xlim(700,15000)
     >>> p = pl.ylim(1e3,1e8)
-    
+
     >>> mu,wave,table = get_table(10000,4.0,vrad=-1000.,ebv=0.5)
-    
+
     >>> p = pl.subplot(224,sharex=ax1,sharey=ax1)
     >>> p = pl.title('E(B-V)=0.5, vrad=-10000.')
     >>> ax = pl.gca()
@@ -381,14 +381,14 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     >>> p = pl.loglog(wave,table)
     >>> p = pl.xlim(700,15000)
     >>> p = pl.ylim(1e3,1e8)
-    
+
     >>> mu,wave,table = get_table(10050,4.12)
-    
+
     >>> p = pl.figure()
     >>> pl.gca().set_color_cycle([pl.cm.spectral(i) for i in np.linspace(0,1,len(mu))])
     >>> p = pl.loglog(wave,table)
-    
-    
+
+
     @param teff: effective temperature (K)
     @type teff: float
     @param logg: log surface gravity (cgs, dex)
@@ -402,13 +402,13 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
     """
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
-    
+
     #-- read the file:
     ff = pf.open(gridfile)
-    
+
     teff = float(teff)
     logg = float(logg)
-    
+
     #-- if we have a grid model, no need for interpolation
     try:
         #-- extenstion name as in fits files prepared by Steven
@@ -423,21 +423,21 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
         logger.debug('Model LD interpolated from grid %s (%s)'%(os.path.basename(gridfile),kwargs))
         wave = wave + 0.
         table = flux_grid(np.log10(teff),logg) + 0.
-    
+
     ff.close()
-    
+
     #-- velocity shift if necessary
     if vrad is not None and vrad!=0:
         cc = constants.cc/1000. #speed of light in km/s
         for i in range(len(mu)):
             flux_shift = tools.doppler_shift(wave,vrad,flux=table[:,i])
             table[:,i] = flux_shift - 5.*vrad/cc*table[:,i]
-    
+
     #-- redden if necessary
     if ebv is not None and ebv>0:
         for i in range(len(mu)):
             table[:,i] = reddening.redden(table[:,i],wave=wave,ebv=ebv,rtype='flux',**kwargs)
-    
+
     #-- that's it!
     return mu,wave,table
 
@@ -454,7 +454,7 @@ def get_itable2(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=Fals
     """
     if theta is not None:
         mu = np.cos(theta)
-    
+
     try:
         out = get_ld_grid(photbands,integrated=True,**kwargs)(teff,logg)
     except ValueError:
@@ -474,7 +474,7 @@ def _get_itable_markers(photband,gridfile,
     Get a list of markers to more easily retrieve integrated fluxes.
     """
     clear_memoization()
-    
+
     ff = pf.open(gridfile)
     ext = ff[photband]
     columns = ext.columns.names
@@ -487,17 +487,17 @@ def _get_itable_markers(photband,gridfile,
     if 'vrad' in columns:
         names.append('vrad')
         grid.append(ext.data.field('vrad'))
-    
+
     grid_axes = [np.sort(list(set(i))) for i in grid]
-    
+
     #-- we construct an array representing the teff-logg-ebv content, but
-    #   in one number: 50000400 means: 
+    #   in one number: 50000400 means:
     #   T=50000,logg=4.0
     N = len(grid[0])
     markers = np.zeros(N,float)
     gridpnts = np.zeros((N,len(grid)))
     pars = np.zeros((N,5))
-    
+
     for i,entries in enumerate(zip(*grid)):
         markers[i] = encode(**{key:entry for key,entry in zip(names,entries)})
         gridpnts[i]= entries
@@ -507,29 +507,29 @@ def _get_itable_markers(photband,gridfile,
     print 'read in gridfile',gridfile
     pars[:,-1] = np.log10(pars[:,-1])
     return markers[sa],grid_axes,gridpnts[sa],pars[sa]
-        
+
 
 
 
 def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,z=None,photbands=None,normalised=False,**kwargs):
     """
     Retrieve a limb darkening law for a specific star and specific bandpass.
-    
-    Possibility to include reddening via EB-V parameter. If not given, 
+
+    Possibility to include reddening via EB-V parameter. If not given,
     reddening will not be performed...
-    
+
     You choose your own reddening function.
-    
+
     See e.g. Heyrovsky et al., 2007
-    
+
     If you specify one angle (mu in radians), it will take the closest match
     from the grid.
-    
+
     Mu = cos(theta) where theta is the angle between the surface and the line
     of sight. mu=1 means theta=0 means center of the star.
-    
+
     Example usage:
-    
+
     >>> teff,logg = 5000,4.5
     >>> mu,intensities = get_limbdarkening(teff=teff,logg=logg,photbands=['JOHNSON.V'])
 
@@ -565,11 +565,11 @@ def get_limbdarkening(teff=None,logg=None,ebv=None,vrad=None,z=None,photbands=No
 def get_coeffs(teff,logg,photband,ebv=None,vrad=None,law='claret',fitmethod='equidist_r_leastsq'):
     """
     Retrieve limb darkening coefficients on the fly.
-    
+
     This is particularly useful if you only need a few and speed is not really
     a problem (although this function is nearly instantaneous, looping over it
     will expose that it's actually pretty slow).
-    
+
     @keyword teff: effective temperature
     @type teff: float
     @keyword logg: logarithmic gravity (cgs)
@@ -585,7 +585,7 @@ def get_coeffs(teff,logg,photband,ebv=None,vrad=None,law='claret',fitmethod='equ
     norm_factor = intensities.max(axis=0)
     coeffs,ssr,idiff = fit_law(mu,intensities[:,0]/norm_factor,law=law,fitmethod=fitmethod)
     return coeffs,norm_factor,ssr,idiff
-    
+
 
 
 
@@ -605,9 +605,9 @@ def get_ld_grid_dimensions(**kwargs):
 def intensity_moment(coeffs,ll=0,**kwargs):
     """
     Calculate the intensity moment (see Townsend 2003, eq. 39).
-    
+
     Test analytical versus numerical implementation:
-    
+
     #>>> photband = 'JOHNSON.V'
     #>>> l,logg = 2.,4.0
     #>>> gridfile = 'tables/ikurucz93_z0.0_k2_ld.fits'
@@ -632,8 +632,8 @@ def intensity_moment(coeffs,ll=0,**kwargs):
     #...    check.append(abs(Ilx1-Ilx3)<0.1)
     #>>> np.all(np.array(check))
     #True
-    
-    
+
+
     @parameter teff: effecitve temperature (K)
     @type teff: float
     @parameter logg: log of surface gravity (cgs)
@@ -654,7 +654,7 @@ def intensity_moment(coeffs,ll=0,**kwargs):
     a1x_,a2x_,a3x_,a4x_, I_x1 = coeffs
     a0x_ = 1 - a1x_ - a2x_ - a3x_ - a4x_
     limb_coeffs = np.array([a0x_,a1x_,a2x_,a3x_,a4x_])
-    
+
     #-- compute intensity moment via helper coefficients
     int_moms = np.array([_I_ls(ll,1 + r/2.) for r in range(0,5,1)])
     #int_moms = np.outer(int_moms,np.ones(1))
@@ -662,7 +662,7 @@ def intensity_moment(coeffs,ll=0,**kwargs):
     #-- return value depends on keyword
     if full_output:
         return I_x1,limb_coeffs,int_moms
-    else:    
+    else:
         return I_lx
 
 
@@ -675,21 +675,21 @@ def ld_eval(mu,coeffs):
     Evaluate Claret's limb darkening law.
     """
     return ld_claret(mu,coeffs)
-    
+
 def ld_claret(mu,coeffs):
     """
     Claret's limb darkening law.
     """
     a1,a2,a3,a4 = coeffs
-    Imu = 1-a1*(1-mu**0.5)-a2*(1-mu)-a3*(1-mu**1.5)-a4*(1-mu**2.)    
+    Imu = 1-a1*(1-mu**0.5)-a2*(1-mu)-a3*(1-mu**1.5)-a4*(1-mu**2.)
     return Imu
-    
+
 def ld_linear(mu,coeffs):
     """
     Linear or linear cosine law
     """
     return 1-coeffs[0]*(1-mu)
-    
+
 def ld_nonlinear(mu,coeffs):
     """
     Nonlinear or logarithmic law
@@ -712,14 +712,14 @@ def ld_uniform(mu,coeffs):
     """
     Uniform law.
     """
-    return 1. 
+    return 1.
 
 def ld_power(mu,coeffs):
     """
     Power law.
     """
     return mu**coeffs[0]
-    
+
 #}
 
 #{ Fitting routines (thanks to Steven Bloemen)
@@ -727,23 +727,23 @@ def ld_power(mu,coeffs):
 def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
     """
     Fit an LD law to a sampled set of limb angles/intensities.
-    
+
     In my (Pieter) experience, C{fitmethod='equidist_r_leastsq' seems
     appropriate for the Kurucz models.
-    
+
     Make sure the intensities are normalised!
-    
+
     >>> mu,intensities = get_limbdarkening(teff=10000,logg=4.0,photbands=['JOHNSON.V'],normalised=True)
     >>> p = pl.figure()
     >>> p = pl.plot(mu,intensities[:,0],'ko-')
     >>> cl,ssr,rdiff = fit_law(mu,intensities[:,0],law='claret')
-    
+
     >>> mus = np.linspace(0,1,1000)
     >>> Imus = ld_claret(mus,cl)
     >>> p = pl.plot(mus,Imus,'r-',lw=2)
-    
-    
-    
+
+
+
     @return: coefficients, sum of squared residuals,relative flux difference between prediction and model integrated intensity
     @rtype: array, float, float
     """
@@ -761,14 +761,14 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
         mu_order = np.argsort(mu)
         tck = splrep(mu[mu_order],Imu[mu_order],s=0.0, k=2)
         mu_spl = np.linspace(mu[mu_order][0],1,5000)
-        Imu_spl = splev(mu_spl,tck,der=0)    
+        Imu_spl = splev(mu_spl,tck,der=0)
         (csol, ierr)  = leastsq(ldres_leastsq, c0, args=(mu_spl,Imu_spl,law))
     elif fitmethod=='equidist_r_leastsq':
         mu_order = np.argsort(mu)
         tck = splrep(mu[mu_order],Imu[mu_order],s=0., k=2)
         r_spl = np.linspace(mu[mu_order][0],1,5000)
         mu_spl = np.sqrt(1-r_spl**2)
-        Imu_spl = splev(mu_spl,tck,der=0)    
+        Imu_spl = splev(mu_spl,tck,der=0)
         (csol,ierr)  = leastsq(ldres_leastsq, c0, args=(mu_spl,Imu_spl,law))
     elif fitmethod=='equidist_mu_fmin':
         mu_order = np.argsort(mu)
@@ -790,13 +790,13 @@ def fit_law(mu,Imu,law='claret',fitmethod='equidist_r_leastsq'):
     int1,int2 = np.trapz(Imu,x=mu),np.trapz(myfit,x=mu)
     dflux = (int1-int2)/int1
     return csol,res,dflux
-    
-    
+
+
 def fit_law_to_grid(photband,vrads=[0],ebvs=[0],zs=[0],
              law='claret',fitmethod='equidist_r_leastsq',**kwargs):
     """
     Gets the grid and fits LD law to all the models.
-    
+
     Does not use mu=0 point in the fitting process.
     """
     teffs, loggs = get_grid_dimensions(**kwargs)
@@ -820,12 +820,12 @@ def fit_law_to_grid(photband,vrads=[0],ebvs=[0],zs=[0],
     grid_pars = np.array(grid_pars)
     grid_coeffs = np.array(grid_coeffs)
     Imu1s = np.array(Imu1s)
-    
+
     return grid_pars, grid_coeffs, Imu1s
-    
+
 def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
              law='claret',fitmethod='equidist_r_leastsq',outfile='mygrid.fits',**kwargs):
-    
+
     if os.path.isfile(outfile):
         hdulist = pf.open(outfile,mode='update')
         existing_bands = [ext.header['extname'] for ext in hdulist[1:]]
@@ -838,7 +838,7 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
     hd.update('FIT', fitmethod, 'FIT ROUTINE')
     hd.update('LAW', law, 'FITTED LD LAW')
     hd.update('GRID', kwargs.get('grid',defaults['grid']), 'GRID')
-    
+
     for photband in photbands:
         if photband in existing_bands:
             logger.info('BAND {} already exists: skipping'.format(photband))
@@ -862,7 +862,7 @@ def generate_grid(photbands,vrads=[0],ebvs=[0],zs=[0],
         newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
         newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
         hdulist.append(newtable)
-    
+
     if os.path.isfile(outfile):
         hdulist.close()
     else:
@@ -877,19 +877,19 @@ def _r(mu):
     Convert mu to r coordinates
     """
     return np.sqrt(1.-mu**2.)
-    
+
 def _mu(r_):
     """
     Convert r to mu coordinates
     """
     return np.sqrt(1.-r_**2.)
-    
+
 def ldres_fmin(coeffs, mu, Imu, law):
     """
     Residual function for Nelder-Mead optimizer.
     """
     return sum((Imu - globals()['ld_%s'%(law)](mu,coeffs))**2)
-    
+
 def ldres_leastsq(coeffs, mu, Imu, law):
     """
     Residual function for Levenberg-Marquardt optimizer.
@@ -899,9 +899,9 @@ def ldres_leastsq(coeffs, mu, Imu, law):
 def _I_ls(ll,ss):
     """
     Limb darkening moments (Dziembowski 1977, Townsend 2002)
-    
+
     Recursive implementation.
-    
+
     >>> _I_ls(0,0.5)
     0.6666666666666666
     >>> _I_ls(1,0.5)
@@ -914,15 +914,15 @@ def _I_ls(ll,ss):
     elif ll==1:
         return 1./(2.+ss)
     else:
-        return (ss-ll+2)/(ss+ll-2+3.)*_I_ls(ll-2,ss)    
+        return (ss-ll+2)/(ss+ll-2+3.)*_I_ls(ll-2,ss)
 
 @memoized
 def get_ld_grid(photband,**kwargs):
     """
     Retrieve an interpolating grid for the LD coefficients
-    
+
     Check outcome:
-    
+
     #>>> bands = ['GENEVA.U', 'GENEVA.B', 'GENEVA.G', 'GENEVA.V']
     #>>> f_ld_grid = get_ld_grid(bands)
     #>>> ff = pf.open(_atmos['file'])
@@ -931,9 +931,9 @@ def get_ld_grid(photband,**kwargs):
     #>>> all(ff['GENEVA.G'].data[257][2:]==f_ld_grid(ff['GENEVA.G'].data[257][0],ff['GENEVA.G'].data[257][1])[10:15])
     #True
     #>>> ff.close()
-    
+
     #Make some plots:
-    
+
     #>>> photband = ['GENEVA.V']
     #>>> f_ld = get_ld_grid(photband)
     #>>> logg = 4.0
@@ -950,15 +950,15 @@ def get_ld_grid(photband,**kwargs):
     #...    p = subplot(223);p = title('Without absolute intensity')
     #...    p = plot(mu,ld_eval(mu,[a1x,a2x,a3x,a4x]),'-')
     #...    p = subplot(224);p = title('With absolute intensity')
-    #...    p = plot(mu,I_x1*ld_eval(mu,[a1x,a2x,a3x,a4x]),'-')    
-    
+    #...    p = plot(mu,I_x1*ld_eval(mu,[a1x,a2x,a3x,a4x]),'-')
+
     """
     #-- retrieve the grid points (unique values)
     teffs,loggs = get_ld_grid_dimensions(**kwargs)
     teffs_grid = np.sort(np.unique1d(teffs))
     loggs_grid = np.sort(np.unique1d(loggs))
     coeff_grid = np.zeros((len(teffs_grid),len(loggs_grid),5*len(photband)))
-    
+
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
     #-- fill the grid
@@ -971,12 +971,12 @@ def get_ld_grid(photband,**kwargs):
             indexg = np.searchsorted(loggs_grid,ilogg)
             #-- array and list are added for backwards compatibility with some
             #   pyfits versions
-            coeff_grid[indext,indexg,5*pp:5*(pp+1)] = np.array(list(ff[iband].data[ii]))[2:]                                
+            coeff_grid[indext,indexg,5*pp:5*(pp+1)] = np.array(list(ff[iband].data[ii]))[2:]
     ff.close()
     #-- make an interpolating function
     f_ld_grid = InterpolatingFunction([teffs_grid,loggs_grid],coeff_grid)
     return f_ld_grid
-    
+
 
 @memoized
 def _get_itable_markers(photband,gridfile,
@@ -985,7 +985,7 @@ def _get_itable_markers(photband,gridfile,
     Get a list of markers to more easily retrieve integrated fluxes.
     """
     clear_memoization()
-    
+
     ff = pf.open(gridfile)
     ext = ff[photband]
     columns = ext.columns.names
@@ -998,17 +998,17 @@ def _get_itable_markers(photband,gridfile,
     if 'vrad' in columns:
         names.append('vrad')
         grid.append(ext.data.field('vrad'))
-    
+
     grid_axes = [np.sort(list(set(i))) for i in grid]
-    
+
     #-- we construct an array representing the teff-logg-ebv content, but
-    #   in one number: 50000400 means: 
+    #   in one number: 50000400 means:
     #   T=50000,logg=4.0
     N = len(grid[0])
     markers = np.zeros(N,float)
     gridpnts = np.zeros((N,len(grid)))
     pars = np.zeros((N,5))
-    
+
     for i,entries in enumerate(zip(*grid)):
         markers[i] = encode(**{key:entry for key,entry in zip(names,entries)})
         gridpnts[i]= entries
@@ -1019,8 +1019,8 @@ def _get_itable_markers(photband,gridfile,
     pars[:,-1] = np.log10(pars[:,-1])
     return markers[sa],grid_axes,gridpnts[sa],pars[sa]
 
-#}    
-    
+#}
+
 
 if __name__=="__main__":
     import sys

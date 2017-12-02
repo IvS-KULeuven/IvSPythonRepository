@@ -17,7 +17,7 @@ from scipy.optimize import fmin,fmin_powell
 from ivs.statistics import pca
 from ivs.sed import model
 from ivs.sed import filters
-from ivs.sed.decorators import iterate_gridsearch,parallel_gridsearch
+from ivs.sed.decorators import parallel_gridsearch
 from ivs.sigproc import fit as sfit
 from ivs.aux import numpy_ext
 from ivs.aux import progressMeter

@@ -3,10 +3,7 @@ Non-standard interpolation methods.
 """
 import numpy as np
 from scipy import ndimage
-import astropy.io.fits as pf
-import time
-import itertools
-import pyfinterpol
+
 
 def __df_dx(oldx,oldy,index,sharp=False):
     """
@@ -15,7 +12,7 @@ def __df_dx(oldx,oldy,index,sharp=False):
     xm1,fm1 = oldx[index-1],oldy[index-1]
     x  ,f   = oldx[index]  ,oldy[index]
     xp1,fp1 = oldx[index+1],oldy[index+1]
-    
+
     if not sharp:
         df_dx = 1./(xp1-xm1) * ( fp1*(x-xm1)/(xp1-x) - fm1*(xp1-x)/(x-xm1)) + \
             f*(xp1-2*x+xm1) / ( (x-xm1)*(xp1-x))
@@ -32,11 +29,11 @@ def __P4(x,x0,x1): return  (x-x0)**2 * (x-x1)        / (x1-x0)**2
 def local_interpolation(newx,oldx,oldy,full_output=False):
     """
     A local interpolation method by a polynomial of degree 3.
-    
+
     After Marc-Antoine Dupret, 2002 (extended version of PhD thesis).
-    
+
     Cannot extrapolate!
-    
+
     >>> np.random.seed(1114)
     >>> oldx = np.sort(np.random.uniform(size=10))
     >>> oldy = oldx**2#np.random.uniform(size=10)
@@ -44,7 +41,7 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     >>> newx = np.linspace(oldx.min(),oldx.max(),1000)
     >>> newy,disconts = local_interpolation(newx,oldx,oldy,full_output=True)
     >>> newy_ = local_interpolation(newx,oldx,oldy)
-    
+
     >>> sharpy = newy.copy()
     >>> sharpy[disconts] = np.nan
     >>> smoothy = newy.copy()
@@ -54,7 +51,7 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     >>> p = pl.plot(newx,smoothy,'go-',lw=2,ms=2,mec='g')
     >>> p = pl.plot(newx,sharpy,'ro-',lw=2,ms=2,mec='r')
     >>> p = pl.plot(newx,newy_,'bo--',lw=2,ms=2,mec='b')
-    
+
     @param newx: new x-array to interpolate on
     @type newx: ndarray
     @param oldx: old x-array to interpolate from
@@ -79,17 +76,17 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
     if full_output:
         disconts = np.zeros(len(newx),bool)
         #disconts = np.zeros(len(newx))
-    
+
     index = -1
     for i,x in enumerate(newx):
         index = oldx.searchsorted(x)
-        
+
         #if index>=(len(oldx)-1): continue
         x0,f0 = oldx[index-1],oldy[index-1]
         x1,f1 = oldx[index],oldy[index]
         x2,f2 = oldx[index-2],oldy[index-2]
-        
-        #-- check sharpness of feature    
+
+        #-- check sharpness of feature
         #sharpness_ = 1./((f1-f0)/(x1-x0)*(x1-x2)/(f1-f2))
         numerator = ((x1-x0)*(f1-f2))
         denominator = ((f1-f0)*(x1-x2))
@@ -98,20 +95,20 @@ def local_interpolation(newx,oldx,oldy,full_output=False):
             sharpness = 0.
         else:
             sharpness = numerator/denominator
-        sharp = (0.2<=sharpness<=0.5) 
+        sharp = (0.2<=sharpness<=0.5)
         if full_output:
             disconts[i] = sharp#ness#sharp
         #-- preliminary estimation of df/dx
         dfdx0 = __df_dx(oldx,oldy,index-1,sharp=sharp)
         dfdx1 = __df_dx(oldx,oldy,index,sharp=sharp)
-        
-        
+
+
         #-- interpolation by polynomial of degree 3
         P1 =  (x-x1)**2 * (2*x-3*x0+x1) / (x1-x0)**3
         P2 = -(x-x0)**2 * (2*x-3*x1+x0) / (x1-x0)**3
         P3 =  (x-x0)    * (x-x1)**2     / (x1-x0)**2
         P4 =  (x-x0)**2 * (x-x1)        / (x1-x0)**2
-        
+
         #-- interpolating polynomial
         Px = f0*P1 + f1*P2 + dfdx0*P3 + dfdx1*P4
         newy[i] = Px
@@ -130,21 +127,21 @@ def local_interpolation_ND(newx,oldx,oldy):
         x0,f0 = oldx[index-1],oldy[index-1]
         x1,f1 = oldx[index],oldy[index]
         x2,f2 = oldx[index-2],oldy[index-2]
-    
+
     polynomials = []
-    
+
 
 def create_pixeltypegrid(grid_pars,grid_data):
     """
     Creates pixelgrid and arrays of axis values.
-    
+
     Starting from:
         * grid_pars: 2D numpy array, 1 column per parameter, unlimited number of cols
         * grid_data: 2D numpy array, 1 column per variable, data corresponding to the rows in grid_pars
-    
-    The grid should be rectangular and complete, i.e. every combination of the unique values in the 
+
+    The grid should be rectangular and complete, i.e. every combination of the unique values in the
     parameter columns should exist. If not, a nan value will be inserted.
-    
+
     @param grid_pars: Npar x Ngrid array of parameters
     @type grid_pars: array
     @param grid_data: Ndata x Ngrid array of data
@@ -158,18 +155,18 @@ def create_pixeltypegrid(grid_pars,grid_data):
 
     axis_values = [uniques_[0] for uniques_ in uniques]
     unique_val_indices = [uniques_[1] for uniques_ in uniques]
-    
+
     data_dim = np.shape(grid_data)[0]
 
     par_dims   = [len(uv[0]) for uv in uniques]
 
     par_dims.append(data_dim)
     pixelgrid = np.ones(par_dims)
-    
+
     # We put np.inf as default value. If we get an inf, that means we tried to access
     # a region of the pixelgrid that is not populated by the data table
     pixelgrid[pixelgrid==1] = np.inf
-    
+
     # now populate the multiDgrid
     indices = [uv[1] for uv in uniques]
     pixelgrid[indices] = grid_data.T
@@ -178,9 +175,9 @@ def create_pixeltypegrid(grid_pars,grid_data):
 def interpolate(p, axis_values, pixelgrid):
     """
     Interpolates in a grid prepared by create_pixeltypegrid().
-    
+
     p is an array of parameter arrays
-    
+
     @param p: Npar x Ninterpolate array
     @type p: array
     @return: Ndata x Ninterpolate array
@@ -197,13 +194,13 @@ def interpolate(p, axis_values, pixelgrid):
         indices = np.searchsorted(av_,val)
         indices[indices==len(av_)] = len(av_)-1
         p_.append(indices)
-    
+
 
     #-- The type of p is changes to the same type as in axis_values to catch possible rounding errors
     #   when comparing float64 to float32.
     for i, ax in enumerate(axis_values):
         p[i] = np.array(p[i], dtype = ax.dtype)
-    
+
     #-- Convert requested parameter combination into a coordinate
     p_ = np.array([np.searchsorted(av_,val) for av_, val in zip(axis_values,p)])
     lowervals_stepsize = np.array([[av_[p__-1], av_[p__]-av_[p__-1]] \
@@ -222,7 +219,7 @@ if __name__=='__main__':
     #import time
     #from doctest import testmod
     #testmod()
-    
+
     np.random.seed(1114)
     oldx = np.sort(np.random.uniform(size=10))
     oldy = oldx**2#np.random.uniform(size=10)
@@ -230,7 +227,7 @@ if __name__=='__main__':
     newx = np.linspace(oldx.min(),oldx.max(),1000)
     newy,disconts = local_interpolation(newx,oldx,oldy,full_output=True)
     newy_ = local_interpolation(newx,oldx,oldy)
-    
+
     sharpy = newy.copy()
     sharpy[disconts] = np.nan
     smoothy = newy.copy()
@@ -240,5 +237,5 @@ if __name__=='__main__':
     p = pl.plot(newx,smoothy,'go-',lw=2,ms=2,mec='g')
     p = pl.plot(newx,sharpy,'ro-',lw=2,ms=2,mec='r')
     p = pl.plot(newx,newy_,'bo--',lw=2,ms=2,mec='b')
-    
+
     pl.show()
