@@ -90,7 +90,6 @@ import os
 import itertools
 import astropy.io.fits as pf
 import tarfile
-import tempfile
 import shutil
 import ConfigParser
 from scipy.spatial import KDTree
@@ -103,7 +102,6 @@ from ivs.units import conversions
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
 from ivs.sed import filters
-from ivs import config
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler())

@@ -31,7 +31,7 @@ logger = logging.getLogger("IVS.TS.WINF")
 #{ Main wrapper
 def getWindowFunction(name,times):
     return globals()[name.lower()](times)
-    
+
 #}
 
 #{ Low dynamic range
@@ -63,7 +63,7 @@ def hann(times):
     window = 0.5* (1-np.cos(2*np.pi*n)/N_1)
     logger.debug("Selected Hann window")
     return window
-    
+
 def cosine(times):
     """
     Cosine window

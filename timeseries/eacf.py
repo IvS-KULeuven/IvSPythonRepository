@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Computes the envelope auto-correlation function. This function is estimated by computing the power spectrum of 
+Computes the envelope auto-correlation function. This function is estimated by computing the power spectrum of
 a smoothed power spectrum of a time series. It is ideally suited to discover periodicities in the power spectrum,
-as is often the case for solar-like oscillators (cf the asymptotic relation of Tassoul), and can thus be used to 
+as is often the case for solar-like oscillators (cf the asymptotic relation of Tassoul), and can thus be used to
 estimate the mean large separation (mean frequency spacing between two consecutive radial modes).
 
 As an example we take the Kepler red giant KIC3744043, which shows a beautiful spectrum of solar-like oscillations:
@@ -33,8 +33,8 @@ The EACF looks as follows:
 
 ]include figure]]eacf_smooth15.png]
 
-The highest peak is caused by the main periodicity in the power spectrum. This does not, however, correspond directly 
-to the mean large separation, but to half the large separation. The reason is that almost in the middle between each 
+The highest peak is caused by the main periodicity in the power spectrum. This does not, however, correspond directly
+to the mean large separation, but to half the large separation. The reason is that almost in the middle between each
 two radial modes there is a dipole mode. To compute the large separation we therefore have to enter:
 
 >>> meanLargeSeparation = 2.0 * spacings[np.argmax(autoCorrelation)]
@@ -43,10 +43,10 @@ two radial modes there is a dipole mode. To compute the large separation we ther
 
 How did we choose the value 2.0 (microHz) for the FWHM of the smoothing kernel? The smoothing is done by convolving
 the power spectrum with a Hann kernel with a certain width. If you take the width too large, the spectrum will be too
-heavily smoothed so that no periodicities can be detected. If you take the width too small, the EACF will contain too 
+heavily smoothed so that no periodicities can be detected. If you take the width too small, the EACF will contain too
 many features, which makes it difficult to recognize the right peak. As a rule-of-thumb you can take the kernel width
 to be 1/8 of your initial estimate of the mean large separation. If you don't have such an initial estimate, you can
-estimate nu_max, which is the frequency of maximum power (= the location of the gaussian envelope of the 
+estimate nu_max, which is the frequency of maximum power (= the location of the gaussian envelope of the
 power excess), and derive from that value a first estimate for the large separation:
 
 >>> nuMax = 120.0                                      # for KIC3744043
@@ -68,14 +68,14 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doS
     """
     Compute the Envelope Auto-Correlation Function (EACF) of a signal.
 
-    The EACF is derived by computing the power spectrum of a smoothed version of the 
-    power spectrum of the time series. It allows to identify equispaced patterns in the 
+    The EACF is derived by computing the power spectrum of a smoothed version of the
+    power spectrum of the time series. It allows to identify equispaced patterns in the
     power spectrum
 
-    Source: 
+    Source:
         - Mosser & Appourchaux, 2009, A&A 508, p. 877
         - Mosser, 2010, Astron. Nachr. 331, p. 944
-    
+
     @param freqs: frequencies in which the power specturm is given. Assumed to be equidistant.
     @type freqs: ndarray
     @param spectrum: power spectrum corresponding to the given frequency points.
@@ -96,12 +96,12 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doS
     @return: autoCorrelation, croppedFreqs, smoothedSpectrum
                 - autoCorrelation:  the EACF evaluated in the values of 'spacings'
                 - croppedFreqs:     the frequencies of the selected part [minFreq, maxFreq]
-                - smoothedSpectrum: the smoothed power spectrum used to compute the EACF. Same length as croppedFreqs.    
+                - smoothedSpectrum: the smoothed power spectrum used to compute the EACF. Same length as croppedFreqs.
     @rtype: (ndarray, ndarray, ndarray)
     """
-    
+
     # If requested, perform sanity checks
-    # The 1000. in the check on equidistancy was needed to let pass the arrays created by 
+    # The 1000. in the check on equidistancy was needed to let pass the arrays created by
     # linspace() and arange().
 
     if doSanityCheck:
@@ -122,35 +122,35 @@ def eacf(freqs, spectrum, spacings, kernelWidth, minFreq=None, maxFreq=None, doS
 
 
     # Set the default values
-    
+
     if minFreq == None: minFreq = freqs[0]
     if maxFreq == None: maxFreq = freqs[-1]
     freqStep = freqs[1]-freqs[0]
-   
+
     # Crop the spectrum to the specified range
-    
+
     croppedSpectrum = spectrum[(freqs >= minFreq) & (freqs <= maxFreq)]
     croppedFreqs = freqs[(freqs >= minFreq) & (freqs <= maxFreq)]
-    
+
     # Set up a normalized Hann smoothing kernel.
-    # Note: a Hann window of size N has FWHM = (N-1)/2. The FWHM is given by 
+    # Note: a Hann window of size N has FWHM = (N-1)/2. The FWHM is given by
     # the user in frequency units, so the corresponding N can be derived.
-     
+
     kernelSize = 1 + 2 * int(round(kernelWidth/freqStep))
     kernel = np.hanning(kernelSize)
     kernel = kernel/kernel.sum()
-    
+
     # Smooth the spectrum using a convolution
-    
+
     smoothedSpectrum = np.convolve(kernel, croppedSpectrum, mode='same')
     smoothedSpectrum -= smoothedSpectrum.mean()
-    
+
     # Compute the power spectrum of the power spectrum
-    
+
     autoCorrelation = DFTpower2(croppedFreqs, smoothedSpectrum, 1.0/spacings)
-    
+
     # That's it.
-    
-    return autoCorrelation, croppedFreqs, smoothedSpectrum 
-    
+
+    return autoCorrelation, croppedFreqs, smoothedSpectrum
+
 

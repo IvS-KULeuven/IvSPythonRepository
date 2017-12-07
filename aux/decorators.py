@@ -59,10 +59,10 @@ def clear_memoization(keys=None):
 def make_parallel(fctn):
     """
     Make a parallel version of a function.
-    
+
     This extends the function's arguments with one extra argument, which is
     a parallel array that collects the output of the function.
-    
+
     You have to decorate this function in turn with a function that calls the
     basic function, but with different arguments so to effectively make it
     parallel (e.g. in the frequency analysis case, this would be a function
@@ -78,7 +78,7 @@ def make_parallel(fctn):
 def timeit(fctn):
     """
     Time a function.
-    
+
     @return: output from func, duration of function
     @rtype: 2-tuple
     """
@@ -87,14 +87,14 @@ def timeit(fctn):
         start_time = time.time()
         output = fctn(*args,**kwargs)
         duration = time.time()-start_time
-        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)    
+        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)
         return output
     return time_this
 
 def timeit_duration(fctn):
     """
     Time a function and return duration.
-    
+
     @return: output from func, duration of function
     @rtype: 2-tuple
     """
@@ -103,14 +103,14 @@ def timeit_duration(fctn):
         start_time = time.time()
         output = fctn(*args,**kwargs)
         duration = time.time()-start_time
-        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)    
+        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)
         return duration
     return time_this
 
 def retry(tries, delay=3, backoff=2):
   """
   Retry a function or method until it returns True.
-  
+
   Delay sets the initial delay, and backoff sets how much the delay should
   lengthen after each failure. backoff must be greater than 1, or else it
   isn't really a backoff. tries must be at least 0, and delay greater than 0.
@@ -150,7 +150,7 @@ def retry_http(tries, backoff=2, on_failure='error'):
     """
     Retry a function or method reading from the internet until no socket or IOError
     is raised
-    
+
     delay sets the initial delay, and backoff sets how much the delay should
     lengthen after each failure. backoff must be greater than 1, or else it
     isn't really a backoff. tries must be at least 0, and delay greater than 0.
@@ -173,7 +173,7 @@ def retry_http(tries, backoff=2, on_failure='error'):
     def deco_retry(f):
       def f_retry(*args, **kwargs):
         mtries, mdelay = tries, delay # make mutable
-        
+
         while mtries > 0:
           try:
               rv = f(*args, **kwargs) # Try again
@@ -181,7 +181,7 @@ def retry_http(tries, backoff=2, on_failure='error'):
               rv = False
           except socket.error:
               rv = False
-              
+
           if rv != False: # Done on success
             return rv
           mtries -= 1      # consume an attempt
@@ -235,7 +235,7 @@ class LogPrinter:
         il = self.ilogger
         logging.basicConfig()
         il.setLevel(logging.INFO)
-    
+
     def write(self, text):
         """Logs written output to a specific logger"""
         text = text.strip()
@@ -270,18 +270,18 @@ def filter_kwargs(fctn):
                 thrash = kwargs.pop(key)
         return fctn(*args,**kwargs)
     return do_filter
-    
+
 #}
 
 #{ Disable decorator
 def disabled(func):
     """
     Disables the provided function
-    
+
     use as follows:
         1. set a global enable flag for a decorator:
         >>> global_mydecorator_enable_flag = True
-    
+
         2. toggle decorator right before the definition
         >>> state = mydecorator if global_mydecorator_enable_flag else disabled
         >>> @state
@@ -295,13 +295,13 @@ def extend(cls):
     """
     Decorator that allows you to add methods or attributes to an already
     existing class. Inspired on the reopening of classes in Ruby
-    
+
     Example:
-    
+
     >>> @extend(SomeClassThatAlreadyExists)
     >>> def some_method():
     >>>     do stuff
-    
+
     Will add the method some_method to SomeClassThatAlreadyExists
     """
     def decorator(f):

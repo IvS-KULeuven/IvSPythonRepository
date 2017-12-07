@@ -12,13 +12,10 @@ You can combine all the possibilities, as the functions are generated on the fly
 
 >>> print blink_green_bgred_bold('blinking green bold text on red background')
 blinking green bold text on red background
-    
+
 """
 from __future__ import print_function
-import functools
-import inspect
 import sys
-import types
 import subprocess
 import time
 RED="\[\033[0;35m\]"
@@ -47,26 +44,26 @@ instructs = {'black':"\033[30m",
 def overwrite_line(message):
     """
     Save cursor at current position, clear current line, print the message and reset the cursor.
-    
+
     @param message: message to print to the screen
     @type message: str
     """
     ESC=chr(27)
     print('{ESC}[s{ESC}[2K{message}{ESC}[u'.format(ESC=ESC,message=message),end='')
-    
+
 
 def line_at_a_time(fileobj):
     """
     Return one line at a time from a file-like object.
-    
+
     >>> #p1 = subprocess.Popen('ls',shell=True,stdout=subprocess.PIPE)
     >>> #for line in line_at_a_time(p1.stdout):
     ... #    print 'next line:',line.strip()
     >>> #retcode = p1.wait()
-    
+
     use C{os.kill(p1.pid,SIGKILL)} to with C{SIGKILL} from C{signal} standard
     module to kill the process.
-    
+
     return model_number
     Works around the iter behavior of pipe files in
     Python 2.x, e.g., instead of "for line in file" you can
@@ -76,16 +73,16 @@ def line_at_a_time(fileobj):
         line = fileobj.readline()
         if not line:
             return
-        yield line    
+        yield line
 
 
 def subprocess_timeout(command, time_out):
     """
-    
+
     Kill a running subprocess after a certain amount of time.
-    
+
     Command represents the command for the process you would give in a terminal e.g. 'ls -l' in a terminal becomes ["ls", "-l"] or 'firefox' becomes ["firefox"]'; time_out is expressed in seconds. If the process did not complete before time_out, the process is killed.
-    
+
     @param command: command to run
     @type command: str
     """
@@ -106,7 +103,7 @@ def subprocess_timeout(command, time_out):
         # and fill the return code with some error value
         returncode = -1  # (comment 2)
 
-    else:                 
+    else:
         # in the case the process completed normally
         returncode = c.poll()
 
@@ -115,7 +112,7 @@ def subprocess_timeout(command, time_out):
 class CallInstruct:
     """
     Generate a callable function on-the-fly.
-    
+
     The function takes text as an input and will first print all the terminal
     instructions, then the text and then reset the terminal settings to the
     normal value.
@@ -141,7 +138,7 @@ class MemoryMonitor(object):
         self.time = []
         self.free = []
         self.used = []
-    
+
     def usage(self):
         """Return int containing memory used by user's processes."""
         #self.process = subprocess.Popen("ps -u %s -o rss | awk '{sum+=$1} END {print sum}'" % self.username,
@@ -153,7 +150,7 @@ class MemoryMonitor(object):
         used,free = process.communicate()[0].split('\n')[1].split()[2:4]
         self.free.append(free)
         self.used.append(used)
-        
+
 
 
 

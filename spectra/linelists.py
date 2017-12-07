@@ -62,18 +62,18 @@ stellar = os.path.join('linelists/mask')
 def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
   """
   Request linelists from VALD for each ion seperately within a specific wavelength range.
-  
+
   elem = an array of ions e.g. ['CI','OII'], xmin and xmax: wavelength range in which the spectral lines are searched, outputdir = output directory chosen by the user.
-  
+
   If no elements are given, this function returns all of them.
-  
+
   @param elem: list of ions
   @type elem: list of str
   """
   if elem is None:
     files = sorted(config.glob('VALD_individual','VALD_*.lijnen'))
     elem = [os.path.splitext(os.path.basename(ff))[0].split('_')[1] for ff in files]
-  
+
   all_lines = []
   for i in range(len(elem)):
     print elem[i]
@@ -81,7 +81,7 @@ def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
     if not os.path.isfile(filename):
       logger.info('No data for element ' + str(elem[i]))
       return None
-   
+
     newwav,newexc,newep,newgf = np.loadtxt(filename).T
     lines = np.rec.fromarrays([newwav,newexc,newep,newgf],names=['wavelength','ion','ep','gf'])
     keep = (xmin<=lines['wavelength']) & (lines['wavelength']<=xmax)
@@ -100,36 +100,36 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
                 blend=0.0):
     """
     Retrieve line transitions and strengths for a specific stellar type
-    
+
     Selection wavelength range in angstrom.
-    
+
     Ions should be a list of ions to include. This can either be a string or
     a number
-    
+
     A lines is considerd a blend if the closest line is closer than C{blend} angstrom.
-    
+
     Returns record array with fields C{wavelength}, C{ion} and C{depth}.
-    
+
     Example usage:
-    
+
     Retrieve all Silicon lines between 4500 and 4600 for a B1V star.
-    
+
     >>> data = get_lines(20000,4.0,atoms=['Si'],wrange=(4500,4600))
     >>> p = pl.figure()
     >>> p = pl.vlines(data['wavelength'],1,1-data['depth'])
-    
+
     See how the depth of the Halpha line varies wrt temperature:
-    
+
     >>> teffs = range(5000,21000,1000) + range(22000,32000,2000) + range(30000,50000,50000)
     >>> depths = np.zeros((len(teffs),7))
     >>> for i,teff in enumerate(teffs):
     ...     data = get_lines(teff,5.0,ions=['HI'],wrange=(3800,7000))
     ...     depths[i] = data['depth']
-    
+
     >>> p = pl.figure();p = pl.title('Depth of Balmer lines (Halpha-Heta)')
     >>> p = pl.plot(teffs,1-depths,'o-')
     >>> p = pl.xlabel('Effective temperature');p = pl.grid()
-    
+
     """
     #-- get filepath
     filename = 'mask.%d.%02d.p%02d'%(int(teff),int(logg*10),int(z))
@@ -144,7 +144,7 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
         blends_right= np.hstack([np.diff(data['wavelength']),1e10])
         keep = (blends_left>blend) & (blends_right>blend)
         data = data[keep]
-    
+
     #-- only keep those transitions within a certain wavelength range
     keep = (wrange[0]<=data['wavelength']) & (data['wavelength']<=wrange[1])
     data = data[keep]
@@ -163,7 +163,7 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
         ions = [(isinstance(ion,str) and name2ioncode(ion) or ion) for ion in ions]
         for ion in ions:
             keep = keep | (np.abs(data['ion']-ion)<0.005)
-    
+
     return data[keep]
 
 
@@ -207,4 +207,3 @@ if __name__=="__main__":
     import doctest
     doctest.testmod()
     pl.show()
-    

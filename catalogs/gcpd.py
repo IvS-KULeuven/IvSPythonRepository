@@ -44,12 +44,12 @@ cat_info.readfp(open(os.path.join(basedir,'gcpd_cats_phot.cfg')))
 def search(name,**kwargs):
     """
     Search and retrieve information from the GCPD catalog.
-    
+
     @param name: name of photometric system
     @type name: string
     """
     base_url = _get_URI(name,**kwargs)
-    
+
     #-- the data is listed in two lines: one with the header, one with
     #   the values
     webpage = urllib.urlopen(base_url)
@@ -73,7 +73,7 @@ def search(name,**kwargs):
         start += 1
     logger.info('Querying GCPD for %s (%s)'%(name,log_message))
     webpage.close()
-    
+
     #-- assume that all entries are floats, and are values are magnitudes
     if entries is not None:
         if len(values) < len(entries):
@@ -92,36 +92,36 @@ def search(name,**kwargs):
         results = np.rec.array(cols, dtype=dtypes)
     else:
         results,units,comms = None,None,None
-    
+
     return results, units, None
-    
-    
+
+
 def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fields=None):
     """
     Convert/combine GCPD record arrays to measurement record arrays.
-    
+
     Every line in the combined array represents a measurement in a certain band.
-    
+
     The standard columns are:
-    
+
         1. C{meas}: containing the photometric measurement
         2. C{e_meas}: the error on the photometric measurement
         3. C{flag}: an optional quality flag
         4. C{unit}: the unit of the measurement
         5. C{photband}: the photometric passband (FILTER.BAND)
         6. C{source}: name of the source catalog
-    
+
     If you give a C{master}, the information will be added to a previous
     record array. If not, a new master will be created.
-    
+
     Colors will be expanded, derived from the other columns and added to the
     master.
-    
+
     The result is a record array with each row a measurement.
-    
+
     Extra fields are not available for the GCPD, they will be filled in with
     nans.
-    
+
     @param source: name of the VizieR source
     @type source: str
     @param results: results from VizieR C{search}
@@ -142,27 +142,27 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
     """
     if cat_info.has_option(source,'e_flag'):
         e_flag = cat_info.get(source,'e_flag')
-    
+
     #-- basic dtypes
     dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
-    
+
     #-- extra can be added, but only if a master is already given!! The reason
     #   is that thre GCPD actually does not contain any extra information, so
     #   we will never be able to add it and will not know what dtype the extra
-    #   columns should be   
+    #   columns should be
     #-- extra can be added:
     names = list(results.dtype.names)
     if extra_fields is not None:
         for e_dtype in extra_fields:
             dtypes.append((e_dtype,'f8'))
-     
+
     #-- create empty master if not given
     newmaster = False
     if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
         newmaster = True
-    
+
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
@@ -187,7 +187,7 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
             rows.append(tuple([col[i] for col in cols]))
         master = np.core.records.fromrecords(master.tolist()+rows,dtype=dtypes)
         cols_added += 1
-    
+
     #-- fix colours: we have to run through it two times to be sure to have
     #   all the colours
     N = len(master)-cols_added
@@ -196,17 +196,17 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
         master_ = vizier._breakup_colours(master_)
     #-- combine and return
     master = np.core.records.fromrecords(master.tolist()[:N]+master_.tolist(),dtype=dtypes)
-    
-    #-- skip first line from building 
+
+    #-- skip first line from building
     if newmaster: master = master[1:]
     return master
 
 def get_photometry(ID=None,extra_fields=[],**kwargs):
     """
     Download all available photometry from a star to a record array.
-    
+
     Extra fields will not be useful probably.
-    
+
     For extra kwargs, see L{_get_URI} and L{gcpd2phot}
     """
     to_units = kwargs.pop('to_units','erg/s/cm2/AA')
@@ -217,7 +217,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
         results,units,comms = search(source,ID=ID,**kwargs)
         if results is not None:
             master = gcpd2phot(source,results,units,master,extra_fields=extra_fields)
-    
+
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
@@ -259,7 +259,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
-    
+
     #-- if a master is given as a keyword, and data is found in this module,
     #   append the two
     if master_ is not None and master is not None:
@@ -275,19 +275,19 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
 def _get_URI(name='GENEVA',ID=None,**kwargs):
     """
     Build GCPD URI from available options.
-    
+
     kwargs are to catch unused arguments.
-    
+
     @param name: photometric system name (E.g. JOHNSON, STROMGREN, GENEVA...)
     @type name: string (automatically uppercased)
     @keyword ID: star name (should be resolvable by SIMBAD)
     @type ID: string
-    @return: 
+    @return:
     """
     #-- GCPD is poor at recognising aliases: therefore we try different
     #   identifiers retrieved from Sesame that GCPD understands
     recognized_alias = ['HD','BD',"CD"]
-    
+
     try:
         aliases = sesame.search(ID)['alias']
         for alias in aliases:
@@ -298,12 +298,12 @@ def _get_URI(name='GENEVA',ID=None,**kwargs):
             logger.error('Star %s has no aliases recognised by GCPD: query will not return results'%(ID))
     except KeyError:
         logger.error('Unknown star %s: GCPD query will not return results'%(ID))
-    
-    
+
+
     base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.quote(ID))
     logger.debug(base_url)
     return base_url
-    
+
 #}
 
 if __name__=="__main__":
@@ -313,4 +313,3 @@ if __name__=="__main__":
     print ""
     master = get_photometry(ID='vega')
     print master
-    

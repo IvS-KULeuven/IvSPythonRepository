@@ -30,17 +30,17 @@ and more sophisticated input for args and kwargs, see L{parse}.
 """
 import json
 import sys
-    
+
 def parse(argv=None):
     """
     Command-line to method call arg processing.
-    
+
         - positional args: a b -> method('a', 'b')
         - intifying args: a 123 -> method('a', 123)
         - json loading args: a '["pi", 3.14, null]' -> method('a', ['pi', 3.14, None])
         - keyword args: a foo=bar -> method('a', foo='bar')
         - using more of the above 1234 'extras=["r2"]'  -> method(1234, extras=["r2"])
-    
+
     @param argv: Command line arg list. Defaults to `sys.argv`.
     @return: method-name, args, kwargs
     @rtype: string, list, dict
@@ -63,7 +63,7 @@ def parse(argv=None):
         else:
             key, value = None, s
         try:
-            value = json.loads(value) 
+            value = json.loads(value)
         except ValueError:
             pass
         if key:

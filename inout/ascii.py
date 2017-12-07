@@ -15,11 +15,11 @@ logger.addHandler(logging.NullHandler())
 def read2list(filename,**kwargs):
     """
     Load an ASCII file to list of lists.
-    
+
     The comments and data go to two different lists.
-    
+
     Also opens gzipped files.
-    
+
     @param filename: name of file with the data
     @type filename: string
     @keyword commentchar: character(s) denoting comment rules
@@ -38,64 +38,64 @@ def read2list(filename,**kwargs):
     splitchar = kwargs.get('splitchar',None)
     skip_empty = kwargs.get('skip_empty',True)
     skip_lines = kwargs.get('skip_lines',0)
-    
+
     if os.path.splitext(filename)[1] == '.gz':
         ff = gzip.open(filename)
     else:
         ff = open(filename)
-        
+
     data = []  # data
     comm = []  # comments
-    
+
     line_nr = -1
-    
+
     #-- fixwidth split or character split?
     if splitchar is None or isinstance(splitchar,str):
         fixwidth = False
     else:
         fixwidth = True
-    
+
     while 1:  # might call read several times for a file
         line = ff.readline()
         if not line: break  # end of file
         line_nr += 1
-        if line_nr<skip_lines:        
+        if line_nr<skip_lines:
             continue
-        
+
         #-- strip return character from line
         if skip_empty and line.isspace():
             continue # empty line
-        
+
         #-- remove return characters
         line = line.replace('\n','')
         #-- when reading a comment line
         if line[0] in commentchar:
             comm.append(line[1:])
             continue # treat next line
-        
+
         #-- when reading data, split the line
         if not fixwidth:
             data.append(line.split(splitchar))
         else:
             data.append(fw2python(line,splitchar))
     ff.close()
-    
+
     #-- report that the file has been read
     logger.debug('Data file %s read'%(filename))
-    
+
     #-- and return the contents
     return data,comm
 
 def read2array(filename,**kwargs):
     """
     Load ASCII file to a numpy array.
-    
+
     For a list of extra keyword arguments, see C{<read2list>}.
-    
+
     If you want to return a list of the columns instead of rows, just do
-    
+
     C{>>> col1,col2,col3 = ascii.read2array(myfile).T}
-    
+
     @param filename: name of file with the data
     @type filename: string
     @keyword dtype: type of numpy array (default: float)
@@ -114,19 +114,19 @@ def read2array(filename,**kwargs):
 def read2recarray(filename,**kwargs):
     """
     Load ASCII file to a numpy record array.
-    
+
     For a list of extra keyword arguments, see C{<read2list>}.
-    
+
     IF dtypes is None, we have some room to automatically detect the contents
     of the columns. This is not implemented yet.
-    
+
     the keyword 'dtype' should be equal to a list of tuples, e.g.
-    
+
     C{dtype = [('col1','a10'),('col2','>f4'),..]}
-    
+
     @param filename: name of file with the data
     @type filename: string
-    @keyword dtype: dtypes of record array 
+    @keyword dtype: dtypes of record array
     @type dtype: list of tuples
     @keyword return_comments: flag to return comments (default: False)
     @type return_comments: bool
@@ -136,10 +136,10 @@ def read2recarray(filename,**kwargs):
     dtype = kwargs.get('dtype',None)
     return_comments = kwargs.get('return_comments',False)
     splitchar = kwargs.get('splitchar',None)
-    
+
     #-- first read in as a normal array
     data,comm = read2list(filename,**kwargs)
-    
+
     #-- if dtypes is None, we have some room to automatically detect the contents
     #   of the columns. This is not fully implemented yet, and works only
     #   if the second-to-last and last columns of the comments denote the
@@ -164,10 +164,10 @@ def read2recarray(filename,**kwargs):
             else:
                 dtype.append((str(names[i]),fmt))
         dtype = np.dtype(dtype)
-    
+
     #-- cast all columns to the specified type
     data = [np.cast[dtype[i]](data[i]) for i in range(len(data))]
-        
+
     #-- and build the record array
     data = np.rec.array(data, dtype=dtype)
     return return_comments and (data,comm) or data
@@ -178,14 +178,14 @@ def read2recarray(filename,**kwargs):
 def write_array(data, filename, **kwargs):
     """
     Save a numpy array to an ASCII file.
-    
+
     Add comments via keyword comments (a list of strings denoting every comment
     line). By default, the comment lines will be preceded by the C{commentchar}.
     If you want to override this behaviour, set C{commentchar=''}.
-    
+
     If you give a record array, you can simply set C{header} to C{True} to write
     the header, instead of specifying a list of strings.
-    
+
     @keyword header: optional header for column names
     @type header: list of str (or boolean for record arrays)
     @keyword comments: comment lines
@@ -213,14 +213,14 @@ def write_array(data, filename, **kwargs):
     auto_width = kwargs.get('auto_width',False)
     formats = kwargs.get('formats',None)
     # use '%g' or '%f' or '%e' for writing floats automatically from record arrays with auto width
-    use_float = kwargs.get('use_float','%f') 
-    
+    use_float = kwargs.get('use_float','%f')
+
     #-- switch to rows first if a list of columns is given
     if not isinstance(data,np.ndarray):
         data = np.array(data)
     if not 'row' in axis0.lower():
         data = data.T
-    
+
     if formats is None:
         try:
             formats = [('S' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
@@ -240,17 +240,17 @@ def write_array(data, filename, **kwargs):
     elif auto_width is True and header is not None:
         for i in range(data.shape[1]):
             col_widths.append(max([len('%s'%(formats[i])%(el)) for el in data[:,i]]))
-    
+
     if header is True:
         col_fmts = [str(data.dtype[i]) for i in range(len(data.dtype))]
         header = data.dtype.names
     else:
         col_fmts = None
-    
+
     ff = open(filename,mode)
     if comments is not None:
         ff.write('\n'.join(comments)+'\n')
-    
+
     #-- WRITE HEADER
     #-- when header is desired and automatic width
     if header is not None and col_widths:
@@ -258,13 +258,13 @@ def write_array(data, filename, **kwargs):
     #-- when header is desired
     elif header is not None:
         ff.write('#'+sep.join(header)+'\n')
-    
+
     #-- WRITE COLUMN FORMATS
     if col_fmts is not None and col_widths:
         ff.write('#'+sep.join(['%%%s%ss'%(('s' in fmt and '-' or ''),cw)%(colfmt) for fmt,colfmt,cw in zip(formats,col_fmts,col_widths)])+'\n')
     elif col_fmts is not None:
         ff.write('#'+sep.join(['%%%ss'%('s' in fmt and '-' or '')%(colfmt) for fmt,colfmt in zip(formats,col_fmts)])+'\n')
-    
+
     #-- WRITE DATA
     #-- with automatic width
     if col_widths:
@@ -275,8 +275,8 @@ def write_array(data, filename, **kwargs):
         for row in data:
             ff.write(sep.join(['%s'%(col) for col in row])+'\n')
     ff.close()
-    
-    
+
+
 
 #}
 
@@ -285,7 +285,7 @@ def write_array(data, filename, **kwargs):
 def fw2info(fixwidth):
     """
     Convert fix width information to python information
-  
+
     >>> fw2info('F13.4')
     ([float], [13])
     >>> fw2info('I2')
@@ -299,10 +299,10 @@ def fw2info(fixwidth):
     translator['I'] = int
     translator['F'] = float
     translator['A'] = str
-    
+
     numbers = re.compile('[\d]*[\d\.*]+',re.IGNORECASE)
     formats = re.compile('[a-z]+',re.IGNORECASE)
-  
+
     numbers = numbers.findall(fixwidth)
     formats = formats.findall(fixwidth)
     if len(numbers)==1:
@@ -320,7 +320,7 @@ def fws2info(fixwidths):
     for iinfo in info: length += iinfo[1]
     length = [0]+[sum(length[:i+1]) for i in range(len(length))]
     return types,length
-    
+
 
 def fw2python(line,fixwidths,missing_value=0):
     """
@@ -342,7 +342,7 @@ def fw2python(line,fixwidths,missing_value=0):
 def read_harps(filename):
     """
     Return spectrum and header from a HARPS normalised file.
-    
+
     @parameter filename: name of the file
     @type filename: str
     @return: wavelengths,flux,header
@@ -360,17 +360,17 @@ def read_harps(filename):
 def read_mad(infile,add_dp=False,**kwargs):
     """
     Reads .phot from MADROT or .nad from MAD.
-    
+
     MAD is the nonadiabatic pulsation code from Marc-Antoine Dupret.
-    
+
     MADROT is the extension for slowly rotating stars in the traditional
     approximation.
-    
+
     This function serves a generic read function, it reads *.phot and *.nad
     files, both from MAD and MADROT.
-    
+
     Returns list of dicts
-    
+
     @param add_dp: add period spacings information
     @type add_dp: boolean
     @return: star info, blocks
@@ -394,31 +394,31 @@ def read_mad(infile,add_dp=False,**kwargs):
 def read_photrot(infile,teff=None,logg=None):
     """
     Reads .phot output file of MADROT.
-    
+
     Returns list of dictionaries
-    
+
     For quick reading, you can already give a range on teff and logg, and skip
     the rest of file.
-        
+
     if there is a NAD file with the same name (but extension .nad instead of .phot),
     we read in the header of this file too for information on the star::
-        
-        #   M/M_sun =  1.40      Teff    =   6510.2    Log (L/L_sun) =  0.5168                              
-        #   Log g   =  4.2748    R/R_sun =  1.4283     age (y)       =  2.3477E+08                          
-        #   X       =  0.70      Z       =  0.020      alphaconv     =  1.80     overshoot =  0.40 
-    
+
+        #   M/M_sun =  1.40      Teff    =   6510.2    Log (L/L_sun) =  0.5168
+        #   Log g   =  4.2748    R/R_sun =  1.4283     age (y)       =  2.3477E+08
+        #   X       =  0.70      Z       =  0.020      alphaconv     =  1.80     overshoot =  0.40
+
    if the filename is given as C{M1.4_0.020_0.40_0.70_001-0097.phot}, we add
    information on mass, Z, overshoot, X and evolution number to star_info,
    except for those quantities already derived from a NAD file.
-   
+
    One dictionary representes information about one pulsation mode.
-   
+
    @param teff: range in effective temperature for file selection (value, sigma)
    @type teff: tuple
    @param logg: range in surface gravity for file selection (value, sigma)
    @type logg: tuple
    """
-    dict_keys = ('l', 'm', 'par', 'n', 'f_cd_com', 'f_cd_obs', 'ltilde', 'fT', 
+    dict_keys = ('l', 'm', 'par', 'n', 'f_cd_com', 'f_cd_obs', 'ltilde', 'fT',
                  'psiT', 'fg', 'psig', 'K', 'omega_puls', 'omega_rot')
     with open(infile,'r') as f:
         line = f.readline()
@@ -427,7 +427,7 @@ def read_photrot(infile,teff=None,logg=None):
         logTeff, logg_, Fe_H = line.split()
         logTeff, logg_, Fe_H = float(logTeff), float(logg_), float(Fe_H)
         star_info = dict(teff=10**logTeff,logg=logg_,Fe_H=Fe_H)
-        
+
         #-- read the NAD file if it exists:
         nadfile =  os.path.splitext(infile)[0]+'.nad'
         if os.path.isfile(nadfile):
@@ -435,12 +435,12 @@ def read_photrot(infile,teff=None,logg=None):
         else:
             pass
             # not implemented yet.
-            
+
         #second line gives number of blocks
         line = f.readline()
         nr_b = int(line)
         blocks = []
-        
+
         #-- check for fundamental parameters
         valid_funds = True
         if teff is not None:
@@ -478,7 +478,7 @@ def read_photrot(infile,teff=None,logg=None):
                 #add spin parameter if not failed
                 if not fail:
                     d['s'] = 2*d['omega_rot']/d['omega_puls']
-                
+
                 for key_ in ('l', 'm', 'par', 'n'): d[key_]=int(d[key_])
                 #create the lists to store B
                 d['B']=[]
@@ -495,24 +495,24 @@ def read_photrot(infile,teff=None,logg=None):
                     if not fail: blocks.append(d)
                     pos = 0
                     continue
-        
+
     logger.debug("Read %d modes from MADROT %s (%d modes failed)"%(len(blocks),infile,nrfails))
-    
+
     return star_info,blocks
-        
+
 
 def read_phot(photfile,teff=None,logg=None):
     """
     Reads .phot output file of MAD.
-    
+
     Returns list of dictionaries
-    
+
     One dictionary representes information about one pulsation mode.
     """
     dict_keys = ('l', 'fT','psiT', 'fg', 'psig')
-    
+
     blocks = []
-    
+
     with open(photfile,'r') as f:
         fc = f.readlines()
         #first line gives teff, logg, XYZ, remember this as global information
@@ -520,11 +520,11 @@ def read_phot(photfile,teff=None,logg=None):
         logTeff, logg = fc[0].split()[:2]
         logTeff, logg = float(logTeff), float(logg)
         star_info = dict(teff=10**logTeff,logg=logg)
-        
+
         #second line gives number of blocks
         nr_b = int(fc[1])
         blocks = []
-        
+
         #loop over all blocks and store them
         pos = 0
         fail = False
@@ -539,18 +539,18 @@ def read_phot(photfile,teff=None,logg=None):
             block['f_cd_com'] = 0 # no information on frequency
             block['omega_rot'] = 0 # no rotation
             blocks.append(block)
-        
+
     logger.debug("Read %d modes from MAD %s"%(len(blocks),photfile))
     return star_info,blocks
-    
+
 def read_nad(nadfile,only_header=False):
     """
     Reads .nad output file of MAD.
-    
+
     Returns list of dictionaries
     One dictionary representes information about one pulsation mode.
     """
-    
+
     dict_keys = {'l':'l',
                  'm':'m',
                  'n':'n',
@@ -572,19 +572,19 @@ def read_nad(nadfile,only_header=False):
                  'lifetime (d)':'lifetime',
                  'Q (d)':'Q'}  # for non rotating nad
     star_info = {}
-    
+
     blocks = []
     myheader = None
     lines = 0
-    
+
     with open(nadfile,'r') as ff:
-    
+
         while 1:
             lines += 1
             line = ff.readline()
             if not line: break            # end of file, quit
             if line.isspace(): continue   # blank line, continue
-            
+
             line = line.strip()
             if line[0]=='#' and lines<=3:  # general header containing star info
                 contents = [i for i in line[1:].split()]
@@ -619,7 +619,7 @@ def read_nad(nadfile,only_header=False):
                 #-- for rotating AND nonrotating nad files, omega_rot is not available
                 thismode['omega_rot'] = 0
                 blocks.append(thismode)
-    
+
     logger.debug("Read %d modes from MAD (nad) %s"%(len(blocks),nadfile))
     return star_info,blocks
 

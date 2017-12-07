@@ -15,7 +15,7 @@ logger = logging.getLogger("CAT.SESAME")
 def get_URI(ID,db='S'):
     """
     Build Sesame URI from available options.
-    
+
     @param ID: name of the star
     @type ID: str
     @keyword db: database (one of 'S','N', or 'A')
@@ -36,19 +36,19 @@ def get_URI(ID,db='S'):
 def search(ID,db='S',fix=False):
     """
     Query Simbad, NED and/or Vizier for information on an identifier.
-    
+
     This retrieves basic information on a star, e.g. as shown in a typical
     Simbad page: coordinates, spectral type, fluxes, aliases, references...
-    
+
     Database C{db} is one of 'S' (SIMBAD), 'N' (NED), 'V' (Vizier)
     or 'A' (all).
-    
+
     This function returns a (sometimes nested) dictionary. Example output is
     given below, where nested dictionaries are shown with the separator '.'
     between the keys.
-    
+
     If you set C{fix} to C{False}, following values will be updated:
-    
+
         1. the spectral type will be replaced by the one from the Skiff (2010)
         catalog if possible.
         2. The parallax will be replaced with the value from the new Van Leeuwen
@@ -56,9 +56,9 @@ def search(ID,db='S',fix=False):
         3. The galactic coordinates will be added (converted from RA and DEC)
         4. The proper motions will be taken from the PPMXL catalog from Roeser
         2010.
-    
+
     Example usage:
-    
+
     >>> info = search('vega',db='S')
     >>> print info['jpos']
     18:36:56.33 +38:47:01.2
@@ -70,7 +70,7 @@ def search(ID,db='S',fix=False):
     128.93
     >>> print info['mag']['B']['v']
     0.03
-    
+
     This is an exhaustive list of example contents::
         Vel.e    = 0.9
         Vel.q    = A
@@ -121,8 +121,8 @@ def search(ID,db='S',fix=False):
         refPos   = [u'1997A', u'&', u'A...323L..49P']
         spNum    = 0.0000C800.0030.0000000000000000
         spType   = A0V
-            
-            
+
+
     >>> info = search('vega',db='N')
     >>> for key1 in sorted(info.keys()):
     ...    print '%s = %s'%(key1.ljust(8),info[key1])
@@ -133,10 +133,10 @@ def search(ID,db='S',fix=False):
     jdedeg   = 38.782316
     jpos     = 18:36:55.70 +38:46:56.3
     jradeg   = 279.2321017
-    oname    = VEGA 
+    oname    = VEGA
     otype    = !*
     refPos   = 1990IRASF.C...0000M
-    
+
     @param ID: name of the source
     @type ID: str
     @param db: database to use
@@ -160,7 +160,7 @@ def search(ID,db='S',fix=False):
         #-- we found nothing!
         database = {}
     ff.close()
-    
+
     if fix:
         #-- fix the parallax: make sure we have the Van Leeuwen 2007 value.
         #   simbad seems to have changed to old values to the new ones somewhere
@@ -194,7 +194,7 @@ def search(ID,db='S',fix=False):
             database['pm']['epmDE'] = data['e_pmDE'][0]
             database['pm']['r'] = 'I/317/sample'
     return database
-    
+
 if __name__=="__main__":
     import doctest
     doctest.testmod()
