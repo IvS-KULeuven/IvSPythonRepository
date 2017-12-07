@@ -47,7 +47,7 @@ import inspect
 # Local modules
 from ivs.units import uncertainties
 
-from ivs.units.uncertainties import __author__, to_affine_scalar, AffineScalarFunc
+from ivs.units.uncertainties import to_affine_scalar, AffineScalarFunc
 
 ###############################################################################
 
