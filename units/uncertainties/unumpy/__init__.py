@@ -68,7 +68,6 @@ This software is released under a dual license.  (1) The BSD license.
 author."""
 
 # Local modules:
-from core import *
 import core
 import ulinalg  # Local sub-module
 
