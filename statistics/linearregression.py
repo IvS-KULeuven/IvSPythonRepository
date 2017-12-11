@@ -108,21 +108,21 @@ Some handy derived classes
 There is a shortcut to define polynomials:
 
 >>> myPolynomial = PolynomialModel(x, "x", [3,1])
->>> print myPolynomial
+>>> print(myPolynomial)
 Model: y = a_0 * x^3 + a_1 * x^1
 Expected number of observations: 10
 
 and to define harmonic models:
 
 >>> myHarmonicModel = HarmonicModel(x, "x", [2.13, 3.88], ["f1", "f2"], maxNharmonics=2)
->>> print myHarmonicModel
+>>> print(myHarmonicModel)
 Model: y = a_0 * sin(2*pi*1*f1*x) + a_1 * cos(2*pi*1*f1*x) + a_2 * sin(2*pi*2*f1*x) + a_3 * cos(2*pi*2*f1*x) + a_4 * sin(2*pi*1*f2*x) + a_5 * cos(2*pi*1*f2*x) + a_6 * sin(2*pi*2*f2*x) + a_7 * cos(2*pi*2*f2*x)
 Expected number of observations: 10
 
 One can even add the two models:
 
 >>> myCombinedModel = myPolynomial + myHarmonicModel
->>> print myCombinedModel
+>>> print(myCombinedModel)
 Model: y = a_0 * x^3 + a_1 * x^1 + a_2 * sin(2*pi*1*f1*x) + a_3 * cos(2*pi*1*f1*x) + a_4 * sin(2*pi*2*f1*x) + a_5 * cos(2*pi*2*f1*x) + a_6 * sin(2*pi*1*f2*x) + a_7 * cos(2*pi*1*f2*x) + a_8 * sin(2*pi*2*f2*x) + a_9 * cos(2*pi*2*f2*x)
 Expected number of observations: 10
 
@@ -215,13 +215,13 @@ class LinearModel(object):
             self._nParameters = regressors.shape[1]
             self._nObservations = regressors.shape[0]
         else:
-            raise TypeError, "LinearModel only accepts a list of regressors, or a design matrix"
+            raise TypeError("LinearModel only accepts a list of regressors, or a design matrix")
 
 
         # Sanity check of the 'nameList'
     
         if len(nameList) != self._nParameters:
-            raise ValueError, "Number of names not equal to number of regressors"
+            raise ValueError("Number of names not equal to number of regressors")
         else:
             self._regressorNames = copy.copy(nameList)
 
@@ -231,14 +231,14 @@ class LinearModel(object):
         if covMatrix == None:
             self._covMatrixObserv = None
         elif not isinstance(covMatrix, np.ndarray):
-            raise TypeError, "Covariance matrix of observations needs to be an ndarray object"
+            raise TypeError("Covariance matrix of observations needs to be an ndarray object")
         else:
             if len(covMatrix.shape) != 2:
-                raise TypeError, "Covariance matrix not a 2-dimensional array"
+                raise TypeError("Covariance matrix not a 2-dimensional array")
             elif covMatrix.shape[0] != self._nObservations:
-                raise TypeError, "Size of covariance matrix not compatible with number of observations"
+                raise TypeError("Size of covariance matrix not compatible with number of observations")
             elif covMatrix.shape[1] != covMatrix.shape[0]:
-                raise TypeError, "Covariance matrix is not a square matrix"
+                raise TypeError("Covariance matrix is not a square matrix")
             else:
                 self._covMatrixObserv = covMatrix
 
@@ -302,13 +302,13 @@ class LinearModel(object):
         """
         
         if not isinstance(linearModel, LinearModel):
-            raise TypeError, "Only a LinearModel can be added to a LinearModel"
+            raise TypeError("Only a LinearModel can be added to a LinearModel")
 
         if linearModel.designMatrix().shape[0] != self._nObservations:
-            raise ValueError, "Linear model has incompatible design matrix"
+            raise ValueError("Linear model has incompatible design matrix")
 
         if not np.alltrue(linearModel._covMatrixObserv == self._covMatrixObserv):
-            raise ValueError, "Linear model has a different covariance matrix"
+            raise ValueError("Linear model has a different covariance matrix")
             
         designMatrix = np.hstack([self._designMatrix, linearModel.designMatrix()])
         regressorNames = self._regressorNames + linearModel.regressorNames()
@@ -969,7 +969,7 @@ class LinearModel(object):
         """
         
         if len(observations) != self._nObservations:
-            raise ValueError, "Number of observations should be %d != %d" % (self._nObservations, len(observations))
+            raise ValueError("Number of observations should be {0} != {1}".format(self._nObservations, len(observations)))
             
         return LinearFit(self, observations)
         
@@ -2006,8 +2006,7 @@ class LinearFit(object):
          
         """
         
-        return   "Linear fit of a dataset of %d observations, " % self._nObservations    \
-               + "using a linear model with %d regressors" % self._nParameters
+        return("Linear fit of a dataset of {0} observations, using a linear model with {1} regressors".format(self._nObservations, self._nParameters))
 
 
 
@@ -2057,7 +2056,7 @@ class LinearFit(object):
         # Sanity check of the 'regressors'
         
         if not isinstance(regressors, list) and not isinstance(regressors, np.ndarray):
-            raise TypeError, "LinearModel only accepts a list of regressors, or a design matrix"
+            raise TypeError("LinearModel only accepts a list of regressors, or a design matrix")
             
         # Construct the design matrix, if required    
             
@@ -2069,10 +2068,10 @@ class LinearFit(object):
         # Check whether the design matrix has the proper shape
         
         if designMatrix.ndim != 2:
-            raise TypeError, "Design matrix is not 2-dimensional"
+            raise TypeError("Design matrix is not 2-dimensional")
             
         if designMatrix.shape[1] != self._nParameters:
-            raise TypeError, "Number of regressors not equal to the one of the original model"          
+            raise TypeError("Number of regressors not equal to the one of the original model")        
         
         # Evaluate the model in the new regressors    
             
