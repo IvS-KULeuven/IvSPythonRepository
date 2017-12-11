@@ -15,7 +15,7 @@ import numpy  as np
 from numpy import (abs, arange, array, ceil, cos, dot, floor, int, logical_and,
                    logical_or, max, min, ones, pi, sin, sqrt, where, zeros, exp)
 import scipy  as sc
-import pyfits as pf
+import astropy.io.fits as pf
 import logging
 
 logger = logging.getLogger("SED.EXT")

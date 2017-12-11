@@ -12,7 +12,7 @@ Examples::
 
 """
 import sys
-import pyfits
+import astropy.io.fits as pf
 import logging
 import numpy as np
 import time
@@ -23,7 +23,7 @@ from ivs.sed import model
 from ivs.sed import filters
 from ivs.sed import reddening
 from ivs.sed import limbdark
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import argkwargparser
 from ivs.aux import loggers
 
@@ -132,11 +132,11 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
         outfile = '{}_{}_{}.fits'.format(kwargs.get('grid',limbdark.defaults['grid']),ld_law,fitmethod)
     #-- add the possibility to update an existing file if it already exists.
     if os.path.isfile(outfile):
-        hdulist = pyfits.open(outfile,mode='update')
+        hdulist = pf.open(outfile,mode='update')
         existing_bands = [ext.header['extname'] for ext in hdulist[1:]]
     else:
-        hdulist = pyfits.HDUList([])
-        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        hdulist = pf.HDUList([])
+        hdulist.append(pf.PrimaryHDU(np.array([[0,0]])))
         existing_bands = []
         
     #-- update the header with some information on the fitting parameters
@@ -155,18 +155,18 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
                       law=ld_law,fitmethod=fitmethod,**kwargs)
         cols = []
 
-        cols.append(pyfits.Column(name='Teff', format='E', array=pars[:,0]))
-        cols.append(pyfits.Column(name="logg", format='E', array=pars[:,1]))
-        cols.append(pyfits.Column(name="ebv" , format='E', array=pars[:,2]))
-        cols.append(pyfits.Column(name="vrad", format='E', array=pars[:,3]))
-        cols.append(pyfits.Column(name="z"   , format='E', array=pars[:,4]))
+        cols.append(pf.Column(name='Teff', format='E', array=pars[:,0]))
+        cols.append(pf.Column(name="logg", format='E', array=pars[:,1]))
+        cols.append(pf.Column(name="ebv" , format='E', array=pars[:,2]))
+        cols.append(pf.Column(name="vrad", format='E', array=pars[:,3]))
+        cols.append(pf.Column(name="z"   , format='E', array=pars[:,4]))
         for col in range(coeffs.shape[1]):
-            cols.append(pyfits.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
-        cols.append(pyfits.Column(name='Imu1', format='E', array=Imu1s[:,0]))
-        cols.append(pyfits.Column(name='SRS', format='E', array=Imu1s[:,1]))
-        cols.append(pyfits.Column(name='dint', format='E', array=Imu1s[:,2]))
+            cols.append(pf.Column(name='a{:d}'.format(col+1), format='E', array=coeffs[:,col]))
+        cols.append(pf.Column(name='Imu1', format='E', array=Imu1s[:,0]))
+        cols.append(pf.Column(name='SRS', format='E', array=Imu1s[:,1]))
+        cols.append(pf.Column(name='dint', format='E', array=Imu1s[:,2]))
 
-        newtable = pyfits.new_table(pyfits.ColDefs(cols))
+        newtable = pf.new_table(pf.ColDefs(cols))
         newtable.header.update('EXTNAME', photband, "SYSTEM.FILTER")
         newtable.header.update('SYSTEM', photband.split('.')[0], 'PASSBAND SYSTEM')
         newtable.header.update('FILTER', photband.split('.')[1], 'PASSBAND FILTER')
@@ -305,22 +305,22 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         shutil.copy(outfile,outfile+'.backup')
     output = output.T
     if not update or not os.path.isfile(outfile):
-        cols = [pyfits.Column(name='teff',format='E',array=output[0]),
-                pyfits.Column(name='logg',format='E',array=output[1]),
-                pyfits.Column(name='ebv',format='E',array=output[3]),
-                pyfits.Column(name='Labs',format='E',array=output[2])]
+        cols = [pf.Column(name='teff',format='E',array=output[0]),
+                pf.Column(name='logg',format='E',array=output[1]),
+                pf.Column(name='ebv',format='E',array=output[3]),
+                pf.Column(name='Labs',format='E',array=output[2])]
         for i,photband in enumerate(responses):
-            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
+            cols.append(pf.Column(name=photband,format='E',array=output[4+i]))
     #-- make FITS columns but copy the existing ones
     else:
-        hdulist = pyfits.open(outfile,mode='update')
+        hdulist = pf.open(outfile,mode='update')
         names = hdulist[1].columns.names
-        cols = [pyfits.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
+        cols = [pf.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
         for i,photband in enumerate(responses):
-            cols.append(pyfits.Column(name=photband,format='E',array=output[4+i]))
+            cols.append(pf.Column(name=photband,format='E',array=output[4+i]))
         
     #-- make FITS extension and write grid/reddening specifications to header
-    table = pyfits.new_table(pyfits.ColDefs(cols))
+    table = pf.new_table(pf.ColDefs(cols))
     table.header.update('gridfile',os.path.basename(gridfile))
     for key in sorted(model.defaults.keys()):
         key_ = (len(key)>8) and 'HIERARCH '+key or key
@@ -337,8 +337,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         if os.path.isfile(outfile):
             os.remove(outfile)
             logger.warning('Removed existing file: %s'%(outfile))
-        hdulist = pyfits.HDUList([])
-        hdulist.append(pyfits.PrimaryHDU(np.array([[0,0]])))
+        hdulist = pf.HDUList([])
+        hdulist.append(pf.PrimaryHDU(np.array([[0,0]])))
         hdulist.append(table)
         hdulist.writeto(outfile)
         logger.info("Written output to %s"%(outfile))
@@ -358,7 +358,7 @@ def update_grid(gridfile,responses,threads=10):
     Add passbands to an existing grid.
     """
     shutil.copy(gridfile,gridfile+'.backup')
-    hdulist = pyfits.open(gridfile,mode='update')
+    hdulist = pf.open(gridfile,mode='update')
     existing_responses = set(list(hdulist[1].columns.names))
     responses = sorted(list(set(responses) - existing_responses))
     if not len(responses):
@@ -426,21 +426,21 @@ def update_grid(gridfile,responses,threads=10):
     #-- copy old columns and append new ones
     cols = []
     for i,photband in enumerate(responses):
-        cols.append(pyfits.Column(name=photband,format='E',array=output[i]))
+        cols.append(pf.Column(name=photband,format='E',array=output[i]))
     #-- create new table
-    table = pyfits.new_table(pyfits.ColDefs(cols))
-    table = pyfits.new_table(hdulist[1].columns + table.columns,header=hdulist[1].header)
+    table = pf.new_table(pf.ColDefs(cols))
+    table = pf.new_table(hdulist[1].columns + table.columns,header=hdulist[1].header)
     hdulist[1] = table
     hdulist.close()
 
 
 def fix_grid(grid):
-    hdulist = pyfits.open(grid,mode='update')
+    hdulist = pf.open(grid,mode='update')
     names = hdulist[1].columns.names
     for i,name in enumerate(names):
         if name.lower() in ['teff','logg','ebv','labs','vrad','rv','z']:
             names[i] = name.lower()
-    cols = [pyfits.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
+    cols = [pf.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
     N = len(hdulist[1].data)
 
     keys = [key.lower() for key in hdulist[1].header.keys()]
@@ -448,13 +448,13 @@ def fix_grid(grid):
     if not 'z' in names:
         z = hdulist[1].header['z']
         logger.info('Adding metallicity from header {}'.format(z))
-        cols.append(pyfits.Column(name='z',format='E',array=np.ones(N)*z))
+        cols.append(pf.Column(name='z',format='E',array=np.ones(N)*z))
     else:
         logger.info("Metallicity already in there")
     if not 'vrad' in names:
         vrad = 0.
         logger.info('Adding radial velocity {}'.format(vrad))
-        cols.append(pyfits.Column(name='vrad',format='E',array=np.ones(N)*vrad))
+        cols.append(pf.Column(name='vrad',format='E',array=np.ones(N)*vrad))
     else:
         logger.info("Radial velocity already in there")
         
@@ -466,7 +466,7 @@ def fix_grid(grid):
         else:
             rv = 3.1
             logger.info("Adding default interstellar Rv {}".format(rv))
-        cols.append(pyfits.Column(name='rv',format='E',array=np.ones(N)*rv))
+        cols.append(pf.Column(name='rv',format='E',array=np.ones(N)*rv))
     elif not hdulist[1].header['Rv']==hdulist[1].data.field('rv')[0]:
         rv = hdulist[1].header['Rv']
         fix_rv = rv
@@ -474,7 +474,7 @@ def fix_grid(grid):
     else:
        logger.info("Interstellar Rv already in there")
         
-    table = pyfits.new_table(pyfits.ColDefs(cols))
+    table = pf.new_table(pf.ColDefs(cols))
     if fix_rv:
         table.data.field('rv')[:] = rv
     fake_keys = [key.lower() for key in table.header.keys()]

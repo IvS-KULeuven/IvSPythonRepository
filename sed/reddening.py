@@ -93,7 +93,7 @@ import os
 import numpy as np
 import logging
 
-from ivs.io import ascii
+from ivs.inout import ascii
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 from ivs.units import conversions

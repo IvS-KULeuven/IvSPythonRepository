@@ -40,7 +40,7 @@ Now take care of the plot details
 import os
 import logging
 import copy
-import pyfits
+import astropy.io.fits as pf
 import inspect
 from ivs import config
 from ivs.units import constants
@@ -64,22 +64,22 @@ basedir = 'spectables'
 def set_defaults(**kwargs):
     """
     Set defaults of this module.
-    
+
     If you give no keyword arguments, the default values will be reset.
     """
     if not kwargs:
         kwargs = dict(grid='atlas',z=+0.0,vturb=2,band='vis',
                 t=0.0,a=0.0,c=0.5,atm='p')          # MARCS and COMARCS
-    
+
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
-       
+
 
 def get_gridnames():
     """
     Return a list of available grid names.
-    
+
     @return: list of grid names
     @rtype: list of str
     """
@@ -90,7 +90,7 @@ def get_gridnames():
 def get_file(**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
-    
+
     Available grids and example keywords:
         - grid='fastwind': no options
         - grid='cmfgen': no options
@@ -98,12 +98,12 @@ def get_file(**kwargs):
         - grid='ostar2002': options z,v
         - grid='bstar2006a': options z,v
         - grid='bstar2006b': options z,v
-        - grid='bstar2006': options z,v,a                          
+        - grid='bstar2006': options z,v,a
         - grid='atlas': options z
-        - grid='heberb': no options 
-        - grid='hebersdb': no options 
+        - grid='heberb': no options
+        - grid='hebersdb': no options
         - grid='tmapsdb': no options
-    
+
     Details for grid 'bstar2006':
         - metallicity in Z/Z0 with Z0 solar. z=0,0.001,0.01,0.033,0.1,0.2,0.5,1.,2
         - microturbulent velocity: v=2 or v=10 km/s
@@ -111,17 +111,17 @@ def get_file(**kwargs):
         increased to He/H=0.2, the nitrogen abundance is increased
         by a factor of 5, and the carbon abundance is halved (CNO cycle processed
         material brought to the stellar surface)
-                    
+
     Details for grid 'heberb': LTE Grid computed for B-type stars by Uli Heber,
     reff: Heber et al. 2000
-        
+
     Details for grid 'hebersdb': LTE Grid computed for sdB stars by Uli Heber,
     reff: Heber et al. 2000
-    
+
     Details for grid 'tmapsdb': NLTE Grid computed for sdB stars using the TMAP
     (TUEBINGEN NLTE MODEL ATMOSPHERE PACKAGE) code. reff: Werner K., et al. 2003
     and Rauch T., Deetjen J.L. 2003
-    
+
     @param grid: gridname, or path to grid.
     @type grid: string
     """
@@ -129,7 +129,7 @@ def get_file(**kwargs):
     grid = kwargs.get('grid',defaults['grid'])#.lower()
     if os.path.isfile(grid):
         return grid
-    
+
     #-- general
     z = kwargs.get('z',defaults['z'])
     #-- only for Kurucz
@@ -141,7 +141,7 @@ def get_file(**kwargs):
     atm = kwargs.get('atm',defaults['atm'])
     #-- only for TLUSTY
     band = kwargs.get('band',defaults['band'])
-        
+
     #-- figure out what grid to use
     if grid=='cmfgen':
         basename = 'cmfgen_spectra.fits'
@@ -164,28 +164,28 @@ def get_file(**kwargs):
 
     #-- retrieve the absolute path of the file and check if it exists:
     grid = config.get_datafile(basedir,basename)
-    
+
     return grid
 
 
 def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     """
     Retrieve synthetic spectrum.
-        
+
     Wavelengths in angstrom, fluxes in eddington flux: erg/s/cm2/A.
-    
+
     It is possible to rotationally broaden the spectrum by supplying at least
     'vrot' and optionally also other arguments for the rotation.rotin function.
     Supply vrot in km/s
-    
+
     It is possibility to include a radial velocity shift in the spectrum. Supply
     'vrad' in km/s. (+vrad means redshift). Uses spectra.tools.doppler_shift
     """
     gridfile = get_file(**kwargs)
     template_wave = kwargs.pop('wave',None)
-    
-    ff = pyfits.open(gridfile)
-    
+
+    ff = pf.open(gridfile)
+
     try:
         #-- extenstion name as in fits files prepared by Steven
         mod_name = "T%05d_logg%01.02f" %(teff,logg)
@@ -219,11 +219,11 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
             #logger.error('teff=%f-->%f, logg=%f-->%f'%(teff,teffs[index],logg,loggs[index]))
             flux = flux_grid(np.log10(teffs[index]),loggs[index]) + 0.
             cont = cont_grid(np.log10(teffs[index]),loggs[index]) + 0.
-    
+
     #-- convert to arrays
     wave = np.array(wave,float)
     flux = np.array(flux,float)
-    
+
     if vrot>0:
         #-- calculate rotational broadening but reinterpolate on original
         #   wavelength grid. First we need to check which arguments we can pass
@@ -238,10 +238,10 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
     if vrad!=0:
         wave_ = tools.doppler_shift(wave,vrad)
         flux = np.interp(wave,wave_,flux)
-    
+
     ff.close()
     return wave,flux,cont
-    
+
 
 
 
@@ -253,12 +253,12 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
 def get_grid_dimensions(**kwargs):
     """
     Retrieve possible effective temperatures and gravities from a grid.
-    
+
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
     """
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     teffs = []
     loggs = []
     for mod in ff[1:]:
@@ -276,20 +276,20 @@ def get_grid_dimensions(**kwargs):
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of spectrum models.
-    
+
     WARNING: the grid must be entirely defined on a mesh grid, but it does not
     need to be equidistant.
-    
+
     It is thus the user's responsibility to know whether the grid is evenly
     spaced in logg and teff
-    
+
     You can supply your own wavelength range, since the grid models'
     resolution are not necessarily homogeneous. If not, the first wavelength
     array found in the grid will be used as a template.
-        
+
     It might take a long a time and cost a lot of memory if you load the entire
     grid. Therefor, you can also set range of temperature and gravity.
-    
+
     @param wave: wavelength to define the grid on
     @type wave: ndarray
     @param teffrange: starting and ending of the grid in teff
@@ -321,7 +321,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     #-- run over teff and logg, and interpolate the models onto the supplied
     #   wavelength range
     gridfile = get_file(**kwargs)
-    ff = pyfits.open(gridfile)
+    ff = pf.open(gridfile)
     for i,teff in enumerate(teffs):
         for j,logg in enumerate(loggs):
             try:
@@ -364,7 +364,7 @@ if __name__=="__main__":
     import pylab as pl
     import numpy as np
     #doctest.testmod()
-    
+
     grids = get_gridnames()
 
     p = pl.figure()
@@ -386,5 +386,5 @@ if __name__=="__main__":
     p = pl.xticks([np.log10(i) for i in xticks],['%d'%(i) for i in xticks])
     p = pl.legend(loc='upper left',prop=dict(size='small'))
     p = pl.grid()
-    
+
     pl.show()

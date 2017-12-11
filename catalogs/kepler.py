@@ -3,13 +3,13 @@ Retrieve light curves from the Kepler satellite mission.
 """
 import urllib
 import os
-import pyfits
+import astropy.io.fits as pf
 import logging
 import numpy as np
 from ivs.catalogs import mast
 from ivs.units import conversions
-from ivs.io import ascii
-from ivs.io import fits
+from ivs.inout import ascii
+from ivs.inout import fits
 from ivs import config
 
 logger = logging.getLogger("CAT.KEPLER")
@@ -73,7 +73,7 @@ def get_data(KIC):
     else:
         filenames = KIC
     for filename in filenames:
-        header = pyfits.getheader(filename)
+        header = pf.getheader(filename)
         data = fits.read2recarray(filename,ext='LIGHTCURVE')
         times.append(data['TIME']+2454833.)
         flux.append(data['SAP_FLUX'])
