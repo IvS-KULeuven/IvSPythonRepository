@@ -9,7 +9,7 @@ Welcome to Sphinx Documentation's documentation!
 .. toctree::
 
     README
-    sed
+    sed/index
 
 Indices and tables
 ==================
