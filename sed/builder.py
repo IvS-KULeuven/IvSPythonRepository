@@ -1,562 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 SED builder program.
-
-To construct an SED, use the SED class. The functions defined in this module
-are mainly convenience functions specifically for that class, but can be used
-outside of the SED class if you know what you're doing.
-
-Table of contents:
-
-    1. Retrieving and plotting photometry of a target
-    2. Where/what is my target?
-    3. SED fitting using a grid based approach
-        - Binar star ### W.I.P ###
-        - Saving SED fits
-        - Loading SED fits ### BROKEN ###
-    4. Accessing the best fitting full SED model
-    5. Radii, distances and luminosities
-        - Relations between quantities
-        - Parallaxes
-        - Seismic constraints
-        - Reddening constraints
-        - Evolutionary constraints
-
-Section 1. Retrieving and plotting photometry of a target
-=========================================================
-
->>> mysed = SED('HD180642')
->>> mysed.get_photometry()
->>> mysed.plot_data()
-
-and call Pylab's C{show} function to show to the screen:
-
-]]include figure]]ivs_sed_builder_example_photometry.png]
-
-Catch IndexErrors and TypeErrors in case no photometry is found.
-
-You can give a B{search radius} to C{get_photometry} via the keyword C{radius}.
-The default value is 10 arcseconds for stars dimmer than 6th magnitude, and 60
-arcseconds for brighter stars. The best value of course depends on the density
-of the field.
-
->>> mysed.get_photometry(radius=5.)
-
-If your star's name is not recognised by any catalog, you can give coordinates
-to look for photometry. In that case, the ID of the star given in the C{SED}
-command will not be used to search photometry (only to save the phot file):
-
->>> mysed.get_photometry(ra=289.31167983,dec=1.05941685)
-
-Note that C{ra} and C{dec} are given in B{degrees}.
-
-You best B{switch on the logger} (see L{ivs.aux.loggers.get_basic_logger}) to see the progress:
-sometimes, access to catalogs can take a long time (the GATOR sources are
-typically slow). If one of the C{gator}, C{vizier} or C{gcpd} is impossibly slow
-or the site is down, you can B{include/exclude these sources} via the keywords
-C{include} or C{exclude}, which take a list of strings (choose from C{gator},
-C{vizier} and/or C{gcpd}). For ViZieR, there is an extra option to change to
-another mirror site via
-
->>> vizier.change_mirror()
-
-The L{vizier.change_mirror} function cycles through all the mirrors continuously,
-so sooner or later you will end up with the default one and repeat the cycle.
-
->>> mysed.get_photometry(exclude=['gator'])
-
-The results will be written to the file B{HD180642.phot}. An example content is::
-
-  #  meas    e_meas flag unit photband          source                        _r   _RAJ2000    _DEJ2000   cwave       cmeas     e_cmeas cunit       color include
-  #float64   float64 |S20 |S30 |S30              |S50                     float64    float64     float64 float64     float64     float64 |S50         bool    bool
-    7.823      0.02 nan  mag  WISE.W3           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  123337 4.83862e-17 8.91306e-19 erg/s/cm2/AA     0       1
-    7.744     0.179 nan  mag  WISE.W4           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05  222532 4.06562e-18 6.70278e-19 erg/s/cm2/AA     0       1
-     7.77     0.023 nan  mag  WISE.W1           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05 33791.9   6.378e-15  1.3511e-16 erg/s/cm2/AA     0       1
-    7.803      0.02 nan  mag  WISE.W2           wise_prelim_p3as_psd    0.112931  2.667e-05   2.005e-05   46293 1.82691e-15 3.36529e-17 erg/s/cm2/AA     0       1
-    8.505     0.016 nan  mag  TYCHO2.BT         I/259/tyc2                 0.042   7.17e-06    1.15e-06  4204.4 2.76882e-12 4.08029e-14 erg/s/cm2/AA     0       1
-    8.296     0.013 nan  mag  TYCHO2.VT         I/259/tyc2                 0.042   7.17e-06    1.15e-06 5321.86 1.93604e-12 2.31811e-14 erg/s/cm2/AA     0       1
-     8.27       nan nan  mag  JOHNSON.V         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
-     0.22       nan nan  mag  JOHNSON.B-V       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.40749    0.140749 flux_ratio      1       0
-    -0.66       nan nan  mag  JOHNSON.U-B       II/168/ubvmeans             0.01    1.7e-07    3.15e-06     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
-     7.83       nan nan  mag  JOHNSON.U         II/168/ubvmeans             0.01    1.7e-07    3.15e-06 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
-    2.601       nan nan  mag  STROMGREN.HBN-HBW J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.66181    0.166181 flux_ratio      1       0
-   -0.043       nan nan  mag  STROMGREN.M1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan    0.961281   0.0961281 flux_ratio      1       0
-    8.221       nan nan  mag  STROMGREN.Y       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 5477.32 1.88222e-12 1.88222e-13 erg/s/cm2/AA     0       1
-    0.009       nan nan  mag  STROMGREN.C1      J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     0.93125    0.093125 flux_ratio      1       0
-    0.238       nan nan  mag  STROMGREN.B-Y     J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685     nan     1.28058    0.128058 flux_ratio      1       0
-    8.459       nan nan  mag  STROMGREN.B       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685  4671.2 2.41033e-12 2.41033e-13 erg/s/cm2/AA     0       1
-    8.654       nan nan  mag  STROMGREN.V       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 4108.07 2.96712e-12 2.96712e-13 erg/s/cm2/AA     0       1
-    8.858       nan nan  mag  STROMGREN.U       J/A+A/528/A148/tables       0.54 -5.983e-05 -0.00013685 3462.92 3.40141e-12 3.40141e-13 erg/s/cm2/AA     0       1
-     7.82      0.01 nan  mag  JOHNSON.J         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 12487.8 2.36496e-13 2.36496e-15 erg/s/cm2/AA     0       1
-     7.79      0.01 nan  mag  JOHNSON.K         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 21951.2 3.24868e-14 3.24868e-16 erg/s/cm2/AA     0       1
-     7.83      0.04 nan  mag  JOHNSON.H         J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06 16464.4 8.64659e-14 3.18552e-15 erg/s/cm2/AA     0       1
-   8.3451    0.0065 nan  mag  HIPPARCOS.HP      I/239/hip_main             0.036   2.17e-06    1.15e-06 5275.11 1.91003e-12 1.91003e-14 erg/s/cm2/AA     0       1
-    8.525     0.011 nan  mag  TYCHO2.BT         I/239/hip_main             0.036   2.17e-06    1.15e-06  4204.4 2.71829e-12   2.754e-14 erg/s/cm2/AA     0       1
-    8.309     0.012 nan  mag  TYCHO2.VT         I/239/hip_main             0.036   2.17e-06    1.15e-06 5321.86   1.913e-12 2.11433e-14 erg/s/cm2/AA     0       1
-     8.02     0.057 nan  mag  COUSINS.I         II/271A/patch2               0.2 -4.983e-05   2.315e-05 7884.05 7.51152e-13 3.94347e-14 erg/s/cm2/AA     0       1
-    8.287     0.056 nan  mag  JOHNSON.V         II/271A/patch2               0.2 -4.983e-05   2.315e-05 5504.67 1.77773e-12 9.16914e-14 erg/s/cm2/AA     0       1
-     8.47       nan nan  mag  USNOB1.B1         I/284/out                  0.026   7.17e-06     1.5e-07 4448.06 2.57935e-12 7.73805e-13 erg/s/cm2/AA     0       1
-     8.19       nan nan  mag  USNOB1.R1         I/284/out                  0.026   7.17e-06     1.5e-07 6939.52 1.02601e-12 3.07803e-13 erg/s/cm2/AA     0       1
-    8.491     0.012 nan  mag  JOHNSON.B         I/280B/ascc                0.036   2.17e-06    2.15e-06 4448.06 2.53928e-12 2.80651e-14 erg/s/cm2/AA     0       1
-    8.274     0.013 nan  mag  JOHNSON.V         I/280B/ascc                0.036   2.17e-06    2.15e-06 5504.67 1.79914e-12 2.15419e-14 erg/s/cm2/AA     0       1
-    7.816     0.023 nan  mag  2MASS.J           II/246/out                 0.118 -2.783e-05   1.715e-05 12412.1 2.28049e-13 4.83093e-15 erg/s/cm2/AA     0       1
-    7.792     0.021 nan  mag  2MASS.KS          II/246/out                 0.118 -2.783e-05   1.715e-05 21909.2 3.26974e-14 6.32423e-16 erg/s/cm2/AA     0       1
-    7.825     0.042 nan  mag  2MASS.H           II/246/out                 0.118 -2.783e-05   1.715e-05 16497.1 8.48652e-14 3.28288e-15 erg/s/cm2/AA     0       1
-    8.272     0.017 nan  mag  GENEVA.V          GCPD                         nan        nan         nan  5482.6 1.88047e-12 2.94435e-14 erg/s/cm2/AA     0       1
-      1.8     0.004 nan  mag  GENEVA.G-B        GCPD                         nan        nan         nan     nan    0.669837  0.00669837 flux_ratio      1       0
-    1.384     0.004 nan  mag  GENEVA.V1-B       GCPD                         nan        nan         nan     nan    0.749504  0.00749504 flux_ratio      1       0
-     0.85     0.004 nan  mag  GENEVA.B1-B       GCPD                         nan        nan         nan     nan     1.05773   0.0105773 flux_ratio      1       0
-    1.517     0.004 nan  mag  GENEVA.B2-B       GCPD                         nan        nan         nan     nan    0.946289  0.00946289 flux_ratio      1       0
-    0.668     0.004 nan  mag  GENEVA.V-B        GCPD                         nan        nan         nan     nan    0.726008  0.00726008 flux_ratio      1       0
-    0.599     0.004 nan  mag  GENEVA.U-B        GCPD                         nan        nan         nan     nan     1.13913   0.0113913 flux_ratio      1       0
-    7.604 0.0174642 nan  mag  GENEVA.B          GCPD                         nan        nan         nan 4200.85 2.59014e-12 4.16629e-14 erg/s/cm2/AA     0       1
-    9.404 0.0179165 nan  mag  GENEVA.G          GCPD                         nan        nan         nan 5765.89 1.73497e-12   2.863e-14 erg/s/cm2/AA     0       1
-    8.988 0.0179165 nan  mag  GENEVA.V1         GCPD                         nan        nan         nan 5395.63 1.94132e-12 3.20351e-14 erg/s/cm2/AA     0       1
-    8.454 0.0179165 nan  mag  GENEVA.B1         GCPD                         nan        nan         nan 4003.78 2.73968e-12 4.52092e-14 erg/s/cm2/AA     0       1
-    9.121 0.0179165 nan  mag  GENEVA.B2         GCPD                         nan        nan         nan 4477.56 2.45102e-12  4.0446e-14 erg/s/cm2/AA     0       1
-    8.203 0.0179165 nan  mag  GENEVA.U          GCPD                         nan        nan         nan 3421.62 2.95052e-12 4.86885e-14 erg/s/cm2/AA     0       1
-     8.27       nan nan  mag  JOHNSON.V         GCPD                         nan        nan         nan 5504.67 1.80578e-12 1.80578e-13 erg/s/cm2/AA     0       1
-     0.22       nan nan  mag  JOHNSON.B-V       GCPD                         nan        nan         nan     nan     1.40749    0.140749 flux_ratio      1       0
-    -0.66       nan nan  mag  JOHNSON.U-B       GCPD                         nan        nan         nan     nan     1.21491    0.121491 flux_ratio      1       0
-     8.49       nan nan  mag  JOHNSON.B         GCPD                         nan        nan         nan 4448.06 2.54162e-12 2.54162e-13 erg/s/cm2/AA     0       1
-     7.83       nan nan  mag  JOHNSON.U         GCPD                         nan        nan         nan 3641.75 3.08783e-12 3.08783e-13 erg/s/cm2/AA     0       1
-   -0.035       nan nan  mag  STROMGREN.M1      GCPD                         nan        nan         nan     nan    0.954224   0.0954224 flux_ratio      1       0
-    0.031       nan nan  mag  STROMGREN.C1      GCPD                         nan        nan         nan     nan     0.91257    0.091257 flux_ratio      1       0
-    0.259       nan nan  mag  STROMGREN.B-Y     GCPD                         nan        nan         nan     nan     1.25605    0.125605 flux_ratio      1       0
-   -0.009 0.0478853 nan  mag  2MASS.J-H         II/246/out                 0.118 -2.783e-05   1.715e-05     nan     2.68719    0.118516 flux_ratio      1       0
-   -0.033 0.0469574 nan  mag  2MASS.KS-H        II/246/out                 0.118 -2.783e-05   1.715e-05     nan    0.385286   0.0166634 flux_ratio      1       0
-    -0.01 0.0412311 nan  mag  JOHNSON.J-H       J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06     nan     2.73514    0.103867 flux_ratio      1       0
-    -0.04 0.0412311 nan  mag  JOHNSON.K-H       J/PASP/120/1128/catalog     0.02  1.017e-05    3.15e-06     nan    0.375718    0.014268 flux_ratio      1       0
-    0.209 0.0206155 nan  mag  TYCHO2.BT-VT      I/259/tyc2                 0.042   7.17e-06    1.15e-06     nan     1.43014    0.027155 flux_ratio      1       0
-
-Once a .phot file is written and L{get_photometry} is called again for the same
-target, the script will B{not retrieve the photometry from the internet again},
-but will use the contents of the file instead. The purpose is minimizing network
-traffic and maximizing speed. If you want to refresh the search, simply manually
-delete the .phot file or set C{force=True} when calling L{get_photometry}.
-
-The content of the .phot file is most easily read using the L{ivs.inout.ascii.read2recarray}
-function. Be careful, as it contains both absolute fluxes as flux ratios.
-
->>> data = ascii.read2recarray('HD180642.phot')
-
-Notice that in the C{.phot} files, also a C{comment} column is added. You can
-find translation of some of the flags here (i.e. upper limit, extended source etc..),
-or sometimes just additional remarks on variability etc. Not all catalogs have
-this feature implemented, so you are still responsible yourself for checking
-the quality of the photometry.
-
-The references to each source are given in the C{bibtex} column. Simply call
-
->>> mysed.save_bibtex()
-
-to convert those bibcodes to a C{.bib} file.
-
-Using L{SED.plot_MW_side} and L{SED.plot_MW_top}, you can make a picture of where
-your star is located with respect to the Milky Way and the Sun. With L{SED.plot_finderchart},
-you can check the location of your photometry, and also see if proper motions
-etc are available.
-
-Section 2. Where/what is my target?
-===================================
-
-To give you some visual information on the target, the following plotting
-procedure might be of some help.
-
-To check whether the downloaded photometry is really belonging to the target,
-instead of some neighbouring star (don't forget to set C{radius} when looking
-for photometry!), you can generate a finderchart with the location of the
-downloaded photometry overplotted. On top of that, proper motion data is added
-when available, as well as radial velocity data. When a distance is available,
-the proper motion velocity will be converted to a true tangential velocity.
-
->>> p = pl.figure();mysed.plot_finderchart(window_size=1)
-
-]]include figure]]ivs_sed_builder_finderchart.png]
-
-To know the location of your target wrt the Milky Way (assuming your target is
-in the milky way), you can call
-
->>> p = pl.figure();mysed.plot_MW_side()
->>> p = pl.figure();mysed.plot_MW_top()
-
-]]include figure]]ivs_sed_builder_MWside.png]
-
-]]include figure]]ivs_sed_builder_MWtop.png]
-
-Section 3. SED fitting using a grid based approach
-==================================================
-
-Subsection 3.1 Single star
---------------------------
-
-We make an SED of HD180642 by simply B{exploring a whole grid of Kurucz models}
-(constructed via L{fit.generate_grid}, iterated over via L{fit.igrid_search} and
-evaluated with L{fit.stat_chi2}). The model with the best parameters is picked
-out and we make a full SED with those parameters.
-
->>> mysed = SED('HD180642')
->>> mysed.get_photometry()
-
-Now we have collected B{all fluxes and colors}, but we do not want to use them
-all: first, B{fluxes and colors are not independent}, so you probably want to use
-either only absolute fluxes or only colors (plus perhaps one absolute flux per
-system to compute the angular diameter) (see L{SED.set_photometry_scheme}). Second,
-B{some photometry is better suited for fitting an SED than others}; typically IR
-photometry does not add much to the fitting of massive stars, or it can be
-contaminated with circumstellar material. Third, B{some photometry is not so
-reliable}, i.e. the measurements can have large systematic uncertainties due to
-e.g. calibration effects, which are typically not included in the error bars.
-
-Currently, four standard schemes are implemented, which you can set via L{SED.set_photometry_scheme}:
-
-    1. C{absolute}: use only absolute values
-    2. C{colors}: use only colors (no angular diameter values calculated)
-    3. C{combo}: use all colors and one absolute value per photometric system
-    4. C{irfm}: (infrared flux method) use colors for wavelengths shorter than
-    infrared wavelengths, and absolute values for systems in the infrared. The
-    infrared is defined as wavelength longer than 1 micron, but this can be
-    customized with the keyword C{infrared=(value,unit)} in
-    L{SED.set_photometry_scheme}.
-
-Here, we chose to use colors and one absolute flux per system, but exclude IR
-photometry (wavelength range above 2.5 micron), and some systems and colors which
-we know are not so trustworthy:
-
->>> mysed.set_photometry_scheme('combo')
->>> mysed.exclude(names=['STROMGREN.HBN-HBW','USNOB1','SDSS','DENIS','COUSINS','ANS','TD1'],wrange=(2.5e4,1e10))
-
-You can L{include}/L{exclude} photoemtry based on name, wavelength range, source and index,
-and only select absolute photometry or colors (L{include_abs},L{include_colors}).
-When working in interactive mode, in particular the index is useful. Print the
-current set of photometry to the screen with
-
->>> print(photometry2str(mysed.master,color=True,index=True))
-
-and you will see in green the included photometry, and in red the excluded photometry.
-You will see that each column is preceded by an index, you can use these indices
-to select/deselect the photometry.
-
-Speed up the fitting process by copying the model grids to the scratch disk
-
->>> model.copy2scratch(z='*')
-
-Start the grid based fitting process and show some plots. We use 100000 randomly
-distributed points over the grid:
-
->>> mysed.igrid_search(points=100000)
-
-Delete the model grids from the scratch disk
-
->>> model.clean_scratch()
-
-and make the plot
-
->>> p = pl.figure()
->>> p = pl.subplot(131);mysed.plot_sed()
->>> p = pl.subplot(132);mysed.plot_grid(limit=None)
->>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
-
-]]include figure]]ivs_sed_builder_example_fitting01.png]
-
-The grid is a bit too coarse for our liking around the minimum, so we zoom in on
-the results:
-
->>> teffrange = mysed.results['igrid_search']['CI']['teffL'],mysed.results['igrid_search']['CI']['teffU']
->>> loggrange = mysed.results['igrid_search']['CI']['loggL'],mysed.results['igrid_search']['CI']['loggU']
->>> ebvrange = mysed.results['igrid_search']['CI']['ebvL'],mysed.results['igrid_search']['CI']['ebvU']
->>> mysed.igrid_search(points=100000,teffrange=teffrange,loggrange=loggrange,ebvrange=ebvrange)
-
-and repeat the plot
-
->>> p = pl.figure()
->>> p = pl.subplot(131);mysed.plot_sed(plot_deredded=True)
->>> p = pl.subplot(132);mysed.plot_grid(limit=None)
->>> p = pl.subplot(133);mysed.plot_grid(x='ebv',y='z',limit=None)
-
-]]include figure]]ivs_sed_builder_example_fitting02.png]
-
-You can automatically make plots of (most plotting functions take C{colors=True/False}
-as an argument so you can make e.g. the 'color' SED and 'absolute value' SED):
-
-    1. the grid (see L{SED.plot_grid})
-    2. the SED (see L{SED.plot_sed})
-    3. the fit statistics (see L{SED.plot_chi2})
-
-To change the grid, load the L{ivs.sed.model} module and call
-L{ivs.sed.model.set_defaults} with appropriate arguments. See that module for
-conventions on the grid structure when adding custom grids.
-
-To add arrays manually, i.e. not from the predefined set of internet catalogs,
-use the L{SED.add_photometry_fromarrays} function.
-
-B{Warning}: Be careful when interpreting the Chi2 results. In order to always have a
-solution, the chi2 is rescaled so that the minimum equals 1, in the case the
-probability of the best chi2-model is zero. The Chi2 rescaling factor I{f} mimicks
-a rescaling of all errorbars with a factor I{sqrt(f)}, and does not discriminate
-between systems (i.e., B{all} errors are blown up). If the errorbars are
-underestimated, it could be that the rescaling factor is also wrong, which means
-that the true probability region can be larger or smaller!
-
-Subsection 3.2 Binary star - ### W.I.P ###
-------------------------------------------
-
-The SED class can create SEDs for multiple stars as well. There are 2 options
-available, the multiple SED fit which in theory can handle any number of stars,
-and the binary SED fit which is for binaries only, and uses the mass of both
-components to restrict the radii when combining two model SEDs.
-
-As an example we take the system PG1104+243, which consists of a subdwarf B star,
-and a G2 type mainsequence star. The photometry from the standard catalogues that
-are build in this class, is of to low quality, so we use photometry obtained from
-U{the subdwarf database<http://catserver.ing.iac.es/sddb/>}.
-
->>> mysed = SED('PG1104+243')
-
->>> meas, e_meas, units, photbands, source = ascii.read2array('pg1104+243_sddb.phot', dtype=str)
->>> meas = np.array(meas, dtype=float)
->>> e_meas = np.array(e_meas, dtype=float)
->>> mysed.add_photometry_fromarrays(meas, e_meas, units, photbands, source)
-
-We use only the absolute fluxes
-
->>> mysed.set_photometry_scheme('abs')
-
-For the main sequence component we use kurucz models with solar metalicity, and
-for the sdB component tmap models. And we copy the model grids to the scratch disk
-to speed up the process:
-
->>> grid1 = dict(grid='kurucz',z=+0.0)
->>> grid2 = dict(grid='tmap')
->>> model.set_defaults_multiple(grid1,grid2)
->>> model.copy2scratch()
-
-The actual fitting. The second fit starts from the 95% probability intervals of
-the first fit.
-
->>> teff_ms = (5000,7000)
->>> teff_sdb = (25000,45000)
->>> logg_ms = (4.00,4.50)
->>> logg_sdb = (5.00,6.50)
->>> mysed.igrid_search(masses=(0.47,0.71) ,teffrange=(teff_ms,teff_fix),loggrange=(logg_ms,logg_sdb), ebvrange=(0.00,0.02), zrange=(0,0), points=2000000, type='binary')
->>> mysed.igrid_search(masses=(0.47,0.71) ,points=2000000, type='binary')
-
-Delete the used models from the scratch disk
-
->>> model.clean_scratch()
-
-Plot the results
-
->>> p = pl.figure()
->>> p = pl.subplot(131); mysed.plot_sed(plot_deredded=False)
->>> p = pl.subplot(132); mysed.plot_grid(x='teff', y='logg', limit=0.95)
->>> p = pl.subplot(133); mysed.plot_grid(x='teff-2', y='logg-2', limit=0.95)
-
-]]include figure]]ivs_sed_builder_example_fittingPG1104+243.png]
-
-Subsection 3.3 Saving SED fits
-------------------------------
-
-You can save all the data to a multi-extension FITS file via
-
->>> mysed.save_fits()
-
-This FITS file then contains all B{measurements} (it includes the .phot file),
-the B{resulting SED}, the B{confidence intervals of all parameters} and also the
-B{whole fitted grid}: in the above case, the extensions of the FITS file contain
-the following information (we print part of each header)::
-
-    EXTNAME = 'DATA    '
-    XTENSION= 'BINTABLE'           / binary table extension
-    BITPIX  =                    8 / array data type
-    NAXIS   =                    2 / number of array dimensions
-    NAXIS1  =                  270 / length of dimension 1
-    NAXIS2  =                   67 / length of dimension 2
-    TTYPE1  = 'meas    '
-    TTYPE2  = 'e_meas  '
-    TTYPE3  = 'flag    '
-    TTYPE4  = 'unit    '
-    TTYPE5  = 'photband'
-    TTYPE6  = 'source  '
-    TTYPE7  = '_r      '
-    TTYPE8  = '_RAJ2000'
-    TTYPE9  = '_DEJ2000'
-    TTYPE10 = 'cwave   '
-    TTYPE11 = 'cmeas   '
-    TTYPE12 = 'e_cmeas '
-    TTYPE13 = 'cunit   '
-    TTYPE14 = 'color   '
-    TTYPE15 = 'include '
-    TTYPE16 = 'synflux '
-    TTYPE17 = 'mod_eff_wave'
-    TTYPE18 = 'chi2    '
-
-    EXTNAME = 'MODEL   '
-    XTENSION= 'BINTABLE'           / binary table extension
-    BITPIX  =                    8 / array data type
-    NAXIS   =                    2 / number of array dimensions
-    NAXIS1  =                   24 / length of dimension 1
-    NAXIS2  =                 1221 / length of dimension 2
-    TTYPE1  = 'wave    '
-    TUNIT1  = 'A       '
-    TTYPE2  = 'flux    '
-    TUNIT2  = 'erg/s/cm2/AA'
-    TTYPE3  = 'dered_flux'
-    TUNIT3  = 'erg/s/cm2/AA'
-    TEFFL   =    23000.68377498454
-    TEFF    =    23644.49138963689
-    TEFFU   =    29999.33189058337
-    LOGGL   =    3.014445328877565
-    LOGG    =    4.984788506855546
-    LOGGU   =    4.996095055525759
-    EBVL    =   0.4703171900728142
-    EBV     =   0.4933185398871652
-    EBVU    =   0.5645144879211454
-    ZL      =   -2.499929434601112
-    Z       =   0.4332336811329144
-    ZU      =   0.4999776537652627
-    SCALEL  = 2.028305798068863E-20
-    SCALE   = 2.444606991671813E-20
-    SCALEU  = 2.830281842143698E-20
-    LABSL   =    250.9613352757437
-    LABS    =     281.771013453664
-    LABSU   =    745.3149766772975
-    CHISQL  =    77.07958742733673
-    CHISQ   =    77.07958742733673
-    CHISQU  =    118.8587169011471
-    CI_RAWL =   0.9999999513255379
-    CI_RAW  =   0.9999999513255379
-    CI_RAWU =   0.9999999999999972
-    CI_RED  =   0.5401112973063139
-    CI_REDL =   0.5401112973063139
-    CI_REDU =   0.9500015229597392
-
-    EXTNAME = 'IGRID_SEARCH'
-    XTENSION= 'BINTABLE'           / binary table extension
-    BITPIX  =                    8 / array data type
-    NAXIS   =                    2 / number of array dimensions
-    NAXIS1  =                   80 / length of dimension 1
-    NAXIS2  =                99996 / length of dimension 2
-    TTYPE1  = 'teff    '
-    TTYPE2  = 'logg    '
-    TTYPE3  = 'ebv     '
-    TTYPE4  = 'z       '
-    TTYPE5  = 'chisq   '
-    TTYPE6  = 'scale   '
-    TTYPE7  = 'escale '
-    TTYPE8  = 'Labs    '
-    TTYPE9  = 'CI_raw  '
-    TTYPE10 = 'CI_red  '
-
-
-Subsection 3.4 Loading SED fits  ### BROKEN ###
------------------------------------------------
-
-Unfortunately this is not yet working properly!
-
-Once saved, you can load the contents of the FITS file again into an SED object
-via
-
->>> mysed = SED('HD180642')
->>> mysed.load_fits()
-
-and then you can build all the plots again easily. You can of course use the
-predefined plotting scripts to start a plot, and then later on change the
-properties of the labels, legends etc... for higher quality plots or to better
-suit your needs.
-
-Section 4. Accessing the best fitting full SED model
-====================================================
-
-You can access the full SED model that matches the parameters found by the
-fitting routine via:
-
->>> wavelength,flux,deredded_flux = mysed.get_best_model()
-
-Note that this model is retrieved after fitting, and was not in any way used
-during the fitting. As a consequence, there could be small differences between
-synthetic photometry calculated from this returned model and the synthetic
-fluxes stored in C{mysed.results['igrid_search']['synflux']}, which is the
-synthetic photometry coming from the interpolation of the grid of pre-interpolated
-photometry. See the documentation of L{SED.get_model} for more information.
-
-Section 5. Radii, distances and luminosities
-============================================
-
-Subsection 4.1. Relations between quantities
---------------------------------------------
-
-Most SED grids don't have the radius as a tunable model parameter. The scale
-factor, which is available for all fitted models in the grid when at least one
-absolute photometric point is included, is directly propertional to the angular
-diameter. The following relations hold::
-
-    >> distance = radius / np.sqrt(scale)
-    >> radius = distance * np.sqrt(scale)
-
-Where C{radius} and C{distance} have equal units. The true absolute luminosity
-(solar units) is related to the absolute luminosity from the SED (solar units)
-via the radius (solar units)::
-
-    >> L_abs_true = L_abs * radius**2
-
-Finally, the angular diameter can be computed via::
-
-    >> 2*conversions.convert('sr','mas',scale)
-
-Subsection 4.2. Seismic constraints
------------------------------------
-
-If the star shows clear solar-like oscillations, you can use the nu_max give an
-independent constraint on the surface gravity, given the effective temperature of
-the model (you are free to give errors or not, just keep in mind that in the
-former case, you will get an array of Uncertainties rather than floats)::
-
-    >> teff = 4260.,'K'
-    >> nu_max = 38.90,0.86,'muHz'
-    >> logg_slo = conversions.derive_logg_slo(teff,nu_max,unit='[cm/s2'])
-
-If you have the large separation (l=0 modes) and the nu_max, you can get an
-estimate of the radius::
-
-    >> Deltanu0 = 4.80,0.02,'muHz'
-    >> R_slo = conversions.derive_radius_slo(numax,Deltanu0,teff,unit='Rsol')
-
-Then from the radius, you can get both the absolute luminosity and distance to
-your star.
-
-Subsection 4.3. Parallaxes
---------------------------
-
-From the parallax, you can get an estimate of the distance. This is, however,
-dependent on some prior assumptions such as the shape of the galaxy and the
-distribution of stars. To estimate the probability density value due to
-a measured parallax of a star at particular distance, you can call L{distance.distprob}::
-
-    >> gal_latitude = 0.5
-    >> plx = 3.14,0.5
-    >> d_prob = distance.distprob(d,gal_latitude,plx)
-
-Using this distance, you can get an estimate for the radius of your star, and
-thus also the absolute luminosity.
-
-Subsection 4.4: Reddening constraints
--------------------------------------
-
-An estimate of the reddening of a star at a particular distance may be obtained
-with the L{extinctionmodels.findext} function. There are currently three
-reddening maps available: Drimmel, Marshall and Arenou::
-
-    >> lng,lat = 120.,-0.5
-    >> dist = 100. # pc
-    >> Rv = 3.1
-    >> EBV = extinctionmodels.findext(lng,lat,model='drimmel',distance=dist)/Rv
-    >> EBV = extinctionmodels.findext(lng,lat,model='marshall',distance=dist)/Rv
-    >> EBV = extinctionmodels.findext(lng,lat,model='arenou',distance=dist)/Rv
-
-
 """
+
 import re
 import sys
 import time
@@ -611,33 +57,32 @@ logger = logging.getLogger("SED.BUILD")
 def fix_master(master,e_default=None):
     """
     Clean/extend/fix record array received from C{get_photometry}.
-
     This function does a couple of things:
 
-        1. Adds common but uncatalogized colors like 2MASS.J-H if not already
-           present. WARNING: these colors can mix values from the same system
-           but from different catalogs!
-        2. Removes photometry for which no calibration is available
-        3. Adds a column 'color' with flag False denoting absolute flux measurement
+    1.  Adds common but uncatalogized colors like 2MASS.J-H if not
+        already present. WARNING: these colors can mix values from the same system
+        but from different catalogs!
+    2.  Removes photometry for which no calibration is available
+    3.  Adds a column 'color' with flag False denoting absolute flux measurement
         and True denoting color.
-        4. Adds a column 'include' with flag True meaning the value will be
+    4.  Adds a column 'include' with flag True meaning the value will be
         included in the fit
-        5. Sets some default errors to photometric values, for which we know
+    5.  Sets some default errors to photometric values, for which we know
         that the catalog values are not trustworthy.
-        6. Sets a lower limit to the allowed errors of 1%. Errors below this
-        value are untrostworthy because the calibration error is larger than that.
-        7. USNOB1 and ANS photometry are set the have a minimum error of 30%
+    6.  Sets a lower limit to the allowed errors of 1%. Errors below this
+        value are untrustworthy because the calibration error is larger than that.
+    7.  USNOB1 and ANS photometry are set the have a minimum error of 30%
         due to uncertainties in response curves.
 
-    @param master: record array containing photometry. This should have the fields
-    'meas','e_meas','unit','photband','source','_r','_RAJ2000','DEJ2000',
-    'cmeas','e_cmeas','cwave','cunit'
-    @type master: record array
-    @param e_default: default error for measurements without errors
-    @type e_default: float
-    @return: record array extended with fields 'include' and 'color', and with
+    :param master: record array containing photometry. This should have the fields
+    ``meas``, ``e_meas``, ``unit``, ``photband``, ``source``, ``_r``, ``_RAJ2000``,
+    ``DEJ2000``, ``cmeas``, ``e_cmeas``, ``cwave``, ``cunit``
+    :type master: record array
+    :param e_default: default error for measurements without errors
+    :type e_default: float
+    :return: record array extended with fields 'include' and 'color', and with
     rows added (see above description)
-    @rtype: numpy recard array
+    :rtype: numpy recard array
     """
     #-- we recognize uncalibrated stuff as those for which no absolute flux was
     #   obtained, and remove them:
@@ -749,48 +194,48 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
 
     Some examples:
 
-        1. Exclude all measurements::
+    1 Exclude all measurements::
 
-        >> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
+      >> decide_phot(master,wrange=(-np.inf,+np.inf),ptype='all',include=False)
 
-        2. Include all TD1 fluxes and colors::
+    2 Include all TD1 fluxes and colors::
 
-        >> decide_phot(master,names=['TD1'],ptype='all',include=True)
+      >> decide_phot(master,names=['TD1'],ptype='all',include=True)
 
-        3. Include all V band measurements from all systems (but not the colors)::
+    3 Include all V band measurements from all systems (but not the colors)::
 
-        >> decide_phot(master,names=['.V'],ptype='abs',include=True)
+      >> decide_phot(master,names=['.V'],ptype='abs',include=True)
 
-        4. Include all Geneva colors and exclude Geneva magnitudes::
+    4 Include all Geneva colors and exclude Geneva magnitudes::
 
-        >> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
-        >> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
+      >> decide_phot(master,names=['GENEVA'],ptype='col',include=True)
+      >> decide_phot(master,names=['GENEVA'],ptype='abs',include=False)
 
-        5. Exclude all infrared measurements beyond 1 micron::
+    5 Exclude all infrared measurements beyond 1 micron::
 
-        >> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
+      >> decide_phot(master,wrange=(1e4,np.inf),ptype='all',include=False)
 
-        6. Include all AKARI measurements below 10 micron::
+    6 Include all AKARI measurements below 10 micron::
 
-        >> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
+      >> decide_phot(master,names=['AKARI'],wrange=(-np.inf,1e5),ptype='all',include=True)
 
-    @param master: record array containing all photometry
-    @type master: numpy record array
-    @param names: strings excerpts to match filters
-    @type names: list of strings
-    @param wrange: wavelength range (most likely angstrom) to include/exclude
-    @type wrange: 2-tuple (start wavelength,end wavelength)
-    @param sources: list of sources
-    @type sources: list of strings
-    @param indices: list of indices (integers)
-    @type indices: list of integers
-    @param ptype: type of photometry to include/exclude: absolute values, colors
+    :param master: record array containing all photometry
+    :type master: numpy record array
+    :param names: strings excerpts to match filters
+    :type names: list of strings
+    :param wrange: wavelength range (most likely angstrom) to include/exclude
+    :type wrange: 2-tuple (start wavelength,end wavelength)
+    :param sources: list of sources
+    :type sources: list of strings
+    :param indices: list of indices (integers)
+    :type indices: list of integers
+    :param ptype: type of photometry to include/exclude: absolute values, colors
     or both
-    @type ptype: string, one of 'abs','col','all'
-    @param include: flag setting exclusion or inclusion
-    @type include: boolean
-    @return: master record array with adapted 'include' flags
-    @rtype: numpy record array
+    :type ptype: string, one of 'abs','col','all'
+    :param include: flag setting exclusion or inclusion
+    :type include: boolean
+    :return: master record array with adapted 'include' flags
+    :rtype: numpy record array
     """
     #-- exclude/include passbands based on their names
     if names is not None:
@@ -839,8 +284,8 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
 
     Sorting is disabled when C{index=True}.
 
-    @param master: master record array containing photometry
-    @type master: numpy record array
+    :param master: master record array containing photometry
+    :type master: numpy record array
     """
     if sort and not index:
         master = master[np.argsort(master[sort])]
@@ -879,8 +324,8 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #Download Schaller 1992 evolutionary tracks and return an Rbf interpolation
     #function.
 
-    #@return: Rbf interpolation function
-    #@rtype: Rbf interpolation function
+    #:return: Rbf interpolation function
+    #:rtype: Rbf interpolation function
     #"""
     ##-- translation between table names and masses
     ##masses = [1,1.25,1.5,1.7,2,2.5,3,4,5,7,9,12,15,20,25,40,60][:-1]
@@ -914,12 +359,12 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
     #"""
     #Retrieve radii from stellar evolutionary tracks from Schaller 1992.
 
-    #@param teffs: model effective temperatures
-    #@type teffs: numpy array
-    #@param loggs: model surface gravities
-    #@type loggs: numpy array
-    #@return: model radii (solar units)
-    #@rtype: numpy array
+    #:param teffs: model effective temperatures
+    #:type teffs: numpy array
+    #:param loggs: model surface gravities
+    #:type loggs: numpy array
+    #:return: model radii (solar units)
+    #:rtype: numpy array
     #"""
     #mygrid = get_schaller_grid()
     #radii = mygrid(np.log10(teffs),loggs)
@@ -967,13 +412,13 @@ class SED(object):
 
     The most important attributes of SED are:
 
-        1. C{sed.ID}: star's identification (str)
-        2. C{sed.photfile}: name of the file containing all photometry (str)
-        3. C{sed.info}: star's information from Simbad (dict)
-        4. C{sed.master}: photometry data (record array)
-        5. C{sed.results}: results and summary of the fitting process (dict)
+    1 C{sed.ID}: star's identification (str)
+    2 C{sed.photfile}: name of the file containing all photometry (str)
+    3 C{sed.info}: star's information from Simbad (dict)
+    4 C{sed.master}: photometry data (record array)
+    5 C{sed.results}: results and summary of the fitting process (dict)
 
-    After fitting, e.g. via calling L{igrid_search}, you can call L{get_model}
+    After fitting, e.g. via calling :class:`igrid_search`, you can call :class:`get_model`
     to retrieve the full SED matching the best fitting parameters (or, rather,
     closely matching them, see the documentation).
 
@@ -996,8 +441,8 @@ class SED(object):
         The C{ID} variable is used internally to look up data, so it should be
         something SIMBAD understands and that designates the target.
 
-        @param plx: parallax (and error) of the object
-        @type plx: tuple (plx,e_plx)
+        :param plx: parallax (and error) of the object
+        :type plx: tuple (plx,e_plx)
         """
         self.ID = ID
         self.label = label
@@ -1101,8 +546,8 @@ class SED(object):
 
         For bright stars, you can set radius a bit higher...
 
-        @param radius: search radius (arcseconds)
-        @type radius: float.
+        :param radius: search radius (arcseconds)
+        :type radius: float.
         """
         if radius is None:
             if 'mag.V.v' in self.info and self.info['mag.V.v']<6.:
@@ -1234,28 +679,27 @@ class SED(object):
     def set_photometry_scheme(self,scheme,infrared=(1,'micron')):
         """
         Set a default scheme of colors/absolute values to fit the SED.
-
         Possible values:
 
-            1. scheme = 'abs': means excluding all colors, including all absolute values
-            2. scheme = 'color': means including all colors, excluding all absolute values
-            3. scheme = 'combo': means inculding all colors, and one absolute value per
-            system (the one with the smallest relative error)
-            4. scheme = 'irfm': means mimic infrared flux method: choose absolute values
-            in the infrared (define with C{infrared}), and colours in the optical
+        1 ``abs``: means excluding all colors, including all absolute values
+        2 ``color``: means including all colors, excluding all absolute values
+        3 ``combo``: means inculding all colors, and one absolute value per
+        system (the one with the smallest relative error)
+        4 ``irfm``: means mimic infrared flux method: choose absolute values
+        in the infrared (define with C{infrared}), and colours in the optical
 
-        @param infrared: definition of start of infrared for infrared flux method
-        @type infrared: tuple (value <float>, unit <str>)
+        :param infrared: definition of start of infrared for infrared flux method
+        :type infrared: tuple (value <float>, unit <str>)
         """
         #-- only absolute values: real SED fitting
         if 'abs' in scheme.lower():
             self.master['include'][self.master['color']] = False
-            self.master['include'][-self.master['color']] = True
+            self.master['include'][~self.master['color']] = True
             logger.info('Fitting procedure will use only absolute fluxes (%d)'%(sum(self.master['include'])))
         #-- only colors: color fitting
         elif 'col' in scheme.lower():
             self.master['include'][self.master['color']] = True
-            self.master['include'][-self.master['color']] = False
+            self.master['include'][~self.master['color']] = False
             logger.info('Fitting procedure will use only colors (%d)'%(sum(self.master['include'])))
         #-- combination: all colors and one absolute value per system
         elif 'com' in scheme.lower():
@@ -1305,16 +749,16 @@ class SED(object):
         By default unflagged, and at the ra and dec of the star. No color and
         included.
 
-        @param meas: original measurements (fluxes, magnitudes...)
-        @type meas: array
-        @param e_meas: error on original measurements in same units as C{meas}
-        @type e_meas: array
-        @param units: units of original measurements
-        @type units: array of strings
-        @param photbands: photometric passbands of original measurements
-        @type photbands: array of strings
-        @param source: source of original measurements
-        @type source: array of strings
+        :param meas: original measurements (fluxes, magnitudes...)
+        :type meas: array
+        :param e_meas: error on original measurements in same units as C{meas}
+        :type e_meas: array
+        :param units: units of original measurements
+        :type units: array of strings
+        :param photbands: photometric passbands of original measurements
+        :type photbands: array of strings
+        :param source: source of original measurements
+        :type source: array of strings
         """
         if flags is None:
             flags = np.nan*np.ones(len(meas))
@@ -1375,15 +819,15 @@ class SED(object):
 
     def is_target(self,name):
         """
-        Check if this SED represents the object `name'.
+        Check if this SED represents the object ``name``.
 
         Purpose: solve alias problems. Maybe the ID is 'HD129929', and you are
         checking for "V* V836 Cen", which is the same target.
 
-        @param name: object name
-        @type name: str
-        @return: True if this object instance represent the target "name".
-        @rtype: bool
+        :param name: object name
+        :type name: str
+        :return: True if this object instance represent the target "name".
+        :rtype: bool
         """
         try:
             info = sesame.search(name)
@@ -1398,8 +842,8 @@ class SED(object):
         """
         Check if this SED has a phot file.
 
-        @return: True if this object instance has a photfile
-        @rtype: bool
+        :return: True if this object instance has a photfile
+        :rtype: bool
         """
         return os.path.isfile(self.photfile)
 
@@ -1421,8 +865,8 @@ class SED(object):
 
         Distance is returned in parsec (pc).
 
-        @return: distance
-        @rtype: (float,float)
+        :return: distance
+        :rtype: (float,float)
         """
         #-- we need parallax and galactic position
         if plx is None and 'plx' in self.info:
@@ -1475,10 +919,10 @@ class SED(object):
             distance = r/sqrt(scale)
 
         This particularly useful when you added constraints from solar-like
-        oscillations (L{add_constraint_slo}).
+        oscillations (:class:`add_constraint_slo`).
 
-        @return: distance,uncertainty (pc)
-        @rtype: (float,float)
+        :return: distance,uncertainty (pc)
+        :rtype: (float,float)
         """
         grid = self.results[mtype]['grid']
         radius = grid['radius']
@@ -1558,10 +1002,10 @@ class SED(object):
         """
         Clip grid on CI limit, to save memory.
 
-        @param mtype: type or results to clip
-        @type mtype: str
-        @param CI_limit: confidence limit to clip on
-        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
+        :param mtype: type or results to clip
+        :type mtype: str
+        :param CI_limit: confidence limit to clip on
+        :type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
         """
         if CI_limit is None:
             CI_limit = self.CI_limit
@@ -1664,12 +1108,12 @@ class SED(object):
         """
         Compute confidence interval of all columns in the results grid.
 
-        @param mtype: type of results to compute confidence intervals of
-        @type mtype: str
-        @param chi2_type: type of chi2 (raw or reduced)
-        @type chi2_type: str ('raw' or 'red')
-        @param CI_limit: confidence limit to clip on
-        @type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
+        :param mtype: type of results to compute confidence intervals of
+        :type mtype: str
+        :param chi2_type: type of chi2 (raw or reduced)
+        :type chi2_type: str ('raw' or 'red')
+        :param CI_limit: confidence limit to clip on
+        :type CI_limit: float (between 0 (clips everything) and 1 (clips nothing))
         """
         #-- get some info
         grid_results = self.results[mtype]['grid']
@@ -1696,16 +1140,16 @@ class SED(object):
         self.results[mtype]['CI'] with as key for the value the name, for cilow:
         name_l and for cihigh: name_u.
 
-        @param mtype: the search type
-        @type mtype: str
-        @param name: names of the parameters
-        @type name: array
-        @param value: best fit values
-        @type value: array
-        @param cilow: lower CI limit
-        @type cilow: array
-        @param cihigh: upper CI limit
-        @type cihigh: array
+        :param mtype: the search type
+        :type mtype: str
+        :param name: names of the parameters
+        :type name: array
+        :param value: best fit values
+        :type value: array
+        :param cilow: lower CI limit
+        :type cilow: array
+        :param cihigh: upper CI limit
+        :type cihigh: array
         """
         if not 'CI' in self.results[mtype]:
             self.results[mtype]['CI'] = {}
@@ -2069,12 +1513,12 @@ class SED(object):
 
         The label will be used to store the model in the C{results} attribute.
 
-        @param wave: wavelength array (angstrom)
-        @type wave: ndarray
-        @param flux: flux array (erg/s/cm2/AA)
-        @type flux: ndarray
-        @param label: key used to store the model and synthetic photometry in C{results}
-        @type label:s str
+        :param wave: wavelength array (angstrom)
+        :type wave: ndarray
+        :param flux: flux array (erg/s/cm2/AA)
+        :type flux: ndarray
+        :param label: key used to store the model and synthetic photometry in C{results}
+        :type label:s str
         """
         #-- necessary information
         photbands = self.master['photband']
@@ -2125,8 +1569,8 @@ class SED(object):
         An array of length "NrSamples" containing 'grid-indices' is returned, so the actual parameter values
         of the corresponding model can be retrieved from the results dictionary.
 
-        @param NrSamples: the number of samples you wish to draw
-        @type NrSamples: int
+        :param NrSamples: the number of samples you wish to draw
+        :type NrSamples: int
         """
         #-- this function is only checked to work with the results of an igrid_search
         if not 'igrid_search' in mtype:
@@ -2199,16 +1643,16 @@ class SED(object):
         Compute radii, absolute luminosities and masses, and add them to the
         results.
 
-        Extra kwargs go to L{get_distance_from_plx}.
+        Extra kwargs go to :class:`get_distance_from_plx`.
 
         B{Warning:} after calling this function, the C{labs} column in the grid
         is actually absolutely calibrated and reflects the true absolute
         luminosity instead of the absolute luminosity assuming 1 solar radius.
 
-        @param distance: distance in solar units and error
-        @type distance: tuple (float,float)
-        @param mtype: type of results to add the information to
-        @type mtype: str
+        :param distance: distance in solar units and error
+        :type distance: tuple (float,float)
+        :param mtype: type of results to add the information to
+        :type mtype: str
         """
         if distance is None:
             kwargs['lutz_kelker'] = False # we can't handle asymmetric error bars
@@ -2251,15 +1695,15 @@ class SED(object):
         """
         Use diagnostics from solar-like oscillations to put additional constraints on the parameters.
 
-        If the results are constrained with the distance before L{add_constraint_distance},
+        If the results are constrained with the distance before :class:`add_constraint_distance`,
         then these results are combined with the SLO constraints.
 
-        @param numax: frequency of maximum amplitude
-        @type numax: 3-tuple (value,error,unit)
-        @param Deltanu0: large separation (l=0)
-        @type Deltanu0: 3-tuple (value,error,unit)
-        @param chi2_type: type of chi2 (raw or reduced)
-        @type chi2_type: str ('raw' or 'red')
+        :param numax: frequency of maximum amplitude
+        :type numax: 3-tuple (value,error,unit)
+        :param Deltanu0: large separation (l=0)
+        :type Deltanu0: 3-tuple (value,error,unit)
+        :param chi2_type: type of chi2 (raw or reduced)
+        :type chi2_type: str ('raw' or 'red')
         """
         grid = self.results[mtype]['grid']
         #-- we need the teffs, so that we can compute the logg and radius using
@@ -2353,18 +1797,18 @@ class SED(object):
         C{upper_limit=True}. You can change this behaviour by setting C{model}
         manually.
 
-        @param distance: distance and uncertainty in parsec
-        @type distance: tuple (float,float)
-        @param ebv: E(B-V) reddening in magnitude
-        @type ebv: float
-        @param e_ebv: error on the reddening in percentage
-        @type e_ebv: float
-        @param model: model reddening maps
-        @type model: str
-        @param mtype: type of results to add the information to
-        @type mtype: str
-        @param upper_limit: consider the E(B-V) value as an upper limit
-        @type upper_limit: bool
+        :param distance: distance and uncertainty in parsec
+        :type distance: tuple (float,float)
+        :param ebv: E(B-V) reddening in magnitude
+        :type ebv: float
+        :param e_ebv: error on the reddening in percentage
+        :type e_ebv: float
+        :param model: model reddening maps
+        :type model: str
+        :param mtype: type of results to add the information to
+        :type mtype: str
+        :param upper_limit: consider the E(B-V) value as an upper limit
+        :type upper_limit: bool
         """
         #-- for upper limits on E(B-V), we best use Schlegel maps by default,
         #   otherwise we best use Drimmel maps.
@@ -2746,10 +2190,10 @@ class SED(object):
         stay open so that the user can still access all plot elements and do
         further enhancements.
 
-        @param colors: if False, plot absolute values, otherwise plot colors
+        :param colors: if False, plot absolute values, otherwise plot colors
         (flux ratios)
-        @type colors: boolean
-        @param plot_unselected: if True, all photometry is plotted, otherwise
+        :type colors: boolean
+        :param plot_unselected: if True, all photometry is plotted, otherwise
         only those that are selected
         """
         if not plot_unselected:
@@ -3024,8 +2468,8 @@ class SED(object):
 
         ]]include figure]]ivs_sed_builder_plot_chi2_01.png]
 
-        @param colors: flag to distinguish between colors and absolute values
-        @type colors: boolean
+        :param colors: flag to distinguish between colors and absolute values
+        :type colors: boolean
         """
         if 'phase' in kwargs:
             uniquephase = kwargs.pop('phase')
@@ -3312,8 +2756,8 @@ class SED(object):
         """
         Save master photometry to a file.
 
-        @param photfile: name of the photfile. Defaults to C{starname.phot}.
-        @type photfile: str
+        :param photfile: name of the photfile. Defaults to C{starname.phot}.
+        :type photfile: str
         """
         #-- write to file
         if photfile is not None:
@@ -3331,8 +2775,8 @@ class SED(object):
         """
         Load the contents of the photometry file to the master record.
 
-        @param photfile: name of the photfile. Defaults to the value of C{self.photfile}.
-        @type photfile: str
+        :param photfile: name of the photfile. Defaults to the value of C{self.photfile}.
+        :type photfile: str
         """
         if photfile is not None:
             self.photfile = photfile
@@ -3371,10 +2815,10 @@ class SED(object):
            6) imc (CI from monte carlo = actual monte carlo samples)
            7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
 
-        @param filename: name of SED FITS file
-        @type filename: string
-        @param overwrite: overwrite old FITS file if true
-        @type overwrite: boolean
+        :param filename: name of SED FITS file
+        :type filename: string
+        :param overwrite: overwrite old FITS file if true
+        :type overwrite: boolean
 
         Example usage:
 
@@ -3460,10 +2904,10 @@ class SED(object):
            #6) imc (CI from monte carlo = actual monte carlo samples)
            #7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
 
-        #@param filename: name of SED FITS file
-        #@type filename: string
-        #@rtype: bool
-        #@return: true if Fits file could be loaded
+        #:param filename: name of SED FITS file
+        #:type filename: string
+        #:rtype: bool
+        #:return: true if Fits file could be loaded
         #"""
         #if filename is None:
             #filename = os.path.splitext(self.photfile)[0]+'.fits'
@@ -3563,10 +3007,10 @@ class SED(object):
            6) imc (CI from monte carlo = actual monte carlo samples)
            7) synflux_imc (integrated synthetic fluxes for best model from monte carlo)
 
-        @param filename: name of SED FITS file
-        @type filename: string
-        @rtype: bool
-        @return: true if Fits file could be loaded
+        :param filename: name of SED FITS file
+        :type filename: string
+        :rtype: bool
+        :return: true if Fits file could be loaded
         """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.fits'
@@ -3644,17 +3088,18 @@ class SED(object):
         This way of saving is more thorough that save_fits(), fx. the CI2D confidence
         intervals are not save to a fits file, but are saved to a hdf5 file.
         Currently the following data is saved to HDF5 file:
-            - sed.master (photometry)
-            - sed.results (results from all fitting methods)
-            - sed.constraints (extra constraints on the fits)
 
-        @param filename: name of SED FITS file
-        @type filename: string
-        @param update: if True, an existing file will be updated with the current information, if
-                       False, an existing fill be overwritten
-        @type update: bool
-        @return: the name of the output HDF5 file.
-        @rtype: string
+        - sed.master (photometry)
+        - sed.results (results from all fitting methods)
+        - sed.constraints (extra constraints on the fits)
+
+        :param filename: name of SED FITS file
+        :type filename: string
+        :param update: if True, an existing file will be updated with the current information, if
+        False, an existing fill be overwritten
+        :type update: bool
+        :return: the name of the output HDF5 file.
+        :rtype: string
         """
 
         if filename is None:
@@ -3674,10 +3119,10 @@ class SED(object):
         """
         Load a previously made SED from HDF5 file.
 
-        @param filename: name of SED FITS file
-        @type filename: string
-        @return: True if HDF5 file could be loaded
-        @rtype: bool
+        :param filename: name of SED FITS file
+        :type filename: string
+        :return: True if HDF5 file could be loaded
+        :rtype: bool
         """
         if filename is None:
             filename = os.path.splitext(self.photfile)[0]+'.hdf5'
