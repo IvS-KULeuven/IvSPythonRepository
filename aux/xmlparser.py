@@ -4,7 +4,6 @@ Convert a XML page to a dictionary
 """
 
 import xml.parsers.expat
-import urllib
 
 class XMLParser:
     """
@@ -22,7 +21,7 @@ class XMLParser:
         if logger:
             logger.debug("XMLParser initialised")
         p.Parse(text)
-        
+
     def start_element(self,name,attrs):
         """
         If a new element is found, at it to the dictionary
@@ -45,11 +44,11 @@ class XMLParser:
                 if key not in curdict[name].keys():
                     curdict[name][key] = {}
                     self.elem.append(key)
-    
+
     def end_element(self,name):
         """
         Remove the element from the queu (and everything after it)
-        
+
         @parameter name: designation of the element
         @type name: string
         """
@@ -57,11 +56,11 @@ class XMLParser:
         if len(self.elem)>1:
             index = len(self.elem) - 1 - self.elem[::-1].index(name)
             self.elem = self.elem[:index]
-    
+
     def char_data(self,data):
         """
         Add the value of an element to the dictionary with its designation.
-        
+
         @parameter data: value of the element
         @type data: string
         """
@@ -85,4 +84,3 @@ class XMLParser:
             curdict[self.elem[-1]] = data
         if self.logger:
             self.logger.debug("... %s: %s"%(self.elem,data))
-        

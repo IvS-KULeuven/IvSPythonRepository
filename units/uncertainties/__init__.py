@@ -231,8 +231,7 @@ author.'''
 from __future__ import division  # Many analytical derivatives depend on this
 
 import re
-import math
-from math import sqrt, log  # Optimization: no attribute look-up
+from math import sqrt  # Optimization: no attribute look-up
 import copy
 
 # Numerical version:

@@ -21,9 +21,9 @@ logger.addHandler(loggers.NullHandler())
 def get_sismo_data(ID):
     """
     Retrieve CoRoT timeseries from a local data repository.
-    
+
     The output record array has fields 'HJD', 'flux', 'e_flux', 'flag'.
-    
+
     @param ID: ID of the target: either an integer (CoRoT ID), an SIMBAD-recognised
     target name, or a valid CoRoT FITS file
     @type ID: int or str
@@ -33,7 +33,7 @@ def get_sismo_data(ID):
     #-- data on one target can be spread over multiple files: collect the
     #   data
     data = []
-        
+
     if isinstance(ID,str) and os.path.isfile(ID):
         header = pf.getheader(ID)
         times,flux,error,flags = fits.read_corot(ID)
@@ -62,7 +62,7 @@ def get_sismo_data(ID):
     #-- now make a record array and sort according to times
     if not data:
         raise ValueError('target {0} not in offline CoRoT data repository'.format(ID))
-    data = np.hstack(data)        
+    data = np.hstack(data)
     data = np.rec.fromarrays(data,dtype=[('HJD','>f8'),('flux','>f8'),('e_flux','>f8'),('flag','i')])
     sa = np.argsort(data['HJD'])
     return data[sa],header
@@ -70,9 +70,9 @@ def get_sismo_data(ID):
 def get_exo_data(ID,type_data='white'):
     """
     Retrieve CoRoT timeseries from a remote data repository.
-    
+
     The output record array has fields 'HJD', 'flux', 'e_flux', 'flag'.
-    
+
     @param ID: ID of the target: either an integer (CoRoT ID), an SIMBAD-recognised
     target name, or a valid CoRoT FITS file
     @type ID: int or str
@@ -106,11 +106,11 @@ def get_exo_data(ID,type_data='white'):
             times,flux,error,flags = fits.read_corot(filen,type_data=type_data)
             url.close()
             data.append([times,flux,error,flags])
-        
+
     #-- now make a record array and sort according to times
     if not data:
         raise ValueError('target {0} not in online CoRoT data repository'.format(ID))
-    data = np.hstack(data)        
+    data = np.hstack(data)
     data = np.rec.fromarrays(data,dtype=[('HJD','>f8'),('flux','>f8'),('e_flux','>f8'),('flag','i')])
     sa = np.argsort(data['HJD'])
     return data[sa],header
@@ -123,11 +123,11 @@ def get_exo_catalog():
     exofile = config.get_datafile('catalogs/corot/exo','exo.tsv')
     data,units,comms = vizier.tsv2recarray(exofile)
     return data,units,comms
-    
+
 def resolve(corot_id):
     """
     Convert a CoRoT ID to ra,dec.
-    
+
     @param corot_id: CoRoT exoplanet identification number
     @type corot_id: int
     @return: RA, DEC (degrees)

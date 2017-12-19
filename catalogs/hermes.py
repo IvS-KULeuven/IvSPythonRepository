@@ -139,7 +139,6 @@ and everything should be fine.
               can be copied to. You need write permission in this directory. The
               default is set to '/scratch/user/'
 """
-import re
 import os
 import sys
 import glob

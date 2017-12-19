@@ -10,7 +10,6 @@ import numpy as np
 
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
-from ivs.inout import ascii
 from ivs.sed import filters
 from ivs.units import conversions
 
@@ -32,21 +31,21 @@ cat_info.readfp(open(os.path.join(basedir,'gator_cats_phot.cfg')))
 def search(catalog,**kwargs):
     """
     Search and retrieve information from a Gator catalog.
-    
+
     Two ways to search for data within a catalog C{name}:
-        
+
         1. You're looking for info on B{one target}, then give the target's
         C{ID} or coordinates (C{ra} and C{dec}), and a search C{radius}.
-    
+
         2. You're looking for information of B{a whole field}, then give the
         field's coordinates (C{ra} and C{dec}), and C{radius}.
-    
+
     If you have a list of targets, you need to loop this function.
-    
+
     If you supply a filename, the results will be saved to that path, and you
     will get the filename back as received from urllib.URLopener (should be the
     same as the input name, unless something went wrong).
-    
+
     If you don't supply a filename, you should leave C{filetype} to the default
     C{tsv}, and the results will be saved to a temporary
     file and deleted after the function is finished. The content of the file
@@ -55,8 +54,8 @@ def search(catalog,**kwargs):
     catalog). The entries in the dictionary are of type C{ndarray}, and will
     be converted to a float-array if possible. If not, the array will consist
     of strings. The comments are also returned as a list of strings.
-        
-    
+
+
     @param catalog: name of a GATOR catalog (e.g. 'II/246/out')
     @type catalog: str
     @keyword filename: name of the file to write the results to (no extension)
@@ -70,7 +69,7 @@ def search(catalog,**kwargs):
         filetype = os.path.splitext(filename)[1][1:]
     elif filename is not None:
         filename = '%s.%s'%(filename,filetype)
-    
+
     #-- gradually build URI
     base_url = _get_URI(catalog,**kwargs)
     #-- prepare to open URI
@@ -81,7 +80,7 @@ def search(catalog,**kwargs):
         logger.info('Querying GATOR source %s and downloading to %s'%(catalog,filen))
         url.close()
         return filen
-    
+
     #   otherwise, we read everything into a dictionary
     if filetype=='1':
         try:
@@ -99,7 +98,7 @@ def search(catalog,**kwargs):
 def list_catalogs():
     """
     Return a list of all availabe GATOR catalogues.
-    
+
     @return: list of gator catalogs and discriptions
     @rtype: list of string tuples
     """
@@ -120,11 +119,11 @@ def list_catalogs():
 def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     """
     Download all available photometry from a star to a record array.
-    
+
     For extra kwargs, see L{_get_URI} and L{gator2phot}
-    
+
     Example usage:
-    
+
     >>> import pylab
     >>> import vizier
     >>> name = 'kr cam'
@@ -137,7 +136,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     >>> p = pylab.gca().set_xscale('log')
     >>> p = pylab.gca().set_yscale('log')
     >>> p = pylab.show()
-    
+
     Other examples:
     >>> master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
     >>> master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
@@ -151,7 +150,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
         results,units,comms = search(source,**kwargs)
         if results is not None:
             master = gator2phot(source,results,units,master,extra_fields=extra_fields)
-    
+
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
@@ -181,12 +180,12 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
         #-- reset errors
         master['e_meas'][no_errors] = np.nan
         master['e_cmeas'][no_errors] = np.nan
-    
+
     if master_ is not None and master is not None:
         master = numpy_ext.recarr_addrows(master_,master.tolist())
     elif master_ is not None:
         master = master_
-    
+
     #-- and return the results
     return master
 
@@ -199,7 +198,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
 def txt2recarray(filename):
     """
     Read a GATOR outfmt=1__ (ASCII) file into a record array.
-    
+
     @param filename: name of the TSV file
     @type filename: str
     @return: catalog data columns, units, comments
@@ -212,11 +211,11 @@ def txt2recarray(filename):
     while 1:  # might call read several times for a file
         line = ff.readline()
         if not line: break  # end of file
-        
+
         #-- strip return character from line
         if line.isspace():
             continue # empty line
-        
+
         #-- remove return characters
         line = line.replace('\n','')
         #-- when reading a comment line
@@ -261,7 +260,7 @@ def txt2recarray(filename):
             #-- fill empty or null values with nan
             col = [(row.isspace() or not row or row=='null') and 'nan' or row for row in col]
             cols.append(col)
-            
+
         #-- define columns for record array and construct record array
         if len(data)==0:
             results = None
@@ -276,29 +275,29 @@ def txt2recarray(filename):
 def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_DEJ2000']):
     """
     Convert/combine Gator record arrays to measurement record arrays.
-    
+
     Every line in the combined array represents a measurement in a certain band.
-    
+
     This is probably only useful if C{results} contains only information on
     one target (or you have to give 'ID' as an extra field, maybe).
-    
+
     The standard columns are:
-    
+
         1. C{meas}: containing the photometric measurement
         2. C{e_meas}: the error on the photometric measurement
         3. C{flag}: an optional quality flag
         4. C{unit}: the unit of the measurement
         5. C{photband}: the photometric passband (FILTER.BAND)
         6. C{source}: name of the source catalog
-    
+
     You can add extra information from the Gator catalog via the list of keys
     C{extra_fields}.
-    
+
     If you give a C{master}, the information will be added to a previous
     record array. If not, a new master will be created.
-    
+
     The result is a record array with each row a measurement.
-    
+
     @param source: name of the Gator source
     @type source: str
     @param results: results from Gator C{search}
@@ -318,20 +317,20 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
     #-- basic dtypes
     dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
                   ('unit','a30'),('photband','a30'),('source','a50')]
-    
+
     #-- extra can be added:
     names = list(results.dtype.names)
     translation = {'_r':'dist','_RAJ2000':'ra','_DEJ2000':'dec'}
     if extra_fields is not None:
         for e_dtype in extra_fields:
             dtypes.append((e_dtype,results.dtype[names.index(translation[e_dtype])].str))
-    
+
     #-- create empty master if not given
     newmaster = False
     if master is None or len(master)==0:
         master = np.rec.array([tuple([('f' in dt[1]) and np.nan or 'none' for dt in dtypes])],dtype=dtypes)
         newmaster = True
-    
+
     #-- add fluxes and magnitudes to the record array
     cols_added = 0
     for key in cat_info.options(source):
@@ -356,8 +355,8 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
             rows.append(tuple([col[i] for col in cols]))
         master = np.core.records.fromrecords(master.tolist()+rows,dtype=dtypes)
         cols_added += 1
-    
-    #-- skip first line from building 
+
+    #-- skip first line from building
     if newmaster: master = master[1:]
     return master
 
@@ -368,22 +367,22 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
 def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone',**kwargs):
     """
     Build GATOR URI from available options.
-    
+
     Filetype should be one of:
-    
-    6___ returns a program interface in XML 
-    3___ returns a VO Table (XML) 
-    2___ returns SVC (Software handshaking structure) message 
-    1___ returns an ASCII table 
+
+    6___ returns a program interface in XML
+    3___ returns a VO Table (XML)
+    2___ returns SVC (Software handshaking structure) message
+    1___ returns an ASCII table
     0___ returns Gator Status Page in HTML (default)
-    
+
     kwargs are to catch unused arguments.
-    
+
     @param name: name of a GATOR catalog (e.g. 'wise_prelim_p3as_psd')
     @type name: str
     @keyword ID: target name
     @type ID: str
-    @param filetype: type of the retrieved file 
+    @param filetype: type of the retrieved file
     @type filetype: str (one of '0','1','2','3','6'... see GATOR site)
     @keyword radius: search radius (arcseconds)
     @type radius: float
@@ -399,11 +398,11 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
     base_url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query?'
     base_url += 'catalog=%s'%(name)
     #base_url += '&spatial=cone'
-    
+
     #-- in GATOR, many things should be given via the keyword 'objstr': right
     #   ascension, declination, target name...
     objstr = None
-    
+
     #-- transform input to the 'objstr' paradigm
     if ID is not None:
         #-- if the ID is given in the form 'J??????+??????', derive the
@@ -416,7 +415,7 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
             objstr = ra+dec
         else:
             objstr = ID
-            
+
     #-- this is when ra and dec are given
     if ra is not None and dec is not None:
         ra = str(ra)
@@ -424,14 +423,14 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
         ra = ra.replace(' ','+').replace(':','+')
         dec = dec.replace(' ','+').replace(':','+')
         objstr = '+'.join([ra,dec])
-    
+
     #-- build up the URI
     if 'objstr' is not None:   base_url += '&objstr=%s'%(objstr)
     if 'filetype' is not None: base_url += '&outfmt=%s'%(filetype)
     if 'radius' is not None:   base_url += '&radius=%s'%(radius)
-    
+
     logger.debug(base_url)
-    
+
     return base_url
 
 
@@ -443,26 +442,26 @@ if __name__=="__main__":
     #-- example 1
     #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
     #master = vizier.get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=5.,master=master)
-    
+
     #-- example 2
     #master = get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=1.)
     #master = vizier.get_photometry(ID='J044458.39-703522.6',to_units='W/m2',extra_fields=[],radius=5.,master=master)
-    
-    
+
+
     #-- example 3
     #master = get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=1.)
     #master = vizier.get_photometry(ID='HD43317',to_units='W/m2',extra_fields=[],radius=5.,master=master)
-    
+
     #-- example 4
     #master = get_photometry(ID='HD143454',to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
     #master = vizier.get_photometry(ID='HD143454',to_units='erg/s/cm2/AA',extra_fields=[],radius=30.,master=master)
     #-- example 5
     master = get_photometry(ID='RR Aql',to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
     master = vizier.get_photometry(ID='RR Aql',to_units='erg/s/cm2/AA',extra_fields=[],radius=30.,master=master)
-    
-    
+
+
     print master
-    
+
     from pylab import *
     figure()
     #loglog(master['cwave'],master['cmeas'],'ko')
@@ -475,10 +474,10 @@ if __name__=="__main__":
     #plot(np.log10(2315.66),np.log10(conversions.convert('muJy','W/m2',7106.731,photband='GALEX.NUV'))+13,'go')
     #ylim(-1.5,2.5)
     #xlim(3.1,4.7)
-    
-    
+
+
     show()
-    
+
     sys.exit()
     import doctest
     doctest.testmod()
@@ -491,7 +490,7 @@ if __name__=="__main__":
     #name = 'kr cam'
     #master = vizier.get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[])
     #master = get_photometry(name,to_units='erg/s/cm2/AA',extra_fields=[],master=master)
-    
+
     #pylab.figure()
     #wise = np.array(['WISE' in photband and True or False for photband in master['photband']])
     #pylab.errorbar(master['cwave'],master['cmeas'],yerr=master['e_cmeas'],fmt='ko')

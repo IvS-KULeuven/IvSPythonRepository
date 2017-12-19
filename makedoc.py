@@ -21,7 +21,6 @@ import subprocess
 import shutil
 import glob
 import webbrowser
-import sys
 import argparse
 from ivs.aux import termtools
 

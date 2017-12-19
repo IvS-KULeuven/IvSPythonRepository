@@ -515,7 +515,6 @@ import sys
 import logging
 import urllib
 import numpy as np
-import pytz
 import datetime
 
 #-- optional libraries: WARNING: when these modules are not installed, the
@@ -530,7 +529,6 @@ from ivs.units.uncertainties.unumpy import log10,log,exp,sqrt
 from ivs.units.uncertainties.unumpy import sin,cos,tan
 from ivs.units.uncertainties.unumpy import arcsin,arccos,arctan
 from ivs.sed import filters
-from ivs.inout import ascii
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 
@@ -3741,7 +3739,6 @@ if __name__=="__main__":
         doctest.testmod()
         quit()
     from optparse import OptionParser, Option, OptionGroup
-    import datetime
     import copy
     
     logger = loggers.get_basic_logger()

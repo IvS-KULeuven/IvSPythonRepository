@@ -43,9 +43,6 @@ import copy
 import astropy.io.fits as pf
 import inspect
 from ivs import config
-from ivs.units import constants
-from ivs.units import conversions
-from ivs.aux.decorators import memoized
 from ivs.spectra import tools
 from ivs.aux import loggers
 

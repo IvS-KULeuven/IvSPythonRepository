@@ -135,7 +135,7 @@ logger = logging.getLogger('IVS.KEPLER')
 def radial_velocity(parameters,times=None,theta=None,itermax=8):
     """
     Evaluate Radial velocities due to kepler orbit.
-    
+
     These parameters define the Keplerian orbit if you give times points (C{times}, days):
         1. Period of the system (days)
         2. time of periastron passage T0 (not x0!) (HJD)
@@ -144,7 +144,7 @@ def radial_velocity(parameters,times=None,theta=None,itermax=8):
            of the orbit within its own plane (radians)
         5. the semiamplitude of the velocity curve (km/s)
         6. systemic velocity RV0 (RV of centre of mass of system) (km/s)
-    
+
     These parameters define the Keplerian orbit if you give angles (C{theta}, radians):
         1. Period of the system (days)
         2. eccentricity
@@ -153,13 +153,13 @@ def radial_velocity(parameters,times=None,theta=None,itermax=8):
         orbit within in its own plane (radians)
         5. inclination of the orbit (radians)
         6. systemic velocity RV0 (RV of centre of mass of system) (km/s)
-    
+
     The periastron passage T0 can be derived via x0 by calculating
-    
+
     T0 = x0/(2pi*Freq) + times[0]
-    
+
     See e.g. p 41,42 of Hilditch, 'An Introduction To Close Binary Stars'
-    
+
     @parameter parameters: parameters of Keplerian orbit (dependent on input)
     @type parameters: iterable
     @parameter times: observation times (days)
@@ -171,7 +171,7 @@ def radial_velocity(parameters,times=None,theta=None,itermax=8):
     @return: fitted radial velocities (km/s)
     @rtype: ndarray
     """
-    
+
     #-- in the case time points are given:
     if times is not None:
         #-- expand parameters and calculate x0
@@ -182,30 +182,30 @@ def radial_velocity(parameters,times=None,theta=None,itermax=8):
         E,true_an = true_anomaly(times*2*np.pi*freq-x0,e,itermax=itermax)
         #-- evaluate Keplerian radial velocity orbit
         RVfit = RV0 + K*(e*np.cos(omega) + np.cos(true_an+omega))
-    
+
     elif theta is not None:
         P,e,a,omega,i,RV0 = parameters
         P = conversions.convert('d','s',P)
         a = conversions.convert('au','m',a)
         K = 2*np.pi*a*np.sin(i)/ (P*np.sqrt(1.-e**2))
         RVfit = RV0 + K*(e*np.cos(omega) + np.cos(theta+omega))/1000.
-        
+
     return RVfit
 
 def orbit_in_plane(times,parameters,component='primary',coordinate_frame='polar'):
     """
     Construct an orbit in the orbital plane.
-    
+
     Give times in days
-    
+
     Parameters contains:
         1. period (days)
         2. eccentricity
         3. semi-major axis (au)
         4. time of periastron passage T0 (not x0!) (HJD)
-    
+
     Return r (m) and theta (radians)
-    
+
     @param times: times of observations (days)
     @type times: array
     @param parameters: list of parameters (P,e,a,T0)
@@ -223,7 +223,7 @@ def orbit_in_plane(times,parameters,component='primary',coordinate_frame='polar'
     a = conversions.convert('au','m',a)
     T0 = conversions.convert('d','s',T0)
     times = conversions.convert('d','s',times)
-    
+
     n = 2*np.pi/P
     ma = n*(times-T0)
     E,theta = true_anomaly(ma,e)
@@ -231,11 +231,11 @@ def orbit_in_plane(times,parameters,component='primary',coordinate_frame='polar'
     PR = r*np.sin(theta)
     #PR[E>0] *= -1
     #theta[E>0] *= -1
-    
+
     #-- correct angles if secondary component is calculated
     if 'sec' in component.lower():
         theta += np.pi
-    
+
     if coordinate_frame=='polar':
         return r,theta
     elif coordinate_frame=='cartesian':
@@ -244,7 +244,7 @@ def orbit_in_plane(times,parameters,component='primary',coordinate_frame='polar'
 def velocity_in_plane(times,parameters,component='primary',coordinate_frame='polar'):
     """
     Calculate the velocity in the orbital plane.
-    
+
     @param times: times of observations (days)
     @type times: array
     @param parameters: list of parameters (P,e,a,T0)
@@ -262,13 +262,13 @@ def velocity_in_plane(times,parameters,component='primary',coordinate_frame='pol
     P,e,a,T0 = parameters
     P = conversions.convert('d','s',P)
     a = conversions.convert('au','m',a)
-    
+
     #-- compute rdot and thetadot
     l = r*(1+e*np.cos(theta))
     L = 2*np.pi*a**2/P*np.sqrt(1-e**2)
     rdot = L/l*e*np.sin(theta)
     thetadot = L/r**2
-    
+
     #-- convert to the right coordinate frame
     if coordinate_frame=='polar':
         return rdot,thetadot
@@ -280,15 +280,15 @@ def velocity_in_plane(times,parameters,component='primary',coordinate_frame='pol
 def project_orbit(r,theta,parameters):
     """
     Project an orbit onto the plane of the sky.
-    
+
     Parameters contains the Euler angles:
         1. omega: the longitude of periastron gives the orientation of the
         orbit within in its own plane (radians)
         2. Omega: PA of ascending node (radians)
         3. i: inclination (radians), i=pi/2 is edge on
-    
+
     Returns x,y (orbit in plane of the sky) and z
-    
+
     See Hilditch p41 for a sketch of the coordinates. The difference with this
     is that all angles are inverted. In this approach, North is in the positive
     X direction, East is in the negative Y direction.
@@ -298,13 +298,13 @@ def project_orbit(r,theta,parameters):
     y = r*(np.sin(Omega)*np.cos(theta+omega) + np.cos(+Omega)*np.sin(theta+omega)*np.cos(i))
     z = r*(np.sin(theta+omega)*np.sin(i))
     return x,y,z
-    
-    
+
+
 
 def orbit_on_sky(times,parameters,distance=None,component='primary'):
     """
     Construct an orbit projected on the sky.
-    
+
     Parameters contains:
         1. period (days)
         2. eccentricity
@@ -314,12 +314,12 @@ def orbit_on_sky(times,parameters,distance=None,component='primary'):
         orbit within in its own plane (radians)
         6. Omega: PA of ascending node (radians)
         7. i: inclination (radians), i=pi/2 is edge on
-    
+
     You can give an extra parameter 'distance' as a tuple (value,'unit'). This
     will be used to convert the distances to angular scale (arcsec).
-    
+
     Else, this function returns the distances in AU.
-    
+
     See Hilditch p41 for a sketch of the coordinates. The difference with this
     is that all angles are inverted. In this approach, North is in the positive
     X direction, East is in the negative Y direction.
@@ -330,7 +330,7 @@ def orbit_on_sky(times,parameters,distance=None,component='primary'):
     r,theta = orbit_in_plane(times,pars_in_plane,component=component)
     #-- and project in onto the sky according to the euler angles
     x,y,z = project_orbit(r,theta,euler_angles)
-    
+
     #-- if necessary, convert the true distance to angular scale
     if distance is not None:
         d = conversions.convert(distance[1],'m',distance[0])
@@ -340,18 +340,18 @@ def orbit_on_sky(times,parameters,distance=None,component='primary'):
         return x,y,z
     else:
         return x/au,y/au,z/au
-    
-    
+
+
 
 
 def true_anomaly(M,e,itermax=8):
     """
     Calculation of true and eccentric anomaly in Kepler orbits.
-    
+
     M is the phase of the star, e is the eccentricity
-    
+
     See p.39 of Hilditch, 'An Introduction To Close Binary Stars'
-    
+
     @parameter M: phase
     @type M: float
     @parameter e: eccentricity
@@ -385,7 +385,7 @@ def true_anomaly(M,e,itermax=8):
 def calculate_phase(T,e,omega,pshift=0):
     """
     Compute orbital phase from true anomaly T
-    
+
     @parameter T: true anomaly
     @type T: float
     @parameter omega: argument of periastron (radians)
@@ -401,18 +401,18 @@ def calculate_phase(T,e,omega,pshift=0):
     M = E - e*np.sin(E)
     return (M+omega)/(2.0*np.pi) - 0.25 + pshift
 
-    
-    
+
+
 def calculate_critical_phases(omega,e,pshift=0):
     """
     Compute phase of superior conjunction and periastron passage.
-    
+
     Example usage:
     >>> omega = np.pi/4.0
     >>> e = 0.3
     >>> print calculate_critical_phases(omega,e)
     (-0.125, -0.057644612788576133, -0.42054512757020118, -0.19235538721142384, 0.17054512757020118)
-    
+
     @parameter omega: argument of periastron (radians)
     @type omega: float
     @parameter e: eccentricity
@@ -435,10 +435,10 @@ def calculate_critical_phases(omega,e,pshift=0):
 def eclipse_separation(e,omega):
     """
     Calculate the eclipse separation between primary and secondary in a light curve.
-    
+
     Minimum separation at omega=pi
     Maximum spearation at omega=0
-    
+
     @parameter e: eccentricity
     @type e: float
     @parameter omega: argument of periastron (radians)
@@ -453,9 +453,9 @@ def eclipse_separation(e,omega):
 def omega_from_eclipse_separation(separation,e):
     """
     Caculate the argument of periastron from the eclipse separation and eccentricity.
-    
+
     separation in phase units.
-    
+
     @parameter separation: separation in phase units (0.5 is half)
     @type separation: float
     @parameter e: eccentricity
@@ -473,7 +473,7 @@ def omega_from_eclipse_separation(separation,e):
     else:
         omega = optimize.bisect(lambda x:separation-eclipse_separation(e,x),maxsep_omega,minsep_omega)
         return omega
-    
+
 #}
 
 #{ Kepler's laws
@@ -481,15 +481,15 @@ def omega_from_eclipse_separation(separation,e):
 def third_law(M=None,a=None,P=None):
     """
     Kepler's third law.
-    
+
     Give two quantities, derived the third.
-    
+
     M = total mass system (solar units)
     a = semi-major axis (au)
     P = period (d)
-    
+
     >>> print third_law(M=1.,a=1.)
-    365.256891359 
+    365.256891359
     >>> print third_law(a=1.,P=365.25)
     1.00003773538
     >>> print third_law(M=1.,P=365.25)
@@ -501,18 +501,17 @@ def third_law(M=None,a=None,P=None):
         P *= (24*3600.)
     if M is not None:
         M *= Msol
-    
+
     if M is None:
         return 4*np.pi**2*a**3/P**2/GG/Msol
     if a is None:
         return (GG*M*P**2/(4*np.pi**2))**(1./3.)/au
     if P is None:
         return np.sqrt(4*np.pi**2*a**3/(GG*M))/(24*3600.)
-    
+
 
 if __name__=="__main__":
     import doctest
     import pylab as pl
     doctest.testmod()
     pl.show()
-    

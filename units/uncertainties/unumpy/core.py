@@ -21,8 +21,6 @@ import numpy
 from ivs.units import uncertainties
 from ivs.units.uncertainties import umath
 
-from ivs.units.uncertainties import __author__
-
 __all__ = [
     # Factory functions:
     'uarray', 'umatrix',
