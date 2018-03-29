@@ -1,4 +1,4 @@
-Documentation - this is a test
+Documentation - this is another test
 -------------
 
 *   You can read online documentation at https://ivs-kuleuven.github.io/IvSPythonRepository/index.html
