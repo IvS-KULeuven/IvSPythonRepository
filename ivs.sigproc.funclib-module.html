@@ -70,10 +70,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'lorentz'</span>,x,[5,1.,2.,0.5]),label=<span class="py-string">'lorentz'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib01.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib01.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,1000)[1:]
@@ -81,10 +78,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'power_law'</span>,x,[2.,3.,1.5,0,0.5])+evaluate(<span class="py-string">'gauss'</span>,x,[1.,5.,0.5,0,0]),label=<span class="py-string">'power_law + gauss'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib02.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib02.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(0,10,1000)
@@ -93,20 +87,14 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine_expfreqshift'</span>,x,[1.,0.5,0,0,1.2]),label=<span class="py-string">'sine_expfreqshift'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib03.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib03.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine'</span>,x,[1.,2.,0,0]),label=<span class="py-string">'sine'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'sine_orbit'</span>,x,[1.,2.,0,0,0.1,10.,0.1]),label=<span class="py-string">'sine_orbit'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib03a.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib03a.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>x_single = np.linspace(0,10,1000)
@@ -118,10 +106,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.plot(x,evaluate(<span class="py-string">'box_transit'</span>,x,[2.,0.4,0.1,0.3,0.5]),label=<span class="py-string">'box_transit'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib04.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib04.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>x = np.linspace(-1,1,1000)
@@ -131,10 +116,7 @@
 <span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">for</span> iy,gamma <span class="py-keyword">in</span> zip(y,gammas): p = plt.plot(x,iy,label=<span class="py-string">&quot;soft_parabola $\gamma$={:.2f}&quot;</span>.format(gamma))
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib05.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib05.png]</p>
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.figure()
 <span class="py-prompt">&gt;&gt;&gt; </span>x = np.logspace(-1,2,1000)
@@ -182,10 +164,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = plt.loglog(x,wien,label=<span class="py-string">'Wien'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg = plt.legend(loc=<span class="py-string">'best'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>leg.get_frame().set_alpha(0.5)</pre>
-<center><img src='../images/ivs_sigproc_fit_funclib06.png' alt='[image example]' width='75%'/></center>
-
-
-
+  <p>]include figure]]ivs_sigproc_fit_funclib06.png]</p>
 
 <!-- ==================== FUNCTIONS ==================== -->
 <a name="section-Functions"></a>
@@ -1056,7 +1035,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Wed Feb 21 11:27:10 2018
+    Generated by Epydoc 3.0.1 on Fri Mar 30 10:45:19 2018
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

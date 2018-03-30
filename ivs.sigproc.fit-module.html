@@ -116,10 +116,7 @@
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(1)
 <span class="py-prompt">&gt;&gt;&gt; </span>result.plot_results()</pre>
-<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_1.png' alt='[image example]' width='75%'/></center>
-
-
-
+      <p>]include figure]]ivs_sigproc_lmfit_BD+29.3070_1.png]</p>
       <p>We can use the <a 
       href="ivs.sigproc.fit.Minimizer-class.html#plot_confidence_interval" 
       class="link">Minimizer.plot_confidence_interval</a> method to plot 
@@ -128,10 +125,7 @@
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(2)
 <span class="py-prompt">&gt;&gt;&gt; </span>result.plot_confidence_interval(xname=<span class="py-string">'p'</span>,yname=<span class="py-string">'t0'</span>, res=30, filled=True)</pre>
-<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_2.png' alt='[image example]' width='75%'/></center>
-
-
-
+      <p>]include figure]]ivs_sigproc_lmfit_BD+29.3070_2.png]</p>
       <p>To get a better idea of how the parameter space behaves we can 
       start the fitting process from different starting values and see how 
       they converge. Fx, we will let the fitting process start from 
@@ -153,10 +147,7 @@
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(3)
 <span class="py-prompt">&gt;&gt;&gt; </span>plot_convergence(startpars, models, chi2s, xpar=<span class="py-string">'p'</span>, ypar=<span class="py-string">'e'</span>)</pre>
-<center><img src='../images/ivs_sigproc_lmfit_BD+29.3070_3.png' alt='[image example]' width='75%'/></center>
-
-
-
+      <p>]include figure]]ivs_sigproc_lmfit_BD+29.3070_3.png]</p>
     <h2 class="heading">1.2 LSI+65010</h2>
       <p>Fit orbit of massive X-ray binary LSI+65010, after Grundstrom 
       2007:</p>
@@ -224,10 +215,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [km s$^{-1}$]'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.legend()</pre>
-<center><img src='../images/ivs_sigproc_fit_01.png' alt='[image example]' width='75%'/></center>
-
-
-
+      <p>]include figure]]ivs_sigproc_fit_01.png]</p>
   <h1 class="heading">Section 2. Fitting an absorption line</h1>
     <p>Here we show how to use 2 gaussians to fit an absorption line with 
     an emission feature in its core:</p>
@@ -280,10 +268,7 @@
 <pre class="py-doctest">
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.figure(1)
 <span class="py-prompt">&gt;&gt;&gt; </span>result.plot_results()</pre>
-<center><img src='../images/ivs_sigproc_lmfit_gaussian.png' alt='[image example]' width='75%'/></center>
-
-
-
+    <p>]include figure]]ivs_sigproc_lmfit_gaussian.png]</p>
   <h1 class="heading">Section 3. Pulsation frequency analysis</h1>
     <p>Do a frequency analysis of the star HD129929, after Aerts 2004:</p>
     <p>Read in the data:</p>
@@ -329,10 +314,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.plot(phases2[sa2],phased2[sa2],<span class="py-string">'b--'</span>,lw=2)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Amplitude [mag]'</span>)</pre>
-<center><img src='../images/ivs_sigproc_fit_02.png' alt='[image example]' width='75%'/></center>
-
-
-
+    <p>]include figure]]ivs_sigproc_fit_02.png]</p>
   <h1 class="heading">Section 4. Exoplanet transit analysis</h1>
     <p>Find the transits of CoRoT 8b, after Borde 2010.</p>
 <pre class="py-doctest">
@@ -373,10 +355,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlim(0.70,0.85)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.xlabel(<span class="py-string">'Phase [$2\pi^{-1}$]'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.ylabel(<span class="py-string">'Depth [%]'</span>)</pre>
-<center><img src='../images/ivs_sigproc_fit_03.png' alt='[image example]' width='75%'/></center>
-
-
-
+    <p>]include figure]]ivs_sigproc_fit_03.png]</p>
   <h1 class="heading">Section 5. Eclipsing binary fit</h1>
     <p>Splines are not a good way to fit eclipsing binaries, but just for 
     the sake of showing the use of the periodic spline fitting functions, 
@@ -455,10 +434,7 @@
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.errorbar(wave,flux2,yerr=error2,fmt=<span class="py-string">'bs'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_xscale(<span class="py-string">'log'</span>)
 <span class="py-prompt">&gt;&gt;&gt; </span>p = pl.gca().set_yscale(<span class="py-string">'log'</span>)</pre>
-<center><img src='../images/ivs_sigproc_lmfit_blackbody.png' alt='[image example]' width='75%'/></center>
-
-
-
+    <p>]include figure]]ivs_sigproc_lmfit_blackbody.png]</p>
 
 <!-- ==================== CLASSES ==================== -->
 <a name="section-Classes"></a>
@@ -1527,7 +1503,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Wed Feb 21 11:27:10 2018
+    Generated by Epydoc 3.0.1 on Fri Mar 30 10:45:19 2018
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
