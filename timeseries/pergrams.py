@@ -147,17 +147,17 @@ from ivs.aux import loggers
 from ivs.aux import termtools
 from ivs.timeseries.decorators import parallel_pergram,defaults_pergram,getNyquist
 
-import pyscargle
-import pyscargle_single
-import pyfasper
-import pyfasper_single
-import pyclean
-import pyGLS
-import pyKEP
-import pydft
-import multih
-import deeming as fdeeming
-import eebls
+from . import pyscargle
+from . import pyscargle_single
+from . import pyfasper
+from . import pyfasper_single
+from . import pyclean
+from . import pyGLS
+from . import pyKEP
+from . import pydft
+from . import multih
+from . import deeming as fdeeming
+from . import eebls
 
 logger = logging.getLogger("TS.PERGRAMS")
 
@@ -608,7 +608,7 @@ def DFTscargle(times, signal,f0,fn,df):
     #df *= 2*np.pi
     #-- initialize
     nfreq = int((fn-f0)/(df))
-    print "Nfreq=",nfreq
+    print("Nfreq=",nfreq)
     tzero = times[0]
     si = 1.
     lfreq = 2*nfreq+1
@@ -1057,8 +1057,8 @@ def Zwavelet(time, signal, freq, position, sigma=10.0):
             cosine = np.cos(arg*nu)
             sine = np.sin(arg*nu)
 
-            print arg, nu
-            print sine, cosine
+            print(arg, nu)
+            print(sine, cosine)
 
             # Compute the innerproduct of the base functions
             # phi_0 = 1 (constant), phi_1 = cosine, phi_2 = sine
@@ -1069,7 +1069,7 @@ def Zwavelet(time, signal, freq, position, sigma=10.0):
             S[1,1] = np.sum(weight * cosine * cosine) / W
             S[1,2] = S[2,1] = np.sum(weight * cosine * sine) / W
             S[2,2] = np.sum(weight * sine * sine) / W
-            print S
+            print(S)
             invS = np.linalg.inv(S)
 
             # Determine the best-fit coefficients y_k of the base functions
@@ -1235,19 +1235,19 @@ def fasper_py(x,y,ofac,hifac, MACC=4):
         Translation of IDL code (orig. Numerical recipies)
     """
     #Check dimensions of input arrays
-    n = long(len(x))
+    n = int(len(x))
     if n != len(y):
-        print 'Incompatible arrays.'
+        print('Incompatible arrays.')
         return
 
     nout  = 0.5*ofac*hifac*n
-    nfreqt = long(ofac*hifac*n*MACC)   #Size the FFT as next power
-    nfreq = 64L             # of 2 above nfreqt.
+    nfreqt = int(ofac*hifac*n*MACC)   #Size the FFT as next power
+    nfreq = 64             # of 2 above nfreqt.
 
     while nfreq < nfreqt:
         nfreq = 2*nfreq
 
-    ndim = long(2*nfreq)
+    ndim = int(2*nfreq)
 
     #Compute the mean, variance
     ave = y.mean()
@@ -1267,7 +1267,7 @@ def fasper_py(x,y,ofac,hifac, MACC=4):
     ck  = ((x-xmin)*fac) % fndim
     ckk  = (2.0*ck) % fndim
 
-    for j in range(0L, n):
+    for j in range(0, n):
         __spread__(y[j]-ave,wk1,ndim,ck[j],MACC)
         __spread__(1.0,wk2,ndim,ckk[j],MACC)
 
@@ -1362,53 +1362,53 @@ def check_input(times,signal,**kwargs):
     #-- check if the input are arrays and have the same 1D shape
     is_array0 = isinstance(times,np.ndarray)
     is_array1 = isinstance(signal,np.ndarray)
-    if not is_array0: print(termtools.red('ERROR: time input is not an array'))
-    if not is_array1: print(termtools.red('ERROR: signal input is not an array'))
+    if not is_array0: print((termtools.red('ERROR: time input is not an array')))
+    if not is_array1: print((termtools.red('ERROR: signal input is not an array')))
     if not is_array0 or not is_array1:
         times = np.asarray(times)
         signal = np.asarray(signal)
-        print(termtools.green("---> FIXED: inputs are arrays"))
-    print(termtools.green("OK: inputs are arrays"))
+        print((termtools.green("---> FIXED: inputs are arrays")))
+    print((termtools.green("OK: inputs are arrays")))
     onedim = (len(times.shape)==1) & (len(signal.shape)==1)
     same_shape = times.shape==signal.shape
     if not onedim or not same_shape:
-        print(termtools.red('ERROR: input is not 1D or not of same length'))
+        print((termtools.red('ERROR: input is not 1D or not of same length')))
         return False
-    print(termtools.green("OK: inputs are 1D and have same length"))
+    print((termtools.green("OK: inputs are 1D and have same length")))
     #-- check if the signal constains nans or infs:
     isnan0 = np.sum(np.isnan(times))
     isnan1 = np.sum(np.isnan(signal))
     isinf0 = np.sum(np.isinf(times))
     isinf1 = np.sum(np.isinf(signal))
-    if isnan0: print(termtools.red('ERROR: time array contains nans'))
-    if isnan1: print(termtools.red('ERROR: signal array contains nans'))
-    if isinf0: print(termtools.red('ERROR: time array contains infs'))
-    if isinf1: print(termtools.red('ERROR: signal array contains infs'))
+    if isnan0: print((termtools.red('ERROR: time array contains nans')))
+    if isnan1: print((termtools.red('ERROR: signal array contains nans')))
+    if isinf0: print((termtools.red('ERROR: time array contains infs')))
+    if isinf1: print((termtools.red('ERROR: signal array contains infs')))
     if not isnan0 and not isnan1 and not isinf0 and not isinf1:
-        print(termtools.green('OK: no infs or nans'))
+        print((termtools.green('OK: no infs or nans')))
     else:
         keep = -np.isnan(times) & -np.isnan(signal) & -np.isinf(times) & -np.isinf(signal)
         times,signal = times[keep],signal[keep]
-        print(termtools.green('---> FIXED: infs and nans removed'))
+        print((termtools.green('---> FIXED: infs and nans removed')))
     #-- check if the timeseries is sorted
     is_sorted = np.all(np.diff(times)>0)
     if not is_sorted:
-        print(termtools.red('ERROR: time array is not sorted'))
+        print((termtools.red('ERROR: time array is not sorted')))
         sa = np.argsort(times)
         times,signal = times[sa],signal[sa]
-        print(termtools.green('---> FIXED: time array is sorted'))
+        print((termtools.green('---> FIXED: time array is sorted')))
     else:
-        print(termtools.green("OK: time array is sorted"))
-    print(termtools.green("No inconsistencies found or inconsistencies are fixed"))
+        print((termtools.green("OK: time array is sorted")))
+    print((termtools.green("No inconsistencies found or inconsistencies are fixed")))
 
     #-- check keyword arguments:
     fnyq = getNyquist(times,nyq_stat=np.min)
-    print("Default Nyquist frequency: {}".format(fnyq))
+    print(("Default Nyquist frequency: {}".format(fnyq)))
     if 'nyq_stat' in kwargs:
         fnyq = getNyquist(times,nyq_stat=kwargs['nyq_stat'])
-        print("Nyquist value manually set to {}".format(fnyq))
+        print(("Nyquist value manually set to {}".format(fnyq)))
     if 'fn' in kwargs and kwargs['fn']>fnyq:
-        print(termtools.red("Final frequency 'fn' is larger than the Nyquist frequency"))
+        print((termtools.red("Final frequency 'fn' is larger than the Nyquist frequency")))
     return times,signal
 
 
@@ -1429,14 +1429,14 @@ def __spread__(y, yy, n, x, m):
     """
     nfac=[0,1,1,2,6,24,120,720,5040,40320,362880]
     if m > 10. :
-        print 'factorial table too small in spread'
+        print('factorial table too small in spread')
         return
 
-    ix=long(x)
+    ix=int(x)
     if x == float(ix):
         yy[ix]=yy[ix]+y
     else:
-        ilo = long(x-0.5*float(m)+1.0)
+        ilo = int(x-0.5*float(m)+1.0)
         ilo = min( max( ilo , 1 ), n-m+1 )
         ihi = ilo+m-1
         nden = nfac[m]
@@ -1537,7 +1537,7 @@ if __name__=="__main__":
     else:
 
         method,args,kwargs = argkwargparser.parse()
-        print "Running method %s with arguments %s and keyword arguments %s"%(method,args,kwargs)
+        print("Running method %s with arguments %s and keyword arguments %s"%(method,args,kwargs))
         if '--help' in args or 'help' in args or 'help' in kwargs:
             sys.exit()
         times,signal = ascii.read2array(kwargs.pop('infile')).T[:2]

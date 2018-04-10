@@ -68,8 +68,8 @@ This software is released under a dual license.  (1) The BSD license.
 author."""
 
 # Local modules:
-from core import *
-import core
+from .core import *
+from . import core
 from ivs.sigproc.lmfit.uncertainties.unumpy import ulinalg  # Local sub-module
 
 from ivs.sigproc.lmfit.uncertainties import __author__

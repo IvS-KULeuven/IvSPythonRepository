@@ -60,7 +60,7 @@ def can_kick(self,pnames=None):
     Checks if the given parameters can be kicked and returns the good ones in a list.
     """
     if pnames == None:
-        pnames = self.keys()
+        pnames = list(self.keys())
     kick_pars = []
     for key in pnames:
         if self[key].can_kick():
@@ -86,7 +86,7 @@ def __getattr__(self, name):
     """
     if name in ['name', 'value', 'min', 'max', 'vary', 'expr',
                 'stderr', 'mcerr', 'cierr', 'correl']:
-        return [getattr(p, name) for n, p in self.items()]
+        return [getattr(p, name) for n, p in list(self.items())]
     else:
         raise AttributeError
 

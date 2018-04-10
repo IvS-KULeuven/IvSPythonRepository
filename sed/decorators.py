@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import pylab as pl
 from multiprocessing import Manager,Process,cpu_count
-import model
+from . import model
 from ivs.units import conversions
 from ivs.units import constants
 
@@ -181,7 +181,7 @@ def blackbody_input(fctn):
         #-- correct for rad
         if x_unit_type=='frequency':
             x /= (2*np.pi)
-        print y_unit_type
+        print(y_unit_type)
         #-- run function
         I = fctn((x,x_unit_type),T)
 

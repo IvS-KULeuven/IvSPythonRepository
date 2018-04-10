@@ -223,7 +223,7 @@ def phasediagram(time,signal,nu0,D=0,t0=None,forb=None,asini=None,
         mysignl = [[]]
         currentphase = chainnr[0]
         #-- divide the signal into separate phase bins
-        for i in xrange(len(signal)):
+        for i in range(len(signal)):
             if chainnr[i]==currentphase:
                 myphase[-1].append(phase[i])
                 mysignl[-1].append(signal[i])
@@ -315,7 +315,7 @@ def sine(times, parameters):
         total_fit = parameters['const'].sum()
     else:
         total_fit = 0.
-    for i in xrange(len(parameters)):
+    for i in range(len(parameters)):
         total_fit += parameters['ampl'][i]*sin(2*pi*(parameters['freq'][i]*times+parameters['phase'][i]))
     return total_fit
 

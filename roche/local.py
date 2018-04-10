@@ -8,7 +8,7 @@ from scipy.optimize import newton
 try:
     from scipy.spatial import Delaunay
 except ImportError:
-    print 'No Delaunay'
+    print('No Delaunay')
 
 from ivs.sed import limbdark
 from ivs.coordinates import vectors
@@ -209,12 +209,12 @@ def surface_normals(r,phi,theta,grid,gtype='spher'):
         normals_T = normals.T
         normals = normals_T / vectors.norm(normals_T)
         #cos_gamma = vectors.cos_angle(a,normals)
-        print centers.shape,sizes.shape,normals.shape
+        print(centers.shape,sizes.shape,normals.shape)
         return centers, sizes, normals#, cos_gamma
 
 #{ Derivation of local quantities
 
-def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='spher'):
+def surface_elements(xxx_todo_changeme, xxx_todo_changeme1,gtype='spher'):
     """
     Compute surface area of elements in a grid.
     
@@ -223,6 +223,8 @@ def surface_elements((r,mygrid),(surfnormal_x,surfnormal_y,surfnormal_z),gtype='
     usually, the surfnormals are acquired via differentiation of a gravity potential,
     and is then equal to the *negative* of the local surface gravity.
     """
+    (r,mygrid) = xxx_todo_changeme
+    (surfnormal_x,surfnormal_y,surfnormal_z) = xxx_todo_changeme1
     theta,phi = mygrid[:2]
     if gtype=='spher':
         #-- compute the grid size at each location
@@ -295,10 +297,10 @@ def intensity(teff,grav,mu=None,photband='OPEN.BOL'):
     if mu is None:
         mu = np.ones_like(teff)
     if (teff<3500).any() or np.isnan(teff).any():
-        print 'WARNING: point outside of grid, minimum temperature is 3500K'
+        print('WARNING: point outside of grid, minimum temperature is 3500K')
         teff = np.where((teff<3500) | np.isnan(teff),3500,teff)
     if (grav<0.01).any() or np.isnan(grav).any():
-        print 'WARNING: point outside of grid, minimum gravity is 0 dex'
+        print('WARNING: point outside of grid, minimum gravity is 0 dex')
         grav = np.where((np.log10(grav*100)<0.) | np.isnan(grav),0.01,grav)
     intens = np.array([limbdark.get_itable(teff=iteff,logg=np.log10(igrav*100),absolute=True,mu=imu,photbands=[photband])[0] for iteff,igrav,imu in zip(teff.ravel(),grav.ravel(),mu.ravel())])
     return intens.reshape(teff.shape)

@@ -5,8 +5,8 @@ Retrieve Hipparcos epoch/intermediate photometry from the internet.
 Author: Joris De Ridder & Pieter Degroote
 """
 
-from __future__ import with_statement
-import httplib
+
+import http.client
 import logging
 import numpy as np
 from ivs.aux import loggers
@@ -93,7 +93,7 @@ def getHipData(ID,dtype='ep',outputFileName=None):
 
     # Connect to the website, en retrieve the wanted webpage
 
-    conn = httplib.HTTPConnection(server)
+    conn = http.client.HTTPConnection(server)
     conn.request("GET", webpage + str(hipnr))
     response = conn.getresponse()
     if response.reason != "OK":

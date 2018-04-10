@@ -513,9 +513,10 @@ import re
 import os
 import sys
 import logging
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import numpy as np
 import datetime
+import imp
 
 #-- optional libraries: WARNING: when these modules are not installed, the
 #   module's use is restricted
@@ -1170,7 +1171,7 @@ def set_convention(units='SI',values='standard',frequency='rad'):
     constants._current_values = values
     #-- when we set everything back to SI, make sure we have no rounding errors:
     if units=='SI' and values=='standard' and frequency=='rad':
-        reload(constants)
+        imp.reload(constants)
         logger.warning('Reloading of constants')
     logger.info('Changed convention to {0} with values from {1} set'.format(units,values))
     return to_return
@@ -1700,7 +1701,7 @@ def get_help():
         text[i%2] += help_text[key]
     out = ''
     #for i,j in itertools.zip_longest(*text,fillvalue=''): # for Python 3
-    for i,j in itertools.izip_longest(*text,fillvalue=''):
+    for i,j in itertools.zip_longest(*text,fillvalue=''):
         out += '%s| %s\n'%(i,j)
     
     return out
@@ -1721,7 +1722,7 @@ def derive_wrapper(fctn):
     @functools.wraps(fctn)
     def func(*args,**kwargs):
         argspec = inspect.getargspec(fctn)
-        print argspec
+        print(argspec)
         result = fctn(*args,**kwargs)
         return result
     return func
@@ -2979,7 +2980,7 @@ def set_exchange_rates():
     Download currency exchange rates from the European Central Bank.
     """
     myurl = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     #url = urllib.request.URLopener() # for Python 3
     logger.info('Downloading current exchanges rates from ecb.europa.eu')
     filen,msg = url.retrieve(myurl)
@@ -2991,7 +2992,7 @@ def set_exchange_rates():
     ff.close()
     #-- now also retrieve the name of the currencies:
     myurl = 'http://www.ecb.europa.eu/stats/exchange/eurofxref/html/index.en.html'
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     #url = urllib.request.URLopener() # for Python 3
     logger.info('Downloading information on currency names from ecb.europa.eu')
     filen,msg = url.retrieve(myurl)

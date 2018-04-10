@@ -350,8 +350,8 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
 
     logger.warning('Encountered %s exceptions!'%(exceptions))
     for i in exceptions_logs:
-        print 'ERROR'
-        print i
+        print('ERROR')
+        print(i)
 
 def update_grid(gridfile,responses,threads=10):
     """
@@ -363,7 +363,7 @@ def update_grid(gridfile,responses,threads=10):
     responses = sorted(list(set(responses) - existing_responses))
     if not len(responses):
         hdulist.close()
-        print "No new responses to do"
+        print("No new responses to do")
         return None
     law = hdulist[1].header['REDLAW']
     units = hdulist[1].header['FLUXTYPE']
@@ -379,7 +379,7 @@ def update_grid(gridfile,responses,threads=10):
     index = np.arange(N)
 
     output = np.zeros((len(responses),len(teffs)))
-    print N
+    print(N)
 
     #--- PARALLEL PROCESS
     def do_process(teffs,loggs,ebvs,zs,rvs,index,arr):
@@ -389,7 +389,7 @@ def update_grid(gridfile,responses,threads=10):
         for i,(teff,logg,ebv,z,rv,ind) in enumerate(zip(teffs,loggs,ebvs,zs,rvs,index)):
             if i%100==0:
                 dt = time.time()-c0
-                print "ETA",index[0],(N-i)/100.*dt/3600.,'hr'
+                print("ETA",index[0],(N-i)/100.*dt/3600.,'hr')
                 c0 = time.time()
             #-- get model SED and absolute luminosity
             model.set_defaults(z=z)
@@ -443,7 +443,7 @@ def fix_grid(grid):
     cols = [pf.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
     N = len(hdulist[1].data)
 
-    keys = [key.lower() for key in hdulist[1].header.keys()]
+    keys = [key.lower() for key in list(hdulist[1].header.keys())]
 
     if not 'z' in names:
         z = hdulist[1].header['z']
@@ -477,19 +477,19 @@ def fix_grid(grid):
     table = pf.new_table(pf.ColDefs(cols))
     if fix_rv:
         table.data.field('rv')[:] = rv
-    fake_keys = [key.lower() for key in table.header.keys()]
+    fake_keys = [key.lower() for key in list(table.header.keys())]
     fake_keys.append('use_scratch') # Don't know why this is nessessary but it doesn't work otherwise (JV 23.7.13) !!!
-    for key in hdulist[1].header.keys():
+    for key in list(hdulist[1].header.keys()):
         if not key.lower() in fake_keys:
             if len(key)>8:
                 key = 'HIERARCH '+key
             table.header.update(key,hdulist[1].header[key])
     hdulist[1] = table
-    print "Axis:"
+    print("Axis:")
     for name in hdulist[1].columns.names:
         if name.islower() and not name=='labs':
             ax = np.unique(hdulist[1].data.field(name))
-            print name,len(ax),min(ax),max(ax)
+            print(name,len(ax),min(ax),max(ax))
 
     teffs = hdulist[1].data.field('teff')
     loggs = hdulist[1].data.field('logg')

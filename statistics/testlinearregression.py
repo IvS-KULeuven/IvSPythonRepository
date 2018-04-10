@@ -8,7 +8,7 @@ Author: Joris De Ridder
 import unittest
 from math import pi, sqrt
 import numpy as np
-from linearregression import LinearModel, PolynomialModel, HarmonicModel, LinearFit
+from .linearregression import LinearModel, PolynomialModel, HarmonicModel, LinearFit
 
 
 
@@ -552,7 +552,7 @@ class LinearSubmodelGeneratorTestCase(unittest.TestCase):
 
         generator = self.linearModel1.submodels(Nmin=3, nested=True, ranks=[1,0,3])
         self.assertTrue(generator.__class__.__name__ == "generator")
-        submodel = generator.next()
+        submodel = next(generator)
         self.assertTrue(isinstance(submodel, LinearModel))
         designMatrix = np.column_stack([self.x,np.ones(len(self.x)),self.x**2])
         self.assertTrue(np.alltrue(submodel.designMatrix() == designMatrix))

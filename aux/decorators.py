@@ -12,7 +12,7 @@ Various decorator functions
     - Extend/Reopen an existing class (like in Ruby)
 """
 import functools
-import cPickle
+import pickle
 import time
 import logging
 import sys
@@ -33,7 +33,7 @@ def memoized(fctn):
     """
     @functools.wraps(fctn)
     def memo(*args,**kwargs):
-        haxh = cPickle.dumps((fctn.__name__, args, sorted(kwargs.iteritems())))
+        haxh = pickle.dumps((fctn.__name__, args, sorted(kwargs.items())))
         modname = fctn.__module__
         if not (modname in memory):
             memory[modname] = {}
@@ -50,10 +50,10 @@ def clear_memoization(keys=None):
     Clear contents of memory
     """
     if keys is None:
-        keys = memory.keys()
+        keys = list(memory.keys())
     for key in keys:
         if key in memory:
-            riddens = [memory[key].pop(ikey) for ikey in memory[key].keys()[:]]
+            riddens = [memory[key].pop(ikey) for ikey in list(memory[key].keys())[:]]
     logger.debug("Memoization cleared")
 
 def make_parallel(fctn):
@@ -87,7 +87,7 @@ def timeit(fctn):
         start_time = time.time()
         output = fctn(*args,**kwargs)
         duration = time.time()-start_time
-        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)
+        print("FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration))
         return output
     return time_this
 
@@ -103,7 +103,7 @@ def timeit_duration(fctn):
         start_time = time.time()
         output = fctn(*args,**kwargs)
         duration = time.time()-start_time
-        print "FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration)
+        print("FUNC: %s MOD: %s: EXEC TIME: %.3fs"%(fctn.__module__,fctn.__name__,duration))
         return duration
     return time_this
 
@@ -177,7 +177,7 @@ def retry_http(tries, backoff=2, on_failure='error'):
         while mtries > 0:
           try:
               rv = f(*args, **kwargs) # Try again
-          except IOError,msg:
+          except IOError as msg:
               rv = False
           except socket.error:
               rv = False
@@ -190,7 +190,7 @@ def retry_http(tries, backoff=2, on_failure='error'):
           logger.error("URL timeout: %d attempts remaining (delay=%.1fs)"%(mtries,mdelay))
         logger.critical("URL timeout: number of trials exceeded")
         if on_failure=='error':
-          raise IOError,msg # Ran out of tries :-(
+          raise IOError(msg) # Ran out of tries :-(
         else:
           logger.critical("URL Failed, but continuing...")
           return None
@@ -265,7 +265,7 @@ def filter_kwargs(fctn):
         args_,varargs,keywords,defaults = inspect.getargspec(fctn)
         #-- loop over all keywords given by the user, and remove them from the
         #   kwargs dictionary if their names are not present in 'args'
-        for key in kwargs.keys():
+        for key in list(kwargs.keys()):
             if not key in args_[-len(defaults):]:
                 thrash = kwargs.pop(key)
         return fctn(*args,**kwargs)
@@ -316,7 +316,7 @@ def class_extend(cls):
     cls. Use at own risk, results may vary!!!
     """
     def decorator(nclf):
-        for at in nclf.__dict__.keys():
+        for at in list(nclf.__dict__.keys()):
             setattr(cls, at, getattr(nclf, at))
         return cls
     return decorator

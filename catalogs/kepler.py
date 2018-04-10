@@ -1,7 +1,7 @@
 """
 Retrieve light curves from the Kepler satellite mission.
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import os
 import astropy.io.fits as pf
 import logging
@@ -37,7 +37,7 @@ def download_light_curve(KIC,directory=''):
     #-- and download the files
     logger.info("Found %d public/proprietary light curves for KIC%s"%(len(links),KIC))
     for base_url in links:
-        url = urllib.URLopener()
+        url = urllib.request.URLopener()
         filename = os.path.basename(base_url)
         if directory:
             filename = os.path.join(directory,filename)

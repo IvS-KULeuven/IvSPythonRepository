@@ -49,7 +49,7 @@ class TestCase1Function(FitTestCase):
         self.assertEqual(self.model.function, self.function)
         self.assertEqual(self.model.jacobian, self.Dfunction)
         self.assertEqual(self.model.par_names, self.pnames)
-        self.assertListEqual(self.pnames, self.model.parameters.keys())
+        self.assertListEqual(self.pnames, list(self.model.parameters.keys()))
 
     def testEvaluate(self):
         """ sigproc.fit.Function evaluate """
@@ -222,7 +222,7 @@ class TestCase3Minimizer(FitTestCase):
         y_ = result._perturb_input_data(100)
         dy = np.abs(np.ravel(y_[0]) - np.ravel(result.y))
 
-        print dy
+        print(dy)
 
         msg = 'Perturbed data has wrong shape'
         self.assertEqual(y_.shape, (100,) + result.y.shape, msg=msg)
@@ -347,7 +347,7 @@ class TestCase4FittingFunction(FitTestCase):
         self.assertArrayAlmostEqual(ci['freq'][0.997], [0.1197, 0.1210], places=2, msg=msg)
 
         msg = 'ci intervals are not stored in the parameter object'
-        for name, param in model.parameters.items():
+        for name, param in list(model.parameters.items()):
             self.assertTrue(0.674 in param.cierr, msg=msg)
             self.assertTrue(0.997 in param.cierr, msg=msg)
 
@@ -479,7 +479,7 @@ class TestCase5IntegrationJacobian(FitTestCase):
         valr = [2.4272, 1.2912, 0.4928]
         errr = [0.0665, 0.0772, 0.0297]
 
-        print self.model.param2str(accuracy=4, output='result')
+        print(self.model.param2str(accuracy=4, output='result'))
 
         msg = 'Resulting value for {:s} is not correct within {:.0f}\%'
         pc = 0.05 # 5% difference is allowed
@@ -503,7 +503,7 @@ class TestCase5IntegrationJacobian(FitTestCase):
         valr = [2.4272, 1.2912, 0.4928]
         errr = [0.4345, 0.3796, 0.0921]
 
-        print self.model.param2str(accuracy=4, output='result')
+        print(self.model.param2str(accuracy=4, output='result'))
 
         msg = 'Resulting value for {:s} is not correct within {:.0f}\%'
         pc = 0.05 # 5% difference is allowed

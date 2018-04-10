@@ -6,6 +6,7 @@ import numpy as np
 from ivs.catalogs import hermes
 
 import unittest
+import imp
 try:
     import mock
     noMock = False
@@ -225,7 +226,7 @@ class TestCase2SetHermesConfig(HermesTestCase):
         old = hermes.write_hermesConfig(filename=self.testfile)
 
         msg = 'write_hermesConfig did not return the correct content of hermesConfig.xml'
-        for key in old.keys():
+        for key in list(old.keys()):
             self.assertEqual(old[key], self.config[key], msg=msg)
 
 
@@ -239,7 +240,7 @@ class TestCase2SetHermesConfig(HermesTestCase):
 
         msg = 'The new hermesConfig is not correctly written!'
         self.config.update(new_config)
-        for key in new.keys():
+        for key in list(new.keys()):
             self.assertEqual(new[key], self.config[key], msg=msg)
 
 
@@ -253,7 +254,7 @@ class TestCase2SetHermesConfig(HermesTestCase):
         restored = hermes.write_hermesConfig(filename=self.testfile)
 
         msg = 'The new hermesConfig is not correctly restored!'
-        for key in new.keys():
+        for key in list(new.keys()):
             self.assertEqual(restored[key], self.config[key], msg=msg)
 
 
@@ -267,7 +268,7 @@ class TestCase2SetHermesConfig(HermesTestCase):
             try:
                 os.rmdir(cls.testdir)
             except Exception:
-                print 'Error in removing directory'
+                print('Error in removing directory')
 
 
 class TestCase3ReadHermesVRVelocities(HermesTestCase):
@@ -411,7 +412,7 @@ class TestCase3ReadHermesVRVelocities(HermesTestCase):
             try:
                 os.rmdir(cls.testdir)
             except Exception:
-                print 'Error in removing directory'
+                print('Error in removing directory')
 
 
 class TestCase4ReadHermesVRAllCCF(HermesTestCase):
@@ -476,9 +477,9 @@ class TestCase4ReadHermesVRAllCCF(HermesTestCase):
             try:
                 os.rmdir(cls.testdir)
             except Exception:
-                print 'Error in removing directory'
+                print('Error in removing directory')
 
-        reload(hermes)
+        imp.reload(hermes)
 
 class TestCase5HermesCCF(HermesTestCase):
     """
@@ -493,7 +494,7 @@ class TestCase5HermesCCF(HermesTestCase):
 
         cls.ccfobj = hermes.HermesCCF(filename=cls.testfile)
 
-        print cls.ccfobj
+        print(cls.ccfobj)
 
     def test1init(self):
         """catalogs.hermes HermesCCF init"""
@@ -598,9 +599,9 @@ class TestCase6RunHermesVR(HermesTestCase):
     @classmethod
     def tearDownClass(self):
         """ restore all mocked methods """
-        reload(os)
-        reload(shutil)
-        reload(hermes)
+        imp.reload(os)
+        imp.reload(shutil)
+        imp.reload(hermes)
 
 
     @unittest.skipIf(noMock, "Mock not installed")

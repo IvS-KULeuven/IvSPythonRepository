@@ -14,7 +14,7 @@ You can combine all the possibilities, as the functions are generated on the fly
 blinking green bold text on red background
 
 """
-from __future__ import print_function
+
 import sys
 import subprocess
 import time

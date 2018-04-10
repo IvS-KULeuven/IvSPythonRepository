@@ -6,7 +6,7 @@ Author: Robin Lombaert
 
 """
 
-import cPickle
+import pickle
 import time
 
 
@@ -186,7 +186,7 @@ class Database(dict):
 
         '''
 
-        if not self.has_key(key):
+        if key not in self:
             self.__changed.append(key)
         return super(Database,self).setdefault(key,*args)
 
@@ -214,7 +214,7 @@ class Database(dict):
 
         '''
 
-        if self.has_key(key):
+        if key in self:
             self.__deleted.append(key)
         return super(Database,self).pop(key,*args)
 
@@ -258,8 +258,8 @@ class Database(dict):
 
         '''
 
-        self.__changed.extend(kwargs.keys())
-        self.__changed.extend(args[0].keys())
+        self.__changed.extend(list(kwargs.keys()))
+        self.__changed.extend(list(args[0].keys()))
         return super(Database,self).update(*args,**kwargs)
 
 
@@ -291,17 +291,17 @@ class Database(dict):
             dbfile = open(self.db_path,'r')
             while True:
                 try:
-                    db = cPickle.load(dbfile)
+                    db = pickle.load(dbfile)
                     break
                 except ValueError:
-                    print 'Loading database failed: ValueError ~ insecure '+\
-                          'string pickle. Waiting 10 seconds and trying again.'
+                    print('Loading database failed: ValueError ~ insecure '+\
+                          'string pickle. Waiting 10 seconds and trying again.')
                     time.sleep(10)
             dbfile.close()
             self.clear()
             super(Database,self).update(db)
         except IOError:
-            print 'No database present at %s. Creating a new one.'%self.db_path
+            print('No database present at %s. Creating a new one.'%self.db_path)
             self.__save()
 
 
@@ -328,7 +328,7 @@ class Database(dict):
 
         if self.__changed or self.__deleted:
             current_db = dict([(k,v)
-                               for k,v in self.items()
+                               for k,v in list(self.items())
                                if k in set(self.__changed)])
             self.read()
             self.__deleted = list(set(self.__deleted))
@@ -357,7 +357,7 @@ class Database(dict):
         '''
 
         dbfile = open(self.db_path,'w')
-        cPickle.dump(self,dbfile)
+        pickle.dump(self,dbfile)
         dbfile.close()
 
 

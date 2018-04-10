@@ -458,7 +458,7 @@ def get_itable2(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=Fals
     try:
         out = get_ld_grid(photbands,integrated=True,**kwargs)(teff,logg)
     except ValueError:
-        print 'Used teff and logg',teff,logg
+        print('Used teff and logg',teff,logg)
         raise
     a1x_,a2x_,a3x_,a4x_, I_x1 = out.reshape((len(photbands),5)).T
     Imu = ld_eval(mu,[a1x_,a2x_,a3x_,a4x_])
@@ -504,7 +504,7 @@ def _get_itable_markers(photband,gridfile,
         pars[i] = list(ext.data[i][-5:])
     ff.close()
     sa = np.argsort(markers)
-    print 'read in gridfile',gridfile
+    print('read in gridfile',gridfile)
     pars[:,-1] = np.log10(pars[:,-1])
     return markers[sa],grid_axes,gridpnts[sa],pars[sa]
 
@@ -1015,7 +1015,7 @@ def _get_itable_markers(photband,gridfile,
         pars[i] = list(ext.data[i][-5:])
     ff.close()
     sa = np.argsort(markers)
-    print 'read in gridfile',gridfile
+    print('read in gridfile',gridfile)
     pars[:,-1] = np.log10(pars[:,-1])
     return markers[sa],grid_axes,gridpnts[sa],pars[sa]
 

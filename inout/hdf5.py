@@ -37,7 +37,7 @@ def read2dict(filename):
     def read_rec(hdf):
         """ recusively read the hdf5 file """
         res = {}
-        for name,grp in hdf.items():
+        for name,grp in list(hdf.items()):
             #-- read the subgroups and datasets
             if hasattr(grp, 'items'):
                 # in case of a group, read the group into a new dictionary key
@@ -47,7 +47,7 @@ def read2dict(filename):
                 res[name] = grp.value
 
         #-- read all the attributes
-        for name, atr in hdf.attrs.iteritems():
+        for name, atr in hdf.attrs.items():
             res[name] = atr
 
         return res
@@ -88,7 +88,7 @@ def write_dict(data, filename, update=True, attr_types=[]):
 
     def save_rec(data, hdf):
         """ recusively save a dictionary """
-        for key in data.keys():
+        for key in list(data.keys()):
 
             if type(data[key]) == dict:
                 # if part is dictionary: add 1 level and save dictionary in new level

@@ -228,7 +228,7 @@ author.'''
 # Uncertainties can then be calculated by using this local linear
 # approximation of the original function.
 
-from __future__ import division  # Many analytical derivatives depend on this
+  # Many analytical derivatives depend on this
 
 import re
 from math import sqrt  # Optimization: no attribute look-up
@@ -311,7 +311,7 @@ def to_affine_scalar(x):
         return x
 
     #! In Python 2.6+, numbers.Number could be used instead, here:
-    if isinstance(x, (float, int, complex, long)):
+    if isinstance(x, (float, int, complex)):
         # No variable => no derivative to define:
         return AffineScalarFunc(x, {})
 
@@ -437,7 +437,7 @@ def wrap(f, derivatives_funcs=None):
         # Can this function perform the calculation of an
         # AffineScalarFunc (or maybe float) result?
         try:
-            aff_funcs = map(to_affine_scalar, args)
+            aff_funcs = list(map(to_affine_scalar, args))
 
         except NotUpcast:
 
@@ -536,7 +536,7 @@ def wrap(f, derivatives_funcs=None):
         # derivatives_wrt_args):
 
         for (func, f_derivative) in zip(aff_funcs, derivatives_wrt_args):
-            for (var, func_derivative) in func.derivatives.iteritems():
+            for (var, func_derivative) in func.derivatives.items():
                 derivatives_wrt_vars[var] += f_derivative * func_derivative
 
         # The function now returns an AffineScalarFunc object:
@@ -745,7 +745,7 @@ class AffineScalarFunc(object):
     # as the result of bool()) don't have a very meaningful
     # uncertainty unless it is zero, this behavior is fine.
     
-    def __nonzero__(self):
+    def __bool__(self):
         """
         Equivalent to self != 0.
         """
@@ -819,7 +819,7 @@ class AffineScalarFunc(object):
     
         # Calculation of the variance:
         error_components = {}
-        for (variable, derivative) in self.derivatives.iteritems():            
+        for (variable, derivative) in self.derivatives.items():            
             # Individual standard error due to variable:
             error_components[variable] = abs(derivative*variable._std_dev)
 
@@ -842,7 +842,7 @@ class AffineScalarFunc(object):
         #not need to have their std_dev calculated: only the final
         #AffineScalarFunc returned to the user does).
         return sqrt(sum(
-            delta**2 for delta in self.error_components().itervalues()))
+            delta**2 for delta in self.error_components().values()))
 
     def _general_representation(self, to_string):
         """
@@ -899,7 +899,7 @@ class AffineScalarFunc(object):
         return AffineScalarFunc(
             self._nominal_value,
             dict((copy.deepcopy(var), deriv)
-                 for (var, deriv) in self.derivatives.iteritems()))
+                 for (var, deriv) in self.derivatives.items()))
 
     def __getstate__(self):
         """
@@ -915,7 +915,7 @@ class AffineScalarFunc(object):
         """
         Hook for the pickle module.
         """        
-        for (name, value) in data_dict.iteritems():
+        for (name, value) in data_dict.items():
             setattr(self, name, value)
 
 # Nicer name, for users: isinstance(ufloat(...), UFloat) is True:
@@ -964,7 +964,7 @@ def get_ops_with_reflection():
 
     # Conversion to Python functions:
     ops_with_reflection = {}
-    for (op, derivatives) in derivatives_list.iteritems():
+    for (op, derivatives) in derivatives_list.items():
         ops_with_reflection[op] = [
             eval("lambda x, y: %s" % expr) for expr in derivatives ]
 
@@ -1004,7 +1004,7 @@ def add_operators_to_AffineScalarFunc():
         }
 
     for (op, derivative) in \
-          simple_numerical_operators_derivatives.iteritems():
+          simple_numerical_operators_derivatives.items():
         
         attribute_name = "__%s__" % op
         # float objects don't exactly have the same attributes between
@@ -1019,7 +1019,7 @@ def add_operators_to_AffineScalarFunc():
     ########################################
 
     # Reversed versions (useful for float*AffineScalarFunc, for instance):
-    for (op, derivatives) in _ops_with_reflection.iteritems():
+    for (op, derivatives) in _ops_with_reflection.items():
         attribute_name = '__%s__' % op
         setattr(AffineScalarFunc, attribute_name,
                 wrap(getattr(float, attribute_name), derivatives))
@@ -1174,7 +1174,7 @@ class Variable(AffineScalarFunc):
         """
         Hook for the standard pickle module.
         """        
-        for (name, value) in data_dict.iteritems():
+        for (name, value) in data_dict.items():
             setattr(self, name, value)
         
 ###############################################################################
@@ -1298,7 +1298,7 @@ else:
 
         # Representation of the initial correlated values:
         values_funcs = tuple(
-            AffineScalarFunc(value, dict(zip(variables, coords)))
+            AffineScalarFunc(value, dict(list(zip(variables, coords))))
             for (coords, value) in zip(transform, values))
 
         return values_funcs
@@ -1465,7 +1465,7 @@ def ufloat(representation, tag=None):
     # thus does not have any overhead.
 
     #! Different, in Python 3:
-    if isinstance(representation, basestring):
+    if isinstance(representation, str):
         representation = str_to_number_with_uncert(representation)
         
     #! The tag is forced to be a string, so that the user does not
@@ -1475,7 +1475,7 @@ def ufloat(representation, tag=None):
 
     #! 'unicode' is removed in Python3:
     if tag is not None:
-        assert ((type(tag) is str) or (type(tag) is unicode)), \
+        assert ((type(tag) is str) or (type(tag) is str)), \
                "The tag can only be a string."
 
     #! init_args must contain all arguments, here:

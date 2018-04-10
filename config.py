@@ -44,7 +44,7 @@ def get_datafile(relative_path,basename):
     else:
         str_data_dirs = ", ".join([idir for idir in data_dirs if idir is not None])
         relative_file = os.path.join(relative_path,basename)
-        raise IOError, "File %s not found in any of the specified data directories %s"%(relative_file,str_data_dirs)
+        raise IOError("File %s not found in any of the specified data directories %s"%(relative_file,str_data_dirs))
 
     return filename
 
@@ -101,7 +101,7 @@ if __name__=="__main__":
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
                     if answer!='Y':
-                        answer = raw_input('Continue? [Y/n] ')
+                        answer = input('Continue? [Y/n] ')
                         if answer.lower()=='n':
                             continue
                     #-- call the compiling command

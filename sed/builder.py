@@ -519,7 +519,7 @@ class SED(object):
         #-- additional info
         for key in sorted(self.info.keys()):
             if isinstance(self.info[key],dict):
-                txt.append(" {:10s} = ".format(key)+", ".join(["{}: {}".format(i,j) for i,j in self.info[key].iteritems()]))
+                txt.append(" {:10s} = ".format(key)+", ".join(["{}: {}".format(i,j) for i,j in self.info[key].items()]))
             else:
                 txt.append(" {:10s} = {}".format(key,self.info[key]))
 
@@ -987,7 +987,7 @@ class SED(object):
             if distribution=='normal':
                 parrange = ((i[1]-i[0])/2.,(i[1]-i[0])/6.)
             elif distribution!='uniform':
-                raise NotImplementedError, 'Any distribution other than "uniform" and "normal" has not been implemented yet!'
+                raise NotImplementedError('Any distribution other than "uniform" and "normal" has not been implemented yet!')
             limits[par_range_name] = parrange
         #-- this returns the kwargs but with filled in limits, and confirms
         #   the type if it was given, or gives the type when it needed to be derived
@@ -1189,7 +1189,7 @@ class SED(object):
         if not exc_interpolpar == None:
             for var in exc_interpolpar:
                 if ranges[var+'range'][0] != ranges[var+'range'][1]:
-                    raise IOError, 'Exclusion of parameters from interpolation is only possible if the lower and upper ranges of those ranges are equal to an actual grid point.'
+                    raise IOError('Exclusion of parameters from interpolation is only possible if the lower and upper ranges of those ranges are equal to an actual grid point.')
         #-- build the grid, run over the grid and calculate the CHI2
         pars = fit.generate_grid_pix(self.master['photband'][include_grid],points=points,**ranges)
         pars['exc_interpolpar'] = exc_interpolpar
@@ -1216,7 +1216,7 @@ class SED(object):
         generates a dictionary with parameter information that can be handled by fit.iminimize
         """
         result = dict()
-        for key in pars.keys():
+        for key in list(pars.keys()):
             if re.search("range$", key):
                 result[key[0:-5]+"_min"] =  pars[key][0]
                 result[key[0:-5]+"_max"] =  pars[key][1]
@@ -1240,7 +1240,7 @@ class SED(object):
         #-- Get the best fit parameters and ranges
         pars = {}
         skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
-        for name in self.results[mtype]['CI'].keys():
+        for name in list(self.results[mtype]['CI'].keys()):
             name = re.sub('_[u|l]$', '', name)
             if not name in pars and not name in skip:
                 pars[name] = self.results[mtype]['CI'][name]
@@ -1271,7 +1271,7 @@ class SED(object):
         #-- get the best fitting parameters
         pars = {}
         skip = ['scale', 'chisq', 'nfev', 'labs', 'ci_raw', 'ci_red', 'scale', 'escale']
-        for name in self.results[mtype]['CI'].keys():
+        for name in list(self.results[mtype]['CI'].keys()):
             name = re.sub('_[u|l]$', '', name)
             if not name in pars and not name in skip:
                 pars[name] = self.results[mtype]['CI'][name]
@@ -1299,7 +1299,7 @@ class SED(object):
     def _get_imin_ci(self, mtype='iminimize',**ranges):
         """ returns ci information for store_confidence_intervals """
         names, values, cil, cih = [],[],[],[]
-        for key in ranges.keys():
+        for key in list(ranges.keys()):
             name = key[0:-5]
             names.append(name)
             values.append(self.results[mtype]['grid'][name][-1])
@@ -1600,7 +1600,7 @@ class SED(object):
         #-- Uniformly sample the cdf, to get a sampling according to the pdf
         sample = pl.uniform(cumuldensfunc[0],cumuldensfunc[-1],NrSamples)
         indices = np.zeros(NrSamples,int)
-        for i in xrange(NrSamples):
+        for i in range(NrSamples):
             indices[i] = (abs(cumuldensfunc-sample[i])).argmin()
         return indices
 
@@ -2224,7 +2224,7 @@ class SED(object):
                     # plot each photometric points separately, so that we could
                     # use it interactively. Label them all with a unique ID
                     # and make them pickable.
-                    color = color_cycle.next()
+                    color = next(color_cycle)
                     #for i in range(sum(keep)):
                         #label = system if i==0 else '_nolegend_'
                         #pltlin,caplins,barlincs = pl.errorbar(wave[keep][i],flux[keep][i],yerr=e_flux[keep][i],fmt='o',label=label,ms=7,picker=5,color=color,**kwargs)
@@ -2249,10 +2249,10 @@ class SED(object):
             for system in systems:
                 keep = (allsystems==system) & iscolor
                 if keep.sum():
-                    pl.errorbar(range(start_index,start_index+keep.sum()),flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
+                    pl.errorbar(list(range(start_index,start_index+keep.sum())),flux[keep],yerr=e_flux[keep],fmt='o',label=system,ms=7,**kwargs)
                     names += [ph.split('.')[1] for ph in photbands[keep]]
                 start_index += keep.sum()
-            pl.xticks(range(1,len(names)+1),names,rotation=90)
+            pl.xticks(list(range(1,len(names)+1)),names,rotation=90)
             pl.ylabel(r'Flux ratio')
             pl.xlabel('Index')
         leg = pl.legend(prop=dict(size='small'),loc='best',fancybox=True) #,numpoints=1) #prop=dict(size='small'),loc='best',fancybox=True)
@@ -2316,7 +2316,7 @@ class SED(object):
 
         #-- for plotting reasons, we translate every color to an integer
         for system in set_systems:
-            color = color_cycle.next()
+            color = next(color_cycle)
             keep = (systems==system) & (self.master['color']==colors)
             if not plot_unselected:
                 keep = keep & self.master['include']
@@ -2396,7 +2396,7 @@ class SED(object):
             pl.ylabel(conversions.unit2texlabel(flux_units,full=True))
             pl.xlabel('wavelength [{0}]'.format(conversions.unit2texlabel(wave_units)))
         else:
-            xlabels = color_dict.keys()
+            xlabels = list(color_dict.keys())
             xticks = [color_dict[key] for key in xlabels]
             pl.xticks(xticks,xlabels,rotation=90)
             pl.ylabel(r'Flux ratio')
@@ -2484,7 +2484,7 @@ class SED(object):
             eff_waves,synflux,photbands = self.results[mtype]['synflux']
             chi2 = self.results[mtype]['chi2']
             for system in set_systems:
-                color = color_cycle.next()
+                color = next(color_cycle)
                 keep = (systems==system)
                 if phase:
                     keep = keep & (self.master['phase'][include_grid] == uniquephase)
@@ -2494,7 +2494,7 @@ class SED(object):
                     except:
                         logger.critical('Plotting of CHI2 of absolute values failed')
                 elif sum(keep) and colors:
-                    pl.semilogy(range(len(eff_waves[include_grid][keep])),chi2[include_grid][keep],'o',label=system,color=color)
+                    pl.semilogy(list(range(len(eff_waves[include_grid][keep]))),chi2[include_grid][keep],'o',label=system,color=color)
             pl.legend(loc='upper right',prop=dict(size='x-small'))
             pl.grid()
             pl.annotate('Total $\chi^2$ = %.1f'%(self.results[mtype]['grid']['chisq'][-1]),(0.59,0.120),xycoords='axes fraction',color='r')
@@ -2663,7 +2663,7 @@ class SED(object):
             set_systems = sorted(list(set(systems)))
             color_cycle = itertools.cycle([cmap_photometry(j) for j in np.linspace(0, 1.0, len(set_systems))])
             for system in set_systems:
-                color = color_cycle.next()
+                color = next(color_cycle)
                 keep = systems==system
                 if sum(keep):
                     pl.plot(toplot['_RAJ2000'][keep][0]*60,
@@ -2869,7 +2869,7 @@ class SED(object):
                 headerdict = results_modeldict.copy()
                 key = 'model{}'.format(index)
                 headerdict['extname'] = key+'_'+mtype
-                if key in self.results[mtype].keys():
+                if key in list(self.results[mtype].keys()):
                     fits.write_array(list(self.results[mtype][key]),filename,
                              names=('wave','flux','dered_flux'),
                              units=('AA','erg/s/cm2/AA','erg/s/cm2/AA'),
@@ -3050,7 +3050,7 @@ class SED(object):
                     if 'factor' in ff[mtype].header:
                         self.results[mtype]['factor'] = np.array([ff[mtype].header['factor']])[0]
 
-                    headerkeys = ff[mtype].header.keys() #ascardlist().keys()
+                    headerkeys = list(ff[mtype].header.keys()) #ascardlist().keys()
                     for key in headerkeys[::-1]:
                         for badkey in ['xtension','bitpix','naxis','pcount','gcount','tfields','ttype','tform','tunit','factor','extname']:
                             if key.lower().count(badkey):
@@ -3060,8 +3060,8 @@ class SED(object):
                     for key in headerkeys:
                         #-- we want to have the same types as the original: numpy.float64 --> np.array([..])[0]
                         self.results[mtype]['CI'][key.lower()] = np.array([ff[mtype].header[key]])[0]
-                except KeyError,msg:
-                    print msg
+                except KeyError as msg:
+                    print(msg)
                     continue
             else:
                 splitted = mtype.lower().split('_',1) #lstrip('synflux_').lstrip('model_')
@@ -3135,7 +3135,7 @@ class SED(object):
         self.constraints = data.get('constraints', {})
 
         logger.info('Loaded previous results from HDF5 file: %s'%(filename))
-        logger.debug('Loaded following datasets from HDF5 file:\n %s'%(data.keys()))
+        logger.debug('Loaded following datasets from HDF5 file:\n %s'%(list(data.keys())))
         return True
 
     def save_bibtex(self):
@@ -3206,8 +3206,8 @@ class SED(object):
         factor = self.results[method]['factor']
         #names = ['scaling_factor','chi2_type','ci_limit']
         results = [factor,chi2type,CI_limit*100]
-        print 'Metallicity:'
-        print grid_results['z'][-1]
+        print('Metallicity:')
+        print(grid_results['z'][-1])
         wanted_names = ['ebv','logg','teff','z','chisq']
         for name in wanted_names:
             lv,cv,uv = grid_results[name][start_CI:].min(),\
@@ -3258,7 +3258,7 @@ class BinarySED(SED):
         Summarizes all constraints in a string.
         """
         res = ""
-        for key in self.constraints.keys():
+        for key in list(self.constraints.keys()):
             res += "Using constraint: %s = %s\n"%(key, self.constraints[key])
         res = res[:-1]
         return res
@@ -3460,7 +3460,7 @@ class BinarySED(SED):
                                       law=law)
             #-- get synthetic photometry
             pars = {}
-            for key in self.results[mtype]['CI'].keys():
+            for key in list(self.results[mtype]['CI'].keys()):
                 if not key[-2:] == '_u' and not key[-2:] == '_l':
                     pars[key] = self.results[mtype]['CI'][key]
             synflux_,pars = model.get_itable(photbands=self.master['photband'][keep], **pars)
@@ -3510,12 +3510,12 @@ class PulsatingSED(SED):
             #self.constraints['distance'] = kwargs['distance']
         if 'deltaTeff' in kwargs:
             deltaTeff = kwargs.get('deltaTeff')
-            print deltaTeff
+            print(deltaTeff)
             for i in range(len(deltaTeff)):
                 self.constraints['delta{}Teff'.format(i+1)] = deltaTeff[i]
         if 'deltaLogg' in kwargs:
             deltaLogg = kwargs.get('deltaLogg')
-            print deltaLogg
+            print(deltaLogg)
             for i in range(len(deltaTeff)):
                 self.constraints['delta{}Logg'.format(i+1)] = deltaLogg[i]
 
@@ -3524,7 +3524,7 @@ class PulsatingSED(SED):
         Summarizes all constraints in a string.
         """
         res = ""
-        for key in self.constraints.keys():
+        for key in list(self.constraints.keys()):
             res += "Using constraint: %s = %s\n"%(key, self.constraints[key])
         res = res[:-1]
         return res
@@ -3581,8 +3581,8 @@ class PulsatingSED(SED):
         #    compute the confidence intervals
         for i in range(len(unique_phases)):
             fitres = dict(chisq=chisqs[:,i], scale=scales[:,i], escale=escales[:,i], labs=lumis[:,i])
-            partpars = pars.fromkeys(pars.keys())
-            for key in pars.keys():
+            partpars = pars.fromkeys(list(pars.keys()))
+            for key in list(pars.keys()):
                 partpars[key] = pars[key][:,i]
             self.collect_results(grid=partpars, fitresults=fitres, mtype='igrid_search_{}'.format(unique_phases[i]))
 
@@ -3600,8 +3600,8 @@ class PulsatingSED(SED):
         ##-- collect the results of the all-inclusive fit
         index = len(unique_phases)
         fitres = dict(chisq=chisqs[:,index], scale=scales[:,index], escale=escales[:,index], labs=lumis[:,index])
-        allpars = pars.fromkeys(pars.keys())
-        for key in pars.keys():
+        allpars = pars.fromkeys(list(pars.keys()))
+        for key in list(pars.keys()):
             allpars[key] = pars[key][:,0]
         for i in range(len(unique_phases)-1):
             fitres['scale{}'.format(i+1)] = scales[:,index+i+1]
@@ -3771,7 +3771,7 @@ class PulsatingSED(SED):
 
         #-- for plotting reasons, we translate every color to an integer
         for system in set_systems:
-            color = color_cycle.next()
+            color = next(color_cycle)
             keep = (systems==system) & (self.master['color']==colors)
             if not plot_unselected:
                 keep = keep & self.master['include']
@@ -3855,7 +3855,7 @@ class PulsatingSED(SED):
             pl.ylabel(conversions.unit2texlabel(flux_units,full=True))
             pl.xlabel('wavelength [{0}]'.format(conversions.unit2texlabel(wave_units)))
         else:
-            xlabels = color_dict.keys()
+            xlabels = list(color_dict.keys())
             xticks = [color_dict[key] for key in xlabels]
             pl.xticks(xticks,xlabels,rotation=90)
             pl.ylabel(r'Flux ratio')
@@ -4100,7 +4100,7 @@ if __name__ == "__main__":
         mysed.get_photometry(units=units)
         mysed.plot_data()
         pl.show()
-        answer = raw_input('Keep photometry file %s (y/N)'%(mysed.photfile))
+        answer = input('Keep photometry file %s (y/N)'%(mysed.photfile))
         if not 'y' in answer.lower():
             os.unlink(mysed.photfile)
             logger.info('Removed %s'%(mysed.photfile))

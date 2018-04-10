@@ -74,7 +74,7 @@ class SEDTestCase(unittest.TestCase):
                 'Argument %s was not in call to %s (called with args: %s)'%(arg, mck, args_)
                 self.assertInList(arg, args_, msg=msg_)
         if kwargs != None:
-            for key in kwargs.keys():
+            for key in list(kwargs.keys()):
                 msg_ = msg if msg != None else \
                 'Key Word Argument %s=%s was not in call to %s (called with args: %s)'% \
                 (key, kwargs[key], mck, kwargs_)
@@ -363,7 +363,7 @@ class PixFitTestCase(SEDTestCase):
         self.assertTrue('z' in names)
         self.assertTrue('rad' in names)
 
-        for key in parameters.keys():
+        for key in list(parameters.keys()):
             self.assertTrue(type(parameters[key]) == np.ndarray)
 
         self.assertEqual(parameters['value'][names == 'teff'], 5000)

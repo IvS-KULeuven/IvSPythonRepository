@@ -1650,7 +1650,7 @@ class Model(object):
         """
         if type(parameters) == str:
             parameters = [parameters]
-        pnames = parameters if parameters != None else self.parameters.keys()
+        pnames = parameters if parameters != None else list(self.parameters.keys())
 
         out = []
         for name in pnames:
@@ -1758,7 +1758,7 @@ class Model(object):
         pnames = []
         for i, params in enumerate(parameters):
             pname = []
-            for n,par in params.items():
+            for n,par in list(params.items()):
                 pname.append(n+'_%i'%(i))
                 new_params.add(n+'_%i'%(i), value=par.value, vary=par.vary, min=par.min, max=par.max, expr=par.expr)
             pnames.append(pname)
@@ -1935,7 +1935,7 @@ class Minimizer(object):
             sigmas = [sigmas]
         if 'sigma' in kwargs:
             sigmas = [kwargs['sigma']]
-            print 'WARNING: sigma is depricated, use sigmas'
+            print('WARNING: sigma is depricated, use sigmas')
 
         #-- Use the adjusted conf_interval() function of the lmfit package.
         #   We need to work on a copy of the minimizer and make a backup of
@@ -1949,7 +1949,7 @@ class Minimizer(object):
         self.model.parameters = backup
 
         #-- store the CI values in the parameter object
-        for key, value in ci.items():
+        for key, value in list(ci.items()):
             self.model.parameters[key].cierr.update(value)
 
         return ci
@@ -2032,7 +2032,7 @@ class Minimizer(object):
         #-- perturb the data
         y_perturbed = self._perturb_input_data(points, **perturb_args)
 
-        if verbose: print "MC simulations ({:.0f} points):".format(points)
+        if verbose: print("MC simulations ({:.0f} points):".format(points))
         if verbose: Pmeter = progress.ProgressMeter(total=points)
         for i, y_ in enumerate(y_perturbed):
             if verbose: Pmeter.update(1)
@@ -2403,7 +2403,7 @@ class Minimizer(object):
         "Internal function that starts all minimizers one by one"
         #-- Possible termial output
         if len(self._minimizers) <= 1: verbose = False
-        if verbose: print "Grid Minimizer ({:.0f} points):".format(len(self._minimizers))
+        if verbose: print("Grid Minimizer ({:.0f} points):".format(len(self._minimizers)))
         if verbose: Pmeter = progress.ProgressMeter(total=len(self._minimizers))
 
         #-- Start all minimizers
@@ -2436,7 +2436,7 @@ class Minimizer(object):
     def _mc_error_from_parameters(self, params):
         " Use standard deviation to get the error on a parameter "
         #-- calculate the std
-        pnames = params[0].keys()
+        pnames = list(params[0].keys())
         errors = np.zeros((len(params), len(pnames)))
         for i, pars in enumerate(params):
             errors[i] = np.array(pars.value)
@@ -2588,7 +2588,7 @@ def get_correlation_factor(residus, full_output=False):
     """
     same_sign_groups = [1]
 
-    for i in xrange(1,len(residus)):
+    for i in range(1,len(residus)):
         if np.sign(residus[i])==np.sign(residus[i-1]):
             same_sign_groups[-1] += 1
         else:
@@ -2638,7 +2638,7 @@ def _calc_length(par, accuracy, field=None):
                 length = length + accuracy + 1 # 1 for the decimal point
                 np.seterr(divide=old['divide'])
                 out = int(length)
-        except Exception, e:
+        except Exception as e:
             logging.warning(
                 'Could not calculate length of: %s, type = %s, field = %s\nerror: %s'%(par, type(par), field, e))
             out = 0
@@ -2705,13 +2705,13 @@ def parameters2string(parameters, accuracy=2, error='stderr', output='result', *
     maxlen = np.zeros(len(output), dtype=int)
     for i, field in enumerate(output):
         max_value = 0
-        for name, par in parameters.items():
+        for name, par in list(parameters.items()):
             current = _calc_length(getattr(par, field), accuracy, field=field)
             if current > max_value: max_value = current
         maxlen[i] = max_value
 
     #-- create matrix with all values in requered accuracy as string
-    roundedvals = np.empty(shape=(len(parameters.keys()), len(output)),
+    roundedvals = np.empty(shape=(len(list(parameters.keys())), len(output)),
                           dtype="|S{:.0f}".format(np.max(maxlen)))
     for i, (name, par) in enumerate(parameters.items()):
         for j, field in enumerate(output):
@@ -2735,8 +2735,8 @@ def correlation2string(parameters, accuracy=3, limit=0.100):
 
     #-- first select all correlations we want
     cor_name, cor_value = [],[]
-    for name1,par  in parameters.items():
-        for name2, corr in par.correl.items():
+    for name1,par  in list(parameters.items()):
+        for name2, corr in list(par.correl.items()):
             n1 = name1 + ' - ' + name2
             n2 = name2 + ' - ' + name1
             if corr >=limit and not n1 in cor_name and not n2 in cor_name:
@@ -2770,9 +2770,9 @@ def confidence2string(parameters, accuracy=4):
     max_name = 0
     max_value = 6
     sigmas = []
-    for name, par in parameters.items():
+    for name, par in list(parameters.items()):
         if len(name) > max_name: max_name = len(name)
-        for ci in par.cierr.keys():
+        for ci in list(par.cierr.keys()):
             if not ci in sigmas: sigmas.append(ci)
             current = _calc_length(par.cierr[ci][0], accuracy)
             if current > max_value: max_value = current
@@ -2783,11 +2783,11 @@ def confidence2string(parameters, accuracy=4):
 
     #-- create the output values
     template =  "{{:.{0}f}}".format(accuracy)
-    cis = np.empty(shape=(len(parameters.keys()), 2*len(sigmas)+1),
+    cis = np.empty(shape=(len(list(parameters.keys())), 2*len(sigmas)+1),
                    dtype="|S{:.0f}".format(max_value))
     for i, (name, par) in enumerate(parameters.items()):     #cis
         for j, sigma in enumerate(sigmas):
-            if sigma in par.cierr.keys():
+            if sigma in list(par.cierr.keys()):
                 cis[i,j] = template.format(par.cierr[sigma][0])
                 cis[i,-j-1] = template.format(par.cierr[sigma][1])
             else:
@@ -2810,7 +2810,7 @@ def confidence2string(parameters, accuracy=4):
 
     template = "{{:>{0}s}}  ".format(max_value) * (2*len(sigmas)+1)
     template = "    {{:>{0}s}}:  ".format(max_name) + template +"\n"
-    for name, ci in zip(parameters.keys(), cis):
+    for name, ci in zip(list(parameters.keys()), cis):
         out += template.format(name, *ci)
 
     return out.rstrip()
@@ -2901,7 +2901,7 @@ if __name__=="__main__":
     frequencies = []
 
     for i in range(9):
-        print "======== STEP %d ======"%(i)
+        print("======== STEP %d ======"%(i))
 
 
         pergram = pergrams.scargle(times,residus,threads=2)
@@ -2916,20 +2916,20 @@ if __name__=="__main__":
 
 
         if i<len(parins):
-            print ''
+            print('')
             for par in ['const','ampl','freq','phase']:
-                print par,parins[i][par],parameters[par],e_parameters['e_%s'%(par)]
-            print 'S/N',parameters['ampl']/e_parameters['e_ampl']
+                print(par,parins[i][par],parameters[par],e_parameters['e_%s'%(par)])
+            print('S/N',parameters['ampl']/e_parameters['e_ampl'])
 
         else:
-            print ''
+            print('')
             for par in ['const','ampl','freq','phase']:
-                print par,parameters[par],e_parameters['e_%s'%(par)]
-            print 'S/N',parameters['ampl']/e_parameters['e_ampl']
+                print(par,parameters[par],e_parameters['e_%s'%(par)])
+            print('S/N',parameters['ampl']/e_parameters['e_ampl'])
 
 
 
-        print ''
+        print('')
 
 
 

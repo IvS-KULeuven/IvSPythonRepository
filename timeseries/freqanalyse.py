@@ -512,7 +512,7 @@ def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,
     freq_spectrum = []
     mymodel = []
     #-- do frequency analysis
-    for iwave in xrange(len(matrix[0])):
+    for iwave in range(len(matrix[0])):
         signal = matrix[:,iwave]
         if weights_2d is not None:
             weights = weights_2d[:,iwave]
@@ -621,7 +621,7 @@ def stopcrit_scargle_prob(times,signal,modelfunc,allparams,pergram,crit_value):
     Stop criterium based on probability.
     """
     value = pergrams.scargle_probability(pergram[1].max(),times,pergram[0])
-    print value
+    print(value)
     return value>crit_value,value
 
 def stopcrit_scargle_snr(times,signal,modelfunc,allparams,pergram,crit_value,width=6.):
@@ -714,7 +714,7 @@ def autocorrelation(frequencies,power,max_step=1.5,interval=(),threshold=None,me
 
     #-- compute autocorrelation. If nessecary, take border effects into
     #   account.
-    for i in xrange(2,max_step):
+    for i in range(2,max_step):
         end_s = min(len(power), stop+i)
         end_o = start + end_s - (start+i)
         original = power[start  :end_o]
@@ -756,7 +756,7 @@ if __name__=="__main__":
     # $:> python freqanalyse.py time_frequency infile=test.dat full_output=True
     else:
         method,args,kwargs = argkwargparser.parse()
-        print "Running method %s with arguments %s and keyword arguments %s"%(method,args,kwargs)
+        print("Running method %s with arguments %s and keyword arguments %s"%(method,args,kwargs))
         if '--help' in args or 'help' in args or 'help' in kwargs:
             sys.exit()
         full_output = kwargs.get('full_output',False)
@@ -765,7 +765,7 @@ if __name__=="__main__":
 
         #-- when find_frequency is called
         if method=='find_frequency' and full_output:
-            print pl.mlab.rec2txt(out[0],precision=8)
+            print(pl.mlab.rec2txt(out[0],precision=8))
             pl.figure()
             pl.subplot(211)
             pl.plot(out[1][0],out[1][1],'k-')
@@ -774,11 +774,11 @@ if __name__=="__main__":
             pl.plot(times,out[2],'r-',lw=2)
             pl.show()
         elif method=='find_frequency':
-            print pl.mlab.rec2txt(out)
+            print(pl.mlab.rec2txt(out))
 
         #-- when time_frequency is called
         elif method=='time_frequency':
-            print pl.mlab.rec2txt(out['pars'],precision=8)
+            print(pl.mlab.rec2txt(out['pars'],precision=8))
             pl.figure()
             pl.imshow(out['pergram'][1].T[::-1],aspect='auto',extent=[out['times'][0],out['times'][-1],out['pergram'][0][0],out['pergram'][0][-1]])
 

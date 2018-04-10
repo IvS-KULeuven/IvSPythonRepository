@@ -6,7 +6,7 @@ of the functions from numpy.linalg.
 """
 
 from ivs.sigproc.lmfit.uncertainties import __author__
-import core
+from . import core
 
 # This module cannot import unumpy because unumpy imports this module.
 

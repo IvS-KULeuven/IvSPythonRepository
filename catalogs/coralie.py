@@ -74,7 +74,7 @@ def make_data_overview():
     outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime date-avg filename\n')
     outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 a30 a200\n')
     for i,obj_file in enumerate(obj_files):
-        print i,len(obj_files)
+        print(i,len(obj_files))
         #-- keep track of: UNSEQ, BJD, BVCOR, OBSERVER, RA, DEC , PROG_ID, OBSMODE, EXPTIME, DATE-AVG, OBJECT and filename
         contents = dict(unseq=-1,prog_id=-1,obsmode='CORALIE',bvcor=0,observer='nan',
                         object='nan',ra=np.nan,dec=np.nan,

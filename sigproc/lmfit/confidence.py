@@ -3,7 +3,7 @@
 """
 Contains functions to calculate confidence intervals.
 """
-from __future__ import print_function
+
 import numpy as np
 from scipy.stats import f
 from scipy.optimize import brentq
@@ -118,10 +118,10 @@ def conf_interval(minimizer, p_names=None, sigmas=(0.674, 0.95, 0.997),
 def map_trace_to_names(trace, params):
     "maps trace to param names"
     out = {}
-    for name in trace.keys():
+    for name in list(trace.keys()):
         tmp_dict = {}
         tmp = np.array(trace[name])
-        for para_name, values in zip(params.keys() + ['prob'], tmp.T):
+        for para_name, values in zip(list(params.keys()) + ['prob'], tmp.T):
             tmp_dict[para_name] = values
         out[name] = tmp_dict
     return out
@@ -137,7 +137,7 @@ class ConfidenceInterval(object):
 
         """
         if p_names is None:
-            self.p_names = minimizer.params.keys()
+            self.p_names = list(minimizer.params.keys())
         else:
             self.p_names = p_names
 
@@ -198,7 +198,7 @@ class ConfidenceInterval(object):
 
         calc_prob = lambda val, prob: self.calc_prob(para, val, prob)
         if self.trace:
-            x = [i.value for i in self.minimizer.params.values()]
+            x = [i.value for i in list(self.minimizer.params.values())]
             self.trace_dict[para.name].append(x + [0])
 
         para.vary = False
@@ -268,7 +268,7 @@ class ConfidenceInterval(object):
             out.chisqr, self.best_chi)
 
         if self.trace:
-            x = [i.value for i in out.params.values()]
+            x = [i.value for i in list(out.params.values())]
             self.trace_dict[para.name].append(x + [prob])
         return prob - offset
 

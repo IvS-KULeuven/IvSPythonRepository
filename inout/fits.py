@@ -269,7 +269,7 @@ def read2recarray(fits_file,ext=1,return_header=False):
     data = [np.cast[dtypes[i]](data.field(name)) for i,name in enumerate(names)]
     data = np.rec.array(data,dtype=dtypes)
     header = {}
-    for key in ff[ext].header.keys():
+    for key in list(ff[ext].header.keys()):
         if 'TTYPE' in key: continue
         if 'TUNIT' in key: continue
         if 'TFORM' in key: continue
@@ -345,7 +345,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     #-- take care of the header:
     if len(header_dict):
         for key in header_dict:
-            if (len(key)>8) and (not key in tbhdu.header.keys()) and (not key[:9]=='HIERARCH'):
+            if (len(key)>8) and (not key in list(tbhdu.header.keys())) and (not key[:9]=='HIERARCH'):
                 key_ = 'HIERARCH '+key
             else:
                 key_ = key
@@ -355,7 +355,7 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
 
 
     #   put it in the right place
-    extnames = [iext.header['EXTNAME'] for iext in hdulist if ('extname' in iext.header.keys()) or ('EXTNAME' in iext.header.keys())]
+    extnames = [iext.header['EXTNAME'] for iext in hdulist if ('extname' in list(iext.header.keys())) or ('EXTNAME' in list(iext.header.keys()))]
     if ext=='new' or not ext in extnames:
         logger.info('Creating new extension %s'%(ext))
         hdulist.append(tbhdu)
