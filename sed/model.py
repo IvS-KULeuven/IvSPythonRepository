@@ -2343,7 +2343,8 @@ def _get_itable_markers(photbands,
 
         for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
             markers[-1][i] = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(it)),int(round(il*100)),int(round(ie*100))))
-	    gridpnts[-1][i]= it,il,ie,z
+            gridpnts[-1][i]= it,il,ie,z
+
         flux.append(_get_flux_from_table(ext,photbands,include_Labs=include_Labs))
         ff.close()
 
@@ -2485,4 +2486,3 @@ if __name__=="__main__":
     import pylab as pl
     doctest.testmod()
     pl.show()
-
