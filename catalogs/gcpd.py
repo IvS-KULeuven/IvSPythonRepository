@@ -2,10 +2,10 @@
 """
 Interface to Geneva's Genaral Catalogue of Photometric Data
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import os
-import ConfigParser
+import configparser
 
 import numpy as np
 
@@ -34,7 +34,7 @@ logger.addHandler(loggers.NullHandler())
 basedir = os.path.dirname(os.path.abspath(__file__))
 
 #-- read in catalog information
-cat_info = ConfigParser.ConfigParser()
+cat_info = configparser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'gcpd_cats_phot.cfg')))
 
@@ -52,7 +52,7 @@ def search(name,**kwargs):
 
     #-- the data is listed in two lines: one with the header, one with
     #   the values
-    webpage = urllib.urlopen(base_url)
+    webpage = urllib.request.urlopen(base_url)
     entries,values = None,None
     log_message = '0'
     start = -1
@@ -230,7 +230,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
         try:
             zp = filters.get_info(master['photband'])
         except:
-            print master['photband']
+            print(master['photband'])
             raise
         for i in range(len(master)):
             to_units_ = to_units+''
@@ -300,7 +300,7 @@ def _get_URI(name='GENEVA',ID=None,**kwargs):
         logger.error('Unknown star %s: GCPD query will not return results'%(ID))
 
 
-    base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.quote(ID))
+    base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.parse.quote(ID))
     logger.debug(base_url)
     return base_url
 
@@ -309,7 +309,7 @@ def _get_URI(name='GENEVA',ID=None,**kwargs):
 if __name__=="__main__":
     results,units,comms = search('GENEVA',ID='HD180642')
     master = gcpd2phot('GENEVA',results,units)
-    print master
-    print ""
+    print(master)
+    print("")
     master = get_photometry(ID='vega')
-    print master
+    print(master)

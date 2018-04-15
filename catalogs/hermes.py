@@ -660,7 +660,7 @@ def write_hermesConfig(**kwargs):
     #-- read current config file to dictionary
     old_config = _etree_to_dict( ET.parse(config_file).getroot() )['hermes']
 
-    if len(kwargs.keys()) == 0.0:
+    if len(list(kwargs.keys())) == 0.0:
         logger.debug('Nothing written to hermesConfig.xml, returning current config.')
         return old_config
 
@@ -669,7 +669,7 @@ def write_hermesConfig(**kwargs):
     new_config.update(kwargs)
 
     hermes = etree.Element("hermes")
-    for key in new_config.keys():
+    for key in list(new_config.keys()):
         child = etree.SubElement(hermes, key)
         child.text = new_config[key]
 
@@ -819,9 +819,9 @@ def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
             returncode = -35
             logger.debug(out)
 
-        if verbose: print out
+        if verbose: print(out)
 
-    except Exception, e:
+    except Exception as e:
         runError = e
 
     #-- restore hermesConfig and delete coppied files
@@ -978,7 +978,7 @@ class HermesCCF(object):
             for o in orders:
                 if ':' in o:
                     o = o.split(':')
-                    o_list.extend( range( int(o[0]), int(o[1])+1 ) )
+                    o_list.extend( list(range( int(o[0]), int(o[1])+1)) )
                 else:
                     o_list.append( int(o) )
             logger.debug("converted order string: ''{:}'' to list: {:}".format(orders, o_list))
@@ -1209,11 +1209,11 @@ def _etree_to_dict(t):
     if children:
         dd = defaultdict(list)
         for dc in map(_etree_to_dict, children):
-            for k, v in dc.iteritems():
+            for k, v in dc.items():
                 dd[k].append(v)
-        d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+        d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.items()}}
     if t.attrib:
-        d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+        d[t.tag].update(('@' + k, v) for k, v in t.attrib.items())
     if t.text:
         text = t.text.strip()
         if children or t.attrib:
@@ -1264,7 +1264,7 @@ if __name__=="__main__":
 
     data = read_hermesVR_velocities(unseq=[unseq])
 
-    print data['vrad'], ' +- ', data['vraderr']
+    print(data['vrad'], ' +- ', data['vraderr'])
 
     #import time
     #import sys

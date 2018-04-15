@@ -6,7 +6,7 @@ check out http://nsted.ipac.caltech.edu/
 
 import logging
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import astropy.io.fits as pf
 import numpy as np
 from ivs.aux import loggers
@@ -97,7 +97,7 @@ def get_exo_data(ID,type_data='white'):
             return None
         #-- collect the files containing data on the target
         for filename in cat['FileName'][cat['CoRoT']==ID]:
-            url = urllib.URLopener()
+            url = urllib.request.URLopener()
             filen,msg = url.retrieve(filename)
             try:
                 header = pf.getheader(filen)

@@ -2,7 +2,7 @@
 """
 Interface to Sesame for general information on a star (SIMBAD)
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 
 import numpy as np
@@ -25,7 +25,7 @@ def get_URI(ID,db='S'):
     """
     #mirrors:
     # http://vizier.cfa.harvard.edu/viz-bin/nph-sesame/-oxpsIF/~%s?%s'
-    ID = urllib.quote(ID)
+    ID = urllib.parse.quote(ID)
     return 'http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxpsIF/%s?%s'%(db,ID)
 
 
@@ -145,7 +145,7 @@ def search(ID,db='S',fix=False):
     @rtype: dictionary
     """
     base_url = get_URI(ID,db=db)
-    ff = urllib.urlopen(base_url)
+    ff = urllib.request.urlopen(base_url)
     xmlpage = ""
     for line in ff.readlines():
         line_ = line[::-1].strip(' ')[::-1]
@@ -155,8 +155,8 @@ def search(ID,db='S',fix=False):
     database = xmlparser.XMLParser(xmlpage).content
     try:
         database = database['Sesame']['Target']['%s'%(db)]['Resolver']
-        database = database[database.keys()[0]]
-    except KeyError,IndexError:
+        database = database[list(database.keys())[0]]
+    except KeyError as IndexError:
         #-- we found nothing!
         database = {}
     ff.close()

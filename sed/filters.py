@@ -373,7 +373,7 @@ def get_response(photband):
     elif photfile_is_file:
         wave, response = ascii.read2array(photfile).T[:2]
     else:
-        raise IOError,('{0} does not exist {1}'.format(photband,custom_filters.keys()))
+        raise IOError('{0} does not exist {1}'.format(photband,list(custom_filters.keys())))
     sa = np.argsort(wave)
     return wave[sa],response[sa]
 
@@ -430,7 +430,7 @@ def add_custom_filter(wave,response,**kwargs):
     #-- check if the filter already exists:
     photfile = os.path.join(basedir,'filters',photband)
     if os.path.isfile(photfile) and not kwargs['force']:
-        raise ValueError,'bandpass {0} already exists'.format(photfile)
+        raise ValueError('bandpass {0} already exists'.format(photfile))
     elif photband in custom_filters:
         logger.debug('Overwriting previous definition of {0}'.format(photband))
     custom_filters[photband] = dict(response=(wave,response))
@@ -503,7 +503,7 @@ def list_response(name='*',wave_range=(-np.inf,+np.inf)):
     else:
         name_ = name
     curve_files = sorted(glob.glob(os.path.join(basedir,'filters',name_.upper())))
-    curve_files = sorted(curve_files+[key for key in custom_filters.keys() if ((name in key) and not (key=='_prefer_file'))])
+    curve_files = sorted(curve_files+[key for key in list(custom_filters.keys()) if ((name in key) and not (key=='_prefer_file'))])
     curve_files = [cf for cf in curve_files if not ('HUMAN' in cf or 'EYE' in cf) ]
     #-- select in correct wavelength range
     curve_files = [os.path.basename(curve_file) for curve_file in curve_files if (wave_range[0]<=eff_wave(os.path.basename(curve_file))<=wave_range[1])]
@@ -605,7 +605,7 @@ def eff_wave(photband,model=None,det_type=None):
 
     #-- if photband is a string, it's the name of a photband: put it in a container
     #   but unwrap afterwards
-    if isinstance(photband,unicode):
+    if isinstance(photband,str):
         photband = str(photband)
     if isinstance(photband,str):
         single_band = True
@@ -764,7 +764,7 @@ if __name__=="__main__":
             if not hasattr(pl.gca(),'color_cycle'):
                 color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, nr_filters)])
                 p = pl.gca().color_cycle = color_cycle
-            color = pl.gca().color_cycle.next()
+            color = next(pl.gca().color_cycle)
             p = pl.title(resp.split('.')[0])
             # get the response curve and plot it
             wave,trans = get_response(resp)

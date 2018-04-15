@@ -33,15 +33,15 @@ class XMLParser:
             curdict = self.content
             for ie in self.elem:
                 curdict = curdict[ie]
-            if not name in curdict.keys():
+            if not name in list(curdict.keys()):
                 curdict[name] = {}
             if not self.elem[-1]==name:
                 self.elem.append(name)
             if attrs:
-                key = attrs[attrs.keys()[0]]
+                key = attrs[list(attrs.keys())[0]]
                 #print "START2",self.elem
                 #print "START3",name,attrs,key,curdict[name].keys()
-                if key not in curdict[name].keys():
+                if key not in list(curdict[name].keys()):
                     curdict[name][key] = {}
                     self.elem.append(key)
 

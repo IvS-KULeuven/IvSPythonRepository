@@ -232,7 +232,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
         self.var_map = []
         self.vars = []
         self.vmin, self.vmax = [], []
-        for name, par in self.params.items():
+        for name, par in list(self.params.items()):
             if par.expr is not None:
                 par.ast = self.asteval.parse(par.expr)
                 check_ast_errors(self.asteval.error)
@@ -430,7 +430,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
         except (LinAlgError, ValueError):
             cov = None
 
-        for par in self.params.values():
+        for par in list(self.params.values()):
             par.stderr, par.correl = 0, None
 
         self.covar = cov
@@ -458,7 +458,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
                         par.correl[varn2] = (cov[ivar, jvar]/
                                         (par.stderr * sqrt(cov[jvar, jvar])))
 
-            for pname, par in self.params.items():
+            for pname, par in list(self.params.items()):
                 eval_stderr(par, uvars, self.var_map,
                             self.params, self.asteval)
 
@@ -466,7 +466,7 @@ or set  leastsq_kws['maxfev']  to increase this maximum."""
             for v, nam in zip(uvars, self.var_map):
                 self.asteval.symtable[nam] = v.nominal_value
 
-        for par in self.params.values():
+        for par in list(self.params.values()):
             if hasattr(par, 'ast'):
                 delattr(par, 'ast')
         return self.success
@@ -502,13 +502,13 @@ def minimize(fcn, params, method='leastsq', args=None, kws=None,
     else:
         # if scalar_minimize() is supported and method is in list, use it.
         if HAS_SCALAR_MIN:
-            for name, method in _scalar_methods.items():
+            for name, method in list(_scalar_methods.items()):
                 if meth.startswith(name):
                     fitfunction = fitter.scalar_minimize
                     kwargs = dict(method=method)
         # look for other built-in methods
         if fitfunction is None:
-            for name, method in _fitmethods.items():
+            for name, method in list(_fitmethods.items()):
                 if meth.startswith(name):
                     fitfunction = getattr(fitter, method)
     if fitfunction is not None:
@@ -541,7 +541,7 @@ def make_paras_and_func(fcn, x0, used_kwargs=None):
         p.add(args[0][i], val)
 
     if used_kwargs:
-        for arg, val in used_kwargs.items():
+        for arg, val in list(used_kwargs.items()):
             p.add(arg, val)
     else:
         used_kwargs = {}
@@ -550,7 +550,7 @@ def make_paras_and_func(fcn, x0, used_kwargs=None):
         "wrapped func"
         kwdict = {}
 
-        for arg in used_kwargs.keys():
+        for arg in list(used_kwargs.keys()):
             kwdict[arg] = para[arg].value
 
         vals = [para[i].value for i in p]

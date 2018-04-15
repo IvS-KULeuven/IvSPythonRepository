@@ -73,8 +73,8 @@ def parse(argv=None):
     return method_name, args, kwargs
 
 def test(*args,**kwargs):
-    print 'args',args
-    print 'kwargs',kwargs
+    print('args',args)
+    print('kwargs',kwargs)
 
 if __name__=="__main__":
     method,args,kwargs = parse()

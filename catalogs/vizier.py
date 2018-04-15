@@ -84,14 +84,14 @@ You can add catalogs on the fly via
 """
 #-- standard libraries
 import numpy as np
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import os
 import itertools
 import astropy.io.fits as pf
 import tarfile
 import shutil
-import ConfigParser
+import configparser
 from scipy.spatial import KDTree
 
 #-- IvS repository
@@ -109,11 +109,11 @@ logger.addHandler(loggers.NullHandler())
 basedir = os.path.dirname(os.path.abspath(__file__))
 
 #-- read in catalog information
-cat_info = ConfigParser.ConfigParser()
+cat_info = configparser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'vizier_cats_phot.cfg')))
 
-cat_info_fund = ConfigParser.ConfigParser()
+cat_info_fund = configparser.ConfigParser()
 cat_info_fund.optionxform = str # make sure the options are case sensitive
 cat_info_fund.readfp(open(os.path.join(basedir,'vizier_cats_fund.cfg')))
 
@@ -126,7 +126,7 @@ mirrors = {'cycle': itertools.cycle(['vizier.u-strasbg.fr',      # France
                                      'vizier.inasan.ru',         # Russia
                                      'vizier.iucaa.ernet.in',    # India
                                      'data.bao.ac.cn'])}        # China
-mirrors['current'] = mirrors['cycle'].next()
+mirrors['current'] = next(mirrors['cycle'])
 
 #{ Basic interfaces
 
@@ -134,7 +134,7 @@ def change_mirror():
     """
     Cycle through the mirrors of ViZieR.
     """
-    mirrors['current'] = mirrors['cycle'].next()
+    mirrors['current'] = next(mirrors['cycle'])
     logger.info("Changed cycle to {}".format(mirrors['current']))
 
 def search(name,filetype='tsv',filename=None,**kwargs):
@@ -220,7 +220,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     base_url = _get_URI(name=name,**kwargs)
 
     #-- prepare to open URI
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
@@ -234,7 +234,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
             results,units,comms = tsv2recarray(filen)
         #-- raise an exception when multiple catalogs were specified
         except ValueError:
-            raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name)
+            raise ValueError("failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name))
         url.close()
         logger.info('Querying ViZieR source %s (%d)'%(name,(results is not None and len(results) or 0)))
         return results,units,comms
@@ -262,7 +262,7 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     base_url = _get_URI(ID=ID,filetype='fits',**kwargs)
 
     #-- download the file
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
 
     #-- if it is a FITS file, we extract all catalog IDs. We download the
@@ -280,11 +280,11 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
             mycats[name] = title
             logger.info('%25s %s'%(name,title))
 
-            photometry = [col for col in units.keys() if 'mag' in units[col]]
-            rv = [col for col in units.keys() if 'rv' in col.lower()]
-            vsini = [col for col in units.keys() if 'sin' in col.lower()]
-            sptype = [col for col in units.keys() if col.lower()=='sp' or col.lower()=='sptype']
-            fund = [col for col in units.keys() if 'logg' in col.lower() or 'teff' in col.lower()]
+            photometry = [col for col in list(units.keys()) if 'mag' in units[col]]
+            rv = [col for col in list(units.keys()) if 'rv' in col.lower()]
+            vsini = [col for col in list(units.keys()) if 'sin' in col.lower()]
+            sptype = [col for col in list(units.keys()) if col.lower()=='sp' or col.lower()=='sptype']
+            fund = [col for col in list(units.keys()) if 'logg' in col.lower() or 'teff' in col.lower()]
 
         ff.close()
         url.close()
@@ -369,14 +369,14 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
         if i[0]   in units1:   ff.write(units1[i[0]])
         elif i[0] in units2_:  ff.write(units2_[i[0]])
         else:
-            raise ValueError,'this cannot be'
+            raise ValueError('this cannot be')
         if nr<(len(dtypes)-1): ff.write('\t')
 
     ff.write('\n')
     ff.write('\t'.join(['---']*len(dtypes)))
     ff.write('\n')
 
-    for row1,row2 in itertools.izip(cat1,cat2):
+    for row1,row2 in zip(cat1,cat2):
         ff.write('\t'.join([str(x) for x in row1])+'\t')
         ff.write('\t'.join([str(x) for x in row2])+'\n')
 
@@ -1125,7 +1125,7 @@ def catalog2bibcode(catalog):
     N = max(2,len(catalog)-1)
     catalog = "/".join(catalog[:N])
     base_url = "http://cdsarc.u-strasbg.fr/viz-bin/Cat?{0}".format(catalog)
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url)
 
     code = None
@@ -1148,7 +1148,7 @@ def bibcode2bibtex(bibcode):
     @rtype: str
     """
     base_url = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode={0}&data_type=BIBTEX&db_key=AST&nocookieset=1".format(bibcode)
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url)
 
     bibtex = []
@@ -1230,7 +1230,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     if out_all: base_url += '&-out.all'
     if out_max: base_url += '&-out.max=%s'%(out_max)
     if radius:  base_url += '&-c.rs=%s'%(radius)
-    if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.quote(ID))
+    if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.parse.quote(ID))
     if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
     logger.debug(base_url)
     #print base_url

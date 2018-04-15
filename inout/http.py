@@ -1,7 +1,7 @@
 """
 Read or download files from the internet.
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 #@decorators.retry_http(3)
 def download(link,filename=None):
@@ -22,7 +22,7 @@ def download(link,filename=None):
     @return: output filename(, url object)
     @rtype: string(, FancyURLopener)
     """
-    url = urllib.FancyURLopener()
+    url = urllib.request.FancyURLopener()
     myfile,msg = url.retrieve(link,filename=filename)
     if filename is not None:
         url.close()

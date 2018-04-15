@@ -233,7 +233,7 @@ if __name__=="__main__":
         help(globals()[method])
     else:
         master = globals()[method](*args,**kwargs)
-        print photometry2str(master)
+        print(photometry2str(master))
 
 
 

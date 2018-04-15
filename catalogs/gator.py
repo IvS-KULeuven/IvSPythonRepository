@@ -3,9 +3,9 @@
 Interface to the GATOR search engine
 """
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
-import ConfigParser
+import configparser
 import numpy as np
 
 from ivs.aux import loggers
@@ -21,7 +21,7 @@ logger.addHandler(loggers.NullHandler())
 basedir = os.path.dirname(os.path.abspath(__file__))
 
 #-- read in catalog information
-cat_info = ConfigParser.ConfigParser()
+cat_info = configparser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'gator_cats_phot.cfg')))
 
@@ -73,7 +73,7 @@ def search(catalog,**kwargs):
     #-- gradually build URI
     base_url = _get_URI(catalog,**kwargs)
     #-- prepare to open URI
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
@@ -87,7 +87,7 @@ def search(catalog,**kwargs):
             results,units,comms = txt2recarray(filen)
         #-- raise an exception when multiple catalogs were specified
         except ValueError:
-            raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(catalog)
+            raise ValueError("failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(catalog))
         url.close()
         logger.info('Querying GATOR source %s (%d)'%(catalog,(results is not None and len(results) or 0)))
         return results,units,comms
@@ -102,7 +102,7 @@ def list_catalogs():
     @return: list of gator catalogs and discriptions
     @rtype: list of string tuples
     """
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve('http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-scan?mode=ascii')
     results,units,comms = txt2recarray(filen)
     cats = []
@@ -437,7 +437,7 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
 #}
 
 if __name__=="__main__":
-    import vizier
+    from . import vizier
     logger = loggers.get_basic_logger("")
     #-- example 1
     #master = get_photometry(ra=71.239527,dec=-70.589427,to_units='erg/s/cm2/AA',extra_fields=[],radius=1.)
@@ -460,7 +460,7 @@ if __name__=="__main__":
     master = vizier.get_photometry(ID='RR Aql',to_units='erg/s/cm2/AA',extra_fields=[],radius=30.,master=master)
 
 
-    print master
+    print(master)
 
     from pylab import *
     figure()

@@ -46,7 +46,7 @@ def standardization(X):
     _STDs = std(X, 0)
 
     for value in _STDs:
-        if value == 0: raise ZeroDivisionError, 'division by zero, cannot proceed'
+        if value == 0: raise ZeroDivisionError('division by zero, cannot proceed')
 
     for row in range(rows):
         new_X[row, 0:cols] = X[row, 0:cols] / _STDs[0:cols]
@@ -69,7 +69,7 @@ def get_column(E):
         t = E[:,col_ind] # extract a column
         if (vec_inner(t) > 0):
             return t
-    raise ValueError, 'all column vectors in E are zero vectors' # error: sum of matrix is 0
+    raise ValueError('all column vectors in E are zero vectors') # error: sum of matrix is 0
 
 
 def get_column_mat(E):
@@ -88,7 +88,7 @@ def get_column_mat(E):
         eig = transpose(t)*t
         if (eig > 0):
             return t
-    raise ValueError, 'all column vectors in E are zero vectors' # error: sum of matrix is 0
+    raise ValueError('all column vectors in E are zero vectors') # error: sum of matrix is 0
 
 def vec_inner(v):
     """
@@ -116,7 +116,7 @@ def mat_prod(A, x):
     #for i in range(m):
     #    b[i] = sum(A[i,:]*x)
 
-    return array(map(lambda a: sum(a[:]*x), A))
+    return array([sum(a[:]*x) for a in A])
 
 def remove_tp_prod(E, t, p):
     """

@@ -217,7 +217,7 @@ from scipy.spatial import KDTree
 try:
     from scipy.spatial import Delaunay
 except ImportError:
-    print "import Error Delaunay"
+    print("import Error Delaunay")
 import time
 from ivs.timeseries import keplerorbit
 from ivs.units import constants
@@ -378,8 +378,8 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
     reflection_iter = 0
     while (reflection_iter<max_iter):
         R1,R2 = np.ones(len(primary['teff'])/4),np.ones(len(primary['teff'])/4)
-        for i in xrange(len(R1)):
-            if i%100==0: print i,len(R1)
+        for i in range(len(R1)):
+            if i%100==0: print(i,len(R1))
             #-- radiation from secondary onto primary
             s12 = np.array([ primary['x'][i]-secondary['x'],
                              primary['y'][i]-secondary['y'],
@@ -436,20 +436,20 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
         R2 = R2.ravel()
         
         if (R1[-np.isnan(R1)]>1.05).any():
-            print "Significant reflection effect on primary (max %.3f%%)"%((R1.max()**0.25-1)*100)
+            print("Significant reflection effect on primary (max %.3f%%)"%((R1.max()**0.25-1)*100))
             primary['teff']*= R1**0.25
             primary['flux'] = local_intensity(primary['teff'],primary['grav'],np.ones_like(primary['teff']),photbands=['OPEN.BOL'])
             break_out = False
         else:
-            print 'Maximum reflection effect on primary: %.3f%%'%((R1.max()**0.25-1)*100)
+            print('Maximum reflection effect on primary: %.3f%%'%((R1.max()**0.25-1)*100))
         
         if (R2[-np.isnan(R2)]>1.05).any():
-            print "Significant reflection effect on secondary (max %.3g%%)"%((R2.max()**0.25-1)*100)
+            print("Significant reflection effect on secondary (max %.3g%%)"%((R2.max()**0.25-1)*100))
             secondary['teff']*= R2**0.25
             secondary['flux'] = local_intensity(secondary['teff'],secondary['grav'],np.ones_like(secondary['teff']),photbands=['OPEN.BOL'])
             break_out = False
         else:
-            print 'Maximum reflection effect on secondary: %.3g%%'%((R1.max()**0.25-1)*100)
+            print('Maximum reflection effect on secondary: %.3g%%'%((R1.max()**0.25-1)*100))
         
         if break_out:
             break
@@ -508,9 +508,9 @@ def spectral_synthesis(*stars,**kwargs):
     get_spectrum = spectra_model.get_table
     for mystar in stars:
         loggs = np.log10(np.sqrt(mystar['gravx']**2 + mystar['gravy']**2 + mystar['gravz']**2)*100)
-        iterator = zip(mystar['teff'],loggs,mystar['vx']/1000.)
-        print "Temperature range:",mystar['teff'].min(),mystar['teff'].max()
-        print "logg range:",loggs.min(),loggs.max()
+        iterator = list(zip(mystar['teff'],loggs,mystar['vx']/1000.))
+        print("Temperature range:",mystar['teff'].min(),mystar['teff'].max())
+        print("logg range:",loggs.min(),loggs.max())
         #-- retrieve the synthetic spectra for all surface elements, interpolated
         #   on the supplied wavelength grid, and taking care of radial velocity shifts
         spectra_elements = np.array([get_spectrum(teff=iteff,logg=ilogg,vrad=ivrad,wave=wave)[1] for iteff,ilogg,ivrad in iterator])

@@ -34,7 +34,7 @@ def getP7Data(ID=None,code=None,include_nans=True):
     if ID is not None:
         if not 'HD' in ID or not 'SAO' in ID or not 'HIC' in ID:
             info = sesame.search(ID)
-            print info
+            print(info)
             if 'alias' in info:
                 for alias in info['alias']:
                     if 'HD' in alias:

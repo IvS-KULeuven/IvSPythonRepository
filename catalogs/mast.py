@@ -6,11 +6,11 @@ Because the MAST archive is very inhomegeneous, this module is very limited in
 use, and sometimes confusing. It is probably best to check the data or retrieve
 the data manually from the archive.
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import socket
 import logging
 import os
-import ConfigParser
+import configparser
 
 import numpy as np
 import astropy.io.fits as pf
@@ -31,7 +31,7 @@ logger.addHandler(loggers.NullHandler())
 basedir = os.path.dirname(os.path.abspath(__file__))
 
 #-- read in catalog information
-cat_info = ConfigParser.ConfigParser()
+cat_info = configparser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'mast_cats_phot.cfg')))
 
@@ -118,7 +118,7 @@ def galex(**kwargs):
     #radius = radius/60.
     base_url = 'http://galex.stsci.edu/gxws/conesearch/conesearch.asmx/ConeSearchToXml?ra={0:f}&dec={1:f}&sr={2:f}&verb=1'.format(ra,dec,radius)
     #base_url = 'http://galex.stsci.edu/GR4/?page=searchresults&RA={ra:f}&DEC={dec:f}&query=no'.format(ra=ra,dec=dec)
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=None)
     fuv_flux,e_fuv_flux = None,None
     columns = ['_r','ra','dec','fuv_flux','fuv_fluxerr','nuv_flux','nuv_fluxerr']
@@ -196,7 +196,7 @@ def search(catalog,**kwargs):
     base_url = _get_URI(catalog,**kwargs)
     #-- prepare to open URI
 
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
@@ -459,7 +459,7 @@ def get_dss_image(ID,ra=None,dec=None,width=5,height=5):
     if ra is None or dec is None:
         info = sesame.search(ID)
         ra,dec = info['jradeg'],info['jdedeg']
-    url  = urllib.URLopener()
+    url  = urllib.request.URLopener()
     myurl = "http://archive.stsci.edu/cgi-bin/dss_search?ra=%s&dec=%s&equinox=J2000&height=%s&generation=%s&width=%s&format=FITS"%(ra,dec,height,'2i',width)
     out = url.retrieve(myurl)
     data1 = pf.getdata(out[0])
@@ -516,13 +516,13 @@ def get_FUSE_spectra(ID=None,directory=None,cat_info=False,select=['ano']):
 
 if __name__=="__main__":
     #get_FUSE_spectrum(ID='hd163296')
-    print get_FUSE_spectrum(ID='hd163296').dtype.names
+    print(get_FUSE_spectrum(ID='hd163296').dtype.names)
 
     raise SystemExit
     mission = 'fuse'
     base_url = _get_URI(mission,ID='hd163296')
-    print base_url
-    url = urllib.URLopener()
+    print(base_url)
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename='%s.test'%(mission))
     url.close()
     raise SystemExit
@@ -557,7 +557,7 @@ if __name__=="__main__":
     out = search('kepler/kgmatch',ID='3749404',filename='kgmatch.test',radius=1.)
     #results,units,comms = search('kepler/kgmatch',ID='3749404')
     master = mast2phot('kepler/kgmatch',results,units,master=None,extra_fields=None)
-    print master
+    print(master)
     #data,units,comms = search('spectra',ID='hd46149',filename='ssap.test')
     sys.exit()
 
@@ -565,11 +565,11 @@ if __name__=="__main__":
         base_url = _get_URI(mission,ID='hd46149')
         #ff = urllib.urlopen(base_url)
         try:
-            url = urllib.URLopener()
+            url = urllib.request.URLopener()
             filen,msg = url.retrieve(base_url,filename='%s.test'%(mission))
             url.close()
         except IOError:
-            print 'failed'
+            print('failed')
             continue
 
 

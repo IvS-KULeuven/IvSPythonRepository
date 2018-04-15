@@ -1469,6 +1469,6 @@ def findext_schlegel(ll, bb, distance = None, redlaw='cardelli1989', Rv=3.1, nor
 #}
 
 if __name__ == "__main__":
-    print findext_marshall(10.2,9.)
-    print findext_marshall(10.2,9.,norm='Ak')
+    print(findext_marshall(10.2,9.))
+    print(findext_marshall(10.2,9.,norm='Ak'))
 

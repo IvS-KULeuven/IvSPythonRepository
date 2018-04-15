@@ -685,12 +685,12 @@ if __name__=="__main__":
                           window=21, offset='std', base='average', full_output=True)
     t2 = time.time() - t2
 
-    print 'reading ', t1
-    print 'processing ', t2
+    print('reading ', t1)
+    print('processing ', t2)
 
     wrej = wtotal[rejected[1]]
     frej = ftotal[rejected[1]]
-    print len(wrej)
+    print(len(wrej))
 
 
     ftotal = ftotal[(wtotal>5000) & (wtotal<7000)]

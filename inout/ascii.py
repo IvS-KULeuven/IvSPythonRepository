@@ -157,7 +157,7 @@ def read2recarray(filename,**kwargs):
     elif isinstance(splitchar,list):
         types,lengths = fws2info(splitchar)
         dtype = []
-        names = range(300)
+        names = list(range(300))
         for i,(fmt,lng) in enumerate(zip(types,lengths)):
             if fmt.__name__=='str':
                 dtype.append((str(names[i]),(fmt,lng)))
@@ -449,7 +449,7 @@ def read_photrot(infile,teff=None,logg=None):
         if logg is not None:
             if not ((logg[0]-logg[1]) <= star_info['logg'] <= (logg[0]+logg[1])):
                 valid_funds = False
-        print star_info['teff'],teff,valid_funds
+        print(star_info['teff'],teff,valid_funds)
         #loop over all blocks and store them
         pos = 0
         fail = False

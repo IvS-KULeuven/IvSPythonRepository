@@ -76,7 +76,7 @@ def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
 
   all_lines = []
   for i in range(len(elem)):
-    print elem[i]
+    print(elem[i])
     filename = config.get_datafile('VALD_individual','VALD_' + elem[i] + '.lijnen')
     if not os.path.isfile(filename):
       logger.info('No data for element ' + str(elem[i]))

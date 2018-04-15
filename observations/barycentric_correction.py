@@ -849,7 +849,7 @@ def precess(ra0, dec0, equinox1, equinox2, doprint=False, fk4=False, radian=Fals
     ra  = ra + (ra < 0.) * 2.0e0 * np.pi
   
   if doprint:   
-    print 'Equinox (%.2f): %f,%f' % (equinox2, ra, dec)
+    print('Equinox (%.2f): %f,%f' % (equinox2, ra, dec))
   if scal:
     ra, dec = ra[0], dec[0]
   return ra, dec

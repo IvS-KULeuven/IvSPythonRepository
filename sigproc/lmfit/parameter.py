@@ -6,7 +6,7 @@ from numpy import arcsin, cos, sin, sqrt, inf, nan, random
 try:
     from collections import OrderedDict
 except ImportError:
-    from ordereddict import OrderedDict
+    from .ordereddict import OrderedDict
 
 import re
 from . import uncertainties
@@ -210,7 +210,7 @@ class Parameter(object):
         "positive"
         return +self._getval()
 
-    def __nonzero__(self):
+    def __bool__(self):
         "not zero"
         return self._getval() != 0
 
@@ -220,7 +220,7 @@ class Parameter(object):
 
     def __long__(self):
         "long"
-        return long(self._getval())
+        return int(self._getval())
 
     def __float__(self):
         "float"

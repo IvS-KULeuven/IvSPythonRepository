@@ -113,7 +113,7 @@ class Ephemeris(object):
                 jpos = sesame.search(objectname,db='N')['jpos']
             except KeyError:
                 logger.warning('Object %s not found in NED either.'%(objectname))
-                raise IOError, 'No coordinates retrieved for object %s.'%(objectname)
+                raise IOError('No coordinates retrieved for object %s.'%(objectname))
         myobject = ephem.readdb("%s,f|M|A0,%s,8.0,2000"%(objectname,','.join(jpos.split())))
         return myobject
 

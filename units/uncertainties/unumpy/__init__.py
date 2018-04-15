@@ -68,8 +68,8 @@ This software is released under a dual license.  (1) The BSD license.
 author."""
 
 # Local modules:
-import core
-import ulinalg  # Local sub-module
+from . import core
+from . import ulinalg  # Local sub-module
 
 #from ivs.units.uncertainties import __author__
 

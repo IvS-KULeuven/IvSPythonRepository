@@ -15,9 +15,9 @@ from scipy.spatial import Delaunay
 def legendre_(l,m,x):
     """
     Legendre polynomial.
-    
+
     Check equation (3) from Townsend, 2002:
-    
+
     >>> ls,x = [0,1,2,3,4,5],cos(linspace(0,pi,100))
     >>> check = 0
     >>> for l in ls:
@@ -41,10 +41,10 @@ def legendre_(l,m,x):
 def sph_harm(theta,phi,l=2,m=1):
     """
     Spherical harmonic according to Townsend, 2002.
-    
+
     This function is memoized: once a spherical harmonic is computed, the
     result is stored in memory
-    
+
     >>> theta,phi = mgrid[0:pi:20j,0:2*pi:40j]
     >>> Ylm20 = sph_harm(theta,phi,2,0)
     >>> Ylm21 = sph_harm(theta,phi,2,1)
@@ -56,7 +56,7 @@ def sph_harm(theta,phi,l=2,m=1):
     >>> p = subplot(412);p = title('l=2,m=1');p = imshow(Ylm21.real,cmap=cm.RdBu)
     >>> p = subplot(413);p = title('l=2,m=2');p = imshow(Ylm22.real,cmap=cm.RdBu)
     >>> p = subplot(414);p = title('l=2,m=-2');p = imshow(Ylm2_2.real,cmap=cm.RdBu)
-    
+
     """
     factor = (-1)**m * sqrt( (2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m))
     Plm = legendre_(l,m,cos(theta))
@@ -65,13 +65,13 @@ def sph_harm(theta,phi,l=2,m=1):
 def dsph_harm_dtheta(theta,phi,l=2,m=1):
     """
     Derivative of spherical harmonic wrt colatitude.
-    
+
     Using Y_l^m(theta,phi).
-    
+
     Equation::
-        
+
         sin(theta)*dY/dtheta = (l*J_{l+1}^m * Y_{l+1}^m - (l+1)*J_l^m * Y_{l-1,m})
-        
+
     E.g.: Phd thesis of Joris De Ridder
     """
     if abs(m)>=l:
@@ -86,15 +86,15 @@ def dsph_harm_dtheta(theta,phi,l=2,m=1):
 def dsph_harm_dphi(theta,phi,l=2,m=1):
     """
     Derivative of spherical harmonic wrt longitude.
-    
+
     Using Y_l^m(theta,phi).
-    
+
     Equation::
-        
+
         dY/dphi = i*m*Y
     """
     return 1j*m*sph_harm(theta,phi,l,m)
-    
+
 
 def norm_J(l,m):
     """
@@ -117,7 +117,7 @@ def norm_atlm1(l,m,Omega,k):
     Omega is actually spin parameter (Omega_rot/omega_freq)
     """
     return Omega * (l+abs(m))/l * 2./(2*l+1) * (1 + (l+1)*k)
-    
+
 #}
 
 #{ Displacement fields
@@ -125,7 +125,7 @@ def norm_atlm1(l,m,Omega,k):
 def radial(theta,phi,l,m,t):
     """
     Radial displacement, see Zima 2006.
-    
+
     t in phase units
     """
     return sph_harm(theta,phi,l,m) * exp(1j*t)
@@ -150,7 +150,7 @@ def surface(theta,phi,l,m,t,Omega=0.1,k=1.,asl=0.2,radius=1.):
     else:
         ksi_theta = np.zeros_like(theta)
         ksi_phi = np.zeros_like(phi)
-    
+
     return (radius+ksi_r.real),\
            (theta + ksi_theta.real),\
            (phi + ksi_phi.real)
@@ -170,7 +170,7 @@ def observables(theta,phi,teff,logg,l,m,t,Omega=0.1,k=1.,asl=0.2,radius=1.,delta
            (phi + ksi_phi.real),\
            (teff + (delta_T*rad_part*teff).real),\
            np.log10(gravity+(delta_g*rad_part*gravity).real)+2
-           
+
 #}
 
 if __name__=="__main__":
@@ -187,7 +187,7 @@ if __name__=="__main__":
     #theta,phi = theta[keep],phi[keep]
     l,m = 2,2
     asl = 0.01
-    
+
     for k in [0,1.,2.]:
         for l in range(1,5):
             for m in range(0,l+1,1):
@@ -199,21 +199,21 @@ if __name__=="__main__":
                     asl = 0.01
                 old_center=None
                 for i,t in enumerate(np.linspace(0,2*pi,100)):
-                    print k,l,m,i
+                    print(k,l,m,i)
                     r,th,ph = surface(theta,phi,l,m,t,asl=asl,k=k)
                     center,size,normal = local.surface_normals(r,ph,th,grid,gtype='triangular')
-                    
+
                     if i==0:
                         colors = r
                         r_c,phi_c,theta_c = vectors.cart2spher_coord(*center.T)
                         colors_ = r_c
-                    
-                    
+
+
                     mlab.clf()
                     mlab.points3d(center.T[0],center.T[1],center.T[2],colors_,scale_factor=0.05,scale_mode='none',colormap='RdBu',vmin=colors_.min(),vmax=colors_.max())
-                    #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')                    
+                    #mlab.quiver3d(center.T[0],center.T[1],center.T[2],normal.T[0],normal.T[1],normal.T[2],colormap='spectral',scale_mode='none')
                     mlab.colorbar()
-                    
+
                     if i>=1:
                         vx,vy,vz = center.T[0]-old_center.T[0],\
                                    center.T[1]-old_center.T[1],\
@@ -227,5 +227,3 @@ if __name__=="__main__":
                     mlab.savefig('pulsation_lm%d%d_k%03d_%03d.png'%(l,m,k,i))
                 mlab.close()
                 multimedia.make_movie('pulsation_lm%d%d_k%03d_*.png'%(l,m,k),output='pulsation_lm%d%d_k%03d.avi'%(l,m,k))
-                
-        

@@ -310,7 +310,7 @@ from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.inout import fits
 from ivs.sigproc import interpol
-import reddening
+from . import reddening
 import getpass
 import shutil
 
@@ -1053,7 +1053,7 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     flux = np.array(flux,float)
     #-- redden if necessary
     if ebv is not None and ebv>0:
-        if 'wave' in kwargs.keys():
+        if 'wave' in list(kwargs.keys()):
             removed = kwargs.pop('wave')
         flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
     if flux_units!='erg/s/cm2/AA/sr':
@@ -1170,7 +1170,7 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
             #-- if metallicity needs to be interpolated
             if not (z in g_z):
                 fluxes = np.zeros((2,2,2,2,len(photbands)+1))
-                for i,j,k in itertools.product(xrange(2),xrange(2),xrange(2)):
+                for i,j,k in itertools.product(range(2),range(2),range(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
                                                     int(round(teffs_subgrid[j])),\
                                                     int(round(loggs_subgrid[k]*100)),\
@@ -1184,7 +1184,7 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
             #-- if only teff,logg and ebv need to be interpolated (faster)
             else:
                 fluxes = np.zeros((2,2,2,len(photbands)+1))
-                for i,j in itertools.product(xrange(2),xrange(2)):
+                for i,j in itertools.product(range(2),range(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(teffs_subgrid[i])),\
                                                     int(round(loggs_subgrid[j]*100)),\
@@ -1323,7 +1323,7 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
     """
     #-- Find the parameters provided and store them separately.
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
@@ -1526,7 +1526,7 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
     """
     #-- Find the parameters provided and store them separately.
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rv|vrad|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rv|vrad|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
@@ -1607,7 +1607,7 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
     @rtype: (ndarray,ndarray)
     """
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
@@ -1936,7 +1936,7 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
         fits_file.close()
 
     if calfile is None:
-        raise ValueError, 'Calibrator %s (version=%s) not found'%(name,version)
+        raise ValueError('Calibrator %s (version=%s) not found'%(name,version))
 
     if flux_units is not None:
         flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
@@ -2223,7 +2223,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
             elif filter_info['type'][i]=='CCD':
                 energys[i] = np.trapz(flux_f*transr/freq_,x=wave_)/np.trapz(transr/freq_,x=wave_)
         else:
-            raise ValueError,'units %s not understood'%(units)
+            raise ValueError('units %s not understood'%(units))
 
     #-- that's it!
     return energys

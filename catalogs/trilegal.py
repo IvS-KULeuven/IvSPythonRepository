@@ -6,7 +6,7 @@ Author: Joris De Ridder
 
 
 from time import sleep, gmtime, strftime
-from urllib import urlretrieve
+from urllib.request import urlretrieve
 from mechanize import Browser, urlopen
 
 def trilegal(outputFileName,
@@ -88,14 +88,14 @@ def trilegal(outputFileName,
     # Get the web form
 
     timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print("{0}: Opening TRILEGAL web interface".format(timestamp))
+    print(("{0}: Opening TRILEGAL web interface".format(timestamp)))
 
     myBrowser = Browser()
     try:
         myBrowser.open(trilegalURL)
     except:
         timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-        print("{0}: Unable to open the TRILEGAL website".format(timestamp))
+        print(("{0}: Unable to open the TRILEGAL website".format(timestamp)))
         return
 
     myBrowser.select_form(nr=0)    # there is only one form...
@@ -108,7 +108,7 @@ def trilegal(outputFileName,
     # >>> print forms[0]
 
     timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print("{0}: Filling TRILEGAL web form".format(timestamp))
+    print(("{0}: Filling TRILEGAL web form".format(timestamp)))
 
     if coordinateType == "galactic":
         myBrowser["gal_coord"] = ["1"]
@@ -153,7 +153,7 @@ def trilegal(outputFileName,
     # Submit the completed form
 
     timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print("{0}: Submitting completed TRILEGAL web form".format(timestamp))
+    print(("{0}: Submitting completed TRILEGAL web form".format(timestamp)))
 
     nextWebPage = myBrowser.submit()
 
@@ -161,7 +161,7 @@ def trilegal(outputFileName,
     # button until the webpage says that the computations are finished.
 
     timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print ("{0}: Waiting until TRILEGAL computations are finished".format(timestamp))
+    print(("{0}: Waiting until TRILEGAL computations are finished".format(timestamp)))
 
     myBrowser.select_form(nr=0)                   # one form on the "be patient" web page
     message = "Your job was finished"
@@ -173,9 +173,9 @@ def trilegal(outputFileName,
     # Get the url of the outputfile, and retrieve it. This can take a while.
 
     timestamp = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print("{0}: Retrieving TRILEGAL output file".format(timestamp))
+    print(("{0}: Retrieving TRILEGAL output file".format(timestamp)))
 
-    outputLink = myBrowser.links(url_regex="lgirardi/tmp/output").next()
+    outputLink = next(myBrowser.links(url_regex="lgirardi/tmp/output"))
     urlretrieve(outputLink.absolute_url, outputFileName)
     myBrowser.close()
 
