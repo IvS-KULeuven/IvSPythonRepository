@@ -33,7 +33,7 @@ Examples:
 
   # Access to the nominal value, and to the uncertainty:
   square = x**2  # Square
-  print square  # Prints "0.04+/-0.004"  
+  print square  # Prints "0.04+/-0.004"
   print square.nominal_value  # Prints "0.04"
   print square.std_dev()  # Prints "0.004..."
 
@@ -43,7 +43,7 @@ Examples:
   u = ufloat((1, 0.05), "u variable")  # Tag
   v = ufloat((10, 0.1), "v variable")
   sum_value = u+v
-  
+
   u.set_std_dev(0.1)  # Standard deviations can be updated on the fly
   print sum_value - u - v  # Prints "0.0" (exact result)
 
@@ -95,7 +95,7 @@ etc.) can handle numbers with uncertainties instead of floats through
 the provided wrap() wrapper:
 
   import uncertainties
-    
+
   # wrapped_f is a version of f that can take arguments with
   # uncertainties, even if f only takes floats:
   wrapped_f = uncertainties.wrap(f)
@@ -252,10 +252,10 @@ __all__ = [
     # Uniform access to nominal values and standard deviations:
     'nominal_value',
     'std_dev',
-    
+
     # Utility functions (more are exported if NumPy is present):
     'covariance_matrix',
-    
+
     # Class for testing whether an object is a number with
     # uncertainty.  Not usually created by users (except through the
     # Variable subclass), but possibly manipulated by external code
@@ -346,7 +346,7 @@ def partial_derivative(f, param_num):
 
         shifted_args[param_num] += step
         shifted_f_plus = f(*shifted_args)
-        
+
         shifted_args[param_num] -= 2*step  # Optimization: only 1 list copy
         shifted_f_minus = f(*shifted_args)
 
@@ -372,7 +372,7 @@ class NumericalDerivatives(object):
         Returns the n-th numerical derivative of the function.
         """
         return partial_derivative(self._function, n)
-  
+
 def wrap(f, derivatives_funcs=None):
     """
     Wraps function f so that, when applied to numbers with
@@ -425,12 +425,12 @@ def wrap(f, derivatives_funcs=None):
     (AffineScalarFunc object), if its result depends on variables
     (Variable objects).  Otherwise, returns a simple constant (when
     applied to constant arguments).
-    
+
     Warning: arguments of the function that are not AffineScalarFunc
     objects must not depend on uncertainties.Variable objects in any
     way.  Otherwise, the dependence of the result in
     uncertainties.Variable objects will be incorrect.
-    
+
     Original documentation:
     %s""" % (f.__name__, f.__doc__))
     def f_with_affine_output(*args):
@@ -565,7 +565,7 @@ def _force_aff_func_args(func):
         Returns %s(self, to_affine_scalar(y)) if y can be upcast
         through to_affine_scalar.  Otherwise returns NotImplemented.
         """ % func.__name__
-        
+
         try:
             y_with_uncert = to_affine_scalar(y)
         except NotUpcast:
@@ -663,7 +663,7 @@ class AffineScalarFunc(object):
     'error' on the function, from the uncertainties on its variables.
 
     Main attributes and methods:
-    
+
     - nominal_value, std_dev(): value at the origin / nominal value,
       and standard deviation.
 
@@ -674,7 +674,7 @@ class AffineScalarFunc(object):
       with respect to Variable x.  This attribute is a dictionary
       whose keys are the Variable objects on which the function
       depends.
-      
+
       All the Variable objects on which the function depends are in
       'derivatives'.
 
@@ -684,7 +684,7 @@ class AffineScalarFunc(object):
 
     # To save memory in large arrays:
     __slots__ = ('_nominal_value', 'derivatives')
-    
+
     #! The code could be modify in order to accommodate for non-float
     # nominal values.  This could for instance be done through
     # the operator module: instead of delegating operations to
@@ -703,7 +703,7 @@ class AffineScalarFunc(object):
         being defined depends to the value of the derivative with
         respect to that variable, taken at the nominal value of all
         variables.
- 
+
         Warning: the above constraint is not checked, and the user is
         responsible for complying with it.
         """
@@ -725,10 +725,10 @@ class AffineScalarFunc(object):
     def nominal_value(self):
         "Nominal value of the random number."
         return self._nominal_value
-    
+
     ############################################################
 
-        
+
     ### Operators: operators applied to AffineScalarFunc and/or
     ### float-like objects only are supported.  This is why methods
     ### from float are used for implementing these operators.
@@ -736,7 +736,7 @@ class AffineScalarFunc(object):
     # Operators with no reflection:
 
     ########################################
-        
+
     # __nonzero__() is supposed to return a boolean value (it is used
     # by bool()).  It is for instance used for converting the result
     # of comparison operators to a boolean, in sorted().  If we want
@@ -744,7 +744,7 @@ class AffineScalarFunc(object):
     # return a AffineScalarFunc object.  Since boolean results (such
     # as the result of bool()) don't have a very meaningful
     # uncertainty unless it is zero, this behavior is fine.
-    
+
     def __bool__(self):
         """
         Equivalent to self != 0.
@@ -757,11 +757,9 @@ class AffineScalarFunc(object):
         # vector of that space):
         return self != 0.  # Uses the AffineScalarFunc.__ne__ function
 
-    # Compatibility with Python 3:
-    __bool__ = __nonzero__
-    
+
     ########################################
-    
+
     ## Logical operators: warning: the resulting value cannot always
     ## be differentiated.
 
@@ -784,13 +782,13 @@ class AffineScalarFunc(object):
     # function with derivatives, as these derivatives are either 0 or
     # don't exist (i.e., the user should probably not rely on
     # derivatives for his code).
-    
+
     # __eq__ is used in "if data in [None, ()]", for instance.  It is
     # therefore important to be able to handle this case too, which is
     # taken care of when _force_aff_func_args(_eq_on_aff_funcs)
     # returns NotImplemented.
     __eq__ = _force_aff_func_args(_eq_on_aff_funcs)
-    
+
     __ne__ = _force_aff_func_args(_ne_on_aff_funcs)
     __gt__ = _force_aff_func_args(_gt_on_aff_funcs)
 
@@ -805,7 +803,7 @@ class AffineScalarFunc(object):
     ########################################
 
     # Uncertainties handling:
-    
+
     def error_components(self):
         """
         Individual components of the standard deviation of the affine
@@ -816,10 +814,10 @@ class AffineScalarFunc(object):
         object take scalar values (and are not a tuple, like what
         math.frexp() returns, for instance).
         """
-    
+
         # Calculation of the variance:
         error_components = {}
-        for (variable, derivative) in self.derivatives.items():            
+        for (variable, derivative) in self.derivatives.items():
             # Individual standard error due to variable:
             error_components[variable] = abs(derivative*variable._std_dev)
 
@@ -868,7 +866,7 @@ class AffineScalarFunc(object):
 
     def __repr__(self):
         return self._general_representation(repr)
-                    
+
     def __str__(self):
         return self._general_representation(str)
 
@@ -914,7 +912,7 @@ class AffineScalarFunc(object):
     def __setstate__(self, data_dict):
         """
         Hook for the pickle module.
-        """        
+        """
         for (name, value) in data_dict.items():
             setattr(self, name, value)
 
@@ -927,7 +925,7 @@ def get_ops_with_reflection():
     Returns operators with a reflection, along with their derivatives
     (for float operands).
     """
-    
+
     # Operators with a reflection:
 
     # We do not include divmod().  This operator could be included, by
@@ -944,14 +942,13 @@ def get_ops_with_reflection():
 
     # String expressions are used, so that reversed operators are easy
     # to code, and execute relatively efficiently:
-    
+
     derivatives_list = {
         'add': ("1.", "1."),
         # 'div' is the '/' operator when __future__.division is not in
         # effect.  Since '/' is applied to
         # AffineScalarFunc._nominal_value numbers, it is applied on
         # floats, and is therefore the "usual" mathematical division.
-        'div': ("1/y", "-x/y**2"),
         'floordiv': ("0.", "0."),  # Non exact: there is a discontinuities
         # The derivative wrt the 2nd arguments is something like (..., x//y),
         # but it is calculated numerically, for convenience:
@@ -983,7 +980,7 @@ def add_operators_to_AffineScalarFunc():
     """
     Adds many operators (__add__, etc.) to the AffineScalarFunc class.
     """
-    
+
     ########################################
 
     #! Derivatives are set to return floats.  For one thing,
@@ -1005,7 +1002,7 @@ def add_operators_to_AffineScalarFunc():
 
     for (op, derivative) in \
           simple_numerical_operators_derivatives.items():
-        
+
         attribute_name = "__%s__" % op
         # float objects don't exactly have the same attributes between
         # different versions of Python (for instance, __trunc__ was
@@ -1015,7 +1012,7 @@ def add_operators_to_AffineScalarFunc():
                     wrap(getattr(float, attribute_name),
                                  [derivative]))
             _modified_operators.append(op)
-            
+
     ########################################
 
     # Reversed versions (useful for float*AffineScalarFunc, for instance):
@@ -1038,7 +1035,7 @@ def add_operators_to_AffineScalarFunc():
 
 add_operators_to_AffineScalarFunc()  # Actual addition of class attributes
 
-class Variable(AffineScalarFunc):    
+class Variable(AffineScalarFunc):
     """
     Representation of a float-like scalar random variable, along with
     its uncertainty.
@@ -1093,7 +1090,7 @@ class Variable(AffineScalarFunc):
         # Since AffineScalarFunc.std_dev is a property, we cannot do
         # "self.std_dev = ...":
         self._std_dev = std_dev
-        
+
         self.tag = tag
 
     # Standard deviations can be modified (this is a feature).
@@ -1104,7 +1101,7 @@ class Variable(AffineScalarFunc):
         """
         Updates the standard deviation of the variable to a new value.
         """
-        
+
         # A zero variance is accepted.  Thus, it is possible to
         # conveniently use infinitely precise variables, for instance
         # to study special cases.
@@ -1121,7 +1118,7 @@ class Variable(AffineScalarFunc):
         to_string() is typically repr() or str().
         """
         num_repr  = super(Variable, self)._general_representation(to_string)
-        
+
         # Optional tag: only full representations (to_string == repr)
         # contain the tag, as the tag is required in order to recreate
         # the variable.  Outputting the tag for regular string ("print
@@ -1134,7 +1131,7 @@ class Variable(AffineScalarFunc):
         """
         Hook for the standard copy module.
         """
-        
+
         # This copy implicitly takes care of the reference of the
         # variable to itself (in self.derivatives): the new Variable
         # object points to itself, not to the original Variable.
@@ -1152,13 +1149,13 @@ class Variable(AffineScalarFunc):
 
         A new variable is created.
         """
-        
+
         # This deep copy implicitly takes care of the reference of the
         # variable to itself (in self.derivatives): the new Variable
         # object points to itself, not to the original Variable.
 
         # Reference: http://www.doughellmann.com/PyMOTW/copy/index.html
-        
+
         return self.__copy__()
 
     def __getstate__(self):
@@ -1173,10 +1170,10 @@ class Variable(AffineScalarFunc):
     def __setstate__(self, data_dict):
         """
         Hook for the standard pickle module.
-        """        
+        """
         for (name, value) in data_dict.items():
             setattr(self, name, value)
-        
+
 ###############################################################################
 
 # Utilities
@@ -1255,7 +1252,7 @@ try:
 except ImportError:
     pass
 else:
-    
+
     def correlated_values(values, covariance_mat, tags=None):
         """
         Returns numbers with uncertainties (AffineScalarFunc objects)
@@ -1285,7 +1282,7 @@ else:
         # Numerical errors might make some variances negative: we set
         # them to zero:
         variances[variances < 0] = 0.
-        
+
         # Creation of new, independent variables:
 
         # We use the fact that the eigenvectors in 'transform' are
@@ -1329,7 +1326,7 @@ def parse_error_in_parentheses(representation):
     If no parenthesis is given, an uncertainty of one on the last
     digit is assumed.
 
-    Raises ValueError if the string cannot be parsed.    
+    Raises ValueError if the string cannot be parsed.
     """
 
     match = NUMBER_WITH_UNCERT_RE.search(representation)
@@ -1350,7 +1347,7 @@ def parse_error_in_parentheses(representation):
                            main_int,
                            main_dec or '.0',
                            exponent or '')))
-                  
+
     if uncert_int is None:
         # No uncertainty was found: an uncertainty of 1 on the last
         # digit is assumed:
@@ -1376,7 +1373,7 @@ def parse_error_in_parentheses(representation):
 
     return (value, uncert)
 
-    
+
 # The following function is not exposed because it can in effect be
 # obtained by doing x = ufloat(representation) and
 # x.nominal_value and x.std_dev():
@@ -1467,7 +1464,7 @@ def ufloat(representation, tag=None):
     #! Different, in Python 3:
     if isinstance(representation, str):
         representation = str_to_number_with_uncert(representation)
-        
+
     #! The tag is forced to be a string, so that the user does not
     # create a Variable(2.5, 0.5) in order to represent 2.5
     # +/- 0.5.  Forcing 'tag' to be a string prevents errors from being
@@ -1483,7 +1480,7 @@ def ufloat(representation, tag=None):
 
 ###############################################################################
 # Support for legacy code (will be removed in the future):
-    
+
 def NumberWithUncert(*args):
     """
     Wrapper for legacy code.  Obsolete: do not use.  Use ufloat
@@ -1544,4 +1541,3 @@ def std_devs(*args):
                   stacklevel=2)
     import uncertainties.unumpy
     return uncertainties.unumpy.std_devs(*args)
-
