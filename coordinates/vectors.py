@@ -51,7 +51,7 @@ def cart2spher_coord(x,y,z):
     phi = np.arctan2(y,x)
     theta = np.arctan2(np.sqrt(x**2+y**2),z)
     return rho,phi,theta
-    
+
 def rotate(x,y,theta,x0=0.,y0=0.):
     """
     Rotate counter clockwise.
@@ -63,35 +63,35 @@ def rotate(x,y,theta,x0=0.,y0=0.):
 
 #{ Coordinate vector transformations
 
-def spher2cart(xxx_todo_changeme, xxx_todo_changeme1):
+def spher2cart(spherical_coord, a_spherical_coord):
     """
     theta is angle from z-axis (colatitude)
     phi is longitude
-    
+
     E.g. http://www.engin.brown.edu/courses/en3/Notes/Vector_Web2/Vectors6a/Vectors6a.htm
-    
+
     >>> np.random.seed(111)
     >>> r,phi,theta = np.random.uniform(low=-1,high=1,size=(3,2))
     >>> a_r,a_phi,a_theta = np.random.uniform(low=-1,high=1,size=(3,2))
     >>> a_x,a_y,a_z = spher2cart((r,phi,theta),(a_r,a_phi,a_theta))
     """
-    (r,phi,theta) = xxx_todo_changeme
-    (a_r,a_phi,a_theta) = xxx_todo_changeme1
+    (r,phi,theta) = spherical_coord
+    (a_r,a_phi,a_theta) = a_spherical_coord
     ax = sin(theta)*cos(phi)*a_r + cos(theta)*cos(phi)*a_theta - sin(phi)*a_phi
     ay = sin(theta)*sin(phi)*a_r + cos(theta)*sin(phi)*a_theta + cos(phi)*a_phi
     az = cos(theta)         *a_r - sin(theta)         *a_theta
     return ax,ay,az
-    
 
-def cart2spher(xxx_todo_changeme2, xxx_todo_changeme3):
+
+def cart2spher(cartesian_coordinats_0, cartesian_coordinats_1):
     """
     theta is angle from z-axis (colatitude)
     phi is longitude
-    
+
     return r,phi,theta
     """
-    (x0,y0,z0) = xxx_todo_changeme2
-    (x1,y1,z1) = xxx_todo_changeme3
+    (x0,y0,z0) = cartesian_coordinats_0
+    (x1,y1,z1) = cartesian_coordinats_1
     r,phi,theta = cart2spher_coord(x0,y0,z0)
     ar     = sin(theta)*cos(phi)*x1 + sin(theta)*sin(phi)*y1 + cos(theta)*z1
     atheta = cos(theta)*cos(phi)*x1 + cos(theta)*sin(phi)*y1 - sin(theta)  *z1
@@ -105,25 +105,25 @@ def cart2spher(xxx_todo_changeme2, xxx_todo_changeme3):
 def norm(vec):
     """
     Euclidic norm of a vector (or of a grid of vectors)
-    
+
     Input vectors should be numpy arrays.
     """
     return sqrt((vec**2).sum(axis=0))
-    
+
 
 def angle(vec1,vec2):
     """
     Compute angle between two vectors (or between two grids of vectors).
-    
+
     Input vectors should be numpy arrays.
     """
     return np.arccos( (vec1*vec2).sum(axis=0) / (norm(vec1)*norm(vec2)))
- 
- 
+
+
 def cos_angle(vec1,vec2):
     """
     Compute cosine of angle between two vectors (or between two grids of vectors).
-    
+
     Input vectors should be numpy arrays.
     """
     return (vec1*vec2).sum(axis=0) / (norm(vec1)*norm(vec2))
