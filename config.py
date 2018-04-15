@@ -101,7 +101,7 @@ if __name__=="__main__":
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
-                    if answer!='Y':
+                    if answer.lower()!='y':
                         answer = input('Continue? [Y/n] ')
                         if answer.lower()=='n':
                             continue
