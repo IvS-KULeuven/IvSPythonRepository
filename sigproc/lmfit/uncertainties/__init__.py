@@ -1133,7 +1133,6 @@ def get_ops_with_reflection():
         # effect.  Since '/' is applied to
         # AffineScalarFunc._nominal_value numbers, it is applied on
         # floats, and is therefore the "usual" mathematical division.
-        'div': ("1/y", "-x/y**2"),
         'floordiv': ("0.", "0."),  # Non exact: there is a discontinuities
         # The derivative wrt the 2nd arguments is something like (..., x//y),
         # but it is calculated numerically, for convenience:
@@ -1642,4 +1641,3 @@ def ufloat(representation, tag=None):
     #! The special ** syntax is for Python 2.5 and before (Python 2.6+
     # understands tag=tag):
     return Variable(*representation, **{'tag': tag})
-
