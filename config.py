@@ -77,6 +77,7 @@ if __name__=="__main__":
     from ivs.aux import loggers
     import shutil
     import time
+    import glob
     logger = loggers.get_basic_logger()
 
     to_install = ['spectra/pyrotin4',
@@ -107,8 +108,13 @@ if __name__=="__main__":
                     #-- call the compiling command
                     p = subprocess.check_output(cmd,shell=True)#,stdout=devnull)
                     #-- check if compilation went fine
-                    if os.path.isfile(pname+'.so'):
-                        shutil.move(pname+'.so',name+'.so')
+                    # find compiled file name
+                    compiled_filename = list(filter(os.path.isfile, glob.glob('./'+pname+'*.so')))
+                    # if it exists move it to to appropriate dir
+                    # and change the compiled name e.g. deeming.cpython-36m-x86_64-linux-gnu.so
+                    # to e.g. deeming.so
+                    if compiled_filename:
+                        shutil.move(compiled_filename[0],name+'.so')
                         logger.info('... succeeded')
                     else:
                         logger.error('FAILED')
