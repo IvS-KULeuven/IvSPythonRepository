@@ -138,24 +138,24 @@ package, and numerically. So let us build a star with these parameters:
 >>> r_pole = 2.0       # solar radii
 >>> M = 1.5            # solar mass
 >>> view_angle = pi/2  # radians
->>> theta,phi = get_grid(20,100,full=True,gtype='spher')
+>>> theta,phi = local.get_grid(20,100,full=True,gtype='spher')
 >>> thetas,phis = np.ravel(theta),np.ravel(phi)
 
 Then calculate the shape of this star
 
->>> radius = (np.array([get_fastrot_roche_radius(itheta,r_pole,omega)\
+>>> radius = (np.array([rotation.get_fastrot_roche_radius(itheta,r_pole,omega)\
                        for itheta in thetas]).reshape(theta.shape))
->>> grav_local = (np.array([fastrot_roche_surface_gravity(\
+>>> grav_local = (np.array([rotation.fastrot_roche_surface_gravity(\
                             iradius,itheta,iphi,r_pole,omega,M)\
                             for iradius,itheta,iphi in\
                             zip(radius.ravel(),thetas,phis)]).T)
 >>> grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
->>> g_pole = fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]
+>>> g_pole = rotation.fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]
 >>> grav = vectors.norm(grav_local)
 
 and the local quantities
 
->>> areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
+>>> areas_local,cos_gamma = local.surface_elements((radius,[theta,phi]),-grav_local)
 >>> teff_local = local.temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
 >>> ints_local = local.intensity(teff_local,grav,photband='OPEN.BOL')
 >>> x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
@@ -164,7 +164,7 @@ Assume, with a shape of a non-rotating star, that we have a velocity component
 on the surface of the star:
 
 >>> myomega = 0.5
->>> velo_local = diffrot_velocity((phi,theta,radius*constants.Rsol),myomega,myomega,r_pole,M)
+>>> velo_local = rotation.diffrot_velocity((phi,theta,radius*constants.Rsol),myomega,myomega,r_pole,M)
 
 Collect all the necessary information in one record array.
 
@@ -178,7 +178,7 @@ Project the star in some line-of-sight. The velocity component in the X-directio
 is the radial velocity.
 
 >>> view_angle = pi/2 # edge on
->>> mystar = (project(star,view_long=(0,0,0),view_lat=(view_angle,0,0),\
+>>> mystar = (local.project(star,view_long=(0,0,0),view_lat=(view_angle,0,0),\
                     photband='OPEN.BOL',only_visible=True,plot_sort=True))
 
 We can calculate the synthetic spectra for all surface elements between 7055 and
@@ -254,6 +254,7 @@ from ivs.sed import model as sed_model
 from ivs.sed import limbdark
 from ivs.spectra import model as spectra_model
 from ivs.roche import local
+from ivs.roche import rotation
 from ivs.aux import loggers
 from ivs.inout import ascii
 from ivs.inout import fits
