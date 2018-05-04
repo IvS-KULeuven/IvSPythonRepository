@@ -43,6 +43,8 @@ parameters.
 >>> T_pole2 = 18850.     # polar temperature secondary
 >>> M1 = 10.3            # primary mass
 >>> M2 = 5.6             # secondary mass
+>>> theta,phi = local.get_grid(20,100,full=True,gtype='spher')
+>>> thetas,phis = np.ravel(theta),np.ravel(phi)
 
 Note that we actually do not need the masses, since we can derive them from
 the third kepler law with the other parameters. We do so for convenience.
@@ -61,15 +63,22 @@ We need some constants for the calculations: the polar radii and angular velocit
 >>> omega_rot_vec = np.array([0.,0.,-omega_rot])
 
 Derive the shape of the two stars
-
->>> radius1 = np.array([get_binary_roche_radius(itheta,iphi,Phi=Phi1,q=  q,d=d,F=F,r_pole=r_pole1) for itheta,iphi in zip(thetas,phis)]).reshape(theta.shape)
->>> radius2 = np.array([get_binary_roche_radius(itheta,iphi,Phi=Phi2,q=1/q,d=d,F=F,r_pole=r_pole2) for itheta,iphi in zip(thetas,phis)]).reshape(theta.shape)
+>>> radius1 = (np.array([get_binary_roche_radius(\
+                        itheta, iphi, Phi=Phi1, q=q, d=d, F=F, r_pole=r_pole1)\
+                        for itheta, iphi in zip(thetas, phis)])\
+                        .reshape(theta.shape))
+>>> radius2 = (np.array([get_binary_roche_radius(\
+                        itheta,iphi,Phi=Phi2,q=1/q,d=d,F=F,r_pole=r_pole2)\
+                        for itheta,iphi in zip(thetas,phis)])\
+                        .reshape(theta.shape))
 
 We focus on the primary, then repeat everything for the secondary: The local
 surface gravity can only be calculated if we have Cartesian coordinates.
 
 >>> x1,y1,z1 = vectors.spher2cart_coord(radius1,phi,theta)
->>> g_pole1 = binary_roche_surface_gravity(0,0,r_pole1*to_SI,d*to_SI,omega_rot,M1*constants.Msol,M2*constants.Msol,norm=True)
+>>> g_pole1 = (binary_roche_surface_gravity(0,0,r_pole1*to_SI,d*to_SI,\
+                                            omega_rot,M1*constants.Msol,\
+                                            M2*constants.Msol,norm=True))
 >>> Gamma_pole1 = binary_roche_potential_gradient(0,0,r_pole1,q,d,F,norm=True)
 >>> zeta1 = g_pole1 / Gamma_pole1
 >>> dOmega1 = binary_roche_potential_gradient(x1,y1,z1,q,d,F,norm=False)
@@ -81,7 +90,8 @@ Now we can, as before, calculate the other local quantities:
 
 >>> areas_local1,cos_gamma1 = surface_elements((radius1,theta,phi),-grav_local1)
 >>> teff_local1 = local_temperature(grav1,g_pole1,T_pole1,beta=1.)
->>> ints_local1 = local_intensity(teff_local1,grav1,np.ones_like(cos_gamma1),photband='OPEN.BOL')
+>>> ints_local1 = (local_intensity(teff_local1,grav1,np.ones_like(cos_gamma1),\
+                                photband='OPEN.BOL'))
 >>> velo_local1 = np.cross(np.array([x1,y1,z1]).T*to_SI,omega_rot_vec).T
 
 
@@ -90,14 +100,15 @@ Now make some plots showing the local quantities:
 >>> quantities = areas_local1,np.log10(grav1*100),teff_local1,ints_local1
 >>> names = 'Area','log g', 'Teff', 'Flux'
 >>> p = pl.figure()
->>> rows,cols = 2,2    
+>>> rows,cols = 2,2
 >>> for i,(quantity,name) in enumerate(zip(quantities,names)):
 ...    p = pl.subplot(rows,cols,i+1)
 ...    p = pl.title(name)
 ...    q = quantity.ravel()
 ...    vmin,vmax = q[-np.isnan(q)].min(),q[-np.isnan(q)].max()
 ...    if vmin==vmax: vmin,vmax = q[-np.isnan(q)].mean()-0.01*q[-np.isnan(q)].mean(),q[-np.isnan(q)].mean()+0.01*q[-np.isnan(q)].mean()
-...    p = pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors='none',vmin=vmin,vmax=vmax)
+...    p = (pl.scatter(phis/pi*180,thetas/pi*180,c=q,edgecolors='none',\
+                        vmin=vmin,vmax=vmax))
 ...    p = pl.colorbar()
 ...    p = pl.xlim(0,360)
 ...    p = pl.ylim(180,0)
@@ -132,8 +143,12 @@ package, and numerically. So let us build a star with these parameters:
 
 Then calculate the shape of this star
 
->>> radius = np.array([get_fastrot_roche_radius(itheta,r_pole,omega) for itheta in thetas]).reshape(theta.shape)
->>> grav_local = np.array([fastrot_roche_surface_gravity(iradius,itheta,iphi,r_pole,omega,M) for iradius,itheta,iphi in zip(radius.ravel(),thetas,phis)]).T
+>>> radius = (np.array([get_fastrot_roche_radius(itheta,r_pole,omega)\
+                       for itheta in thetas]).reshape(theta.shape))
+>>> grav_local = (np.array([fastrot_roche_surface_gravity(\
+                            iradius,itheta,iphi,r_pole,omega,M)\
+                            for iradius,itheta,iphi in\
+                            zip(radius.ravel(),thetas,phis)]).T)
 >>> grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
 >>> g_pole = fastrot_roche_surface_gravity(r_pole,0,0,r_pole,omega,M)[-1]
 >>> grav = vectors.norm(grav_local)
@@ -153,7 +168,9 @@ on the surface of the star:
 
 Collect all the necessary information in one record array.
 
->>> starlist = [x,y,z] + [i.ravel() for i in velo_local] + [i.ravel() for i in grav_local] + [teff_local.ravel(),areas_local.ravel()]
+>>> starlist = ([x,y,z] + [i.ravel() for i in velo_local] +\
+                [i.ravel() for i in grav_local] +\
+                [teff_local.ravel(),areas_local.ravel()])
 >>> starnames = ['x','y','z','vx','vy','vz','gravx','gravy','gravz','teff','areas']
 >>> star = np.rec.array(starlist,names=starnames)
 
@@ -161,7 +178,8 @@ Project the star in some line-of-sight. The velocity component in the X-directio
 is the radial velocity.
 
 >>> view_angle = pi/2 # edge on
->>> mystar = project(star,view_long=(0,0,0),view_lat=(view_angle,0,0),photband='OPEN.BOL',only_visible=True,plot_sort=True)
+>>> mystar = (project(star,view_long=(0,0,0),view_lat=(view_angle,0,0),\
+                    photband='OPEN.BOL',only_visible=True,plot_sort=True))
 
 We can calculate the synthetic spectra for all surface elements between 7055 and
 7075 angstrom:
@@ -169,7 +187,9 @@ We can calculate the synthetic spectra for all surface elements between 7055 and
 >>> loggs = np.log10(np.sqrt(mystar['gravx']**2 + mystar['gravy']**2 + mystar['gravz']**2)*100)
 >>> iterator = zip(mystar['teff'],loggs,mystar['vx']/1000.)
 >>> wave_spec = np.linspace(7055,7075,750)
->>> spectra = np.array([spectra_model.get_table(teff=iteff,logg=ilogg,vrad=ivrad,wave=wave_spec)[1] for iteff,ilogg,ivrad in iterator])
+>>> spectra = (np.array([spectra_model.get_table(\
+                        teff=iteff,logg=ilogg,vrad=ivrad,wave=wave_spec)[1]\
+                        for iteff,ilogg,ivrad in iterator]))
 
 The total observed spectrum is then simply the weighted sum with the local projected
 intensities:
@@ -178,9 +198,13 @@ intensities:
 
 We compare with the ROTIN package, which assumes a linear limbdarkening law
 
->>> original = spectra_model.get_table(teff=mystar['teff'][0],logg=loggs[0],wave=wave_spec)[1]
->>> rotin1 = spectra_model.get_table(teff=mystar['teff'][0],logg=loggs[0],vrot=vmax/1000.*sin(view_angle),wave=wave_spec,fwhm=0,epsilon=0.6,stepr=-1)[1]
-    
+>>> original = (spectra_model.get_table(teff=mystar['teff'][0],logg=loggs[0],\
+                                       wave=wave_spec)[1])
+>>> rotin1 = (spectra_model.get_table(teff=mystar['teff'][0],logg=loggs[0],\
+                                     vrot=vmax/1000.*sin(view_angle),\
+                                     wave=wave_spec,fwhm=0,\
+                                     epsilon=0.6,stepr=-1)[1])
+
 And a plot can be made via
 
 >>> colors = mystar['eyeflux']/mystar['eyeflux'].max()
@@ -190,8 +214,11 @@ And a plot can be made via
 >>> p = ax.set_axis_bgcolor('k')
 >>> p = pl.box(on=False)
 >>> p = pl.xticks([]);p = pl.yticks([])
->>> p = pl.scatter(mystar['y'],mystar['z'],c=colors,edgecolors='none',cmap=pl.cm.gray,vmin=0,vmax=1)
->>> p = pl.scatter(mystar['y']+1.02*mystar['y'].ptp(),mystar['z'],c=mystar['vx'],edgecolors='none',vmin=vmin,vmax=vmax,cmap=pl.cm.RdBu)
+>>> p = (pl.scatter(mystar['y'],mystar['z'],c=colors,edgecolors='none',\
+                    cmap=pl.cm.gray,vmin=0,vmax=1))
+>>> p = (pl.scatter(mystar['y']+1.02*mystar['y'].ptp(),mystar['z'],\
+                   c=mystar['vx'],edgecolors='none',vmin=vmin,vmax=vmax,\
+                   cmap=pl.cm.RdBu))
 >>> ax = pl.axes([0.13,0.1,0.78,0.4])
 >>> p = pl.plot(wave_spec,average_spectrum,'k-',lw=2,label='Numerical')
 >>> p = pl.plot(wave_spec,original,'r-',label='No rotation')
@@ -238,16 +265,16 @@ logger = logging.getLogger("BIN.ROCHE")
 def binary_roche_potential(r,theta,phi,Phi,q,d,F):
     """
     Unitless eccentric asynchronous Roche potential in spherical coordinates.
-    
+
     See Wilson, 1979.
-    
+
     The  synchronicity parameter F is 1 for synchronised circular orbits. For
     pseudo-synchronous eccentrical orbits, it is equal to (Hut, 1981)
-    
+
     F = sqrt( (1+e)/ (1-e)^3)
-    
+
     Periastron is reached when d = 1-e.
-        
+
     @param r: radius of Roche volume at potential Phi (in units of semi-major axis)
     @type r: float
     @param theta: colatitude (0 at the pole, pi/2 at the equator)
@@ -274,11 +301,11 @@ def binary_roche_potential(r,theta,phi,Phi,q,d,F):
 def binary_roche_potential_gradient(x,y,z,q,d,F,norm=False):
     """
     Gradient of eccenctric asynchronous Roche potential in cartesian coordinates.
-    
+
     See Phoebe scientific reference, http://phoebe.fiz.uni-lj.si/docs/phoebe_science.ps.gz
-    
+
     x,y,z,d in real units! (otherwise you have to scale it yourself)
-    
+
     @param x: x-axis
     @type x: float'
     @param y: y-axis
@@ -301,7 +328,7 @@ def binary_roche_potential_gradient(x,y,z,q,d,F,norm=False):
     dOmega_dx = - x / r**3 + q * (d-x) / r_**3 + F**2 * (1+q)*x - q/d**2
     dOmega_dy = - y / r**3 - q * y     / r_**3 + F**2 * (1+q)*y
     dOmega_dz = - z / r**3 - q * z     / r_**3
-    
+
     dOmega = np.array([dOmega_dx,dOmega_dy,dOmega_dz])
     if norm:
         return vectors.norm(dOmega)
@@ -315,16 +342,16 @@ def binary_roche_surface_gravity(x,y,z,d,omega,M1,M2,a=1.,norm=False):
     """
     q = M2/M1
     x_com = q*d/(1+q)
-    
+
     r = np.array([x,y,z])
     d_cf = np.array([d-x_com,0,0])
     d = np.array([d,0,0])
     h = d - r
-    
+
     term1 = - constants.GG*M1/vectors.norm(r)**3*r
     term2 = - constants.GG*M2/vectors.norm(h)**3*h
     term3 = - omega**2 * d_cf
-    
+
     g_pole = term1 + term2 + term3
     if norm:
         return vectors.norm(g_pole)
@@ -335,12 +362,12 @@ def binary_roche_surface_gravity(x,y,z,d,omega,M1,M2,a=1.,norm=False):
 def get_binary_roche_radius(theta,phi,Phi,q,d,F,r_pole=None):
     """
     Calculate the eccentric asynchronous binary Roche radius in spherical coordinates.
-    
+
     This is done via the Newton-Raphson secant method. If r_pole is not given
     as a starting value, it will be calculated here (slowing down the function).
-    
+
     If no radius can be calculated for the given coordinates, 'nan' is returned.
-    
+
     @param theta: colatitude (0 at the pole, pi/2 at the equator)
     @type theta: float
     @param phi: longitude (0 in direction of COM)
@@ -365,7 +392,7 @@ def get_binary_roche_radius(theta,phi,Phi,q,d,F,r_pole=None):
         if r<0 or r>d:
             r = nan
     except RuntimeError:
-        r = nan    
+        r = nan
     return r
 
 #}
@@ -387,17 +414,17 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
             psi2 = vectors.angle(+s12,-np.array([secondary['gravx'],secondary['gravy'],secondary['gravz']]))
             psi1 = vectors.angle(-s12,-np.array([primary['gravx'][i:i+1],primary['gravy'][i:i+1],primary['gravz'][i:i+1]]))
             s12 = s12.ravel()
-            
+
             keep = (psi2<pi/2.) & (psi1<pi/2.)
             Lambda_2_bol = np.array([limbdark.get_itable(teff=iteff,logg=np.log10(igrav*100),theta=ipsi2,photbands=['OPEN.BOL'],absolute=False)[0]\
                             for iteff,igrav,ipsi2 in zip(secondary['teff'][keep],secondary['grav'][keep],psi2[keep])])
-    
+
             s = vectors.norm(s12[keep])
             J_21_entrant = A1 * R2[i] * np.sum(secondary['flux'][keep] * cos(psi1[keep])*cos(psi2[keep])*Lambda_2_bol*secondary['areas'][keep]/s**2)
             if np.isnan(J_21_entrant).any(): raise ValueError
             J_1_tot      = primary['flux'][i]
             R1_new = 1+ J_21_entrant/J_1_tot
-        
+
             #-- radiation from primary onto secondary
             s12 = np.array([primary['x']-secondary['x'][i],
                             primary['y']-secondary['y'][i],
@@ -405,19 +432,19 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
             psi2 = vectors.angle(+s12,-np.array([primary['gravx'],primary['gravy'],primary['gravz']]))
             psi1 = vectors.angle(-s12,-np.array([secondary['gravx'][i:i+1],secondary['gravy'][i:i+1],secondary['gravz'][i:i+1]]))
             s12 = s12.ravel()
-            
+
             keep = (psi2<pi/2.) & (psi1<pi/2.)
             Lambda_2_bol = np.array([limbdark.get_itable(teff=iteff,logg=np.log10(igrav*100),theta=ipsi2,photbands=['OPEN.BOL'],absolute=False)[0]\
                     for iteff,igrav,ipsi2 in zip(primary['teff'][keep],primary['grav'][keep],psi2[keep])])
-        
+
             s = vectors.norm(s12)
             J_12_entrant = A2 * R1[i] * np.nansum(primary['flux'][keep] * cos(psi1[keep])*cos(psi2[keep])*Lambda_2_bol*primary['areas'][keep]/s**2)
             J_2_tot      = secondary['flux'][i]
             R2_new = 1+ J_12_entrant/J_2_tot
-                
+
             R1[i] = R1_new
             R2[i] = R2_new
-        
+
         #================ START DEBUGGING PLOTS ===================
         #pl.figure()
         #pl.subplot(423);pl.title('old primary')
@@ -427,14 +454,14 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
         #pl.scatter(phis_,thetas_,c=teff2_,edgecolors='none',cmap=pl.cm.spectral)
         #pl.colorbar()
         #================   END DEBUGGING PLOTS ===================
-        
+
         #-- adapt the teff only (and when) the increase is more than 1% (=>1.005**0.25=1.01)
         break_out = True
         trash,trash2,R1,R2 = stitch_grid(theta,phi,R1.reshape(theta.shape),R2.reshape(theta.shape))
         del trash,trash2
         R1 = R1.ravel()
         R2 = R2.ravel()
-        
+
         if (R1[-np.isnan(R1)]>1.05).any():
             print("Significant reflection effect on primary (max %.3f%%)"%((R1.max()**0.25-1)*100))
             primary['teff']*= R1**0.25
@@ -442,7 +469,7 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
             break_out = False
         else:
             print('Maximum reflection effect on primary: %.3f%%'%((R1.max()**0.25-1)*100))
-        
+
         if (R2[-np.isnan(R2)]>1.05).any():
             print("Significant reflection effect on secondary (max %.3g%%)"%((R2.max()**0.25-1)*100))
             secondary['teff']*= R2**0.25
@@ -450,26 +477,26 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
             break_out = False
         else:
             print('Maximum reflection effect on secondary: %.3g%%'%((R1.max()**0.25-1)*100))
-        
+
         if break_out:
             break
-            
-        
+
+
         reflection_iter += 1
-        
+
         #================ START DEBUGGING PLOTS ===================
         #pl.subplot(411)
         #pl.scatter(x,y,c=teff_,edgecolors='none',cmap=pl.cm.spectral,vmin=T_pole,vmax=T_pole2)
         #pl.scatter(x2,y2,c=teff2_,edgecolors='none',cmap=pl.cm.spectral,vmin=T_pole,vmax=T_pole2)
         #pl.colorbar()
-        
+
         #pl.subplot(425);pl.title('new primary')
         #pl.scatter(phis_,thetas_,c=teff_,edgecolors='none',cmap=pl.cm.spectral)
         #pl.colorbar()
         #pl.subplot(426);pl.title('new secondary')
         #pl.scatter(phis_,thetas_,c=teff2_,edgecolors='none',cmap=pl.cm.spectral)
         #pl.colorbar()
-        
+
         #pl.subplot(427)
         #pl.scatter(phis_,thetas_,c=R1,edgecolors='none',cmap=pl.cm.spectral)
         #pl.colorbar()
@@ -484,17 +511,17 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
 def spectral_synthesis(*stars,**kwargs):
     """
     Generate a synthetic spectrum of one or more stars.
-    
+
     If you give more than one star, you get more than one synthesized spectrum
     back. To compute the total spectrum, just add them up.
-    
+
     WARNING: the spectra are scaled with the value of the projected intensity.
     This is usually calculated within a specific photometric passband. The total
     spectrum will thus be dependent on the photometric passband, unless you
     specified 'OPEN.BOL' (which is the bolometric open filter). If you want to
     know the RV for a specific line, you might want to look into calculating the
     projected intensities at specific wavelength intervals.
-    
+
     @param stars: any number of (projected) star record arrays
     @type stars: tuple of star record arrays
     @keyword wave: wavelength template to compute the synthetic spectrum on
@@ -523,7 +550,7 @@ def spectral_synthesis(*stars,**kwargs):
 def binary_light_curve_synthesis(**parameters):
     """
     Generate a synthetic light curve of a binary system.
-    
+
     @keyword name: name of the binary system, used for output
     @type name: string
     @keyword direc: directory to put output files
@@ -559,7 +586,7 @@ def binary_light_curve_synthesis(**parameters):
     A2= parameters.setdefault('A2',1.)                   # albedo secondary
     beta1 = parameters.setdefault('beta1',1.0)           # gravity darkening primary
     beta2 = parameters.setdefault('beta2',1.0)           # gravity darkening secondary
-    
+
     #-- others are mandatory:
     T_pole = parameters['Tpole1']       # Primary Polar temperature   [K]
     T_pole2 = parameters['Tpole2']      # Secondary Polar temperature [K]
@@ -567,7 +594,7 @@ def binary_light_curve_synthesis(**parameters):
     asini = parameters['asini']         # total semi-major axis*sini  [AU]
     Phi  = parameters['Phi1']           # Gravitational potential of primary [-]
     Phi2 = parameters['Phi2']           # Gravitational potential of secondary [-]
-    
+
     #-- derive parameters needed in the calculation
     a = asini/sin(incl/180.*pi)
     a1 = a / (1.+1./q)
@@ -589,7 +616,7 @@ def binary_light_curve_synthesis(**parameters):
     parameters['M2'] = M2
     parameters['L1'] = L1*a*constants.au/constants.Rsol
     parameters['L2'] = L2*a*constants.au/constants.Rsol
-    
+
     #-- calculate the Keplerian orbits of the primary and secondary
     if not hasattr(tres,'__iter__'):
         times = np.linspace(0.5*P,1.5*P,tres)
@@ -599,7 +626,7 @@ def binary_light_curve_synthesis(**parameters):
     r2,theta2 = keplerorbit.orbit_in_plane(times,[P,e,a2,gamma],component='secondary')
     RV1 = keplerorbit.radial_velocity([P,e,a1,pi/2,view_angle,gamma],theta=theta1,itermax=8)
     RV2 = keplerorbit.radial_velocity([P,e,a2,pi/2,view_angle,gamma],theta=theta2,itermax=8)
-    
+
     r1 = r1/constants.au
     r2 = r2/constants.au
     #   put them in cartesian coordinates
@@ -609,22 +636,22 @@ def binary_light_curve_synthesis(**parameters):
     rot_i = -(pi/2 - view_angle)
     x1o_,z1o = vectors.rotate(x1o,np.zeros_like(y1o),rot_i)
     x2o_,z2o = vectors.rotate(x2o,np.zeros_like(y2o),rot_i)
-    
+
     #-- calculate separation at all phases
     ds = np.sqrt( (x1o-x2o)**2 + (y1o-y2o)**2)
-    
+
     #-- calculate the polar radius and the radius towards L1 at minimum separation
     r_pole = newton(binary_roche_potential,1e-5,args=(0,0,Phi,q,ds.min(),F))
     r_pole2 = newton(binary_roche_potential,1e-5,args=(0,0,Phi2,q2,ds.min(),F2))
     parameters['Rp1'] = r_pole*a*constants.au/constants.Rsol
     parameters['Rp2'] = r_pole2*a*constants.au/constants.Rsol
-    
+
     #-- calculate the critical Phis and Roche radius
     phi1_crit = binary_roche_potential(L1,0,0,Phi,q,ds.min(),F)
     phi2_crit = binary_roche_potential(L1,0,0,Phi2,q2,ds.min(),F2)
     R_roche1 = a * 0.49 * q2**(2./3.) / (0.6*q2**(2./3.) + np.log(1+q2**(1./3.)))
     R_roche2 = a * 0.49 * q**(2./3.) / (0.6*q**(2./3.) + np.log(1+q**(1./3.)))
-    
+
     #-- timescales
     tdyn1 = np.sqrt(2*(r_pole*constants.au)**3/(constants.GG*M1*constants.Msol))
     tdyn2 = np.sqrt(2*(r_pole2*constants.au)**3/(constants.GG*M2*constants.Msol))
@@ -634,7 +661,7 @@ def binary_light_curve_synthesis(**parameters):
     tthr2 = constants.GG * (M2*constants.Msol)**2 / (r_pole2*constants.au*lumt2*constants.Lsol)
     tnuc1 = 7e9 * M1 / lumt1
     tnuc2 = 7e9 * M2 / lumt2
-    
+
     logger.info('=================================================')
     logger.info('GENERAL SYSTEM AND COMPONENT PROPERTIES')
     logger.info('=================================================')
@@ -663,7 +690,7 @@ def binary_light_curve_synthesis(**parameters):
     logger.info('TTHERM primary               = %.3g yr'%(tthr1/(24*3600*365)))
     logger.info('TTHERM secondary             = %.3g yr'%(tthr2/(24*3600*365)))
     logger.info('=================================================')
-    
+
     #-- construct the grid to calculate stellar shapes
     if hasattr(res,'__iter__'):
         mygrid = local.get_grid(res[0],res[1],gtype=gtype)
@@ -672,14 +699,14 @@ def binary_light_curve_synthesis(**parameters):
         mygrid = local.get_grid(res,gtype=gtype)
         theta,phi = mygrid[:2]
     thetas,phis = np.ravel(theta),np.ravel(phi)
-    
+
     light_curve = np.zeros_like(times)
     RV1_corr = np.zeros_like(times)
     RV2_corr = np.zeros_like(times)
     to_SI = a*constants.au
     to_CGS = a*constants.au*100.
     scale_factor = a*constants.au/constants.Rsol
-    
+
     fitsfile = os.path.join(direc,'%s.fits'%(name))
     if direc is not None and os.path.isfile(fitsfile):
         os.remove(fitsfile)
@@ -691,22 +718,22 @@ def binary_light_curve_synthesis(**parameters):
         outputfile_secn = os.path.join(direc,'%s_secondary.fits'%(name))
         outputfile_prim = fits.write_primary(outputfile_prim,header_dict=parameters)
         outputfile_secn = fits.write_primary(outputfile_secn,header_dict=parameters)
-    
+
     ext_dict = {}
     for di,d in enumerate(ds):
         report = "STEP %04d"%(di)
-        
+
         #-- this is the angular velocity due to rotation and orbit
         #   you get the rotation period of the star via 2pi/omega_rot (in sec)
         omega_rot = F * 2*pi/P_ * 1/d**2 * sqrt( (1+e)*(1-e))
         omega_rot_vec = np.array([0.,0.,-omega_rot])
-        
+
         if e>0 or di==0:
             #-- compute the star's radius and surface gravity
             out = [[get_binary_roche_radius(itheta,iphi,Phi=Phi,q=q,d=d,F=F,r_pole=r_pole),
                     get_binary_roche_radius(itheta,iphi,Phi=Phi2,q=q2,d=d,F=F2,r_pole=r_pole2)] for itheta,iphi in zip(thetas,phis)]
             rprim,rsec = np.array(out).T
-            
+
             #-- for the primary
             #------------------
             radius  = rprim.reshape(theta.shape)
@@ -717,7 +744,7 @@ def binary_light_curve_synthesis(**parameters):
             zeta = g_pole / Gamma_pole
             dOmega = binary_roche_potential_gradient(x,y,z,q,d,F,norm=False)
             grav_local = dOmega*zeta
-            
+
             #-- here we can compute local quantities: surface gravity, area,
             #   effective temperature, flux and velocity
             grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
@@ -726,7 +753,7 @@ def binary_light_curve_synthesis(**parameters):
             teff_local = local.temperature(grav,g_pole,T_pole,beta=beta1)
             ints_local = local.intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
             velo_local = np.cross(np.array([x,y,z]).T*to_SI,omega_rot_vec).T
-            
+
             #-- here we can compute the global quantities: total surface area
             #   and luminosity
             lumi_prim = 4*pi*(ints_local*areas_local*to_CGS**2).sum()/constants.Lsol_cgs
@@ -741,7 +768,7 @@ def binary_light_curve_synthesis(**parameters):
             ext_dict['loggp1'] = np.log10(g_pole*100)
             ext_dict['LUMI1'] = lumi_prim
             ext_dict['SURF1'] = area_prim
-                                    
+
             #-- for the secondary
             #--------------------
             radius2 = rsec.reshape(theta.shape)
@@ -752,16 +779,16 @@ def binary_light_curve_synthesis(**parameters):
             zeta2 = g_pole2 / Gamma_pole2
             dOmega2 = binary_roche_potential_gradient(x2,y2,z2,q2,d,F2,norm=False)
             grav_local2 = dOmega2*zeta2
-            
+
             #-- here we can compute local quantities: : surface gravity, area,
-            #   effective temperature, flux and velocity  
+            #   effective temperature, flux and velocity
             grav_local2 = np.array([i.reshape(theta.shape) for i in grav_local2])
             grav2 = vectors.norm(grav_local2)
             areas_local2,cos_gamma2 = local.surface_elements((radius2,mygrid),-grav_local2,gtype=gtype)
             teff_local2 = local.temperature(grav2,g_pole2,T_pole2,beta=beta2)
             ints_local2 = local.intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
             velo_local2 = np.cross(np.array([x2,y2,z2]).T*to_SI,omega_rot_vec).T
-            
+
             #-- here we can compute the global quantities: total surface area
             #   and luminosity
             lumi_sec = 4*pi*(ints_local2*areas_local2*to_CGS**2).sum()/constants.Lsol_cgs
@@ -776,13 +803,13 @@ def binary_light_curve_synthesis(**parameters):
             ext_dict['loggp2'] = np.log10(g_pole2*100)
             ext_dict['LUMI2'] = lumi_sec
             ext_dict['SURF2'] = area_sec
-            
+
             #================ START DEBUGGING PLOTS ===================
             #plot_quantities(phi,theta,np.log10(grav2*100.),areas_local2,np.arccos(cos_gamma2)/pi*180,teff_local2,ints_local2,
             #           names=['grav','area','angle','teff','ints'],rows=2,cols=3)
             #pl.show()
             #================   END DEBUGGING PLOTS ===================
-                    
+
             #-- stitch the grid!
             theta_,phi_,radius,gravx,gravy,gravz,grav,areas,teff,ints,vx,vy,vz = \
                          local.stitch_grid(theta,phi,radius,grav_local[0],grav_local[1],grav_local[2],
@@ -795,11 +822,11 @@ def binary_light_curve_synthesis(**parameters):
                                     grav2,areas_local2,teff_local2,ints_local2,velo_local2[0],velo_local2[1],velo_local2[2],
                                     seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
-            
+
             #-- vectors and coordinates in original frame
             x_of,y_of,z_of = vectors.spher2cart_coord(radius.ravel(),phi_.ravel(),theta_.ravel())
             x2_of,y2_of,z2_of = vectors.spher2cart_coord(radius2.ravel(),phi2_.ravel(),theta2_.ravel())
-            x2_of = -x2_of            
+            x2_of = -x2_of
             #-- store information on primary and secondary in a record array
             primary = np.rec.fromarrays([theta_.ravel(),phi_.ravel(),radius.ravel(),
                                          x_of,y_of,z_of,
@@ -811,7 +838,7 @@ def binary_light_curve_synthesis(**parameters):
                                          'vx','vy','vz',
                                          'gravx','gravy','gravz','grav',
                                          'areas','teff','flux'])
-            
+
             secondary = np.rec.fromarrays([theta2_.ravel(),phi2_.ravel(),radius2.ravel(),
                                          x2_of,y2_of,z2_of,
                                          vx2.ravel(),-vy2.ravel(),vz2.ravel(),
@@ -822,7 +849,7 @@ def binary_light_curve_synthesis(**parameters):
                                          'vx','vy','vz',
                                          'gravx','gravy','gravz','grav',
                                          'areas','teff','flux'])
-            
+
             #-- take care of the reflection effect
             primary,secondary = reflection_effect(primary,secondary,theta,phi,
                                        A1=A1,A2=A2,max_iter=max_iter_reflection)
@@ -854,7 +881,7 @@ def binary_light_curve_synthesis(**parameters):
             #   and append to primary HDUList
             outputfile_prim = fits.write_recarray(prim,outputfile_prim,close=close,header_dict=prim_header)
             outputfile_secn = fits.write_recarray(secn,outputfile_secn,close=close,header_dict=secn_header)
-        
+
         prim = local.project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
                        view_lat=(view_angle,0,0),photband=photband,
                        only_visible=True,plot_sort=True)
@@ -863,7 +890,7 @@ def binary_light_curve_synthesis(**parameters):
                        only_visible=True,plot_sort=True)
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
-        
+
         #-- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
         #   we collect the Y-Z coordinates in one array for easy matching in
@@ -879,8 +906,8 @@ def binary_light_curve_synthesis(**parameters):
             front_component = 2
             report += ' Secondary in front'
         coords_front = np.column_stack([front['y'],front['z']])
-        coords_back = np.column_stack([back['y'],back['z']])    
-        
+        coords_back = np.column_stack([back['y'],back['z']])
+
         if gtype!='delaunay':
             #   now find the coordinates of the front component closest to the
             #   the coordinates of the back component
@@ -900,13 +927,13 @@ def binary_light_curve_synthesis(**parameters):
             report += ' during eclipse'
         else:
             report += ' outside eclipse'
-        
+
         #-- so now we can easily compute the total intensity as the sum of
         #   all visible meshpoints:
         total_intensity = front['projflux'].sum() + back['projflux'][-in_eclipse].sum()
         light_curve[di] = total_intensity
         report += "---> Total intensity: %g "%(total_intensity)
-        
+
         if di==0:
             ylim_lc = (0.95*min(prim['projflux'].sum(),secn['projflux'].sum()),1.2*(prim['projflux'].sum()+secn['projflux'].sum()))
         back['projflux'][in_eclipse] = 0
@@ -914,7 +941,7 @@ def binary_light_curve_synthesis(**parameters):
         back['vx'][in_eclipse] = 0
         back['vy'][in_eclipse] = 0
         back['vz'][in_eclipse] = 0
-        
+
         #-- now calculate the *real* observed radial velocity and projected intensity
         if front_component==1:
             RV1_corr[di] = np.average(front['vx']/1000.,weights=front['projflux'])
@@ -923,21 +950,21 @@ def binary_light_curve_synthesis(**parameters):
             back_cmap = pl.cm.cool_r
         else:
             RV2_corr[di] = np.average(front['vx']/1000.,weights=front['projflux'])
-            RV1_corr[di] = np.average(back['vx'][-in_eclipse]/1000.,weights=back['projflux'][-in_eclipse])        
+            RV1_corr[di] = np.average(back['vx'][-in_eclipse]/1000.,weights=back['projflux'][-in_eclipse])
             front_cmap = pl.cm.cool_r
             back_cmap = pl.cm.hot
         report += 'RV1=%.3f, RV2=%.3f'%(RV1_corr[di],RV2_corr[di])
         logger.info(report)
-        
+
         #================ START DEBUGGING PLOTS ===================
         if direc is not None:
             #--   first calculate the size of the picture, and the color scales
             if di==0:
                 size_x = 1.2*(max(prim['y'].ptp(),secn['y'].ptp())/2. + max(ds))
                 size_y = 1.2*(max(prim['z'].ptp(),secn['z'].ptp())/2. + max(ds) * cos(view_angle))
-                vmin_image,vmax_image = 0,max([front['eyeflux'].max(),back['eyeflux'].max()])        
+                vmin_image,vmax_image = 0,max([front['eyeflux'].max(),back['eyeflux'].max()])
                 size_top = 1.2*(max(prim['x'].ptp(),secn['x'].ptp())/2. + max(ds))
-            
+
             pl.figure(figsize=(16,11))
             pl.subplot(221,aspect='equal');pl.title('line of sight intensity')
             pl.scatter(back['y'],back['z'],c=back['eyeflux'],edgecolors='none',cmap=back_cmap)
@@ -946,7 +973,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.ylim(-size_y,size_y)
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Z [semi-major axis]')
-            
+
             #-- line-of-sight velocity of the system
             pl.subplot(222,aspect='equal');pl.title('line of sight velocity')
             if di==0:
@@ -960,7 +987,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.ylim(-size_y,size_y)
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Z [semi-major axis]')
-            
+
             #-- top view of the system
             pl.subplot(223,aspect='equal');pl.title('Top view')
             pl.scatter(prim['x'],prim['y'],c=prim['eyeflux'],edgecolors='none',cmap=pl.cm.hot)
@@ -969,7 +996,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.ylim(-size_top,size_top)
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Y [semi-major axis]')
-            
+
             #-- light curve and radial velocity curve
             pl.subplot(224);pl.title('light curve and RV curve')
             pl.plot(times[:di+1],2.5*np.log10(light_curve[:di+1]),'k-',label=photband)
@@ -978,7 +1005,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.ylim(2.5*np.log10(ylim_lc[0]),2.5*np.log10(ylim_lc[1]))
             pl.ylabel('Flux [erg/s/cm2/A/sr]')
             pl.legend(loc='lower left',prop=dict(size='small'))
-            
+
             pl.twinx(pl.gca())
             #   primary radial velocity (numerical, kepler and current)
             pl.plot(times[:di+1],RV1_corr[:di+1],'b-',lw=2,label='Numeric 1')
@@ -997,7 +1024,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.legend(loc='upper left',prop=dict(size='small'))
             pl.savefig(os.path.join(direc,'%s_los_%04d'%(name,di)),facecolor='0.75')
             pl.close()
-            
+
             #-- REAL IMAGE picture
             pl.figure(figsize=(7,size_y/size_x*7))
             ax = pl.axes([0,0,1,1])
@@ -1012,7 +1039,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.savefig(os.path.join(direc,'%s_image_%04d'%(name,di)),facecolor='k')
             pl.close()
             #================   END DEBUGGING PLOTS ===================
-    
+
     #-- make sure to have everything
     if direc is not None:
         outputfile_prim.close()
@@ -1023,7 +1050,6 @@ if __name__=="__main__":
     import doctest
     doctest.testmod()
     pl.show()
-    
+
     logger = loggers.get_basic_logger("")
     import sys
-    
