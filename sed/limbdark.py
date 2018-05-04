@@ -448,7 +448,7 @@ def get_table(teff=None,logg=None,ebv=None,vrad=None,star=None,
 
 
 
-def get_itable2(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False,**kwargs):
+def get_itable(teff=None,logg=None,theta=None,mu=1,photbands=None,absolute=False,**kwargs):
     """
     mu=1 is center of disk
     """
