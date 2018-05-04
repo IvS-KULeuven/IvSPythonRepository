@@ -4119,7 +4119,7 @@ if __name__ == "__main__":
     if sum(keep)>2:
         do_pca = True
         logger.info("Start of PCA analysis to find fundamental parameters")
-        colors,index = np.unique1d(master['photband'][include_pca],return_index=True)
+        colors,index = np.unique(master['photband'][include_pca],return_index=True)
         A,grid = fit.get_PCA_grid(colors,ebvrange=(0,0.5),res=10)
         P,T,(means,stds) = fit.get_PCA(A)
         calib = fit.calibrate_PCA(T,grid,function='linear')

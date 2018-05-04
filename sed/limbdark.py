@@ -955,8 +955,8 @@ def get_ld_grid(photband,**kwargs):
     """
     #-- retrieve the grid points (unique values)
     teffs,loggs = get_ld_grid_dimensions(**kwargs)
-    teffs_grid = np.sort(np.unique1d(teffs))
-    loggs_grid = np.sort(np.unique1d(loggs))
+    teffs_grid = np.sort(np.unique(teffs))
+    loggs_grid = np.sort(np.unique(loggs))
     coeff_grid = np.zeros((len(teffs_grid),len(loggs_grid),5*len(photband)))
 
     #-- get the FITS-file containing the tables
