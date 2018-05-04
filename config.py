@@ -12,7 +12,8 @@ import glob as glob_module
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
 data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/',
-             '/STER/kenneth/Python_repository/','/home/ben/public_html/opacities','/STER/michelh/IVSDATA/']
+             '/STER/kenneth/Python_repository/','/home/ben/public_html/opacities','/STER/michelh/IVSDATA/',
+             '/STER/mike/IVSDATA/']
 
 ivs_dirs = dict(coralie='/STER/coralie/',
                 hermes='/STER/mercator/hermes/')
