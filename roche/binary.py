@@ -14,7 +14,7 @@ Currently, three types of stellar shapes are implemented:
 This module can be used to calculate the following information:
     1.  the distorted shape of the star due to a Roche potential
     2.  the local surface gravity assuming Von Zeipel gravity darkening
-    3.  the L{local effective temperature<local_temperature>}
+    3.  the L{local effective temperature<local.temperature>}
     4.  the local velocity vector due to rotation
     5.  the radial velocity
     6.  the total distorted surface area
@@ -88,9 +88,9 @@ surface gravity can only be calculated if we have Cartesian coordinates.
 
 Now we can, as before, calculate the other local quantities:
 
->>> areas_local1,cos_gamma1 = surface_elements((radius1,theta,phi),-grav_local1)
->>> teff_local1 = local_temperature(grav1,g_pole1,T_pole1,beta=1.)
->>> ints_local1 = (local_intensity(teff_local1,grav1,np.ones_like(cos_gamma1),\
+>>> areas_local1,cos_gamma1 = local.surface_elements((radius1,[theta,phi]),-grav_local1)
+>>> teff_local1 = local.temperature(grav1,g_pole1,T_pole1,beta=1.)
+>>> ints_local1 = (local.intensity(teff_local1,grav1,np.ones_like(cos_gamma1),\
                                 photband='OPEN.BOL'))
 >>> velo_local1 = np.cross(np.array([x1,y1,z1]).T*to_SI,omega_rot_vec).T
 
@@ -156,8 +156,8 @@ Then calculate the shape of this star
 and the local quantities
 
 >>> areas_local,cos_gamma = surface_elements((radius,theta,phi),-grav_local)
->>> teff_local = local_temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
->>> ints_local = local_intensity(teff_local,grav,photband='OPEN.BOL')
+>>> teff_local = local.temperature(vectors.norm(grav_local),g_pole,T_pole,beta=1.)
+>>> ints_local = local.intensity(teff_local,grav,photband='OPEN.BOL')
 >>> x,y,z = vectors.spher2cart_coord(radius.ravel(),phis,thetas)
 
 Assume, with a shape of a non-rotating star, that we have a velocity component
@@ -465,7 +465,7 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
         if (R1[-np.isnan(R1)]>1.05).any():
             print("Significant reflection effect on primary (max %.3f%%)"%((R1.max()**0.25-1)*100))
             primary['teff']*= R1**0.25
-            primary['flux'] = local_intensity(primary['teff'],primary['grav'],np.ones_like(primary['teff']),photbands=['OPEN.BOL'])
+            primary['flux'] = local.intensity(primary['teff'],primary['grav'],np.ones_like(primary['teff']),photbands=['OPEN.BOL'])
             break_out = False
         else:
             print('Maximum reflection effect on primary: %.3f%%'%((R1.max()**0.25-1)*100))
@@ -473,7 +473,7 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
         if (R2[-np.isnan(R2)]>1.05).any():
             print("Significant reflection effect on secondary (max %.3g%%)"%((R2.max()**0.25-1)*100))
             secondary['teff']*= R2**0.25
-            secondary['flux'] = local_intensity(secondary['teff'],secondary['grav'],np.ones_like(secondary['teff']),photbands=['OPEN.BOL'])
+            secondary['flux'] = local.intensity(secondary['teff'],secondary['grav'],np.ones_like(secondary['teff']),photbands=['OPEN.BOL'])
             break_out = False
         else:
             print('Maximum reflection effect on secondary: %.3g%%'%((R1.max()**0.25-1)*100))
