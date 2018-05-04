@@ -117,7 +117,7 @@ import numpy as np
 from scipy.optimize import leastsq,fmin
 from scipy.interpolate import splrep, splev
 from scipy.interpolate import LinearNDInterpolator
-from Scientific.Functions.Interpolation import InterpolatingFunction
+# from Scientific.Functions.Interpolation import InterpolatingFunction
 from ivs.aux import loggers
 from ivs.sed import reddening
 from ivs.sed import model
