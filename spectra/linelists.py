@@ -69,6 +69,12 @@ def VALD(elem=None,xmin=3200.,xmax=4800.,outputdir=None):
 
   @param elem: list of ions
   @type elem: list of str
+
+  Example usage:
+
+  >>> x = VALD(elem=['CI','OII'],xmin=3000., xmax=4000.)
+  CI
+  OII
   """
   if elem is None:
     files = sorted(config.glob('VALD_individual','VALD_*.lijnen'))
@@ -114,13 +120,13 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
 
     Retrieve all Silicon lines between 4500 and 4600 for a B1V star.
 
-    >>> data = get_lines(20000,4.0,atoms=['Si'],wrange=(4500,4600))
+    >>> data = get_lines(20000,4.0,atoms=['Si'],ions=['CI','CII'],wrange=(4200,6800))
     >>> p = pl.figure()
     >>> p = pl.vlines(data['wavelength'],1,1-data['depth'])
 
     See how the depth of the Halpha line varies wrt temperature:
 
-    >>> teffs = range(5000,21000,1000) + range(22000,32000,2000) + range(30000,50000,50000)
+    >>> teffs = list(range(5000,21000,1000)) + list(range(22000,32000,2000)) + list(range(30000,50000,50000))
     >>> depths = np.zeros((len(teffs),7))
     >>> for i,teff in enumerate(teffs):
     ...     data = get_lines(teff,5.0,ions=['HI'],wrange=(3800,7000))
@@ -174,6 +180,9 @@ def get_lines(teff,logg,z=0,atoms=None,ions=None,wrange=(-inf,inf),\
 def ioncode2name(ioncode):
     """
     Convert 14.01 to SiII
+
+    >>> print(ioncode2name(14.01))
+    SiII
     """
     atom = int(np.floor(ioncode))
     ion = int(np.round((ioncode-atom)*100))
@@ -182,6 +191,9 @@ def ioncode2name(ioncode):
 def name2ioncode(name):
     """
     Convert SiII to 14.01
+
+    >>> print(name2ioncode("SiII"))
+    14.01
     """
     atomname,ionstage = splitname(name)
     return atomcode.index(atomname) + roman.index(ionstage)/100.
@@ -189,6 +201,9 @@ def name2ioncode(name):
 def splitname(name):
     """
     Split SiII into Si and II
+
+    >>> print(splitname("BaIV"))
+    ('Ba', 'IV')
     """
     atomname = ''
     ionstage = ''

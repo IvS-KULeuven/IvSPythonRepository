@@ -12,7 +12,8 @@ import glob as glob_module
 #-- You can add directories here, but be sure that the relative paths within
 #   those directories are correct!
 data_dirs = [os.getenv('ivsdata'),'/STER/pieterd/IVSDATA/', '/STER/kristofs/IVSdata','/STER/jorisv/IVSDATA/',
-             '/STER/kenneth/Python_repository/','/home/ben/public_html/opacities','/STER/michelh/IVSDATA/']
+             '/STER/kenneth/Python_repository/','/home/ben/public_html/opacities','/STER/michelh/IVSDATA/',
+             '/STER/mike/IVSDATA/']
 
 ivs_dirs = dict(coralie='/STER/coralie/',
                 hermes='/STER/mercator/hermes/')
@@ -77,6 +78,7 @@ if __name__=="__main__":
     from ivs.aux import loggers
     import shutil
     import time
+    import glob
     logger = loggers.get_basic_logger()
 
     to_install = ['spectra/pyrotin4',
@@ -100,15 +102,20 @@ if __name__=="__main__":
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
                     logger.info('Compiling %s: %s'%(pname.upper(),cmd))
-                    if answer!='Y':
+                    if answer.lower()!='y':
                         answer = input('Continue? [Y/n] ')
                         if answer.lower()=='n':
                             continue
                     #-- call the compiling command
                     p = subprocess.check_output(cmd,shell=True)#,stdout=devnull)
                     #-- check if compilation went fine
-                    if os.path.isfile(pname+'.so'):
-                        shutil.move(pname+'.so',name+'.so')
+                    # find compiled file name
+                    compiled_filename = list(filter(os.path.isfile, glob.glob('./'+pname+'*.so')))
+                    # if it exists move it to to appropriate dir
+                    # and change the compiled name e.g. deeming.cpython-36m-x86_64-linux-gnu.so
+                    # to e.g. deeming.so
+                    if compiled_filename:
+                        shutil.move(compiled_filename[0],name+'.so')
                         logger.info('... succeeded')
                     else:
                         logger.error('FAILED')

@@ -8,21 +8,21 @@ Error messages are written to the logger "granulation".
 
 import numpy as np
 from numpy.random import normal
-import logging
+# import logging
 
 
 # Setup the logger.
-# Add at least one handler to avoid the message "No handlers could be found" 
-# on the console. The NullHandler is part of the standard logging module only 
+# Add at least one handler to avoid the message "No handlers could be found"
+# on the console. The NullHandler is part of the standard logging module only
 # from Python 2.7 on.
 
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-        
-logger = logging.getLogger("granulation")
-nullHandler = NullHandler()
-logger.addHandler(nullHandler)
+# class NullHandler(logging.Handler):
+#     def emit(self, record):
+#         pass
+#
+# logger = logging.getLogger("granulation")
+# nullHandler = NullHandler()
+# logger.addHandler(nullHandler)
 
 
 
@@ -30,46 +30,48 @@ def granulation(time, timescale, varscale):
 
     """
     Simulates a time series showing granulation variations
-    
+
     A first-order autoregressive process is used, as this gives a Harvey
     model in the frequency domain. See also:
     De Ridder et al., 2006, MNRAS 365, pp. 595-605.
-    
+
     @param time: time points
     @type time: ndarray
     @param timescale: array of time scale "tau_i" of each granulation component
                       of the granulation/magnetic activity. Same units as 'time'.
     @type timescale: ndarray
-    @param varscale: array of variation scale "sigma_i" of each component of the 
+    @param varscale: array of variation scale "sigma_i" of each component of the
                      granulation/magnetic activity in the appropriate passband.
                      Same size as the timescale array. Unit: ppm
     @type varscale: ndarray
     @return: the granulation signal
     @rtype: ndarray
-    
+
     Example:
-    
+
     >>> time = np.linspace(0,100,200)             # E.g. in days
     >>> timescale = np.array([5.0, 20.])          # time scales in days
     >>> varscale = np.array([10.0, 50.0])         # variation scale in ppm
     >>> gransignal = granulation(time, timescale, varscale)
     >>> flux = 100000.0                           # mean flux level
     >>> signal = flux * (1.0 + gransignal)        # signal in flux
-    
+
     """
-    
-    
+
+
     Ntime = len(time)
     Ncomp = len(timescale)
 
-    logger.info("Simulating %d granulation components\n" % Ncomp)
-        
+    # logger.info("Simulating %d granulation components\n" % Ncomp)
+    print("Simulating %d granulation components" % Ncomp)
+
     # Set the kick (= reexcitation) timestep to be one 100th of the
     # shortest granulation time scale (i.e. kick often enough).
 
     kicktimestep = min(timescale) / 100.0
-    
-    logger.info("Kicktimestep = %f\n" % kicktimestep)
+
+    # logger.info("Kicktimestep = %f\n" % kicktimestep)
+    print("Kicktimestep = %f" % kicktimestep)
 
     # Predefine some arrays
 
@@ -80,14 +82,16 @@ def granulation(time, timescale, varscale):
 
     # Warm up the first-order autoregressive process
 
-    logger.info("Granulation process warming up...\n")
-        
+    # logger.info("Granulation process warming up...\n")
+    print("Kicktimestep = %f" % kicktimestep)
+
     for i in range(2000):
         granul = granul * (1.0 - kicktimestep / timescale) + normal(mu, sigma)
 
     # Start simulating the granulation time series
 
-    logger.info("Simulating granulation signal.\n")
+    # logger.info("Simulating granulation signal.\n")
+    print("Simulating granulation signal.")
 
     delta = 0.0
     currenttime = time[0] - kicktimestep
@@ -108,12 +112,30 @@ def granulation(time, timescale, varscale):
                  + normal(mu, np.sqrt(delta/timescale)*varscale)
         currenttime = time[i]
 
-        # Add the different components to the signal. 
+        # Add the different components to the signal.
 
         signal[i] = sum(granul)
 
 
-    # That's it!
-
+    # Return the resulting signal
+    print("Returning the resulting signal")
     return(signal)
 
+def mainx():
+    import matplotlib.pyplot as plt
+    time = np.linspace(0,100,200)             # E.g. in days
+    timescale = np.array([5.0, 20.])          # time scales in days
+    varscale = np.array([10.0, 50.0])         # variation scale in ppm
+    # granulation is simulated stochastically, thus each realization is different, given a certain random seed
+    gransignal = granulation(time, timescale, varscale)
+    flux = 100000.0                           # mean flux level
+    signal = flux * (1.0 + gransignal)        # signal in flux
+
+    plt.figure(figsize=(12,4))
+    plt.plot(time,signal)
+    plt.xlabel('Time [Ms]',fontsize=14)
+    plt.ylabel('Signal',fontsize=14)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == '__main__': mainx()

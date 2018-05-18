@@ -15,34 +15,34 @@ Suppose Delta is the peak FWHM linewidth (muHz) and eta is the damping rate (muH
 import numpy as np
 from numpy.random import uniform, normal
 from math import sin,cos, floor, pi
-import logging
+# import logging
 
 
 # Setup the logger.
-# Add at least one handler to avoid the message "No handlers could be found" 
-# on the console. The NullHandler is part of the standard logging module only 
+# Add at least one handler to avoid the message "No handlers could be found"
+# on the console. The NullHandler is part of the standard logging module only
 # from Python 2.7 on.
 
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-        
-logger = logging.getLogger("solarosc")
-nullHandler = NullHandler()
-logger.addHandler(nullHandler)
+# class NullHandler(logging.Handler):
+#     def emit(self, record):
+#         pass
+#
+# logger = logging.getLogger("solarosc")
+# nullHandler = NullHandler()
+# logger.addHandler(nullHandler)
 
 
 
 
 def solarosc(time, freq, ampl, eta):
-    
+
     """
     Compute time series of stochastically excited damped modes
-    
+
     See also De Ridder et al., 2006, MNRAS 365, pp. 595-605.
 
     Example:
-    
+
     >>> time = np.linspace(0, 40, 100)      # in Ms
     >>> freq = np.array([23.0, 23.5])       # in microHz
     >>> ampl = np.array([100.0, 110.0])     # in ppm
@@ -60,7 +60,7 @@ def solarosc(time, freq, ampl, eta):
     Oscillation kicktimestep: 3333.333333
     300 kicks for warm up for oscillation signal
     Simulating stochastic oscillations
-    
+
     @param time: time points [0..Ntime-1] (unit: e.g. Ms)
     @type time: ndarray
     @param freq: oscillation freqs [0..Nmodes-1] (unit: e.g. microHz)
@@ -73,18 +73,20 @@ def solarosc(time, freq, ampl, eta):
     @return: signal[0..Ntime-1]
     @rtype: ndarray
     """
-  
+
     Ntime = len(time)
     Nmode = len(freq)
 
-    logger.info("Simulating %d modes" % Nmode)
+    # logger.info("Simulating %d modes" % Nmode)
+    print("Simulating %d modes" % Nmode)
 
     # Set the kick (= reexcitation) timestep to be one 100th of the
     # shortest damping time. (i.e. kick often enough).
 
     kicktimestep = (1.0 / max(eta)) / 100.0
-    
-    logger.info("Oscillation kicktimestep: %f" % kicktimestep)
+
+    # logger.info("Oscillation kicktimestep: %f" % kicktimestep)
+    print("Oscillation kicktimestep: %f" % kicktimestep)
 
     # Init start values of amplitudes, and the kicking amplitude
     # so that the amplitude of the oscillator will be on average be
@@ -98,12 +100,13 @@ def solarosc(time, freq, ampl, eta):
     # initial conditions. Do this during the longest damping time.
     # But put a maximum on the number of kicks, as there might
     # be almost-stable modes with damping time = infinity
-  
+
     damp = np.exp(-eta * kicktimestep)
     Nwarmup = min(20000, int(floor(1.0 / min(eta) / kicktimestep)))
 
-    logger.info("%d kicks for warm up for oscillation signal" % Nwarmup)
-        
+    # logger.info("%d kicks for warm up for oscillation signal" % Nwarmup)
+    print("%d kicks for warm up for oscillation signal" % Nwarmup)
+
     for i in range(Nwarmup):
         amplsin = damp * amplsin + normal(np.zeros(Nmode), kick_amplitude)
         amplcos = damp * amplcos + normal(np.zeros(Nmode), kick_amplitude)
@@ -119,8 +122,9 @@ def solarosc(time, freq, ampl, eta):
 
     # Start simulating the time series.
 
-    logger.info("Simulating stochastic oscillations")
-        
+    # logger.info("Simulating stochastic oscillations")
+    print("Simulating stochastic oscillations")
+
     signal = np.zeros(Ntime)
 
     for j in range(Ntime):
@@ -148,6 +152,25 @@ def solarosc(time, freq, ampl, eta):
                                   + amplcos[i] * cos(2*pi*freq[i]*time[j]))
 
     # Return the resulting signal
-
+    print("Returning the resulting signal")
     return(signal)
 
+def mainx():
+    import matplotlib.pyplot as plt
+    time = np.linspace(0, 40, 100)      # in Ms
+    freq = np.array([23.0, 23.5])       # in microHz
+    ampl = np.array([100.0, 110.0])     # in ppm
+    eta = np.array([1.e-6, 3.e-6])      # in 1/Ms
+    # oscillations are simulated stochastically, thus each realization is different, given a certain random seed
+    oscsignal = solarosc(time, freq, ampl, eta)
+    flux = 1000000.0                    # average flux level
+    signal = flux * (1.0 + oscsignal)
+
+    plt.figure(figsize=(12,4))
+    plt.plot(time,signal)
+    plt.xlabel('Time [Ms]',fontsize=14)
+    plt.ylabel('Signal',fontsize=14)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == '__main__': mainx()
