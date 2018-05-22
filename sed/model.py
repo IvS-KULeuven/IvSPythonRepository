@@ -310,7 +310,7 @@ from ivs.aux import numpy_ext
 from ivs.sed import filters
 from ivs.inout import fits
 from ivs.sigproc import interpol
-from . import reddening
+import reddening
 import getpass
 import shutil
 
@@ -2485,4 +2485,3 @@ if __name__=="__main__":
     import pylab as pl
     doctest.testmod()
     pl.show()
-

@@ -49,7 +49,7 @@ def overwrite_line(message):
     @type message: str
     """
     ESC=chr(27)
-    print('{ESC}[s{ESC}[2K{message}{ESC}[u'.format(ESC=ESC,message=message),end='')
+    # print('{ESC}[s{ESC}[2K{message}{ESC}[u'.format(ESC=ESC,message=message),end='')
 
 
 def line_at_a_time(fileobj):
