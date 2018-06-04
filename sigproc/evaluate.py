@@ -518,7 +518,7 @@ def binary(times,parameters,n1=None,itermax=8):
     parameter fields must be C{'P','T0','e','omega','K1', 'K2'}.
     """
     if n1 is None:
-        n1 = len(times)/2
+        n1 = len(times)//2
     if 'gamma' in parameters.dtype.names:
         RVfit = parameters['gamma'].sum()
     else:
@@ -841,7 +841,7 @@ def sine_preppars(pars):
     else:
         # with constant
         if len(pars)%3==1:
-            converted_pars = np.zeros((4,(len(pars)-1)/3))
+            converted_pars = np.zeros((4,(len(pars)-1)//3))
             converted_pars[0,0] = pars[0]
             converted_pars[1] = pars[1::3]
             converted_pars[2] = pars[2::3]
@@ -849,7 +849,7 @@ def sine_preppars(pars):
             names = ['const','ampl','freq','phase']
         # without constant
         else:
-            converted_pars = np.zeros((3,len(pars)/3))
+            converted_pars = np.zeros((3,len(pars)//3))
             converted_pars[0] = pars[0::3]
             converted_pars[1] = pars[1::3]
             converted_pars[2] = pars[2::3]
@@ -895,7 +895,7 @@ def kepler_preppars(pars):
     else:
         # with constant
         if len(pars)%5==1:
-            converted_pars = np.zeros((6,(len(pars)-1)/5))
+            converted_pars = np.zeros((6,(len(pars)-1)//5))
             converted_pars[0,0] = pars[0]
             converted_pars[1] = pars[1::5]
             converted_pars[2] = pars[2::5]
@@ -905,7 +905,7 @@ def kepler_preppars(pars):
             names = ['gamma','P','T0','e','omega','K']
         # without constant
         else:
-            converted_pars = np.zeros((5,len(pars)/5))
+            converted_pars = np.zeros((5,len(pars)//5))
             converted_pars[0] = pars[0::5]
             converted_pars[1] = pars[1::5]
             converted_pars[2] = pars[2::5]
@@ -955,7 +955,7 @@ def binary_preppars(pars):
     else:
         # with constant
         if len(pars)%6==1:
-            converted_pars = np.zeros((7,(len(pars)-1)/6))
+            converted_pars = np.zeros((7,(len(pars)-1)//6))
             converted_pars[0,0] = pars[0]
             converted_pars[1] = pars[1::6]
             converted_pars[2] = pars[2::6]
@@ -966,7 +966,7 @@ def binary_preppars(pars):
             names = ['gamma','P','T0','e','omega','K1','K2']
         # without constant
         else:
-            converted_pars = np.zeros((6,len(pars)/6))
+            converted_pars = np.zeros((6,len(pars)//6))
             converted_pars[0] = pars[0::6]
             converted_pars[1] = pars[1::6]
             converted_pars[2] = pars[2::6]
@@ -1004,7 +1004,7 @@ def box_preppars(pars):
         converted_pars[4::4] = pars['egress']
     #-- from flat to record array
     else:
-        converted_pars = np.ones((5,(len(pars)-1)/4))
+        converted_pars = np.ones((5,(len(pars)-1)//4))
         converted_pars[0,0] = pars[0]
         converted_pars[1] = pars[1::4]
         converted_pars[2] = pars[2::4]
@@ -1043,10 +1043,10 @@ def gauss_preppars(pars):
     #-- from flat to record array
     else:
         if len(pars)%3==0:
-            converted_pars = np.zeros((3,len(pars)/3))
+            converted_pars = np.zeros((3,len(pars)//3))
             names = ['ampl','mu','sigma']
         else:
-            converted_pars = np.zeros((4,(len(pars)-1)/3))
+            converted_pars = np.zeros((4,(len(pars)-1)//3))
             converted_pars[3,0] = pars[-1]
             names = ['ampl','mu','sigma','const']
         converted_pars[0] = pars[0:-1:3]
@@ -1083,10 +1083,10 @@ def lorentz_preppars(pars):
     #-- from flat to record array
     else:
         if len(pars)%3==0:
-            converted_pars = np.zeros((3,len(pars)/3))
+            converted_pars = np.zeros((3,len(pars)//3))
             names = ['ampl','mu','gamma']
         else:
-            converted_pars = np.zeros((4,(len(pars)-1)/3))
+            converted_pars = np.zeros((4,(len(pars)-1)//3))
             converted_pars[3,0] = pars[-1]
             names = ['ampl','mu','gamma','const']
         converted_pars[0] = pars[0:-1:3]
@@ -1124,10 +1124,10 @@ def voigt_preppars(pars):
     #-- from flat to record array
     else:
         if len(pars)%4==0:
-            converted_pars = np.zeros((4,len(pars)/4))
+            converted_pars = np.zeros((4,len(pars)//4))
             names = ['ampl','mu','sigma','gamma']
         else:
-            converted_pars = np.zeros((5,(len(pars)-1)/4))
+            converted_pars = np.zeros((5,(len(pars)-1)//4))
             converted_pars[4,0] = pars[-1]
             names = ['ampl','mu','sigma','gamma','const']
         converted_pars[0] = pars[0:-1:4]
@@ -1166,10 +1166,10 @@ def power_law_preppars(pars):
     #-- from flat to record array
     else:
         if len(pars)%3==0:
-            converted_pars = np.zeros((3,len(pars)/3))
+            converted_pars = np.zeros((3,len(pars)//3))
             names = ['A','B','C']
         else:
-            converted_pars = np.zeros((4,(len(pars)-1)/3))
+            converted_pars = np.zeros((4,(len(pars)-1)//3))
             converted_pars[3,0] = pars[-1]
             names = ['A','B','C','const']
         converted_pars[0] = pars[0:-1:3]
