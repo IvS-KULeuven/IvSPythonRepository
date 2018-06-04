@@ -26,7 +26,7 @@ from ivs.aux import termtools
 
 
 #-- skip documentation generation of the following third party modules:
-skip = ['uncertainties','lmfit']
+skip = ['lmfit']
 
 #-- do you want to immediately show the contents in your default webbrowser each
 #   time the documentation is generated (False, 'current tab' or 'new tab')?

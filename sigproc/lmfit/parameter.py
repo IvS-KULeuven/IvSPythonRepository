@@ -9,7 +9,7 @@ except ImportError:
     from .ordereddict import OrderedDict
 
 import re
-from . import uncertainties
+import uncertainties
 
 
 RESERVED_WORDS = ('and', 'as', 'assert', 'break', 'class', 'continue',
@@ -184,7 +184,7 @@ class Parameter(object):
         except(TypeError, ValueError):
             self._val = nan
         return self._val
-    
+
     @property
     def value(self):
         "get value"
@@ -323,4 +323,3 @@ def isParameter(x):
     "test for Parameter-ness"
     return (isinstance(x, Parameter) or
             x.__class__.__name__ == 'Parameter')
-
