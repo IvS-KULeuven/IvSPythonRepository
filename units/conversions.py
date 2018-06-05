@@ -525,7 +525,8 @@ except ImportError: print("Unable to load pyephem, stellar coordinate transforma
 
 #-- from IVS repository
 from ivs.units import constants
-from uncertainties import unumpy,ufloat #AffineScalarFunc
+from uncertainties import unumpy,ufloat
+from uncertainties.core import AffineScalarFunc
 from numpy import log10,log,exp,sqrt
 from numpy import sin,cos,tan
 from numpy import arcsin,arccos,arctan
