@@ -343,7 +343,7 @@ def binary_roche_potential_gradient(x, y, z, q, d, F, norm=False):
         return dOmega
 
 
-def binary_roche_surface_gravity(x, y, z, d, omega, M1, M2, a=1., norm=False):
+def binary_roche_surface_gravity(x, y, z, d, omega, M1, M2, norm=False):
     """
     Calculate surface gravity in an eccentric asynchronous binary roche potential.
     """
