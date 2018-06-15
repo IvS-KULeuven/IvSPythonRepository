@@ -402,19 +402,18 @@ def get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole):
     return r
 
 
-#}
+# }
 
-
-
-def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
-    #-- reflection effect
-    #--------------------
+def reflection_effect(primary, secondary, theta, phi, A1=1., A2=1.,
+                      max_iter=1):
+    # -- reflection effect
+    # --------------------
     reflection_iter = 0
     while (reflection_iter<max_iter):
-        R1,R2 = np.ones(len(primary['teff'])/4),np.ones(len(primary['teff'])/4)
+        R1,R2 = np.ones(int(len(primary['teff'])/4)),np.ones(int(len(primary['teff'])/4))
         for i in range(len(R1)):
             if i%100==0: print(i,len(R1))
-            #-- radiation from secondary onto primary
+            # -- radiation from secondary onto primary
             s12 = np.array([ primary['x'][i]-secondary['x'],
                              primary['y'][i]-secondary['y'],
                              primary['z'][i]-secondary['z']])
@@ -432,7 +431,7 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
             J_1_tot      = primary['flux'][i]
             R1_new = 1+ J_21_entrant/J_1_tot
 
-            #-- radiation from primary onto secondary
+            # -- radiation from primary onto secondary
             s12 = np.array([primary['x']-secondary['x'][i],
                             primary['y']-secondary['y'][i],
                             primary['z']-secondary['z'][i]])
@@ -462,7 +461,7 @@ def reflection_effect(primary,secondary,theta,phi,A1=1.,A2=1.,max_iter=1):
         #pl.colorbar()
         #================   END DEBUGGING PLOTS ===================
 
-        #-- adapt the teff only (and when) the increase is more than 1% (=>1.005**0.25=1.01)
+        # -- adapt the teff only (and when) the increase is more than 1% (=>1.005**0.25=1.01)
         break_out = True
         trash,trash2,R1,R2 = stitch_grid(theta,phi,R1.reshape(theta.shape),R2.reshape(theta.shape))
         del trash,trash2
@@ -537,7 +536,7 @@ def spectral_synthesis(*stars,**kwargs):
     @rtype: tuple of numpy arrays
     """
     wave = kwargs.get('wave',np.linspace(7050,7080,1000))
-    #-- these are the log surface gravity values in cgs [dex]
+    # -- these are the log surface gravity values in cgs [dex]
     spectra = []
     get_spectrum = spectra_model.get_table
     for mystar in stars:
@@ -545,10 +544,10 @@ def spectral_synthesis(*stars,**kwargs):
         iterator = list(zip(mystar['teff'],loggs,mystar['vx']/1000.))
         print("Temperature range:",mystar['teff'].min(),mystar['teff'].max())
         print("logg range:",loggs.min(),loggs.max())
-        #-- retrieve the synthetic spectra for all surface elements, interpolated
+        # -- retrieve the synthetic spectra for all surface elements, interpolated
         #   on the supplied wavelength grid, and taking care of radial velocity shifts
         spectra_elements = np.array([get_spectrum(teff=iteff,logg=ilogg,vrad=ivrad,wave=wave)[1] for iteff,ilogg,ivrad in iterator])
-        #-- and add them up according to the flux projected in the line of sight
+        # -- and add them up according to the flux projected in the line of sight
         average_spectrum = np.sum(spectra_elements*mystar['projflux'],axis=0)
         spectra.append(average_spectrum)
     return spectra
@@ -570,7 +569,7 @@ def binary_light_curve_synthesis(**parameters):
     @parameter tres: number of phase steps to comptue the light curve on
     @type tres: integer
     """
-    #-- some parameters are optional
+    # -- some parameters are optional
     #   file output parameters
     name = parameters.setdefault('name','mybinary')
     direc = parameters.setdefault('direc','')
@@ -594,7 +593,7 @@ def binary_light_curve_synthesis(**parameters):
     beta1 = parameters.setdefault('beta1',1.0)           # gravity darkening primary
     beta2 = parameters.setdefault('beta2',1.0)           # gravity darkening secondary
 
-    #-- others are mandatory:
+    # -- others are mandatory:
     T_pole = parameters['Tpole1']       # Primary Polar temperature   [K]
     T_pole2 = parameters['Tpole2']      # Secondary Polar temperature [K]
     P = parameters['P']                 # Period [days]
@@ -602,7 +601,7 @@ def binary_light_curve_synthesis(**parameters):
     Phi  = parameters['Phi1']           # Gravitational potential of primary [-]
     Phi2 = parameters['Phi2']           # Gravitational potential of secondary [-]
 
-    #-- derive parameters needed in the calculation
+    # -- derive parameters needed in the calculation
     a = asini/sin(incl/180.*pi)
     a1 = a / (1.+1./q)
     a2 = a / (1.+   q)
@@ -624,7 +623,7 @@ def binary_light_curve_synthesis(**parameters):
     parameters['L1'] = L1*a*constants.au/constants.Rsol
     parameters['L2'] = L2*a*constants.au/constants.Rsol
 
-    #-- calculate the Keplerian orbits of the primary and secondary
+    # -- calculate the Keplerian orbits of the primary and secondary
     if not hasattr(tres,'__iter__'):
         times = np.linspace(0.5*P,1.5*P,tres)
     else:
@@ -644,22 +643,22 @@ def binary_light_curve_synthesis(**parameters):
     x1o_,z1o = vectors.rotate(x1o,np.zeros_like(y1o),rot_i)
     x2o_,z2o = vectors.rotate(x2o,np.zeros_like(y2o),rot_i)
 
-    #-- calculate separation at all phases
+    # -- calculate separation at all phases
     ds = np.sqrt( (x1o-x2o)**2 + (y1o-y2o)**2)
 
-    #-- calculate the polar radius and the radius towards L1 at minimum separation
+    # -- calculate the polar radius and the radius towards L1 at minimum separation
     r_pole = newton(binary_roche_potential,1e-5,args=(0,0,Phi,q,ds.min(),F))
     r_pole2 = newton(binary_roche_potential,1e-5,args=(0,0,Phi2,q2,ds.min(),F2))
     parameters['Rp1'] = r_pole*a*constants.au/constants.Rsol
     parameters['Rp2'] = r_pole2*a*constants.au/constants.Rsol
 
-    #-- calculate the critical Phis and Roche radius
+    # -- calculate the critical Phis and Roche radius
     phi1_crit = binary_roche_potential(L1,0,0,Phi,q,ds.min(),F)
     phi2_crit = binary_roche_potential(L1,0,0,Phi2,q2,ds.min(),F2)
     R_roche1 = a * 0.49 * q2**(2./3.) / (0.6*q2**(2./3.) + np.log(1+q2**(1./3.)))
     R_roche2 = a * 0.49 * q**(2./3.) / (0.6*q**(2./3.) + np.log(1+q**(1./3.)))
 
-    #-- timescales
+    # -- timescales
     tdyn1 = np.sqrt(2*(r_pole*constants.au)**3/(constants.GG*M1*constants.Msol))
     tdyn2 = np.sqrt(2*(r_pole2*constants.au)**3/(constants.GG*M2*constants.Msol))
     lumt1 = (M1<2.) and M1**4 or (1.5*M1**3.5) # from mass luminosity relation
@@ -698,7 +697,7 @@ def binary_light_curve_synthesis(**parameters):
     logger.info('TTHERM secondary             = %.3g yr'%(tthr2/(24*3600*365)))
     logger.info('=================================================')
 
-    #-- construct the grid to calculate stellar shapes
+    # -- construct the grid to calculate stellar shapes
     if hasattr(res,'__iter__'):
         mygrid = local.get_grid(res[0],res[1],gtype=gtype)
         theta,phi = mygrid[:2]
@@ -730,19 +729,19 @@ def binary_light_curve_synthesis(**parameters):
     for di,d in enumerate(ds):
         report = "STEP %04d"%(di)
 
-        #-- this is the angular velocity due to rotation and orbit
+        # -- this is the angular velocity due to rotation and orbit
         #   you get the rotation period of the star via 2pi/omega_rot (in sec)
         omega_rot = F * 2*pi/P_ * 1/d**2 * sqrt( (1+e)*(1-e))
         omega_rot_vec = np.array([0.,0.,-omega_rot])
 
         if e>0 or di==0:
-            #-- compute the star's radius and surface gravity
+            # -- compute the star's radius and surface gravity
             out = [[get_binary_roche_radius(itheta,iphi,Phi=Phi,q=q,d=d,F=F,r_pole=r_pole),
                     get_binary_roche_radius(itheta,iphi,Phi=Phi2,q=q2,d=d,F=F2,r_pole=r_pole2)] for itheta,iphi in zip(thetas,phis)]
             rprim,rsec = np.array(out).T
 
-            #-- for the primary
-            #------------------
+            # -- for the primary
+            # ------------------
             radius  = rprim.reshape(theta.shape)
             this_r_pole = get_binary_roche_radius(0,0,Phi=Phi,q=q,d=d,F=F,r_pole=r_pole)
             x,y,z = vectors.spher2cart_coord(radius,phi,theta)
@@ -752,7 +751,7 @@ def binary_light_curve_synthesis(**parameters):
             dOmega = binary_roche_potential_gradient(x,y,z,q,d,F,norm=False)
             grav_local = dOmega*zeta
 
-            #-- here we can compute local quantities: surface gravity, area,
+            # -- here we can compute local quantities: surface gravity, area,
             #   effective temperature, flux and velocity
             grav_local = np.array([i.reshape(theta.shape) for i in grav_local])
             grav = vectors.norm(grav_local)
@@ -761,7 +760,7 @@ def binary_light_curve_synthesis(**parameters):
             ints_local = local.intensity(teff_local,grav,np.ones_like(cos_gamma),photband='OPEN.BOL')
             velo_local = np.cross(np.array([x,y,z]).T*to_SI,omega_rot_vec).T
 
-            #-- here we can compute the global quantities: total surface area
+            # -- here we can compute the global quantities: total surface area
             #   and luminosity
             lumi_prim = 4*pi*(ints_local*areas_local*to_CGS**2).sum()/constants.Lsol_cgs
             area_prim = 4*areas_local.sum()*to_CGS**2/(4*pi*constants.Rsol_cgs**2)
@@ -776,8 +775,8 @@ def binary_light_curve_synthesis(**parameters):
             ext_dict['LUMI1'] = lumi_prim
             ext_dict['SURF1'] = area_prim
 
-            #-- for the secondary
-            #--------------------
+            # -- for the secondary
+            # --------------------
             radius2 = rsec.reshape(theta.shape)
             this_r_pole2 = get_binary_roche_radius(itheta,iphi,Phi=Phi2,q=q2,d=d,F=F2,r_pole=r_pole2)
             x2,y2,z2 = vectors.spher2cart_coord(radius2,phi,theta)
@@ -787,7 +786,7 @@ def binary_light_curve_synthesis(**parameters):
             dOmega2 = binary_roche_potential_gradient(x2,y2,z2,q2,d,F2,norm=False)
             grav_local2 = dOmega2*zeta2
 
-            #-- here we can compute local quantities: : surface gravity, area,
+            # -- here we can compute local quantities: : surface gravity, area,
             #   effective temperature, flux and velocity
             grav_local2 = np.array([i.reshape(theta.shape) for i in grav_local2])
             grav2 = vectors.norm(grav_local2)
@@ -796,7 +795,7 @@ def binary_light_curve_synthesis(**parameters):
             ints_local2 = local.intensity(teff_local2,grav2,np.ones_like(cos_gamma2),photband='OPEN.BOL')
             velo_local2 = np.cross(np.array([x2,y2,z2]).T*to_SI,omega_rot_vec).T
 
-            #-- here we can compute the global quantities: total surface area
+            # -- here we can compute the global quantities: total surface area
             #   and luminosity
             lumi_sec = 4*pi*(ints_local2*areas_local2*to_CGS**2).sum()/constants.Lsol_cgs
             area_sec = 4*areas_local2.sum()*to_CGS**2/(4*pi*constants.Rsol_cgs**2)
@@ -817,24 +816,24 @@ def binary_light_curve_synthesis(**parameters):
             #pl.show()
             #================   END DEBUGGING PLOTS ===================
 
-            #-- stitch the grid!
+            # -- stitch the grid!
             theta_,phi_,radius,gravx,gravy,gravz,grav,areas,teff,ints,vx,vy,vz = \
                          local.stitch_grid(theta,phi,radius,grav_local[0],grav_local[1],grav_local[2],
                                     grav,areas_local,teff_local,ints_local,velo_local[0],velo_local[1],velo_local[2],
                                     seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
-            #-- stitch the grid!
+            # -- stitch the grid!
             theta2_,phi2_,radius2,gravx2,gravy2,gravz2,grav2,areas2,teff2,ints2,vx2,vy2,vz2 = \
                          local.stitch_grid(theta,phi,radius2,grav_local2[0],grav_local2[1],grav_local2[2],
                                     grav2,areas_local2,teff_local2,ints_local2,velo_local2[0],velo_local2[1],velo_local2[2],
                                     seamless=False,gtype=gtype,
                                     vtype=['scalar','x','y','z','scalar','scalar','scalar','scalar','vx','vy','vz'])
 
-            #-- vectors and coordinates in original frame
+            # -- vectors and coordinates in original frame
             x_of,y_of,z_of = vectors.spher2cart_coord(radius.ravel(),phi_.ravel(),theta_.ravel())
             x2_of,y2_of,z2_of = vectors.spher2cart_coord(radius2.ravel(),phi2_.ravel(),theta2_.ravel())
             x2_of = -x2_of
-            #-- store information on primary and secondary in a record array
+            # -- store information on primary and secondary in a record array
             primary = np.rec.fromarrays([theta_.ravel(),phi_.ravel(),radius.ravel(),
                                          x_of,y_of,z_of,
                                          vx.ravel(),vy.ravel(),vz.ravel(),
@@ -846,25 +845,28 @@ def binary_light_curve_synthesis(**parameters):
                                          'gravx','gravy','gravz','grav',
                                          'areas','teff','flux'])
 
-            secondary = np.rec.fromarrays([theta2_.ravel(),phi2_.ravel(),radius2.ravel(),
-                                         x2_of,y2_of,z2_of,
-                                         vx2.ravel(),-vy2.ravel(),vz2.ravel(),
-                                         -gravx2.ravel(),gravy2.ravel(),gravz2.ravel(),grav2.ravel(),
-                                         areas2.ravel(),teff2.ravel(),ints2.ravel()],
-                                  names=['theta','phi','r',
-                                         'x','y','z',
-                                         'vx','vy','vz',
-                                         'gravx','gravy','gravz','grav',
-                                         'areas','teff','flux'])
+            secondary = np.rec.fromarrays([theta2_.ravel(), phi2_.ravel(),
+                                           radius2.ravel(), x2_of, y2_of,
+                                           z2_of, vx2.ravel(), -vy2.ravel(),
+                                           vz2.ravel(), -gravx2.ravel(),
+                                           gravy2.ravel(), gravz2.ravel(),
+                                           grav2.ravel(), areas2.ravel(),
+                                           teff2.ravel(), ints2.ravel()],
+                                          names=['theta', 'phi', 'r', 'x', 'y',
+                                                 'z', 'vx', 'vy', 'vz',
+                                                 'gravx', 'gravy', 'gravz',
+                                                 'grav', 'areas', 'teff',
+                                                 'flux']
+                                          )
 
-            #-- take care of the reflection effect
+            # -- take care of the reflection effect
             primary,secondary = reflection_effect(primary,secondary,theta,phi,
                                        A1=A1,A2=A2,max_iter=max_iter_reflection)
 
-        #-- now compute the integrated intensity in the line of sight:
-        #-------------------------------------------------------------
+        # -- now compute the integrated intensity in the line of sight:
+        # -------------------------------------------------------------
         rot_theta = np.arctan2(y1o[di],x1o[di])
-        #-- if we want to save the binary to a file, we'd better want it in some
+        # -- if we want to save the binary to a file, we'd better want it in some
         #   real units, and the entire star, instead of just the projected star:
         if direc is not None:
             prim = local.project(primary,view_long=(rot_theta,x1o[di],y1o[di]),
@@ -873,7 +875,7 @@ def binary_light_curve_synthesis(**parameters):
             secn = local.project(secondary,view_long=(rot_theta,x2o[di],y2o[di]),
                         view_lat=(view_angle,0,0),photband=photband,
                         only_visible=False,plot_sort=False,scale_factor=scale_factor)
-            #-- calculate center-of-mass (is this correct?)
+            # -- calculate center-of-mass (is this correct?)
             com_x = (x1o[di] + q*x2o[di]) / (1.0+q)
             com_y = (y1o[di] + q*y2o[di]) / (1.0+q)
             com = np.array([com_x,com_y,0.])
@@ -882,7 +884,7 @@ def binary_light_curve_synthesis(**parameters):
             com[0],com[2] = vectors.rotate(com[0],com[2],rot_i)
             prim_header = dict(x0=x1o[di],y0=y1o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
             secn_header = dict(x0=x2o[di],y0=y2o[di],i=view_angle,comx=com[0],comy=com[1],com_z=com[2],nr=di,time=times[di])
-            #-- only close the file every 20 cycles (for speed)
+            # -- only close the file every 20 cycles (for speed)
             if direc is not None and (di%20==0): close = True
             else:                                close = False
             #   and append to primary HDUList
@@ -898,7 +900,7 @@ def binary_light_curve_synthesis(**parameters):
         prim['vx'] = -prim['vx'] + RV1[di]*1000.
         secn['vx'] = -secn['vx'] + RV2[di]*1000.
 
-        #-- the total intensity is simply the sum of the projected intensities
+        # -- the total intensity is simply the sum of the projected intensities
         #   over all visible meshpoints. To calculate the visibility, we
         #   we collect the Y-Z coordinates in one array for easy matching in
         #   the KDTree
@@ -935,7 +937,7 @@ def binary_light_curve_synthesis(**parameters):
         else:
             report += ' outside eclipse'
 
-        #-- so now we can easily compute the total intensity as the sum of
+        # -- so now we can easily compute the total intensity as the sum of
         #   all visible meshpoints:
         total_intensity = front['projflux'].sum() + back['projflux'][-in_eclipse].sum()
         light_curve[di] = total_intensity
@@ -949,7 +951,7 @@ def binary_light_curve_synthesis(**parameters):
         back['vy'][in_eclipse] = 0
         back['vz'][in_eclipse] = 0
 
-        #-- now calculate the *real* observed radial velocity and projected intensity
+        # -- now calculate the *real* observed radial velocity and projected intensity
         if front_component==1:
             RV1_corr[di] = np.average(front['vx']/1000.,weights=front['projflux'])
             RV2_corr[di] = np.average(back['vx'][-in_eclipse]/1000.,weights=back['projflux'][-in_eclipse])
@@ -965,7 +967,7 @@ def binary_light_curve_synthesis(**parameters):
 
         #================ START DEBUGGING PLOTS ===================
         if direc is not None:
-            #--   first calculate the size of the picture, and the color scales
+            # --   first calculate the size of the picture, and the color scales
             if di==0:
                 size_x = 1.2*(max(prim['y'].ptp(),secn['y'].ptp())/2. + max(ds))
                 size_y = 1.2*(max(prim['z'].ptp(),secn['z'].ptp())/2. + max(ds) * cos(view_angle))
@@ -981,7 +983,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Z [semi-major axis]')
 
-            #-- line-of-sight velocity of the system
+            # -- line-of-sight velocity of the system
             pl.subplot(222,aspect='equal');pl.title('line of sight velocity')
             if di==0:
                 vmin_rv = min((prim['vx'].min()/1000.+RV1.min()),(prim['vx'].min()/1000.+RV2.min()))
@@ -995,7 +997,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Z [semi-major axis]')
 
-            #-- top view of the system
+            # -- top view of the system
             pl.subplot(223,aspect='equal');pl.title('Top view')
             pl.scatter(prim['x'],prim['y'],c=prim['eyeflux'],edgecolors='none',cmap=pl.cm.hot)
             pl.scatter(secn['x'],secn['y'],c=secn['eyeflux'],edgecolors='none',cmap=pl.cm.cool_r)
@@ -1004,7 +1006,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.xlabel('X [semi-major axis]')
             pl.ylabel('Y [semi-major axis]')
 
-            #-- light curve and radial velocity curve
+            # -- light curve and radial velocity curve
             pl.subplot(224);pl.title('light curve and RV curve')
             pl.plot(times[:di+1],2.5*np.log10(light_curve[:di+1]),'k-',label=photband)
             pl.plot(times[di],2.5*np.log10(light_curve[di]),'ko',ms=10)
@@ -1032,7 +1034,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.savefig(os.path.join(direc,'%s_los_%04d'%(name,di)),facecolor='0.75')
             pl.close()
 
-            #-- REAL IMAGE picture
+            # -- REAL IMAGE picture
             pl.figure(figsize=(7,size_y/size_x*7))
             ax = pl.axes([0,0,1,1])
             ax.set_aspect('equal')
@@ -1047,7 +1049,7 @@ def binary_light_curve_synthesis(**parameters):
             pl.close()
             #================   END DEBUGGING PLOTS ===================
 
-    #-- make sure to have everything
+    # -- make sure to have everything
     if direc is not None:
         outputfile_prim.close()
         outputfile_secn.close()
