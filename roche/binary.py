@@ -366,7 +366,7 @@ def binary_roche_surface_gravity(x, y, z, d, omega, M1, M2, norm=False):
         return g_pole
 
 
-def get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole=None):
+def get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole):
     """
     Calculate the eccentric asynchronous binary Roche radius in spherical coordinates.
 
@@ -392,9 +392,6 @@ def get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole=None):
     @return r: radius of Roche volume at potential Phi (in units of semi-major axis)
     @rtype r: float
     """
-    if r_pole is None:
-        r_pole = newton(binary_roche_potential, 1e-5,
-                        args=(0, 0, Phi, q, ds.min(), F))
     try:
         r = newton(binary_roche_potential, r_pole,
                    args=(theta, phi, Phi, q, d, F))
