@@ -39,9 +39,9 @@ from ivs.catalogs import sesame
 from ivs.catalogs import corot
 from ivs.units import conversions
 from ivs.units import constants
-from ivs.units.uncertainties import unumpy,ufloat
-from ivs.units.uncertainties.unumpy import sqrt as usqrt
-from ivs.units.uncertainties.unumpy import tan as utan
+from uncertainties import unumpy,ufloat
+from uncertainties.unumpy import sqrt as usqrt
+from uncertainties.unumpy import tan as utan
 from ivs.sigproc import evaluate
 try:
     from ivs.stellar_evolution import evolutionmodels #This module has now been removed, perhaps future re-implementation if demanded

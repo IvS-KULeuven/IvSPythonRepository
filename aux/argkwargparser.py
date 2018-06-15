@@ -6,8 +6,6 @@ Python code to parse to methods.
 
 Example usage:
 
-Given an example minimalistic Python module 'example.py'
-
 >>> def testfunc(a,b,calc='sum'):
 >>> ... if calc=='sum': return a+b
 >>> ... elif calc=='prod': return a*b
@@ -16,6 +14,7 @@ Given an example minimalistic Python module 'example.py'
 >>> if __name__=="__main__":
 >>> ... method,args,kwargs = argkwargparser.parse()
 >>> ... output = globals()[method](*args,**kwargs)
+>>> ... print(output)
 
 Then, in a terminal, you can do::
 
@@ -77,6 +76,11 @@ def test(*args,**kwargs):
     print('kwargs',kwargs)
 
 if __name__=="__main__":
+    def testfunc(a,b,calc='sum'):
+      if calc=='sum': return a+b
+      elif calc=='prod': return a*b
+      return None
+
     method,args,kwargs = parse()
-    out = globals()[method](*args, **kwargs)
-    sys.exit(out)
+    output = globals()[method](*args, **kwargs)
+    print(output)

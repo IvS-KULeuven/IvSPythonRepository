@@ -34,7 +34,7 @@ from .astutils import NameFinder
 from .parameter import Parameter, Parameters
 
 # use locally modified version of uncertainties package
-from . import uncertainties
+import uncertainties
 
 def asteval_with_uncertainties(*vals,  **kwargs):
     """
@@ -557,6 +557,3 @@ def make_paras_and_func(fcn, x0, used_kwargs=None):
         return fcn(*vals[:len(x0)], **kwdict)
 
     return p, func
-
-
-

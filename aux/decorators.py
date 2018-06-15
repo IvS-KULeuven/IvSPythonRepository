@@ -322,3 +322,11 @@ def class_extend(cls):
     return decorator
 
 #}
+
+if __name__=="__main__":
+    from ivs.sed.reddening import fitzpatrick1999
+    memo = memoized(fitzpatrick1999)
+    print(memo.__doc__)
+    print(memory.keys())
+    # clear_memoization(keys=None)
+    # print(memo.__doc__)

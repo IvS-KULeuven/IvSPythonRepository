@@ -513,7 +513,7 @@ import re
 import os
 import sys
 import logging
-import urllib.request, urllib.parse, urllib.error
+# import urllib.request, urllib.parse, urllib.error
 import numpy as np
 import datetime
 import imp
@@ -525,10 +525,11 @@ except ImportError: print("Unable to load pyephem, stellar coordinate transforma
 
 #-- from IVS repository
 from ivs.units import constants
-from ivs.units.uncertainties import unumpy,AffineScalarFunc,ufloat
-from ivs.units.uncertainties.umath import log10,log,exp,sqrt
-from ivs.units.uncertainties.umath import sin,cos,tan
-from ivs.units.uncertainties.umath import asin,acos,atan
+from uncertainties import unumpy,ufloat
+from uncertainties.core import AffineScalarFunc
+from numpy import log10,log,exp,sqrt
+from numpy import sin,cos,tan
+from numpy import arcsin,arccos,arctan
 from ivs.sed import filters
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
@@ -2973,47 +2974,47 @@ class RadCoords(NonLinearConverter):
             return x + 1j*y
 
 #}
-#{ Currencies
-@memoized
-def set_exchange_rates():
-    """
-    Download currency exchange rates from the European Central Bank.
-    """
-    myurl = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
-    url = urllib.request.URLopener()
-    #url = urllib.request.URLopener() # for Python 3
-    logger.info('Downloading current exchanges rates from ecb.europa.eu')
-    filen,msg = url.retrieve(myurl)
-    ff = open(filen,'r')
-    for line in ff.readlines():
-        if '<Cube currency=' in line:
-            prefix,curr,interfix,rate,postfix = line.split("'")
-            _factors[curr] = (1/float(rate),'EUR','currency','<some currency>')
-    ff.close()
-    #-- now also retrieve the name of the currencies:
-    myurl = 'http://www.ecb.europa.eu/stats/exchange/eurofxref/html/index.en.html'
-    url = urllib.request.URLopener()
-    #url = urllib.request.URLopener() # for Python 3
-    logger.info('Downloading information on currency names from ecb.europa.eu')
-    filen,msg = url.retrieve(myurl)
-    ff = open(filen,'r')
-    gotcurr = False
-    for line in ff.readlines():
-        if gotcurr:
-            name = line.split('>')[1].split('<')[0]
-            if curr in _factors:
-                _factors[curr] = (_factors[curr][0],_factors[curr][1],_factors[curr][2],name)
-            gotcurr = False
-        if '<td headers="aa" id="' in line:
-            curr = line.split('>')[1].split('<')[0]
-            gotcurr = True
-    ff.close()
-
-
-
-
-
-#}
+# #{ Currencies
+# @memoized
+# def set_exchange_rates():
+#     """
+#     Download currency exchange rates from the European Central Bank.
+#     """
+#     myurl = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
+#     url = urllib.request.URLopener()
+#     #url = urllib.request.URLopener() # for Python 3
+#     logger.info('Downloading current exchanges rates from ecb.europa.eu')
+#     filen,msg = url.retrieve(myurl)
+#     ff = open(filen,'r')
+#     for line in ff.readlines():
+#         if '<Cube currency=' in line:
+#             prefix,curr,interfix,rate,postfix = line.split("'")
+#             _factors[curr] = (1/float(rate),'EUR','currency','<some currency>')
+#     ff.close()
+#     #-- now also retrieve the name of the currencies:
+#     myurl = 'http://www.ecb.europa.eu/stats/exchange/eurofxref/html/index.en.html'
+#     url = urllib.request.URLopener()
+#     #url = urllib.request.URLopener() # for Python 3
+#     logger.info('Downloading information on currency names from ecb.europa.eu')
+#     filen,msg = url.retrieve(myurl)
+#     ff = open(filen,'r')
+#     gotcurr = False
+#     for line in ff.readlines():
+#         if gotcurr:
+#             name = line.split('>')[1].split('<')[0]
+#             if curr in _factors:
+#                 _factors[curr] = (_factors[curr][0],_factors[curr][1],_factors[curr][2],name)
+#             gotcurr = False
+#         if '<td headers="aa" id="' in line:
+#             curr = line.split('>')[1].split('<')[0]
+#             gotcurr = True
+#     ff.close()
+#
+#
+#
+#
+#
+# #}
 
 #{ Computations with units
 class Unit(object):
