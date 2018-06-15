@@ -238,7 +238,7 @@ import logging
 import os
 import pylab as pl
 import numpy as np
-from numpy import pi,cos,sin,sqrt,nan
+from numpy import pi, cos, sin, sqrt, nan
 from scipy.optimize import newton
 from scipy.spatial import KDTree
 try:
@@ -263,7 +263,12 @@ logger = logging.getLogger("BIN.ROCHE")
 
 #{ Eccentric asynchronous binary Roche potential in spherical coordinates
 
-def binary_roche_potential(r,theta,phi,Phi,q,d,F):
+
+def print_tester(name):
+    return name.upper()
+
+
+def binary_roche_potential(r, theta, phi, Phi, q, d, F):
     """
     Unitless eccentric asynchronous Roche potential in spherical coordinates.
 
@@ -293,13 +298,14 @@ def binary_roche_potential(r,theta,phi,Phi,q,d,F):
     @return: residu between Phi and roche potential
     @rtype: float
     """
-    lam,nu = cos(phi)*sin(theta),cos(theta)
+    lam, nu = cos(phi)*sin(theta), cos(theta)
     term1 = 1. / r
-    term2 = q * ( 1./sqrt(d**2 - 2*lam*d*r + r**2) - lam*r/d**2)
+    term2 = q * (1./sqrt(d**2 - 2*lam*d*r + r**2) - lam*r/d**2)
     term3 = 0.5 * F**2 * (q+1) * r**2 * (1-nu**2)
     return (Phi - (term1 + term2 + term3))
 
-def binary_roche_potential_gradient(x,y,z,q,d,F,norm=False):
+
+def binary_roche_potential_gradient(x, y, z, q, d, F, norm=False):
     """
     Gradient of eccenctric asynchronous Roche potential in cartesian coordinates.
 
@@ -325,28 +331,28 @@ def binary_roche_potential_gradient(x,y,z,q,d,F,norm=False):
     @rtype: ndarray or float
     """
     r = sqrt(x**2 + y**2 + z**2)
-    r_= sqrt((d-x)**2 + y**2 + z**2)
+    r_ = sqrt((d-x)**2 + y**2 + z**2)
     dOmega_dx = - x / r**3 + q * (d-x) / r_**3 + F**2 * (1+q)*x - q/d**2
-    dOmega_dy = - y / r**3 - q * y     / r_**3 + F**2 * (1+q)*y
-    dOmega_dz = - z / r**3 - q * z     / r_**3
+    dOmega_dy = - y / r**3 - q * y / r_**3 + F**2 * (1+q)*y
+    dOmega_dz = - z / r**3 - q * z / r_**3
 
-    dOmega = np.array([dOmega_dx,dOmega_dy,dOmega_dz])
+    dOmega = np.array([dOmega_dx, dOmega_dy, dOmega_dz])
     if norm:
         return vectors.norm(dOmega)
     else:
         return dOmega
 
 
-def binary_roche_surface_gravity(x,y,z,d,omega,M1,M2,a=1.,norm=False):
+def binary_roche_surface_gravity(x, y, z, d, omega, M1, M2, a=1., norm=False):
     """
     Calculate surface gravity in an eccentric asynchronous binary roche potential.
     """
     q = M2/M1
     x_com = q*d/(1+q)
 
-    r = np.array([x,y,z])
-    d_cf = np.array([d-x_com,0,0])
-    d = np.array([d,0,0])
+    r = np.array([x, y, z])
+    d_cf = np.array([d - x_com, 0, 0])
+    d = np.array([d, 0, 0])
     h = d - r
 
     term1 = - constants.GG*M1/vectors.norm(r)**3*r
@@ -360,7 +366,7 @@ def binary_roche_surface_gravity(x,y,z,d,omega,M1,M2,a=1.,norm=False):
         return g_pole
 
 
-def get_binary_roche_radius(theta,phi,Phi,q,d,F,r_pole=None):
+def get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole=None):
     """
     Calculate the eccentric asynchronous binary Roche radius in spherical coordinates.
 
@@ -387,14 +393,17 @@ def get_binary_roche_radius(theta,phi,Phi,q,d,F,r_pole=None):
     @rtype r: float
     """
     if r_pole is None:
-        r_pole = newton(binary_roche_potential,1e-5,args=(0,0,Phi,q,ds.min(),F))
+        r_pole = newton(binary_roche_potential, 1e-5,
+                        args=(0, 0, Phi, q, ds.min(), F))
     try:
-        r = newton(binary_roche_potential,r_pole,args=(theta,phi,Phi,q,d,F))
-        if r<0 or r>d:
+        r = newton(binary_roche_potential, r_pole,
+                   args=(theta, phi, Phi, q, d, F))
+        if r < 0 or r > d:
             r = nan
     except RuntimeError:
         r = nan
     return r
+
 
 #}
 
