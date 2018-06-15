@@ -97,8 +97,8 @@ from ivs.inout import ascii
 from ivs.aux import loggers
 from ivs.aux.decorators import memoized
 from ivs.units import conversions
-import filters
-import model
+from ivs.sed import filters
+from ivs.sed import model
 
 logger = logging.getLogger("SED.RED")
 logger.addHandler(loggers.NullHandler())
