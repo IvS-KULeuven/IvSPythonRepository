@@ -74,3 +74,22 @@ class TestRochePotential(object):
 
         binary.reflection_effect(star, star, theta, phi)
         lof.debug(no_assert)
+
+    def test_spectral_synthesis(test):
+        log = logging.getLogger('spectral_synthesis')
+
+        binary.spectral_synthesis(star)
+        lof.debug(no_assert)
+
+    def test_binary_light_curve_synthesis(test):
+        log = logging.getLogger('binary_light_curve_synthesis')
+        parameters = {}
+        parameters['Tpole1'] = 1     # Primary Polar temperature   [K]
+        parameters['Tpole2'] = 1    # Secondary Polar temperature [K]
+        parameters['P'] = 1             # Period [days]
+        parameters['asini'] = 1        # total semi-major axis*sini  [AU]
+        parameters['Phi1'] = 0          # Gravitational potential of primary [-]
+        parameters['Phi2'] = 0
+
+        binary.binary_light_curve_synthesis(parameters=parameters)
+        lof.debug(no_assert)
