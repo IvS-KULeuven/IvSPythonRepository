@@ -975,6 +975,11 @@ def get_ld_grid(photband,**kwargs):
     ff.close()
     #-- make an interpolating function
     f_ld_grid = InterpolatingFunction([teffs_grid,loggs_grid],coeff_grid)
+    # TODO: replace InterpolatingFunction
+    # print('ffffffffffffff')
+    # print(np.size(np.array([teffs_grid,loggs_grid]).T, size(coeff_grid)))
+    # f_ld_grid = LinearNDInterpolator(np.array([teffs_grid,loggs_grid]).T,coeff_grid)
+
     return f_ld_grid
 
 
