@@ -2,6 +2,7 @@
 
 import binary
 import logging
+import numpy as np
 
 logging.basicConfig(level=logging.DEBUG)
 no_assert = 'There is currently no Assert check implemented'
@@ -11,6 +12,7 @@ x = 1
 y = 1
 z = 1
 r = 1
+r_pole = 1
 theta = 0
 phi = 0
 Phi = 0
@@ -21,6 +23,12 @@ M1 = 1
 M2 = 1
 q = 1
 booleans = [True, False]
+star = np.rec.fromarrays([[1,1,1,1]]*16, names=['theta', 'phi', 'r', 'x',
+                                                  'y', 'z', 'vx', 'vy', 'vz',
+                                                  'gravx', 'gravy', 'gravz',
+                                                  'grav', 'areas', 'teff',
+                                                  'flux']
+                         )
 
 
 class TestRochePotential(object):
@@ -42,7 +50,7 @@ class TestRochePotential(object):
         for norm in booleans:
             binary.binary_roche_potential_gradient(x, y, z, q, d, F, norm)
 
-            log.debug('For case = ' + str(norm))
+            log.debug('For case norm = {}'.format(norm))
             log.debug(no_assert)
             # log.debug()
 
@@ -52,11 +60,17 @@ class TestRochePotential(object):
         for norm in booleans:
             binary.binary_roche_surface_gravity(x, y, z, d, omega, M1, M2,
                                                 norm)
-            log.debug('For case = ' + str(norm))
+            log.debug('For case norm = {}'.format(norm))
             log.debug(no_assert)
 
     def test_get_binary_roche_radius(self):
         log = logging.getLogger('get_binary_roche_radius')
 
-        binary.get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole=None)
+        binary.get_binary_roche_radius(theta, phi, Phi, q, d, F, r_pole)
         log.debug(no_assert)
+
+    def test_reflection_effect(self):
+        log = logging.getLogger('reflection_effect')
+
+        binary.reflection_effect(star, star, theta, phi)
+        lof.debug(no_assert)
