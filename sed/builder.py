@@ -2429,13 +2429,13 @@ class SED(object):
                 pass
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         teff = "%d" % teff
-	logg = "%.2f" % logg
-	ebv = "%.3f" % ebv
-	metallicity = "%.3f" % met
-	#wave,flux = model.get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz2')
-	'''f = open('/home/anae/python/SEDfitting/Bastars_info.txt', 'a')
-	f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\t'+str(metallicity)+'\n')
-	f.closed'''
+    logg = "%.2f" % logg
+    ebv = "%.3f" % ebv
+    metallicity = "%.3f" % met
+    #wave,flux = model.get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz2')
+    '''f = open('/home/anae/python/SEDfitting/Bastars_info.txt', 'a')
+    f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\t'+str(metallicity)+'\n')
+    f.closed'''
 
 
 
@@ -3884,12 +3884,12 @@ class PulsatingSED(SED):
                         loc,xycoords='axes fraction')
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         teff = "%d" % teff
-	logg = "%.2f" % logg
-	ebv = "%.3f" % ebv
-	metallicity = "%.3f" % met
-	'''f = open('/home/anae/python/SEDfitting/Bastars_info.txt', 'a')
-	f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\n'+'\t'+str(metallicity)+'\n')
-	f.closed'''
+    logg = "%.2f" % logg
+    ebv = "%.3f" % ebv
+    metallicity = "%.3f" % met
+    '''f = open('/home/anae/python/SEDfitting/Bastars_info.txt', 'a')
+    f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\n'+'\t'+str(metallicity)+'\n')
+    f.closed'''
 
 
 class Calibrator(SED):
