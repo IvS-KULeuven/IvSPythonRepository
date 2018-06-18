@@ -47,7 +47,7 @@ from ivs.spectra import tools
 from ivs.aux import loggers
 
 import numpy as np
-from Scientific.Functions.Interpolation import InterpolatingFunction
+# from Scientific.Functions.Interpolation import InterpolatingFunction
 
 logger = logging.getLogger("SPEC.MODEL")
 logger.addHandler(loggers.NullHandler)
