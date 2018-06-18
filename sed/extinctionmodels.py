@@ -242,7 +242,7 @@ def _getarenouparams(ll,bb):
     if   0  <= ll < 30:
       alpha = 2.77060 ; beta = -9.52310 ; rr0 = 0.145 ; saa = 16
     elif 30 <= ll < 60:
-      alpha = 1.96533 ; beta = -9.52310 ; rr0 = 0.174 ; saa = 06
+      alpha = 1.96533 ; beta = -9.52310 ; rr0 = 0.174 ; saa = 6
     elif 60 <= ll < 110:
       alpha = 1.93622 ; beta = -13.31757 ; rr0 = 0.073 ; saa = 26
     elif 110 <= ll < 180:
@@ -1471,4 +1471,3 @@ def findext_schlegel(ll, bb, distance = None, redlaw='cardelli1989', Rv=3.1, nor
 if __name__ == "__main__":
     print(findext_marshall(10.2,9.))
     print(findext_marshall(10.2,9.,norm='Ak'))
-
