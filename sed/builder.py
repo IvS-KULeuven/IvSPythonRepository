@@ -14,7 +14,10 @@ import json
 
 import pylab as pl
 from matplotlib import mlab
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    print("The PIL package is discontinued")
 import numpy as np
 import scipy.stats
 import astropy.io.fits as pf
