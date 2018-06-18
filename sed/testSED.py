@@ -474,7 +474,6 @@ class BuilderTestCase(SEDTestCase):
             sesame.search = mock.Mock(return_value={'plx':(0.0,0.0)})
             builder.SED.load_photometry = mock.Mock(return_value=None)
 
-
     def setUp(self):
         self.sed = builder.SED(ID='TEST',load_fits=False)
         self.sed.master = {}
@@ -877,20 +876,5 @@ class XIntegrationTestCase(SEDTestCase):
         self.assertEqual(len(sed.results['iminimize']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    unittest.main()
