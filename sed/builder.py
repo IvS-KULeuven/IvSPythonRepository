@@ -287,7 +287,8 @@ def decide_phot(master,names=None,wrange=None,sources=None,indices=None,ptype='a
         master['include'][indices] = include
 
 
-def photometry2str(master,comment='',sort='photband',color=False,index=False):
+def photometry2str(master, comment='', sort='photband', color=False,
+                   index=False):
     """
     String representation of master record array.
 
@@ -301,7 +302,8 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
 
     templateh = '{:20s} {:>12s} {:>12s} {:12s} {:>10s} {:>12s} {:>12s} {:12s} {:30s}'
     templated = '{:20s} {:12g} {:12g} {:12s} {:10.0f} {:12g} {:12g} {:12s} {:30s}'
-    header = ['PHOTBAND','MEAS','E_MEAS','UNIT','CWAVE','CMEAS','E_CMEAS','CUNIT','SOURCE']
+    header = ['PHOTBAND', 'MEAS', 'E_MEAS', 'UNIT', 'CWAVE', 'CMEAS',
+              'E_CMEAS', 'CUNIT', 'SOURCE']
     if 'comments' in master.dtype.names:
         templateh += ' {:s}'
         templated += ' {:s}'
@@ -313,11 +315,11 @@ def photometry2str(master,comment='',sort='photband',color=False,index=False):
 
     txt = [comment+templateh.format(*header)]
     txt.append(comment+'='*170)
-    columns = [master[col.lower()] for col in header if not col=='NR']
-    for nr,contents in enumerate(zip(*columns)):
+    columns = [master[col.lower()] for col in header if not col == 'NR']
+    for nr, contents in enumerate(zip(*columns)):
         contents = list(contents)
         if 'comments' in master.dtype.names:
-            contents[-1] = contents[-1].replace('_',' ')
+            contents[-1] = contents[-1].replace('_', ' ')
         if index:
             contents = [nr] + contents
         line = templated.format(*contents)
