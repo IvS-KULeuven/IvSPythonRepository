@@ -148,6 +148,7 @@ def search(ID, db='S', fix=False):
     ff = urllib.request.urlopen(base_url)
     xmlpage = ""
     for line in ff.readlines():
+        line = line.decode('utf-8')
         line_ = line[::-1].strip(' ')[::-1]
         if line_[0] == '<':
             line = line_
