@@ -778,10 +778,13 @@ class SED(object):
         if phases is None:
             phases = np.zeros(len(meas))
         # -- if master record array does not exist, make a new one
-        if not hasattr(self,'master') or self.master is None:
-            dtypes = [('meas','f8'),('e_meas','f8'),('flag','S20'),('unit','S30'),('photband','S30'),('source','S50'),('_r','f8'),('_RAJ2000','f8'),\
-                       ('_DEJ2000','f8'),('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','S50'),('color',bool),('include',bool),\
-                       ('phase',int),('bibcode','S20'),('comments','S200')]
+        if not hasattr(self, 'master') or self.master is None:
+            dtypes = [('meas', 'f8'), ('e_meas', 'f8'), ('flag', 'U20'),
+                      ('unit', 'U30'), ('photband', 'U30'), ('source', 'U50'),
+                      ('_r', 'f8'), ('_RAJ2000', 'f8'), ('_DEJ2000', 'f8'),
+                      ('cwave', 'f8'), ('cmeas', 'f8'), ('e_cmeas', 'f8'),
+                      ('cunit', 'U50'), ('color', bool), ('include', bool),
+                      ('phase', int), ('bibcode', 'U20'), ('comments', 'U200')]
             logger.info('No previous measurements available, initialising master record')
             self.master = np.rec.fromarrays(np.array([ [] for i in dtypes]), dtype=dtypes)
             _to_unit = 'erg/s/cm2/AA'
