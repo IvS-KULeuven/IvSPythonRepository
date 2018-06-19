@@ -1037,7 +1037,7 @@ def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwarg
     fitmodel = kwargs.pop('model_func',_iminimize_model)
     residuals = kwargs.pop('res_func',_iminimize_residuals)
     epsfcn = kwargs.pop('epsfcn', 0.0005)# using ~3% step to derive jacobian.
-
+    fitkws_old = kwargs.pop('fitkws', None)
     #-- get the parameters
     parameters = create_parameter_dict(**kwargs)
 
