@@ -1684,11 +1684,11 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
     #-- where the fluxes are zero, log can do weird
     if full_output:
         fluxes_ = np.vstack(fluxes_)
-        keep = -np.isnan(np.sum(fluxes_,axis=0))
+        keep = ~np.isnan(np.sum(fluxes_,axis=0))
         waves_ = waves_[keep]
         fluxes_ = fluxes_[:,keep]
     else:
-        keep = -np.isnan(fluxes_)
+        keep = ~np.isnan(fluxes_)
         waves_ = waves_[keep]
         fluxes_ = fluxes_[keep]
     return waves_,fluxes_
