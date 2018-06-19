@@ -350,7 +350,8 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if name in out_dict_:
             out_dict[name] = out_dict_[name]
         else:
-            out_dict[name] = np.array([ranges[name+'range'][0] for i in out_dict['teff']])
+            out_dict[name] = np.array([ranges[name+'range'][0]
+                                      for i in out_dict_['teff']])
 
     return out_dict
 
