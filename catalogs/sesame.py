@@ -145,22 +145,21 @@ def search(ID, db='S', fix=False):
     @rtype: dictionary
     """
     base_url = get_URI(ID, db=db)
-    ff = urllib.request.urlopen(base_url)
-    xmlpage = ""
-    for line in ff.readlines():
-        line = line.decode('utf-8')
-        line_ = line[::-1].strip(' ')[::-1]
-        if line_[0] == '<':
-            line = line_
-        xmlpage += line.strip('\n')
-    database = xmlparser.XMLParser(xmlpage).content
-    try:
-        database = database['Sesame']['Target']['%s' % (db)]['Resolver']
-        database = database[list(database.keys())[0]]
-    except KeyError as IndexError:
-        # -- we found nothing!
-        database = {}
-    ff.close()
+    with urllib.request.urlopen(base_url) as ff:
+        xmlpage = ""
+        for line in ff.readlines():
+            line = line.decode('utf-8')
+            line_ = line[::-1].strip(' ')[::-1]
+            if line_[0] == '<':
+                line = line_
+            xmlpage += line.strip('\n')
+        database = xmlparser.XMLParser(xmlpage).content
+        try:
+            database = database['Sesame']['Target']['%s' % (db)]['Resolver']
+            database = database[list(database.keys())[0]]
+        except KeyError as IndexError:
+            # -- we found nothing!
+            database = {}
 
     if fix:
         # -- fix the parallax: make sure we have the Van Leeuwen 2007 value.
