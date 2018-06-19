@@ -60,15 +60,15 @@ def search(ID,db='S',fix=False):
     Example usage:
 
     >>> info = search('vega',db='S')
-    >>> print info['jpos']
+    >>> print (info['jpos'])
     18:36:56.33 +38:47:01.2
-    >>> print info['jdedeg']
+    >>> print (info['jdedeg'])
     38.78369194
-    >>> print info['alias'][1]
+    >>> print (info['alias'][1])
     * alf Lyr
-    >>> print info['plx']['v']
+    >>> print (info['plx']['v'])
     128.93
-    >>> print info['mag']['B']['v']
+    >>> print (info['mag']['B']['v'])
     0.03
 
     This is an exhaustive list of example contents::
@@ -125,7 +125,7 @@ def search(ID,db='S',fix=False):
 
     >>> info = search('vega',db='N')
     >>> for key1 in sorted(info.keys()):
-    ...    print '%s = %s'%(key1.ljust(8),info[key1])
+    ...    print ('%s = %s'%(key1.ljust(8),info[key1]))
     INFO     = from cache
     alias    = [u'alpha Lyr', u'HR 7001', u'HD 172167', u'IRAS  18352+3844', u'IRAS F18352+3844']
     errDEmas = 4824.0
@@ -148,6 +148,7 @@ def search(ID,db='S',fix=False):
     ff = urllib.request.urlopen(base_url)
     xmlpage = ""
     for line in ff.readlines():
+        line  = line.decode('utf-8')
         line_ = line[::-1].strip(' ')[::-1]
         if line_[0]=='<':
             line = line_

@@ -40,7 +40,7 @@ def read2list(filename,**kwargs):
     skip_lines = kwargs.get('skip_lines',0)
 
     if os.path.splitext(filename)[1] == '.gz':
-        ff = gzip.open(filename)
+        ff = gzip.open(filename,mode='rt')
     else:
         ff = open(filename)
 
@@ -147,7 +147,7 @@ def read2recarray(filename,**kwargs):
     if dtype is None:
         data = np.array(data,dtype=str).T
         header = comm[-2].replace('|',' ').split()
-        types = comm[-1].replace('|','').split()
+        types = comm[-1].replace('|','').replace('a','U').replace('S','U').split()
         dtype = [(head,typ) for head,typ in zip(header,types)]
         dtype = np.dtype(dtype)
     elif isinstance(dtype,list):
