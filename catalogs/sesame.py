@@ -2,7 +2,9 @@
 """
 Interface to Sesame for general information on a star (SIMBAD)
 """
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import logging
 
 import numpy as np
@@ -12,7 +14,8 @@ from ivs.catalogs import vizier
 
 logger = logging.getLogger("CAT.SESAME")
 
-def get_URI(ID,db='S'):
+
+def get_URI(ID, db='S'):
     """
     Build Sesame URI from available options.
 
@@ -23,17 +26,14 @@ def get_URI(ID,db='S'):
     @return: uri name
     @rtype: str
     """
-    #mirrors:
+    # mirrors:
     # http://vizier.cfa.harvard.edu/viz-bin/nph-sesame/-oxpsIF/~%s?%s'
     ID = urllib.parse.quote(ID)
-    return 'http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxpsIF/%s?%s'%(db,ID)
+    return ('http://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oxpsIF/%s?%s'
+            % (db, ID))
 
 
-
-
-
-
-def search(ID,db='S',fix=False):
+def search(ID, db='S', fix=False):
     """
     Query Simbad, NED and/or Vizier for information on an identifier.
 
@@ -144,49 +144,50 @@ def search(ID,db='S',fix=False):
     @return: (nested) dictionary containing information on star
     @rtype: dictionary
     """
-    base_url = get_URI(ID,db=db)
+    base_url = get_URI(ID, db=db)
     ff = urllib.request.urlopen(base_url)
     xmlpage = ""
     for line in ff.readlines():
         line_ = line[::-1].strip(' ')[::-1]
-        if line_[0]=='<':
+        if line_[0] == '<':
             line = line_
-        xmlpage+=line.strip('\n')
+        xmlpage += line.strip('\n')
     database = xmlparser.XMLParser(xmlpage).content
     try:
-        database = database['Sesame']['Target']['%s'%(db)]['Resolver']
+        database = database['Sesame']['Target']['%s' % (db)]['Resolver']
         database = database[list(database.keys())[0]]
     except KeyError as IndexError:
-        #-- we found nothing!
+        # -- we found nothing!
         database = {}
     ff.close()
 
     if fix:
-        #-- fix the parallax: make sure we have the Van Leeuwen 2007 value.
-        #   simbad seems to have changed to old values to the new ones somewhere
-        #   in 2011. We check if this is the case for all stars:
+        # -- fix the parallax: make sure we have the Van Leeuwen 2007 value.
+        #   simbad seems to have changed to old values to the new ones
+        # somewhere in 2011. We check if this is the case for all stars:
         if 'plx' in database and not ('2007' in database['plx']['r']):
-            data,units,comms = vizier.search('I/311/hip2',ID=ID)
+            data, units, comms = vizier.search('I/311/hip2', ID=ID)
             if data is not None and len(data):
-                if not 'plx' in database:
+                if 'plx' not in database:
                     database['plx'] = {}
                 database['plx']['v'] = data['Plx'][0]
                 database['plx']['e'] = data['e_Plx'][0]
                 database['plx']['r'] = 'I/311/hip2'
-        #-- fix the spectral type
-        data,units,comms = vizier.search('B/mk/mktypes',ID=ID)
+        # -- fix the spectral type
+        data, units, comms = vizier.search('B/mk/mktypes', ID=ID)
         if data is not None and len(data):
             database['spType'] = data['SpType'][0]
         if 'jpos' in database:
-            #-- add galactic coordinates (in degrees)
-            ra,dec = database['jpos'].split()
-            gal = conversions.convert('equatorial','galactic',(str(ra),str(dec)),epoch='2000')
-            gal = float(gal[0])/np.pi*180,float(gal[1])/np.pi*180
+            # -- add galactic coordinates (in degrees)
+            ra, dec = database['jpos'].split()
+            gal = conversions.convert('equatorial', 'galactic',
+                                      (str(ra), str(dec)), epoch='2000')
+            gal = float(gal[0])/np.pi*180, float(gal[1])/np.pi*180
             database['galpos'] = gal
-        #-- fix the proper motions
-        data,units,comms = vizier.search('I/317/sample',ID=ID)
+        # -- fix the proper motions
+        data, units, comms = vizier.search('I/317/sample', ID=ID)
         if data is not None and len(data):
-            if not 'pm' in database:
+            if'pm' not in database:
                 database['pm'] = {}
             database['pm']['pmRA'] = data['pmRA'][0]
             database['pm']['pmDE'] = data['pmDE'][0]
@@ -195,6 +196,7 @@ def search(ID,db='S',fix=False):
             database['pm']['r'] = 'I/317/sample'
     return database
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     import doctest
     doctest.testmod()
