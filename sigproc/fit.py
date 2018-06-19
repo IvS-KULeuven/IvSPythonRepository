@@ -1243,7 +1243,7 @@ class Function(object):
         If no parameter object is given then the parameter object belonging to the function
         is used.
         """
-        if self.jacobian == None:
+        if self.jacobian is None:
             return [0.0 for i in self.par_names]
 
         if len(args) == 0:
@@ -1286,15 +1286,15 @@ class Function(object):
         @type exprs: array
         """
         nrpars = len(self.par_names)
-        if value == None:
+        if value is None:
             value = kwargs['values'] if 'values' in kwargs else [0 for i in range(nrpars)]
-        if bounds == None:
+        if bounds is None:
             bounds = np.array([[None,None] for i in range(nrpars)])
         else:
             bounds = np.asarray(bounds)
-        if vary == None:
+        if vary is None:
             vary = [True for i in range(nrpars)]
-        if expr == None:
+        if expr is None:
             expr = kwargs['exprs'] if 'exprs' in kwargs else [None for i in range(nrpars)]
 
         min = kwargs['min'] if 'min' in kwargs else bounds[:,0]
@@ -1302,18 +1302,18 @@ class Function(object):
 
         def check_boundaries(min, max, value, name):
             #-- Check if boundaries are consistent
-            if max != None and min != None and max < min:
+            if max is not None and min is not None and max < min:
                 min, max = max, min
                 logging.warning('Parameter %s: max < min, switched boundaries!'%(name))
-            if min != None and value < min:
+            if min is not None and value < min:
                 min = value
                 logging.warning('Parameter %s: value < min, adjusted min!'%(name))
-            if max != None and value > max:
+            if max is not None and value > max:
                 max = value
                 logging.warning('Parameter %s: value > max, adjusted max!'%(name))
             return min, max
 
-        if self.parameters == None:
+        if self.parameters is None:
             #-- Create a new parameter object
             self.parameters = lmfit.Parameters()
             for i,name in enumerate(self.par_names):
@@ -1325,7 +1325,7 @@ class Function(object):
                 min_, max_ = check_boundaries(min[i], max[i], value[i], name)
                 self.parameters[name].value = float(value[i])
                 self.parameters[name].user_value = float(value[i])
-                self.parameters[name].vary = bool(vary[i]) if vary[i] != None else True
+                self.parameters[name].vary = bool(vary[i]) if vary[i] is not None else True
                 self.parameters[name].min = min_
                 self.parameters[name].max = max_
                 self.parameters[name].expr = expr[i]
@@ -1381,7 +1381,7 @@ class Function(object):
         if type(parameters) == str:
             parameters = [parameters]
 
-        pnames = parameters if parameters != None else self.par_names
+        pnames = parameters if parameters is not None else self.par_names
 
 
         out = []
@@ -1562,7 +1562,7 @@ class Model(object):
         self.push_parameters(parameters=parameters)
 
         #-- For each function, read the arguments and calculate the result
-        if self.expr == None:
+        if self.expr is None:
             result = np.zeros(len(x))
             for function in self.functions:
                 result += function.evaluate(x, **kwargs)
@@ -1650,7 +1650,7 @@ class Model(object):
         """
         if type(parameters) == str:
             parameters = [parameters]
-        pnames = parameters if parameters != None else list(self.parameters.keys())
+        pnames = parameters if parameters is not None else list(self.parameters.keys())
 
         out = []
         for name in pnames:
@@ -1771,7 +1771,7 @@ class Model(object):
         Pushes the parameters in the combined parameter object to the parameter objects of the underlying
         models or functions.
         """
-        if parameters == None:
+        if parameters is None:
             parameters = self.parameters
         for pnames,function in zip(self._par_names, self.functions):
             old_parameters = function.parameters
@@ -1782,7 +1782,7 @@ class Model(object):
     def __str__(self):
         """ String representation of the Model object """
         fnames = ", ".join([f.function.__name__ for f in self.functions])
-        expr = self.expr if self.expr != None else "Sum()"
+        expr = self.expr if self.expr is not None else "Sum()"
         name = "<Model with functions: [{:s}] combined by: {:s}>"
         return name.format(fnames, expr)
 
@@ -1856,10 +1856,10 @@ class Minimizer(object):
         self.engine = engine
         self._minimizers = [None]
 
-        if weights == None:
+        if weights is None:
             self.weights = np.ones(len(y)) # if no weigths definded set them all at one.
 
-        if resfunc != None:
+        if resfunc is not None:
             self.resfunc = resfunc # if residual function is provided, use that one.
 
         params = model.parameters
@@ -1869,7 +1869,7 @@ class Minimizer(object):
         self._setup_jacobian_function()
         fcn_args = (self.x, self.y)
         fcn_kws = dict(weights=self.weights, errors=self.errors)
-        if self.model_kws != None:
+        if self.model_kws is not None:
             fcn_kws.update(self.model_kws)
 
         #-- Setup the Minimizer object
@@ -1926,7 +1926,7 @@ class Minimizer(object):
         #-- check if a special probability function is provided.
         prob_func = kwargs.pop('prob_func', None)
 
-        if parameters == None:
+        if parameters is None:
             parameters = self.model.par_names
         elif type(parameters) == str:
             parameters = [parameters]
@@ -2022,7 +2022,7 @@ class Minimizer(object):
         @return: The MC errors of all parameters.
         @rtype: array or dict
         """
-        if errors != None:
+        if errors is not None:
             self.errors = errors
 
         perturb_args = dict(distribution=distribution)
@@ -2041,7 +2041,7 @@ class Minimizer(object):
             pars = copy.deepcopy(self.model.parameters)
             fcn_args = (self.x, y_)
             fcn_kws = dict(weights=self.weights, errors=self.errors)
-            if self.model_kws != None:
+            if self.model_kws is not None:
                 fcn_kws.update(self.model_kws)
             result = lmfit.Minimizer(self.residuals, pars, fcn_args=fcn_args,
                                      fcn_kws=fcn_kws, **self.fit_kws)
@@ -2081,7 +2081,7 @@ class Minimizer(object):
         #-- transform to 2D if nessessary
         res = np.atleast_2d(self.y - self.model.evaluate(self.x))
         x, y = np.atleast_2d(self.x), np.atleast_2d(self.y)
-        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(self.x)
+        err = np.atleast_2d(self.errors) if self.errors is not None else np.zeros_like(self.x)
 
         #-- transpose if the axis is 1
         if axis == 1: x, y, res, err = x.T, y.T, res.T, err.T
@@ -2124,7 +2124,7 @@ class Minimizer(object):
         #-- transform to 2D if nessessary
         res = np.atleast_2d(self.y - self.model.evaluate(self.x))
         x = np.atleast_2d(self.x)
-        err = np.atleast_2d(self.errors) if self.errors != None else np.zeros_like(self.x)
+        err = np.atleast_2d(self.errors) if self.errors is not None else np.zeros_like(self.x)
         if axis == 1: x, res, err = x.T, res.T, err.T
 
         #-- setup a colorMap
@@ -2253,7 +2253,7 @@ class Minimizer(object):
         #-- Get the minimizer grid
         minis, models, chisqrs = self.grid
 
-        if chi2lim != None:
+        if chi2lim is not None:
             selected = np.where(chisqrs <= chi2lim*max(chisqrs))
             models = models[selected]
             chisqrs = np.abs(chisqrs[selected])
@@ -2323,7 +2323,7 @@ class Minimizer(object):
     @errors.setter
     def errors(self, val):
         'set error'
-        if val == None:
+        if val is None:
             self._error = None
         elif np.shape(val) == ():
             self._error = np.ones_like(self.x) * val
@@ -2356,7 +2356,7 @@ class Minimizer(object):
 
     def _setup_residual_function(self):
         "Internal function to setup the residual function for the minimizer."
-        if self.resfunc != None:
+        if self.resfunc is not None:
             def residuals(params, x, y, weights=None, errors=None, **kwargs):
                 synth = self.model.evaluate(x, params, **kwargs)
                 return self.resfunc(synth, y, weights=weights, errors=errors, **kwargs)
@@ -2368,7 +2368,7 @@ class Minimizer(object):
 
     def _setup_jacobian_function(self):
         "Internal function to setup the jacobian function for the minimizer."
-        if self.model.jacobian != None:
+        if self.model.jacobian is not None:
             def jacobian(params, x, y, weights=None, errors=None, **kwargs):
                 return self.model.evaluate_jacobian(x, params, **kwargs)
             self.jacobian = jacobian
@@ -2454,10 +2454,10 @@ class Minimizer(object):
         out = []
         out.append( ('Model', str(self.model)) )
         out.append( ('Data shape', str(np.array(self.x).shape)) )
-        out.append( ('Errors', 'Provided' if self._error != None else 'Not Provided') )
-        out.append( ('Weights', 'Provided' if self.weights != None else 'Not Provided') )
-        out.append( ('Residuals', 'Standard' if self.resfunc == None else 'Custom') )
-        out.append( ('Jacobian', 'Provided' if self.jacobian != None else 'Not Provided') )
+        out.append( ('Errors', 'Provided' if self._error is not None else 'Not Provided') )
+        out.append( ('Weights', 'Provided' if self.weights is not None else 'Not Provided') )
+        out.append( ('Residuals', 'Standard' if self.resfunc is None else 'Custom') )
+        out.append( ('Jacobian', 'Provided' if self.jacobian is not None else 'Not Provided') )
         out.append( ('Engine', str(self.engine)) )
         out.append( ("Grid points", "{:.0f}".format(len(self._minimizers))) )
         temp = "{:<12s}: {:s}\n"
@@ -2627,7 +2627,7 @@ def _calc_length(par, accuracy, field=None):
         try:
             if type(par) == str:
                 out = len(par)
-            elif par == None or par == np.nan or np.isposinf(par):
+            elif par is None or par == np.nan or np.isposinf(par):
                 out = 3
             elif np.isneginf(par):
                 out = 4
@@ -2651,7 +2651,7 @@ def _calc_length(par, accuracy, field=None):
     else:
         out = calculate_length(par)
 
-    if field != None and field in extralen:
+    if field is not None and field in extralen:
         return out + extralen[field]
     else:
         return out
@@ -2678,7 +2678,7 @@ def _format_field(par, field, maxlen=10,  accuracy=2):
         return '(vary)' if getattr(par, field) else '(fixed)'
     elif field == 'expr':
         expr = getattr(par, field)
-        return 'expr = %s'%(expr) if expr != None else ''
+        return 'expr = %s'%(expr) if expr is not None else ''
     else:
         return ''
 
@@ -2825,7 +2825,7 @@ def plot_convergence(startpars, models, chi2s, xpar=None, ypar=None, clim=None):
     models = models[inds]
     chi2s = chi2s[inds]
 
-    if clim != None:
+    if clim is not None:
         selected = np.where(chi2s <= clim*max(chi2s))
         startpars = startpars[selected]
         models = models[selected]
