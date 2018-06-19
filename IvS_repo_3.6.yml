@@ -11,3 +11,5 @@ dependencies:
 - python=3.6.2=0
 - scipy=0.19.1=np113py36_0
 - uncertainties=3.0.2=py36_1
+- h5py=2.8.0=py36ha1f6525_0
+- ephem=3.7.6.0=py36h14c3975_1
