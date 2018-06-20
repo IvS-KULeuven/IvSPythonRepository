@@ -2785,7 +2785,10 @@ class SED(object):
                 self.master = crossmatch.add_bibcodes(self.master)
             if not 'comments' in self.master.dtype.names:
                 self.master = vizier.quality_check(self.master,self.ID)
-        ascii.write_array(self.master,self.photfile,header=True,auto_width=True,use_float='%g',comments=['#'+json.dumps(self.info)])
+        print('MASTER', self.master)
+        ascii.write_array(self.master, self.photfile, header=True,
+                          auto_width=True, use_float='%g',
+                          comments=['#'+json.dumps(self.info)])
 
     def load_photometry(self,photfile=None):
         """
@@ -4078,7 +4081,7 @@ class SampleSEDs(object):
             else:
                 records.append([targetname]+list(sed.master[keep][0])+synflux)
         # -- make the thing into a record array
-        dtypes = np.dtype([('targetname','|S25')] + sed.master.dtype.descr + synflux_label)
+        dtypes = np.dtype([('targetname','U25')] + sed.master.dtype.descr + synflux_label)
         output = np.rec.fromrecords(records,names=dtypes.names)
         output = np.array(output,dtype=dtypes)
         return output
