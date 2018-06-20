@@ -264,8 +264,8 @@ def mast2phot(source,results,units,master=None,extra_fields=None):
     e_flag = 'e_'
     q_flag = 'q_'
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
-                  ('unit','a30'),('photband','a30'),('source','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','U20'),
+                  ('unit','U30'),('photband','U30'),('source','U50')]
 
     #-- MAST has no unified terminology:
     translations = {'kepler/kgmatch':{'_r':"Ang Sep (')",
@@ -354,7 +354,7 @@ def csv2recarray(filename):
         #   the contents as a long string
         formats = np.zeros_like(data[0])
         for i,fmt in enumerate(data[1]):
-            if 'string' in fmt or fmt=='datetime': formats[i] = 'a100'
+            if 'string' in fmt or fmt=='datetime': formats[i] = 'U100'
             if fmt=='integer': formats[i] = 'f8'
             if fmt=='ra': formats[i] = 'f8'
             if fmt=='dec': formats[i] = 'f8'
@@ -406,7 +406,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','U50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])

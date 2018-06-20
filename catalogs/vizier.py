@@ -544,7 +544,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','U50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -775,7 +775,7 @@ def tsv2recarray(filename):
             for i,key in enumerate(data[0]):
                 if key == line[1] and line[0]=='Column': # this is the line with information
                     formats[i] = line[2].replace('(','').replace(')','').lower()
-                    if formats[i][0].isdigit(): formats[i] = 'a100'
+                    if formats[i][0].isdigit(): formats[i] = 'U100'
                     elif 'f' in formats[i]: formats[i] = 'f8' # floating point
                     elif 'i' in formats[i]: formats[i] = 'f8' # integer, but make it float to contain nans
                     elif 'e' in formats[i]: formats[i] = 'f8' # exponential
@@ -939,8 +939,8 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info.get(source,'e_flag')
 
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
-                  ('unit','a30'),('photband','a30'),('source','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','U20'),
+                  ('unit','U30'),('photband','U30'),('source','U50')]
 
     #-- extra can be added:
     names = list(results.dtype.names)
@@ -1066,8 +1066,8 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info_fund.get(source,'e_flag')
 
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','a30'),
-              ('source','a50'),('name','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','U30'),
+              ('source','U50'),('name','U50')]
 
     #-- extra can be added:
     names = list(results.dtype.names)

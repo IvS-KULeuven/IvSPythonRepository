@@ -3459,7 +3459,7 @@ _factors = collections.OrderedDict([
            ('mi',    (1609.344,      'm','length','mile (international)')), # mile (international)
            ('USmi',  (1609.344,      'm','length','mile (US)')), # US mile or survey mile or statute mile
            ('nami',  (1852.,      'm','length','nautical mile')), # nautical mile
-           ('a0',    (constants.a0,  constants.a0_units,'length','Bohr radius')), # Bohr radius
+           ('U0',    (constants.a0,  constants.a0_units,'length','Bohr radius')), # Bohr radius
            ('ell',   (1.143,         'm','length','ell')), # ell
            ('yd',    (0.9144,        'm','length','yard (international)')), # yard (international)
            ('potrzebie',(0.002263348517438173216473,'m','length','potrzebie')),

@@ -122,7 +122,7 @@ def read2recarray(filename,**kwargs):
 
     the keyword 'dtype' should be equal to a list of tuples, e.g.
 
-    C{dtype = [('col1','a10'),('col2','>f4'),..]}
+    C{dtype = [('col1','U10'),('col2','>f4'),..]}
 
     @param filename: name of file with the data
     @type filename: string

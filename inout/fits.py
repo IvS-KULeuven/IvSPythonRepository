@@ -262,7 +262,7 @@ def read2recarray(fits_file,ext=1,return_header=False):
     dtypes = []
     for name,dtype in zip(names,formats):
         if 'A' in dtype:
-            dtypes.append((name,'S60'))
+            dtypes.append((name,'U60'))
         else:
             dtypes.append((name,dtype_translator[dtype]))
     dtypes = np.dtype(dtypes)
