@@ -815,7 +815,7 @@ def convert(_from,_to,*args,**kwargs):
     #   if two arguments are given, we assume the first is the actual value and
     #   the second is the error on the value
     elif len(args)==2:
-        start_value = unumpy.uarray([args[0],args[1]])
+        start_value = unumpy.uarray(*[args[0],args[1]])
     else:
         raise ValueError('illegal input')
 
@@ -2247,15 +2247,15 @@ def derive_radius_slo(numax,Deltanu0,teff,unit='Rsol'):
     Deltanu0_sol = convert(constants.Deltanu0_sol[-1],'muHz',*constants.Deltanu0_sol[:-1],unpack=False)
     #-- take care of temperature
     if len(teff)==3:
-        teff = (unumpy.uarray([teff[0],teff[1]]),teff[2])
+        teff = (unumpy.uarray(*[teff[0],teff[1]]),teff[2])
     teff = convert(teff[-1],'5777K',*teff[:-1],unpack=False)
     #-- take care of numax
     if len(numax)==3:
-        numax = (unumpy.uarray([numax[0],numax[1]]),numax[2])
+        numax = (unumpy.uarray(*[numax[0],numax[1]]),numax[2])
     numax = convert(numax[-1],'mHz',*numax[:-1],unpack=False)
     #-- take care of large separation
     if len(Deltanu0)==3:
-        Deltanu0 = (unumpy.uarray([Deltanu0[0],Deltanu0[1]]),Deltanu0[2])
+        Deltanu0 = (unumpy.uarray(*[Deltanu0[0],Deltanu0[1]]),Deltanu0[2])
     Deltanu0 = convert(Deltanu0[-1],'muHz',*Deltanu0[:-1],unpack=False)
     R = sqrt(teff)/numax_sol * numax/Deltanu0**2 * Deltanu0_sol**2
     return convert('Rsol',unit,R)
@@ -2289,11 +2289,11 @@ def derive_logg(mass,radius, unit='[cm/s2]'):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'g',*mass[:-1],unpack=False)
     #-- take care of radius
     if len(radius)==3:
-        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+        radius = (unumpy.uarray(*[radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'cm',*radius[:-1],unpack=False)
     #-- calculate surface gravity in logarithmic CGS units
     logg = log10(constants.GG_cgs*M / (R**2))
@@ -2325,11 +2325,11 @@ def derive_logg_zg(mass, zg, unit='cm s-2', **kwargs):
 
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'g',*mass[:-1],unpack=False)
     #-- take care of zg
     if len(zg)==3:
-        zg = (unumpy.uarray([zg[0],zg[1]]),zg[2])
+        zg = (unumpy.uarray(*[zg[0],zg[1]]),zg[2])
     gr = convert(zg[-1],'cm s-1',*zg[:-1],unpack=False, **kwargs)
 
     logg = np.log10( gr**2 * constants.cc_cgs**2 / (constants.GG_cgs * M) )
@@ -2353,11 +2353,11 @@ def derive_logg_slo(teff,numax, unit='[cm/s2]'):
     numax_sol = convert(constants.numax_sol[-1],'mHz',*constants.numax_sol[:-1],unpack=False)
     #-- take care of temperature
     if len(teff)==3:
-        teff = (unumpy.uarray([teff[0],teff[1]]),teff[2])
+        teff = (unumpy.uarray(*[teff[0],teff[1]]),teff[2])
     teff = convert(teff[-1],'5777K',*teff[:-1],unpack=False)
     #-- take care of numax
     if len(numax)==3:
-        numax = (unumpy.uarray([numax[0],numax[1]]),numax[2])
+        numax = (unumpy.uarray(*[numax[0],numax[1]]),numax[2])
     numax = convert(numax[-1],'mHz',*numax[:-1],unpack=False)
     #-- calculate surface gravity in logarithmic CGS units
     GG = convert(constants.GG_units,'Rsol3 Msol-1 s-2',constants.GG)
@@ -2371,11 +2371,11 @@ def derive_mass(surface_gravity,radius,unit='kg'):
     """
     #-- take care of logg
     if len(surface_gravity)==3:
-        surface_gravity = (unumpy.uarray([surface_gravity[0],surface_gravity[1]]),surface_gravity[2])
+        surface_gravity = (unumpy.uarray(*[surface_gravity[0],surface_gravity[1]]),surface_gravity[2])
     grav = convert(surface_gravity[-1],'m/s2',*surface_gravity[:-1],unpack=False)
     #-- take care of radius
     if len(radius)==3:
-        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+        radius = (unumpy.uarray(*[radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'m',*radius[:-1],unpack=False)
     #-- calculate mass in SI
     M = grav*R**2/constants.GG
@@ -2403,11 +2403,11 @@ def derive_zg(mass, logg, unit='cm s-1', **kwargs):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'g',*mass[:-1],unpack=False)
     #-- take care of logg
     if len(logg)==3:
-        logg = (unumpy.uarray([logg[0],logg[1]]),logg[2])
+        logg = (unumpy.uarray(*[logg[0],logg[1]]),logg[2])
     g = convert(logg[-1],'cm s-2',*logg[:-1],unpack=False, **kwargs)
 
     zg = 10**g / constants.cc_cgs * np.sqrt(constants.GG_cgs * M / 10**g)
@@ -2423,15 +2423,15 @@ def derive_numax(mass,radius,temperature,unit='mHz'):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'Msol',*mass[:-1],unpack=False)
     #-- take care of radius
     if len(radius)==3:
-        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+        radius = (unumpy.uarray(*[radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'Rsol',*radius[:-1],unpack=False)
     #-- take care of effective temperature
     if len(temperature)==3:
-        temperature = (unumpy.uarray([temperature[0],temperature[1]]),temperature[2])
+        temperature = (unumpy.uarray(*[temperature[0],temperature[1]]),temperature[2])
     teff = convert(temperature[-1],'5777K',*temperature[:-1],unpack=False)
     #-- predict nu_max
     nu_max = M/R**2/sqrt(teff)*3.05
@@ -2447,15 +2447,15 @@ def derive_nmax(mass,radius,temperature):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'Msol',*mass[:-1])
     #-- take care of radius
     if len(radius)==3:
-        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+        radius = (unumpy.uarray(*[radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'Rsol',*radius[:-1])
     #-- take care of effective temperature
     if len(temperature)==3:
-        temperature = unumpy.uarray([temperature[0],temperature[1]])
+        temperature = unumpy.uarray(*[temperature[0],temperature[1]])
     teff = convert(temperature[-1],'5777K',*temperature[:-1])
     #-- predict n_max
     n_max = sqrt(M/teff/R)*22.6 - 1.6
@@ -2471,11 +2471,11 @@ def derive_Deltanu0(mass,radius,unit='mHz'):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'Msol',*mass[:-1])
     #-- take care of radius
     if len(radius)==3:
-        radius = (unumpy.uarray([radius[0],radius[1]]),radius[2])
+        radius = (unumpy.uarray(*[radius[0],radius[1]]),radius[2])
     R = convert(radius[-1],'Rsol',*radius[:-1])
     #-- predict large spacing
     Deltanu0 = sqrt(M)*R**(-1.5)*134.9
@@ -2492,21 +2492,21 @@ def derive_ampllum(luminosity,mass,temperature,wavelength,unit='ppm'):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'Msol',*mass[:-1])
     #-- take care of effective temperature
     if len(temperature)==3:
-        temperature = unumpy.uarray([temperature[0],temperature[1]])
+        temperature = unumpy.uarray(*[temperature[0],temperature[1]])
     teff = convert(temperature[-1],'5777K',*temperature[:-1])
     #-- take care of luminosity
     if len(luminosity)==3:
-        luminosity = unumpy.uarray([luminosity[0],luminosity[1]])
+        luminosity = unumpy.uarray(*[luminosity[0],luminosity[1]])
     lumi = convert(luminosity[-1],'Lsol',*luminosity[:-1])
     #-- take care of wavelength
     if len(wavelength)==3:
-        wavelength = unumpy.uarray([wavelength[0],wavelength[1]])
+        wavelength = unumpy.uarray(*[wavelength[0],wavelength[1]])
     wave = convert(wavelength[-1],'550nm',*wavelength[:-1])
-    ampllum = lumi / wave / teff**2 / M * ufloat((4.7,0.3))
+    ampllum = lumi / wave / teff**2 / M * ufloat(4.7,0.3)
     return convert('ppm',unit,ampllum)
 
 def derive_ampllum_from_velo(velo,temperature,wavelength,unit='ppm'):
@@ -2520,17 +2520,17 @@ def derive_ampllum_from_velo(velo,temperature,wavelength,unit='ppm'):
     """
     #-- take care of velocity
     if len(velo)==3:
-        velo = (unumpy.uarray([velo[0],velo[1]]),velo[2])
+        velo = (unumpy.uarray(*[velo[0],velo[1]]),velo[2])
     velo = convert(velo[-1],'m/s',*velo[:-1])
     #-- take care of effective temperature
     if len(temperature)==3:
-        temperature = unumpy.uarray([temperature[0],temperature[1]])
+        temperature = unumpy.uarray(*[temperature[0],temperature[1]])
     teff = convert(temperature[-1],'5777K',*temperature[:-1])
     #-- take care of wavelength
     if len(wavelength)==3:
-        wavelength = unumpy.uarray([wavelength[0],wavelength[1]])
+        wavelength = unumpy.uarray(*[wavelength[0],wavelength[1]])
     wave = convert(wavelength[-1],'550nm',*wavelength[:-1])
-    ampllum = velo / wave / teff**2 * ufloat((20.1,0.05)) #not sure about error
+    ampllum = velo / wave / teff**2 * ufloat(20.1,0.05) #not sure about error
     return convert('ppm',unit,ampllum)
 
 def derive_amplvel(luminosity,mass,unit='cm/s'):
@@ -2544,13 +2544,13 @@ def derive_amplvel(luminosity,mass,unit='cm/s'):
     """
     #-- take care of mass
     if len(mass)==3:
-        mass = (unumpy.uarray([mass[0],mass[1]]),mass[2])
+        mass = (unumpy.uarray(*[mass[0],mass[1]]),mass[2])
     M = convert(mass[-1],'Msol',*mass[:-1])
     #-- take care of luminosity
     if len(luminosity)==3:
-        luminosity = unumpy.uarray([luminosity[0],luminosity[1]])
+        luminosity = unumpy.uarray(*[luminosity[0],luminosity[1]])
     lumi = convert(luminosity[-1],'Lsol',*luminosity[:-1])
-    amplvel = lumi / M * ufloat((23.4,1.4))
+    amplvel = lumi / M * ufloat(23.4,1.4)
     return convert('cm/s',unit,amplvel)
 
 def derive_galactic_uvw(ra, dec, pmra, pmdec, d, vrad, lsr=False, unit='km s-1'):
@@ -2585,27 +2585,27 @@ def derive_galactic_uvw(ra, dec, pmra, pmdec, d, vrad, lsr=False, unit='km s-1')
     """
     #-- take care of ra
     if len(ra)==3:
-        ra = (unumpy.uarray([ra[0],ra[1]]),ra[2])
+        ra = (unumpy.uarray(*[ra[0],ra[1]]),ra[2])
     ra = convert(ra[-1],'deg',*ra[:-1])
     #-- take care of dec
     if len(dec)==3:
-        dec = (unumpy.uarray([dec[0],dec[1]]),dec[2])
+        dec = (unumpy.uarray(*[dec[0],dec[1]]),dec[2])
     dec = convert(dec[-1],'deg',*dec[:-1])
     #-- take care of pmra
     if len(pmra)==3:
-        pmra = (unumpy.uarray([pmra[0],pmra[1]]),pmra[2])
+        pmra = (unumpy.uarray(*[pmra[0],pmra[1]]),pmra[2])
     pmra = convert(pmra[-1],'mas yr-1',*pmra[:-1])
     #-- take care of pmdec
     if len(pmdec)==3:
-        pmdec = (unumpy.uarray([pmdec[0],pmdec[1]]),pmdec[2])
+        pmdec = (unumpy.uarray(*[pmdec[0],pmdec[1]]),pmdec[2])
     pmdec = convert(pmdec[-1],'mas yr-1',*pmdec[:-1])
     #-- take care of d
     if len(d)==3:
-        d = (unumpy.uarray([d[0],d[1]]),d[2])
+        d = (unumpy.uarray(*[d[0],d[1]]),d[2])
     d = convert(d[-1],'pc',*d[:-1])
     #-- take care of pmdec
     if len(vrad)==3:
-        vrad = (unumpy.uarray([vrad[0],vrad[1]]),vrad[2])
+        vrad = (unumpy.uarray(*[vrad[0],vrad[1]]),vrad[2])
     vrad = convert(vrad[-1],'km s-1',*vrad[:-1])
 
     plx = 1e3 / d # parallax in mas
@@ -3184,7 +3184,7 @@ class Unit(object):
             try:
                 self.value = ufloat(self.value)
             except:
-                self.value = unumpy.uarray(self.value)
+                self.value = unumpy.uarray(*self.value)
 
         #-- values and units to work with
         if self.unit is not None:

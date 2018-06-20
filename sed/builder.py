@@ -2712,8 +2712,8 @@ class SED(object):
                 e_max_distance = abs(max_distance - d[np.argmin(np.abs(dprob-0.5*max(dprob)))])
             elif 'plx' in self.info and 'v' in self.info['plx'] and 'e' in self.info['plx']:
                 plx,eplx = self.info['plx']['v'],self.info['plx']['e']
-                dist = 1000./ufloat((plx,eplx))
-                max_distance,e_max_distance = dist.nominal_value,dist.std_dev()
+                dist = 1000./ufloat(plx,eplx)
+                max_distance,e_max_distance = dist.nominal_value,dist.std_dev
             else:
                 max_distance = 1000.
                 e_max_distance = 100.
@@ -2723,9 +2723,9 @@ class SED(object):
             max_distance = conversions.convert('pc','km',max_distance,e_max_distance)
             ppm_ra = conversions.convert('mas/yr','rad/s',*ppm_ra)
             ppm_de = conversions.convert('mas/yr','rad/s',*ppm_de)
-            max_distance = unumpy.uarray([max_distance[0],max_distance[1]])
-            x = unumpy.uarray([ppm_ra[0],ppm_ra[1]])
-            y = unumpy.uarray([ppm_de[0],ppm_de[1]])
+            max_distance = unumpy.uarray(*[max_distance[0],max_distance[1]])
+            x = unumpy.uarray(*[ppm_ra[0],ppm_ra[1]])
+            y = unumpy.uarray(*[ppm_de[0],ppm_de[1]])
             velocity = max_distance*utan( usqrt(x**2+y**2))
 
 
