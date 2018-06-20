@@ -223,15 +223,17 @@ def write_array(data, filename, **kwargs):
 
     if formats is None:
         try:
-            formats = [('S' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
+            formats = [('U' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
         except TypeError:
-            formats = [('S' in str(col.dtype) and '%s' or '%s') for col in data.T]
+            formats = [('U' in str(col.dtype) and '%s' or '%s') for col in data.T]
     #-- determine width of columns: also take the header label into account
     col_widths = []
     #-- for record arrays
     if auto_width is True and header==True:
         for fmt,head in zip(formats,data.dtype.names):
-            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]+[len(head)]))
+            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]
+                                  + [len(head)]))
+
     #-- for normal arrays and specified header
     elif auto_width is True and header is not None:
         for i,head in enumerate(header):
