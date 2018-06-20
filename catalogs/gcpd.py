@@ -57,6 +57,7 @@ def search(name,**kwargs):
     log_message = '0'
     start = -1
     for line in webpage:
+        line = line.decode('utf-8')
         line = line.replace('\n','')
         #-- change this marker to be much more general: now it only works for
         #   geneva photometry
