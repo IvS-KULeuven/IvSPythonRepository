@@ -221,7 +221,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
 
     #-- prepare to open URI
     url = urllib.request.URLopener()
-    filen,msg = url.retrieve(base_url,filename=filename)
+    filen, msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
         logger.info('Querying ViZieR source %s and downloading to %s'%(name,filen))
@@ -232,6 +232,7 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     if filetype=='tsv':
         try:
             results,units,comms = tsv2recarray(filen)
+
         #-- raise an exception when multiple catalogs were specified
         except ValueError:
             raise ValueError("failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name))
@@ -757,7 +758,7 @@ def tsv2recarray(filename):
     @return: catalog data columns, units, comments
     @rtype: record array, dict, list of str
     """
-    data,comms = ascii.read2array(filename,dtype=np.str,splitchar='\t',return_comments=True)
+    data, comms = ascii.read2array(filename,dtype=np.str,splitchar='\t',return_comments=True)
     results = None
     units = {}
     #-- retrieve the data and put it into a record array
@@ -769,19 +770,21 @@ def tsv2recarray(filename):
         #   themselves (so called vectors). In those cases, we interpret
         #   the contents as a long string
         formats = np.zeros_like(data[0])
+
         for line in comms:
             line = line.split('\t')
+
             if len(line)<3: continue
             for i,key in enumerate(data[0]):
                 if key == line[1] and line[0]=='Column': # this is the line with information
-                    formats[i] = line[2].replace('(','').replace(')','').lower()
+                    formats[i] = line[2].replace('(','').replace(')','').lower().replace('a', 'U')
                     if formats[i][0].isdigit(): formats[i] = 'U100'
                     elif 'f' in formats[i]: formats[i] = 'f8' # floating point
                     elif 'i' in formats[i]: formats[i] = 'f8' # integer, but make it float to contain nans
                     elif 'e' in formats[i]: formats[i] = 'f8' # exponential
                     #-- see remark about the nans a few lines down
-                    if formats[i][0]=='a':
-                        formats[i] = 'a'+str(int(formats[i][1:])+3)
+                    if formats[i][0]=='U':
+                        formats[i] = 'U'+str(int(formats[i][1:])+3)
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
