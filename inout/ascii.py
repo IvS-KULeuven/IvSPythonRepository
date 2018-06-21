@@ -147,7 +147,8 @@ def read2recarray(filename,**kwargs):
     if dtype is None:
         data = np.array(data,dtype=str).T
         header = comm[-2].replace('|',' ').split()
-        types = comm[-1].replace('|a','U').replace('|S','U').split()
+        types = comm[-1]
+        types = re.sub(r'(<|>|\||=)(S|a)', 'U', types).split()
         dtype = [(head,typ) for head,typ in zip(header,types)]
         dtype = np.dtype(dtype)
     elif isinstance(dtype,list):
