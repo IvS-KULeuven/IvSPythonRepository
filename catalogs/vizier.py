@@ -555,15 +555,23 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
         for i in range(len(master)):
             to_units_ = to_units+''
             try:
-                value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                value, e_value = conversions.convert(master['unit'][i],
+                                                     to_units,
+                                                     master['meas'][i],
+                                                     master['e_meas'][i],
+                                                     photband=master['photband'][i])
             except ValueError: # calibrations not available, or its a color
                 # if it is a magnitude color, try converting it to a flux ratio
                 if 'mag' in master['unit'][i]:
                     try:
-                        value,e_value = conversions.convert('mag_color','flux_ratio',master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                        value, e_value = conversions.convert('mag_color',
+                                                             'flux_ratio',
+                                                             master['meas'][i],
+                                                             master['e_meas'][i],
+                                                             photband=master['photband'][i])
                         to_units_ = 'flux_ratio'
                     except ValueError:
-                        value,e_value = np.nan,np.nan
+                        value, e_value = np.nan, np.nan
                 # else, we are powerless...
                 else:
                     value,e_value = np.nan,np.nan

@@ -119,7 +119,10 @@ def fix_master(master, e_default=None):
             band0, band1 = band.split('-')
             band0, band1 = '%s.%s' % (system, band0), '%s.%s' % (system, band1)
 
-            if band0 in master_['photband'] and band1 in master_['photband'] and not color in master_['photband']:
+            if (band0 in master_['photband']
+                and band1 in master_['photband']
+                and color not in master_['photband']):
+
                 # -- where are the bands located?
                 index0 = list(master_['photband']).index(band0)
                 index1 = list(master_['photband']).index(band1)
@@ -130,8 +133,9 @@ def fix_master(master, e_default=None):
                 row[columns.index('cwave')] = np.nan
 
                 # -- it could be a magnitude difference
-                if master_['unit'][index0]=='mag':
-                    row[columns.index('meas')] = master_['meas'][index0]-master_['meas'][index1]
+                if master_['unit'][index0] == 'mag':
+                    row[columns.index('meas')] = (master_['meas'][index0]
+                                                  - master_['meas'][index1])
                     row[columns.index('e_meas')] = np.sqrt(master_['e_meas'][index0]**2+master_['e_meas'][index1]**2)
                     # -- error will not always be available...
                     try:
