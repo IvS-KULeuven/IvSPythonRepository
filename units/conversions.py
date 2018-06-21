@@ -2720,14 +2720,15 @@ class VegaMag(NonLinearConverter):
         #-- this part should include something where the zero-flux is retrieved
         zp = filters.get_info()
         match = zp['photband'] == photband.upper()
-        if match is False:
-             raise ValueError("No calibrations for %s"%(photband))
+        if not any(match):
+            raise ValueError("No calibrations for %s"%(photband))
+            return
         F0 = convert(zp['Flam0_units'][match][0],'W/m3',zp['Flam0'][match][0])
         mag0 = float(zp['vegamag'][match][0])
         if not inv:
-             return 10**(-(meas-mag0)/2.5)*F0
+            return 10**(-(meas-mag0)/2.5)*F0
         else:
-             return -2.5*log10(meas/F0)+mag0
+            return -2.5*log10(meas/F0)+mag0
 
 class ABMag(NonLinearConverter):
     """
@@ -2737,8 +2738,9 @@ class ABMag(NonLinearConverter):
         zp = filters.get_info()
         F0 = convert('W/m2/Hz',constants._current_convention,3.6307805477010024e-23)
         match = zp['photband']==photband.upper()
-        if match is False:
+        if not any(match):
             raise ValueError("No calibrations for %s"%(photband))
+            return
         mag0 = float(zp['ABmag'][match][0])
         if np.isnan(mag0):
             mag0 = 0.
@@ -2762,8 +2764,9 @@ class STMag(NonLinearConverter):
         zp = filters.get_info()
         F0 = convert('erg/s/cm2/AA',constants._current_convention,3.6307805477010028e-09)#0.036307805477010027
         match = zp['photband']==photband.upper()
-        if match is False:
+        if not any(match):
             raise ValueError("No calibrations for %s"%(photband))
+            return
         mag0 = float(zp['STmag'][match][0])
         if np.isnan(mag0):
             mag0 = 0.
