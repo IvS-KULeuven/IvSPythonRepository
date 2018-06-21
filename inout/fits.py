@@ -330,14 +330,16 @@ def write_recarray(recarr,filename,header_dict={},units={},ext='new',close=True)
     else:
         hdulist = filename
 
-
     #-- create the table HDU
     cols = []
     for i,name in enumerate(recarr.dtype.names):
         format = recarr.dtype[i].str.lower().replace('|','').replace('>','')
         format = format.replace('b1','L').replace('<','')
         if 's' in format:                                                                                                              # Changes to be compatible with Pyfits version 3.3
-            format = format.replace('s','') + 'A'                                                                                       # Changes to be compatible with Pyfits version 3.3
+            format = format.replace('s','') + 'A'
+        if 'u' in format:
+            format = format.replace('u','') + 'A'
+            # Changes to be compatible with Pyfits version 3.3
         unit = name in units and units[name] or 'NA'
         cols.append(pf.Column(name=name,format=format,array=recarr[name],unit=unit))
     tbhdu = pf.BinTableHDU.from_columns(pf.ColDefs(cols))

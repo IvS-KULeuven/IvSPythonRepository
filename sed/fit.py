@@ -260,14 +260,12 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
     """
     Generate a grid of parameters.
     """
-
     #-- Find the parameters provided and store them separately.
     ranges, parameters = {}, []
     for key in list(kwargs.keys()):
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
-
     #-- report on the received grid
     if not kwargs:
         logger.info('Received grid (%s)'%model.defaults2str())
@@ -279,7 +277,8 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
                  model._get_pix_grid(photbands,teffrange=(-inf,inf),
                  loggrange=(-inf,inf),ebvrange=(-inf,inf),
                  zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
-                 include_Labs=True,clear_memory=clear_memory,**kwargs)
+                 include_Labs=True,clear_memory=clear_memory,
+                 variables=parameters, **kwargs)
 
     #-- we first generate random teff-logg coordinates, since the grid is
     #   not exactly convex in these parameters. We assume it is for all the
@@ -352,7 +351,6 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         else:
             out_dict[name] = np.array([ranges[name+'range'][0]
                                       for i in out_dict_['teff']])
-
     return out_dict
 
 
@@ -435,7 +433,6 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         if radiusrange == []: radiusrange = [(0.1,10) for i in components]
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
-
     return pars
 
 

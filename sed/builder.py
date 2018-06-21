@@ -1204,10 +1204,13 @@ class SED(object):
         include_grid = self.master['include']
         logger.info('The following measurements are included in the fitting process:\n%s'%(photometry2str(self.master[include_grid])))
         # -- an initial check on the conditions for exclusion of a parameter from interpolation
+        exclude = {}
         if not exc_interpolpar == None:
             for var in exc_interpolpar:
                 if ranges[var+'range'][0] != ranges[var+'range'][1]:
                     raise IOError('Exclusion of parameters from interpolation is only possible if the lower and upper ranges of those ranges are equal to an actual grid point.')
+                exclude[var+'_skip'] = ''
+                del ranges[var+'range']
         # -- build the grid, run over the grid and calculate the CHI2
         pars = fit.generate_grid_pix(self.master['photband'][include_grid],points=points,**ranges)
         pars['exc_interpolpar'] = exc_interpolpar
@@ -1228,7 +1231,8 @@ class SED(object):
         ci = self.calculate_confidence_intervals(mtype='igrid_search',chi2_type='red',CI_limit=CI_limit)
         self.store_confidence_intervals(mtype='igrid_search', **ci)
         # -- remember the best model
-        if set_model: self.set_best_model()
+
+        if set_model: self.set_best_model(**exclude)
     def generate_fit_param(self, start_from='igrid_search', **pars):
         """
         generates a dictionary with parameter information that can be handled by fit.iminimize
@@ -1477,31 +1481,51 @@ class SED(object):
         synflux = np.zeros(len(self.master['photband']))
         keep = (self.master['cwave']<1.6e6) | np.isnan(self.master['cwave'])
         keep = keep & include
-
         if ('igrid_search' in mtype) | ('iminimize' in mtype): #mtype in ['igrid_search', 'iminimize']:
             # -- get the metallicity right
-            files = model.get_file(z='*')
-            if type(files) == str: files = [files] #files needs to be a list!
-            metals = np.array([pf.getheader(ff)['Z'] for ff in files])
-            metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
-            scale = self.results[mtype]['CI']['scale']
-            # -- get (approximated) reddened and unreddened model
-            wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
-                                    logg=self.results[mtype]['CI']['logg'],
-                                    ebv=self.results[mtype]['CI']['ebv'],
-                                    z=metals,
-                                    law=law)
-            wave_ur,flux_ur = model.get_table(teff=self.results[mtype]['CI']['teff'],
+            # files = model.get_file(z='*')
+            # print('FILE', kwargs)
+             #files needs to be a list!
+            if 'z_skip' not in kwargs:
+                files = model.get_file(z='*')
+                if type(files) == str: files = [files]
+                metals = np.array([pf.getheader(ff)['Z'] for ff in files])
+                metals = metals[np.argmin(np.abs(metals-self.results[mtype]['CI']['z']))]
+
+                scale = self.results[mtype]['CI']['scale']
+                # -- get (approximated) reddened and unreddened model
+                wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
                                         logg=self.results[mtype]['CI']['logg'],
-                                        ebv=0,
+                                        ebv=self.results[mtype]['CI']['ebv'],
                                         z=metals,
                                         law=law)
-            # -- get synthetic photometry
-            synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
-                               logg=self.results[mtype]['CI']['logg'],
-                               ebv=self.results[mtype]['CI']['ebv'],
-                               z=self.results[mtype]['CI']['z'],
-                               photbands=self.master['photband'][keep])
+                wave_ur,flux_ur = model.get_table(teff=self.results[mtype]['CI']['teff'],
+                                            logg=self.results[mtype]['CI']['logg'],
+                                            ebv=0,
+                                            z=metals,
+                                            law=law)
+                # -- get synthetic photometry
+                synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
+                                   logg=self.results[mtype]['CI']['logg'],
+                                   ebv=self.results[mtype]['CI']['ebv'],
+                                   z=self.results[mtype]['CI']['z'],
+                                   photbands=self.master['photband'][keep])
+            else:
+                scale = self.results[mtype]['CI']['scale']
+                # -- get (approximated) reddened and unreddened model
+                wave,flux = model.get_table(teff=self.results[mtype]['CI']['teff'],
+                                        logg=self.results[mtype]['CI']['logg'],
+                                        ebv=self.results[mtype]['CI']['ebv'],
+                                        law=law)
+                wave_ur,flux_ur = model.get_table(teff=self.results[mtype]['CI']['teff'],
+                                            logg=self.results[mtype]['CI']['logg'],
+                                            ebv=0,law=law)
+                # -- get synthetic photometry
+                synflux_,Labs = model.get_itable(teff=self.results[mtype]['CI']['teff'],
+                                   logg=self.results[mtype]['CI']['logg'],
+                                   ebv=self.results[mtype]['CI']['ebv'],
+                                   photbands=self.master['photband'][keep],**kwargs)
+
 
             flux,flux_ur = flux*scale,flux_ur*scale
 
@@ -2432,7 +2456,7 @@ class SED(object):
             teff = self.results[mtype]['grid']['teff'][-1]
             logg = self.results[mtype]['grid']['logg'][-1]
             ebv = self.results[mtype]['grid']['ebv'][-1]
-            met = self.results[mtype]['grid']['z'][-1]
+            # met = self.results[mtype]['grid']['z'][-1]
             scale = self.results[mtype]['grid']['scale'][-1]
             angdiam = 2*conversions.convert('sr','mas',scale)
             try:
@@ -2442,14 +2466,16 @@ class SED(object):
                 pl.annotate('Teff=%i   %i K\nlogg=%.2f   %.2f cgs\nE(B-V)=%.3f mag\nr2/r1=%.2f\n$\Theta$=%.3g mas'%(teff,teff2,logg,logg2,ebv,radii,angdiam),
                         loc,xycoords='axes fraction')
             except:
-                pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\nlogZ=%.3f dex\n$\Theta$=%.3g mas'%(teff,logg,ebv,met,angdiam),
+                # pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\nlogZ=%.3f dex\n$\Theta$=%.3g mas'%(teff,logg,ebv,met,angdiam),
+                #         loc,xycoords='axes fraction')
+                pl.annotate('Teff=%d K\nlogg=%.2f cgs\nE(B-V)=%.3f mag\n$\Theta$=%.3g mas'%(teff,logg,ebv,angdiam),
                         loc,xycoords='axes fraction')
                 pass
         logger.info('Plotted SED as %s'%(colors and 'colors' or 'absolute fluxes'))
         teff = "%d" % teff
         logg = "%.2f" % logg
         ebv = "%.3f" % ebv
-        metallicity = "%.3f" % met
+        # metallicity = "%.3f" % met
         #wave,flux = model.get_table(teff=teff,logg=logg,ebv=ebv,z=z,grid='kurucz2')
         '''f = open('/home/anae/python/SEDfitting/Bastars_info.txt', 'a')
         f.writelines(str(teff)+'\t'+str(logg)+'\t'+str(ebv)+'\t'+str(metallicity)+'\n')
@@ -2785,7 +2811,6 @@ class SED(object):
                 self.master = crossmatch.add_bibcodes(self.master)
             if not 'comments' in self.master.dtype.names:
                 self.master = vizier.quality_check(self.master,self.ID)
-        print('MASTER', self.master)
         ascii.write_array(self.master, self.photfile, header=True,
                           auto_width=True, use_float='%g',
                           comments=['#'+json.dumps(self.info)])
@@ -3210,7 +3235,9 @@ class SED(object):
         logger.info('Saved summary to {0}'.format(filename))
 
 
-    def save_important_info(self,filename=None,CI_limit=None,method='igrid_search',chi2type='ci_red'):
+    def save_important_info(self, filename=None, CI_limit=None,
+                            method='igrid_search', chi2type='ci_red',
+                            exclude=set()):
         """
         Save a summary of the results to an ASCII file.
         """
@@ -3227,10 +3254,10 @@ class SED(object):
         factor = self.results[method]['factor']
         #names = ['scaling_factor','chi2_type','ci_limit']
         results = [factor,chi2type,CI_limit*100]
-        print('Metallicity:')
-        print(grid_results['z'][-1])
-        wanted_names = ['ebv','logg','teff','z','chisq']
-        for name in wanted_names:
+
+        wanted_names = {'ebv','logg','teff','z','chisq'}
+        result_names = wanted_names.difference(exclude)
+        for name in result_names:
             lv,cv,uv = grid_results[name][start_CI:].min(),\
                        grid_results[name][-1],\
                        grid_results[name][start_CI:].max()
