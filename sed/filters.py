@@ -738,6 +738,30 @@ def update_info(zp=None):
     ascii.write_array(zp[sa],'zeropoints.dat',header=True,auto_width=True,comments=['#'+line for line in comms[:-2]],use_float='%g')
 
 
+def get_plotsymbolcolorinfo():
+    """
+    Return the arrays needed to always plot the same photometric system with the same color.
+    """
+    photsystem_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'list_photsystems_sorted.dat')
+    plotcolorvalues_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'plotcolorvalues.dat')
+    try:
+        sortedphotsystems = ascii.read2array(photsystem_file,dtype='str')
+    except IOError:
+        logger.info('Loading of {} file failed. No fixed symbol color for each photometric system possible.'.format(photsystem_file))
+    try:
+        plotcolorvalues = ascii.read2array(plotcolorvalues_file)
+    except IOError:
+        logger.info('Loading of {} file failed. No fixed symbol color for each photometric system possible.'.format(plotcolorvalues_file))
+
+    try:
+        if len(sortedphotsystems) == len(plotcolorvalues):
+            return sortedphotsystems.ravel(),plotcolorvalues.ravel()
+        else:
+            raise IndexError
+            print('{} should be of equal length as {}.'.format(plotcolorvalues_file,photsystem_file))
+    except NameError:
+        return None,None
+
 
 if __name__=="__main__":
     import sys
