@@ -57,6 +57,7 @@ def search(name,**kwargs):
     log_message = '0'
     start = -1
     for line in webpage:
+        line = line.decode('utf-8')
         line = line.replace('\n','')
         #-- change this marker to be much more general: now it only works for
         #   geneva photometry
@@ -144,8 +145,8 @@ def gcpd2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_fie
         e_flag = cat_info.get(source,'e_flag')
 
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
-                  ('unit','a30'),('photband','a30'),('source','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','U20'),
+                  ('unit','U30'),('photband','U30'),('source','U50')]
 
     #-- extra can be added, but only if a master is already given!! The reason
     #   is that thre GCPD actually does not contain any extra information, so
@@ -221,7 +222,7 @@ def get_photometry(ID=None,extra_fields=[],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','U50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])

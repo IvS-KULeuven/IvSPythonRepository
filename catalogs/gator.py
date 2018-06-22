@@ -154,7 +154,7 @@ def get_photometry(ID=None,extra_fields=['dist','ra','dec'],**kwargs):
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','U50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -244,7 +244,7 @@ def txt2recarray(filename):
         names = [head.strip() for head in comms[0].split('|')[1:-1]]
         formats = comms[1]
         formats = formats.replace('double','f8')
-        formats = formats.replace('char','a100')
+        formats = formats.replace('char','U100')
         formats = formats.replace('int','f8')
         formats = formats.replace('long','f8')
         formats = [head.strip() for head in formats.split('|')[1:-1]]
@@ -315,8 +315,8 @@ def gator2phot(source,results,units,master=None,extra_fields=['_r','_RAJ2000','_
     e_flag = 'e_'
     q_flag = 'q_'
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
-                  ('unit','a30'),('photband','a30'),('source','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','U20'),
+                  ('unit','U30'),('photband','U30'),('source','U50')]
 
     #-- extra can be added:
     names = list(results.dtype.names)

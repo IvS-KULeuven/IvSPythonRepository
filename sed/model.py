@@ -568,7 +568,9 @@ def get_file(integrated=False,**kwargs):
     grid = grid.lower()
 
     #-- general
+
     z = kwargs.get('z',defaults['z'])
+    # z = defaults['z']
     Rv = kwargs.get('Rv',defaults['Rv'])
     #-- only for Kurucz
     vturb = int(kwargs.get('vturb',defaults['vturb']))
@@ -632,6 +634,16 @@ def get_file(integrated=False,**kwargs):
         basename = 'marcsp_z%st%s_a%s_c%s_sed.fits'%(z,t,a,c)
     elif grid=='marcs2':
         basename = 'marcsp2_z0.00t2.0_m.1.0c0.00_sed.fits'
+    elif grid == 'marcsana':
+        # if not isinstance(z,str): z = '%.2f'%(z)
+
+        if z == '*':
+            basename  = 'MARCS_SED_Ana_z*.fits'
+        else:
+            if isinstance(z,str):
+                z = float(z)
+            basename = 'MARCS_SED_Ana_z{:+.2f}.fits'.format(z)
+        # basename = 'MARCS_SED_Ana_z+0.25.fits'
     elif grid=='comarcs':
         if not isinstance(z,str): z = '%.2f'%(z)
         if not isinstance(co,str): co = '%.2f'%(co)
@@ -1015,7 +1027,6 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
 
@@ -1113,6 +1124,11 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
         logger.debug('vrad is NOT taken into account when interpolating in get_itable()')
     if 'rv' in kwargs:
         logger.debug('Rv is NOT taken into account when interpolating in get_itable()')
+    # TODO: when skip_z is True, the default of z should be changed to the
+    # input default
+    # skip_z = False
+    # if 'z' in kwargs:
+    #     skip_z = True
 
     if photbands is None:
         raise ValueError('no photometric passbands given')
@@ -1123,7 +1139,12 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
     #c0 = time.time()
     #c1 = time.time() - c0
     #-- retrieve structured information on the grid (memoized)
-    markers,(g_teff,g_logg,g_ebv,g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
+    # if skip_z:
+    #     markers,(g_teff,g_logg,g_ebv),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
+    #                         include_Labs=True,clear_memory=clear_memory,**kwargs)
+    # else:
+
+    markers,(g_teff,g_logg,g_ebv, g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
                             include_Labs=True,clear_memory=clear_memory,**kwargs)
     #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
@@ -1131,6 +1152,7 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
         input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(teff)),int(round(logg*100)),int(round(ebv*100))))
         index = markers.searchsorted(input_code)
         output_code = markers[index]
+
         #-- if not available, go on and interpolate!
         #   we raise a KeyError for symmetry with C{get_table}.
         if not input_code==output_code:
@@ -1451,6 +1473,7 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
     #print locals()
     vrad = 0
     N = 1
+    variables = []
     clear_memory = kwargs.pop('clear_memory',False)
     #variables = kwargs.pop('variables',['teff','logg','ebv','z','rv','vrad'])                             # !!!
     for var in ['teff','logg','ebv','z','rv','vrad']:                                       # !!!
@@ -1458,43 +1481,52 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
             kwargs.setdefault(var+'range',(locals()[var],locals()[var]))
         else:
             N = len(locals()[var])
+            variables.append(var)
+
+
 
     #-- retrieve structured information on the grid (memoized)
     axis_values,gridpnts,pixelgrid,cols = _get_pix_grid(photbands,
-                            include_Labs=True,clear_memory=clear_memory,**kwargs)     # !!!
+                            include_Labs=True, variables=variables,
+                            clear_memory=clear_memory,**kwargs)     # !!!
 
     #-- Remove parameters from the grid if it is requested that these should not be interpolated
     #-- (with the exc_interpolpar keyword). This can only work if the requested values of
     #-- these parameters all correspond to a single point in the original grid!
     #-- we check whether this condition is fulfilled
     #-- if not, then the parameter is not excluded from the interpolation
-    #-- and a warning is raised to the log
-    for var in kwargs.get('exc_interpolpar',[]): # e.g. for Kurucz, var can be anything in ['teff','logg','ebv','z']
-        # retrieve the unique values in var
-        var_uniquevalue = np.unique(np.array(locals()[var]))
-        # if there is more than one unique value in var, then our condition is not fulfilled
-        if len(var_uniquevalue) > 1:
-            logger.warning('{} is requested to be excluded from interpolation, although fluxes for more than one value are requested!?'.format(var))
-        else:
-            # retrieve the index of var in the 'pixelgrid' and 'cols' arrays of the original grid
-            var_index = np.where(cols == var)[0]
-            # retrieve the index of the unique value in the original grid
-            var_uniquevalue_index = np.where(axis_values[var_index] == var_uniquevalue[0])[0]
-            # if the unique value does not correspond to a grid point of the original grid, then we only raise a warning
-            if len(var_uniquevalue_index) == 0:
-                logger.warning('{} can only be excluded from interpolation, as requested, if its values are all equal to an actual grid point!'.format(var))
-            else:
-                # remove var from the list of variables in the original grid
-                trash = axis_values.pop(var_index)
-                cols = np.delete(cols,[var_index])
-                # since we do not know the axis of var in advance, we devise a clever way to
-                # bring it to the first axis by transposing the array
-                indices = [x for x in range(pixelgrid.ndim)]
-                indices.remove(var_index)
-                indices.insert(0,var_index)
-                pixelgrid = np.transpose(pixelgrid, indices)
-                # now we select the subgrid corresponding to the requested value of var
-                pixelgrid = pixelgrid[var_uniquevalue_index[0]]
+    # #-- and a warning is raised to the log
+    # for var in kwargs.get('exc_interpolpar',[]): # e.g. for Kurucz, var can be anything in ['teff','logg','ebv','z']
+    #     # retrieve the unique values in var
+    #     var_uniquevalue = np.unique(np.array(locals()[var]))
+    #     # if there is more than one unique value in var, then our condition is not fulfilled
+    #     if len(var_uniquevalue) > 1:
+    #         logger.warning('{} is requested to be excluded from interpolation, although fluxes for more than one value are requested!?'.format(var))
+    #     else:
+    #         # retrieve the index of var in the 'pixelgrid' and 'cols' arrays of the original grid
+    #         print(cols)
+    #         print(var)
+    #         var_index = np.where(cols == var)[0]
+    #         # retrieve the index of the unique value in the original grid
+    #         print(var_index)
+    #         print(axis_values[var_index])
+    #         print(var_uniquevalue[0])
+    #         var_uniquevalue_index = np.where(axis_values[var_index] == var_uniquevalue[0])[0]
+    #         # if the unique value does not correspond to a grid point of the original grid, then we only raise a warning
+    #         if len(var_uniquevalue_index) == 0:
+    #             logger.warning('{} can only be excluded from interpolation, as requested, if its values are all equal to an actual grid point!'.format(var))
+    #         else:
+    #             # remove var from the list of variables in the original grid
+    #             trash = axis_values.pop(var_index)
+    #             cols = np.delete(cols,[var_index])
+    #             # since we do not know the axis of var in advance, we devise a clever way to
+    #             # bring it to the first axis by transposing the array
+    #             indices = [x for x in range(pixelgrid.ndim)]
+    #             indices.remove(var_index)
+    #             indices.insert(0,var_index)
+    #             pixelgrid = np.transpose(pixelgrid, indices)
+    #             # now we select the subgrid corresponding to the requested value of var
+    #             pixelgrid = pixelgrid[var_uniquevalue_index[0]]
 
     #-- prepare input:
     values = np.zeros((len(cols),N))
@@ -1684,11 +1716,11 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
     #-- where the fluxes are zero, log can do weird
     if full_output:
         fluxes_ = np.vstack(fluxes_)
-        keep = -np.isnan(np.sum(fluxes_,axis=0))
+        keep = ~np.isnan(np.sum(fluxes_,axis=0))
         waves_ = waves_[keep]
         fluxes_ = fluxes_[:,keep]
     else:
-        keep = -np.isnan(fluxes_)
+        keep = ~np.isnan(fluxes_)
         waves_ = waves_[keep]
         fluxes_ = fluxes_[keep]
     return waves_,fluxes_
@@ -2299,6 +2331,11 @@ def _get_itable_markers(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
+    # Possibility to not fetch all grid files when not needed
+    # does not work currently
+    # if 'z_skip' in kwargs:
+    #     gridfiles = get_file(integrated=True,**kwargs)
+    # else:
     gridfiles = get_file(z='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
@@ -2309,7 +2346,6 @@ def _get_itable_markers(photbands,
     gridpnts = []
     grid_z = []
     markers = []
-
     #-- collect information
     for gridfile in gridfiles:
         ff = pf.open(gridfile)
@@ -2374,15 +2410,13 @@ def _get_pix_grid(photbands,
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
 
-    #-- remove Rv and z from the grid keywords
-    trash = kwargs.pop('Rv', '*')
-    trash = kwargs.pop('z', '*')
-    gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
+    gridfiles = get_file(integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
     flux = []
     grid_pars = []
     grid_names = np.array(variables)
+
     #-- collect information from all the grid files
     for gridfile in gridfiles:
         with pf.open(gridfile) as ff:

@@ -152,7 +152,7 @@ def getHipData(ID,dtype='ep',outputFileName=None):
     if dtype=='ep':
         dtypes = [('time','f8'),('mag','f8'),('e_mag','f8'),('q_mag','i')]
     elif dtype=='i':
-        dtypes = [('orbit','i'),('source','a1'),
+        dtypes = [('orbit','i'),('source','U1'),
                   ('d_acosd','f8'),('d_d','f8'),('d_pi','f8'),
                   ('d_mua','f8'),('d_mud','f8'),
                   ('abs_res','f8'),('abs_std','f8'),('cor','f8')]

@@ -122,7 +122,7 @@ def read2recarray(filename,**kwargs):
 
     the keyword 'dtype' should be equal to a list of tuples, e.g.
 
-    C{dtype = [('col1','a10'),('col2','>f4'),..]}
+    C{dtype = [('col1','U10'),('col2','>f4'),..]}
 
     @param filename: name of file with the data
     @type filename: string
@@ -147,7 +147,8 @@ def read2recarray(filename,**kwargs):
     if dtype is None:
         data = np.array(data,dtype=str).T
         header = comm[-2].replace('|',' ').split()
-        types = comm[-1].replace('|','').replace('a','U').replace('S','U').split()
+        types = comm[-1]
+        types = re.sub(r'(<|>|\||=)(S|a)', 'U', types).split()
         dtype = [(head,typ) for head,typ in zip(header,types)]
         dtype = np.dtype(dtype)
     elif isinstance(dtype,list):
@@ -223,15 +224,17 @@ def write_array(data, filename, **kwargs):
 
     if formats is None:
         try:
-            formats = [('S' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
+            formats = [('U' in str(data[col].dtype) and '%s' or use_float) for col in data.dtype.names]
         except TypeError:
-            formats = [('S' in str(col.dtype) and '%s' or '%s') for col in data.T]
+            formats = [('U' in str(col.dtype) and '%s' or '%s') for col in data.T]
     #-- determine width of columns: also take the header label into account
     col_widths = []
     #-- for record arrays
     if auto_width is True and header==True:
         for fmt,head in zip(formats,data.dtype.names):
-            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]+[len(head)]))
+            col_widths.append(max([len('%s'%(fmt)%(el)) for el in data[head]]
+                                  + [len(head)]))
+
     #-- for normal arrays and specified header
     elif auto_width is True and header is not None:
         for i,head in enumerate(header):

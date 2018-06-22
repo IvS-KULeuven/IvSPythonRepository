@@ -394,7 +394,7 @@ class MinimizeFitTestCase(SEDTestCase):
                 'teff_max': 7000, 'rv_vary': True, 'ebv_vary': True}
         exp = {'max': array([3.1, 7000, 4.5, 0.015, 0, 0.0], dtype=object),
                'vary': array([True, True, True, True, False, True], dtype=object),
-               'names': array(['rv', 'teff', 'logg', 'ebv', 'vrad', 'z'], dtype='|S4'),
+               'names': array(['rv', 'teff', 'logg', 'ebv', 'vrad', 'z'], dtype='U4'),
                'value': array([2.4, 6000, 4.0, 0.007, 0, -0.3], dtype=object),
                'min': array([2.1, 5000, 3.5, 0.005, 0, -0.5], dtype=object)}
 
@@ -473,7 +473,6 @@ class BuilderTestCase(SEDTestCase):
         if not noMock:
             sesame.search = mock.Mock(return_value={'plx':(0.0,0.0)})
             builder.SED.load_photometry = mock.Mock(return_value=None)
-
 
     def setUp(self):
         self.sed = builder.SED(ID='TEST',load_fits=False)
@@ -877,20 +876,5 @@ class XIntegrationTestCase(SEDTestCase):
         self.assertEqual(len(sed.results['iminimize']['synflux']), 3, msg='stored synflux has wrong number of collumns (should be 3)')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    unittest.main()

@@ -567,11 +567,11 @@ def read_hermesVR_velocities(unique=True, return_latest=True, unseq=None, object
             line[20] = " ".join(line[20:])
             rawdata[i] = tuple(line[0:21])
 
-    dtype = [('unseq','int'),('object','a20'),('hjd','f8'),('exptime','f8'),('bvcor','f8'),
+    dtype = [('unseq','int'),('object','U20'),('hjd','f8'),('exptime','f8'),('bvcor','f8'),
              ('rvdrift','f8'),('telloff','f8'),('tellofferr','f8'),('telloffwidth','f8'),
              ('vrad','f8'),('vraderr','f8'),('nlines','int'),('ccfdepth','f8'),
              ('ccfdeptherr','f8'), ('ccfsigma','f8'),('ccfsigmaerr','f8'),('sn','f8'),
-             ('gaussoc','f8'),('wvlfile','a80'),('maskfile','a80'),('fffile','a80')]
+             ('gaussoc','f8'),('wvlfile','U80'),('maskfile','U80'),('fffile','U80')]
     data = np.rec.array(rawdata, dtype=dtype)
 
     #-- select which lines to keep
