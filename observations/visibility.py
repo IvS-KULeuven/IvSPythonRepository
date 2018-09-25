@@ -113,7 +113,7 @@ class Ephemeris(object):
                 jpos = sesame.search(objectname,db='N')['jpos']
             except KeyError:
                 logger.warning('Object %s not found in NED either.'%(objectname))
-                raise IOError, 'No coordinates retrieved for object %s.'%(objectname)
+                raise IOError('No coordinates retrieved for object %s.'%(objectname))
         myobject = ephem.readdb("%s,f|M|A0,%s,8.0,2000"%(objectname,','.join(jpos.split())))
         return myobject
 
@@ -491,7 +491,7 @@ class Ephemeris(object):
 
         #-- the output dictionary
         self.vis = dict(MJDs=MJDs,dates=dates,alts=alts,airmass=airmass,during_night=during_night,moon_alts=moon_alts,moon_airmass=moon_airmass,moon_separation=moon_separation)
-        self.vis.update(dict(sun_prevrise=np.array(num2date(self._sun_prevrise),dtype='|S19'),sun_prevset=np.array(num2date(self._sun_prevset),dtype='|S19'),sun_nextrise=np.array(num2date(self._sun_nextrise),dtype='|S19'),sun_nextset=np.array(num2date(self._sun_nextset),dtype='|S19')))
+        self.vis.update(dict(sun_prevrise=np.array(num2date(self._sun_prevrise),dtype='U19'),sun_prevset=np.array(num2date(self._sun_prevset),dtype='U19'),sun_nextrise=np.array(num2date(self._sun_nextrise),dtype='U19'),sun_nextset=np.array(num2date(self._sun_nextset),dtype='U19')))
         for i,obj in enumerate(self.objects):
             keep = (self._objectIndices == i) & (during_night==1) & (0<=airmass) & (airmass<=2.5)
             logger.info('Object %s: %s visible during night time (%.1f<airmass<%.1f)'%(obj.name,~np.any(keep) and 'not' or '',sum(keep) and airmass[keep].min() or np.nan,sum(keep) and airmass[keep].max() or np.nan))

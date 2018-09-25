@@ -17,7 +17,7 @@ from scipy.optimize import fmin,fmin_powell
 from ivs.statistics import pca
 from ivs.sed import model
 from ivs.sed import filters
-from ivs.sed.decorators import iterate_gridsearch,parallel_gridsearch
+from ivs.sed.decorators import parallel_gridsearch
 from ivs.sigproc import fit as sfit
 from ivs.aux import numpy_ext
 from ivs.aux import progressMeter
@@ -173,7 +173,7 @@ def get_PCA_parameters(obsT,calib,P,means,stds,e_obsT=None,mc=None):
     if mc is not None:
         if e_obsT is None:
             e_obsT = 0.01*obsT[0]
-        obsT_ = np.array([obsT[0]+np.random.normal(size=len(obsT[0]),scale=e_obsT) for i in xrange(mc)])
+        obsT_ = np.array([obsT[0]+np.random.normal(size=len(obsT[0]),scale=e_obsT) for i in range(mc)])
         obsT_[0] = obsT[0]
         obsT = obsT_
 
@@ -260,14 +260,12 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
     """
     Generate a grid of parameters.
     """
-
     #-- Find the parameters provided and store them separately.
     ranges, parameters = {}, []
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search('range$', key):
             ranges[key] = kwargs.pop(key)
             parameters.append(re.sub('range$', '', key))
-
     #-- report on the received grid
     if not kwargs:
         logger.info('Received grid (%s)'%model.defaults2str())
@@ -279,7 +277,8 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
                  model._get_pix_grid(photbands,teffrange=(-inf,inf),
                  loggrange=(-inf,inf),ebvrange=(-inf,inf),
                  zrange=(-inf,inf),rvrange=(-inf,inf),vradrange=(0,0),
-                 include_Labs=True,clear_memory=clear_memory,**kwargs)
+                 include_Labs=True,clear_memory=clear_memory,
+                 variables=parameters, **kwargs)
 
     #-- we first generate random teff-logg coordinates, since the grid is
     #   not exactly convex in these parameters. We assume it is for all the
@@ -350,8 +349,8 @@ def generate_grid_single_pix(photbands, points=None, clear_memory=True, **kwargs
         if name in out_dict_:
             out_dict[name] = out_dict_[name]
         else:
-            out_dict[name] = np.array([ranges[name+'range'][0] for i in out_dict['teff']])
-
+            out_dict[name] = np.array([ranges[name+'range'][0]
+                                      for i in out_dict_['teff']])
     return out_dict
 
 
@@ -379,7 +378,7 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
     #-- Find all ranges and the number of components
     radiusrange = []
     ranges, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search('range$', key) and not re.search('^rad\d?',key):
             ranges[key] = kwargs.pop(key)
             name, comp = re.findall('(.*?)(\d?)range$', key)[0]
@@ -407,13 +406,13 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         #-- prepare a permutation so different blocks are not clustered together
         permutation = np.random.permutation(len(grid_['teff']))
 
-        for key in grid_.keys():
+        for key in list(grid_.keys()):
             npoints = min(npoints,len(grid_[key]))
             pars[key+comp] = grid_[key][permutation]
 
     #-- The generate_grid_single_pix method does not guarantee the number of points.
     #   So force that all arrays have the same length.
-    for key in pars.keys():
+    for key in list(pars.keys()):
         pars[key] = pars[key][:npoints]
 
     #-- Check that ebv, z and rv is the same for each component
@@ -434,7 +433,6 @@ def generate_grid_pix(photbands, points=None, clear_memory=False,**kwargs):
         if radiusrange == []: radiusrange = [(0.1,10) for i in components]
         for i, comp in enumerate(components):
             pars['rad'+comp] = np.random.uniform(low=radiusrange[i][0], high=radiusrange[i][1], size=npoints)
-
     return pars
 
 
@@ -934,7 +932,7 @@ def igrid_search(meas,e_meas,photbands,*args,**kwargs):
         p = progressMeter.ProgressMeter(total=N)
     #-- run over the grid, retrieve synthetic fluces and compare with
     #   observations.
-    for n,pars in enumerate(itertools.izip(*args)):
+    for n,pars in enumerate(zip(*args)):
         if index is None: p.update(1)
         syn_flux,Labs = model_func(*pars,photbands=photbands,**kwargs)
         chisqs[n],scales[n],e_scales[n] = stat_func(meas,e_meas,colors,syn_flux, **fitkws)
@@ -954,7 +952,7 @@ def create_parameter_dict(**pars):
     #-- Find all the parameters first
     parnames = set()
     atributes = set()
-    for key in pars.keys():
+    for key in list(pars.keys()):
         name, att = re.findall("(.*)_([a-zA-Z]+)$", key)[0]
         parnames.add(name)
         atributes.add(att)
@@ -966,7 +964,7 @@ def create_parameter_dict(**pars):
         result[att] = np.array([None for i in parnames])
 
     #-- read the attributes
-    for key in pars.keys():
+    for key in list(pars.keys()):
         name, att = re.findall("(.*)_([a-zA-Z]+)$", key)[0]
         result[att][parnames == name] = pars[key]
 
@@ -1036,7 +1034,7 @@ def iminimize(meas,e_meas,photbands, points=None, return_minimizer=False,**kwarg
     fitmodel = kwargs.pop('model_func',_iminimize_model)
     residuals = kwargs.pop('res_func',_iminimize_residuals)
     epsfcn = kwargs.pop('epsfcn', 0.0005)# using ~3% step to derive jacobian.
-
+    fitkws_old = kwargs.pop('fitkws', None)
     #-- get the parameters
     parameters = create_parameter_dict(**kwargs)
 
@@ -1214,7 +1212,7 @@ if __name__=="__main__":
 
     c0 = time.time()
     teffs,loggs,ebvs,zs,radii = generate_grid(photbands,teffrange=(5000,5800),loggrange=(4.20,4.70),zrange=(0,0),ebvrange=(0.05,0.08), grid='kurucz',points=10000)
-    print 'Time: %i'%(time.time()-c0)
+    print('Time: %i'%(time.time()-c0))
 
     plt.figure(2)
     plt.scatter(teffs,loggs,c=ebvs,s=(zs+5)*10,edgecolors='none',cmap=plt.cm.spectral)
@@ -1244,5 +1242,5 @@ if __name__=="__main__":
     calib = calibrate_PCA(T,grid,function='linear')
     sample_index = int(np.random.uniform(high=len(A)))
     sample = 10**A[sample_index]
-    print [bla[sample_index] for bla in grid]
-    print get_PCA_parameters(sample,calib,P,means,stds)
+    print([bla[sample_index] for bla in grid])
+    print(get_PCA_parameters(sample,calib,P,means,stds))

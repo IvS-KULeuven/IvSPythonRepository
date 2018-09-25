@@ -129,7 +129,7 @@ logger = logging.getLogger("SP.FUNCLIB")
 def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     """
     Blackbody (T, scale).
-    
+
     @param wave_units: wavelength units
     @type wave_units: string
     @param flux_units: flux units
@@ -142,13 +142,13 @@ def blackbody(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     function.__name__ = 'blackbody'
-    
+
     return Function(function=function, par_names=pnames)
-    
+
 def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     """
     Rayleigh-Jeans tail (T, scale).
-    
+
     @param wave_units: wavelength units
     @type wave_units: string
     @param flux_units: flux units
@@ -161,13 +161,13 @@ def rayleigh_jeans(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=Tru
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     function.__name__ = 'rayleigh_jeans'
-    
+
     return Function(function=function, par_names=pnames)
-    
+
 def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
     """
     Wien approximation (T, scale).
-    
+
     @param wave_units: wavelength units
     @type wave_units: string
     @param flux_units: flux units
@@ -180,16 +180,16 @@ def wien(wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True):
                                                 flux_units=flux_units,\
                                                 disc_integrated=disc_integrated)
     function.__name__ = 'wien'
-    
+
     return Function(function=function, par_names=pnames)
 
 def kepler_orbit(type='single'):
     """
     Kepler orbits ((p,t0,e,omega,K,v0) or (p,t0,e,omega,K1,v01,K2,v02))
-    
+
     A single kepler orbit
     parameters are: [p, t0, e, omega, k, v0]
-    
+
     A double kepler orbit
     parameters are: [p, t0, e, omega, k_1, v0_1, k_2, v0_2]
     Warning: This function uses 2d input and output!
@@ -198,9 +198,9 @@ def kepler_orbit(type='single'):
         pnames = ['p','t0','e','omega','k','v0']
         function = lambda p, x: kepler.radial_velocity(p, times=x, itermax=8)
         function.__name__ = 'kepler_orbit_single'
-    
+
         return Function(function=function, par_names=pnames)
-        
+
     elif type == 'double':
         pnames = ['p','t0','e','omega','k1','v01','k2','v02' ]
         function = lambda p, x: [kepler.radial_velocity([p[0],p[1],p[2],p[3],p[4],p[5]], times=x[0], itermax=8),
@@ -208,13 +208,13 @@ def kepler_orbit(type='single'):
         def residuals(syn, data, weights=None, errors=None, **kwargs):
             return np.hstack( [( data[0] - syn[0] ) * weights[0],  ( data[1] - syn[1] ) * weights[1] ] )
         function.__name__ = 'kepler_orbit_double'
-    
+
         return Function(function=function, par_names=pnames, resfunc=residuals)
 
 def box_transit(t0=0.):
     """
     Box transit model (cont,freq,ingress,egress,depth)
-    
+
     @param t0: reference time (defaults to 0)
     @type t0: float
     """
@@ -234,25 +234,25 @@ def box_transit(t0=0.):
 def polynomial(d=1):
     """
     Polynomial (a1,a0).
-    
+
     y(x) = ai*x**i + a(i-1)*x**(i-1) + ... + a1*x + a0
-    
+
     @param d: degree of the polynomial
     @type d: int
     """
     pnames = ['a{:d}'.format(i) for i in range(d,0,-1)]+['a0']
     function = lambda p, x: np.polyval(p,x)
     function.__name__ = 'polynomial'
-    
+
     return Function(function=function, par_names=pnames)
 
 
 def soft_parabola():
     """
     Soft parabola (ta,vlsr,vinf,gamma).
-    
+
     See Olofsson 1993ApJS...87...267O.
-    
+
     T_A(x) = T_A(0) * [ 1 - ((x- v_lsr)/v_inf)**2 ] ** (gamma/2)
     """
     pnames = ['ta','vlsr','vinf','gamma']
@@ -263,20 +263,20 @@ def soft_parabola():
         y[np.isnan(y)] = 0
         return y
     function.__name__ = 'soft_parabola'
-    
+
     return Function(function=function, par_names=pnames)
 
 
 def gauss(use_jacobian=True):
     """
     Gaussian (a,mu,sigma,c)
-    
+
     f(x) = a * exp( - (x - mu)**2 / (2 * sigma**2) ) + c
     """
     pnames = ['a', 'mu', 'sigma', 'c']
     function = lambda p, x: p[0] * np.exp( -(x-p[1])**2 / (2.0*p[2]**2)) + p[3]
     function.__name__ = 'gauss'
-    
+
     if not use_jacobian:
         return Function(function=function, par_names=pnames)
     else:
@@ -284,27 +284,27 @@ def gauss(use_jacobian=True):
             ex = np.exp( -(x-p[1])**2 / (2.0*p[2]**2) )
             return np.array([-ex, -p[0] * (x-p[1]) * ex / p[2]**2, -p[0] * (x-p[1])**2 * ex / p[2]**3, [-1 for i in x] ]).T
         return Function(function=function, par_names=pnames, jacobian=jacobian)
-    
+
 def sine():
     """
     Sine (ampl,freq,phase,const)
-    
+
     f(x) = ampl * sin(2pi*freq*x + 2pi*phase) + const
     """
     pnames = ['ampl', 'freq', 'phase', 'const']
     function = lambda p, x: p[0] * sin(2*pi*(p[1]*x + p[2])) + p[3]
     function.__name__ = 'sine'
-    
+
     return Function(function=function, par_names=pnames)
 
 
 def sine_linfreqshift(t0=0.):
     """
     Sine with linear frequency shift (ampl,freq,phase,const,D).
-        
+
     Similar to C{sine}, but with extra parameter 'D', which is the linear
     frequency shift parameter.
-    
+
     @param t0: reference time (defaults to 0)
     @type t0: float
     """
@@ -314,18 +314,18 @@ def sine_linfreqshift(t0=0.):
         return p[0] * sin(2*pi*(freq + p[2])) + p[3]
     function.__name__ = 'sine_linfreqshift'
     return Function(function=function, par_names=pnames)
-    
+
 def sine_expfreqshift(t0=0.):
     """
     Sine with exponential frequency shift (ampl,freq,phase,const,K).
-        
+
     Similar to C{sine}, but with extra parameter 'K', which is the exponential
     frequency shift parameter.
-    
+
     frequency(x) = freq / log(K) * (K**(x-t0)-1)
-    
+
     f(x) = ampl * sin( 2*pi * (frequency + phase))
-    
+
     @param t0: reference time (defaults to 0)
     @type t0: float
     """
@@ -336,24 +336,24 @@ def sine_expfreqshift(t0=0.):
     function.__name__ = 'sine_expfreqshift'
     return Function(function=function, par_names=pnames)
 
-    
+
 def sine_orbit(t0=0.,nmax=10):
     """
     Sine with a sinusoidal frequency shift (ampl,freq,phase,const,forb,asini,omega,(,ecc))
-    
+
     Similar to C{sine}, but with extra parameter 'asini' and 'forb', which are
     the orbital parameters. forb in cycles/day or something similar, asini in au.
-    
+
     For eccentric orbits, add longitude of periastron 'omega' (radians) and
     'ecc' (eccentricity).
-        
+
     @param t0: reference time (defaults to 0)
     @type t0: float
     @param nmax: number of terms to include in series for eccentric orbit
     @type nmax: int
     """
     pnames = ['ampl', 'freq', 'phase', 'const','forb','asini','omega']
-    def ane(n,e): return 2.*sqrt(1-e**2)/e/n*jn(n,n*e)    
+    def ane(n,e): return 2.*sqrt(1-e**2)/e/n*jn(n,n*e)
     def bne(n,e): return 1./n*(jn(n-1,n*e)-jn(n+1,n*e))
     def function(p,x):
         ampl,freq,phase,const,forb,asini,omega = p[:7]
@@ -383,7 +383,7 @@ def sine_orbit(t0=0.,nmax=10):
 def power_law():
     """
     Power law (A,B,C,f0,const)
-    
+
     P(f) = A / (1+ B(f-f0))**C + const
     """
     pnames = ['ampl','b','c','f0','const']
@@ -395,7 +395,7 @@ def power_law():
 def lorentz():
     """
     Lorentz profile (ampl,mu,gamma,const)
-    
+
     P(f) = A / ( (x-mu)**2 + gamma**2) + const
     """
     pnames = ['ampl','mu','gamma','const']
@@ -406,7 +406,7 @@ def lorentz():
 def voigt():
     """
     Voigt profile (ampl,mu,sigma,gamma,const)
-    
+
     z = (x + gamma*i) / (sigma*sqrt(2))
     V = A * Real[cerf(z)] / (sigma*sqrt(2*pi))
     """
@@ -425,7 +425,7 @@ def voigt():
 def multi_sine(n=10):
     """
     Multiple sines.
-    
+
     @param n: number of sines
     @type n: int
     """
@@ -434,7 +434,7 @@ def multi_sine(n=10):
 def multi_blackbody(n=3,**kwargs):
     """
     Multiple black bodies.
-    
+
     @param n: number of blackbodies
     @type n: int
     """
@@ -467,14 +467,14 @@ def _complex_error_function(x):
 def evaluate(funcname, domain, parameters, **kwargs):
     """
     Evaluate a function on specified interval with specified parameters.
-    
+
     Extra keywords are passed to the funcname.
-    
+
     Example:
-    
+
     >>> x = np.linspace(-5,5,1000)
     >>> y = evaluate('gauss',x,[1.,0.,2.,0.])
-    
+
     @parameter funcname: name of the function
     @type funcname: str
     @parameter domain: domain to evaluate onto
@@ -485,7 +485,7 @@ def evaluate(funcname, domain, parameters, **kwargs):
     function = globals()[funcname](**kwargs)
     function.setup_parameters(parameters)
     return function.evaluate(domain)
-    
+
 if  __name__=="__main__":
     import doctest
     from matplotlib import pyplot as plt

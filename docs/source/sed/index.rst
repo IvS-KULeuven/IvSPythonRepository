@@ -1,0 +1,6 @@
+SED documentation
+=================
+
+.. toctree::
+
+   builder

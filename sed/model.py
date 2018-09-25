@@ -15,7 +15,7 @@ Section 1. Available model grids
 
     Section 1.1 Available grids
     ---------------------------
-    
+
     - kurucz: The Kurucz model grids, (default setting)  reference: Kurucz 1993, yCat, 6039, 0
         - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
         - metallicity (z): p01 is +0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
@@ -23,12 +23,12 @@ Section 1. Available model grids
         - turbulent velocity (vturb): vturb in km/s
         - nover= True means no overshoot
         - odfnew=True means no overshoot but with better opacities and abundances
-    
+
     - tmap: NLTE grids computed for sdB stars with the Tubingen NLTE Model
       Atmosphere package. No further parameters are available. Reference:
-      Werner et al. 2003, 
-    
-    
+      Werner et al. 2003,
+
+
     Section 1.2 Plotting the domains of all spectral grids
     ------------------------------------------------------
 
@@ -108,7 +108,7 @@ copy2scratch() after setting the default settings as explained above. f.x.:
 >>> copy2scratch()
 
 You have to do this every time you change a grid setting. This function creates a
-directory named 'your_username' on the scratch disk and works from there. So you 
+directory named 'your_username' on the scratch disk and works from there. So you
 won`t disturbed other users.
 
 After the fitting process use the function
@@ -286,12 +286,9 @@ And make a nice plot
 """
 import re
 import os
-import sys
 import glob
 import logging
-import copy
 import astropy.io.fits as pf
-import time
 import numpy as np
 try:
     from scipy.interpolate import LinearNDInterpolator
@@ -301,7 +298,6 @@ except ImportError:
     from Scientific.Functions.Interpolation import InterpolatingFunction
     new_scipy = False
 from scipy.interpolate import interp1d
-from multiprocessing import Process,Manager,cpu_count
 
 from ivs import config
 from ivs.units import conversions
@@ -312,11 +308,9 @@ import itertools
 import functools
 from ivs.aux import numpy_ext
 from ivs.sed import filters
-from ivs.inout import ascii
 from ivs.inout import fits
 from ivs.sigproc import interpol
-from ivs.catalogs import sesame
-import reddening
+from ivs.sed import reddening
 import getpass
 import shutil
 
@@ -345,19 +339,19 @@ scratchdir = None
 def set_defaults(*args,**kwargs):
     """
     Set defaults of this module
-    
+
     If you give no keyword arguments, the default values will be reset.
     """
     clear_memoization(keys=['ivs.sed.model'])
     #-- these are the default defaults
     if not kwargs:
         kwargs = __defaults__.copy()
-                
+
     for key in kwargs:
         if key in defaults:
             defaults[key] = kwargs[key]
-            logger.info('Set %s to %s'%(key,kwargs[key]))        
-                
+            logger.info('Set %s to %s'%(key,kwargs[key]))
+
 
 def set_defaults_multiple(*args):
     """
@@ -369,20 +363,20 @@ def set_defaults_multiple(*args):
         for key in arg:
             if key in defaults_multiple[i]:
                 defaults_multiple[i][key] = arg[key]
-                logger.info('Set %s to %s (star %d)'%(key,arg[key],i)) 
+                logger.info('Set %s to %s (star %d)'%(key,arg[key],i))
 
 def copy2scratch(**kwargs):
     """
     Copy the grids to the scratch directory to speed up the fitting process.
     Files are placed in the directory: /scratch/uname/ where uname is your username.
-    
+
     This function checks the grids that are set with the functions set_defaults()
     and set_defaults_multiple(). Every time a grid setting is changed, this
     function needs to be called again.
-    
+
     Don`t forget to remove the files from the scratch directory after the fitting
     process is completed with clean_scratch()
-    
+
     It is possible to give z='*' and Rv='*' as an option; when you do that, the grids
     with all z, Rv values are copied. Don't forget to add that option to clean_scratch too!
     """
@@ -391,12 +385,12 @@ def copy2scratch(**kwargs):
     if not os.path.isdir('/scratch/%s/'%(uname)):
         os.makedirs('/scratch/%s/'%(uname))
     scratchdir = '/scratch/%s/'%(uname)
-    
+
     #-- we have defaults for the single and multiple grid
     defaults_ = []
     defaults_.append(defaults)
     defaults_.extend(defaults_multiple)
-    
+
     #-- now run over the defaults for the single and multiple grid, and
     #   copy the necessary files to the scratch disk
     for default in defaults_:
@@ -446,7 +440,7 @@ def clean_scratch(**kwargs):
     defaults_ = []
     defaults_.append(defaults)
     defaults_.extend(defaults_multiple)
-    
+
     for default in defaults_:
         if default['use_scratch']:
             originalDefaults = {}
@@ -455,7 +449,7 @@ def clean_scratch(**kwargs):
                     originalDefaults[key] = default[key]
                     default[key] = kwargs[key]
                     logger.debug('Using provided value for {0:s}={1:s} when deleting from scratch'.format(key,str(kwargs[key])))
-            
+
             #if z is not None:
                 #previous_z = default['z']
                 #default['z']
@@ -466,14 +460,14 @@ def clean_scratch(**kwargs):
                 if os.path.isfile(ifname):
                     logger.info('Removed file: %s'%(ifname))
                     os.remove(ifname)
-            
+
             fname = get_file(integrated=True,**default)
             if isinstance(fname,str):
                 fname = [fname]
             for ifname in fname:
                 if os.path.isfile(ifname):
                     logger.info('Removed file: %s'%(ifname))
-                    os.remove(ifname)    
+                    os.remove(ifname)
             default['use_scratch'] = False
             for key in kwargs:
                 if key in default:
@@ -497,10 +491,10 @@ def defaults_multiple2str():
 def get_gridnames(grid=None):
     """
     Return a list of available grid names.
-    
+
     If you specificy the grid's name, you get two lists: one with all available
     original, non-integrated grids, and one with the pre-calculated photometry.
-    
+
     @parameter grid: name of the type of grid (optional)
     @type grid: string
     @return: list of grid names
@@ -522,12 +516,12 @@ def get_gridnames(grid=None):
 def get_file(integrated=False,**kwargs):
     """
     Retrieve the filename containing the specified SED grid.
-    
+
     The keyword arguments are specific to the kind of grid you're using.
-    
+
     Basic keywords are 'grid' for the name of the grid, and 'z' for metallicity.
     For other keywords, see the source code.
-    
+
     Available grids and example keywords:
         - grid='kurucz93':
                     - metallicity (z): m01 is -0.1 log metal abundance relative to solar (solar abundances from Anders and Grevesse 1989)
@@ -549,9 +543,9 @@ def get_file(integrated=False,**kwargs):
         - grid='tkachenko': metallicity z
         - grid='nemo': convection theory and metallicity (CM=Canuto and Mazzitelli 1991),
         (CGM=Canuto,Goldman,Mazzitelli 1996), (MLT=mixinglengththeory a=0.5)
-        - grid='marcsjorissensp': high resolution spectra from 4000 to 25000 A of (online available) MARCS grid computed by A. Jorissen 
+        - grid='marcsjorissensp': high resolution spectra from 4000 to 25000 A of (online available) MARCS grid computed by A. Jorissen
         with turbospectrum v12.1.1 in late 2012, then converted to the Kurucz wavelength grid (by S. Bloemen and M. Hillen).
-    
+
     @param integrated: choose integrated version of the gridcopy2scratch
     @type integrated: boolean
     @keyword grid: gridname (default Kurucz)
@@ -559,7 +553,7 @@ def get_file(integrated=False,**kwargs):
     @return: gridfile
     @rtype: str
     """
-    
+
     #-- possibly you give a filename
     grid = kwargs.get('grid',defaults['grid'])
     use_scratch = kwargs.get('use_scratch',defaults['use_scratch'])
@@ -570,11 +564,13 @@ def get_file(integrated=False,**kwargs):
             return os.path.join(os.path.dirname(grid),basename[0]=='i' and basename or 'i'+basename)
         logging.debug('Returning grid path: '+grid)
         return grid
-    
+
     grid = grid.lower()
-    
+
     #-- general
+
     z = kwargs.get('z',defaults['z'])
+    # z = defaults['z']
     Rv = kwargs.get('Rv',defaults['Rv'])
     #-- only for Kurucz
     vturb = int(kwargs.get('vturb',defaults['vturb']))
@@ -591,7 +587,7 @@ def get_file(integrated=False,**kwargs):
     co= kwargs.get('co',defaults['co'])
     #-- only for Nemo
     ct = kwargs.get('ct','mlt')
-    
+
     #-- figure out what grid to use
     if grid=='fastwind':
         basename = 'fastwind_sed.fits'
@@ -611,9 +607,9 @@ def get_file(integrated=False,**kwargs):
         elif odfnew:
             basename = 'kurucz93_z%s_k%sodfnew_sed%s.fits'%(z,vturb,postfix)
         elif nover:
-            basename = 'kurucz93_z%s_k%snover_sed%s.fits'%(z,vturb,postfix)            
+            basename = 'kurucz93_z%s_k%snover_sed%s.fits'%(z,vturb,postfix)
     elif grid=='cmfgen':
-        basename = 'cmfgen_sed.fits'        
+        basename = 'cmfgen_sed.fits'
     elif grid=='sdb_uli':
         if not isinstance(z,str): z = '%.1f'%(z)
         if not isinstance(He,str): He = '%d'%(He)
@@ -629,7 +625,7 @@ def get_file(integrated=False,**kwargs):
             postfix = ''
         basename = 'SED_WD_Koester_DA%s.fits'%(postfix)
     elif grid=='wd_db':
-        basename = 'SED_WD_Koester_DB.fits'        
+        basename = 'SED_WD_Koester_DB.fits'
     elif grid=='marcs':
         if not isinstance(z,str): z = '%.1f'%(z)
         if not isinstance(t,str): t = '%.1f'%(t)
@@ -638,19 +634,29 @@ def get_file(integrated=False,**kwargs):
         basename = 'marcsp_z%st%s_a%s_c%s_sed.fits'%(z,t,a,c)
     elif grid=='marcs2':
         basename = 'marcsp2_z0.00t2.0_m.1.0c0.00_sed.fits'
+    elif grid == 'marcsana':
+        # if not isinstance(z,str): z = '%.2f'%(z)
+
+        if z == '*':
+            basename  = 'MARCS_SED_Ana_z*.fits'
+        else:
+            if isinstance(z,str):
+                z = float(z)
+            basename = 'MARCS_SED_Ana_z{:+.2f}.fits'.format(z)
+        # basename = 'MARCS_SED_Ana_z+0.25.fits'
     elif grid=='comarcs':
         if not isinstance(z,str): z = '%.2f'%(z)
         if not isinstance(co,str): co = '%.2f'%(co)
         if not isinstance(m,str): m = '%.1f'%(m)
-        basename = 'comarcsp_z%sco%sm%sxi2.50_sed.fits'%(z,co,m)        
+        basename = 'comarcsp_z%sco%sm%sxi2.50_sed.fits'%(z,co,m)
     elif grid=='stars':
-        basename = 'kurucz_stars_sed.fits'        
+        basename = 'kurucz_stars_sed.fits'
     elif grid=='tlusty':
         if not isinstance(z,str): z = '%.2f'%(z)
-        basename = 'tlusty_z%s_sed.fits'%(z)        
+        basename = 'tlusty_z%s_sed.fits'%(z)
     elif grid=='uvblue':
         if not isinstance(z,str): z = '%.1f'%(z)
-        basename = 'uvblue_z%s_k2_sed.fits'%(z)        
+        basename = 'uvblue_z%s_k2_sed.fits'%(z)
     elif grid=='atlas12':
         if not isinstance(z,str): z = '%.1f'%(z)
         basename = 'atlas12_z%s_sed.fits'%(z)
@@ -674,7 +680,7 @@ def get_file(integrated=False,**kwargs):
         basename = 'Heber2000_B_h909_extended.fits' #only 1 metalicity
     elif grid=='hebersdb':
         basename = 'Heber2000_sdB_h909_extended.fits' #only 1 metalicity
-        
+
     elif grid=='tmapsdb':
         # grids for sdB star fitting (JorisV)
         if integrated:
@@ -704,7 +710,7 @@ def get_file(integrated=False,**kwargs):
         else:
             postfix = ''
         basename = 'kurucz_pAGB_z%s_sed%s.fits'%(z,postfix)
-    
+
     elif grid=='tmaptest':
         """ Grids exclusively for testing purposes"""
         if integrated:
@@ -713,8 +719,8 @@ def get_file(integrated=False,**kwargs):
             postfix+= Rv
         else:
             postfix = ''
-        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity  
-    
+        basename = 'TMAP2012_SEDtest%s.fits'%(postfix) #only available for 1 metalicity
+
     elif grid=='kurucztest':
         """ Grids exclusively for testing purposes"""
         if not isinstance(z,str): z = '%.1f'%(z)
@@ -724,7 +730,7 @@ def get_file(integrated=False,**kwargs):
             postfix+= Rv
         else:
             postfix = ''
-        basename = 'kurucz_SEDtest_z%s%s.fits'%(z,postfix) #only available for 1 metalicity 
+        basename = 'kurucz_SEDtest_z%s%s.fits'%(z,postfix) #only available for 1 metalicity
     elif grid=='marcsjorissensp':
         if not isinstance(z,str): z = '%.2f'%(z)
         if not isinstance(a,str): a = '%.2f'%(a)
@@ -751,13 +757,13 @@ def get_file(integrated=False,**kwargs):
             if integrated:
                 grid = glob.glob(scratchdir+'i'+basename)
             else:
-                grid = glob.glob(scratchdir+basename) 
+                grid = glob.glob(scratchdir+basename)
         else:
             if integrated:
                 grid = config.glob(basedir,'i'+basename)
             else:
-                grid = config.glob(basedir,basename)   
-    
+                grid = config.glob(basedir,basename)
+
     #grid.sort()
     logger.debug('Returning grid path(s): %s'%(grid))
     return grid
@@ -766,13 +772,13 @@ def get_file(integrated=False,**kwargs):
 def _blackbody_input(fctn):
     """
     Prepare input and output for blackbody-like functions.
-    
+
     If the user gives wavelength units and Flambda units, we only need to convert
     everything to SI (and back to the desired units in the end).
-    
+
     If the user gives frequency units and Fnu units, we only need to convert
     everything to SI ( and back to the desired units in the end).
-    
+
     If the user gives wavelength units and Fnu units, we need to convert
     the wavelengths first to frequency.
     """
@@ -808,8 +814,8 @@ def _blackbody_input(fctn):
         else:
             to_kwargs['wave'] = (x,conversions._conventions[curr_conv]['length'])
         #-- run function
-        I = fctn((x,x_unit_type),T)        
-        
+        I = fctn((x,x_unit_type),T)
+
         #-- prepare output
         disc_integrated = kwargs.get('disc_integrated',True)
         ang_diam = kwargs.get('ang_diam',None)
@@ -820,7 +826,7 @@ def _blackbody_input(fctn):
                 I *= scale
         I = conversions.convert(curr_conv,flux_units,I,**to_kwargs)
         return I
-        
+
     return dobb
 
 
@@ -832,49 +838,49 @@ def _blackbody_input(fctn):
 def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Definition of black body curve.
-    
+
     To get them into the same units as the Kurucz disc-integrated SEDs, they are
     multiplied by sqrt(2*pi) (set C{disc_integrated=True}).
-    
+
     You can only give an angular diameter if disc_integrated is True.
-    
+
     To convert the scale parameter back to mas, simply do:
-    
+
     ang_diam = 2*conversions.convert('sr','mas',scale)
-    
+
     See decorator L{blackbody_input} for details on how the input parameters
     are handled: the user is free to choose wavelength or frequency units, choose
     *which* wavelength or frequency units, and can even mix them. To be sure that
     everything is handled correctly, we need to do some preprocessing and unit
     conversions.
-    
+
     Be careful when, e.g. during fitting, scale contains an error: be sure to set
     the option C{unpack=True} in the L{conversions.convert} function!
-    
+
     >>> x = np.linspace(2.3595,193.872,500)
     >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='Jy',ang_diam=(1.,'mas'))
     >>> F2 = rayleigh_jeans(x,280.,wave_units='micron',flux_units='Jy',ang_diam=(1.,'mas'))
     >>> F3 = wien(x,280.,wave_units='micron',flux_units='Jy',ang_diam=(1.,'mas'))
-    
-    
+
+
     >>> p = pl.figure()
     >>> p = pl.subplot(121)
     >>> p = pl.plot(x,F1)
     >>> p = pl.plot(x,F2)
     >>> p = pl.plot(x,F3)
-    
-    
+
+
     >>> F1 = blackbody(x,280.,wave_units='AA',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
     >>> F2 = rayleigh_jeans(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
     >>> F3 = wien(x,280.,wave_units='micron',flux_units='erg/s/cm2/AA',ang_diam=(1.,'mas'))
 
-    
+
     >>> p = pl.subplot(122)
     >>> p = pl.plot(x,F1)
     >>> p = pl.plot(x,F2)
     >>> p = pl.plot(x,F3)
 
-    
+
     @param: wavelength
     @type: ndarray
     @param T: temperature, unit
@@ -890,7 +896,7 @@ def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True
     @return: intensity
     @rtype: array
     """
-    x,x_unit_type = x   
+    x,x_unit_type = x
     #-- make the appropriate black body
     if x_unit_type=='frequency': # frequency units
         factor = 2.0 * constants.hh / constants.cc**2
@@ -909,15 +915,15 @@ def blackbody(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True
 def rayleigh_jeans(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Rayleigh-Jeans approximation of a black body.
-    
+
     Valid at long wavelengths.
-    
+
     For input details, see L{blackbody}.
-    
+
     @return: intensity
     @rtype: array
     """
-    x,x_unit_type = x   
+    x,x_unit_type = x
     #-- now make the appropriate model
     if x_unit_type=='frequency': # frequency units
         factor = 2.0 * constants.kB*T / constants.cc**2
@@ -934,15 +940,15 @@ def rayleigh_jeans(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated
 def wien(x,T,wave_units='AA',flux_units='erg/s/cm2/AA',disc_integrated=True,ang_diam=None):
     """
     Wien approximation of a black body.
-    
+
     Valid at short wavelengths.
-    
+
     For input details, see L{blackbody}.
-    
+
     @return: intensity
     @rtype: array
     """
-    x,x_unit_type = x   
+    x,x_unit_type = x
     #-- now make the appropriate model
     if x_unit_type=='frequency': # frequency units
         factor = 2.0 * constants.hh / constants.cc**2
@@ -961,23 +967,23 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
               wave_units='AA',flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Retrieve the spectral energy distribution of a model atmosphere.
-        
+
     Wavelengths in A (angstrom)
     Fluxes in Ilambda = ergs/cm2/s/AA/sr, except specified via 'units',
-    
+
     If you give 'units', and /sr is not included, you are responsible yourself
     for giving an extra keyword with the angular diameter C{ang_diam}, or other
     possibilities offered by the C{units.conversions.convert} function.
-        
+
     Possibility to redden the fluxes according to the reddening parameter EB_V.
-    
+
     Extra kwargs can specify the grid type.
     Extra kwargs can specify constraints on the size of the grid to interpolate.
     Extra kwargs can specify reddening law types.
     Extra kwargs can specify information for conversions.
-    
+
     Example usage:
-    
+
     >>> from pylab import figure,gca,subplot,title,gcf,loglog
     >>> p = figure(figsize=(10,6))
     >>> p=gcf().canvas.set_window_title('Test of <get_table>')
@@ -1005,9 +1011,9 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     >>> p = loglog(*get_table(grid='KURUCZ',teff=11000,logg=4.0,wave_units='micron',flux_units='Jy/sr'),**dict(label='11000'))
     >>> p = pl.xlabel('Wavelength [micron]');p = pl.ylabel('Flux [Jy/sr]')
     >>> p = pl.legend(loc='upper right',prop=dict(size='small'))
-    
+
     ]]include figure]]ivs_sed_model_comparison.png]
-        
+
     @param teff: effective temperature
     @type teff: float
     @param logg: logarithmic gravity (cgs)
@@ -1021,10 +1027,9 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
     @return: wavelength,flux
     @rtype: (ndarray,ndarray)
     """
-    
     #-- get the FITS-file containing the tables
     gridfile = get_file(**kwargs)
-    
+
     #-- read the file:
     ff = pf.open(gridfile)
     #-- a possible grid is the one where only selected stellar models are
@@ -1053,22 +1058,22 @@ def get_table_single(teff=None,logg=None,ebv=None,rad=None,star=None,
             logger.debug('Model SED interpolated from grid %s (%s)'%(os.path.basename(gridfile),kwargs))
             wave = wave + 0.
             flux = flux_grid(np.log10(teff),logg) + 0.
-    
+
     #-- convert to arrays
     wave = np.array(wave,float)
     flux = np.array(flux,float)
     #-- redden if necessary
     if ebv is not None and ebv>0:
-        if 'wave' in kwargs.keys():
+        if 'wave' in list(kwargs.keys()):
             removed = kwargs.pop('wave')
         flux = reddening.redden(flux,wave=wave,ebv=ebv,rtype='flux',**kwargs)
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.convert('erg/s/cm2/AA/sr',flux_units,flux,wave=(wave,'AA'),**kwargs)
     if wave_units!='AA':
         wave = conversions.convert('AA',wave_units,wave,**kwargs)
-    
+
     ff.close()
-    
+
     if rad != None:
         flux = rad**2 * flux
 
@@ -1080,23 +1085,23 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
     """
     Retrieve the spectral energy distribution of a model atmosphere in
     photometric passbands.
-        
+
     Wavelengths in A (angstrom). If you set 'wavelengths' to None, no effective
     wavelengths will be calculated. Otherwise, the effective wavelength is
     calculated taking the model flux into account.
     Fluxes in Ilambda = ergs/cm2/s/AA/sr, except specified via 'units',
-    
+
     If you give 'units', and /sr is not included, you are responsible yourself
     for giving an extra keyword with the angular diameter C{ang_diam}, or other
     possibilities offered by the C{units.conversions.convert} function.
-        
+
     Possibility to redden the fluxes according to the reddening parameter EB_V.
-    
+
     Extra kwargs can specify the grid type.
     Extra kwargs can specify constraints on the size of the grid to interpolate.
     Extra kwargs can specify reddening law types.
     Extra kwargs can specify information for conversions.
-        
+
     @param teff: effective temperature
     @type teff: float
     @param logg: logarithmic gravity (cgs)
@@ -1119,7 +1124,12 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
         logger.debug('vrad is NOT taken into account when interpolating in get_itable()')
     if 'rv' in kwargs:
         logger.debug('Rv is NOT taken into account when interpolating in get_itable()')
-    
+    # TODO: when skip_z is True, the default of z should be changed to the
+    # input default
+    # skip_z = False
+    # if 'z' in kwargs:
+    #     skip_z = True
+
     if photbands is None:
         raise ValueError('no photometric passbands given')
     ebvrange = kwargs.pop('ebvrange',(-np.inf,np.inf))
@@ -1129,7 +1139,12 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
     #c0 = time.time()
     #c1 = time.time() - c0
     #-- retrieve structured information on the grid (memoized)
-    markers,(g_teff,g_logg,g_ebv,g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
+    # if skip_z:
+    #     markers,(g_teff,g_logg,g_ebv),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
+    #                         include_Labs=True,clear_memory=clear_memory,**kwargs)
+    # else:
+
+    markers,(g_teff,g_logg,g_ebv, g_z),gpnts,ext = _get_itable_markers(photbands,ebvrange=ebvrange,zrange=zrange,
                             include_Labs=True,clear_memory=clear_memory,**kwargs)
     #c2 = time.time() - c0 - c1
     #-- if we have a grid model, no need for interpolation
@@ -1137,6 +1152,7 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
         input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(teff)),int(round(logg*100)),int(round(ebv*100))))
         index = markers.searchsorted(input_code)
         output_code = markers[index]
+
         #-- if not available, go on and interpolate!
         #   we raise a KeyError for symmetry with C{get_table}.
         if not input_code==output_code:
@@ -1172,11 +1188,11 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
             #-- iterates over df-1 values (df=degrees of freedom): we know that the
             #   grid is ordered via z in the last part (about twice as fast).
             #   Reducing the grid size to 2 increases the speed again with a factor 2.
-            
+
             #-- if metallicity needs to be interpolated
             if not (z in g_z):
                 fluxes = np.zeros((2,2,2,2,len(photbands)+1))
-                for i,j,k in itertools.product(xrange(2),xrange(2),xrange(2)):
+                for i,j,k in itertools.product(range(2),range(2),range(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((zs_subgrid[i]+5)*100)),\
                                                     int(round(teffs_subgrid[j])),\
                                                     int(round(loggs_subgrid[k]*100)),\
@@ -1186,11 +1202,11 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
                 myf = InterpolatingFunction([zs_subgrid,np.log10(teffs_subgrid),
                                         loggs_subgrid,ebvs_subgrid],np.log10(fluxes),default=-100*np.ones_like(fluxes.shape[1]))
                 flux = 10**myf(z,np.log10(teff),logg,ebv) + 0.
-            
+
             #-- if only teff,logg and ebv need to be interpolated (faster)
             else:
                 fluxes = np.zeros((2,2,2,len(photbands)+1))
-                for i,j in itertools.product(xrange(2),xrange(2)):
+                for i,j in itertools.product(range(2),range(2)):
                     input_code = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),\
                                                     int(round(teffs_subgrid[i])),\
                                                     int(round(loggs_subgrid[j]*100)),\
@@ -1256,24 +1272,24 @@ def get_itable_single(teff=None,logg=None,ebv=0,z=0,rad=None,photbands=None,
     if np.any(np.isinf(flux)):
         flux = np.zeros(fluxes.shape[-1])
     #return flux[:-1],flux[-1]#,np.array([c1_,c2,c3])
-    
+
     #-- convert to arrays: remember that last column of the fluxes is actually
     #   absolute luminosity
     flux,Labs = np.array(flux[:-1],float),flux[-1]
-    
+
     #-- Take radius into account when provided
     if rad != None:
         flux,Labs = flux*rad**2, Labs*rad**2
-    
+
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
-    
+
     if wave_units is not None:
         model = get_table(teff=teff,logg=logg,ebv=ebv,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='AA':
             wave = wave = conversions.convert('AA',wave_units,wave,**kwargs)
-    
+
         return wave,flux,Labs
     else:
         return flux,Labs
@@ -1283,20 +1299,20 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
     """
     Retrieve the integrated spectral energy distribution of a combined model
     atmosphere.
-    
+
     >>> teff1,teff2 = 20200,5100
     >>> logg1,logg2 = 4.35,2.00
     >>> ebv = 0.2,0.2
     >>> photbands = ['JOHNSON.U','JOHNSON.V','2MASS.J','2MASS.H','2MASS.KS']
-    
+
     >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=ebv[0])
     >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=ebv[1])
     >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=ebv,radius=[1,20])
-    
+
     >>> iwave1,iflux1,iLabs1 = get_itable(teff=teff1,logg=logg1,ebv=ebv[0],photbands=photbands,wave_units='AA')
     >>> iflux2,iLabs2 = get_itable(teff=teff2,logg=logg2,ebv=ebv[1],photbands=photbands)
     >>> iflux3,iLabs3 = get_itable_multiple(teff=(teff1,teff2),logg=(logg1,logg2),z=(0,0),ebv=ebv,radius=[1,20.],photbands=photbands)
-    
+
     >>> p = pl.figure()
     >>> p = pl.gcf().canvas.set_window_title('Test of <get_itable_multiple>')
     >>> p = pl.loglog(wave1,flux1,'r-')
@@ -1305,7 +1321,7 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
     >>> p = pl.loglog(iwave1,iflux2*20**2,'bo',ms=10)
     >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
     >>> p = pl.loglog(iwave1,iflux3,'kx',ms=10,mew=2)
-    
+
     @param teff: effective temperature
     @type teff: tuple floats
     @param logg: logarithmic gravity (cgs)
@@ -1329,50 +1345,50 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
     """
     #-- Find the parameters provided and store them separately.
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
             parameters.add(par)
             components.add(comp)
-    
+
     #-- If there is only one component, we can directly return the result
     if len(components) == 1:
         kwargs.update(values)
         return get_itable_single(photbands=photbands,wave_units=wave_units,
                                      flux_units=flux_units,**kwargs)
-    
+
     #-- run over all fluxes and sum them, we do not need to multiply with the radius
     #   as the radius is provided as an argument to itable_single_pix.
-    fluxes, Labs = [],[]                                
+    fluxes, Labs = [],[]
     for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
         trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
         kwargs_ = kwargs
         kwargs_.update(grid)
         for par in parameters:
             kwargs_[par] = values[par+comp] if par+comp in values else values[par]
-        
+
         f,L = get_itable_single(photbands=photbands,wave_units=None,**kwargs_)
-                                     
+
         fluxes.append(f)
         Labs.append(L)
-        
+
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs,axis=0)
-    
+
     if flux_units!='erg/s/cm2/AA/sr':
         fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
-    
+
     if wave_units is not None:
         model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='AA':
             wave = wave = conversions.convert('AA',wave_units,wave)
         return wave,fluxes,Labs
-    
+
     return fluxes,Labs
-    
-    
+
+
     ##-- set default parameters
     #if grids is None:
         #grids = [defaults_multiple[i] for i in range(len(teff))]
@@ -1393,7 +1409,7 @@ def get_itable(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
     #Labs = np.sum(Labs)
     #if flux_units!='erg/s/cm2/AA/sr':
         #fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
-        
+
     #if wave_units is not None:
         #model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         #wave = filters.eff_wave(photbands,model=model)
@@ -1406,50 +1422,50 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
                wave_units=None,flux_units='erg/s/cm2/AA/sr',**kwargs):
     """
     Super fast grid interpolator.
-    
-    Possible kwargs are teffrange,loggrange etc.... that are past on to 
+
+    Possible kwargs are teffrange,loggrange etc.... that are past on to
     L{_get_pix_grid}. You should probably use these options when you want to
     interpolate in many variables; supplying these ranges will make the grid
     smaller and thus decrease memory usage.
-    
+
     It is possible to fix C{teff}, C{logg}, C{ebv}, C{z}, C{rv} and/or C{vrad}
     to one value, in which case it B{has} to be a point in the grid. If you want
     to retrieve a list of fluxes with the same ebv value that is not in the grid,
     you need to give an array with all equal values. The reason is that the
     script can try to minimize the number of interpolations, by fixing a
-    variable on a grid point. The fluxes on the other gridpoints will then not 
-    be interpolated over. These parameter also have to be listed with the 
+    variable on a grid point. The fluxes on the other gridpoints will then not
+    be interpolated over. These parameter also have to be listed with the
     additional C{exc_interpolpar} keyword.
-    
+
     >>> teffs = np.linspace(5000,7000,100)
     >>> loggs = np.linspace(4.0,4.5,100)
     >>> ebvs = np.linspace(0,1,100)
     >>> zs = np.linspace(-0.5,0.5,100)
     >>> rvs = np.linspace(2.2,5.0,100)
-    
+
     >>> set_defaults(grid='kurucz2')
     >>> flux,labs = get_itable_pix(teffs,loggs,ebvs,zs,rvs,photbands=['JOHNSON.V'])
-    
+
     >>> names = ['teffs','loggs','ebvs','zs','rvs']
     >>> p = pl.figure()
     >>> for i in range(len(names)):
     ...     p = pl.subplot(2,3,i+1)
     ...     p = pl.plot(locals()[names[i]],flux[0],'k-')
     ...     p = pl.xlabel(names[i])
-    
-    
+
+
     Thanks to Steven Bloemen for the core implementation of the interpolation
     algorithm.
-    
+
     The addition of the exc_interpolpar keyword was done by Michel Hillen (Jan 2016).
     """
-    
+
     #-- setup some standard values when they are not provided
     ebv = np.array([0 for i in teff]) if ebv is None else ebv
     z = np.array([0.for i in teff]) if z is None else z
     rv = np.array([3.1 for i in teff]) if rv is None else rv
     vrad = np.array([0 for i in teff]) if vrad is None else vrad
-    
+
     #for var in ['teff','logg','ebv','z','rv','vrad']:
         #if not hasattr(locals()[var],'__iter__'):
             #print var, locals()[var]
@@ -1457,6 +1473,7 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
     #print locals()
     vrad = 0
     N = 1
+    variables = []
     clear_memory = kwargs.pop('clear_memory',False)
     #variables = kwargs.pop('variables',['teff','logg','ebv','z','rv','vrad'])                             # !!!
     for var in ['teff','logg','ebv','z','rv','vrad']:                                       # !!!
@@ -1464,55 +1481,64 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
             kwargs.setdefault(var+'range',(locals()[var],locals()[var]))
         else:
             N = len(locals()[var])
-            
+            variables.append(var)
+
+
+
     #-- retrieve structured information on the grid (memoized)
     axis_values,gridpnts,pixelgrid,cols = _get_pix_grid(photbands,
-                            include_Labs=True,clear_memory=clear_memory,**kwargs)     # !!!
-    
-    #-- Remove parameters from the grid if it is requested that these should not be interpolated 
-    #-- (with the exc_interpolpar keyword). This can only work if the requested values of 
+                            include_Labs=True, variables=variables,
+                            clear_memory=clear_memory,**kwargs)     # !!!
+
+    #-- Remove parameters from the grid if it is requested that these should not be interpolated
+    #-- (with the exc_interpolpar keyword). This can only work if the requested values of
     #-- these parameters all correspond to a single point in the original grid!
     #-- we check whether this condition is fulfilled
-    #-- if not, then the parameter is not excluded from the interpolation 
-    #-- and a warning is raised to the log
-    for var in kwargs.get('exc_interpolpar',[]): # e.g. for Kurucz, var can be anything in ['teff','logg','ebv','z']
-        # retrieve the unique values in var
-        var_uniquevalue = np.unique(np.array(locals()[var]))   
-        # if there is more than one unique value in var, then our condition is not fulfilled
-        if len(var_uniquevalue) > 1:                           
-            logger.warning('{} is requested to be excluded from interpolation, although fluxes for more than one value are requested!?'.format(var))
-        else:
-            # retrieve the index of var in the 'pixelgrid' and 'cols' arrays of the original grid
-            var_index = np.where(cols == var)[0]                   
-            # retrieve the index of the unique value in the original grid
-            var_uniquevalue_index = np.where(axis_values[var_index] == var_uniquevalue[0])[0]   
-            # if the unique value does not correspond to a grid point of the original grid, then we only raise a warning
-            if len(var_uniquevalue_index) == 0:                    
-                logger.warning('{} can only be excluded from interpolation, as requested, if its values are all equal to an actual grid point!'.format(var))
-            else:
-                # remove var from the list of variables in the original grid
-                trash = axis_values.pop(var_index)                 
-                cols = np.delete(cols,[var_index])
-                # since we do not know the axis of var in advance, we devise a clever way to
-                # bring it to the first axis by transposing the array
-                indices = [x for x in range(pixelgrid.ndim)]       
-                indices.remove(var_index)                          
-                indices.insert(0,var_index)                         
-                pixelgrid = np.transpose(pixelgrid, indices)       
-                # now we select the subgrid corresponding to the requested value of var
-                pixelgrid = pixelgrid[var_uniquevalue_index[0]]       
-    
+    #-- if not, then the parameter is not excluded from the interpolation
+    # #-- and a warning is raised to the log
+    # for var in kwargs.get('exc_interpolpar',[]): # e.g. for Kurucz, var can be anything in ['teff','logg','ebv','z']
+    #     # retrieve the unique values in var
+    #     var_uniquevalue = np.unique(np.array(locals()[var]))
+    #     # if there is more than one unique value in var, then our condition is not fulfilled
+    #     if len(var_uniquevalue) > 1:
+    #         logger.warning('{} is requested to be excluded from interpolation, although fluxes for more than one value are requested!?'.format(var))
+    #     else:
+    #         # retrieve the index of var in the 'pixelgrid' and 'cols' arrays of the original grid
+    #         print(cols)
+    #         print(var)
+    #         var_index = np.where(cols == var)[0]
+    #         # retrieve the index of the unique value in the original grid
+    #         print(var_index)
+    #         print(axis_values[var_index])
+    #         print(var_uniquevalue[0])
+    #         var_uniquevalue_index = np.where(axis_values[var_index] == var_uniquevalue[0])[0]
+    #         # if the unique value does not correspond to a grid point of the original grid, then we only raise a warning
+    #         if len(var_uniquevalue_index) == 0:
+    #             logger.warning('{} can only be excluded from interpolation, as requested, if its values are all equal to an actual grid point!'.format(var))
+    #         else:
+    #             # remove var from the list of variables in the original grid
+    #             trash = axis_values.pop(var_index)
+    #             cols = np.delete(cols,[var_index])
+    #             # since we do not know the axis of var in advance, we devise a clever way to
+    #             # bring it to the first axis by transposing the array
+    #             indices = [x for x in range(pixelgrid.ndim)]
+    #             indices.remove(var_index)
+    #             indices.insert(0,var_index)
+    #             pixelgrid = np.transpose(pixelgrid, indices)
+    #             # now we select the subgrid corresponding to the requested value of var
+    #             pixelgrid = pixelgrid[var_uniquevalue_index[0]]
+
     #-- prepare input:
     values = np.zeros((len(cols),N))
     for i,col in enumerate(cols):
         values[i] = locals()[col]
     pars = 10**interpol.interpolate(values,axis_values,pixelgrid)
     flux,Labs = pars[:-1],pars[-1]
-    
+
     #-- Take radius into account when provided
     if 'rad' in kwargs:
         flux,Labs = flux*kwargs['rad']**2, Labs*kwargs['rad']**2
-    
+
     #-- change flux and wavelength units if needed
     if flux_units!='erg/s/cm2/AA/sr':
         flux = conversions.nconvert('erg/s/cm2/AA/sr',flux_units,flux,photband=photbands,**kwargs)
@@ -1524,7 +1550,7 @@ def get_itable_single_pix(teff=None,logg=None,ebv=None,z=0,rv=3.1,vrad=0,photban
         return wave,flux,Labs
     else:
         return flux,Labs
-    
+
 def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr',
                 grids=None, **kwargs):
     """
@@ -1532,7 +1558,7 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
     """
     #-- Find the parameters provided and store them separately.
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rv|vrad|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rv|vrad|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
@@ -1545,31 +1571,31 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
                                      flux_units=flux_units,**kwargs)
     #-- run over all fluxes and sum them, we do not need to multiply with the radius
     #   as the radius is provided as an argument to itable_single_pix.
-    fluxes, Labs = [],[]                                
+    fluxes, Labs = [],[]
     for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
         trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
         kwargs_ = kwargs
         kwargs_.update(grid)
         for par in parameters:
             kwargs_[par] = values[par+comp] if par+comp in values else values[par]
-        
+
         f,L = get_itable_single_pix(photbands=photbands,wave_units=None,**kwargs_)
-                                     
+
         fluxes.append(f)
         Labs.append(L)
     fluxes = np.sum(fluxes,axis=0)
     Labs = np.sum(Labs,axis=0)
-    
+
     if flux_units!='erg/s/cm2/AA/sr':
         fluxes = np.array([conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes[i],photband=photbands[i]) for i in range(len(fluxes))])
-    
+
     if wave_units is not None:
         model = get_table_multiple(teff=teff,logg=logg,ebv=ebv, grids=grids,**kwargs)
         wave = filters.eff_wave(photbands,model=model)
         if wave_units !='AA':
             wave = conversions.convert('AA',wave_units,wave)
         return wave,fluxes,Labs
-    return fluxes,Labs   
+    return fluxes,Labs
 
 
 #def get_table_multiple(teff=None,logg=None,ebv=None,radius=None,
@@ -1577,22 +1603,22 @@ def get_itable_pix(photbands=None, wave_units=None, flux_units='erg/s/cm2/AA/sr'
 def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_output=False,**kwargs):
     """
     Retrieve the spectral energy distribution of a combined model atmosphere.
-    
+
     Example usage:
-    
+
     >>> teff1,teff2 = 20200,5100
     >>> logg1,logg2 = 4.35,2.00
     >>> wave1,flux1 = get_table(teff=teff1,logg=logg1,ebv=0.2)
     >>> wave2,flux2 = get_table(teff=teff2,logg=logg2,ebv=0.2)
     >>> wave3,flux3 = get_table_multiple(teff=(teff1,teff2),logg=(logg1,logg2),ebv=(0.2,0.2),radius=[1,20])
-    
+
     >>> p = pl.figure()
     >>> p = pl.gcf().canvas.set_window_title('Test of <get_table_multiple>')
     >>> p = pl.loglog(wave1,flux1,'r-')
     >>> p = pl.loglog(wave2,flux2,'b-')
     >>> p = pl.loglog(wave2,flux2*20**2,'b--')
     >>> p = pl.loglog(wave3,flux3,'k-',lw=2)
-    
+
     @param teff: effective temperature
     @type teff: tuple floats
     @param logg: logarithmic gravity (cgs)
@@ -1613,34 +1639,34 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
     @rtype: (ndarray,ndarray)
     """
     values, parameters, components = {}, set(), set()
-    for key in kwargs.keys():
+    for key in list(kwargs.keys()):
         if re.search("^(teff|logg|ebv|z|rad)\d?$", key):
             par, comp = re.findall("^(teff|logg|ebv|z|rad)(\d?)$", key)[0]
             values[key] = kwargs.pop(key)
             parameters.add(par)
             components.add(comp)
-    
+
     #-- If there is only one components we can directly return the result
     if len(components) == 1:
         kwargs.update(values)
         return get_table_single(wave_units=wave_units, flux_units=flux_units,
                                      full_output=full_output,**kwargs)
-                                     
+
     #-- Run over all fluxes and sum them, we do not need to multiply with the radius
     #   as the radius is provided as an argument to get_table_single.
-    waves, fluxes = [],[]                                
+    waves, fluxes = [],[]
     for i, (comp, grid) in enumerate(zip(components,defaults_multiple)):
         trash = grid.pop('z',0.0), grid.pop('Rv',0.0)
         kwargs_ = kwargs.copy()
         kwargs_.update(grid)
         for par in parameters:
             kwargs_[par] = values[par+comp] if par+comp in values else values[par]
-        
+
         w,f = get_table_single(**kwargs_)
-        
+
         waves.append(w)
         fluxes.append(f)
-    
+
     ##-- set default parameters
     #if grids is None:
         #grids = [defaults_multiple[i] for i in range(len(teff))]
@@ -1654,7 +1680,7 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
         #iwave,iflux = get_table(teff=iteff,logg=ilogg,ebv=iebv,**mykwargs)
         #waves.append(iwave)
         #fluxes.append(iflux)
-        
+
     #-- what's the total wavelength range? Merge all wavelength arrays and
     #   remove double points
     waves_ = np.sort(np.hstack(waves))
@@ -1667,7 +1693,7 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
         fluxes_ = []
     else:
         fluxes_ = 0.
-        
+
     ##-- interpolate onto common grid in log!
     #for i,(wave,flux) in enumerate(zip(waves,fluxes)):
         #intf = interp1d(np.log10(wave),np.log10(flux),kind='linear')
@@ -1682,7 +1708,7 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
             fluxes_.append(10**intf(np.log10(waves_)))
         else:
             fluxes_ += 10**intf(np.log10(waves_))
-            
+
     if flux_units!='erg/cm2/s/AA/sr':
         fluxes_ = conversions.convert('erg/s/cm2/AA/sr',flux_units,fluxes_,wave=(waves_,'AA'),**kwargs)
     if wave_units!='AA':
@@ -1690,11 +1716,11 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
     #-- where the fluxes are zero, log can do weird
     if full_output:
         fluxes_ = np.vstack(fluxes_)
-        keep = -np.isnan(np.sum(fluxes_,axis=0))
+        keep = ~np.isnan(np.sum(fluxes_,axis=0))
         waves_ = waves_[keep]
         fluxes_ = fluxes_[:,keep]
     else:
-        keep = -np.isnan(fluxes_)
+        keep = ~np.isnan(fluxes_)
         waves_ = waves_[keep]
         fluxes_ = fluxes_[keep]
     return waves_,fluxes_
@@ -1703,9 +1729,9 @@ def get_table(wave_units='AA',flux_units='erg/cm2/s/AA/sr',grids=None,full_outpu
 def get_grid_dimensions(**kwargs):
     """
     Retrieve possible effective temperatures and gravities from a grid.
-    
+
     E.g. kurucz, sdB, fastwind...
-    
+
     @rtype: (ndarray,ndarray)
     @return: effective temperatures, gravities
     """
@@ -1717,12 +1743,12 @@ def get_grid_dimensions(**kwargs):
         teffs.append(float(mod.header['TEFF']))
         loggs.append(float(mod.header['LOGG']))
     ff.close()
-    
+
     #-- maybe the fits extensions are not in right order...
     matrix = np.vstack([np.array(teffs),np.array(loggs)]).T
     matrix = numpy_ext.sort_order(matrix,order=[0,1])
     teffs,loggs = matrix.T
-    
+
     return teffs,loggs
 
 
@@ -1732,9 +1758,9 @@ def get_igrid_dimensions(**kwargs):
     """
     Retrieve possible effective temperatures, surface gravities and reddenings
     from an integrated grid.
-    
+
     E.g. kurucz, sdB, fastwind...
-    
+
     @rtype: (ndarray,ndarray,ndarray)
     @return: effective temperatures, surface, gravities, E(B-V)s
     """
@@ -1744,10 +1770,10 @@ def get_igrid_dimensions(**kwargs):
     loggs = ff[1].data.field('LOGG')
     ebvs  = ff[1].data.field('EBV')
     ff.close()
-    
+
     #correct = (teffs==14000) & (loggs==2.0)
     #teffs[correct] = 12000
-    
+
     return teffs,loggs,ebvs
 
 
@@ -1760,24 +1786,24 @@ def get_igrid_dimensions(**kwargs):
 def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     """
     Return InterpolatingFunction spanning the available grid of atmosphere models.
-    
+
     WARNING: the grid must be entirely defined on a mesh grid, but it does not
     need to be equidistant.
-    
+
     It is thus the user's responsibility to know whether the grid is evenly
     spaced in logg and teff (e.g. this is not so for the CMFGEN models).
-    
+
     You can supply your own wavelength range, since the grid models'
     resolution are not necessarily homogeneous. If not, the first wavelength
     array found in the grid will be used as a template.
-        
+
     It might take a long a time and cost a lot of memory if you load the entire
     grid. Therefor, you can also set range of temperature and gravity.
-    
+
     WARNING: 30000,50000 did not work out for FASTWIND, since we miss a model!
-    
+
     Example usage:
-    
+
     @param wave: wavelength to define the grid on
     @type wave: ndarray
     @param teffrange: starting and ending of the grid in teff
@@ -1798,7 +1824,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     if loggrange is not None:
         sa = (loggrange[0]<=loggs) & (loggs<=loggrange[1])
         loggs = loggs[sa]
-    
+
     #-- ScientificPython interface
     if not new_scipy:
         logger.warning('SCIENTIFIC PYTHON')
@@ -1837,7 +1863,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
         ff.close()
         flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
         logger.info('Constructed SED interpolation grid')
-    
+
     #-- Scipy interface
     else:
         logger.warning('SCIPY')
@@ -1861,7 +1887,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
             try:
                 flux[i] = flux_
             except:
-                flux[i] = np.interp(wave,wave_,flux_)            
+                flux[i] = np.interp(wave,wave_,flux_)
         ff.close()
         flux_grid = LinearNDInterpolator(np.array([np.log10(teffs),loggs]).T,flux)
     return wave,teffs,loggs,flux,flux_grid
@@ -1873,7 +1899,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
 def list_calibrators(library='calspec'):
     """
     Print and return the list of calibrators
-    
+
     @parameter library: name of the library (calspec, ngsl, stelib)
     @type library: str
     @return: list of calibrator names
@@ -1881,7 +1907,7 @@ def list_calibrators(library='calspec'):
     """
     files = config.glob(os.path.join(caldir,library),'*.fits')
     targname = dict(calspec='targetid',ngsl='targname',stelib='object')[library]
-    
+
     names = []
     for ff in files:
         name = pf.getheader(ff)[targname]
@@ -1891,20 +1917,20 @@ def list_calibrators(library='calspec'):
         #else:
         names.append(name)
     return names
-    
+
 
 
 def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None,library='calspec'):
     """
     Retrieve a calibration SED
-    
+
     If C{version} is None, get the last version.
-    
+
     Example usage:
-    
+
     >>> wave,flux = get_calibrator(name='alpha_lyr')
     >>> wave,flux = get_calibrator(name='alpha_lyr',version='003')
-    
+
     @param name: calibrator name
     @type name: str
     @param version: version of the calibration file
@@ -1919,7 +1945,7 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
     #-- collect calibration files
     files = config.glob(os.path.join(caldir,library),'*.fits')
     targname = dict(calspec='targetid',ngsl='targname',stelib='object')[library]
-    
+
     calfile = None
     for ff in files:
         #-- check if the name matches with the given one
@@ -1940,18 +1966,18 @@ def get_calibrator(name='alpha_lyr',version=None,wave_units=None,flux_units=None
             else:
                 raise ValueError("Don't know what to do with files from library {}".format(library))
         fits_file.close()
-    
+
     if calfile is None:
-        raise ValueError, 'Calibrator %s (version=%s) not found'%(name,version)
-    
+        raise ValueError('Calibrator %s (version=%s) not found'%(name,version))
+
     if flux_units is not None:
         flux = conversions.convert('erg/s/cm2/AA',flux_units,flux,wave=(wave,'AA'))
     if wave_units is not None:
         wave = conversions.convert('AA',wave_units,wave)
-    
-    
+
+
     logger.info('Calibrator %s selected'%(calfile))
-    
+
     return wave,flux
 
 
@@ -1974,26 +2000,26 @@ def read_calibrator_info(library='ngsl'):
             names.append(line[0])
             fits_files.append(fits_file)
             phot_files.append(phot_file)
-            
+
     return names,fits_files,phot_files
 
 
 def calibrate():
     """
     Calibrate photometry.
-    
+
     Not finished!
-    
+
     ABmag = -2.5 Log F_nu - 48.6 with F_nu in erg/s/cm2/Hz
     Flux computed as 10**(-(meas-mag0)/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
     F0 = 3.6307805477010029e-20 erg/s/cm2/Hz
-    
+
     STmag = -2.5 Log F_lam - 21.10 with F_lam in erg/s/cm2/AA
     Flux computed as 10**(-(meas-mag0)/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
     F0 = 3.6307805477010028e-09 erg/s/cm2/AA
-    
+
     Vegamag = -2.5 Log F_lam - C with F_lam in erg/s/cm2/AA
     Flux computed as 10**(-meas/2.5)*F0
     Magnitude computed as -2.5*log10(Fmeas/F0)
@@ -2003,27 +2029,27 @@ def calibrate():
     #-- get calibrator
     wave,flux = get_calibrator(name='alpha_lyr')
     zp = filters.get_info()
-    
+
     #-- calculate synthetic fluxes
     syn_flux = synthetic_flux(wave,flux,zp['photband'])
     syn_flux_fnu = synthetic_flux(wave,flux,zp['photband'],units='Fnu')
     Flam0_lit = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/AA',zp['Flam0'],photband=zp['photband'])
     Fnu0_lit = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/Hz',zp['Fnu0'],photband=zp['photband'])
-    
+
     #-- we have Flam0 but not Fnu0: compute Fnu0
     keep = (zp['Flam0_lit']==1) & (zp['Fnu0_lit']==0)
     Fnu0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/Hz',zp['Flam0'],photband=zp['photband'])
     zp['Fnu0'][keep] = Fnu0[keep]
     zp['Fnu0_units'][keep] = 'erg/s/cm2/Hz'
-    
+
     #-- we have Fnu0 but not Flam0: compute Flam0
     keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==1)
     Flam0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/AA',zp['Fnu0'],photband=zp['photband'])
-    
+
     #   set everything in correct units for convenience:
     Flam0 = conversions.nconvert(zp['Flam0_units'],'erg/s/cm2/AA',zp['Flam0'])
     Fnu0 = conversions.nconvert(zp['Fnu0_units'],'erg/s/cm2/Hz',zp['Fnu0'])
-    
+
     #-- as a matter of fact, set Flam0 and Fnu for all the stuff for which we
     #   have no literature values
     keep = (zp['Flam0_lit']==0) & (zp['Fnu0_lit']==0)
@@ -2031,96 +2057,96 @@ def calibrate():
     zp['Flam0_units'][keep] = 'erg/s/cm2/AA'
     zp['Fnu0'][keep] = syn_flux_fnu[keep]
     zp['Fnu0_units'][keep] = 'erg/s/cm2/Hz'
-    
+
     keep = np.array(['DENIS' in photb and True or False for photb in zp['photband']])
-    
+
     #-- we have no Flam0, only ZP vegamags
     keep = (zp['vegamag_lit']==1) & (zp['Flam0_lit']==0)
     zp['Flam0'][keep] = syn_flux[keep]
     zp['Flam0_units'][keep] = 'erg/s/cm2/AA'
-    
+
     #-- we have no Flam0, no ZP vegamas but STmags
     keep = (zp['STmag_lit']==1) & (zp['Flam0_lit']==0)
     m_vega = 2.5*np.log10(F0ST/syn_flux) + zp['STmag']
     zp['vegamag'][keep] = m_vega[keep]
-    
+
     #-- we have no Fnu0, no ZP vegamas but ABmags
     keep = (zp['ABmag_lit']==1) & (zp['Flam0_lit']==0)
     F0AB_lam = conversions.convert('erg/s/cm2/Hz','erg/s/cm2/AA',F0AB,photband=zp['photband'])
     m_vega = 2.5*np.log10(F0AB_lam/syn_flux) + zp['ABmag']
     zp['vegamag'][keep] = m_vega[keep]
-    
+
     #-- set the central wavelengths of the bands
     set_wave = np.isnan(zp['eff_wave'])
     zp['eff_wave'][set_wave] = filters.eff_wave(zp['photband'][set_wave])
-    
+
     return zp
-    
+
 
 #}
 
-#{ Synthetic photometry    
+#{ Synthetic photometry
 
 def synthetic_flux(wave,flux,photbands,units=None):
     """
     Extract flux measurements from a synthetic SED (Fnu or Flambda).
-    
+
     The fluxes below 4micron are calculated assuming PHOTON-counting detectors
     (e.g. CCDs).
-    
+
     Flam = int(P_lam * f_lam * lam, dlam) / int(P_lam * lam, dlam)
-    
+
     When otherwise specified, we assume ENERGY-counting detectors (e.g. bolometers)
-    
+
     Flam = int(P_lam * f_lam, dlam) / int(P_lam, dlam)
-    
+
     Where P_lam is the total system dimensionless sensitivity function, which
     is normalised so that the maximum equals 1. Also, f_lam is the SED of the
     object, in units of energy per time per unit area per wavelength.
-    
+
     The PHOTON-counting part of this routine has been thoroughly checked with
     respect to johnson UBV, geneva and stromgren filters, and only gives offsets
     with respect to the Kurucz integrated files (.geneva and stuff on his websites). These could be
     due to different normalisation.
-    
+
     You can also readily integrate in Fnu instead of Flambda by suppling a list
     of strings to 'units'. This should have equal length of photbands, and
     should contain the strings 'flambda' and 'fnu' corresponding to each filter.
     In that case, the above formulas reduce to
-    
+
     Fnu = int(P_nu * f_nu / nu, dnu) / int(P_nu / nu, dnu)
-    
-    and 
-    
+
+    and
+
     Fnu = int(P_nu * f_nu, dnu) / int(P_nu, dnu)
-    
+
     Small note of caution: P_nu is not equal to P_lam according to
     Maiz-Apellaniz, he states that P_lam = P_nu/lambda. But in the definition
     we use above here, it *is* the same!
-    
+
     The model fluxes should B{always} be given in Flambda (erg/s/cm2/AA). The
     program will convert them to Fnu where needed.
-    
+
     The output is a list of numbers, equal in length to the 'photband' inputs.
     The units of the output are erg/s/cm2/AA where Flambda was given, and
     erg/s/cm2/Hz where Fnu was given.
-    
+
     The difference is only marginal for 'blue' bands. For example, integrating
     2MASS in Flambda or Fnu is only different below the 1.1% level:
-    
+
     >>> wave,flux = get_table(teff=10000,logg=4.0)
     >>> energys = synthetic_flux(wave,flux,['2MASS.J','2MASS.J'],units=['flambda','fnu'])
     >>> e0_conv = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',energys[0],photband='2MASS.J')
     >>> np.abs(energys[1]-e0_conv)/energys[1]<0.012
     True
-    
+
     But this is not the case for IRAS.F12:
-    
+
     >>> energys = synthetic_flux(wave,flux,['IRAS.F12','IRAS.F12'],units=['flambda','fnu'])
     >>> e0_conv = conversions.convert('erg/s/cm2/AA','erg/s/cm2/Hz',energys[0],photband='IRAS.F12')
     >>> np.abs(energys[1]-e0_conv)/energys[1]>0.1
     True
-    
+
     If you have a spectrum in micron vs Jy and want to calculate the synthetic
     fluxes in Jy, a little bit more work is needed to get everything in the
     right units. In the following example, we first generate a constant flux
@@ -2128,33 +2154,33 @@ def synthetic_flux(wave,flux,photbands,units=None):
     wavelengths (this is no approximation) and convert wavelength to angstrom.
     Next, we compute the synthetic fluxes in the IRAS band in Fnu, and finally
     convert the outcome (in erg/s/cm2/Hz) to Jansky.
-    
+
     >>> wave,flux = np.linspace(0.1,200,10000),np.ones(10000)
     >>> flam = conversions.convert('Jy','erg/s/cm2/AA',flux,wave=(wave,'micron'))
     >>> lam = conversions.convert('micron','AA',wave)
     >>> energys = synthetic_flux(lam,flam,['IRAS.F12','IRAS.F25','IRAS.F60','IRAS.F100'],units=['Fnu','Fnu','Fnu','Fnu'])
     >>> energys = conversions.convert('erg/s/cm2/Hz','Jy',energys)
-    
+
     You are responsible yourself for having a response curve covering the
     model fluxes!
-    
+
     Now. let's put this all in practice in a more elaborate example: we want
     to check if the effective wavelength is well defined. To do that we will:
-        
+
         1. construct a model (black body)
         2. make our own weird, double-shaped filter (CCD-type and BOL-type detector)
         3. compute fluxes in Flambda, and convert to Fnu via the effective wavelength
         4. compute fluxes in Fnu, and compare with step 3.
-        
+
     In an ideal world, the outcome of step (3) and (4) must be equal:
-    
+
     Step (1): We construct a black body model.
-    
-    
+
+
     WARNING: OPEN.BOL only works in Flambda for now.
-    
+
     See e.g. Maiz-Apellaniz, 2006.
-    
+
     @param wave: model wavelengths (angstrom)
     @type wave: ndarray
     @param flux: model fluxes (erg/s/cm2/AA)
@@ -2165,16 +2191,16 @@ def synthetic_flux(wave,flux,photbands,units=None):
     @type units: list of strings or str
     @return: model fluxes (erg/s/cm2/AA or erg/s/cm2/Hz)
     @rtype: ndarray
-    """    
+    """
     if isinstance(units,str):
         units = [units]*len(photbands)
     energys = np.zeros(len(photbands))
-    
+
     #-- only keep relevant information on filters:
     filter_info = filters.get_info()
     keep = np.searchsorted(filter_info['photband'],photbands)
     filter_info = filter_info[keep]
-    
+
     for i,photband in enumerate(photbands):
         #if filters.is_color
         waver,transr = filters.get_response(photband)
@@ -2203,7 +2229,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
             wave_ = wave__
         #-- interpolate response curve onto model grid
         transr = np.interp(wave_,waver,transr,left=0,right=0)
-        
+
         #-- integrated flux: different for bolometers and CCDs
         #-- WE WORK IN FLAMBDA
         if units is None or ((units is not None) and (units[i].upper()=='FLAMBDA')):
@@ -2213,7 +2239,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
                 energys[i] = np.trapz(flux_*transr,x=wave_)/np.trapz(transr,x=wave_)
             elif filter_info['type'][i]=='CCD':
                 energys[i] = np.trapz(flux_*transr*wave_,x=wave_)/np.trapz(transr*wave_,x=wave_)
-        
+
         #-- we work in FNU
         elif units[i].upper()=='FNU':
             #-- convert wavelengths to frequency, Flambda to Fnu
@@ -2229,8 +2255,8 @@ def synthetic_flux(wave,flux,photbands,units=None):
             elif filter_info['type'][i]=='CCD':
                 energys[i] = np.trapz(flux_f*transr/freq_,x=wave_)/np.trapz(transr/freq_,x=wave_)
         else:
-            raise ValueError,'units %s not understood'%(units)
-    
+            raise ValueError('units %s not understood'%(units))
+
     #-- that's it!
     return energys
 
@@ -2238,7 +2264,7 @@ def synthetic_flux(wave,flux,photbands,units=None):
 def synthetic_color(wave,flux,colors,units=None):
     """
     Construct colors from a synthetic SED.
-    
+
     @param wave: model wavelengths (angstrom)
     @type wave: ndarray
     @param flux: model fluxes (erg/s/cm2/AA)
@@ -2252,7 +2278,7 @@ def synthetic_color(wave,flux,colors,units=None):
     """
     if units is None:
         units = [None for color in colors]
-        
+
     syn_colors = np.zeros(len(colors))
     for i,(color,unit) in enumerate(zip(colors,units)):
         #-- retrieve the passbands necessary to construct the color, and the
@@ -2262,24 +2288,24 @@ def synthetic_color(wave,flux,colors,units=None):
         fluxes = synthetic_flux(wave,flux,photbands,units=unit)
         #-- construct the color
         syn_colors[i] = color_func(*list(fluxes))
-    
-    return syn_colors 
-        
+
+    return syn_colors
+
 
 
 def luminosity(wave,flux,radius=1.):
     """
     Calculate the bolometric luminosity of a model SED.
-    
+
     Flux should be in cgs per unit wavelength (same unit as wave).
     The latter is integrated out, so it is of no importance. After integration,
     flux, should have units erg/s/cm2.
-    
+
     Returned luminosity is in solar units.
-    
+
     If you give radius=1 and want to correct afterwards, multiply the obtained
     Labs with radius**2.
-    
+
     @param wave: model wavelengths
     @type wave: ndarray
     @param flux: model fluxes (Flam)
@@ -2305,6 +2331,11 @@ def _get_itable_markers(photbands,
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
+    # Possibility to not fetch all grid files when not needed
+    # does not work currently
+    # if 'z_skip' in kwargs:
+    #     gridfiles = get_file(integrated=True,**kwargs)
+    # else:
     gridfiles = get_file(z='*',integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
@@ -2315,7 +2346,6 @@ def _get_itable_markers(photbands,
     gridpnts = []
     grid_z = []
     markers = []
-    
     #-- collect information
     for gridfile in gridfiles:
         ff = pf.open(gridfile)
@@ -2323,41 +2353,42 @@ def _get_itable_markers(photbands,
         z = ff[1].header['z']
         if z<zrange[0] or zrange[1]<z:
             continue
-    
+
         teffs = ext.data.field('teff')
         loggs = ext.data.field('logg')
         ebvs = ext.data.field('ebv')
         keep = (ebvrange[0]<=ebvs) & (ebvs<=ebvrange[1])
-        
+
         #-- for some reason, the Kurucz grid has a lonely point at Teff=14000,logg=2
         #   which messes up our interpolation
         #correct = (teffs==14000) & (loggs==2.0)
         #teffs[correct] = 12000
-        
+
         teffs,loggs,ebvs = teffs[keep],loggs[keep],ebvs[keep]
         grid_teffs = np.sort(list(set(teffs)))
         grid_loggs = np.sort(list(set(loggs)))
         grid_ebvs = np.sort(list(set(ebvs)))
         grid_z.append(z)
-        
+
         #-- we construct an array representing the teff-logg-ebv-z content, but
-        #   in one number: 5000040031500 means: 
+        #   in one number: 5000040031500 means:
         #   T=50000,logg=4.0,E(B-V)=0.31 and Z = 0.00
         # Note that Z is Z+5 so that we avoid minus signs...
         markers.append(np.zeros(len(teffs)))
         gridpnts.append(np.zeros((len(teffs),4)))
-        
+
         for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
             markers[-1][i] = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(it)),int(round(il*100)),int(round(ie*100))))
-	    gridpnts[-1][i]= it,il,ie,z
+            gridpnts[-1][i]= it,il,ie,z
+
         flux.append(_get_flux_from_table(ext,photbands,include_Labs=include_Labs))
         ff.close()
-    
+
     flux = np.vstack(flux)
     markers = np.hstack(markers)
     gridpnts = np.vstack(gridpnts)
     grid_z = np.sort(grid_z)
-    
+
     return np.array(markers),(grid_teffs,grid_loggs,grid_ebvs,grid_z),gridpnts,flux
 
 
@@ -2370,24 +2401,22 @@ def _get_pix_grid(photbands,
                     variables=['teff','logg','ebv','z','rv','vrad'],**kwargs):
     """
     Prepare the pixalted grid.
-    
+
     In principle, it should be possible to return any number of free parameters
     here. I'm thinking about:
-    
+
         teff, logg, ebv, z, Rv, vrad.
     """
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
-        
-    #-- remove Rv and z from the grid keywords
-    trash = kwargs.pop('Rv', '*')
-    trash = kwargs.pop('z', '*')
-    gridfiles = get_file(z='*',Rv='*',integrated=True,**kwargs)
+
+    gridfiles = get_file(integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
     flux = []
     grid_pars = []
     grid_names = np.array(variables)
+
     #-- collect information from all the grid files
     for gridfile in gridfiles:
         with pf.open(gridfile) as ff:
@@ -2420,17 +2449,17 @@ def _get_pix_grid(photbands,
     #   this is needed
     #grid_pars[0] = np.log10(grid_pars[0])
     flux = np.log10(flux)
-    
+
     #-- don't take axes into account if it has only one value
     keep = np.ones(len(grid_names),bool)
     for i in range(len(grid_names)):
         if np.all(grid_pars[i]==grid_pars[i][0]):
             keep[i] = False
     grid_pars = grid_pars[keep]
-    
+
     #-- we need to know what variable parameters we have in the grid
     grid_names = grid_names[keep]
-    
+
     #-- create the pixeltype grid
     axis_values, pixelgrid = interpol.create_pixeltypegrid(grid_pars,flux.T)
     return axis_values,grid_pars.T,pixelgrid,grid_names
@@ -2441,7 +2470,7 @@ def _get_pix_grid(photbands,
 def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
     """
     Retrieve flux and flux ratios from an integrated SED table.
-    
+
     @param fits_ext: fits extension containing integrated flux
     @type fits_ext: FITS extension
     @param photbands: list of photometric passbands
@@ -2483,7 +2512,7 @@ def _get_flux_from_table(fits_ext,photbands,index=None,include_Labs=True):
     if index is not None:
         fluxes = fluxes
     return fluxes
-                
+
 
 
 if __name__=="__main__":
@@ -2491,4 +2520,3 @@ if __name__=="__main__":
     import pylab as pl
     doctest.testmod()
     pl.show()
-    

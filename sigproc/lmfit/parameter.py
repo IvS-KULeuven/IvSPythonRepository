@@ -6,10 +6,10 @@ from numpy import arcsin, cos, sin, sqrt, inf, nan, random
 try:
     from collections import OrderedDict
 except ImportError:
-    from ordereddict import OrderedDict
+    from .ordereddict import OrderedDict
 
 import re
-from . import uncertainties
+import uncertainties
 
 
 RESERVED_WORDS = ('and', 'as', 'assert', 'break', 'class', 'continue',
@@ -184,7 +184,7 @@ class Parameter(object):
         except(TypeError, ValueError):
             self._val = nan
         return self._val
-    
+
     @property
     def value(self):
         "get value"
@@ -210,7 +210,7 @@ class Parameter(object):
         "positive"
         return +self._getval()
 
-    def __nonzero__(self):
+    def __bool__(self):
         "not zero"
         return self._getval() != 0
 
@@ -220,7 +220,7 @@ class Parameter(object):
 
     def __long__(self):
         "long"
-        return long(self._getval())
+        return int(self._getval())
 
     def __float__(self):
         "float"
@@ -323,4 +323,3 @@ def isParameter(x):
     "test for Parameter-ness"
     return (isinstance(x, Parameter) or
             x.__class__.__name__ == 'Parameter')
-

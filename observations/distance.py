@@ -56,7 +56,7 @@ extra modules to handle computations with uncertainties, and to evaluate the
 Gaussian function.
 
 >>> from ivs.sigproc import evaluate
->>> from ivs.units.uncertainties import ufloat
+>>> from uncertainties import ufloat
 
 Then we can approximate the distance to the star (in pc) as the inverse of the
 parallax (in arcsec).
@@ -107,15 +107,15 @@ logger = logging.getLogger("IVS.DIST")
 def rho(z,z_sun=20.0,hd=31.8,hh=490.,sigma=1.91e-3,f=0.039):
     """
     Stellar galactic density function.
-    
+
     Galactic coordinate z: self-gravitating isothermal disk plus a Gaussian halo
-    
+
     See, e.g., Maiz-Apellaniz, Alfaro and Sota 2007/2008 (Poster)
-    
+
     Other values we found in the literature:
-    
+
     z_sun,hd,sigma,f = 24.7,34.2,1.62e-3,0.058
-    
+
     @param z: galactic coordinate z (parsec)
     @type z: array or float
     @param z_sun: Sun's distance above the Galactic plane (20.0 +/- 2.9 pc)
@@ -141,11 +141,11 @@ def probability_cd(r,plx):
     Compute the probability for an object to be at distance r (pc), given
     its parallax (mas) and error on the parallax (mas) and a constant density
     function.
-    
+
     Unnormalised!
-    
+
     To obtain the probabilty, multiply with a stellar galactic density function.
-    
+
     @param r: distance (pc)
     @type r: float/array
     @param plx: parallax (mas) and error
@@ -162,12 +162,12 @@ def distprob(r,theta,plx,**kwargs):
     """
     Compute the probability for an object to be located at a distance r (pc),
     given its parallax and galactic lattitude.
-    
+
     theta in degrees
     plx is a tuple!
-    
+
     returns (unnormalised) probability density function.
-    
+
     @param r: distance (pc)
     @type r: float/array
     @param theta: galactic latitude (deg)

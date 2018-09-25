@@ -1,4 +1,4 @@
-# Compiled source 
+# Compiled source
 
 *.pyc
 *.class
@@ -11,6 +11,7 @@
 # HTML files of the documentation
 
 doc/html/*
+docs/build
 
 # Packages
 
@@ -37,3 +38,10 @@ doc/html/*
 .DS_Store*
 Icon?
 Thumbs.db
+
+# Sublime project files
+
+*.sublime-project
+*.sublime-workspace
+
+*.dSYM

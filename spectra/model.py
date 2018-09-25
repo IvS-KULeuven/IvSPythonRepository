@@ -43,9 +43,6 @@ import copy
 import astropy.io.fits as pf
 import inspect
 from ivs import config
-from ivs.units import constants
-from ivs.units import conversions
-from ivs.aux.decorators import memoized
 from ivs.spectra import tools
 from ivs.aux import loggers
 
@@ -161,7 +158,7 @@ def get_file(**kwargs):
     elif grid=='tmapsdb':
         basename = 'TMAP2011_sdB.fits'
     else:
-        raise ValueError, "grid %s does not exist"%(grid)
+        raise ValueError("grid %s does not exist"%(grid))
 
     #-- retrieve the absolute path of the file and check if it exists:
     grid = config.get_datafile(basedir,basename)
@@ -230,7 +227,7 @@ def get_table(teff=None,logg=None,vrad=0,vrot=0,**kwargs):
         #   wavelength grid. First we need to check which arguments we can pass
         #   through
         argspec = inspect.getargspec(tools.rotational_broadening)
-        mykwargs = dict(zip(argspec.args[-len(argspec.defaults):],argspec.defaults))
+        mykwargs = dict(list(zip(argspec.args[-len(argspec.defaults):],argspec.defaults)))
         for key in kwargs:
             if key in mykwargs:
                 mykwargs[key] = kwargs[key]

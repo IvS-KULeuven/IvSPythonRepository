@@ -17,7 +17,7 @@ Here is an example of its output:
 
 [------------------------->                                   ] 41%  821.2/sec
 """
-import time, sys, math
+import time, sys
 
 class ProgressMeter(object):
     ESC = chr(27)

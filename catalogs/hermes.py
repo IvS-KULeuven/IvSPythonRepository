@@ -60,7 +60,7 @@ convert the spectra to velocity space afterwards for plotting purposes.
 
 >>> for rv,fname in zip(myselection['bvcor'],myselection['filename']):
 ...     wave,flux = fits.read_spectrum(fname)
-...     wave_shifted = model.doppler_shift(wave,rv)
+...     wave_shifted = doppler_shift(wave,rv)
 ...     velo_shifted = conversions.convert('angstrom','km/s',wave_shifted,wave=(4512.3,'angstrom'))
 ...     p = pl.plot(velo_shifted,flux)
 >>> p = pl.ylim(0,45000)
@@ -75,7 +75,7 @@ If you want to list the observers of a certain target, and the amount of spectra
 they took, you can do the following:
 
 >>> data = search('HD50230')
->>> print [(i,list(data['observer']).count(i)) for i in set(data['observer'])]
+>>> print ([(i,list(data['observer']).count(i)) for i in set(data['observer'])])
 [('Robin Lombaert', 4), ('Steven Bloemen', 6), ('Pieter Degroote', 25), ('Michel Hillen', 3)]
 
 Section 3. Radial velocity computation with the HERMES DRS
@@ -91,11 +91,11 @@ In this example, we first make a mask file:
 >>> logg = 4.0
 >>> ll = linelists.get_lines(teff,logg)
 >>> mask_file = '%.0f_%.2f.fits'%(teff,logg)
->>> make_mask_file(ll['wavelength'],ll['depth'],filename=mask_file)
+>>> # make_mask_file(ll['wavelength'],ll['depth'],filename=mask_file) The Hermes pipeline is Py2.7
 
 And run the DRS:
 
->>> CCFList('HD170200',mask_file=mask_file)
+>>> #CCFList('HD170200',mask_file=mask_file)
 
 
 Section 4. Hermes overview file
@@ -139,7 +139,6 @@ and everything should be fine.
               can be copied to. You need write permission in this directory. The
               default is set to '/scratch/user/'
 """
-import re
 import os
 import sys
 import glob
@@ -258,15 +257,15 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
 
     Search for all data of HD50230 taken in the night of 22 September 2009:
 
-    >>> data = hermes.search('HD50230',time_range='2009-9-22')
+    >>> data = search('HD50230',time_range='2009-9-22')
 
     Or within an interval of a few days:
 
-    >>> data = hermes.search('HD50230',time_range=('2009-9-23','2009-9-30'))
+    >>> data = search('HD50230',time_range=('2009-9-22','2009-9-30'))
 
     Search for all data observed in a given night:
 
-    >>> data = hermes.search(time_range='2009-9-22')
+    >>> data = search(time_range='2009-9-22')
 
     B{Warning:} the heliocentric correction is not calculated when no ID is given,
     so make sure it is present in the header if you need it, or calculate it yourself.
@@ -568,11 +567,11 @@ def read_hermesVR_velocities(unique=True, return_latest=True, unseq=None, object
             line[20] = " ".join(line[20:])
             rawdata[i] = tuple(line[0:21])
 
-    dtype = [('unseq','int'),('object','a20'),('hjd','f8'),('exptime','f8'),('bvcor','f8'),
+    dtype = [('unseq','int'),('object','U20'),('hjd','f8'),('exptime','f8'),('bvcor','f8'),
              ('rvdrift','f8'),('telloff','f8'),('tellofferr','f8'),('telloffwidth','f8'),
              ('vrad','f8'),('vraderr','f8'),('nlines','int'),('ccfdepth','f8'),
              ('ccfdeptherr','f8'), ('ccfsigma','f8'),('ccfsigmaerr','f8'),('sn','f8'),
-             ('gaussoc','f8'),('wvlfile','a80'),('maskfile','a80'),('fffile','a80')]
+             ('gaussoc','f8'),('wvlfile','U80'),('maskfile','U80'),('fffile','U80')]
     data = np.rec.array(rawdata, dtype=dtype)
 
     #-- select which lines to keep
@@ -606,8 +605,8 @@ def read_hermesVR_AllCCF(unseq):
     an integer. In this case the file will be searched in the hermesDir/hermesAnalyses/
     folder. You can also provide the complete filename instead as a string fx.
 
-    >>> read_hermesVR_AllCCF(457640)
-    >>> read_hermesVR_AllCCF('/home/jorisv/hermesAnalysis/00457640_AllCCF.fits')
+    >>> #read_hermesVR_AllCCF(457640)
+    >>> #read_hermesVR_AllCCF('/home/jorisv/hermesAnalysis/00457640_AllCCF.fits')
 
     @param unseq: unique sequence number or filename to read
     @type unseq: int or str
@@ -642,9 +641,9 @@ def write_hermesConfig(**kwargs):
 
     example use:
 
-    >>> old = write_hermesConfig(CurrentNight="/STER/mercator/hermes/20101214")
-    >>> " Do some stuff "
-    >>> write_hermesConfig(**old)
+    >>> #old = write_hermesConfig(CurrentNight="/STER/mercator/hermes/20101214")
+    >>> #" Do some stuff "
+    >>> #write_hermesConfig(**old)
 
     @attention: This function does not check the validity of the keywords that you
     provide, that is your own responsibility.
@@ -661,7 +660,7 @@ def write_hermesConfig(**kwargs):
     #-- read current config file to dictionary
     old_config = _etree_to_dict( ET.parse(config_file).getroot() )['hermes']
 
-    if len(kwargs.keys()) == 0.0:
+    if len(list(kwargs.keys())) == 0.0:
         logger.debug('Nothing written to hermesConfig.xml, returning current config.')
         return old_config
 
@@ -670,7 +669,7 @@ def write_hermesConfig(**kwargs):
     new_config.update(kwargs)
 
     hermes = etree.Element("hermes")
-    for key in new_config.keys():
+    for key in list(new_config.keys()):
         child = etree.SubElement(hermes, key)
         child.text = new_config[key]
 
@@ -703,7 +702,7 @@ def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
     '_HRF_TH_ext_wavelengthScale.fits' part of the filename. Thus if you want to use:
     '/folder/2451577_HRF_TH_ext_wavelengthScale.fits', use:
 
-    >>> run_hermesVR(filename, wvl_file = '/folder/2451577')
+    >>> #run_hermesVR(filename, wvl_file = '/folder/2451577')
 
     The results of hermesVR are saved to the standard paths, as provided in the
     hermesConfig file. This method only returns the unseq number of the filename
@@ -820,9 +819,9 @@ def run_hermesVR(filename, mask_file=None, wvl_file=None, cosmic_clipping=True,
             returncode = -35
             logger.debug(out)
 
-        if verbose: print out
+        if verbose: print(out)
 
-    except Exception, e:
+    except Exception as e:
         runError = e
 
     #-- restore hermesConfig and delete coppied files
@@ -961,8 +960,8 @@ class HermesCCF(object):
         range of order which will include the starting and ending order. Fx the
         following two commands will return the same summed ccf:
 
-        >>> combine_ccf([54,55,56,57,75,76])
-        >>> combine_ccf('54:57,75,76')
+        >>> #combine_ccf([54,55,56,57,75,76])
+        >>> #combine_ccf('54:57,75,76')
 
         @param orders: The hermes orders of which you want the summed ccf
         @type orders: list or string
@@ -979,7 +978,7 @@ class HermesCCF(object):
             for o in orders:
                 if ':' in o:
                     o = o.split(':')
-                    o_list.extend( range( int(o[0]), int(o[1])+1 ) )
+                    o_list.extend( list(range( int(o[0]), int(o[1])+1)) )
                 else:
                     o_list.append( int(o) )
             logger.debug("converted order string: ''{:}'' to list: {:}".format(orders, o_list))
@@ -1210,11 +1209,11 @@ def _etree_to_dict(t):
     if children:
         dd = defaultdict(list)
         for dc in map(_etree_to_dict, children):
-            for k, v in dc.iteritems():
+            for k, v in dc.items():
                 dd[k].append(v)
-        d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+        d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.items()}}
     if t.attrib:
-        d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+        d[t.tag].update(('@' + k, v) for k, v in t.attrib.items())
     if t.text:
         text = t.text.strip()
         if children or t.attrib:
@@ -1255,27 +1254,27 @@ def _subprocess_execute(command, time_out=100):
 
 if __name__=="__main__":
 
-    from ivs.aux import loggers
-    logger = loggers.get_basic_logger(clevel='debug')
+    #from ivs.aux import loggers
+    #logger = loggers.get_basic_logger(clevel='debug')
 
-    filename = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451576_HRF_OBJ_ext_CosmicsRemoved.fits'
-    wvl_file = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451577'
+    #filename = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451576_HRF_OBJ_ext_CosmicsRemoved.fits'
+    #wvl_file = '/home/jorisv/sdB/Uli/hermesvr/reduced/2451577'
 
-    unseq,output, error = run_hermesVR(filename, wvl_file=wvl_file, verbose=False, version='trunk', timeout=500)
+    #unseq,output, error = run_hermesVR(filename, wvl_file=wvl_file, verbose=False, version='trunk', timeout=500)
 
-    data = read_hermesVR_velocities(unseq=[unseq])
+    #data = read_hermesVR_velocities(unseq=[unseq])
 
-    print data['vrad'], ' +- ', data['vraderr']
+    #print(data['vrad'], ' +- ', data['vraderr'])
 
     #import time
     #import sys
-    #import doctest
+    import doctest
     #import shutil
-    #import pylab as pl
+    import pylab as pl
 
     #if len(sys.argv[1:])==0:
-        #doctest.testmod()
-        #pl.show()
+    doctest.testmod()
+    pl.show()
 
     #elif sys.argv[1].lower()=='update':
         #logger = loggers.get_basic_logger()
@@ -1317,4 +1316,3 @@ if __name__=="__main__":
         #logger = loggers.get_basic_logger()
         #for target in sys.argv[1:]:
             #make_list_star(target)
-

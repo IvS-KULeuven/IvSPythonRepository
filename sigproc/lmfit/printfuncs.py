@@ -17,7 +17,7 @@ Changes:
 
 """
 
-from __future__ import print_function
+
 
 
 def fit_report(params, modelpars=None, show_correl=True, min_correl=0.1):
@@ -78,7 +78,7 @@ def fit_report(params, modelpars=None, show_correl=True, min_correl=0.1):
                     if name != name2 and name2 in par.correl:
                         correls["%s, %s" % (name, name2)] = par.correl[name2]
 
-        sort_correl = sorted(correls.items(), key=lambda it: abs(it[1]))
+        sort_correl = sorted(list(correls.items()), key=lambda it: abs(it[1]))
         sort_correl.reverse()
         for name, val in sort_correl:
             if abs(val) < min_correl:
@@ -103,7 +103,7 @@ def ci_report(ci):
     convp = lambda x: ("%.2f" % (x[0]*100))+'%'
     conv = lambda x: "%.5f" % x[1]
     title_shown = False
-    for name, row in ci.items():
+    for name, row in list(ci.items()):
         if not title_shown:
             add("".join([''.rjust(maxlen)]+[i.rjust(10)   for i in map(convp, row)]))
             title_shown = True

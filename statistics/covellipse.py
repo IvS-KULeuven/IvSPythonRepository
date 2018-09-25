@@ -29,7 +29,7 @@ Compute the 2-sigma ellipse, centered around (0,0):
 Make a plot of the data as well as the ellipse:
 
 >>> p.scatter(m[:,0], m[:,1], s=5)
->>> p.plot(x,y,linewidth=2) 
+>>> p.plot(x,y,linewidth=2)
 """
 
 
@@ -41,7 +41,7 @@ def ellipse(xc, yc, a, b, phi):
 
     """
     Returns x and y values of a complete ellipse
-    
+
     @param xc: x-coordinate of the center of the ellipse
     @type xc: float
     @param yc: y-coordinate of the center of the ellipse
@@ -51,17 +51,17 @@ def ellipse(xc, yc, a, b, phi):
     @param b: half the small axis of the ellipse
     @type b: float
     @param phi: angle between long axis and the x-axis (radians)
-    @type phi: float    
-    @return: x,y: coordinate arrays of ellipse 
+    @type phi: float
+    @return: x,y: coordinate arrays of ellipse
     @rtype: tuple of 2 arrays (dtype: float)
     """
-    
+
     t = np.linspace(0,2*pi,100)
     x = xc + a * np.cos(t) * np.cos(phi) - b * np.sin(t) * np.sin(phi)
     y = yc + a * np.cos(t) * np.sin(phi) + b * np.sin(t) * np.cos(phi)
-    
+
     return x,y
-    
+
 
 
 
@@ -70,16 +70,16 @@ def sigmaEllipse(xc, yc, covMatrix, nSigma):
     """
     Return x and y value of the |nSigma|-sigma ellipse
     Given a covariance matrix, and the center of the ellipse (xc,yc)
-    
+
     @param xc: x-coordinate of the center of the ellipse
     @type xc: float
     @param yc: y-coordinate of the center of the ellipse
     @type yc: float
     @param covMatrix: 2D covariance matrix
     @type covMatrix: 2x2 float nd-array
-    @param nSigma: the nSigma-contour of the ellipse will be returned   
+    @param nSigma: the nSigma-contour of the ellipse will be returned
     @type nSigma: float
-    @return: (x,y): the x and y values of the ellipse 
+    @return: (x,y): the x and y values of the ellipse
     @rtype: tuple of two float ndarrays
     """
 
@@ -87,13 +87,13 @@ def sigmaEllipse(xc, yc, covMatrix, nSigma):
     b = covMatrix [0,1]
     c = b
     d = covMatrix[1,1]
-    
+
     eigenvalue1 = 0.5*(a+d+np.sqrt((a-d)**2+4*b*c))
     eigenvalue2 = 0.5*(a+d-np.sqrt((a-d)**2+4*b*c))
-    
+
     semimajor = sqrt(eigenvalue1) * nSigma
     semiminor = sqrt(eigenvalue2) * nSigma
-    
+
     if b == 0.0:
         eigenvector1 = np.array([1, 0])
         eigenvector2 = np.array([0, 1])
@@ -102,10 +102,10 @@ def sigmaEllipse(xc, yc, covMatrix, nSigma):
         eigenvector1 = np.array([b, eigenvalue1-a])
         eigenvector2 = np.array([b, eigenvalue2-a])
         phi = atan((eigenvalue1-a)/b)
-           
+
     x,y = ellipse(xc, yc, semimajor, semiminor, phi)
-    
+
     return x,y
 
-    
-    
+
+

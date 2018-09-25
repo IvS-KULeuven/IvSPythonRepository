@@ -1,7 +1,7 @@
 """
 Retrieve light curves from the Kepler satellite mission.
 """
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import os
 import astropy.io.fits as pf
 import logging
@@ -17,7 +17,7 @@ logger = logging.getLogger("CAT.KEPLER")
 def download_light_curve(KIC,directory=''):
     """
     Download a light curve file from the data archive.
-    
+
     @param KIC: kic number
     @type KIC: integer
     @param directory: directory to save data to, defaults to cwd
@@ -37,7 +37,7 @@ def download_light_curve(KIC,directory=''):
     #-- and download the files
     logger.info("Found %d public/proprietary light curves for KIC%s"%(len(links),KIC))
     for base_url in links:
-        url = urllib.URLopener()
+        url = urllib.request.URLopener()
         filename = os.path.basename(base_url)
         if directory:
             filename = os.path.join(directory,filename)
@@ -49,15 +49,15 @@ def download_light_curve(KIC,directory=''):
             logger.info('... downloaded %s'%(filename))
             filenames.append(filen)
         url.close()
-        
+
     return filenames
 
 def get_data(KIC):
     """
     Retrieve Kepler timeseries from a remote data repository.
-    
+
     Fields are 'HJD','flux','e_flux','bkg','quarter'.
-    
+
     @param KIC: kic number or list of filenames
     @type KIC: integer or list
     @return: data, header
@@ -84,7 +84,7 @@ def get_data(KIC):
                               np.hstack(background),np.hstack(quarter)],
                               names=['HJD','flux','e_flux','bkg','quarter'])
     return data,header
-   
+
 
 def systematics(units='muHz'):
     """
@@ -96,4 +96,4 @@ def systematics(units='muHz'):
     systems['e_frequency'] = conversions.nconvert(systems['unit'],units,systems['e_frequency'])
     systems['w_frequency'] = conversions.nconvert(systems['unit'],units,systems['w_frequency'])
     return systems
-    
+

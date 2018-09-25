@@ -13,7 +13,7 @@ Installation
     .. code-block:: bash
 
         $ cd python
-        $ git clone https://github.com/IvS-KULeuven/IvSPythonRepository.git ivs
+        $ git clone https://github.com/mike-ivs/IvSPythonRepository_development.git ivs
 
     This will clone all repository files into the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients. The directories of these files can be found, and specified, in ~ivs/config.py.
 
@@ -29,13 +29,13 @@ Installation
     .. code-block:: bash
 
         $ cd ivs
-        $ conda env create -f IvS_repo.yml
+        $ conda env create -f IvS_repo_3.6.yml
 
     If you do not use anaconda you can find the repository dependencies in this file. Make sure to activate your environment each time before using the repository, either by sourcing it in your .bash_profile or running:
 
     .. code-block:: bash
 
-        $ source activate ivs_repo
+        $ source activate ivs_repo_3.6
 
 *   Make sure that your python path points to the directory above the ivs folder:
 

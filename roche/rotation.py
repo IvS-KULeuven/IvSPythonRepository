@@ -70,9 +70,9 @@ effects:
 
 The total and projected luminosity can then be calculated the following way:
 
->>> print pi*(ints_local*areas_local*constants.Rsol_cgs**2).sum()/constants.Lsol_cgs
+>>> print(pi*(ints_local*areas_local*constants.Rsol_cgs**2).sum()/constants.Lsol_cgs)
 0.992471247895
->>> print pi*np.nansum(intens_proj*areas_local*constants.Rsol_cgs**2)/constants.Lsol_cgs
+>>> print(pi*np.nansum(intens_proj*areas_local*constants.Rsol_cgs**2)/constants.Lsol_cgs)
 0.360380373413
 
 Now make some plots showing the local quantities:
@@ -80,7 +80,7 @@ Now make some plots showing the local quantities:
 >>> quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
 >>> names = 'Area','log g', 'Teff', 'Flux', 'Proj. flux', 'Angle'
 >>> p = pl.figure()
->>> rows,cols = 2,3    
+>>> rows,cols = 2,3
 >>> for i,(quantity,name) in enumerate(zip(quantities,names)):
 ...    p = pl.subplot(rows,cols,i+1)
 ...    p = pl.title(name)
@@ -202,7 +202,7 @@ Now make some plots showing the local quantities:
 >>> quantities = areas_local,np.log10(grav*100),teff_local,ints_local,intens_proj,angles/pi*180,radius
 >>> names = 'Area','log g', 'Teff', 'Flux', 'Proj. flux', 'Angle'
 >>> p = pl.figure()
->>> rows,cols = 2,3    
+>>> rows,cols = 2,3
 >>> for i,(quantity,name) in enumerate(zip(quantities,names)):
 ...    p = pl.subplot(rows,cols,i+1)
 ...    p = pl.title(name)
@@ -246,13 +246,13 @@ def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
     """
     Calculate components of the local surface gravity of the fast rotating
     Roche model.
-    
+
     Input units are solar units.
     Output units are SI.
     Omega is fraction of critical velocity.
-    
+
     See Cranmer & Owocki, Apj (1995)
-    
+
     @param r: radius of the surface element to calculate the surface gravity
     @type r: float/ndarray
     @param theta: colatitude of surface element
@@ -276,7 +276,7 @@ def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
     grav_r = GG*M/r_pole**2 * (-1./x**2 + 8./27.*x*omega**2*sin(theta)**2)
     #-- calculate theta-component of local gravity
     grav_th = GG*M/r_pole**2 * (8./27.*x*omega**2*sin(theta)*cos(theta))
-    
+
     grav = np.array([grav_r,grav_th])
     #-- now we transform to spherical coordinates
     grav = np.array(vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) ))
@@ -289,7 +289,7 @@ def fastrot_roche_surface_gravity(r,theta,phi,r_pole,omega,M,norm=False):
 def get_fastrot_roche_radius(theta,r_pole,omega):
     """
     Calculate Roche radius for a fast rotating star.
-    
+
     @param theta: angle from rotation axis
     @type theta: float
     @param r_pole: polar radius in solar units
@@ -305,23 +305,23 @@ def get_fastrot_roche_radius(theta,r_pole,omega):
     if np.isinf(Rstar) or sin(theta)<1e-10:
         Rstar = r_pole
     return Rstar
-    
+
 def critical_angular_velocity(M,R_pole,units='Hz'):
     """
     Compute the critical angular velocity (Hz).
-    
+
     Definition taken from Cranmer and Owocki, 1995 and equal to
-    
+
     Omega_crit = sqrt( 8GM / 27Rp**3 )
-    
+
     Example usage (includes conversion to period in days):
-    
+
     >>> Omega = critical_angular_velocity(1.,1.)
     >>> P = 2*pi/Omega
     >>> P = conversions.convert('s','d',P)
-    >>> print 'Critical rotation period of the Sun: %.3f days'%(P)
-    Critical rotation period of the Sun: 0.213 days
-        
+    >>> print('Critical rotation period of the Sun: %.3f days'%(P))
+    Critical rotation period of the Sun: 0.213 days)
+
     @param M: mass (solar masses)
     @type M: float
     @param R_pole: polar radius (solar radii)
@@ -341,22 +341,22 @@ def critical_angular_velocity(M,R_pole,units='Hz'):
 def critical_velocity(M,R_pole,units='km/s',definition=1):
     """
     Compute the critical velocity (km/s)
-    
+
     Definition 1 from Cranmer and Owocki, 1995:
-    
+
     v_c = 2 pi R_eq(omega_c) * omega_c
-    
+
     Definition 2 from Townsend 2004:
-    
+
     v_c = sqrt ( 2GM/3Rp )
-    
+
     which both amount to the same value:
-    
+
     >>> critical_velocity(1.,1.,definition=1)
     356.71131858379499
     >>> critical_velocity(1.,1.,definition=2)
     356.71131858379488
-    
+
     @param M: mass (solar masses)
     @type M: float
     @param R_pole: polar radius (solar radii)
@@ -374,7 +374,7 @@ def critical_velocity(M,R_pole,units='km/s',definition=1):
     elif definition==2:
         veq = np.sqrt( 2*constants.GG * M*constants.Msol / (3*R_pole*constants.Rsol))
     veq = conversions.convert('m/s',units,veq)
-        
+
     return veq
 
 
@@ -384,21 +384,21 @@ def critical_velocity(M,R_pole,units='km/s',definition=1):
 def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
     """
     Definition of Roche potential due to differentially rotating star
-    
+
     We first solve the cubic equation
-    
+
     M{re/rp = 1 + f (x^2 + x + 1)/(6x^2)}
-        
+
     where M{f = re^3 Omega_e^2 / (G M)}
     and   M{x = Omega_e / Omega_p}
-    
+
     This transforms to solving
-    
+
     M{re^3 + b * re + c = 0}
-        
+
     where M{b = -1 / (aXrp) and c = 1/(aX),}
     and M{a = Omega_e^2/(GM) and X = (x^2 + x + 1)/(6x^2)}
-    
+
     @param r: radius of the surface element to calculate the surface gravity
     @type r: float/ndarray
     @param theta: colatitude of surface element
@@ -415,12 +415,12 @@ def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
     @rtype: float/ndarray
     """
     GG = constants.GG_sol
-    
+
     Omega_crit = sqrt(8*GG*M/ (27*r_pole**3))
     omega_eq = omega_eq*Omega_crit
     omega_pole = omega_pole*Omega_crit
     x = omega_eq / omega_pole
-    
+
     #-- find R_equator solving a cubic equation:
     a = omega_eq**2/(GG*M)
     X = (x**2+x+1)/(6*x**2)
@@ -435,7 +435,7 @@ def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
     x2 = -1./3. * ( om2*c1 + om1*c2 )
     x3 = -1./3. * ( om1*c1 + om2*c2 )
     re = x2.real
-    
+
     #   ratio of centrifugal to gravitational force at the equator
     f = re**3 * omega_eq**2 / (GG*M)
     #   ratio Re/Rp
@@ -453,9 +453,9 @@ def diffrot_roche_potential(r,theta,r_pole,M,omega_eq,omega_pole):
 def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=False):
     """
     Surface gravity from differentially rotation Roche potential.
-    
+
     Magnitude is OK, please carefully check direction.
-    
+
     @param r: radius of the surface element to calculate the surface gravity
     @type r: float/ndarray
     @param theta: colatitude of surface element
@@ -480,7 +480,7 @@ def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=
     omega_eq = omega_eq*Omega_crit
     omega_pole = omega_pole*Omega_crit
     x = omega_eq / omega_pole
-    
+
     #-- find R_equator solving a cubic equation:
     a = omega_eq**2/(GG*M)
     X = (x**2+x+1)/(6*x**2)
@@ -495,7 +495,7 @@ def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=
     x2 = -1./3. * ( om2*c1 + om1*c2 )
     x3 = -1./3. * ( om1*c1 + om2*c2 )
     re = x2.real
-    
+
     #   ratio of centrifugal to gravitational force at the equator
     f = re**3 * omega_eq**2 / (GG*M)
     #   ratio Re/Rp
@@ -509,16 +509,16 @@ def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=
     y = r/r_pole
     grav_th = (6*alpha*y**7*sinth**5 + 4*beta*y**5*sinth**3 + 2*gamma*y**3*sinth)*cos(theta)
     grav_r = 7*alpha/r_pole*y**6*sinth**6 + 5*beta/r_pole*y**4*sinth**4 + 3*gamma/r_pole*y**2*sinth**2 - 1./r_pole
-    
+
     fr = 6*alpha*y**7*sinth**4 + 4*beta*y**5*sinth**2 + 2*gamma*y**3
     magn = GG*M/r**2 * sqrt(cos(theta)**2 + (1-fr)**2 *sin(theta)**2)
     magn_fake = np.sqrt(grav_r**2+(grav_th/r)**2)
     grav_r,grav_th = grav_r/magn_fake*magn,(grav_th/r)/magn_fake*magn
-    
+
     grav = np.array([grav_r*constants.Rsol,grav_th*constants.Rsol])
     #-- now we transform to spherical coordinates
     grav = vectors.spher2cart( (r,phi,theta),(grav[0],0.,grav[1]) )
-    
+
     if norm:
         return vectors.norm(grav)
     else:
@@ -528,7 +528,7 @@ def diffrot_roche_surface_gravity(r,theta,phi,r_pole,M,omega_eq,omega_pole,norm=
 def get_diffrot_roche_radius(theta,r_pole,M,omega_eq,omega_pole):
     """
     Calculate Roche radius for a differentially rotating star.
-    
+
     @param theta: angle from rotation axis
     @type theta: float
     @param r_pole: polar radius in solar units
@@ -545,21 +545,21 @@ def get_diffrot_roche_radius(theta,r_pole,M,omega_eq,omega_pole):
     try:
         r = newton(diffrot_roche_potential,r_pole,args=(theta,r_pole,M,omega_eq,omega_pole))
     except RuntimeError:
-        r = np.nan    
+        r = np.nan
     return r
 
 def diffrot_law(omega_eq,omega_pole,theta):
     """
     Evaluate a differential rotation law of the form Omega = b1+b2*omega**2
-    
+
     The relative differential rotation rate is the ratio of the rotational shear
     to the equatorial velocity
-    
+
     alpha = omega_eq - omega_pole / omega_eq
-    
+
     The units of angular velocity you put in, you get out (i.e. in terms of
     the critical angular velocity or not).
-    
+
     @param omega_eq: equatorial angular velocity
     @type omega_eq: float
     @param omega_pole: polar angular velocity
@@ -578,7 +578,7 @@ def diffrot_law(omega_eq,omega_pole,theta):
 def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
     """
     Calculate the velocity vector of every surface element.
-    
+
     @param coordinates: polar coordinates of stellar surface (phi,theta,radius)
     make sure the radius is in SI units!
     @type coordinates: 3xN array
@@ -599,7 +599,7 @@ def diffrot_velocity(coordinates,omega_eq,omega_pole,R_pole,M):
     omega_local = diffrot_law(omega_eq,omega_pole,theta)*Omega_crit
     #-- direction of local angular velocity in Cartesian coordinates (directed in upwards z)
     omega_local_vec = np.array([np.zeros_like(omega_local),np.zeros_like(omega_local),omega_local]).T
-    
+
     x,y,z = vectors.spher2cart_coord(radius,phi,theta)
     surface_element = np.array([x,y,z]).T
 

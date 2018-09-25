@@ -1,0 +1,2 @@
+.. automodule:: sed.model
+   :members:

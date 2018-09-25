@@ -6,8 +6,6 @@ Python code to parse to methods.
 
 Example usage:
 
-Given an example minimalistic Python module 'example.py'
-
 >>> def testfunc(a,b,calc='sum'):
 >>> ... if calc=='sum': return a+b
 >>> ... elif calc=='prod': return a*b
@@ -16,6 +14,7 @@ Given an example minimalistic Python module 'example.py'
 >>> if __name__=="__main__":
 >>> ... method,args,kwargs = argkwargparser.parse()
 >>> ... output = globals()[method](*args,**kwargs)
+>>> ... print(output)
 
 Then, in a terminal, you can do::
 
@@ -30,17 +29,17 @@ and more sophisticated input for args and kwargs, see L{parse}.
 """
 import json
 import sys
-    
+
 def parse(argv=None):
     """
     Command-line to method call arg processing.
-    
+
         - positional args: a b -> method('a', 'b')
         - intifying args: a 123 -> method('a', 123)
         - json loading args: a '["pi", 3.14, null]' -> method('a', ['pi', 3.14, None])
         - keyword args: a foo=bar -> method('a', foo='bar')
         - using more of the above 1234 'extras=["r2"]'  -> method(1234, extras=["r2"])
-    
+
     @param argv: Command line arg list. Defaults to `sys.argv`.
     @return: method-name, args, kwargs
     @rtype: string, list, dict
@@ -63,7 +62,7 @@ def parse(argv=None):
         else:
             key, value = None, s
         try:
-            value = json.loads(value) 
+            value = json.loads(value)
         except ValueError:
             pass
         if key:
@@ -73,10 +72,15 @@ def parse(argv=None):
     return method_name, args, kwargs
 
 def test(*args,**kwargs):
-    print 'args',args
-    print 'kwargs',kwargs
+    print('args',args)
+    print('kwargs',kwargs)
 
 if __name__=="__main__":
+    def testfunc(a,b,calc='sum'):
+      if calc=='sum': return a+b
+      elif calc=='prod': return a*b
+      return None
+
     method,args,kwargs = parse()
-    out = globals()[method](*args, **kwargs)
-    sys.exit(out)
+    output = globals()[method](*args, **kwargs)
+    print(output)

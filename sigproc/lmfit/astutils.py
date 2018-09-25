@@ -4,7 +4,7 @@ utility functions for asteval
    Matthew Newville <newville@cars.uchicago.edu>,
    The University of Chicago
 """
-from __future__ import division, print_function
+
 import ast
 from sys import exc_info
 

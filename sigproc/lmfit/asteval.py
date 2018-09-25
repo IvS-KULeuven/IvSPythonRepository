@@ -9,7 +9,7 @@ dictionary supporting a simple, flat namespace.
 Expressions can be compiled into ast node and then evaluated
 later, using the current values in the
 """
-from __future__ import division, print_function
+
 from sys import exc_info, stdout, version_info
 import ast
 import math
@@ -65,7 +65,7 @@ __version__ = '0.3.1'
 # holder for 'returned None' from Larch procedure
 class Empty:
     """basic empty containter"""
-    def __nonzero__(self):
+    def __bool__(self):
         return False
 
 ReturnedNone = Empty()
@@ -134,7 +134,7 @@ class Interpreter:
             for sym in FROM_NUMPY:
                 if hasattr(numpy, sym):
                     symtable[sym] = getattr(numpy, sym)
-            for name, sym in NUMPY_RENAMES.items():
+            for name, sym in list(NUMPY_RENAMES.items()):
                 if hasattr(numpy, sym):
                     symtable[name] = getattr(numpy, sym)
 

@@ -268,11 +268,11 @@ def random_rectangular_grid(gridpoints,size):
     hypercube_sides  = [abs(np.diff(axis)) for axis in axis_values]
     hypercube_volume = 0.
     random_ranges_sizes = []
-    for combination,limit_indices in itertools.izip(itertools.product(*hypercube_sides),itertools.product(*axis_indices)):
+    for combination,limit_indices in zip(itertools.product(*hypercube_sides),itertools.product(*axis_indices)):
         limit_indices = np.array(limit_indices)
         #-- create all corners of the particular grid cube, they need to be in the
         #   KDTree!
-        for corner in itertools.product(*zip(limit_indices-1,limit_indices)):
+        for corner in itertools.product(*list(zip(limit_indices-1,limit_indices))):
             dist = tree.query([axis_values[i][j] for i,j in enumerate(corner)])[0]
             if dist!=0:
                 break

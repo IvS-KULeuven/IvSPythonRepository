@@ -11,8 +11,6 @@ or ask for help on any function::
     $:> python crossmatch.py get_photometry --help
 """
 import logging
-import itertools
-import pylab as pl
 import numpy as np
 
 from ivs.catalogs import vizier
@@ -20,12 +18,9 @@ from ivs.catalogs import gator
 from ivs.catalogs import gcpd
 from ivs.catalogs import mast
 from ivs.catalogs import sesame
-from ivs.units import conversions
 from ivs.aux import numpy_ext
-from ivs.aux import progressMeter
 from ivs.aux import loggers
 from ivs.aux import argkwargparser
-from ivs.inout import ascii
 
 from scipy.spatial import KDTree
 
@@ -238,7 +233,7 @@ if __name__=="__main__":
         help(globals()[method])
     else:
         master = globals()[method](*args,**kwargs)
-        print photometry2str(master)
+        print(photometry2str(master))
 
 
 

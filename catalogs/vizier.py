@@ -84,15 +84,14 @@ You can add catalogs on the fly via
 """
 #-- standard libraries
 import numpy as np
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import os
 import itertools
 import astropy.io.fits as pf
 import tarfile
-import tempfile
 import shutil
-import ConfigParser
+import configparser
 from scipy.spatial import KDTree
 
 #-- IvS repository
@@ -103,7 +102,6 @@ from ivs.units import conversions
 from ivs.aux import loggers
 from ivs.aux import numpy_ext
 from ivs.sed import filters
-from ivs import config
 
 logger = logging.getLogger("CAT.VIZIER")
 logger.addHandler(loggers.NullHandler())
@@ -111,11 +109,11 @@ logger.addHandler(loggers.NullHandler())
 basedir = os.path.dirname(os.path.abspath(__file__))
 
 #-- read in catalog information
-cat_info = ConfigParser.ConfigParser()
+cat_info = configparser.ConfigParser()
 cat_info.optionxform = str # make sure the options are case sensitive
 cat_info.readfp(open(os.path.join(basedir,'vizier_cats_phot.cfg')))
 
-cat_info_fund = ConfigParser.ConfigParser()
+cat_info_fund = configparser.ConfigParser()
 cat_info_fund.optionxform = str # make sure the options are case sensitive
 cat_info_fund.readfp(open(os.path.join(basedir,'vizier_cats_fund.cfg')))
 
@@ -128,7 +126,7 @@ mirrors = {'cycle': itertools.cycle(['vizier.u-strasbg.fr',      # France
                                      'vizier.inasan.ru',         # Russia
                                      'vizier.iucaa.ernet.in',    # India
                                      'data.bao.ac.cn'])}        # China
-mirrors['current'] = mirrors['cycle'].next()
+mirrors['current'] = next(mirrors['cycle'])
 
 #{ Basic interfaces
 
@@ -136,7 +134,7 @@ def change_mirror():
     """
     Cycle through the mirrors of ViZieR.
     """
-    mirrors['current'] = mirrors['cycle'].next()
+    mirrors['current'] = next(mirrors['cycle'])
     logger.info("Changed cycle to {}".format(mirrors['current']))
 
 def search(name,filetype='tsv',filename=None,**kwargs):
@@ -222,8 +220,8 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     base_url = _get_URI(name=name,**kwargs)
 
     #-- prepare to open URI
-    url = urllib.URLopener()
-    filen,msg = url.retrieve(base_url,filename=filename)
+    url = urllib.request.URLopener()
+    filen, msg = url.retrieve(base_url,filename=filename)
     #   maybe we are just interest in the file, not immediately in the content
     if filename is not None:
         logger.info('Querying ViZieR source %s and downloading to %s'%(name,filen))
@@ -234,9 +232,10 @@ def search(name,filetype='tsv',filename=None,**kwargs):
     if filetype=='tsv':
         try:
             results,units,comms = tsv2recarray(filen)
+
         #-- raise an exception when multiple catalogs were specified
         except ValueError:
-            raise ValueError, "failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name)
+            raise ValueError("failed to read %s, perhaps multiple catalogs specified (e.g. III/168 instead of III/168/catalog)"%(name))
         url.close()
         logger.info('Querying ViZieR source %s (%d)'%(name,(results is not None and len(results) or 0)))
         return results,units,comms
@@ -264,7 +263,7 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
     base_url = _get_URI(ID=ID,filetype='fits',**kwargs)
 
     #-- download the file
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url,filename=filename)
 
     #-- if it is a FITS file, we extract all catalog IDs. We download the
@@ -282,11 +281,11 @@ def list_catalogs(ID,filename=None,filetype='tsv',**kwargs):
             mycats[name] = title
             logger.info('%25s %s'%(name,title))
 
-            photometry = [col for col in units.keys() if 'mag' in units[col]]
-            rv = [col for col in units.keys() if 'rv' in col.lower()]
-            vsini = [col for col in units.keys() if 'sin' in col.lower()]
-            sptype = [col for col in units.keys() if col.lower()=='sp' or col.lower()=='sptype']
-            fund = [col for col in units.keys() if 'logg' in col.lower() or 'teff' in col.lower()]
+            photometry = [col for col in list(units.keys()) if 'mag' in units[col]]
+            rv = [col for col in list(units.keys()) if 'rv' in col.lower()]
+            vsini = [col for col in list(units.keys()) if 'sin' in col.lower()]
+            sptype = [col for col in list(units.keys()) if col.lower()=='sp' or col.lower()=='sptype']
+            fund = [col for col in list(units.keys()) if 'logg' in col.lower() or 'teff' in col.lower()]
 
         ff.close()
         url.close()
@@ -371,14 +370,14 @@ def xmatch(source1,source2,output_file=None,tol=1.,**kwargs):
         if i[0]   in units1:   ff.write(units1[i[0]])
         elif i[0] in units2_:  ff.write(units2_[i[0]])
         else:
-            raise ValueError,'this cannot be'
+            raise ValueError('this cannot be')
         if nr<(len(dtypes)-1): ff.write('\t')
 
     ff.write('\n')
     ff.write('\t'.join(['---']*len(dtypes)))
     ff.write('\n')
 
-    for row1,row2 in itertools.izip(cat1,cat2):
+    for row1,row2 in zip(cat1,cat2):
         ff.write('\t'.join([str(x) for x in row1])+'\t')
         ff.write('\t'.join([str(x) for x in row2])+'\n')
 
@@ -546,7 +545,7 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
     #-- convert the measurement to a common unit.
     if to_units and master is not None:
         #-- prepare columns to extend to basic master
-        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','a50')]
+        dtypes = [('cwave','f8'),('cmeas','f8'),('e_cmeas','f8'),('cunit','U50')]
         cols = [[],[],[],[]]
         #-- forget about 'nan' errors for the moment
         no_errors = np.isnan(master['e_meas'])
@@ -556,15 +555,23 @@ def get_photometry(ID=None,extra_fields=['_r','_RAJ2000','_DEJ2000'],take_mean=F
         for i in range(len(master)):
             to_units_ = to_units+''
             try:
-                value,e_value = conversions.convert(master['unit'][i],to_units,master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                value, e_value = conversions.convert(master['unit'][i],
+                                                     to_units,
+                                                     master['meas'][i],
+                                                     master['e_meas'][i],
+                                                     photband=master['photband'][i])
             except ValueError: # calibrations not available, or its a color
                 # if it is a magnitude color, try converting it to a flux ratio
                 if 'mag' in master['unit'][i]:
                     try:
-                        value,e_value = conversions.convert('mag_color','flux_ratio',master['meas'][i],master['e_meas'][i],photband=master['photband'][i])
+                        value, e_value = conversions.convert('mag_color',
+                                                             'flux_ratio',
+                                                             master['meas'][i],
+                                                             master['e_meas'][i],
+                                                             photband=master['photband'][i])
                         to_units_ = 'flux_ratio'
                     except ValueError:
-                        value,e_value = np.nan,np.nan
+                        value, e_value = np.nan, np.nan
                 # else, we are powerless...
                 else:
                     value,e_value = np.nan,np.nan
@@ -759,7 +766,7 @@ def tsv2recarray(filename):
     @return: catalog data columns, units, comments
     @rtype: record array, dict, list of str
     """
-    data,comms = ascii.read2array(filename,dtype=np.str,splitchar='\t',return_comments=True)
+    data, comms = ascii.read2array(filename,dtype=np.str,splitchar='\t',return_comments=True)
     results = None
     units = {}
     #-- retrieve the data and put it into a record array
@@ -771,19 +778,21 @@ def tsv2recarray(filename):
         #   themselves (so called vectors). In those cases, we interpret
         #   the contents as a long string
         formats = np.zeros_like(data[0])
+
         for line in comms:
             line = line.split('\t')
+
             if len(line)<3: continue
             for i,key in enumerate(data[0]):
                 if key == line[1] and line[0]=='Column': # this is the line with information
-                    formats[i] = line[2].replace('(','').replace(')','').lower()
-                    if formats[i][0].isdigit(): formats[i] = 'a100'
+                    formats[i] = line[2].replace('(','').replace(')','').lower().replace('a', 'U')
+                    if formats[i][0].isdigit(): formats[i] = 'U100'
                     elif 'f' in formats[i]: formats[i] = 'f8' # floating point
                     elif 'i' in formats[i]: formats[i] = 'f8' # integer, but make it float to contain nans
                     elif 'e' in formats[i]: formats[i] = 'f8' # exponential
                     #-- see remark about the nans a few lines down
-                    if formats[i][0]=='a':
-                        formats[i] = 'a'+str(int(formats[i][1:])+3)
+                    if formats[i][0]=='U':
+                        formats[i] = 'U'+str(int(formats[i][1:])+3)
         #-- define dtypes for record array
         dtypes = np.dtype([(i,j) for i,j in zip(data[0],formats)])
         #-- remove spaces or empty values
@@ -941,8 +950,8 @@ def vizier2phot(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info.get(source,'e_flag')
 
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('flag','a20'),
-                  ('unit','a30'),('photband','a30'),('source','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('flag','U20'),
+                  ('unit','U30'),('photband','U30'),('source','U50')]
 
     #-- extra can be added:
     names = list(results.dtype.names)
@@ -1068,8 +1077,8 @@ def vizier2fund(source,results,units,master=None,e_flag='e_',q_flag='q_',extra_f
         e_flag = cat_info_fund.get(source,'e_flag')
 
     #-- basic dtypes
-    dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','a30'),
-              ('source','a50'),('name','a50')]
+    dtypes = [('meas','f8'),('e_meas','f8'),('q_meas','f8'),('unit','U30'),
+              ('source','U50'),('name','U50')]
 
     #-- extra can be added:
     names = list(results.dtype.names)
@@ -1127,7 +1136,7 @@ def catalog2bibcode(catalog):
     N = max(2,len(catalog)-1)
     catalog = "/".join(catalog[:N])
     base_url = "http://cdsarc.u-strasbg.fr/viz-bin/Cat?{0}".format(catalog)
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url)
 
     code = None
@@ -1150,7 +1159,7 @@ def bibcode2bibtex(bibcode):
     @rtype: str
     """
     base_url = "http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode={0}&data_type=BIBTEX&db_key=AST&nocookieset=1".format(bibcode)
-    url = urllib.URLopener()
+    url = urllib.request.URLopener()
     filen,msg = url.retrieve(base_url)
 
     bibtex = []
@@ -1232,7 +1241,7 @@ def _get_URI(name=None,ID=None,ra=None,dec=None,radius=20.,
     if out_all: base_url += '&-out.all'
     if out_max: base_url += '&-out.max=%s'%(out_max)
     if radius:  base_url += '&-c.rs=%s'%(radius)
-    if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.quote(ID))
+    if ID is not None and ra is None: base_url += '&-c=%s'%(urllib.parse.quote(ID))
     if ra is not None: base_url += '&-c.ra=%s&-c.dec=%s'%(ra,dec)
     logger.debug(base_url)
     #print base_url

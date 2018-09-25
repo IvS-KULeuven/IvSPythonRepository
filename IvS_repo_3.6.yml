@@ -1,0 +1,15 @@
+name: ivs_repo_3.6
+channels:
+- defaults
+- https://repo.continuum.io/pkgs/pro/
+- https://repo.continuum.io/pkgs/free/
+- conda-forge
+dependencies:
+- astropy=2.0.1
+- matplotlib=2.0.2
+- numpy=1.13.1
+- python=3.6.2
+- scipy=0.19.1
+- uncertainties=3.0.2
+- h5py=2.8.0
+- ephem=3.7.6.0

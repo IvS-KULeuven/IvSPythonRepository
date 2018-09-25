@@ -35,22 +35,22 @@ logger = logging.getLogger('IVS.SED.CREATE')
 def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
     """
     Get a list of response functions and their information.
-    
+
     You can specify bandpass systems (e.g. GENEVA) and then all Geveva filters
     will be collected. You can also specific specific bandpasses (e.g. GENEVA.V),
     in which case only that one will be returned. The default C{None} returns
     all systems except some Hubble ones.
-    
+
     You can also set responses to C{None} and give a wavelength range for filter
     selection.
-    
+
     Example input for C{responses} are:
-    
+
     >>> responses = ['GENEVA.V','2MASS.J']
     >>> responses = ['GENEVA','2MASS.J']
     >>> responses = ['BOXCAR','STROMGREN']
     >>> responses = None
-    
+
     @param responses: a list of filter systems of passbands
     @type responses: list of str
     @param add_spectrophotometry: add spectrophotometric filters to the filter list
@@ -61,7 +61,7 @@ def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
     #-- add spectrophometric filtes when asked or when BOXCAR is in responses
     if add_spectrophotometry or (responses is not None and any(['BOXCAR' in i for i in responses])):
         bands = filters.add_spectrophotometric_filters()
-        
+
     #-- if no responses are given, select using wavelength range
     if responses is None:
         responses = filters.list_response(wave_range=(wave[0],wave[-1]))
@@ -80,9 +80,9 @@ def get_responses(responses=None,add_spectrophotometry=False,wave=(0,np.inf)):
     #filter_info = filters.get_info(responses)
     #responses = filter_info['photband']
     responses = [resp for resp in responses if not (('ACS' in resp) or ('WFPC' in resp) or ('STIS' in resp) or ('ISOCAM' in resp) or ('NICMOS' in resp))]
-    
+
     logger.info('Selected response curves: {}'.format(', '.join(responses)))
-    
+
     return responses
 
 #}
@@ -94,20 +94,20 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
          outfile=None,force=False,**kwargs):
     """
     Calculate a grid of limb-darkening coefficients.
-    
+
     You  need to specify a list of response curves, and a grid of radial velocity
     (C{vrads}), metallicity (C{z}) and reddening (C{ebvs}) points. You can
     choose which C{law} to fit and with which C{fitmethod}. Extra kwargs specify
     the properties of the atmosphere grid to be used.
-    
+
     If you give a gridfile that already exists, the current file is simply
     updated with the new passbands, i.e. all overlapping response curves will not
     be recomputed. Unless you set C{force=True}, in which case previous calculations
     will be overwritten. You'd probably only want to update or overwrite existing
     files if you use the same C{vrads}, C{ebvs}, C{zs} etc...
-    
+
     The generated FITS file has the following structure:
-        
+
         1. The primary HDU is empty. The primary header contains only the fit
            routine (FIT), LD law (LAW) and used grid (GRID)
         2. Each table extension has the name of the photometric passband (e.g.
@@ -115,19 +115,19 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
         Teff, logg, ebv, vrad, z (the grid points) and a1, a2, a3, a4 (the limb
         darkening coefficients) and Imu1 (the intensity in the center of the disk)
         and SRS, dint (fit evaluation parameters, see L{ivs.sed.limbdark}).
-        Although the system and filter can be derived from the extension name, 
+        Although the system and filter can be derived from the extension name,
         there are also separate entries in the header for "SYSTEM" and "FILTER".
-    
+
     Example usage:
-    
+
     >>> calc_limbdark_grid(['MOST.V','GENEVA'],vrads=[0],ebvs=[0.06],zs=[0,0],\
     ...  law='claret',fitmethod='equidist_r_leastsq',outfile='HD261903.fits')
-    
-    
+
+
     """
     #-- collect response curves from user input
     photbands = get_responses(responses)
-    
+
     if outfile is None:
         outfile = '{}_{}_{}.fits'.format(kwargs.get('grid',limbdark.defaults['grid']),ld_law,fitmethod)
     #-- add the possibility to update an existing file if it already exists.
@@ -138,13 +138,13 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
         hdulist = pf.HDUList([])
         hdulist.append(pf.PrimaryHDU(np.array([[0,0]])))
         existing_bands = []
-        
+
     #-- update the header with some information on the fitting parameters
     hd = hdulist[0].header
     hd.update('FIT', fitmethod, 'FIT ROUTINE')
     hd.update('LAW', ld_law, 'FITTED LD LAW')
     hd.update('GRID', kwargs.get('grid',limbdark.defaults['grid']), 'GRID')
-    
+
     #-- cycle through all the bands and compute the limb darkening coefficients
     for i,photband in enumerate(photbands):
         if photband in existing_bands and not force:
@@ -175,7 +175,7 @@ def calc_limbdark_grid(responses=None,vrads=[0],ebvs=[0],zs=[0.],\
             logger.info("Forced overwrite of {}".format(photband))
         else:
             hdulist.append(newtable)
-    
+
     #-- clean up
     if os.path.isfile(outfile):
         hdulist.close()
@@ -191,16 +191,16 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
            units='Flambda',responses=None,update=False,add_spectrophotometry=False,**kwargs):
     """
     Integrate an entire SED grid over all passbands and save to a FITS file.
-    
+
     The output file can be used to fit SEDs more efficiently, since integration
     over the passbands has already been carried out.
-    
+
     WARNING: this function can take a loooooong time to compute!
-    
+
     Extra keywords can be used to specify the grid.
-    
+
     @param threads: number of threads
-    @type threads; integer, 'max', 'half' or 'safe' 
+    @type threads; integer, 'max', 'half' or 'safe'
     @param ebvs: reddening parameters to include
     @type ebvs: numpy array
     @param law: interstellar reddening law to use
@@ -214,10 +214,10 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     @param update: if true append to existing FITS file, otherwise overwrite
     possible existing file.
     @type update: boolean
-    """    
+    """
     if ebvs is None:
         ebvs = np.r_[0:4.01:0.01]
-        
+
     #-- select number of threads
     if threads=='max':
         threads = cpu_count()
@@ -229,7 +229,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     if threads > len(ebvs):
         threads = len(ebvs)
     logger.info('Threads: %s'%(threads))
-    
+
     #-- set the parameters for the SED grid
     model.set_defaults(**kwargs)
     #-- get the dimensions of the grid: both the grid points, but also
@@ -240,7 +240,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     #   also get the information on those filters
     responses = get_responses(responses=responses,\
               add_spectrophotometry=add_spectrophotometry,wave=wave)
-    
+
     #-- definition of one process:
     def do_ebv_process(ebvs,arr,responses):
         logger.debug('EBV: %s-->%s (%d)'%(ebvs[0],ebvs[-1],len(ebvs)))
@@ -250,7 +250,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             synflux = model.synthetic_flux(wave,flux_,responses,units=units)
             arr.append([np.concatenate(([ebv],synflux))])
         logger.debug("Finished EBV process (len(arr)=%d)"%(len(arr)))
-    
+
     #-- do the calculations
     c0 = time.time()
     output = np.zeros((len(teffs)*len(ebvs),4+len(responses)))
@@ -261,11 +261,11 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     for i,(teff,logg) in enumerate(zip(teffs,loggs)):
         if i>0:
             logger.info('%s %s %s %s: ET %d seconds'%(teff,logg,i,len(teffs),(time.time()-c0)/i*(len(teffs)-i)))
-        
+
         #-- get model SED and absolute luminosity
         wave,flux = model.get_table(teff=teff,logg=logg)
         Labs = model.luminosity(wave,flux)
-        
+
         #-- threaded calculation over all E(B-V)s
         processes = []
         manager = Manager()
@@ -276,7 +276,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             all_processes[-1].start()
         for p in all_processes:
             p.join()
-        
+
         try:
             #-- collect the results and add them to 'output'
             arr = np.vstack([row for row in arr])
@@ -290,7 +290,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
             logger.debug('Exception: %s'%(sys.exc_info()[1]))
             exceptions = exceptions + 1
             exceptions_logs.append(sys.exc_info()[1])
-    
+
     #-- make FITS columns
     gridfile = model.get_file()
     if os.path.isfile(os.path.basename(gridfile)):
@@ -318,7 +318,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         cols = [pf.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
         for i,photband in enumerate(responses):
             cols.append(pf.Column(name=photband,format='E',array=output[4+i]))
-        
+
     #-- make FITS extension and write grid/reddening specifications to header
     table = pf.new_table(pf.ColDefs(cols))
     table.header.update('gridfile',os.path.basename(gridfile))
@@ -331,7 +331,7 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
     table.header.update('FLUXTYPE',units)
     table.header.update('REDLAW',law,'interstellar reddening law')
     table.header.update('RV',Rv,'interstellar reddening parameter')
-    
+
     #-- make/update complete FITS file
     if not update or not os.path.isfile(outfile):
         if os.path.isfile(outfile):
@@ -347,11 +347,11 @@ def calc_integrated_grid(threads=1,ebvs=None,law='fitzpatrick2004',Rv=3.1,
         hdulist.flush()
         hdulist.close()
         logger.info("Appended output to %s"%(outfile))
-    
+
     logger.warning('Encountered %s exceptions!'%(exceptions))
     for i in exceptions_logs:
-        print 'ERROR'
-        print i
+        print('ERROR')
+        print(i)
 
 def update_grid(gridfile,responses,threads=10):
     """
@@ -363,7 +363,7 @@ def update_grid(gridfile,responses,threads=10):
     responses = sorted(list(set(responses) - existing_responses))
     if not len(responses):
         hdulist.close()
-        print "No new responses to do"
+        print("No new responses to do")
         return None
     law = hdulist[1].header['REDLAW']
     units = hdulist[1].header['FLUXTYPE']
@@ -374,13 +374,13 @@ def update_grid(gridfile,responses,threads=10):
     rvs = hdulist[1].data.field('rv')
     vrads = hdulist[1].data.field('vrad')
     names = hdulist[1].columns.names
-    
+
     N = len(teffs)
     index = np.arange(N)
-    
+
     output = np.zeros((len(responses),len(teffs)))
-    print N
-    
+    print(N)
+
     #--- PARALLEL PROCESS
     def do_process(teffs,loggs,ebvs,zs,rvs,index,arr):
         output = np.zeros((len(responses)+1,len(teffs)))
@@ -389,7 +389,7 @@ def update_grid(gridfile,responses,threads=10):
         for i,(teff,logg,ebv,z,rv,ind) in enumerate(zip(teffs,loggs,ebvs,zs,rvs,index)):
             if i%100==0:
                 dt = time.time()-c0
-                print "ETA",index[0],(N-i)/100.*dt/3600.,'hr'
+                print("ETA",index[0],(N-i)/100.*dt/3600.,'hr')
                 c0 = time.time()
             #-- get model SED and absolute luminosity
             model.set_defaults(z=z)
@@ -402,10 +402,10 @@ def update_grid(gridfile,responses,threads=10):
         arr.append(output)
     #--- PARALLEL PROCESS
     c0 = time.time()
-    
+
     manager = Manager()
     arr = manager.list([])
-    
+
     all_processes = []
     for j in range(threads):
         all_processes.append(Process(target=do_process,args=(teffs[j::threads],\
@@ -417,7 +417,7 @@ def update_grid(gridfile,responses,threads=10):
         all_processes[-1].start()
     for p in all_processes:
         p.join()
-    
+
     output = np.hstack([res for res in arr])
     del arr
     sa = np.argsort(output[0])
@@ -443,7 +443,7 @@ def fix_grid(grid):
     cols = [pf.Column(name=name,format='E',array=hdulist[1].data.field(name)) for name in names]
     N = len(hdulist[1].data)
 
-    keys = [key.lower() for key in hdulist[1].header.keys()]
+    keys = [key.lower() for key in list(hdulist[1].header.keys())]
 
     if not 'z' in names:
         z = hdulist[1].header['z']
@@ -457,7 +457,7 @@ def fix_grid(grid):
         cols.append(pf.Column(name='vrad',format='E',array=np.ones(N)*vrad))
     else:
         logger.info("Radial velocity already in there")
-        
+
     fix_rv = False
     if not 'rv' in names:
         if 'rv' in keys:
@@ -473,23 +473,23 @@ def fix_grid(grid):
         logger.info('Correcting interstellar Rv with {}'.format(rv))
     else:
        logger.info("Interstellar Rv already in there")
-        
+
     table = pf.new_table(pf.ColDefs(cols))
     if fix_rv:
         table.data.field('rv')[:] = rv
-    fake_keys = [key.lower() for key in table.header.keys()]
+    fake_keys = [key.lower() for key in list(table.header.keys())]
     fake_keys.append('use_scratch') # Don't know why this is nessessary but it doesn't work otherwise (JV 23.7.13) !!!
-    for key in hdulist[1].header.keys():
+    for key in list(hdulist[1].header.keys()):
         if not key.lower() in fake_keys:
             if len(key)>8:
                 key = 'HIERARCH '+key
             table.header.update(key,hdulist[1].header[key])
     hdulist[1] = table
-    print "Axis:"
+    print("Axis:")
     for name in hdulist[1].columns.names:
         if name.islower() and not name=='labs':
             ax = np.unique(hdulist[1].data.field(name))
-            print name,len(ax),min(ax),max(ax)
+            print(name,len(ax),min(ax),max(ax))
 
     teffs = hdulist[1].data.field('teff')
     loggs = hdulist[1].data.field('logg')
@@ -500,15 +500,15 @@ def fix_grid(grid):
         #plt.figure()
         #plt.title(logg)
         #plt.plot(teffs[keep],ebvs[keep],'ko',ms=2)
-        
+
     keep = hdulist[1].data.field('teff')>0
     logger.info('Removing {}/{} false entries'.format(sum(-keep),len(keep)))
     #print len(ff[1].data),sum(keep)
     hdulist[1].data = hdulist[1].data[keep]
     hdulist.close()
-    
-#}    
-    
+
+#}
+
 if __name__=="__main__":
     logger = loggers.get_basic_logger()
     imethod,iargs,ikwargs = argkwargparser.parse()

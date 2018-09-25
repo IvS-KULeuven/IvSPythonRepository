@@ -13,28 +13,28 @@
     Author:  Matthew Newville <newville@cars.uchicago.edu>
             Center for Advanced Radiation Sources,
             The University of Chicago
-            
+
     Changes applied to lmfit and uncertainties to make it work with sigproc:
-    
+
     fixed uncertainties import to accomodate its place in the ivs repository
     uncertainties.umath
         import uncertainties -> from ivs.sigproc.lmfit import uncertainties
-    
+
     uncertainties.unumpy.__init__:
         from uncertainties.unumpy import core -> import core
         uncertainties.unumpy -> ivs.sigproc.lmfit.uncertainties.unumpy
-    
+
     uncertainties.unumpy.core:
         import uncertainties -> from ivs.sigproc.lmfit import uncertainties
-        
+
     uncertainties.unumpy.ulinalg
         from uncertainties import __author__ -> from ivs.sigproc.lmfit.uncertainties import __author__
         from uncertainties.unumpy import core -> import core
-    
-    Delete all tests as they are not nessesary at all. 
+
+    Delete all tests as they are not nessesary at all.
     uncertainties.unumpy.test_unumpy, uncertainties.unumpy.test_ulinalg,
     uncertainties.test_umath, uncertainties.test_uncertainties
-    
+
 """
 __version__ = '0.7.2'
 from .minimizer import minimize, Minimizer, MinimizerException, make_paras_and_func
@@ -43,8 +43,8 @@ from .confidence import conf_interval, conf_interval2d, ConfidenceInterval
 from .printfuncs import (fit_report, ci_report,
                          report_fit, report_ci, report_errors)
 
-from . import uncertainties
-from .uncertainties import ufloat, correlated_values
+import uncertainties
+from uncertainties import ufloat, correlated_values
 
 
 #======================================================
@@ -60,7 +60,7 @@ def can_kick(self,pnames=None):
     Checks if the given parameters can be kicked and returns the good ones in a list.
     """
     if pnames == None:
-        pnames = self.keys()
+        pnames = list(self.keys())
     kick_pars = []
     for key in pnames:
         if self[key].can_kick():
@@ -70,7 +70,7 @@ def can_kick(self,pnames=None):
 @decorators.extend(Parameters)
 def kick(self,pnames=None):
     """
-    Kicks the given parameters to a new value chosen from the uniform 
+    Kicks the given parameters to a new value chosen from the uniform
     distribution between max and min value.
     """
     if pnames == None:
@@ -86,7 +86,7 @@ def __getattr__(self, name):
     """
     if name in ['name', 'value', 'min', 'max', 'vary', 'expr',
                 'stderr', 'mcerr', 'cierr', 'correl']:
-        return [getattr(p, name) for n, p in self.items()]
+        return [getattr(p, name) for n, p in list(self.items())]
     else:
         raise AttributeError
 
@@ -159,14 +159,14 @@ def __getattr__(self, name):
 def start_minimize(self, engine, **kwargs):
     "Start the actual fitting"
     engine = engine.lower()
-    
+
     # scalar minimize methods:
-    scal_min = dict(powel='Powell', cg='CG', newton='Newton-CG', 
+    scal_min = dict(powel='Powell', cg='CG', newton='Newton-CG',
                     cobyla='COBYLA', slsqp='SLSQP')
     if engine in ['powell', 'cg', 'newton', 'cobyla', 'slsqp']:
         engine = scal_min[engine]
         self.scalar_minimize(method=engine, **kwargs)
-    
+
     # other methods
     elif engine == 'anneal':
         self.anneal(**kwargs)
@@ -176,7 +176,7 @@ def start_minimize(self, engine, **kwargs):
         self.fmin(**kwargs)
     else:
         self.leastsq(**kwargs)
-    
+
 @decorators.extend(ConfidenceInterval)
 def calc_all_ci(self):
     """
@@ -185,15 +185,15 @@ def calc_all_ci(self):
     """
     out = {}
     for p in self.p_names:
-        
+
         lower = self.calc_ci(p, -1)
         upper = self.calc_ci(p, 1)
-        
+
         o = {}
         for s, l, u in zip(self.sigmas, lower, upper):
             o[s] = (l[1], u[1])
         out[p] = o
-    
+
     if self.trace:
         self.trace_dict = map_trace_to_names(self.trace_dict,
                                                 self.minimizer.params)

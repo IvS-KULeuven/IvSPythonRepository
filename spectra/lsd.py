@@ -109,16 +109,16 @@ import itertools
 def lsd(velos,V,S,rvs,masks,Lambda=0.):
     """
     Compute LSD profiles and cross correlation functions.
-    
+
     Possibility to include Tikhonov regularization to clean up the profiles,
     when setting C{Lambda>0}.
-    
+
     Possibility to include multiprofile LSD. Parameter C{masks} should be a list
     of C{(centers,weights)} (if you give only one mask, give
     C{masks=[(centers,weights)]}.
-    
+
     See Donati, 1997 for the original paper and Kochukhov, 2010 for extensions.
-    
+
     @parameter velos: velocity vector of observations
     @type velos: array of length N_spec
     @parameter V: observation array
@@ -139,7 +139,7 @@ def lsd(velos,V,S,rvs,masks,Lambda=0.):
     Nspec = V.shape[1]
     Nmask = len(masks)
     V = np.matrix(V)-1
-    
+
     #-- weights of the individual pixels
     S = np.matrix(np.diag(S))
     #-- line masks (yes, this can be vectorized but I'm too lazy for the moment)
@@ -164,7 +164,7 @@ def lsd(velos,V,S,rvs,masks,Lambda=0.):
         R[1,0] = -1
         R[-1,-1] = 1
         R[-2,-1] = -1
-    #-- compute the LSD    
+    #-- compute the LSD
     X = M.T*(S**2)
     XM = X*M
     if Lambda:
@@ -202,7 +202,7 @@ def __generate_test_spectra(Nspec,binary=False,noise=0.01):
     weights1 = [0.5,0.1,0.3]
     line_centers2 = [-5,2,10]
     weights2 = [0.3,0.4,0.1]
-    
+
     #-- weights
     S = np.ones(spec_length)
     #-- profiles
@@ -216,10 +216,10 @@ def __generate_test_spectra(Nspec,binary=False,noise=0.01):
         masks.append((line_centers2,weights2))
         for i,prof_velo in enumerate(obs_velo2):
             for line_center,weight in zip(line_centers2,weights2):
-                V[i] += evaluate.gauss(velos,[weight,line_center-prof_velo,1.])            
+                V[i] += evaluate.gauss(velos,[weight,line_center-prof_velo,1.])
     V = 1-np.array(V)
     V = np.matrix(V).T
-    
+
     return velos,V,S,masks
 
 if __name__=="__main__":
