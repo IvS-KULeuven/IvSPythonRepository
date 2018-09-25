@@ -13,7 +13,7 @@ Installation
     .. code-block:: bash
 
         $ cd python
-        $ git clone https://github.com/mike-ivs/IvSPythonRepository_development.git ivs
+        $ git clone https://github.com/IvS-KULeuven/IvSPythonRepository.git ivs
 
     This will clone all repository files into the ~/python/ivs folder. Be aware, however, that only the python scripts and the documentation are being cloned, not the (numerous and sometimes huge) datafiles that come along with it, containing, for example, limbdarkening coefficients. The directories of these files can be found, and specified, in ~ivs/config.py.
 
