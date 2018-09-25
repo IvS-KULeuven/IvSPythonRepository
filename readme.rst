@@ -104,3 +104,10 @@ Encountered errors and their solutions:
         numpy.distutils.fcompiler.CompilerNotFound: gnu95: f90 nor f77
 
 :A: Install gfortran
+
+
+
+I have an bug/fix/improvement to report:
+---------------------------------------
+
+Please let us know via the Github page: https://github.com/IvS-KULeuven/IvSPythonRepository.git
