@@ -48,6 +48,7 @@ from ivs.aux import loggers
 
 import numpy as np
 # from Scientific.Functions.Interpolation import InterpolatingFunction
+from scipy.interpolate import RegularGridInterpolator as InterpolatingFunction
 
 logger = logging.getLogger("SPEC.MODEL")
 logger.addHandler(loggers.NullHandler)
@@ -285,7 +286,7 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
     array found in the grid will be used as a template.
 
     It might take a long a time and cost a lot of memory if you load the entire
-    grid. Therefor, you can also set range of temperature and gravity.
+    grid. Therefore, you can also set range of temperature and gravity.
 
     @param wave: wavelength to define the grid on
     @type wave: ndarray
@@ -344,8 +345,10 @@ def get_grid_mesh(wave=None,teffrange=None,loggrange=None,**kwargs):
             except:
                 flux[i,j,:] = np.interp(wave,wave_,flux_)
                 cont[i,j,:] = np.interp(wave,wave_,cont_)
-    flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
-    cont_grid = InterpolatingFunction([np.log10(teffs),loggs],cont)
+    # flux_grid = InterpolatingFunction([np.log10(teffs),loggs],flux)
+    # cont_grid = InterpolatingFunction([np.log10(teffs),loggs],cont)
+    flux_grid = InterpolatingFunction((np.log10(teffs),loggs),flux)
+    cont_grid = InterpolatingFunction((np.log10(teffs),loggs),cont)
     #logger.info('Constructed spectrum interpolation grid')
     return wave,teffs,loggs,flux,flux_grid,cont_grid
 
