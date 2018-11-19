@@ -94,20 +94,10 @@ Installation
 
 * Happy computing!
 
-Encountered errors and their solutions:
+
+I have a bug/issue (and a fix/improvement):
 ---------------------------------------
 
-:Q: When I run "python config.py compile", I get the following error:
+Please let us know via the Issues tab on the Github page: https://github.com/IvS-KULeuven/IvSPythonRepository/issues
 
-    .. code-block:: bash
-
-        numpy.distutils.fcompiler.CompilerNotFound: gnu95: f90 nor f77
-
-:A: Install gfortran
-
-
-
-I have an bug/fix/improvement to report:
----------------------------------------
-
-Please let us know via the Github page: https://github.com/IvS-KULeuven/IvSPythonRepository.git
+Likewise, if you are able to fix a bug/issue yourself, or have a coding improvement to offer, please let us know so that it can be integrated into the repository!
