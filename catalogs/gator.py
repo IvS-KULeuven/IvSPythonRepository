@@ -395,7 +395,7 @@ def _get_URI(name,ID=None,ra=None,dec=None,radius=1.,filetype='1',spatial='cone'
     @return: url
     @rtype: str
     """
-    base_url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query?'
+    base_url = 'https://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-scan?'
     base_url += 'catalog=%s'%(name)
     #base_url += '&spatial=cone'
 
