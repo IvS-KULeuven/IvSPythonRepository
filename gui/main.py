@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import numpy as np
+# import numpy as np
 import pandas as pd
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from gui import Ui_MainWindow
 from filter import Ui_FilterDialog
 from ivs.inout.fits import read_spectrum
+
 
 class PandasModel(QAbstractTableModel):
     """
@@ -101,7 +102,7 @@ class mainwindow_exec():
             self.ax.plot(wav, flux)
             self.ax.set_title(starname)
             self.canvas.draw()
-        except(AttributeError):
+        except(AttributeError, IndexError):
             pass
         except(FileNotFoundError):
             print('FileNotFoundError: \"' + filename + '\" not found...')
@@ -110,6 +111,7 @@ class mainwindow_exec():
         self.model = PandasModel(self.DATA)
         self.filterui.FiltertableView.setModel(self.model)
         self.filter.show()
+
 
 if __name__ == "__main__":
     mainwindow_exec()
