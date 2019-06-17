@@ -1036,9 +1036,10 @@ def make_data_overview(directory='/STER/mercator/hermes/'):
     By default the function attempts to create/update the master tsv file,
     which is only permitted for a handful of users (such as Mercator). If you
     wish to create or update your own copy, please provide a directory for the
-    file to be written to i.e.{/path/to/dir/}. The {HermesFullDataOverview.tsv}
-    contains the following columns, which are extracted from the Hermes FITS
-    headers (except C{filename}:
+    file to be written to i.e.{/path/to/dir/}. By default this function is
+    looped indefinitely every 24h, feel free to stop python while the code is
+    sleeping. The {HermesFullDataOverview.tsv} contains the following columns,
+    which are extracted from the Hermes FITS headers (except C{filename}:
 
         1.  UNSEQ
         2.  PROG_ID
@@ -1064,79 +1065,87 @@ def make_data_overview(directory='/STER/mercator/hermes/'):
     >>> data = ascii.read2recarray(hermes_file,splitchar='\\t')
 
     """
-    logger.info('Collecting files...')
-    #-- all hermes data directories
-    dirs = sorted(glob.glob(os.path.join(config.ivs_dirs['hermes'],'20??????')))
-    dirs = [idir for idir in dirs if os.path.isdir(idir)]
-    obj_files = []
-    #-- collect in those directories the raw and relevant reduced files
-    for idir in dirs:
-        obj_files += sorted(glob.glob(os.path.join(idir,'raw','*.fits')))
-        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged.fits')))
-        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged_c.fits')))
-        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged.fits')))
-        #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged_c.fits')))
+    while True:
+        logger.info('Collecting files...')
+        #-- all hermes data directories
+        dirs = sorted(glob.glob(os.path.join(config.ivs_dirs['hermes'],'20??????')))
+        dirs = [idir for idir in dirs if os.path.isdir(idir)]
+        obj_files = []
+        #-- collect in those directories the raw and relevant reduced files
+        for idir in dirs:
+            obj_files += sorted(glob.glob(os.path.join(idir,'raw','*.fits')))
+            #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged.fits')))
+            #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*wavelength_merged_c.fits')))
+            #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged.fits')))
+            #obj_files += sorted(glob.glob(os.path.join(idir,'reduced','*OBJ*log_merged_c.fits')))
 
-    #-- keep track of what is already in the file, if it exists:
-    try:
-        overview_file = (directory + 'HermesFullDataOverview.tsv')
-        #overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
-        overview_data = ascii.read2recarray(overview_file,splitchar='\t')
-        outfile = open(overview_file,'a')
-        logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
-    #   if not, begin a new file
-    except FileNotFoundError:
-        overview_file = (directory + 'HermesFullDataOverview.tsv')
-        outfile = open(overview_file,'w')
-        outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime pmtotal date-avg airmass filename\n')
-        outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 >f8 a30 >f8 a200\n')
-        overview_data = {'filename':[]}
-        logger.info('Found %d FITS files: starting new overview file %s'%(len(obj_files),overview_file))
+        #-- keep track of what is already in the file, if it exists:
+        try:
+            overview_file = (directory + 'HermesFullDataOverview.tsv')
+            #overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
+            overview_data = ascii.read2recarray(overview_file,splitchar='\t')
+            outfile = open(overview_file,'a')
+            logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
+        #   if not, begin a new file
+        except FileNotFoundError:
+            overview_file = (directory + 'HermesFullDataOverview.tsv')
+            outfile = open(overview_file,'w')
+            outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime pmtotal date-avg airmass filename\n')
+            outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 >f8 a30 >f8 a200\n')
+            overview_data = {'filename':[]}
+            logger.info('Found %d FITS files: starting new overview file %s'%(len(obj_files),overview_file))
 
-    #-- and summarize the contents in a tab separated file (some columns contain spaces)
-    existing_files = np.sort(overview_data['filename'])
-    for i,obj_file in enumerate(obj_files):
-        sys.stdout.write(chr(27)+'[s') # save cursor
-        sys.stdout.write(chr(27)+'[2K') # remove line
-        sys.stdout.write('Scanning %5d / %5d FITS files'%(i+1,len(obj_files)))
-        sys.stdout.flush() # flush to screen
+        #-- and summarize the contents in a tab separated file (some columns contain spaces)
+        existing_files = np.sort(overview_data['filename'])
+        for i,obj_file in enumerate(obj_files):
+            sys.stdout.write(chr(27)+'[s') # save cursor
+            sys.stdout.write(chr(27)+'[2K') # remove line
+            sys.stdout.write('Scanning %5d / %5d FITS files'%(i+1,len(obj_files)))
+            sys.stdout.flush() # flush to screen
 
-        #-- maybe this file is already processed: forget about it then
-        if len(existing_files):
-            index = existing_files.searchsorted(obj_file)
-            if index<len(existing_files) and existing_files[index]==obj_file:
+            #-- maybe this file is already processed: forget about it then
+            if len(existing_files):
+                index = existing_files.searchsorted(obj_file)
+                if index<len(existing_files) and existing_files[index]==obj_file:
+                    sys.stdout.write(chr(27)+'[u')  # reset cursor
+                    continue
+            #  Skip symbolic links
+            if os.path.islink(obj_file):
                 sys.stdout.write(chr(27)+'[u')  # reset cursor
                 continue
 
-        #-- keep track of: UNSEQ, PROG_ID, OBSMODE, BVCOR, OBSERVER,
-        #                  OBJECT, RA, DEC, BJD, EXPTIME, DATE-AVG, PMTOTAL,
-        #                  airmass and filename (not part of fitsheader)
-        contents = dict(unseq=-1,prog_id=-1,obsmode='nan',bvcor=np.nan,observer='nan',
-                        object='nan',ra=np.nan,dec=np.nan,
-                        bjd=np.nan,exptime=np.nan,pmtotal=np.nan,airmass=np.nan,
-                        filename=os.path.realpath(obj_file))
-        contents['date-avg'] = 'nan'
-        header = pf.getheader(obj_file)
-        for key in contents:
-            if key in header and key in ['unseq','prog_id']:
-                try: contents[key] = int(header[key])
-                except: pass
-            elif key in header and key in ['obsmode','observer','object','date-avg']:
-                contents[key] = str(header[key])
-            elif key in header and key in ['ra','dec','exptime','pmtotal','bjd','bvcor']:
-                contents[key] = float(header[key])
-            elif key=='airmass' and 'telalt' in header:
-                if float(header['telalt'])<90:
-                    try:
-                        contents[key] = airmass.airmass(90-float(header['telalt']))
-                    except ValueError:
-                        pass
+            #-- keep track of: UNSEQ, PROG_ID, OBSMODE, BVCOR, OBSERVER,
+            #                  OBJECT, RA, DEC, BJD, EXPTIME, DATE-AVG, PMTOTAL,
+            #                  airmass and filename (not part of fitsheader)
+            contents = dict(unseq=-1,prog_id=-1,obsmode='nan',bvcor=np.nan,observer='nan',
+                            object='nan',ra=np.nan,dec=np.nan,
+                            bjd=np.nan,exptime=np.nan,pmtotal=np.nan,airmass=np.nan,
+                            filename=os.path.realpath(obj_file))
+            contents['date-avg'] = 'nan'
+            header = pf.getheader(obj_file)
+            for key in contents:
+                if key in header and key in ['unseq','prog_id']:
+                    try: contents[key] = int(header[key])
+                    except: pass
+                elif key in header and key in ['obsmode','observer','object','date-avg']:
+                    contents[key] = str(header[key])
+                elif key in header and key in ['ra','dec','exptime','pmtotal','bjd','bvcor']:
+                    contents[key] = float(header[key])
+                elif key=='airmass' and 'telalt' in header:
+                    if float(header['telalt'])<90:
+                        try:
+                            contents[key] = airmass.airmass(90-float(header['telalt']))
+                        except ValueError:
+                            pass
 
-        outfile.write('%(unseq)d\t%(prog_id)d\t%(obsmode)s\t%(bvcor)f\t%(observer)s\t%(object)s\t%(ra)f\t%(dec)f\t%(bjd)f\t%(exptime)f\t%(pmtotal)f\t%(date-avg)s\t%(airmass)f\t%(filename)s\n'%contents)
-        outfile.flush()
-        sys.stdout.write(chr(27)+'[u') # reset cursor
-    outfile.close()
-    return overview_file
+            outfile.write('%(unseq)d\t%(prog_id)d\t%(obsmode)s\t%(bvcor)f\t%(observer)s\t%(object)s\t%(ra)f\t%(dec)f\t%(bjd)f\t%(exptime)f\t%(pmtotal)f\t%(date-avg)s\t%(airmass)f\t%(filename)s\n'%contents)
+            outfile.flush()
+            sys.stdout.write(chr(27)+'[u') # reset cursor
+        outfile.close()
+        print('Overview file created, going to sleep until tomorrow... (feel free to exit python now using \'CTRL+C\' then \'CTRL+D\' )')
+        time.sleep(86400)
+        #  return overview_file
+
 
 def _derive_filelocation_from_raw(rawfile,data_type):
     """
