@@ -1029,14 +1029,16 @@ class HermesCCF(object):
 
 #{ Administrator functions
 
-def make_data_overview():
+def make_data_overview(directory='/STER/mercator/hermes/'):
     """
     Summarize all Hermes data in a file for easy data retrieval.
 
-    The file is located in one of date data directories (see C{config.py}), in
-    subdirectories C{catalogs/hermes/HermesFullDataOverview.tsv}. If it doesn't
-    exist, it will be created. It contains the following columns, which are
-    extracted from the Hermes FITS headers (except C{filename}:
+    By default the function attempts to create/update the master tsv file,
+    which is only permitted for a handful of users (such as Mercator). If you
+    wish to create or update your own copy, please provide a directory for the
+    file to be written to i.e.{/path/to/dir/}. The {HermesFullDataOverview.tsv}
+    contains the following columns, which are extracted from the Hermes FITS
+    headers (except C{filename}:
 
         1.  UNSEQ
         2.  PROG_ID
@@ -1054,10 +1056,11 @@ def make_data_overview():
         14. airmass
         15. filename
 
-    This file can most easily be read with the L{ivs.inout.ascii} module and the
-    command:
+    This file can most easily be read with the L{ivs.inout.ascii} module and
+    the command:
 
-    >>> hermes_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
+    >>> hermes_file = config.get_datafile(os.path.join('catalogs','hermes'),
+                                          'HermesFullDataOverview.tsv')
     >>> data = ascii.read2recarray(hermes_file,splitchar='\\t')
 
     """
@@ -1076,14 +1079,14 @@ def make_data_overview():
 
     #-- keep track of what is already in the file, if it exists:
     try:
-        overview_file = config.get_datafile('catalogs/hermes','HermesFullDataOverview.tsv')
+        overview_file = (directory + 'HermesFullDataOverview.tsv')
         #overview_file = config.get_datafile(os.path.join('catalogs','hermes'),'HermesFullDataOverview.tsv')
         overview_data = ascii.read2recarray(overview_file,splitchar='\t')
         outfile = open(overview_file,'a')
         logger.info('Found %d FITS files: appending to overview file %s'%(len(obj_files),overview_file))
     #   if not, begin a new file
-    except IOError:
-        overview_file = 'HermesFullDataOverview.tsv'
+    except FileNotFoundError:
+        overview_file = (directory + 'HermesFullDataOverview.tsv')
         outfile = open(overview_file,'w')
         outfile.write('#unseq prog_id obsmode bvcor observer object ra dec bjd exptime pmtotal date-avg airmass filename\n')
         outfile.write('#i i a20 >f8 a50 a50 >f8 >f8 >f8 >f8 >f8 a30 >f8 a200\n')
