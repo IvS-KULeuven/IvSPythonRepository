@@ -1099,10 +1099,11 @@ def make_data_overview():
         sys.stdout.flush() # flush to screen
 
         #-- maybe this file is already processed: forget about it then
-        index = existing_files.searchsorted(obj_file)
-        if index<len(existing_files) and existing_files[index]==obj_file:
-            sys.stdout.write(chr(27)+'[u') # reset cursor
-            continue
+        if len(existing_files):
+            index = existing_files.searchsorted(obj_file)
+            if index<len(existing_files) and existing_files[index]==obj_file:
+                sys.stdout.write(chr(27)+'[u')  # reset cursor
+                continue
 
         #-- keep track of: UNSEQ, PROG_ID, OBSMODE, BVCOR, OBSERVER,
         #                  OBJECT, RA, DEC, BJD, EXPTIME, DATE-AVG, PMTOTAL,
