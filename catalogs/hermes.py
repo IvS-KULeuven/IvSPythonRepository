@@ -152,8 +152,8 @@ import numpy as np
 import astropy.io.fits as pf
 
 import copy
-from lxml import etree
-from xml.etree import ElementTree as ET
+# from lxml import etree
+# from xml.etree import ElementTree as ET
 from collections import defaultdict
 
 from ivs.catalogs import sesame

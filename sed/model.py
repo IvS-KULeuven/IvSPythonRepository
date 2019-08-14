@@ -40,8 +40,9 @@ Section 1. Available model grids
     Preparation of the plot: set the color cycle of the current axes to the spectral
     color cycle.
 
+    >>> from cycler import cycler
     >>> p = pl.figure(figsize=(10,8))
-    >>> color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
+    >>> color_cycle = cycler(color=[pl.cm.Spectral(j) for j in np.linspace(0, 1.0, len(grids))])
     >>> p = pl.gca().set_color_cycle(color_cycle)
 
     To plot all the grid points, we run over all grid names (which are strings), and
@@ -2410,6 +2411,7 @@ def _get_pix_grid(photbands,
     if clear_memory:
         clear_memoization(keys=['ivs.sed.model'])
 
+    # gridfiles = get_file(integrated=False,**kwargs)
     gridfiles = get_file(integrated=True,**kwargs)
     if isinstance(gridfiles,str):
         gridfiles = [gridfiles]
