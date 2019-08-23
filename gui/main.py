@@ -48,7 +48,7 @@ class mainwindow_exec():
 
         app = QApplication(sys.argv)
         self.window = QMainWindow()
-        self.filter = QDialog()
+        self.filter = QDialog(parent=self.window)
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.window)
@@ -98,7 +98,8 @@ class mainwindow_exec():
                 filename = filename.replace('raw', 'reduced')
                 filename = filename.replace('HRF_OBJ', extname)
             wav, flux = read_spectrum(filename)
-            self.ax.cla()
+            self.fig.clf()
+            self.ax = self.fig.add_subplot(111)
             self.ax.plot(wav, flux)
             self.ax.set_title(starname)
             self.canvas.draw()
