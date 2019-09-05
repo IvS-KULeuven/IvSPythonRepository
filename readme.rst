@@ -53,7 +53,7 @@ Installation
 
         from ivs.statistics import linearregression
 
-*   The IvS Python repository contains mostly python routines. Some of the time-critical functions, however, are written in fortran. To compile them you can run
+*   The IvS Python repository contains mostly python routines. Some of the time-critical functions, however, are written in fortran. To compile them you can run the following code (make sure to have the ivs_repo_3.6 environment activated first):
 
     .. code-block:: bash
 
