@@ -175,7 +175,7 @@ logger.addHandler(loggers.NullHandler())
 #{ User functions
 
 def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
-           radius=1.,filename=None):
+           radius=1.,filename=None,extension='cf'):
     """
     Retrieve datafiles from the Hermes catalogue.
 
@@ -193,9 +193,13 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
     the program. Individual stars are not queried in SIMBAD, so any information
     that is missing in the header will not be corrected.
 
+    B{For the keyword C{extension}}: The retrieved filename will contain "_cf" (cosmic corrected and flatfield removed) by default, unless specified to return the "_c" (only cosmic corrected).
+
     If you don't give either ID or time_range, the info on all data will be
     returned. This is a huge amount of data, so it can take a while before it
     is returned. Remember that the header of each spectrum is read in and checked.
+
+    NOTE: If the C{extension} is 'cf', then it is possible that all the observations are not retrieved, as the pipeline did not (or could not) produce the cf extensions for all '_c.fits' files.
 
     Data type can be any of:
         1. cosmicsremoved_log: return log merged without cosmics
@@ -330,7 +334,7 @@ def search(ID=None,time_range=None,prog_ID=None,data_type='cosmicsremoved_log',
             #-- now derive the location of the 'data_type' types from the raw
             #   files
             if not data_type=='raw':
-                data['filename'] = [_derive_filelocation_from_raw(ff,data_type) for ff in data['filename']]
+                data['filename'] = [_derive_filelocation_from_raw(ff,data_type,extension) for ff in data['filename']]
                 existing_files = np.array([ff!='naf' for ff in data['filename']],bool)
                 data = data[existing_files]
             seqs = sorted(set(data['unseq']))
@@ -1147,17 +1151,17 @@ def make_data_overview(directory='/STER/mercator/hermes/'):
         #  return overview_file
 
 
-def _derive_filelocation_from_raw(rawfile,data_type):
+def _derive_filelocation_from_raw(rawfile,data_type,extension):
     """
-    Derive the location of a reduced file from the raw file.
+    Derive the location of a reduced file from the raw file. The extension is "_cf" by default.
     """
     redfile = rawfile.replace('raw','reduced')
     redfiledir,redfilebase = os.path.dirname(redfile),os.path.basename(redfile)
     base,ext = os.path.splitext(redfilebase)
     if data_type.lower()=='cosmicsremoved_log':
-        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','log','merged','c']))+'.fits'
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','log','merged',extension]))+'.fits'
     elif data_type.lower()=='cosmicsremoved_wavelength':
-        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','wavelength','merged','c']))+'.fits'
+        redfile = os.path.join(redfiledir,'_'.join([base,'ext','CosmicsRemoved','wavelength','merged',extension]))+'.fits'
     elif data_type.lower()=='log':
         redfile = os.path.join(redfiledir,'_'.join([base,'ext','log','merged']))+'.fits'
     elif data_type.lower()=='wavelength':
