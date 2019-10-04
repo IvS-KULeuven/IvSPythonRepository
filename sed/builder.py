@@ -2692,7 +2692,7 @@ class SED(object):
         pl.ylim(ylims)
 
     @standalone_figure
-    def plot_finderchart(self,cmap_photometry=pl.cm.spectral,window_size=5.):
+    def plot_finderchart(self,cmap_photometry=pl.cm.Spectral,window_size=5.):
         """
         Size is x and y width in arcminutes
         """
