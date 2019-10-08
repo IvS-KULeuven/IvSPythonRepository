@@ -89,22 +89,21 @@ class SelectionModel(QAbstractTableModel):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
-    Main GUI window: used to interactively view EDIBLES spectra.
+    Main GUI window: used to interactively view HERMES spectra.
 
     Command line usage: $ python main.py
 
     Current functionality:
-    - Use filter tab to select EDIBLES spectra
+    - Use filter tab to select HERMES spectra
     - Use plot tab to display matplotlib plot of highlighted spectra
 
     TODO:
     - I/O functions for subselection?
     - Add FITS header/stellar/etc info into new panel below MPL canvas?
     - Implement filter functions for overview table (by starname, etc)
-    - Expand overview file with additional parameters? (exptime, S/N, etc)
     - Integrate fitting/science functions into GUI
       (i.e. interactive lambda selection for profile fitting, etc)
-    - add more TODO points
+    - Integrate with SIMBAD (for search, expanded stellar info, etc)
     """
     def __init__(self, parent=None):
         # Initialise the Main window
@@ -114,7 +113,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.selected_data = []
 
-        # Load overview file from /catalog/DR3_obslist.ext.txt
+        # Load HERMES overview TSV file
         self.load_overview(obs_only=True)
         # Initialise Filter/Data overview
         self.filtertab(self.overview)
@@ -244,7 +243,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def Objectfilter(self):
         if len(self.ui.ObjectlineEdit.text()):
-            #print(set(self.overview['object']))
             self.filtertab(self.overview[self.overview['object'].str.contains(
                            self.ui.ObjectlineEdit.text(), na=False, case=False)])
         else:
