@@ -596,7 +596,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QFrame" name="ObjectSearch">
+         <widget class="QFrame" name="SearchBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
             <horstretch>0</horstretch>
@@ -627,7 +627,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="ObjectLabel">
+            <widget class="QLabel" name="ObjLabel">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -643,10 +643,69 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="ObjectlineEdit"/>
+            <widget class="QLineEdit" name="ObjLineEdit">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="ObjectpushButton">
+            <widget class="QLabel" name="ObserverLabel">
+             <property name="text">
+              <string>Observer</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="ObserverLineEdit">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="ProgLabel">
+             <property name="text">
+              <string>Prog ID</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="ProgSpinBox">
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
+             <property name="inputMethodHints">
+              <set>Qt::ImhDigitsOnly</set>
+             </property>
+             <property name="wrapping">
+              <bool>false</bool>
+             </property>
+             <property name="frame">
+              <bool>true</bool>
+             </property>
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::UpDownArrows</enum>
+             </property>
+             <property name="specialValueText">
+              <string>None</string>
+             </property>
+             <property name="correctionMode">
+              <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+             </property>
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>200</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="SearchPushButton">
              <property name="text">
               <string>Search</string>
              </property>
@@ -1122,6 +1181,9 @@
           </property>
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="acceptDrops">
+           <bool>false</bool>
           </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>

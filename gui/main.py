@@ -8,84 +8,12 @@ import pandas as pd
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-from PyQt5 import QtCore
-from PyQt5.QtCore import QAbstractTableModel, Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5 import QtCore
 from ivs.gui.gui import Ui_MainWindow
 from ivs.inout.fits import read_spectrum
+from ivs.gui.models import PandasModel, SelectionModel
 
-
-class PandasModel(QAbstractTableModel):
-    """
-    Class to populate a table view with a pandas dataframe
-    """
-    def __init__(self, data, parent=None):
-        QAbstractTableModel.__init__(self, parent)
-        self._data = data
-
-    def rowCount(self, parent=None):
-        return self._data.shape[0]
-
-    def columnCount(self, parent=None):
-        return self._data.shape[1]
-
-    def data(self, index, role=Qt.DisplayRole):
-        if index.isValid():
-            if role == Qt.DisplayRole:
-                return str(self._data.iloc[index.row(), index.column()])
-        return None
-
-    def headerData(self, col, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self._data.columns[col]
-        return None
-
-    def flags(self, index):
-        flags = super(self.__class__, self).flags(index)
-        flags |= QtCore.Qt.ItemIsEditable
-        flags |= QtCore.Qt.ItemIsSelectable
-        flags |= QtCore.Qt.ItemIsEnabled
-        flags |= QtCore.Qt.ItemIsDragEnabled
-        flags |= QtCore.Qt.ItemIsDropEnabled
-        return flags
-
-    def sort(self, Ncol, order):
-        """Sort table by given column number.
-        """
-        try:
-            self.layoutAboutToBeChanged.emit()
-            self._data = self._data.sort_values(self._data.columns[Ncol],
-                                                ascending=not order)
-            self.layoutChanged.emit()
-        except Exception as e:
-            print(e)
-
-
-class SelectionModel(QAbstractTableModel):
-    """
-    Simple class to populate a table view with Selected data
-    """
-    def __init__(self, list, parent=None):
-        QAbstractTableModel.__init__(self, parent)
-        self.headers = ['Filename']
-        self.list = list
-
-    def rowCount(self, parent=None):
-        return len(self.list)
-
-    def columnCount(self, parent=None):
-        return 1
-
-    def data(self, index, role=Qt.DisplayRole):
-        if index.isValid():
-            if role == Qt.DisplayRole:
-                return self.list[index.row()]
-        return None
-
-    def headerData(self, col, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.headers[col]
-        return None
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
@@ -123,7 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect Main window buttons to relevant functions
         self.ui.FilterAddButton.clicked.connect(lambda: self.filter_add())
         self.ui.PlotButton.clicked.connect(lambda: self.update_plot())
-        self.ui.ObjectpushButton.clicked.connect(lambda: self.Objectfilter())
+        self.ui.SearchPushButton.clicked.connect(lambda: self.Objectfilter())
         self.ui.Selectedpushbutton.clicked.connect(lambda: self.Remove_selected())
 
     def keyPressEvent(self, event):
@@ -157,7 +85,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_overview(self, obs_only):
 
         # Load hermes tsv overview into pandas frame
-        self.overview = pd.read_csv('/STER/mercator/hermes/HermesFullDataOverview.tsv',
+        self.overview = pd.read_csv('/lhome/mike/hermes/HermesFullDataOverview.tsv',
                                 sep='\t', skiprows=2, header=None,
                                 names=['unseq', 'prog_id', 'obsmode', 'bvcor',
                                        'observer', 'object', 'ra', 'dec',
@@ -242,12 +170,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ui.statusBar.showMessage(statustext, 3000)
 
     def Objectfilter(self):
-        if len(self.ui.ObjectlineEdit.text()):
-            self.filtertab(self.overview[self.overview['object'].str.contains(
-                           self.ui.ObjectlineEdit.text(), na=False, case=False)])
-        else:
-            self.filtertab(self.overview)
-
+        newdata = self.overview
+        if len(self.ui.ObjLineEdit.text()):
+            newdata= newdata[newdata['object'].str.contains(
+                           self.ui.ObjLineEdit.text(), na=False, case=False)]
+        if len(self.ui.ObserverLineEdit.text()):
+            newdata= newdata[newdata['observer'].str.contains(
+                           self.ui.ObserverLineEdit.text(), na=False, case=False)]
+        if self.ui.ProgSpinBox.value():
+            newdata= newdata[newdata['prog_id'] == self.ui.ProgSpinBox.value()]
+        self.filtertab(newdata)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
