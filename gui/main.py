@@ -26,12 +26,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     - Use plot tab to display matplotlib plot of highlighted spectra
 
     TODO:
-    - I/O functions for subselection?
-    - Add FITS header/stellar/etc info into new panel below MPL canvas?
-    - Implement filter functions for overview table (by starname, etc)
+    - I/O functions for subselection
+    - Implement more filter functions for overview table (RA,DEC,TIME)
+    - Add FITS header/stellar/etc info into new panel below MPL canvas
+    - Integrate with SIMBAD (for search, expanded stellar info, etc)
     - Integrate fitting/science functions into GUI
       (i.e. interactive lambda selection for profile fitting, etc)
-    - Integrate with SIMBAD (for search, expanded stellar info, etc)
     """
     def __init__(self, parent=None):
         # Initialise the Main window
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_overview(self, obs_only):
 
         # Load hermes tsv overview into pandas frame
-        self.overview = pd.read_csv('/lhome/mike/hermes/HermesFullDataOverview.tsv',
+        self.overview = pd.read_csv('/STER/mercator/hermes/HermesFullDataOverview.tsv',
                                 sep='\t', skiprows=2, header=None,
                                 names=['unseq', 'prog_id', 'obsmode', 'bvcor',
                                        'observer', 'object', 'ra', 'dec',
@@ -172,13 +172,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def Objectfilter(self):
         newdata = self.overview
         if len(self.ui.ObjLineEdit.text()):
-            newdata= newdata[newdata['object'].str.contains(
+            newdata = newdata[newdata['object'].str.contains(
                            self.ui.ObjLineEdit.text(), na=False, case=False)]
         if len(self.ui.ObserverLineEdit.text()):
-            newdata= newdata[newdata['observer'].str.contains(
+            newdata = newdata[newdata['observer'].str.contains(
                            self.ui.ObserverLineEdit.text(), na=False, case=False)]
         if self.ui.ProgSpinBox.value():
-            newdata= newdata[newdata['prog_id'] == self.ui.ProgSpinBox.value()]
+            newdata = newdata[newdata['prog_id'] == self.ui.ProgSpinBox.value()]
         self.filtertab(newdata)
 
 if __name__ == "__main__":
