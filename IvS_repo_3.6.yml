@@ -14,3 +14,4 @@ dependencies:
 - h5py=2.8.0
 - ephem=3.7.6.0
 - lxml=3.8.0
+- pandas=0.20
