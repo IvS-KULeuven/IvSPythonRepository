@@ -4,6 +4,7 @@ channels:
 - https://repo.continuum.io/pkgs/pro/
 - https://repo.continuum.io/pkgs/free/
 - conda-forge
+- anaconda
 dependencies:
 - astropy=2.0.1
 - matplotlib=2.0.2
@@ -15,3 +16,4 @@ dependencies:
 - ephem=3.7.6.0
 - lxml=3.8.0
 - pandas=0.20
+- pyqt=5.6.0
