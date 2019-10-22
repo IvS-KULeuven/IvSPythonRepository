@@ -87,7 +87,7 @@ c     ------------------------------------------------------------------
       subroutine kepler(JD_,RV_,RVerr_,N_,Fbeg,Fend,step,wexp,emin,emax,
      $estep,x0min,x0max,f1,s1,p1,l1,s2,maxstep,k2)
       implicit none
-      INTEGER i,j,Nmax,N,wexp,N_, index
+      INTEGER i,j,N,wexp,N_, index_bn
       INTEGER maxstep
 c      ! wexp = weightening exponent (default Chi2)
 c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
@@ -96,7 +96,7 @@ c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       DOUBLE PRECISION twopi,G,AU,Msun,Mjup, fa
       PARAMETER(twopi=2.*3.141592654,G=6.6726E-11,AU=1.496E11)
       PARAMETER(Msun=1.989E30, Mjup = Msun/1047.39)
-      PARAMETER(Nmax=10000)  ! max. data points
+      INTEGER, PARAMETER :: Nmax=10000  ! max_. data points
       DOUBLE PRECISION JD_(N_),RV_(N_),RVerr_(N_)
       DOUBLE PRECISION f1(maxstep),s1(maxstep),p1(maxstep),l1(maxstep)
       DOUBLE PRECISION s2(maxstep)
@@ -109,8 +109,8 @@ c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       DOUBLE PRECISION A,B,C,CBest, Amp,ph, K,RV0,x0,e,w,xx0,ee
       DOUBLE PRECISION A1sinK,A1sinS,AsinK,AsinS,powKe,zwischen
       DOUBLE PRECISION mass,mass2S,mass2K, dummy,FAP,M,prob
-      DOUBLE PRECISION emin,emax,estep                 ! default values
-      DOUBLE PRECISION x0min,x0max,x0step                 ! default values
+      DOUBLE PRECISION emin,emax,estep                 ! default_ values
+      DOUBLE PRECISION x0min,x0max,x0step                 ! default_ values
       COMMON /Messwerte/ v,wy,ww,YY,RVmean,N
 c      DATA RVmean,m33,YY, mass2S,mass2K, powSin,powKep /7* 0./
 c     set all defaults to zero
@@ -127,7 +127,7 @@ c         wy = 0
       mass2K = 0
       powSin = 0
       powKep = 0
-      
+
 
 
       fa=(86400./twopi/G/Msun)**(1./3.)           ! fa= 4.69679026E-06
