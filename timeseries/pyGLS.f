@@ -87,7 +87,7 @@ c     ------------------------------------------------------------------
       subroutine gls(JD_,RV_,RVerr_,N_,Fbeg,Fend,step,wexp,
      $f1,s1,p1,l1,maxstep)
       implicit none
-      INTEGER i,j,Nmax,N,wexp,N_, index
+      INTEGER i,j,N,wexp,N_, index_bn
       INTEGER maxstep
 c      ! wexp = weightening exponent (default Chi2)
 c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
@@ -95,7 +95,7 @@ c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       CHARACTER TV*40, fittype*8/"unknown"/
       DOUBLE PRECISION twopi
       PARAMETER(twopi=2.*3.141592654)
-      PARAMETER(Nmax=500000)  ! max. data points
+      INTEGER, PARAMETER :: Nmax=500000  ! max_ data points
       DOUBLE PRECISION JD_(N_),RV_(N_),RVerr_(N_)
       DOUBLE PRECISION f1(maxstep),s1(maxstep),p1(maxstep),l1(maxstep)
       DOUBLE PRECISION JD(Nmax),RV(Nmax),RVerr(Nmax),phase(Nmax)
@@ -107,7 +107,7 @@ c     !!! weightening of errors: wexp=0 (variance), wexp=2 (Chi2) !!!
       DOUBLE PRECISION dummy,FAP,M,prob
       COMMON /Messwerte/ v,wy,ww,YY,RVmean,N
 c      DATA RVmean,m33,YY,powSin /4* 0./
-      
+
 c     SET default values to some stuff
       do 90 i=1,Nmax
          v(i) = 0.
