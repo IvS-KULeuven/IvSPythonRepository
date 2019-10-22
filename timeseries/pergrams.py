@@ -66,7 +66,7 @@ The timeseries is generated for N=500,1000,2000,5000,10000,20000,50000
 ...         clock.append(time.time()-c0)
 ...         freqs.append(len(freq))
 ...     p = pl.plot(freqs,clock,'o-',label=tech)
-...     print tech,np.polyfit(np.log10(np.array(freqs)),np.log10(np.array(clock)),1)
+...     print(tech,np.polyfit(np.log10(np.array(freqs)),np.log10(np.array(clock)),1))
 >>> #p = pl.legend(loc='best',fancybox=True)
 >>> #q = p.get_frame().set_alpha(0.5)
 >>> #p,q = pl.xlabel('Number of frequencies'),pl.ylabel('Seconds')
@@ -145,19 +145,12 @@ from scipy.special import jn
 from ivs.aux.decorators import make_parallel
 from ivs.aux import loggers
 from ivs.aux import termtools
-from ivs.timeseries.decorators import parallel_pergram,defaults_pergram,getNyquist
+from ivs.timeseries.decorators import (parallel_pergram, defaults_pergram,
+                                       getNyquist)
 
-from . import pyscargle
-from . import pyscargle_single
-from . import pyfasper
-from . import pyfasper_single
-from . import pyclean
-from . import pyGLS
-from . import pyKEP
-from . import pydft
-from . import multih
-from . import deeming as fdeeming
-from . import eebls
+from ivs.timeseries import (pyscargle, pyscargle_single, pyfasper,
+                            pyfasper_single, pyclean, pyGLS, pyKEP, pydft,
+                            multih, deeming as fdeeming, eebls)
 
 logger = logging.getLogger("TS.PERGRAMS")
 
@@ -409,7 +402,7 @@ def clean(times,signal, f0=None, fn=None, df=None, freqbins=None, niter=10.,
     Generate some signal with heavy window side lobes:
 
     >>> times_ = np.linspace(0,150,1000)
-    >>> times = np.array([times_[i] for i in xrange(len(times_)) if (i%10)>7])
+    >>> times = np.array([times_[i] for i in range(len(times_)) if (i%10)>7])
     >>> signal = np.sin(2*pi/10*times) + np.random.normal(size=len(times))
 
     Compute the scargle periodogram as a reference, and compare with the
