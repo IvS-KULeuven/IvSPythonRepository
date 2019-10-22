@@ -3,6 +3,7 @@
 Global configuration of the IvS package.
 
 Usage: $ python config.py compile
+       $ python config.py recompile
 """
 
 import os
@@ -92,12 +93,12 @@ if __name__=="__main__":
             compiler = sys.argv[2]
         else:
             compiler = 'gfortran'
-        if sys.argv[1]=='compile':
+        if 'compile' in sys.argv[1]:
             answer = 'y'
             for name in to_install:
                 #-- break up fortran filepath in file and directory name
                 direc,pname = os.path.dirname(name),os.path.basename(name)
-                if not os.path.isfile(name+'.so'):
+                if not os.path.isfile(name+'.so') or sys.argv[1] == 'recompile':
                     #-- build the command to compile the program and log it to
                     #   the user
                     cmd = 'f2py --fcompiler=%s -c %s.f -m %s'%(compiler,os.path.join(direc,pname),pname)
