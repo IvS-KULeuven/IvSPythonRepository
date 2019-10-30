@@ -363,13 +363,14 @@ if __name__=="__main__":
     #import doctest
     import pylab as pl
     import numpy as np
+    from cycler import cycler
     #doctest.testmod()
 
     grids = get_gridnames()
 
     p = pl.figure()
-    color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(grids))]
-    p = pl.gca().set_color_cycle(color_cycle)
+    color_cycle = cycler(color=[pl.cm.Spectral(j) for j in np.linspace(0, 1.0, len(grids))])
+    p = pl.gca().set_prop_cycle(color_cycle)
 
     for grid in grids:
         vturb = 'ostar' in grid and 10 or 2
