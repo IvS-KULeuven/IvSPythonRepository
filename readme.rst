@@ -35,7 +35,7 @@ Installation
 
     .. code-block:: bash
 
-        $ source activate ivs_repo_3.6
+        $ conda activate ivs_repo_3.6
 
 *   Make sure that your python path points to the directory above the ivs folder:
 
