@@ -6,6 +6,7 @@ import urllib.request, urllib.parse, urllib.error
 import logging
 import os
 import configparser
+from itertools import compress
 
 import numpy as np
 
@@ -49,7 +50,6 @@ def search(name,**kwargs):
     @type name: string
     """
     base_url = _get_URI(name,**kwargs)
-
     #-- the data is listed in two lines: one with the header, one with
     #   the values
     webpage = urllib.request.urlopen(base_url)
@@ -286,22 +286,36 @@ def _get_URI(name='GENEVA',ID=None,**kwargs):
     @return:
     """
     #-- GCPD is poor at recognising aliases: therefore we try different
-    #   identifiers retrieved from Sesame that GCPD understands
-    recognized_alias = ['HD','BD',"CD"]
-
+    #   identifiers retrieved from Sesame that GCPD understands SA:SAO, HI: HIP/HIC
+    recognized_alias = {'HD':100,'SA':150,"HI":160,'PP':170}
+    ubv=False
+    # recognized_alias = ['HD','BD',"CD"]
     try:
         aliases = sesame.search(ID)['alias']
+        aliases.sort(reverse=True)
+        #First check if there is uvby, that directly gives us the ID for GCPD
         for alias in aliases:
-            if alias[:2] in recognized_alias:
-                ID = alias[:2]+' '+alias[2:]
+            if alias.startswith('uvby98'):
+                ID = alias.split('uvby98')[1].strip()
+                ubv=True
                 break
-        else:
-            logger.error('Star %s has no aliases recognised by GCPD: query will not return results'%(ID))
+        #If not, reorder to look for IDs from HD -> SAO
+        if not ubv:
+            aliases.sort()
+            for alias in aliases:
+                if alias[:2] in recognized_alias.keys():
+                # if alias[:2] in recognized_alias:
+                    # ID = alias[:2]+' '+alias[2:]
+                    ID = f'{recognized_alias[alias[2:]]}{alias[2:].strip().zfill(6)}'
+                    break
+            else:
+                logger.error(f'Star {ID} has no aliases recognised by GCPD: query will not return results')
     except KeyError:
-        logger.error('Unknown star %s: GCPD query will not return results'%(ID))
+        logger.error(f'Unknown star {ID}: GCPD query will not return results')
 
 
-    base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.parse.quote(ID))
+    # base_url = 'http://obswww.unige.ch/gcpd/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.parse.quote(ID))
+    base_url = 'https://gcpd.physics.muni.cz/cgi-bin/photoSys.cgi?phot=%02d&type=original&refer=with&mode=starno&ident=%s'%(systems[name],urllib.parse.quote(ID))
     logger.debug(base_url)
     return base_url
 
