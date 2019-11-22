@@ -324,7 +324,10 @@ def find_frequency(times,signal,method='scargle',model='sine',full_output=False,
     #-- add the errors to the parameter array if possible
     if errors is not None:
         params = numpy_ext.recarr_join(params,errors)
-    logger.info("%s model parameters via %s periodogram:\n"%(model,method)+pl.mlab.rec2txt(params,precision=8))
+    # logger.info("%s model parameters via %s periodogram:\n"%(model,method)+pl.mlab.rec2txt(params,precision=8))
+    # params.tofile('log_params', sep=' ', format='%s')
+    # logger.info("%s model parameters via %s periodogram:\n"%(model, method) + np.fromfile('log_params'))
+    logger.info("%s model parameters via %s periodogram:\n"%(model,method) + str(params))
     #-- when full output is required, return parameters, periodogram and fitting
     #   function
     if full_output:
