@@ -369,7 +369,7 @@ def recarr_join(arr1,arr2):
     """
     arr1 = arr1.copy()
     for field in arr2.dtype.names:
-        arr1 = pl.mlab.rec_append_fields(arr1,field,arr2[field])
+        arr1 = np.lib.recfunctions.rec_append_fields(arr1,field,arr2[field])
     return arr1
 
 #}
