@@ -428,6 +428,45 @@ def iterative_prewhitening(times,signal,maxiter=1000,optimize=0,method='scargle'
         return allparams
 
 
+def single_prewhitening(times, signal, residuals, params, optimize=0, model='sine', full_output=False,
+                        correlation_correction=True):
+    """
+    Fit a functions to a timeseries via a single iteration of prewhitening.
+    Use this function in combination with C{find_frequency} to do step-by-step
+    prewhitening.
+
+    This function will fit the function parameters to the original signal
+    (including any previously found parameters given as C{params}) and
+    optimize the parameters if needed.
+
+    @return: parameters(, model)
+    @rtype: rec array(, ndarray)
+    """
+    # do the fit including all frequencies
+    allparams = getattr(fit, model)(times, signal, params['freq'])
+
+    # if there's a need to optimize, optimize the last n parameters
+    if optimize > 0:
+        residuals_for_optimization = residuals
+        if optimize <= len(params):
+            model_fixed_params = getattr(evaluate, model)(times, allparams[:-optimize])
+            residuals_for_optimization -= model_fixed_params
+        uparams, e_uparams, gain = fit.optimize(times, residuals_for_optimization, allparams[-optimize:], model)
+        # only accept the optimization if we gained prediction power
+        if gain > 0:
+            allparams[-optimize:] = uparams
+            logger.info('Accepted optimization (gained %g%%)'%gain)
+
+    # compute the model and the errors
+    modelfunc = getattr(evaluate, model)(times, allparams)
+    e_allparams = getattr(fit, 'e_'+model)(times, signal, allparams, correlation_correction=correlation_correction)
+
+    allparams = numpy_ext.recarr_join(allparams, e_allparams)
+
+    if full_output:
+        return allparams, modelfunc
+    else:
+        return allparams
 
 
 def spectrum_2D(x,y,matrix,weights_2d=None,show_progress=False,
