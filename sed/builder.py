@@ -11,6 +11,7 @@ import logging
 import itertools
 import glob
 import json
+import matplotlib.pyplot as plt
 
 import pylab as pl
 from matplotlib import mlab
@@ -46,6 +47,7 @@ from uncertainties import unumpy, ufloat
 from uncertainties.unumpy import sqrt as usqrt
 from uncertainties.unumpy import tan as utan
 from ivs.sigproc import evaluate
+from numpy.lib.recfunctions import append_fields
 try:
     # This module has now been removed,
     # perhaps future re-implementation if demanded
@@ -957,8 +959,8 @@ class SED(object):
         distance = conversions.convert('Rsol','pc',distance)
         distance,e_distance = conversions.unumpy.nominal_values(distance),\
                       conversions.unumpy.std_devs(distance)
-        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
-                        ['distance','e_distance'],[distance,e_distance])
+        self.results[mtype]['grid'] = append_fields(grid,\
+                        ['distance','e_distance'],[distance,e_distance],asrecarray=False)
         d,e_d = distance.mean(),distance.std()
         logger.info("Computed distance from R and scale: {0}+/-{1} pc".format(d,e_d))
         return d,e_d
@@ -1051,8 +1053,8 @@ class SED(object):
             grid_results = grid_results[~failures]
 
         # -- make room for chi2 statistics
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)))
-        grid_results = mlab.rec_append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)))
+        grid_results = append_fields(grid_results, 'ci_raw', np.zeros(len(grid_results)),asrecarray=False)
+        grid_results = append_fields(grid_results, 'ci_red', np.zeros(len(grid_results)),asrecarray=False)
 
         # -- take the previous results into account if they exist:
         if not mtype in self.results:
@@ -1728,8 +1730,8 @@ class SED(object):
             for idata,ilabel in zip(data,labels):
                 self.results[mtype]['grid'][ilabel] = idata
         else:
-            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(self.results[mtype]['grid'],\
-                     labels,data)
+            self.results[mtype]['grid'] = append_fields(self.results[mtype]['grid'],\
+                     labels,data,asrecarray=False)
 
         # -- update the confidence intervals
         self.calculate_confidence_intervals(mtype=mtype)
@@ -1803,16 +1805,16 @@ class SED(object):
             distance = radius_slo/conversions.sqrt(scale)
             distance,e_distance = conversions.unumpy.nominal_values(distance),\
                                   conversions.unumpy.std_devs(distance)
-            grid = pl.mlab.rec_append_fields(grid,['radius','e_radius','e_labs','mass','e_mass','distance','e_distance'],\
-                                        [radius_slo,e_radius_slo,e_labs,mass,e_mass,distance,e_distance])
+            grid = append_fields(grid,['radius','e_radius','e_labs','mass','e_mass','distance','e_distance'],\
+                                        [radius_slo,e_radius_slo,e_labs,mass,e_mass,distance,e_distance],asrecarray=False)
             logger.info('Added constraint: {0:s} via slo, improved luminosity'.format(', '.join(['radius','e_radius','e_labs','mass','e_mass'])))
 
         # -- combine p values using Fisher's method
         combined_pvals = evaluate.fishers_method(pvalues)
 
         # -- add the information to the grid
-        self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
-                     names,pvalues)
+        self.results[mtype]['grid'] = append_fields(grid,\
+                     names,pvalues,asrecarray=False)
 
         # -- and replace the original confidence intervals, and re-order
         self.results[mtype]['grid']['ci_'+chi2_type] = 1-combined_pvals
@@ -1958,7 +1960,7 @@ class SED(object):
             pl.figure()
             pl.subplot(221)
             pl.title(label)
-            pl.scatter(y_computed,y_interpolated,c=y_prob,edgecolors='none',cmap=pl.cm.spectral)
+            pl.scatter(y_computed,y_interpolated,c=y_prob,edgecolors='none',cmap=plt.cm.Spectral)
             pl.plot([pl.xlim()[0],pl.xlim()[1]],[pl.xlim()[0],pl.xlim()[1]],'r-',lw=2)
             pl.xlim(pl.xlim())
             pl.ylim(pl.xlim())
@@ -1967,11 +1969,11 @@ class SED(object):
             pl.colorbar()
             pl.subplot(223)
             pl.title('y_interpolated')
-            pl.scatter(grid['teff'],grid['logg'],c=y_interpolated,edgecolors='none',cmap=pl.cm.spectral)
+            pl.scatter(grid['teff'],grid['logg'],c=y_interpolated,edgecolors='none',cmap=plt.cm.Spectral)
             pl.colorbar()
             pl.subplot(224)
             pl.title('y_computed')
-            pl.scatter(grid['teff'],grid['logg'],c=y_computed,edgecolors='none',cmap=pl.cm.spectral)
+            pl.scatter(grid['teff'],grid['logg'],c=y_computed,edgecolors='none',cmap=plt.cm.Spectral)
             pl.colorbar()
             pvalues.append(y_prob)
 
@@ -1979,21 +1981,21 @@ class SED(object):
         pl.subplot(221)
         pl.title('p1')
         sa = np.argsort(pvalues[0])
-        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[0][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[0][sa],edgecolors='none',cmap=plt.cm.Spectral)
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
         pl.subplot(222)
         pl.title('p2')
         sa = np.argsort(pvalues[1])
-        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[1][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[1][sa],edgecolors='none',cmap=plt.cm.Spectral)
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
         pl.subplot(223)
         pl.title('p3')
         sa = np.argsort(pvalues[2])
-        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[2][sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=pvalues[2][sa],edgecolors='none',cmap=plt.cm.Spectral)
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
@@ -2003,7 +2005,7 @@ class SED(object):
         pl.subplot(224)
         pl.title('pcombined')
         sa = np.argsort(combined_pvals)
-        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=combined_pvals[sa],edgecolors='none',cmap=pl.cm.spectral)
+        pl.scatter(grid['labs'][sa],grid['radius'][sa],c=combined_pvals[sa],edgecolors='none',cmap=plt.cm.Spectral)
         pl.colorbar()
         pl.xlabel('labs')
         pl.ylabel('radius')
@@ -2012,8 +2014,8 @@ class SED(object):
         # -- add the information to the grid (assume that if there one label
         #   not in there already, none of them are
         if not 'c_'+ylabels[0] in grid.dtype.names:
-            self.results[mtype]['grid'] = pl.mlab.rec_append_fields(grid,\
-                        ['c_'+ylabel for ylabel in ylabels],add_info)
+            self.results[mtype]['grid'] = append_fields(grid,\
+                        ['c_'+ylabel for ylabel in ylabels],add_info,asrecarray=False)
         # -- if they are already in there, overwrite!
         else:
             for info,ylabel in zip(add_info,ylabels):
@@ -2143,7 +2145,7 @@ class SED(object):
 
         # -- make the plot
         if mtype == 'imc':
-            pl.hexbin(X,Y,mincnt=1,cmap=pl.cm.spectral)  #bins='log'
+            pl.hexbin(X,Y,mincnt=1,cmap=plt.cm.Spectral)  #bins='log'
             ptype = 'mc'
 
             # -- set the limits
@@ -2173,7 +2175,7 @@ class SED(object):
 
             # -- grid scatter plot
             pl.scatter(X[region],Y[region],
-                 c=colors,edgecolors='none',cmap=pl.cm.spectral,vmin=vmin,vmax=vmax)
+                 c=colors,edgecolors='none',cmap=plt.cm.Spectral,vmin=vmin,vmax=vmax)
             # -- set the limits to only include the 95 interval
             pl.xlim(X[region].max(),X[region].min())
             pl.ylim(Y[region].max(),Y[region].min())
@@ -2254,7 +2256,7 @@ class SED(object):
 
         allsystems = np.array([i.split('.')[0] for i in photbands])
         systems = sorted(set(allsystems))
-        color_cycle = [pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(systems))]
+        color_cycle = [plt.cm.Spectral(j) for j in np.linspace(0, 1.0, len(systems))]
 
         if not colors:
             color_cycle = itertools.cycle(color_cycle)
@@ -2356,9 +2358,9 @@ class SED(object):
         if ('absolutesymbolcolor' in kwargs) and (kwargs.pop('absolutesymbolcolor') == True):
             sortedphotsystems,plotcolorvalues = filters.get_plotsymbolcolorinfo()
             selectedcolorinds = np.array([np.where(sortedphotsystems == system)[0][0] for system in set_systems])
-            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in plotcolorvalues[selectedcolorinds]])
+            color_cycle = itertools.cycle([plt.cm.Spectral(j) for j in plotcolorvalues[selectedcolorinds]])
         else:
-            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
+            color_cycle = itertools.cycle([plt.cm.Spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
 
         # -- for plotting reasons, we translate every color to an integer
         for system in set_systems:
@@ -2527,7 +2529,7 @@ class SED(object):
         include_grid = self.master['include']
         systems = np.array([system.split('.')[0] for system in self.master['photband'][include_grid]],str)
         set_systems = sorted(list(set(systems)))
-        color_cycle = itertools.cycle([pl.cm.spectral(i) for i in np.linspace(0, 1.0, len(set_systems))])
+        color_cycle = itertools.cycle([plt.cm.Spectral(i) for i in np.linspace(0, 1.0, len(set_systems))])
         if mtype in self.results:
             eff_waves,synflux,photbands = self.results[mtype]['synflux']
             chi2 = self.results[mtype]['chi2']
@@ -2616,11 +2618,11 @@ class SED(object):
         tp_sa = np.argsort(total_prob)[::-1]
         if ptype=='prob':
             pl.scatter(self.results['igrid_search']['grid']['teff'][cutlogg][-n:][tp_sa],self.results['igrid_search']['grid']['logg'][cutlogg][-n:][tp_sa],
-                c=total_prob[tp_sa],edgecolors='none',cmap=pl.cm.spectral,
+                c=total_prob[tp_sa],edgecolors='none',cmap=plt.cm.Spectral,
                 vmin=total_prob.min(),vmax=total_prob.max())
         elif ptype=='radii':
             pl.scatter(self.results['igrid_search']['grid']['teff'][cutlogg][-n:][tp_sa],self.results['igrid_search']['grid']['logg'][cutlogg][-n:][tp_sa],
-                c=radii,edgecolors='none',cmap=pl.cm.spectral,
+                c=radii,edgecolors='none',cmap=plt.cm.Spectral,
                 vmin=radii.min(),vmax=radii.max())
         pl.xlim(self.results['igrid_search']['grid']['teff'][region].max(),self.results['igrid_search']['grid']['teff'][region].min())
         pl.ylim(self.results['igrid_search']['grid']['logg'][region].max(),self.results['igrid_search']['grid']['logg'][region].min())
@@ -2692,7 +2694,7 @@ class SED(object):
         pl.ylim(ylims)
 
     @standalone_figure
-    def plot_finderchart(self,cmap_photometry=pl.cm.Spectral,window_size=5.):
+    def plot_finderchart(self,cmap_photometry=plt.cm.Spectral,window_size=5.):
         """
         Size is x and y width in arcminutes
         """
@@ -3817,9 +3819,9 @@ class PulsatingSED(SED):
         if ('absolutesymbolcolor' in kwargs) and (kwargs.pop('absolutesymbolcolor') == True):
             sortedphotsystems,plotcolorvalues = filters.get_plotsymbolcolorinfo()
             selectedcolorinds = np.array([np.where(sortedphotsystems == system)[0][0] for system in set_systems])
-            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in plotcolorvalues[selectedcolorinds]])
+            color_cycle = itertools.cycle([plt.cm.Spectral(j) for j in plotcolorvalues[selectedcolorinds]])
         else:
-            color_cycle = itertools.cycle([pl.cm.spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
+            color_cycle = itertools.cycle([plt.cm.Spectral(j) for j in np.linspace(0, 1.0, len(set_systems))])
 
         # -- for plotting reasons, we translate every color to an integer
         for system in set_systems:
@@ -4198,7 +4200,7 @@ if __name__ == "__main__":
     toplot = master[-master['color']]
     systems = np.array([system.split('.')[0] for system in toplot['photband']],str)
     set_systems = sorted(list(set(systems)))
-    pl.gca().set_color_cycle([pl.cm.spectral(i) for i in np.linspace(0, 1.0, len(set_systems))])
+    pl.gca().set_color_cycle([plt.cm.Spectral(i) for i in np.linspace(0, 1.0, len(set_systems))])
     for system in set_systems:
         keep = systems==system
         pl.errorbar(master['cwave'][keep],master['cmeas'][keep],

@@ -6,6 +6,7 @@ import numpy as np
 import pylab as pl
 from scipy import spatial
 import itertools
+from numpy.lib.recfunctions import append_fields
 
 #{ Normal arrays
 def unique_arr(a,axis=0,return_index=False):
@@ -369,7 +370,8 @@ def recarr_join(arr1,arr2):
     """
     arr1 = arr1.copy()
     for field in arr2.dtype.names:
-        arr1 = pl.mlab.rec_append_fields(arr1,field,arr2[field])
+        # arr1 = pl.mlab.rec_append_fields(arr1,field,arr2[field])
+        arr1 = append_fields(arr1,field,arr2[field],asrecarray=False)
     return arr1
 
 #}
