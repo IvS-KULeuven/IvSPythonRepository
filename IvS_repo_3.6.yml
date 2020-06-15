@@ -8,7 +8,7 @@ channels:
 dependencies:
 - astropy=2.0.1
 - matplotlib=2.0.2
-- numpy=1.13.1
+- numpy=1.18.5
 - python=3.6.2
 - scipy=0.19.1
 - uncertainties=3.0.2
