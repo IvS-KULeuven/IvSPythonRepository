@@ -195,7 +195,7 @@ class Ephemeris(object):
                 if sitename != None:
                     mysite.name = sitename
                     logger.info('Site name set to %s'%(sitename))
-                if siteelevation != None:
+                if siteelev != None:
                     mysite.elevation = siteelev
                     logger.info('Site elevation set to %s'%(sitename))
                 if sitelat != None:
