@@ -2379,6 +2379,9 @@ def _get_itable_markers(photbands,
         gridpnts.append(np.zeros((len(teffs),4)))
 
         for i,(it,il,ie) in enumerate(zip(teffs,loggs,ebvs)):
+            #snippet to exclude negative logg of marcs:
+            if il<0.:
+                continue
             markers[-1][i] = float('%3d%05d%03d%03d'%(int(round((z+5)*100)),int(round(it)),int(round(il*100)),int(round(ie*100))))
             gridpnts[-1][i]= it,il,ie,z
 
@@ -2417,6 +2420,9 @@ def _get_pix_grid(photbands,
         gridfiles = [gridfiles]
     flux = []
     grid_pars = []
+    #snippet to modify variables if Ana's marcs grids are called
+    if gridfiles[-1].find('Ana') != -1:
+        variables = ['teff','logg','ebv']
     grid_names = np.array(variables)
 
     #-- collect information from all the grid files
