@@ -40,9 +40,9 @@ def read2list(filename,**kwargs):
     skip_lines = kwargs.get('skip_lines',0)
 
     if os.path.splitext(filename)[1] == '.gz':
-        ff = gzip.open(filename,mode='rt')
+        ff = gzip.open(filename,mode='rt',encoding='utf-8')
     else:
-        ff = open(filename)
+        ff = open(filename,encoding='utf-8')
 
     data = []  # data
     comm = []  # comments
