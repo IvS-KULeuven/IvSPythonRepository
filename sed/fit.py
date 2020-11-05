@@ -211,7 +211,7 @@ def stat_chi2(meas,e_meas,colors,syn,full_output=False, **kwargs):
     @rtype: float,float,float
     """
     #-- if syn represents only one measurement
-    syn*=2
+    #syn*=2
     if len(syn.shape)==1:
         if sum(~colors) > 0:
             if 'distance' in kwargs:
